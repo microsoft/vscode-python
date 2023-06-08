@@ -23,6 +23,7 @@ import { removePositionalFoldersAndFiles } from './arguments';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
+import { startTestIdServer } from '../common/utils';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 // (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
@@ -116,40 +117,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
                 testArgs.push('--capture', 'no');
             }
-
-            // create payload with testIds to send to run pytest script
-            const testData = JSON.stringify(testIds);
-            const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-            const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
-            traceLog(`Running pytest execution for the following test ids: ${testIds}`);
+            traceLog(`Running PYTEST execution for the following test ids: ${testIds}`);
 
             let pytestRunTestIdsPort: string | undefined;
-            const startServer = (): Promise<number> =>
-                new Promise((resolve, reject) => {
-                    const server = net.createServer((socket: net.Socket) => {
-                        socket.on('end', () => {
-                            traceVerbose('Client disconnected for pytest test ids server');
-                        });
-                    });
-
-                    server.listen(0, () => {
-                        const { port } = server.address() as net.AddressInfo;
-                        traceVerbose(`Server listening on port ${port} for pytest test ids server`);
-                        resolve(port);
-                    });
-
-                    server.on('error', (error: Error) => {
-                        traceError('Error starting server for pytest test ids server:', error);
-                        reject(error);
-                    });
-                    server.on('connection', (socket: net.Socket) => {
-                        socket.write(payload);
-                        traceVerbose('payload sent for pytest execution', payload);
-                    });
-                });
-
-            // Start the server and wait until it is listening
-            await startServer()
+            await startTestIdServer(testIds)
                 .then((assignedPort) => {
                     traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
                     pytestRunTestIdsPort = assignedPort.toString();

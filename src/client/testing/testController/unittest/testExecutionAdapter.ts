@@ -17,6 +17,7 @@ import {
     TestExecutionCommand,
 } from '../common/types';
 import { traceLog, traceError } from '../../../logging';
+import { startTestIdServer } from '../common/utils';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -75,37 +76,11 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
-        // create payload with testIds to send to run pytest script
-        const testData = JSON.stringify(testIds);
-        const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-        const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
+
+        traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         let runTestIdsPort: string | undefined;
-        const startServer = (): Promise<number> =>
-            new Promise((resolve, reject) => {
-                const server = net.createServer((socket: net.Socket) => {
-                    socket.on('end', () => {
-                        traceLog('Client disconnected');
-                    });
-                });
-
-                server.listen(0, () => {
-                    const { port } = server.address() as net.AddressInfo;
-                    traceLog(`Server listening on port ${port}`);
-                    resolve(port);
-                });
-
-                server.on('error', (error: Error) => {
-                    reject(error);
-                });
-                server.on('connection', (socket: net.Socket) => {
-                    socket.write(payload);
-                    traceLog('payload sent', payload);
-                });
-            });
-
-        // Start the server and wait until it is listening
-        await startServer()
+        await startTestIdServer(testIds)
             .then((assignedPort) => {
                 traceLog(`Server started and listening on port ${assignedPort}`);
                 runTestIdsPort = assignedPort.toString();
