@@ -1,5 +1,5 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
 import * as path from 'path';
 import { TestRun, Uri } from 'vscode';
@@ -19,34 +19,21 @@ import {
 import { traceLog, traceError } from '../../../logging';
 import { startTestIdServer } from '../common/utils';
 
-// suite('Unittest test execution adapter', () => {
-//     let stubConfigSettings: IConfigurationService;
-//     let outputChannel: typemoq.IMock<ITestOutputChannel>;
+/**
+ * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
+ */
 
-//     setup(() => {
-//         stubConfigSettings = ({
-//             getSettings: () => ({
-//                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
-//             }),
-//         } as unknown) as IConfigurationService;
-//         outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
-//     });
+export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
+    private promiseMap: Map<string, Deferred<ExecutionTestPayload | undefined>> = new Map();
 
-//     test('runTests should send the run command to the test server', async () => {
-//         let options: TestCommandOptions | undefined;
+    private cwd: string | undefined;
 
-//         const stubTestServer = ({
-//             sendCommand(opt: TestCommandOptions, runTestIdPort?: string): Promise<void> {
-//                 delete opt.outChannel;
-//                 options = opt;
-//                 assert(runTestIdPort !== undefined);
-//                 return Promise.resolve();
-//             },
-//             onDataReceived: () => {
-//                 // no body
-//             },
-//             createUUID: () => '123456789',
-//         } as unknown) as ITestServer;
+    constructor(
+        public testServer: ITestServer,
+        public configSettings: IConfigurationService,
+        private readonly outputChannel: ITestOutputChannel,
+        private readonly resultResolver?: ITestResultResolver,
+    ) {}
 
     public async runTests(
         uri: Uri,
@@ -73,33 +60,19 @@ import { startTestIdServer } from '../common/utils';
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 
-//         const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
-//         adapter.runTests(uri, [], false).then(() => {
-//             const expectedOptions: TestCommandOptions = {
-//                 workspaceFolder: uri,
-//                 command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
-//                 cwd: uri.fsPath,
-//                 uuid: '123456789',
-//                 debugBool: false,
-//                 testIds: [],
-//             };
-//             assert.deepStrictEqual(options, expectedOptions);
-//         });
-//     });
-//     test("onDataReceivedHandler should parse the data if the cwd from the payload matches the test adapter's cwd", async () => {
-//         const stubTestServer = ({
-//             sendCommand(): Promise<void> {
-//                 return Promise.resolve();
-//             },
-//             onDataReceived: () => {
-//                 // no body
-//             },
-//             createUUID: () => '123456789',
-//         } as unknown) as ITestServer;
+        const command = buildExecutionCommand(unittestArgs);
+        this.cwd = uri.fsPath;
+        const uuid = this.testServer.createUUID(uri.fsPath);
 
-//         const uri = Uri.file('/foo/bar');
-//         const data = { status: 'success' };
-//         const uuid = '123456789';
+        const options: TestCommandOptions = {
+            workspaceFolder: uri,
+            command,
+            cwd: this.cwd,
+            uuid,
+            debugBool,
+            testIds,
+            outChannel: this.outputChannel,
+        };
 
         const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
@@ -127,12 +100,11 @@ import { startTestIdServer } from '../common/utils';
     }
 }
 
-//         const nextData = { status: 'error' };
-//         // will resolve and nextData will be returned as result
-//         adapter.onDataReceivedHandler({ uuid: correctUuid, data: JSON.stringify(nextData) });
+function buildExecutionCommand(args: string[]): TestExecutionCommand {
+    const executionScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
 
-//         const result = await promise;
-
-//         assert.deepStrictEqual(result, nextData);
-//     });
-// });
+    return {
+        script: executionScript,
+        args: ['--udiscovery', ...args],
+    };
+}
