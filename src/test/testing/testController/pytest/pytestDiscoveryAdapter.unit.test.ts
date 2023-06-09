@@ -37,7 +37,7 @@ suite('pytest test discovery adapter', () => {
         // constants
         portNum = 12345;
         uuid = 'uuid123';
-        expectedPath = '/my/test/path/';
+        expectedPath = path.join('/', 'my', 'test', 'path');
         uri = Uri.file(expectedPath);
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
