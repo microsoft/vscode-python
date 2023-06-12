@@ -161,12 +161,17 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
     venv_installed = is_installed("venv")
     pip_installed = is_installed("pip")
     ensure_pip_installed = is_installed("ensurepip")
+    distutils_installed = is_installed("distutils")
 
     if not venv_installed:
         if sys.platform == "win32":
             raise VenvError("CREATE_VENV.VENV_NOT_FOUND")
         else:
             use_micro_venv = True
+            if not distutils_installed:
+                print("Install `python3-distutils` package or equivalent for your OS.")
+                print("On Debian/Ubuntu: `sudo apt install python3-distutils`")
+                raise VenvError("CREATE_VENV.DISTUTILS_NOT_INSTALLED")
 
     if venv_exists(args.name):
         # A virtual environment with same name exists.

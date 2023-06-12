@@ -1,10 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import { ProgressOptions, ProgressLocation } from 'vscode';
-import { IExtensionSingleActivationService } from '../../activation/types';
-import { IApplicationShell, IApplicationEnvironment } from '../../common/application/types';
+import {
+    ProgressOptions,
+    ProgressLocation,
+    MarkdownString,
+    WorkspaceFolder,
+    EnvironmentVariableCollection,
+    EnvironmentVariableScope,
+} from 'vscode';
+import { pathExists } from 'fs-extra';
+import { IExtensionActivationService } from '../../activation/types';
+import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
@@ -14,6 +23,7 @@ import {
     Resource,
     IDisposableRegistry,
     IConfigurationService,
+    IPathUtils,
 } from '../../common/types';
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
@@ -21,15 +31,18 @@ import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
+import { EnvironmentType } from '../../pythonEnvironments/info';
 
 @injectable()
-export class TerminalEnvVarCollectionService implements IExtensionSingleActivationService {
+export class TerminalEnvVarCollectionService implements IExtensionActivationService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
     };
 
     private deferred: Deferred<void> | undefined;
+
+    private registeredOnce = false;
 
     private previousEnvVars = _normCaseKeys(process.env);
 
@@ -42,39 +55,55 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
         @inject(IApplicationEnvironment) private applicationEnvironment: IApplicationEnvironment,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {}
 
-    public async activate(): Promise<void> {
+    public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             this.context.environmentVariableCollection.clear();
+            await this.handleMicroVenv(resource);
+            if (!this.registeredOnce) {
+                this.interpreterService.onDidChangeInterpreter(
+                    async (r) => {
+                        await this.handleMicroVenv(r);
+                    },
+                    this,
+                    this.disposables,
+                );
+                this.registeredOnce = true;
+            }
             return;
         }
-        this.interpreterService.onDidChangeInterpreter(
-            async (resource) => {
-                this.showProgress();
-                await this._applyCollection(resource);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-        this.applicationEnvironment.onDidChangeShell(
-            async (shell: string) => {
-                this.showProgress();
-                // Pass in the shell where known instead of relying on the application environment, because of bug
-                // on VSCode: https://github.com/microsoft/vscode/issues/160694
-                await this._applyCollection(undefined, shell);
-                this.hideProgress();
-            },
-            this,
-            this.disposables,
-        );
-
-        this._applyCollection(undefined).ignoreErrors();
+        if (!this.registeredOnce) {
+            this.interpreterService.onDidChangeInterpreter(
+                async (r) => {
+                    this.showProgress();
+                    await this._applyCollection(r).ignoreErrors();
+                    this.hideProgress();
+                },
+                this,
+                this.disposables,
+            );
+            this.applicationEnvironment.onDidChangeShell(
+                async (shell: string) => {
+                    this.showProgress();
+                    // Pass in the shell where known instead of relying on the application environment, because of bug
+                    // on VSCode: https://github.com/microsoft/vscode/issues/160694
+                    await this._applyCollection(undefined, shell).ignoreErrors();
+                    this.hideProgress();
+                },
+                this,
+                this.disposables,
+            );
+            this.registeredOnce = true;
+        }
+        this._applyCollection(resource).ignoreErrors();
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
@@ -86,6 +115,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             undefined,
             shell,
         );
+        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
@@ -95,7 +125,7 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            this.context.environmentVariableCollection.clear();
+            envVarCollection.clear();
             this.previousEnvVars = _normCaseKeys(process.env);
             return;
         }
@@ -107,10 +137,10 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             if (prevValue !== value) {
                 if (value !== undefined) {
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    this.context.environmentVariableCollection.replace(key, value);
+                    envVarCollection.replace(key, value, { applyAtShellIntegration: true });
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
-                    this.context.environmentVariableCollection.delete(key);
+                    envVarCollection.delete(key);
                 }
             }
         });
@@ -118,9 +148,51 @@ export class TerminalEnvVarCollectionService implements IExtensionSingleActivati
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
-                this.context.environmentVariableCollection.delete(key);
+                envVarCollection.delete(key);
             }
         });
+        const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
+        const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
+        envVarCollection.description = description;
+    }
+
+    private getEnvironmentVariableCollection(workspaceFolder?: WorkspaceFolder) {
+        const envVarCollection = this.context.environmentVariableCollection as EnvironmentVariableCollection & {
+            getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
+        };
+        return workspaceFolder
+            ? envVarCollection.getScopedEnvironmentVariableCollection({ workspaceFolder })
+            : envVarCollection;
+    }
+
+    private async handleMicroVenv(resource: Resource) {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (interpreter?.envType === EnvironmentType.Venv) {
+            const activatePath = path.join(path.dirname(interpreter.path), 'activate');
+            if (!(await pathExists(activatePath))) {
+                const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
+                envVarCollection.replace(
+                    'PATH',
+                    `${path.dirname(interpreter.path)}${path.delimiter}${process.env.Path}`,
+                    { applyAtShellIntegration: true },
+                );
+                return;
+            }
+        }
+        this.context.environmentVariableCollection.clear();
+    }
+
+    private getWorkspaceFolder(resource: Resource): WorkspaceFolder | undefined {
+        let workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        if (
+            !workspaceFolder &&
+            Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length > 0
+        ) {
+            [workspaceFolder] = this.workspaceService.workspaceFolders;
+        }
+        return workspaceFolder;
     }
 
     @traceDecoratorVerbose('Display activating terminals')

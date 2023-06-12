@@ -64,7 +64,7 @@ suite('Jedi LSP - analysis Options', () => {
 
         expect(result.initializationOptions.markupKindPreferred).to.deep.equal('markdown');
         expect(result.initializationOptions.completion.resolveEagerly).to.deep.equal(false);
-        expect(result.initializationOptions.completion.disableSnippets).to.deep.equal(false);
+        expect(result.initializationOptions.completion.disableSnippets).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.enable).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didOpen).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didSave).to.deep.equal(true);

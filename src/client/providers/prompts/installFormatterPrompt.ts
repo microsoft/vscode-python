@@ -21,17 +21,21 @@ const SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY = 'showFormatterExtensionInsta
 
 @injectable()
 export class InstallFormatterPrompt implements IInstallFormatterPrompt {
-    private shownThisSession = false;
+    private currentlyShown = false;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
+    /*
+     * This method is called when the user saves a python file or a cell.
+     * Returns true if an extension was selected. Otherwise returns false.
+     */
     public async showInstallFormatterPrompt(resource?: Uri): Promise<boolean> {
         if (!inFormatterExtensionExperiment(this.serviceContainer)) {
             return false;
         }
 
         const promptState = doNotShowPromptState(SHOW_FORMATTER_INSTALL_PROMPT_DONOTSHOW_KEY, this.serviceContainer);
-        if (this.shownThisSession || promptState.value) {
+        if (this.currentlyShown || promptState.value) {
             return false;
         }
 
@@ -53,7 +57,7 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
         let selection: string | undefined;
 
         if (black || autopep8) {
-            this.shownThisSession = true;
+            this.currentlyShown = true;
             if (black && autopep8) {
                 selection = await showInformationMessage(
                     ToolsExtensions.selectMultipleFormattersPrompt,
@@ -81,7 +85,7 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
                 }
             }
         } else if (formatter === 'black' && !black) {
-            this.shownThisSession = true;
+            this.currentlyShown = true;
             selection = await showInformationMessage(
                 ToolsExtensions.installBlackFormatterPrompt,
                 'Black',
@@ -89,7 +93,7 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
                 Common.doNotShowAgain,
             );
         } else if (formatter === 'autopep8' && !autopep8) {
-            this.shownThisSession = true;
+            this.currentlyShown = true;
             selection = await showInformationMessage(
                 ToolsExtensions.installAutopep8FormatterPrompt,
                 'Black',
@@ -98,23 +102,32 @@ export class InstallFormatterPrompt implements IInstallFormatterPrompt {
             );
         }
 
+        let userSelectedAnExtension = false;
         if (selection === 'Black') {
             if (black) {
+                userSelectedAnExtension = true;
                 await updateDefaultFormatter(BLACK_EXTENSION, resource);
             } else {
+                userSelectedAnExtension = true;
                 await installFormatterExtension(BLACK_EXTENSION, resource);
             }
         } else if (selection === 'Autopep8') {
             if (autopep8) {
+                userSelectedAnExtension = true;
                 await updateDefaultFormatter(AUTOPEP8_EXTENSION, resource);
             } else {
+                userSelectedAnExtension = true;
                 await installFormatterExtension(AUTOPEP8_EXTENSION, resource);
             }
         } else if (selection === Common.doNotShowAgain) {
+            userSelectedAnExtension = false;
             await promptState.updateValue(true);
+        } else {
+            userSelectedAnExtension = false;
         }
 
-        return this.shownThisSession;
+        this.currentlyShown = false;
+        return userSelectedAnExtension;
     }
 }
 

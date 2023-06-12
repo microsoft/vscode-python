@@ -17,8 +17,10 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           path: ./actions
           ref: stable
+
       - name: Install Actions
         run: npm install --production --prefix ./actions
+
       - name: Run Test Plan Item Validator
         uses: ./actions/test-plan-item-validator
         with:

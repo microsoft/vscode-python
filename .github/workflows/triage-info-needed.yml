@@ -11,86 +11,41 @@ jobs:
   add_label:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'triage-needed') && !contains(github.event.issue.labels.*.name, 'info-needed')
-    env:
-      KEYWORDS: '["\\?", "please", "kindly", "let me know", "try", "can you", "could you", "would you", "may I", "provide", "let us know", "tell me", "give me", "send me", "what", "when", "where", "why", "how"]'
     steps:
-      - name: Check for author
-        uses: actions/github-script@v6
+      - name: Checkout Actions
+        uses: actions/checkout@v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const issue = await github.rest.issues.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            });
-            const commentAuthor = context.payload.comment.user.login;
-            const commentBody = context.payload.comment.body;
-            const isTeamMember = ${{ env.TRIAGERS }}.includes(commentAuthor);
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
+          path: ./actions
 
-            const keywords = ${{ env.KEYWORDS }};
-            const isRequestForInfo = new RegExp(keywords.join('|'), 'i').test(commentBody);
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
 
-            const shouldAddLabel = isTeamMember && commentAuthor !== issue.data.user.login && isRequestForInfo;
-
-            if (shouldAddLabel) {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: ['info-needed']
-              });
-            }
+      - name: Add "info-needed" label
+        uses: ./actions/python-triage-info-needed
+        with:
+          triagers: ${{ env.TRIAGERS }}
+          action: 'add'
+          token: ${{secrets.GITHUB_TOKEN}}
 
   remove_label:
     if: contains(github.event.issue.labels.*.name, 'info-needed') && contains(github.event.issue.labels.*.name, 'triage-needed')
     runs-on: ubuntu-latest
     steps:
-      - name: Check for author
-        uses: actions/github-script@v6
+      - name: Checkout Actions
+        uses: actions/checkout@v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const issue = await github.rest.issues.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            });
-            const commentAuthor = context.payload.comment.user.login;
-            const issueAuthor = issue.data.user.login;
-            if (commentAuthor === issueAuthor) {
-              await github.rest.issues.removeLabel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                name: 'info-needed'
-              });
-              return;
-            }
-            if (${{ env.TRIAGERS }}.includes(commentAuthor)) {
-              // If one of triagers made a comment, ignore it
-              return;
-            }
-            // Loop through all the comments on the issue in reverse order and find the last username that a TRIAGER mentioned
-            // If the comment author is the last mentioned username, remove the "info-needed" label
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            });
-            for (const comment of comments.data.slice().reverse()) {
-              if (!${{ env.TRIAGERS }}.includes(comment.user.login)) {
-                continue;
-              }
-              const matches = comment.body.match(/@\w+/g) || [];
-              const mentionedUsernames = matches.map(match => match.replace('@', ''));
-              if (mentionedUsernames.includes(commentAuthor)) {
-                await github.rest.issues.removeLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-                  name: 'info-needed'
-                });
-                break;
-              }
-            }
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
+          path: ./actions
+
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
+
+      - name: Remove "info-needed" label
+        uses: ./actions/python-triage-info-needed
+        with:
+          triagers: ${{ env.TRIAGERS }}
+          action: 'remove'
+          token: ${{secrets.GITHUB_TOKEN}}

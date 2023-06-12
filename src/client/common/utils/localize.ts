@@ -198,6 +198,7 @@ export namespace Interpreters {
         'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change "terminal.integrated.inheritEnv" to false in your user settings. [Learn more](https://aka.ms/AA66i8f).',
     );
     export const activatingTerminals = l10n.t('Reactivating terminals...');
+    export const activateTerminalDescription = l10n.t('Activated environment for');
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
     );
@@ -350,7 +351,7 @@ export namespace DebugConfigStrings {
         export const enterManagePyPath = {
             title: l10n.t('Debug Django'),
             prompt: l10n.t(
-                "Enter the path to manage.py ('${workspaceFolderToken}' points to the root of the current workspace folder)",
+                "Enter the path to manage.py ('${workspaceFolder}' points to the root of the current workspace folder)",
             ),
             invalid: l10n.t('Enter a valid Python file path'),
         };
@@ -406,9 +407,13 @@ export namespace Testing {
     export const testNotConfigured = l10n.t('No test framework configured.');
     export const cancelUnittestDiscovery = l10n.t('Canceled unittest test discovery');
     export const errorUnittestDiscovery = l10n.t('Unittest test discovery error');
+    export const cancelPytestDiscovery = l10n.t('Canceled pytest test discovery');
+    export const errorPytestDiscovery = l10n.t('pytest test discovery error');
     export const seePythonOutput = l10n.t('(see Output > Python)');
     export const cancelUnittestExecution = l10n.t('Canceled unittest test execution');
     export const errorUnittestExecution = l10n.t('Unittest test execution error');
+    export const cancelPytestExecution = l10n.t('Canceled pytest test execution');
+    export const errorPytestExecution = l10n.t('Pytest test execution error');
 }
 
 export namespace OutdatedDebugger {

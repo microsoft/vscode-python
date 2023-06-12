@@ -25,12 +25,12 @@ export async function buildFastAPILaunchDebugConfiguration(
         type: DebuggerTypeName,
         request: 'launch',
         module: 'uvicorn',
-        args: ['main:app'],
+        args: ['main:app', '--reload'],
         jinja: true,
         justMyCode: true,
     };
 
-    if (!application) {
+    if (!application && config.args) {
         const selectedPath = await input.showInputBox({
             title: DebugConfigStrings.fastapi.enterAppPathOrNamePath.title,
             value: 'main.py',
@@ -44,7 +44,7 @@ export async function buildFastAPILaunchDebugConfiguration(
         });
         if (selectedPath) {
             manuallyEnteredAValue = true;
-            config.args = [`${path.basename(selectedPath, '.py').replace('/', '.')}:app`];
+            config.args[0] = `${path.basename(selectedPath, '.py').replace('/', '.')}:app`;
         }
     }
 

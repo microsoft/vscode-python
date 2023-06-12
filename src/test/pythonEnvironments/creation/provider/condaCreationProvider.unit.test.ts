@@ -7,11 +7,7 @@ import { assert, use as chaiUse } from 'chai';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { CancellationToken, ProgressOptions, Uri } from 'vscode';
-import {
-    CreateEnvironmentProgress,
-    CreateEnvironmentProvider,
-    CreateEnvironmentResult,
-} from '../../../../client/pythonEnvironments/creation/types';
+import { CreateEnvironmentProgress } from '../../../../client/pythonEnvironments/creation/types';
 import { condaCreationProvider } from '../../../../client/pythonEnvironments/creation/provider/condaCreationProvider';
 import * as wsSelect from '../../../../client/pythonEnvironments/creation/common/workspaceSelection';
 import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
@@ -23,6 +19,10 @@ import { createDeferred } from '../../../../client/common/utils/async';
 import * as commonUtils from '../../../../client/pythonEnvironments/creation/common/commonUtils';
 import { CONDA_ENV_CREATED_MARKER } from '../../../../client/pythonEnvironments/creation/provider/condaProgressAndTelemetry';
 import { CreateEnv } from '../../../../client/common/utils/localize';
+import {
+    CreateEnvironmentProvider,
+    CreateEnvironmentResult,
+} from '../../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
 chaiUse(chaiAsPromised);
 
@@ -131,7 +131,12 @@ suite('Conda Creation provider tests', () => {
 
         _next!({ out: `${CONDA_ENV_CREATED_MARKER}new_environment`, source: 'stdout' });
         _complete!();
-        assert.deepStrictEqual(await promise, { path: 'new_environment', uri: workspace1.uri });
+        assert.deepStrictEqual(await promise, {
+            path: 'new_environment',
+            workspaceFolder: workspace1,
+            action: undefined,
+            error: undefined,
+        });
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
     });
 

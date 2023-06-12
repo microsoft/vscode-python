@@ -17,7 +17,7 @@ import {
 } from '../common/types';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
-import { traceError, traceInfo } from '../logging';
+import { traceError, traceVerbose } from '../logging';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
@@ -94,7 +94,7 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
     }
 
     private async createNewSession(): Promise<TensorBoardSession | undefined> {
-        traceInfo('Starting new TensorBoard session...');
+        traceVerbose('Starting new TensorBoard session...');
         try {
             const newSession = new TensorBoardSession(
                 this.installer,

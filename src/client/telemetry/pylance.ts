@@ -138,6 +138,11 @@
    }
 */
 /* __GDPR__
+   "language_server/goto_def_inside_string" : {
+      "resultlength" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+   }
+*/
+/* __GDPR__
    "language_server/import_heuristic" : {
       "avgcost" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "avglevel" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },

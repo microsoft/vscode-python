@@ -17,25 +17,22 @@ import {
 import { splitLines } from '../../common/stringUtils';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
 import {
+    clearAllChildren,
     createErrorTestItem,
     DebugTestTag,
     ErrorTestItemOptions,
     getTestCaseNodes,
     RunTestTag,
 } from './common/testItemUtilities';
-import {
-    DiscoveredTestItem,
-    DiscoveredTestNode,
-    DiscoveredTestType,
-    ITestDiscoveryAdapter,
-    ITestExecutionAdapter,
-} from './common/types';
+import { DiscoveredTestItem, DiscoveredTestNode, ITestDiscoveryAdapter, ITestExecutionAdapter } from './common/types';
 import { fixLogLines } from './common/utils';
+import { IPythonExecutionFactory } from '../../common/process/types';
+import { ITestDebugLauncher } from '../common/types';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -68,13 +65,14 @@ export class WorkspaceTestAdapter {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    // ** add executionFactory?: IPythonExecutionFactory, to the parameters
     public async executeTests(
         testController: TestController,
         runInstance: TestRun,
         includes: TestItem[],
         token?: CancellationToken,
         debugBool?: boolean,
+        executionFactory?: IPythonExecutionFactory,
+        debugLauncher?: ITestDebugLauncher,
     ): Promise<void> {
         if (this.executing) {
             return this.executing.promise;
@@ -85,7 +83,7 @@ export class WorkspaceTestAdapter {
 
         let rawTestExecData;
         const testCaseNodes: TestItem[] = [];
-        const testCaseIds: string[] = [];
+        const testCaseIdsSet = new Set<string>();
         try {
             // first fetch all the individual test Items that we necessarily want
             includes.forEach((t) => {
@@ -97,35 +95,39 @@ export class WorkspaceTestAdapter {
                 runInstance.started(node); // do the vscode ui test item start here before runtest
                 const runId = this.vsIdToRunId.get(node.id);
                 if (runId) {
-                    testCaseIds.push(runId);
+                    testCaseIdsSet.add(runId);
                 }
             });
-
-            // ** First line is old way, section with if statement below is new way.
-            rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
-            // if (executionFactory !== undefined) {
-            //     rawTestExecData = await this.executionAdapter.runTests(
-            //         this.workspaceUri,
-            //         testCaseIds,
-            //         debugBool,
-            //         executionFactory,
-            //     );
-            // } else {
-            //     traceVerbose('executionFactory is undefined');
-            // }
+            const testCaseIds = Array.from(testCaseIdsSet);
+            // ** execution factory only defined for new rewrite way
+            if (executionFactory !== undefined) {
+                traceVerbose('executionFactory defined');
+                rawTestExecData = await this.executionAdapter.runTests(
+                    this.workspaceUri,
+                    testCaseIds,
+                    debugBool,
+                    executionFactory,
+                    debugLauncher,
+                );
+            } else {
+                rawTestExecData = await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
+            }
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here
             sendTelemetryEvent(EventName.UNITTEST_RUN_ALL_FAILED, undefined);
 
-            const cancel = token?.isCancellationRequested
+            let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestExecution
                 : Testing.errorUnittestExecution;
+            if (this.testProvider === 'pytest') {
+                cancel = token?.isCancellationRequested ? Testing.cancelPytestExecution : Testing.errorPytestExecution;
+            }
             traceError(`${cancel}\r\n`, ex);
 
             // Also report on the test view
             const message = util.format(`${cancel} ${Testing.seePythonOutput}\r\n`, ex);
-            const options = buildErrorNodeOptions(this.workspaceUri, message);
+            const options = buildErrorNodeOptions(this.workspaceUri, message, this.testProvider);
             const errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
 
@@ -135,8 +137,11 @@ export class WorkspaceTestAdapter {
         }
 
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
+            // Map which holds the subtest information for each test item.
+            const subTestStats: Map<string, { passed: number; failed: number }> = new Map();
+
+            // iterate through payload and update the UI accordingly.
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
-                // check for result and update the UI accordingly.
                 const testCases: TestItem[] = [];
 
                 // grab leaf level test items
@@ -147,7 +152,6 @@ export class WorkspaceTestAdapter {
 
                 if (
                     rawTestExecData.result[keyTemp].outcome === 'failure' ||
-                    rawTestExecData.result[keyTemp].outcome === 'subtest-failure' ||
                     rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
                 ) {
                     const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
@@ -175,8 +179,7 @@ export class WorkspaceTestAdapter {
                     });
                 } else if (
                     rawTestExecData.result[keyTemp].outcome === 'success' ||
-                    rawTestExecData.result[keyTemp].outcome === 'expected-failure' ||
-                    rawTestExecData.result[keyTemp].outcome === 'subtest-passed'
+                    rawTestExecData.result[keyTemp].outcome === 'expected-failure'
                 ) {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
@@ -203,18 +206,83 @@ export class WorkspaceTestAdapter {
                             }
                         });
                     }
+                } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-failure') {
+                    // split on " " since the subtest ID has the parent test ID in the first part of the ID.
+                    const parentTestCaseId = keyTemp.split(' ')[0];
+                    const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
+                    const data = rawTestExecData.result[keyTemp];
+                    // find the subtest's parent test item
+                    if (parentTestItem) {
+                        const subtestStats = subTestStats.get(parentTestCaseId);
+                        if (subtestStats) {
+                            subtestStats.failed += 1;
+                        } else {
+                            subTestStats.set(parentTestCaseId, { failed: 1, passed: 0 });
+                            runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
+                            // clear since subtest items don't persist between runs
+                            clearAllChildren(parentTestItem);
+                        }
+                        const subtestId = keyTemp;
+                        const subTestItem = testController?.createTestItem(subtestId, subtestId);
+                        runInstance.appendOutput(fixLogLines(`${subtestId} Failed\r\n`));
+                        // create a new test item for the subtest
+                        if (subTestItem) {
+                            const traceback = data.traceback ?? '';
+                            const text = `${data.subtest} Failed: ${data.message ?? data.outcome}\r\n${traceback}\r\n`;
+                            runInstance.appendOutput(fixLogLines(text));
+                            parentTestItem.children.add(subTestItem);
+                            runInstance.started(subTestItem);
+                            const message = new TestMessage(rawTestExecData?.result[keyTemp].message ?? '');
+                            if (parentTestItem.uri && parentTestItem.range) {
+                                message.location = new Location(parentTestItem.uri, parentTestItem.range);
+                            }
+                            runInstance.failed(subTestItem, message);
+                        } else {
+                            throw new Error('Unable to create new child node for subtest');
+                        }
+                    } else {
+                        throw new Error('Parent test item not found');
+                    }
+                } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
+                    // split on " " since the subtest ID has the parent test ID in the first part of the ID.
+                    const parentTestCaseId = keyTemp.split(' ')[0];
+                    const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
+
+                    // find the subtest's parent test item
+                    if (parentTestItem) {
+                        const subtestStats = subTestStats.get(parentTestCaseId);
+                        if (subtestStats) {
+                            subtestStats.passed += 1;
+                        } else {
+                            subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
+                            runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
+                            // clear since subtest items don't persist between runs
+                            clearAllChildren(parentTestItem);
+                        }
+                        const subtestId = keyTemp;
+                        const subTestItem = testController?.createTestItem(subtestId, subtestId);
+                        // create a new test item for the subtest
+                        if (subTestItem) {
+                            parentTestItem.children.add(subTestItem);
+                            runInstance.started(subTestItem);
+                            runInstance.passed(subTestItem);
+                            runInstance.appendOutput(fixLogLines(`${subtestId} Passed\r\n`));
+                        } else {
+                            throw new Error('Unable to create new child node for subtest');
+                        }
+                    } else {
+                        throw new Error('Parent test item not found');
+                    }
                 }
             }
         }
         return Promise.resolve();
     }
 
-    // add `executionFactory?: IPythonExecutionFactory,` to the function for new pytest method
     public async discoverTests(
         testController: TestController,
         token?: CancellationToken,
-        isMultiroot?: boolean,
-        workspaceFilePath?: string,
+        executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -230,26 +298,29 @@ export class WorkspaceTestAdapter {
 
         let rawTestData;
         try {
-            // ** First line is old way, section with if statement below is new way.
-            rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
-            // if (executionFactory !== undefined) {
-            //     rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
-            // } else {
-            //     traceVerbose('executionFactory is undefined');
-            // }
+            // ** execution factory only defined for new rewrite way
+            if (executionFactory !== undefined) {
+                traceVerbose('executionFactory defined');
+                rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+            } else {
+                rawTestData = await this.discoveryAdapter.discoverTests(this.workspaceUri);
+            }
             deferred.resolve();
         } catch (ex) {
             sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: true });
 
-            const cancel = token?.isCancellationRequested
+            let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestDiscovery
                 : Testing.errorUnittestDiscovery;
+            if (this.testProvider === 'pytest') {
+                cancel = token?.isCancellationRequested ? Testing.cancelPytestDiscovery : Testing.errorPytestDiscovery;
+            }
 
             traceError(`${cancel}\r\n`, ex);
 
             // Report also on the test view.
             const message = util.format(`${cancel} ${Testing.seePythonOutput}\r\n`, ex);
-            const options = buildErrorNodeOptions(this.workspaceUri, message);
+            const options = buildErrorNodeOptions(this.workspaceUri, message, this.testProvider);
             const errorNode = createErrorTestItem(testController, options);
             testController.items.add(errorNode);
 
@@ -267,17 +338,18 @@ export class WorkspaceTestAdapter {
 
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
+            const testingErrorConst =
+                this.testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
             const { errors } = rawTestData;
-            traceError(Testing.errorUnittestDiscovery, '\r\n', errors!.join('\r\n\r\n'));
-
+            traceError(testingErrorConst, '\r\n', errors?.join('\r\n\r\n'));
             let errorNode = testController.items.get(`DiscoveryError:${workspacePath}`);
             const message = util.format(
-                `${Testing.errorUnittestDiscovery} ${Testing.seePythonOutput}\r\n`,
-                errors!.join('\r\n\r\n'),
+                `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,
+                errors?.join('\r\n\r\n'),
             );
 
             if (errorNode === undefined) {
-                const options = buildErrorNodeOptions(this.workspaceUri, message);
+                const options = buildErrorNodeOptions(this.workspaceUri, message, this.testProvider);
                 errorNode = createErrorTestItem(testController, options);
                 testController.items.add(errorNode);
             }
@@ -286,39 +358,6 @@ export class WorkspaceTestAdapter {
             // Remove the error node if necessary,
             // then parse and insert test data.
             testController.items.delete(`DiscoveryError:${workspacePath}`);
-
-            // Wrap the data under a root node named after the test provider.
-            const wrappedTests = rawTestData.tests;
-
-            // If we are in a multiroot workspace scenario, wrap the current folder's test result in a tree under the overall root + the current folder name.
-            let rootPath = workspacePath;
-            let childrenRootPath = rootPath;
-            let childrenRootName = path.basename(rootPath);
-
-            if (isMultiroot) {
-                rootPath = workspaceFilePath!;
-                childrenRootPath = workspacePath;
-                childrenRootName = path.basename(workspacePath);
-            }
-
-            const children = [
-                {
-                    path: childrenRootPath,
-                    name: childrenRootName,
-                    type_: 'folder' as DiscoveredTestType,
-                    id_: childrenRootPath,
-                    children: wrappedTests ? [wrappedTests] : [],
-                },
-            ];
-
-            // Update the raw test data with the wrapped data.
-            rawTestData.tests = {
-                path: rootPath,
-                name: this.testProvider,
-                type_: 'folder',
-                id_: rootPath,
-                children,
-            };
 
             if (rawTestData.tests) {
                 // If the test root for this folder exists: Workspace refresh, update its children.
@@ -393,10 +432,11 @@ function populateTestTree(
     });
 }
 
-function buildErrorNodeOptions(uri: Uri, message: string): ErrorTestItemOptions {
+function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
+    const labelText = testType === 'pytest' ? 'Pytest Discovery Error' : 'Unittest Discovery Error';
     return {
         id: `DiscoveryError:${uri.fsPath}`,
-        label: `Unittest Discovery Error [${path.basename(uri.fsPath)}]`,
+        label: `${labelText} [${path.basename(uri.fsPath)}]`,
         error: message,
     };
 }

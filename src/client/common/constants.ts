@@ -37,12 +37,14 @@ export namespace Commands {
     export const CreateNewFile = 'python.createNewFile';
     export const ClearWorkspaceInterpreter = 'python.clearWorkspaceInterpreter';
     export const Create_Environment = 'python.createEnvironment';
+    export const Create_Environment_Button = 'python.createEnvironment-button';
     export const Create_Terminal = 'python.createTerminal';
     export const Debug_In_Terminal = 'python.debugInTerminal';
     export const Enable_Linter = 'python.enableLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
+    export const Exec_In_Separate_Terminal = 'python.execInDedicatedTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';

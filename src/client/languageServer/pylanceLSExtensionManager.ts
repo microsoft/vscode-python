@@ -49,11 +49,7 @@ export class PylanceLSExtensionManager implements IDisposable, ILanguageServerEx
         private readonly extensions: IExtensions,
         readonly applicationShell: IApplicationShell,
     ) {
-        this.analysisOptions = new NodeLanguageServerAnalysisOptions(
-            outputChannel,
-            workspaceService,
-            experimentService,
-        );
+        this.analysisOptions = new NodeLanguageServerAnalysisOptions(outputChannel, workspaceService);
         this.clientFactory = new NodeLanguageClientFactory(fileSystem, extensions);
         this.serverProxy = new NodeLanguageServerProxy(
             this.clientFactory,

@@ -23,7 +23,6 @@ import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
-import { IS_WINDOWS } from './platform/constants';
 import {
     IAutoCompleteSettings,
     IDefaultLanguageServer,
@@ -41,6 +40,7 @@ import {
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 import { getOSType, OSType } from './utils/platform';
+import { isWindows } from './platform/platformService';
 
 const untildify = require('untildify');
 
@@ -654,7 +654,7 @@ function getPythonExecutable(pythonPath: string): string {
 
     for (let executableName of KnownPythonExecutables) {
         // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.
-        if (IS_WINDOWS) {
+        if (isWindows()) {
             executableName = `${executableName}.exe`;
             if (isValidPythonPath(path.join(pythonPath, executableName))) {
                 return path.join(pythonPath, executableName);

@@ -7,7 +7,7 @@ import * as internalScripts from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { ITestOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { traceError, traceInfo } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { ITestRunner, ITestDebugLauncher, IUnitTestSocketServer, LaunchOptions, Options } from '../../common/types';
 import { clearAllChildren, getTestCaseNodes } from '../common/testItemUtilities';
@@ -98,7 +98,7 @@ export class UnittestRunner implements ITestsRunner {
             traceError(`${message} ${data.join(' ')}`);
         });
         this.server.on('log', (message: string, ...data: string[]) => {
-            traceInfo(`${message} ${data.join(' ')}`);
+            traceVerbose(`${message} ${data.join(' ')}`);
         });
         this.server.on('connect', noop);
         this.server.on('start', noop);

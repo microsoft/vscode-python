@@ -8,7 +8,7 @@ on:
       - release*
 
 env:
-  NODE_VERSION: 14.18.2
+  NODE_VERSION: 16.17.1
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
@@ -77,6 +77,7 @@ jobs:
       - name: Run Pyright
         uses: jakebailey/pyright-action@v1
         with:
+          version: 1.1.308
           working-directory: 'pythonFiles'
 
   ### Non-smoke tests

@@ -3,7 +3,7 @@
 
 import { Event } from 'vscode';
 import { isTestExecution } from '../../../../common/constants';
-import { traceInfo, traceVerbose } from '../../../../logging';
+import { traceVerbose } from '../../../../logging';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { areEnvsDeepEqual, areSameEnv, getEnvPath } from '../../info/env';
@@ -225,7 +225,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             await this.persistentStorage.store(envs);
             return;
         }
-        traceInfo('Environments added to cache', JSON.stringify(this.envs));
+        traceVerbose('Environments added to cache', JSON.stringify(this.envs));
         this.markAllEnvsAsFlushed();
         await this.persistentStorage.store(this.envs);
     }

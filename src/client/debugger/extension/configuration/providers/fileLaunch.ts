@@ -24,7 +24,7 @@ export async function buildFileLaunchDebugConfiguration(
         justMyCode: true,
     };
     sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
-        configurationType: DebugConfigurationType.launchFastAPI,
+        configurationType: DebugConfigurationType.launchFile,
     });
     Object.assign(state.config, config);
 }

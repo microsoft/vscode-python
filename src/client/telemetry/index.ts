@@ -4,9 +4,10 @@
 
 import TelemetryReporter from '@vscode/extension-telemetry';
 
+import * as path from 'path';
+import * as fs from 'fs-extra';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, isUnitTestExecution } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -41,12 +42,13 @@ function isTelemetrySupported(): boolean {
 }
 
 /**
- * Checks if the telemetry is disabled in user settings
+ * Checks if the telemetry is disabled
  * @returns {boolean}
  */
-export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
-    const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
-    return settings.globalValue === false;
+export function isTelemetryDisabled(): boolean {
+    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
+    const packageJson = fs.readJSONSync(packageJsonPath);
+    return !packageJson.enableTelemetry;
 }
 
 const sharedProperties: Record<string, unknown> = {};
@@ -101,7 +103,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     properties?: P[E],
     ex?: Error,
 ): void {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (isTestExecution() || !isTelemetrySupported() || isTelemetryDisabled()) {
         return;
     }
     const reporter = getTelemetryReporter();
@@ -825,6 +827,12 @@ export interface IEventNamePropertyMapping {
          * @type {('command' | 'icon')}
          */
         trigger?: 'command' | 'icon';
+        /**
+         * Whether user chose to execute this Python file in a separate terminal or not.
+         *
+         * @type {boolean}
+         */
+        newTerminalPerFile?: boolean;
     };
     /**
      * Telemetry Event sent when user executes code against Django Shell.
@@ -2057,7 +2065,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_FAILED]: {
         environmentType: 'venv' | 'conda' | 'microvenv';
-        reason: 'noVenv' | 'noPip' | 'other';
+        reason: 'noVenv' | 'noPip' | 'noDistUtils' | 'other';
     };
     /**
      * Telemetry event sent before installing packages.
@@ -2098,6 +2106,13 @@ export interface IEventNamePropertyMapping {
         environmentType: 'venv' | 'conda' | 'microvenv';
         using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipDownload' | 'pipInstall';
     };
+    /**
+     * Telemetry event sent if create environment button was used to trigger the command.
+     */
+    /* __GDPR__
+       "environment.button" : {"owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_BUTTON]: never | undefined;
     /**
      * Telemetry event sent when a linter or formatter extension is already installed.
      */
