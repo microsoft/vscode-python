@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import { TestRun, Uri } from 'vscode';
+import * as net from 'net';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -75,7 +76,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         const deferred = createDeferred<ExecutionTestPayload>();
         this.promiseMap.set(uuid, deferred);
-
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         let runTestIdsPort: string | undefined;
