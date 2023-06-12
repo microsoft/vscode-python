@@ -172,12 +172,21 @@ export type TestCommandOptionsPytest = {
  */
 export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
+    readonly onRunDataReceived: Event<DataReceivedEvent>;
+    readonly onDiscoveryDataReceived: Event<DataReceivedEvent>;
     sendCommand(options: TestCommandOptions, runTestIdsPort?: string, callback?: () => void): Promise<void>;
     serverReady(): Promise<void>;
     getPort(): number;
     createUUID(cwd: string): string;
+    deleteUUID(uuid: string): void;
 }
-
+export interface ITestResultResolver {
+    runIdToVSid: Map<string, string>;
+    runIdToTestItem: Map<string, TestItem>;
+    vsIdToRunId: Map<string, string>;
+    resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void>;
+    resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): Promise<void>;
+}
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
@@ -192,6 +201,7 @@ export interface ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         debugBool?: boolean,
+        runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload>;
