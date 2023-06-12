@@ -23,7 +23,7 @@ suite('Unittest test discovery adapter', () => {
         outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
     });
 
-    test('discoverTests should send the discovery command to the test server', async () => {
+    test('DiscoverTests should send the discovery command to the test server with the correct args', async () => {
         let options: TestCommandOptions | undefined;
 
         const stubTestServer = ({
@@ -32,7 +32,7 @@ suite('Unittest test discovery adapter', () => {
                 options = opt;
                 return Promise.resolve();
             },
-            onDataReceived: () => {
+            onDiscoveryDataReceived: () => {
                 // no body
             },
             createUUID: () => '123456789',
@@ -47,61 +47,11 @@ suite('Unittest test discovery adapter', () => {
         assert.deepStrictEqual(options, {
             workspaceFolder: uri,
             cwd: uri.fsPath,
-            command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
+            command: {
+                script,
+                args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'],
+            },
             uuid: '123456789',
         });
-    });
-
-    test("onDataReceivedHandler should parse the data if the cwd from the payload matches the test adapter's cwd", async () => {
-        const stubTestServer = ({
-            sendCommand(): Promise<void> {
-                return Promise.resolve();
-            },
-            onDataReceived: () => {
-                // no body
-            },
-            createUUID: () => '123456789',
-        } as unknown) as ITestServer;
-
-        const uri = Uri.file('/foo/bar');
-        const data = { status: 'success' };
-        const uuid = '123456789';
-        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
-        const promise = adapter.discoverTests(uri);
-
-        adapter.onDataReceivedHandler({ uuid, data: JSON.stringify(data) });
-
-        const result = await promise;
-
-        assert.deepStrictEqual(result, data);
-    });
-
-    test("onDataReceivedHandler should ignore the data if the cwd from the payload does not match the test adapter's cwd", async () => {
-        const correctUuid = '123456789';
-        const incorrectUuid = '987654321';
-        const stubTestServer = ({
-            sendCommand(): Promise<void> {
-                return Promise.resolve();
-            },
-            onDataReceived: () => {
-                // no body
-            },
-            createUUID: () => correctUuid,
-        } as unknown) as ITestServer;
-
-        const uri = Uri.file('/foo/bar');
-
-        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
-        const promise = adapter.discoverTests(uri);
-
-        const data = { status: 'success' };
-        adapter.onDataReceivedHandler({ uuid: incorrectUuid, data: JSON.stringify(data) });
-
-        const nextData = { status: 'error' };
-        adapter.onDataReceivedHandler({ uuid: correctUuid, data: JSON.stringify(nextData) });
-
-        const result = await promise;
-
-        assert.deepStrictEqual(result, nextData);
     });
 });
