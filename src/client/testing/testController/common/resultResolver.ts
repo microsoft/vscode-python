@@ -229,5 +229,3 @@ export class PythonResultResolver implements ITestResultResolver {
         return Promise.resolve();
     }
 }
-
-// had to switch the order of the original parameter since required param cannot follow optional.
