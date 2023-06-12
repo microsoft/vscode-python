@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DataReceivedEvent,
