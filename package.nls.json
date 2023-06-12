@@ -128,7 +128,7 @@
     "walkthrough.step.python.createPythonFile.title": "Create a Python file",
     "walkthrough.step.python.createPythonFolder.title": "Open a Python project folder",
     "walkthrough.step.python.createPythonFile.description": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D)",
-    "walkthrough.step.python.createPythonFolder.description": "[Open](command:toSide:workbench.action.files.openFolder) or create a project folder.\n[Open Project Folder](command:toSide:workbench.action.files.openFolder)",
+    "walkthrough.step.python.createPythonFolder.description": "[Open](command:workbench.action.files.openFolder) or create a project folder.\n[Open Project Folder](command:workbench.action.files.openFolder)",
     "walkthrough.step.python.installPythonWin8.title": "Install Python",
     "walkthrough.step.python.installPythonWin8.description": "The Python Extension requires Python to be installed. Install Python [from python.org](https://www.python.org/downloads).\n\n[Install Python](https://www.python.org/downloads)\n",
     "walkthrough.step.python.installPythonMac.title": "Install Python",
