@@ -5,6 +5,7 @@
 
 import { initializeFileLogging, logTo } from '../client/logging';
 import { LogLevel } from '../client/logging/types';
+
 // IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
 // delete everything in '../client' except for '../client/logging' before running smoke tests.
 
@@ -31,7 +32,7 @@ function monkeypatchConsole() {
     const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
     const levels: { [key: string]: LogLevel } = {
         error: LogLevel.Error,
-        warn: LogLevel.Warn,
+        warn: LogLevel.Warning,
         debug: LogLevel.Debug,
         trace: LogLevel.Debug,
         info: LogLevel.Info,

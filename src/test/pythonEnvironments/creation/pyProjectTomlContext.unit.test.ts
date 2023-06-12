@@ -6,11 +6,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
-import { TextDocument, TextDocumentChangeEvent } from 'vscode';
+import { TextDocument } from 'vscode';
 import * as cmdApis from '../../../client/common/vscodeApis/commandApis';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { IDisposableRegistry } from '../../../client/common/types';
-import { registerPyProjectTomlCreateEnvFeatures } from '../../../client/pythonEnvironments/creation/pyprojectTomlCreateEnv';
+import { registerPyProjectTomlFeatures } from '../../../client/pythonEnvironments/creation/pyProjectTomlContext';
 
 chaiUse(chaiAsPromised);
 
@@ -56,16 +56,16 @@ suite('PyProject.toml Create Env Features', () => {
     const disposables: IDisposableRegistry = [];
     let getOpenTextDocumentsStub: sinon.SinonStub;
     let onDidOpenTextDocumentStub: sinon.SinonStub;
-    let onDidChangeTextDocumentStub: sinon.SinonStub;
+    let onDidSaveTextDocumentStub: sinon.SinonStub;
 
     setup(() => {
         executeCommandStub = sinon.stub(cmdApis, 'executeCommand');
         getOpenTextDocumentsStub = sinon.stub(workspaceApis, 'getOpenTextDocuments');
         onDidOpenTextDocumentStub = sinon.stub(workspaceApis, 'onDidOpenTextDocument');
-        onDidChangeTextDocumentStub = sinon.stub(workspaceApis, 'onDidChangeTextDocument');
+        onDidSaveTextDocumentStub = sinon.stub(workspaceApis, 'onDidSaveTextDocument');
 
         onDidOpenTextDocumentStub.returns(new FakeDisposable());
-        onDidChangeTextDocumentStub.returns(new FakeDisposable());
+        onDidSaveTextDocumentStub.returns(new FakeDisposable());
     });
 
     teardown(() => {
@@ -77,27 +77,27 @@ suite('PyProject.toml Create Env Features', () => {
         const pyprojectToml = getInstallableToml();
         getOpenTextDocumentsStub.returns([pyprojectToml.object]);
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
+        registerPyProjectTomlFeatures(disposables);
 
-        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', true));
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', true));
     });
 
     test('Non installable pyproject.toml is already open in the editor on extension activate', async () => {
         const pyprojectToml = getNonInstallableToml();
         getOpenTextDocumentsStub.returns([pyprojectToml.object]);
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
+        registerPyProjectTomlFeatures(disposables);
 
-        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', false));
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
     });
 
     test('Some random file open in the editor on extension activate', async () => {
         const someFile = getSomeFile();
         getOpenTextDocumentsStub.returns([someFile.object]);
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
+        registerPyProjectTomlFeatures(disposables);
 
-        assert.ok(executeCommandStub.notCalled);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
     });
 
     test('Installable pyproject.toml is opened in the editor', async () => {
@@ -113,10 +113,11 @@ suite('PyProject.toml Create Env Features', () => {
 
         const pyprojectToml = getInstallableToml();
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
-        handler(pyprojectToml.object);
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.neverCalledWith('setContext', 'pipInstallableToml', true));
 
-        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', true));
+        handler(pyprojectToml.object);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', true));
     });
 
     test('Non Installable pyproject.toml is opened in the editor', async () => {
@@ -132,10 +133,13 @@ suite('PyProject.toml Create Env Features', () => {
 
         const pyprojectToml = getNonInstallableToml();
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
+        executeCommandStub.reset();
+
         handler(pyprojectToml.object);
 
-        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', false));
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
     });
 
     test('Some random file is opened in the editor', async () => {
@@ -151,65 +155,111 @@ suite('PyProject.toml Create Env Features', () => {
 
         const someFile = getSomeFile();
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
+        executeCommandStub.reset();
+
         handler(someFile.object);
 
-        assert.ok(executeCommandStub.notCalled);
+        assert.ok(executeCommandStub.neverCalledWith('setContext', 'pipInstallableToml', false));
     });
 
     test('Installable pyproject.toml is changed', async () => {
         getOpenTextDocumentsStub.returns([]);
 
-        let handler: (d: TextDocumentChangeEvent) => void = () => {
+        let handler: (d: TextDocument) => void = () => {
             /* do nothing */
         };
-        onDidChangeTextDocumentStub.callsFake((callback) => {
+        onDidSaveTextDocumentStub.callsFake((callback) => {
             handler = callback;
             return new FakeDisposable();
         });
 
         const pyprojectToml = getInstallableToml();
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
-        handler({ contentChanges: [], document: pyprojectToml.object, reason: undefined });
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
 
-        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', true));
+        handler(pyprojectToml.object);
+
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', true));
     });
 
     test('Non Installable pyproject.toml is changed', async () => {
         getOpenTextDocumentsStub.returns([]);
 
-        let handler: (d: TextDocumentChangeEvent) => void = () => {
+        let handler: (d: TextDocument) => void = () => {
             /* do nothing */
         };
-        onDidChangeTextDocumentStub.callsFake((callback) => {
+        onDidSaveTextDocumentStub.callsFake((callback) => {
             handler = callback;
             return new FakeDisposable();
         });
 
         const pyprojectToml = getNonInstallableToml();
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
-        handler({ contentChanges: [], document: pyprojectToml.object, reason: undefined });
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
+        executeCommandStub.reset();
+
+        handler(pyprojectToml.object);
 
         assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', false));
+    });
+
+    test('Non Installable pyproject.toml is changed to Installable', async () => {
+        getOpenTextDocumentsStub.returns([]);
+
+        let openHandler: (doc: TextDocument) => void = () => {
+            /* do nothing */
+        };
+        onDidOpenTextDocumentStub.callsFake((callback) => {
+            openHandler = callback;
+            return new FakeDisposable();
+        });
+
+        let changeHandler: (d: TextDocument) => void = () => {
+            /* do nothing */
+        };
+        onDidSaveTextDocumentStub.callsFake((callback) => {
+            changeHandler = callback;
+            return new FakeDisposable();
+        });
+
+        const nonInatallablePyprojectToml = getNonInstallableToml();
+        const installablePyprojectToml = getInstallableToml();
+
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
+        executeCommandStub.reset();
+
+        openHandler(nonInatallablePyprojectToml.object);
+        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', false));
+        executeCommandStub.reset();
+
+        changeHandler(installablePyprojectToml.object);
+
+        assert.ok(executeCommandStub.calledOnceWithExactly('setContext', 'pipInstallableToml', true));
     });
 
     test('Some random file is changed', async () => {
         getOpenTextDocumentsStub.returns([]);
 
-        let handler: (d: TextDocumentChangeEvent) => void = () => {
+        let handler: (d: TextDocument) => void = () => {
             /* do nothing */
         };
-        onDidChangeTextDocumentStub.callsFake((callback) => {
+        onDidSaveTextDocumentStub.callsFake((callback) => {
             handler = callback;
             return new FakeDisposable();
         });
 
         const someFile = getSomeFile();
 
-        registerPyProjectTomlCreateEnvFeatures(disposables);
-        handler({ contentChanges: [], document: someFile.object, reason: undefined });
+        registerPyProjectTomlFeatures(disposables);
+        assert.ok(executeCommandStub.calledWithExactly('setContext', 'pipInstallableToml', false));
+        executeCommandStub.reset();
+
+        handler(someFile.object);
 
         assert.ok(executeCommandStub.notCalled);
     });

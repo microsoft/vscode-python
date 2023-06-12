@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { traceError, traceInfo } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { Conda, CondaEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/conda';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation } from '../../pythonEnvironments/info';
@@ -71,7 +71,7 @@ class PythonEnvironment implements IPythonEnvironment {
         try {
             data = await this.deps.exec(info.command, info.args);
         } catch (ex) {
-            traceInfo(`Error when getting version of module ${moduleName}`, ex);
+            traceVerbose(`Error when getting version of module ${moduleName}`, ex);
             return undefined;
         }
         return parse(data.stdout);
@@ -84,7 +84,7 @@ class PythonEnvironment implements IPythonEnvironment {
         try {
             await this.deps.exec(info.command, info.args);
         } catch (ex) {
-            traceInfo(`Error when checking if module is installed ${moduleName}`, ex);
+            traceVerbose(`Error when checking if module is installed ${moduleName}`, ex);
             return false;
         }
         return true;
@@ -93,7 +93,7 @@ class PythonEnvironment implements IPythonEnvironment {
     private async getInterpreterInformationImpl(): Promise<InterpreterInformation | undefined> {
         try {
             const python = this.getExecutionInfo();
-            return await getInterpreterInfo(python, this.deps.shellExec, { info: traceInfo, error: traceError });
+            return await getInterpreterInfo(python, this.deps.shellExec, { verbose: traceVerbose, error: traceError });
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }

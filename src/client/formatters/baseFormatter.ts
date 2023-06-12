@@ -8,7 +8,7 @@ import { IPythonToolExecutionService } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, Product } from '../common/types';
 import { isNotebookCell } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
-import { traceError, traceLog } from '../logging';
+import { traceError } from '../logging';
 import { getTempFileWithDocumentContents, getTextEditsFromPatch } from './../common/editor';
 import { IFormatterHelper } from './types';
 import { IInstallFormatterPrompt } from '../providers/prompts/types';
@@ -16,6 +16,7 @@ import { IInstallFormatterPrompt } from '../providers/prompts/types';
 export abstract class BaseFormatter {
     protected readonly workspace: IWorkspaceService;
     private readonly helper: IFormatterHelper;
+    private errorShown: boolean = false;
 
     constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
         this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
@@ -101,23 +102,22 @@ export abstract class BaseFormatter {
     }
 
     protected async handleError(_expectedFileName: string, error: Error, resource?: vscode.Uri) {
-        let customError = `Formatting with ${this.Id} failed.`;
-
         if (isNotInstalledError(error)) {
             const prompt = this.serviceContainer.get<IInstallFormatterPrompt>(IInstallFormatterPrompt);
             if (!(await prompt.showInstallFormatterPrompt(resource))) {
                 const installer = this.serviceContainer.get<IInstaller>(IInstaller);
                 const isInstalled = await installer.isInstalled(this.product, resource);
-                if (!isInstalled) {
-                    customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
-                    installer
-                        .promptToInstall(this.product, resource)
-                        .catch((ex) => traceError('Python Extension: promptToInstall', ex));
+                if (!isInstalled && !this.errorShown) {
+                    traceError(
+                        `\nPlease install '${this.Id}' into your environment.`,
+                        "\nIf you don't want to use it you can turn it off or use another formatter in the settings.",
+                    );
+                    this.errorShown = true;
                 }
             }
         }
 
-        traceLog(`\n${customError}\n${error}`);
+        traceError(`Formatting with ${this.Id} failed:\n${error}`);
     }
 
     /**

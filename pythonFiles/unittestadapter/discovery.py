@@ -8,7 +8,13 @@ import pathlib
 import sys
 import traceback
 import unittest
-from typing import List, Literal, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
+
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.append(os.fspath(script_dir / "lib" / "python"))
+
+from typing_extensions import Literal
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

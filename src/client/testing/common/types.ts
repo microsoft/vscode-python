@@ -25,6 +25,9 @@ export type LaunchOptions = {
     testProvider: TestProvider;
     token?: CancellationToken;
     outChannel?: OutputChannel;
+    pytestPort?: string;
+    pytestUUID?: string;
+    runTestIdsPort?: string;
 };
 
 export type ParserOptions = TestDiscoveryOptions;
@@ -85,7 +88,7 @@ export interface ITestConfigurationManagerFactory {
 }
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 export interface ITestDebugLauncher {
-    launchDebugger(options: LaunchOptions): Promise<void>;
+    launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void>;
 }
 
 export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');

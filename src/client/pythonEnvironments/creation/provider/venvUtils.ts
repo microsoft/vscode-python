@@ -9,7 +9,7 @@ import { CancellationToken, QuickPickItem, RelativePattern, WorkspaceFolder } fr
 import { CreateEnv } from '../../../common/utils/localize';
 import { MultiStepAction, MultiStepNode, showQuickPickWithBack } from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
@@ -133,10 +133,10 @@ export async function pickPackagesToInstall(
                 hasBuildSystem = tomlHasBuildSystem(toml);
 
                 if (!hasBuildSystem) {
-                    traceInfo('Create env: Found toml without build system. So we will not use editable install.');
+                    traceVerbose('Create env: Found toml without build system. So we will not use editable install.');
                 }
                 if (extras.length === 0) {
-                    traceInfo('Create env: Found toml without optional dependencies.');
+                    traceVerbose('Create env: Found toml without optional dependencies.');
                 }
             } else if (context === MultiStepAction.Back) {
                 // This step is not really used so just go back

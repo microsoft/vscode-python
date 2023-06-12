@@ -77,12 +77,15 @@ suite('Terminal - Code Execution Manager', () => {
         executionManager.registerCommands();
 
         const sorted = registered.sort();
-        expect(sorted).to.deep.equal([
-            Commands.Exec_In_Terminal,
-            Commands.Exec_In_Terminal_Icon,
-            Commands.Exec_Selection_In_Django_Shell,
-            Commands.Exec_Selection_In_Terminal,
-        ]);
+        expect(sorted).to.deep.equal(
+            [
+                Commands.Exec_In_Separate_Terminal,
+                Commands.Exec_In_Terminal,
+                Commands.Exec_In_Terminal_Icon,
+                Commands.Exec_Selection_In_Django_Shell,
+                Commands.Exec_Selection_In_Terminal,
+            ].sort(),
+        );
     });
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
@@ -135,7 +138,10 @@ suite('Terminal - Code Execution Manager', () => {
         const fileToExecute = Uri.file('x');
         await commandHandler!(fileToExecute);
         helper.verify(async (h) => h.getFileToExecute(), TypeMoq.Times.never());
-        executionService.verify(async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
+        executionService.verify(
+            async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute), TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 
     test('Ensure executeFileInterTerminal will use active file', async () => {
@@ -164,7 +170,10 @@ suite('Terminal - Code Execution Manager', () => {
             .returns(() => executionService.object);
 
         await commandHandler!(fileToExecute);
-        executionService.verify(async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
+        executionService.verify(
+            async (e) => e.executeFile(TypeMoq.It.isValue(fileToExecute), TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {

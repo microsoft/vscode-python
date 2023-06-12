@@ -77,6 +77,10 @@ export function getActiveTextEditor(): TextEditor | undefined {
     return activeTextEditor;
 }
 
+export function onDidChangeActiveTextEditor(handler: (e: TextEditor | undefined) => void): Disposable {
+    return window.onDidChangeActiveTextEditor(handler);
+}
+
 export enum MultiStepAction {
     Back = 'Back',
     Cancel = 'Cancel',

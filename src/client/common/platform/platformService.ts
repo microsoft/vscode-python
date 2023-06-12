@@ -50,8 +50,9 @@ export class PlatformService implements IPlatformService {
         }
     }
 
+    // eslint-disable-next-line class-methods-use-this
     public get isWindows(): boolean {
-        return this.osType === OSType.Windows;
+        return isWindows();
     }
 
     public get isMac(): boolean {
@@ -71,4 +72,8 @@ export class PlatformService implements IPlatformService {
     public get is64bit(): boolean {
         return getArchitecture() === Architecture.x64;
     }
+}
+
+export function isWindows(): boolean {
+    return getOSType() === OSType.Windows;
 }

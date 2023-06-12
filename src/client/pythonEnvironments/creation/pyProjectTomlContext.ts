@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TextDocument, TextDocumentChangeEvent } from 'vscode';
+import { TextDocument } from 'vscode';
 import { IDisposableRegistry } from '../../common/types';
 import { executeCommand } from '../../common/vscodeApis/commandApis';
 import {
     onDidOpenTextDocument,
-    onDidChangeTextDocument,
+    onDidSaveTextDocument,
     getOpenTextDocuments,
 } from '../../common/vscodeApis/workspaceApis';
 import { isPipInstallableToml } from './provider/venvUtils';
@@ -19,23 +19,26 @@ async function setPyProjectTomlContextKey(doc: TextDocument): Promise<void> {
     }
 }
 
-export function registerPyProjectTomlCreateEnvFeatures(disposables: IDisposableRegistry): void {
+export function registerPyProjectTomlFeatures(disposables: IDisposableRegistry): void {
     disposables.push(
         onDidOpenTextDocument(async (doc: TextDocument) => {
             if (doc.fileName.endsWith('pyproject.toml')) {
                 await setPyProjectTomlContextKey(doc);
             }
         }),
-        onDidChangeTextDocument(async (e: TextDocumentChangeEvent) => {
-            if (e.document.fileName.endsWith('pyproject.toml')) {
-                await setPyProjectTomlContextKey(e.document);
+        onDidSaveTextDocument(async (doc: TextDocument) => {
+            if (doc.fileName.endsWith('pyproject.toml')) {
+                await setPyProjectTomlContextKey(doc);
             }
         }),
     );
 
-    getOpenTextDocuments().forEach(async (doc: TextDocument) => {
-        if (doc.fileName.endsWith('pyproject.toml')) {
-            await setPyProjectTomlContextKey(doc);
-        }
-    });
+    const docs = getOpenTextDocuments().filter(
+        (doc) => doc.fileName.endsWith('pyproject.toml') && isPipInstallableToml(doc.getText()),
+    );
+    if (docs.length > 0) {
+        executeCommand('setContext', 'pipInstallableToml', true);
+    } else {
+        executeCommand('setContext', 'pipInstallableToml', false);
+    }
 }

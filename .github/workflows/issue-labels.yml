@@ -18,55 +18,19 @@ jobs:
     name: "Add 'triage-needed' and remove unrecognizable labels & assignees"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v6
+      - name: Checkout Actions
+        uses: actions/checkout@v3
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const result = await github.rest.issues.listLabelsOnIssue({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const labels = result.data.map((label) => label.name)
-            const hasNeedsOrTPI = labels.some((label) => (label.startsWith('needs') || label === 'testplan-item' || label.startsWith('iteration-plan') || label === 'release-plan'))
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
+          path: ./actions
 
-            if (!hasNeedsOrTPI) {
-              console.log('This issue is not labeled with a "needs __", "iteration-plan", "release-plan", or the "testplan-item" label; add the "triage-needed" label.')
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
 
-              github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: ['triage-needed']
-              })
-            } else {
-              console.log('This issue already has a "needs __", "iteration-plan", "release-plan", or the "testplan-item" label, do not add the "triage-needed" label.')
-            }
-            const knownTriagers = ${{ env.TRIAGERS }}
-            const currentAssignees = await github.rest.issues
-              .get({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.issue.number,
-              })
-              .then((result) => result.data.assignees.map((a) => a.login));
-            console.log('Known triagers:', JSON.stringify(knownTriagers));
-            console.log('Current assignees:', JSON.stringify(currentAssignees));
-            const assigneesToRemove = currentAssignees.filter(a => !knownTriagers.includes(a));
-            console.log('Assignees to remove:', JSON.stringify(assigneesToRemove));
-            github.rest.issues.removeAssignees({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              assignees: assigneesToRemove,
-            });
-            const knownLabels = ${{ env.REPO_LABELS }}
-            for( const label of labels) {
-              if (!knownLabels.includes(label)) {
-                await github.rest.issues.deleteLabel({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  name: label,
-                })
-              }
-            }
+      - name: "Add 'triage-needed' and remove unrecognizable labels & assignees"
+        uses: ./actions/python-issue-labels
+        with:
+          triagers: ${{ env.TRIAGERS }}
+          token: ${{secrets.GITHUB_TOKEN}}
+          repo_labels: ${{ env.REPO_LABELS }}

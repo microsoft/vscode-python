@@ -11,7 +11,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { FileLogger } from './fileLogger';
-import { Arguments, ILogging, LoggingLevelSettingType, LogLevel, TraceDecoratorType, TraceOptions } from './types';
+import { Arguments, ILogging, LogLevel, TraceDecoratorType, TraceOptions } from './types';
 import { argsToLogString, returnValueToLogString } from './util';
 
 const DEFAULT_OPTS: TraceOptions = TraceOptions.Arguments | TraceOptions.ReturnValue;
@@ -24,21 +24,6 @@ export function registerLogger(logger: ILogging): Disposable {
             loggers = loggers.filter((l) => l !== logger);
         },
     };
-}
-
-const logLevelMap: Map<string | undefined, LogLevel> = new Map([
-    ['error', LogLevel.Error],
-    ['warn', LogLevel.Warn],
-    ['info', LogLevel.Info],
-    ['debug', LogLevel.Debug],
-    ['none', LogLevel.Off],
-    ['off', LogLevel.Off],
-    [undefined, LogLevel.Error],
-]);
-
-let globalLoggingLevel: LogLevel;
-export function setLoggingLevel(level?: LoggingLevelSettingType): void {
-    globalLoggingLevel = logLevelMap.get(level) ?? LogLevel.Error;
 }
 
 export function initializeFileLogging(disposables: Disposable[]): void {
@@ -54,27 +39,19 @@ export function traceLog(...args: Arguments): void {
 }
 
 export function traceError(...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Error) {
-        loggers.forEach((l) => l.traceError(...args));
-    }
+    loggers.forEach((l) => l.traceError(...args));
 }
 
 export function traceWarn(...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Warn) {
-        loggers.forEach((l) => l.traceWarn(...args));
-    }
+    loggers.forEach((l) => l.traceWarn(...args));
 }
 
 export function traceInfo(...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Info) {
-        loggers.forEach((l) => l.traceInfo(...args));
-    }
+    loggers.forEach((l) => l.traceInfo(...args));
 }
 
 export function traceVerbose(...args: Arguments): void {
-    if (globalLoggingLevel >= LogLevel.Debug) {
-        loggers.forEach((l) => l.traceVerbose(...args));
-    }
+    loggers.forEach((l) => l.traceVerbose(...args));
 }
 
 /** Logging Decorators go here */
@@ -89,7 +66,7 @@ export function traceDecoratorInfo(message: string): TraceDecoratorType {
     return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Info });
 }
 export function traceDecoratorWarn(message: string): TraceDecoratorType {
-    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Warn });
+    return createTracingDecorator({ message, opts: DEFAULT_OPTS, level: LogLevel.Warning });
 }
 
 // Information about a function/method call.
@@ -223,7 +200,7 @@ export function logTo(logLevel: LogLevel, ...args: Arguments): void {
         case LogLevel.Error:
             traceError(...args);
             break;
-        case LogLevel.Warn:
+        case LogLevel.Warning:
             traceWarn(...args);
             break;
         case LogLevel.Info:

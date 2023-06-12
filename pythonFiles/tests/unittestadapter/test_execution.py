@@ -20,14 +20,12 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
                 "111",
                 "--uuid",
                 "fake-uuid",
-                "--testids",
-                "test_file.test_class.test_method",
             ],
-            (111, "fake-uuid", ["test_file.test_class.test_method"]),
+            (111, "fake-uuid"),
         ),
         (
-            ["--port", "111", "--uuid", "fake-uuid", "--testids", ""],
-            (111, "fake-uuid", [""]),
+            ["--port", "111", "--uuid", "fake-uuid"],
+            (111, "fake-uuid"),
         ),
         (
             [
@@ -35,12 +33,10 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
                 "111",
                 "--uuid",
                 "fake-uuid",
-                "--testids",
-                "test_file.test_class.test_method",
                 "-v",
                 "-s",
             ],
-            (111, "fake-uuid", ["test_file.test_class.test_method"]),
+            (111, "fake-uuid"),
         ),
     ],
 )
@@ -92,6 +88,35 @@ def test_single_ids_run() -> None:
     assert id_result is not None
     assert "outcome" in id_result
     assert id_result["outcome"] == "success"
+
+
+def test_subtest_run() -> None:
+    """This test runs on a the test_subtest which has a single method, test_even,
+    that uses unittest subtest.
+
+    The actual result of run should return a dict payload with 6 entry for the 6 subtests.
+    """
+    id = "test_subtest.NumbersTest.test_even"
+    actual = run_tests(
+        os.fspath(TEST_DATA_PATH), [id], "test_subtest.py", None, "fake-uuid"
+    )
+    subtests_ids = [
+        "test_subtest.NumbersTest.test_even (i=0)",
+        "test_subtest.NumbersTest.test_even (i=1)",
+        "test_subtest.NumbersTest.test_even (i=2)",
+        "test_subtest.NumbersTest.test_even (i=3)",
+        "test_subtest.NumbersTest.test_even (i=4)",
+        "test_subtest.NumbersTest.test_even (i=5)",
+    ]
+    assert actual
+    assert all(item in actual for item in ("cwd", "status"))
+    assert actual["status"] == "success"
+    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+    assert "result" in actual
+    result = actual["result"]
+    assert len(result) == 6
+    for id in subtests_ids:
+        assert id in result
 
 
 @pytest.mark.parametrize(

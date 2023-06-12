@@ -8,9 +8,9 @@ import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
 import { handleCreateEnvironmentCommand } from '../../../client/pythonEnvironments/creation/createEnvironment';
-import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { onCreateEnvironmentStarted } from '../../../client/pythonEnvironments/creation/createEnvApi';
+import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
 chaiUse(chaiAsPromised);
 
@@ -233,7 +233,12 @@ suite('Create Environments Tests', () => {
             showBackButton: true,
         });
 
-        assert.deepStrictEqual(result, { path: undefined, uri: undefined, action: 'Back' });
+        assert.deepStrictEqual(result, {
+            action: 'Back',
+            workspaceFolder: undefined,
+            path: undefined,
+            error: undefined,
+        });
         assert.isTrue(showQuickPickStub.notCalled);
         assert.isTrue(showQuickPickWithBackStub.calledOnce);
     });
@@ -259,7 +264,12 @@ suite('Create Environments Tests', () => {
             showBackButton: true,
         });
 
-        assert.deepStrictEqual(result, { path: undefined, uri: undefined, action: 'Cancel' });
+        assert.deepStrictEqual(result, {
+            action: 'Cancel',
+            workspaceFolder: undefined,
+            path: undefined,
+            error: undefined,
+        });
         assert.isTrue(showQuickPickStub.notCalled);
         assert.isTrue(showQuickPickWithBackStub.calledOnce);
     });

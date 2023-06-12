@@ -123,10 +123,11 @@ suite('Poetry binary is located correctly', async () => {
     test('When user has specified a valid poetry path, use it', async () => {
         getPythonSetting.returns('poetryPath');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
+            const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
             if (
                 command === `poetryPath env list --full-path` &&
-                options.cwd &&
-                externalDependencies.arePathsSame(options.cwd, project1)
+                cwd &&
+                externalDependencies.arePathsSame(cwd, project1)
             ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
@@ -141,11 +142,8 @@ suite('Poetry binary is located correctly', async () => {
     test("When user hasn't specified a path, use poetry on PATH if available", async () => {
         getPythonSetting.returns('poetry'); // Setting returns the default value
         shellExecute.callsFake((command: string, options: ShellOptions) => {
-            if (
-                command === `poetry env list --full-path` &&
-                options.cwd &&
-                externalDependencies.arePathsSame(options.cwd, project1)
-            ) {
+            const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
+            if (command === `poetry env list --full-path` && cwd && externalDependencies.arePathsSame(cwd, project1)) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
             return Promise.reject(new Error('Command failed'));
@@ -168,10 +166,11 @@ suite('Poetry binary is located correctly', async () => {
         pathExistsSync.callThrough();
         getPythonSetting.returns('poetry');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
+            const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
             if (
                 command === `${defaultPoetry} env list --full-path` &&
-                options.cwd &&
-                externalDependencies.arePathsSame(options.cwd, project1)
+                cwd &&
+                externalDependencies.arePathsSame(cwd, project1)
             ) {
                 return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
             }
