@@ -15,7 +15,7 @@ import {
     TestCommandOptions,
     TestExecutionCommand,
 } from '../common/types';
-import { traceLog, traceError } from '../../../logging';
+import { traceLog } from '../../../logging';
 import { startTestIdServer } from '../common/utils';
 
 /**
