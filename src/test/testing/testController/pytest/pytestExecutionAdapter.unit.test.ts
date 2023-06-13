@@ -25,10 +25,6 @@ suite('pytest test execution adapter', () => {
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let deferred: Deferred<void>;
     let debugLauncher: typeMoq.IMock<ITestDebugLauncher>;
-    // let startTestIdServerMock = typeMoq.Mock.ofType<typeof util.startTestIdServer>();
-    // let startTestIdServer: sinon.SinonStub;
-    const startTestIdServer = sinon.stub(util, 'startTestIdServer');
-    startTestIdServer.returns(Promise.resolve(12344));
 
     setup(() => {
         testServer = typeMoq.Mock.ofType<ITestServer>();
@@ -65,19 +61,18 @@ suite('pytest test execution adapter', () => {
                 deferred.resolve();
                 return Promise.resolve();
             });
+        sinon.stub(util, 'startTestIdServer').returns(Promise.resolve(54321));
+
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        // startTestIdServerMock = typeMoq.Mock.ofType<typeof util.startTestIdServer>();
-        // startTestIdServerMock.setup(() => typeMoq.It.isAny()).returns(async () => 12345);
-        // startTestIdServerMock = typeMoq.Mock.ofInstance(util.startTestIdServer);
-        // startTestIdServerMock.setup((x) => x(typeMoq.It.isAny())).returns(async () => 12345);
-        // util.startTestIdServer = startTestIdServerMock.object;
+    });
+    teardown(() => {
+        sinon.restore();
     });
     test('pytest execution called with correct args', async () => {
         const uri = Uri.file('/my/test/path/');
         const uuid = 'uuid123';
-        // const data = { status: 'success' };
         testServer
             .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => ({
@@ -109,7 +104,7 @@ suite('pytest test execution adapter', () => {
                         assert.equal(options.extraVariables?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
                         assert.equal(options.extraVariables?.TEST_UUID, expectedExtraVariables.TEST_UUID);
                         assert.equal(options.extraVariables?.TEST_PORT, expectedExtraVariables.TEST_PORT);
-                        assert.strictEqual(typeof options.extraVariables?.RUN_TEST_IDS_PORT, 'string');
+                        assert.equal(options.extraVariables?.RUN_TEST_IDS_PORT, '54321');
                         assert.equal(options.cwd, uri.fsPath);
                         assert.equal(options.throwOnStdErr, true);
                         return true;
@@ -142,7 +137,7 @@ suite('pytest test execution adapter', () => {
                         assert.equal(launchOptions.testProvider, 'pytest');
                         assert.equal(launchOptions.pytestPort, '12345');
                         assert.equal(launchOptions.pytestUUID, 'uuid123');
-                        assert.strictEqual(typeof launchOptions.runTestIdsPort, 'string');
+                        assert.strictEqual(launchOptions.runTestIdsPort, '54321');
                         return true;
                     }),
                     typeMoq.It.isAny(),

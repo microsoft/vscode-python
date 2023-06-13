@@ -77,19 +77,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         this.promiseMap.set(uuid, deferred);
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
-        let runTestIdsPort: string | undefined;
-        await startTestIdServer(testIds)
-            .then((assignedPort) => {
-                traceLog(`Server started and listening on port ${assignedPort}`);
-                runTestIdsPort = assignedPort.toString();
-                // Send test command to server.
-                // Server fire onDataReceived event once it gets response.
-            })
-            .catch((error) => {
-                traceError('Error starting server:', error);
-            });
+        const runTestIdsPort = await startTestIdServer(testIds);
 
-        await this.testServer.sendCommand(options, runTestIdsPort, () => {
+        await this.testServer.sendCommand(options, runTestIdsPort.toString(), () => {
             // disposable.dispose();
             deferred.resolve();
         });
