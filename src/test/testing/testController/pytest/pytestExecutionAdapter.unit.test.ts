@@ -69,7 +69,7 @@ suite('pytest test execution adapter', () => {
 
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);\
+        debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
     });
     teardown(() => {
@@ -137,12 +137,7 @@ suite('pytest test execution adapter', () => {
                 x.launchDebugger(
                     typeMoq.It.is<LaunchOptions>((launchOptions) => {
                         assert.equal(launchOptions.cwd, uri.fsPath);
-                        assert.deepEqual(launchOptions.args, [
-                            '--rootdir',
-                            myTestPath,
-                            '--capture',
-                            'no',
-                        ]);
+                        assert.deepEqual(launchOptions.args, ['--rootdir', myTestPath, '--capture', 'no']);
                         assert.equal(launchOptions.testProvider, 'pytest');
                         assert.equal(launchOptions.pytestPort, '12345');
                         assert.equal(launchOptions.pytestUUID, 'uuid123');
