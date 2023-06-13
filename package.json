@@ -308,9 +308,9 @@
             },
             {
                 "category": "Python",
-                "command": "python.execInDedicatedTerminal",
+                "command": "python.execInNewTerminal",
                 "icon": "$(play)",
-                "title": "%python.command.python.execInDedicatedTerminal.title%"
+                "title": "%python.command.python.execInNewTerminal.title%"
             },
             {
                 "category": "Python",
@@ -1644,9 +1644,9 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.execInDedicatedTerminal",
+                    "command": "python.execInNewTerminal",
                     "icon": "$(play)",
-                    "title": "%python.command.python.execInDedicatedTerminal.title%",
+                    "title": "%python.command.python.execInNewTerminal.title%",
                     "when": "false"
                 },
                 {
@@ -1808,9 +1808,9 @@
                     "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
-                    "command": "python.execInDedicatedTerminal",
+                    "command": "python.execInNewTerminal",
                     "group": "navigation@0",
-                    "title": "%python.command.python.execInDedicatedTerminal.title%",
+                    "title": "%python.command.python.execInNewTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
