@@ -62,44 +62,6 @@ export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContai
     return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
-// export const startTestIdServer = (testIds: string[]): Promise<number> => {
-//     const a = new Promise((resolve, reject) => {
-//         const server = net.createServer((socket: net.Socket) => {
-//             // Convert the test_ids array to JSON
-//             const testData = JSON.stringify(testIds);
-
-//             // Create the headers
-//             const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-
-//             // Create the payload by concatenating the headers and the test data
-//             const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
-
-//             // Send the payload to the socket
-//             socket.write(payload);
-
-//             // Handle socket events
-//             socket.on('data', (data) => {
-//                 traceLog('Received data:', data.toString());
-//             });
-
-//             socket.on('end', () => {
-//                 traceLog('Client disconnected');
-//             });
-//         });
-
-//         server.listen(0, () => {
-//             const { port } = server.address() as net.AddressInfo;
-//             traceLog(`Server listening on port ${port}`);
-//             resolve(port);
-//         });
-
-//         server.on('error', (error: Error) => {
-//             reject(error);
-//         });
-//     });
-//     return a;
-// };
-
 export async function startTestIdServer(testIds: string[]): Promise<number> {
     const startServer = (): Promise<number> =>
         new Promise((resolve, reject) => {
@@ -149,50 +111,3 @@ export async function startTestIdServer(testIds: string[]): Promise<number> {
         });
     return 0;
 }
-
-// export async function startTestIdsServerFunc(testIds: string[]): Promise<number> {
-//     const a = new Promise((resolve, reject) => {
-//         const server = net.createServer((socket: net.Socket) => {
-//             // Convert the test_ids array to JSON
-//             const testData = JSON.stringify(testIds);
-
-//             // Create the headers
-//             const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-
-//             // Create the payload by concatenating the headers and the test data
-//             const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
-
-//             // Send the payload to the socket
-//             socket.write(payload);
-
-//             // Handle socket events
-//             socket.on('data', (data) => {
-//                 traceLog('Received data:', data.toString());
-//             });
-
-//             socket.on('end', () => {
-//                 traceLog('Client disconnected');
-//             });
-//         });
-
-//         server.listen(0, () => {
-//             const { port } = server.address() as net.AddressInfo;
-//             traceLog(`Server listening on port ${port}`);
-//             resolve(port);
-//         });
-
-//         server.on('error', (error: Error) => {
-//             reject(error);
-//         });
-//     });
-//     await a
-//         .then((assignedPort: number) => {
-//             traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
-//             return assignedPort;
-//             // if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
-//         })
-//         .catch((error) => {
-//             traceError('Error starting server for test ids:', error);
-//         });
-//     return 0;
-// }
