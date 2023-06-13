@@ -19,7 +19,8 @@ import { ICodeExecutionService } from '../../terminals/types';
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
-    private replActive = new Map<string, Promise<boolean>>();
+    private _terminalService!: ITerminalService;
+    private replActive?: Promise<boolean>;
     constructor(
         @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
@@ -47,27 +48,19 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.getTerminalService(resource).sendText(code);
     }
     public async initializeRepl(resource?: Uri) {
-        const terminalService = this.getTerminalService(resource);
-        let replActive = this.replActive.get(resource?.fsPath || '');
-        if (replActive && (await replActive)) {
-            await terminalService.show();
+        if (this.replActive && (await this.replActive)) {
+            await this._terminalService.show();
             return;
         }
-        replActive = new Promise<boolean>(async (resolve) => {
+        this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
-            terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
+            await this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
 
             // Give python repl time to start before we start sending text.
             setTimeout(() => resolve(true), 1000);
         });
-        this.replActive.set(resource?.fsPath || '', replActive);
-        this.disposables.push(
-            terminalService.onDidCloseTerminal(() => {
-                this.replActive.delete(resource?.fsPath || '');
-            }),
-        );
 
-        await replActive;
+        await this.replActive;
     }
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecInfo> {
@@ -84,10 +77,18 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         return this.getExecutableInfo(resource, executeArgs);
     }
     private getTerminalService(resource?: Uri): ITerminalService {
-        return this.terminalServiceFactory.getTerminalService({
-            resource,
-            title: this.terminalTitle,
-        });
+        if (!this._terminalService) {
+            this._terminalService = this.terminalServiceFactory.getTerminalService({
+                resource,
+                title: this.terminalTitle,
+            });
+            this.disposables.push(
+                this._terminalService.onDidCloseTerminal(() => {
+                    this.replActive = undefined;
+                }),
+            );
+        }
+        return this._terminalService;
     }
     private async setCwdForFileExecution(file: Uri) {
         const pythonSettings = this.configurationService.getSettings(file);
