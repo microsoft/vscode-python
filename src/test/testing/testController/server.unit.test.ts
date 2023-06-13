@@ -302,19 +302,19 @@
 //         const client = new net.Socket();
 //         const deferred = createDeferred();
 
-//     //     const options = {
-//     //         command: { script: 'myscript', args: ['-foo', 'foo'] },
-//     //         workspaceFolder: Uri.file('/foo/bar'),
-//     //         cwd: '/foo/bar',
-//     //         uuid: fakeUuid,
-//     //     };
+//         const options = {
+//             command: { script: 'myscript', args: ['-foo', 'foo'] },
+//             workspaceFolder: Uri.file('/foo/bar'),
+//             cwd: '/foo/bar',
+//             uuid: fakeUuid,
+//         };
 
-//     //     stubExecutionService = ({
-//     //         exec: async () => {
-//     //             client.connect(server.getPort());
-//     //             return Promise.resolve({ stdout: '', stderr: '' });
-//     //         },
-//     //     } as unknown) as IPythonExecutionService;
+//         stubExecutionService = ({
+//             exec: async () => {
+//                 client.connect(server.getPort());
+//                 return Promise.resolve({ stdout: '', stderr: '' });
+//             },
+//         } as unknown) as IPythonExecutionService;
 
 //         server = new PythonTestServer(stubExecutionFactory, debugLauncher);
 //         await server.serverReady();
