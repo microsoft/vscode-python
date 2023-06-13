@@ -51,6 +51,7 @@ suite('Unittest test execution adapter', () => {
         const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         const testIds = ['test1id', 'test2id'];
         adapter.runTests(uri, testIds, false).then(() => {
+        adapter.runTests(uri, [], false).then(() => {
             const expectedOptions: TestCommandOptions = {
                 workspaceFolder: uri,
                 command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
