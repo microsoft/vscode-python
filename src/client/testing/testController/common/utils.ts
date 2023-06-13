@@ -62,7 +62,7 @@ export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContai
     return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
-export const startServer = (testIds: string): Promise<number> =>
+export const startTestIdServer = (testIds: string[]): Promise<number> =>
     new Promise((resolve, reject) => {
         const server = net.createServer((socket: net.Socket) => {
             // Convert the test_ids array to JSON

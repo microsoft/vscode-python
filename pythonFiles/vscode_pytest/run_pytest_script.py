@@ -21,6 +21,7 @@ if __name__ == "__main__":
     # Add the root directory to the path so that we can import the plugin.
     directory_path = pathlib.Path(__file__).parent.parent
     sys.path.append(os.fspath(directory_path))
+    sys.path.insert(0, os.getcwd())
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
     run_test_ids_port = os.environ.get("RUN_TEST_IDS_PORT")
