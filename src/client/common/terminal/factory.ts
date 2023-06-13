@@ -24,14 +24,14 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     ) {
         this.terminalServices = new Map<string, TerminalService>();
     }
-    public getTerminalService(options: TerminalCreationOptions & { newTerminalPerFile?: boolean }): ITerminalService {
+    public getTerminalService(options: TerminalCreationOptions): ITerminalService {
         const resource = options?.resource;
         const title = options?.title;
         let terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         const interpreter = options?.interpreter;
-        const id = this.getTerminalId(terminalTitle, resource, interpreter, options.newTerminalPerFile);
+        const id = this.getTerminalId(terminalTitle, resource, interpreter);
         if (!this.terminalServices.has(id)) {
-            if (resource && options.newTerminalPerFile) {
+            if (this.terminalServices.size >= 1 && resource) {
                 terminalTitle = `${terminalTitle}: ${path.basename(resource.fsPath).replace('.py', '')}`;
             }
             options.title = terminalTitle;
@@ -51,19 +51,13 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         title = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         return new TerminalService(this.serviceContainer, { resource, title });
     }
-    private getTerminalId(
-        title: string,
-        resource?: Uri,
-        interpreter?: PythonEnvironment,
-        newTerminalPerFile?: boolean,
-    ): string {
+    private getTerminalId(title: string, resource?: Uri, interpreter?: PythonEnvironment): string {
         if (!resource && !interpreter) {
             return title;
         }
         const workspaceFolder = this.serviceContainer
             .get<IWorkspaceService>(IWorkspaceService)
             .getWorkspaceFolder(resource || undefined);
-        const fileId = resource && newTerminalPerFile ? resource.fsPath : '';
-        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}:${fileId}`;
+        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}:${resource?.fsPath || ''}`;
     }
 }

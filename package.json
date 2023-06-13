@@ -308,12 +308,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.execInNewTerminal",
-                "icon": "$(play)",
-                "title": "%python.command.python.execInNewTerminal.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.debugInTerminal",
                 "icon": "$(debug-alt)",
                 "title": "%python.command.python.debugInTerminal.title%"
@@ -1644,13 +1638,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.execInNewTerminal",
-                    "icon": "$(play)",
-                    "title": "%python.command.python.execInNewTerminal.title%",
-                    "when": "false"
-                },
-                {
-                    "category": "Python",
                     "command": "python.debugInTerminal",
                     "icon": "$(debug-alt)",
                     "title": "%python.command.python.debugInTerminal.title%",
@@ -1805,12 +1792,6 @@
                     "command": "python.execInTerminal-icon",
                     "group": "navigation@0",
                     "title": "%python.command.python.execInTerminalIcon.title%",
-                    "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "command": "python.execInNewTerminal",
-                    "group": "navigation@0",
-                    "title": "%python.command.python.execInNewTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
                 },
                 {

@@ -97,7 +97,7 @@ export interface ITerminalServiceFactory {
      * @returns {ITerminalService}
      * @memberof ITerminalServiceFactory
      */
-    getTerminalService(options: TerminalCreationOptions & { newTerminalPerFile?: boolean }): ITerminalService;
+    getTerminalService(options: TerminalCreationOptions): ITerminalService;
     createTerminalService(resource?: Uri, title?: string): ITerminalService;
 }
 
