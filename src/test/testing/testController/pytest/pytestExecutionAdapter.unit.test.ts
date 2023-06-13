@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import { TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
+import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { ITestServer } from '../../../../client/testing/testController/common/types';
 import {
@@ -16,6 +17,7 @@ import { createDeferred, Deferred } from '../../../../client/common/utils/async'
 import { PytestTestExecutionAdapter } from '../../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { ITestDebugLauncher, LaunchOptions } from '../../../../client/testing/common/types';
 import * as util from '../../../../client/testing/testController/common/utils';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 
 suite('pytest test execution adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -25,6 +27,8 @@ suite('pytest test execution adapter', () => {
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let deferred: Deferred<void>;
     let debugLauncher: typeMoq.IMock<ITestDebugLauncher>;
+    (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
+    let myTestPath: string;
 
     setup(() => {
         testServer = typeMoq.Mock.ofType<ITestServer>();
@@ -65,13 +69,14 @@ suite('pytest test execution adapter', () => {
 
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);\
+        myTestPath = path.join('/', 'my', 'test', 'path', '/');
     });
     teardown(() => {
         sinon.restore();
     });
     test('pytest execution called with correct args', async () => {
-        const uri = Uri.file('/my/test/path/');
+        const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
             .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -86,16 +91,15 @@ suite('pytest test execution adapter', () => {
         adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
         await adapter.runTests(uri, [], false, testRun.object, execFactory.object);
 
-        const expectedArgs = [
-            '/Users/eleanorboyd/vscode-python/pythonFiles/vscode_pytest/run_pytest_script.py',
-            '--rootdir',
-            '/my/test/path/',
-        ];
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
+        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath];
         const expectedExtraVariables = {
-            PYTHONPATH: '/Users/eleanorboyd/vscode-python/pythonFiles',
+            PYTHONPATH: pathToPythonFiles,
             TEST_UUID: 'uuid123',
             TEST_PORT: '12345',
         };
+        //  execService.verify((x) => x.exec(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
         execService.verify(
             (x) =>
                 x.exec(
@@ -114,7 +118,7 @@ suite('pytest test execution adapter', () => {
         );
     });
     test('Debug launched correctly for pytest', async () => {
-        const uri = Uri.file('/my/test/path/');
+        const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
             .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -133,7 +137,12 @@ suite('pytest test execution adapter', () => {
                 x.launchDebugger(
                     typeMoq.It.is<LaunchOptions>((launchOptions) => {
                         assert.equal(launchOptions.cwd, uri.fsPath);
-                        assert.deepEqual(launchOptions.args, ['--rootdir', '/my/test/path/', '--capture', 'no']);
+                        assert.deepEqual(launchOptions.args, [
+                            '--rootdir',
+                            myTestPath,
+                            '--capture',
+                            'no',
+                        ]);
                         assert.equal(launchOptions.testProvider, 'pytest');
                         assert.equal(launchOptions.pytestPort, '12345');
                         assert.equal(launchOptions.pytestUUID, 'uuid123');
