@@ -118,17 +118,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
             traceLog(`Running PYTEST execution for the following test ids: ${testIds}`);
 
-            let pytestRunTestIdsPort: string | undefined;
-            await startTestIdServer(testIds)
-                .then((assignedPort) => {
-                    traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
-                    pytestRunTestIdsPort = assignedPort.toString();
-                    if (spawnOptions.extraVariables)
-                        spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
-                })
-                .catch((error) => {
-                    traceError('Error starting server for pytest test ids server:', error);
-                });
+            const pytestRunTestIdsPort = await startTestIdServer(testIds);
+            if (spawnOptions.extraVariables)
+                spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
 
             if (debugBool) {
                 const pytestPort = this.testServer.getPort().toString();
@@ -140,7 +132,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     testProvider: PYTEST_PROVIDER,
                     pytestPort,
                     pytestUUID,
-                    runTestIdsPort: pytestRunTestIdsPort,
+                    runTestIdsPort: pytestRunTestIdsPort.toString(),
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
