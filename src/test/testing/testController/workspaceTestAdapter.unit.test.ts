@@ -77,23 +77,6 @@
 //                 },
 //             } as unknown) as TestItem;
 
-//             // const vsIdToRunIdGetStub = sinon.stub(stubResultResolver.vsIdToRunId, 'get');
-//             // const expectedRunId = 'expectedRunId';
-//             // vsIdToRunIdGetStub.withArgs(sinon.match.any).returns(expectedRunId);
-
-//             // For some reason the 'tests' namespace in vscode returns undefined.
-//             // While I figure out how to expose to the tests, they will run
-//             // against a stub test controller and stub test items.
-//             const testItem = ({
-//                 canResolveChildren: false,
-//                 tags: [],
-//                 children: {
-//                     add: () => {
-//                         // empty
-//                     },
-//                 },
-//             } as unknown) as TestItem;
-
 //             testController = ({
 //                 items: {
 //                     get: () => {
@@ -136,23 +119,12 @@
 //             outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
 //         });
 
-//             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const testExecutionAdapter = new UnittestTestExecutionAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const workspaceTestAdapter = new WorkspaceTestAdapter(
-//                 'unittest',
-//                 testDiscoveryAdapter,
-//                 testExecutionAdapter,
-//                 Uri.parse('foo'),
-//                 stubResultResolver,
-//             );
+//         teardown(() => {
+//             telemetryEvent = [];
+//             log = [];
+//             testController.dispose();
+//             sandbox.restore();
+//         });
 
 //         test("When discovering tests, the workspace test adapter should call the test discovery adapter's discoverTest method", async () => {
 //             discoverTestsStub.resolves();
@@ -177,23 +149,8 @@
 
 //             await workspaceTestAdapter.discoverTests(testController);
 
-//             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const testExecutionAdapter = new UnittestTestExecutionAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const workspaceTestAdapter = new WorkspaceTestAdapter(
-//                 'unittest',
-//                 testDiscoveryAdapter,
-//                 testExecutionAdapter,
-//                 Uri.parse('foo'),
-//                 stubResultResolver,
-//             );
+//             sinon.assert.calledOnce(discoverTestsStub);
+//         });
 
 //         test('If discovery is already running, do not call discoveryAdapter.discoverTests again', async () => {
 //             discoverTestsStub.callsFake(
@@ -233,13 +190,8 @@
 //             sinon.assert.calledOnce(discoverTestsStub);
 //         });
 
-//             const workspaceTestAdapter = new WorkspaceTestAdapter(
-//                 'unittest',
-//                 testDiscoveryAdapter,
-//                 testExecutionAdapter,
-//                 Uri.parse('foo'),
-//                 stubResultResolver,
-//             );
+//         test('If discovery succeeds, send a telemetry event with the "failed" key set to false', async () => {
+//             discoverTestsStub.resolves({ status: 'success' });
 
 //             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
 //                 stubTestServer,
@@ -269,13 +221,8 @@
 //             assert.strictEqual(lastEvent.properties.failed, false);
 //         });
 
-//             const workspaceTestAdapter = new WorkspaceTestAdapter(
-//                 'unittest',
-//                 testDiscoveryAdapter,
-//                 testExecutionAdapter,
-//                 Uri.parse('foo'),
-//                 stubResultResolver,
-//             );
+//         test('If discovery failed, send a telemetry event with the "failed" key set to true, and add an error node to the test controller', async () => {
+//             discoverTestsStub.rejects(new Error('foo'));
 
 //             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
 //                 stubTestServer,
