@@ -177,7 +177,7 @@
                 "id": "pythonWelcome2",
                 "title": "%walkthrough.pythonWelcome.title%",
                 "description": "%walkthrough.pythonWelcome.description%",
-                "when": "workspacePlatform != webworker",
+                "when": "false",
                 "steps": [
                     {
                         "id": "python.createPythonFolder",
