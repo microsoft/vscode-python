@@ -154,7 +154,7 @@ def test_pytest_execution(test_ids, expected_const):
 
 
     Keyword arguments:
-    test_ids -- an array of test_ids to run.
+    test_ids -- an array of test_ids to run. Change here
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
     """
     args = test_ids
