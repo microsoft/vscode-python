@@ -315,24 +315,17 @@ dual_level_nested_folder_expected_output = {
 }
 
 # This is the expected output for the double_nested_folder tests.
-# └── double_nested_folder
-#    └── nested_folder_one
-#        └── nested_folder_two
+# └── folder_a
+#    └── folder_b
+#        └── folder_a
 #            └── test_nest.py
 #                └── test_function
-double_nested_folder_path = os.fspath(TEST_DATA_PATH / "double_nested_folder")
-double_nested_folder_one_path = os.fspath(
-    TEST_DATA_PATH / "double_nested_folder" / "nested_folder_one"
-)
-double_nested_folder_two_path = os.fspath(
-    TEST_DATA_PATH / "double_nested_folder" / "nested_folder_one" / "nested_folder_two"
-)
-double_nested_test_nest_path = os.fspath(
-    TEST_DATA_PATH
-    / "double_nested_folder"
-    / "nested_folder_one"
-    / "nested_folder_two"
-    / "test_nest.py"
+
+folder_a_path = os.fspath(TEST_DATA_PATH / "folder_a")
+folder_b_path = os.fspath(TEST_DATA_PATH / "folder_a" / "folder_b")
+folder_a_nested_path = os.fspath(TEST_DATA_PATH / "folder_a" / "folder_b" / "folder_a")
+test_nest_path = os.fspath(
+    TEST_DATA_PATH / "folder_a" / "folder_b" / "folder_a" / "test_nest.py"
 )
 double_nested_folder_expected_output = {
     "name": ".data",
@@ -340,39 +333,39 @@ double_nested_folder_expected_output = {
     "type_": "folder",
     "children": [
         {
-            "name": "double_nested_folder",
-            "path": double_nested_folder_path,
+            "name": "folder_a",
+            "path": folder_a_path,
             "type_": "folder",
-            "id_": double_nested_folder_path,
+            "id_": folder_a_path,
             "children": [
                 {
-                    "name": "nested_folder_one",
-                    "path": double_nested_folder_one_path,
+                    "name": "folder_b",
+                    "path": folder_b_path,
                     "type_": "folder",
-                    "id_": double_nested_folder_one_path,
+                    "id_": folder_b_path,
                     "children": [
                         {
-                            "name": "nested_folder_two",
-                            "path": double_nested_folder_two_path,
+                            "name": "folder_a",
+                            "path": folder_a_nested_path,
                             "type_": "folder",
-                            "id_": double_nested_folder_two_path,
+                            "id_": folder_a_nested_path,
                             "children": [
                                 {
                                     "name": "test_nest.py",
-                                    "path": double_nested_test_nest_path,
+                                    "path": test_nest_path,
                                     "type_": "file",
-                                    "id_": double_nested_test_nest_path,
+                                    "id_": test_nest_path,
                                     "children": [
                                         {
                                             "name": "test_function",
-                                            "path": double_nested_test_nest_path,
+                                            "path": test_nest_path,
                                             "lineno": find_test_line_number(
                                                 "test_function",
-                                                double_nested_test_nest_path,
+                                                test_nest_path,
                                             ),
                                             "type_": "test",
-                                            "id_": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
-                                            "runID": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
+                                            "id_": "folder_a/folder_b/folder_a/test_nest.py::test_function",
+                                            "runID": "folder_a/folder_b/folder_a/test_nest.py::test_function",
                                         }
                                     ],
                                 }

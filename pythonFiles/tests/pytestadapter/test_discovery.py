@@ -85,7 +85,7 @@ def test_parameterized_error_collect():
             expected_discovery_test_output.dual_level_nested_folder_expected_output,
         ),
         (
-            "double_nested_folder",
+            "folder_a",
             expected_discovery_test_output.double_nested_folder_expected_output,
         ),
         (
