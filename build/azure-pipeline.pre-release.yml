@@ -18,9 +18,16 @@ resources:
       ref: main
       endpoint: Monaco
 
+parameters:
+  - name: publishExtension
+    displayName: 🚀 Publish Extension
+    type: boolean
+    default: false
+
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
+    publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src/client
     buildSteps:
       - task: NodeTool@0
