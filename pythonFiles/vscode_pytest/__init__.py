@@ -316,7 +316,7 @@ def build_nested_folders(
     Keyword arguments:
     file_module -- the created module for the file we  are nesting.
     file_node -- the file node that we are building the nested folders for.
-    created_files_folders_dict -- Dictionary of all the folders and files that have been created.
+    created_files_folders_dict -- Dictionary of all the folders and files that have been created where the key is the path.
     session -- the pytest session object.
     """
     prev_folder_node = file_node
@@ -326,12 +326,14 @@ def build_nested_folders(
     while iterator_path != session.path:
         curr_folder_name = iterator_path.name
         try:
-            curr_folder_node: TestNode = created_files_folders_dict[curr_folder_name]
+            curr_folder_node: TestNode = created_files_folders_dict[
+                os.fspath(iterator_path)
+            ]
         except KeyError:
             curr_folder_node: TestNode = create_folder_node(
                 curr_folder_name, iterator_path
             )
-            created_files_folders_dict[curr_folder_name] = curr_folder_node
+            created_files_folders_dict[os.fspath(iterator_path)] = curr_folder_node
         if prev_folder_node not in curr_folder_node["children"]:
             curr_folder_node["children"].append(prev_folder_node)
         iterator_path = iterator_path.parent
