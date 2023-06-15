@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection } from 'vscode';
+import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection, Position } from 'vscode';
 import * as typemoq from 'typemoq';
 import * as sinon from 'sinon';
 import { TestProvider } from '../../../client/testing/types';
@@ -140,41 +140,22 @@ suite('Result Resolver tests', () => {
     });
     suite('Test execution result resolver', () => {
         let resultResolver: ResultResolver.PythonResultResolver;
-        // let testController: TestController;
         const log: string[] = [];
         let workspaceUri: Uri;
         let testProvider: TestProvider;
         let cancelationToken: CancellationToken;
         let runInstance: typemoq.IMock<TestRun>;
         let passedMock: typemoq.IMock<TestRun['passed']>;
-        // let testMessageMock: typemoq.IMock<TestMessage>;
         let testControllerMock: typemoq.IMock<TestController>;
+        let mockTestItem1: TestItem;
 
         setup(() => {
-            const blankTestItem2 = ({
-                id: 'id',
-                canResolveChildren: false,
-                tags: [],
-                children: {
-                    add: () => {
-                        // empty
-                    },
-                },
-            } as unknown) as TestItem;
-            const blankTestItem3 = ({
-                id: 'id3',
-                canResolveChildren: false,
-                tags: [],
-                children: {
-                    add: () => {
-                        // empty
-                    },
-                },
-            } as unknown) as TestItem;
+            mockTestItem1 = createMockTestItem('mockTestItem1');
+            const mockTestItem2 = createMockTestItem('mockTestItem2');
 
             const mockTestItems: [string, TestItem][] = [
-                ['1', blankTestItem2],
-                ['2', blankTestItem3],
+                ['1', mockTestItem1],
+                ['2', mockTestItem2],
                 // Add as many mock TestItems as needed
             ];
 
@@ -191,54 +172,10 @@ suite('Result Resolver tests', () => {
                         result = iterableMock.next();
                     }
                 })
-                .returns(() => {
-                    console.log('inside for each');
-
-                    return blankTestItem2;
-                });
-
-            // const testItemCollection = typemoq.Mock.ofType<TestItemCollection>();
-            // testItemCollection.setup((t) => t.get(typemoq.It.isAnyString())).returns(() => blankTestItem2);
-            // testItemCollection
-            //     .setup((t) => t.forEach(typemoq.It.isAny()))
-            //     .returns(() => {
-            //         console.log('second');
-            //     });
+                .returns(() => mockTestItem1);
             testControllerMock = typemoq.Mock.ofType<TestController>();
-            testControllerMock
-                .setup((t) => t.items)
-                .returns(() => {
-                    console.log('hi');
-                    return testItemCollectionMock.object;
-                });
+            testControllerMock.setup((t) => t.items).returns(() => testItemCollectionMock.object);
 
-            // testController = ({
-            //     items: {
-            //         get: () => {
-            //             log.push('get');
-            //         },
-            //         add: () => {
-            //             log.push('add');
-            //         },
-            //         replace: () => {
-            //             log.push('replace');
-            //         },
-            //         delete: () => {
-            //             log.push('delete');
-            //         },
-            //         forEach: (items: unknown) => {
-            //             log.push('forEach');
-            //             return items;
-            //             // return [blankTestItem2];
-            //         },
-            //     },
-            //     // createTestItem: (id: string, label: string, urih?: Uri) => {
-            //     //     testItem;
-            //     // },
-            //     dispose: () => {
-            //         // empty
-            //     },
-            // } as unknown) as TestController;
             cancelationToken = ({
                 isCancellationRequested: false,
             } as unknown) as CancellationToken;
@@ -283,12 +220,13 @@ suite('Result Resolver tests', () => {
                 testProvider,
                 workspaceUri,
             );
-            resultResolver.runIdToVSid.set('id', 'id');
+            resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
+            resultResolver.runIdToTestItem.set('mockTestItem1', mockTestItem1);
             const successPayload: ExecutionTestPayload = {
                 cwd: workspaceUri.fsPath,
                 status: 'success',
                 result: {
-                    testRunID: {
+                    mockTestItem1: {
                         test: 'test',
                         outcome: 'success', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
                         message: 'message',
@@ -298,18 +236,28 @@ suite('Result Resolver tests', () => {
                 },
                 error: '',
             };
-            const blankTestItem = ({
-                canResolveChildren: false,
-                tags: [],
-                children: {
-                    add: () => {
-                        // empty
-                    },
-                },
-            } as unknown) as TestItem;
+            // const blankTestItem = ({
+            //     canResolveChildren: false,
+            //     tags: [],
+            //     children: {
+            //         add: () => {
+            //             // empty
+            //         },
+            //     },
+            // } as unknown) as TestItem;
 
-            sinon.stub(testItemUtilities, 'getTestCaseNodes').returns([blankTestItem]);
+            sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
+                // Custom implementation logic here based on the provided testNode and collection
+
+                // Example implementation: returning a predefined array of TestItem objects
+                [testNode],
+            );
+
             resultResolver.resolveExecution(successPayload, runInstance.object);
+
+            // make sure runInstance.passed(grabTestItem); is called once
+            // runInstance.appendOutput('Passed here');
+            runInstance.verify((r) => r.passed(typemoq.It.isAny()), typemoq.Times.once());
         });
         // test('resolveExecution handles error correctly', async () => {
         //     // test specific constants used expected values
@@ -330,3 +278,21 @@ suite('Result Resolver tests', () => {
         // });
     });
 });
+
+function createMockTestItem(id: string): TestItem {
+    const range = typemoq.Mock.ofType<Range>();
+    const mockTestItem = ({
+        id,
+        canResolveChildren: false,
+        tags: [],
+        children: {
+            add: () => {
+                // empty
+            },
+        },
+        range,
+        uri: Uri.file('/foo/bar'),
+    } as unknown) as TestItem;
+
+    return mockTestItem;
+}
