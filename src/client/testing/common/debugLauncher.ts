@@ -146,7 +146,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             cfg.console = 'internalConsole';
         }
         if (!cfg.cwd) {
-            cfg.cwd = workspaceFolder.uri.fsPath;
+            cfg.cwd = configSettings.testing.cwd || workspaceFolder.uri.fsPath;
         }
         if (!cfg.env) {
             cfg.env = {};

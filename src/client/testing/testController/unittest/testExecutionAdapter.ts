@@ -44,10 +44,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
     public async runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
-        const { unittestArgs } = settings.testing;
+        const { cwd, unittestArgs } = settings.testing;
 
         const command = buildExecutionCommand(unittestArgs);
-        this.cwd = uri.fsPath;
+        this.cwd = cwd || uri.fsPath;
         const uuid = this.testServer.createUUID(uri.fsPath);
 
         const options: TestCommandOptions = {
