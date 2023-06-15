@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection, Position } from 'vscode';
+import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection } from 'vscode';
 import * as typemoq from 'typemoq';
 import * as sinon from 'sinon';
 import { TestProvider } from '../../../client/testing/types';

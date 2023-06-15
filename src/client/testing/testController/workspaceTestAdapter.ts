@@ -14,6 +14,7 @@ import { createErrorTestItem, ErrorTestItemOptions, getTestCaseNodes } from './c
 import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './common/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
+import { buildErrorNodeOptions } from './common/utils';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -161,13 +162,4 @@ export class WorkspaceTestAdapter {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: false });
         return Promise.resolve();
     }
-}
-
-function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
-    const labelText = testType === 'pytest' ? 'Pytest Discovery Error' : 'Unittest Discovery Error';
-    return {
-        id: `DiscoveryError:${uri.fsPath}`,
-        label: `${labelText} [${path.basename(uri.fsPath)}]`,
-        error: message,
-    };
 }
