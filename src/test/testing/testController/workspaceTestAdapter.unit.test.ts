@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 
-import { TestController, TestItem, TestRun, Uri } from 'vscode';
+import { TestController, TestItem, TestItemCollection, TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter'; // 7/7
@@ -15,6 +15,7 @@ import { EventName } from '../../../client/telemetry/constants';
 import { ITestResultResolver, ITestServer } from '../../../client/testing/testController/common/types';
 import * as testItemUtilities from '../../../client/testing/testController/common/testItemUtilities';
 import * as util from '../../../client/testing/testController/common/utils';
+import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
 
 suite('Workspace test adapter', () => {
     suite('Test discovery', () => {
@@ -56,9 +57,6 @@ suite('Workspace test adapter', () => {
                 },
                 resolveExecution: () => {
                     // no body
-                },
-                vsIdToRunId: {
-                    get: sinon.stub().returns('expectedRunId'),
                 },
             } as unknown) as ITestResultResolver;
 
@@ -300,16 +298,6 @@ suite('Workspace test adapter', () => {
             const lastEvent = telemetryEvent[1];
             assert.ok(lastEvent.properties.failed);
         });
-
-        /**
-         * TODO To test:
-         * - successful discovery but no data: delete everything from the test controller
-         * - successful discovery with error status: add error node to tree
-         * - single root: populate tree if there's no root node
-         * - single root: update tree if there's a root node
-         * - single root: delete tree if there are no tests in the test data
-         * - multiroot: update the correct folders
-         */
     });
     suite('Test execution workspace test adapter', () => {
         let stubTestServer: ITestServer;
@@ -319,8 +307,9 @@ suite('Workspace test adapter', () => {
         let sendTelemetryStub: sinon.SinonStub;
         let outputChannel: typemoq.IMock<ITestOutputChannel>;
         let runInstance: typemoq.IMock<TestRun>;
-
+        let testControllerMock: typemoq.IMock<TestController>;
         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
+        let resultResolver: ResultResolver.PythonResultResolver;
 
         // Stubbed test controller (see comment around L.40)
         let testController: TestController;
@@ -355,14 +344,6 @@ suite('Workspace test adapter', () => {
                     get: sinon.stub().returns('expectedRunId'),
                 },
             } as unknown) as ITestResultResolver;
-
-            // const vsIdToRunIdGetStub = sinon.stub(stubResultResolver.vsIdToRunId, 'get');
-            // const expectedRunId = 'expectedRunId';
-            // vsIdToRunIdGetStub.withArgs(sinon.match.any).returns(expectedRunId);
-
-            // For some reason the 'tests' namespace in vscode returns undefined.
-            // While I figure out how to expose to the tests, they will run
-            // against a stub test controller and stub test items.
             const testItem = ({
                 canResolveChildren: false,
                 tags: [],
@@ -397,8 +378,6 @@ suite('Workspace test adapter', () => {
                 },
             } as unknown) as TestController;
 
-            // testController = tests.createTestController('mock-python-tests', 'Mock Python Tests');
-
             const mockSendTelemetryEvent = (
                 eventName: EventName,
                 _: number | Record<string, number> | undefined,
@@ -414,6 +393,10 @@ suite('Workspace test adapter', () => {
             sendTelemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
             outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
             runInstance = typemoq.Mock.ofType<TestRun>();
+
+            const testProvider = 'pytest';
+            const workspaceUri = Uri.file('foo');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
         });
 
         teardown(() => {
@@ -422,10 +405,63 @@ suite('Workspace test adapter', () => {
             testController.dispose();
             sandbox.restore();
         });
+        test('When executing tests, the right tests should be sent to be executed', async () => {
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
+                stubTestServer,
+                stubConfigSettings,
+                outputChannel.object,
+            );
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(
+                stubTestServer,
+                stubConfigSettings,
+                outputChannel.object,
+            );
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                testDiscoveryAdapter,
+                testExecutionAdapter,
+                Uri.parse('foo'),
+                resultResolver,
+            );
+            resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
+
+            sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
+                // Custom implementation logic here based on the provided testNode and collection
+
+                // Example implementation: returning a predefined array of TestItem objects
+                [testNode],
+            );
+
+            const mockTestItem1 = createMockTestItem('mockTestItem1');
+            const mockTestItem2 = createMockTestItem('mockTestItem2');
+            const mockTestItems: [string, TestItem][] = [
+                ['1', mockTestItem1],
+                ['2', mockTestItem2],
+                // Add as many mock TestItems as needed
+            ];
+            const iterableMock = mockTestItems[Symbol.iterator]();
+
+            const testItemCollectionMock = typemoq.Mock.ofType<TestItemCollection>();
+
+            testItemCollectionMock
+                .setup((x) => x.forEach(typemoq.It.isAny()))
+                .callback((callback) => {
+                    let result = iterableMock.next();
+                    while (!result.done) {
+                        callback(result.value[1]);
+                        result = iterableMock.next();
+                    }
+                })
+                .returns(() => mockTestItem1);
+            testControllerMock = typemoq.Mock.ofType<TestController>();
+            testControllerMock.setup((t) => t.items).returns(() => testItemCollectionMock.object);
+
+            await workspaceTestAdapter.executeTests(testController, runInstance.object, [mockTestItem1, mockTestItem2]);
+
+            runInstance.verify((r) => r.started(typemoq.It.isAny()), typemoq.Times.exactly(2));
+        });
 
         test("When executing tests, the workspace test adapter should call the test execute adapter's executionTest method", async () => {
-            // discoverTestsStub.resolves();
-
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
                 stubTestServer,
                 stubConfigSettings,
@@ -527,8 +563,7 @@ suite('Workspace test adapter', () => {
             const buildErrorNodeOptionsStub = sinon.stub(util, 'buildErrorNodeOptions').returns(errorTestItemOptions);
             const testProvider = 'unittest';
 
-            const abc = await workspaceTestAdapter.executeTests(testController, runInstance.object, []);
-            console.log(abc);
+            await workspaceTestAdapter.executeTests(testController, runInstance.object, []);
 
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
             sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, Uri.parse('foo'), sinon.match.any, testProvider);
@@ -561,15 +596,23 @@ suite('Workspace test adapter', () => {
             sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_RUN_ALL_FAILED);
             assert.strictEqual(telemetryEvent.length, 1);
         });
-
-        /**
-         * TODO To test:
-         * - successful discovery but no data: delete everything from the test controller
-         * - successful discovery with error status: add error node to tree
-         * - single root: populate tree if there's no root node
-         * - single root: update tree if there's a root node
-         * - single root: delete tree if there are no tests in the test data
-         * - multiroot: update the correct folders
-         */
     });
 });
+
+function createMockTestItem(id: string): TestItem {
+    const range = typemoq.Mock.ofType<Range>();
+    const mockTestItem = ({
+        id,
+        canResolveChildren: false,
+        tags: [],
+        children: {
+            add: () => {
+                // empty
+            },
+        },
+        range,
+        uri: Uri.file('/foo/bar'),
+    } as unknown) as TestItem;
+
+    return mockTestItem;
+}
