@@ -443,3 +443,87 @@ export enum LogLevel {
      */
     Error = 5,
 }
+
+export class TestMessage {
+    /**
+     * Human-readable message text to display.
+     */
+    message: string | MarkdownString;
+
+    /**
+     * Expected test output. If given with {@link TestMessage.actualOutput actualOutput }, a diff view will be shown.
+     */
+    expectedOutput?: string;
+
+    /**
+     * Actual test output. If given with {@link TestMessage.expectedOutput expectedOutput }, a diff view will be shown.
+     */
+    actualOutput?: string;
+
+    /**
+     * Associated file location.
+     */
+    location?: vscode.Location;
+
+    /**
+     * Creates a new TestMessage that will present as a diff in the editor.
+     * @param message Message to display to the user.
+     * @param expected Expected output.
+     * @param actual Actual output.
+     */
+    static diff(message: string | MarkdownString, expected: string, actual: string): TestMessage {
+        const testMessage = new TestMessage(message);
+        testMessage.expectedOutput = expected;
+        testMessage.actualOutput = actual;
+        return testMessage;
+    }
+
+    /**
+     * Creates a new TestMessage instance.
+     * @param message The message to show to the user.
+     */
+    constructor(message: string | MarkdownString) {
+        this.message = message;
+    }
+}
+
+export interface TestItemCollection extends Iterable<[id: string, testItem: vscode.TestItem]> {
+		/**
+		 * Gets the number of items in the collection.
+		 */
+		readonly size: number;
+
+		/**
+		 * Replaces the items stored by the collection.
+		 * @param items Items to store.
+		 */
+		replace(items: readonly vscode.TestItem[]): void;
+
+		/**
+		 * Iterate over each entry in this collection.
+		 *
+		 * @param callback Function to execute for each entry.
+		 * @param thisArg The `this` context used when invoking the handler function.
+		 */
+		forEach(callback: (item: vscode.TestItem, collection: TestItemCollection) => unknown, thisArg?: any): void;
+
+		/**
+		 * Adds the test item to the children. If an item with the same ID already
+		 * exists, it'll be replaced.
+		 * @param item Item to add.
+		 */
+		add(item: vscode.TestItem): void;
+
+		/**
+		 * Removes a single test item from the collection.
+		 * @param itemId Item ID to delete.
+		 */
+		delete(itemId: string): void;
+
+		/**
+		 * Efficiently gets a test item by ID, if it exists, in the children.
+		 * @param itemId Item ID to get.
+		 * @returns The found item or undefined if it does not exist.
+		 */
+		get(itemId: string): vscode.TestItem | undefined;
+	}

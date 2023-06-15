@@ -70,6 +70,7 @@ mockedVSCode.Hover = vscodeMocks.Hover;
 mockedVSCode.Disposable = vscodeMocks.Disposable as any;
 mockedVSCode.ExtensionKind = vscodeMocks.ExtensionKind;
 mockedVSCode.CodeAction = vscodeMocks.CodeAction;
+mockedVSCode.TestMessage = vscodeMocks.TestMessage;
 mockedVSCode.EventEmitter = vscodeMocks.EventEmitter;
 mockedVSCode.CancellationTokenSource = vscodeMocks.CancellationTokenSource;
 mockedVSCode.CompletionItemKind = vscodeMocks.CompletionItemKind;
