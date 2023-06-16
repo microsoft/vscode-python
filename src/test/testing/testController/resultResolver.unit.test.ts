@@ -41,9 +41,7 @@ suite('Result Resolver tests', () => {
                         log.push('delete');
                     },
                 },
-                // createTestItem: (id: string, label: string, urih?: Uri) => {
-                //     testItem;
-                // },
+
                 dispose: () => {
                     // empty
                 },
@@ -145,24 +143,24 @@ suite('Result Resolver tests', () => {
         let testProvider: TestProvider;
         let cancelationToken: CancellationToken;
         let runInstance: typemoq.IMock<TestRun>;
-        let passedMock: typemoq.IMock<TestRun['passed']>;
         let testControllerMock: typemoq.IMock<TestController>;
         let mockTestItem1: TestItem;
+        let mockTestItem2: TestItem;
 
         setup(() => {
+            // create mock test items
             mockTestItem1 = createMockTestItem('mockTestItem1');
-            const mockTestItem2 = createMockTestItem('mockTestItem2');
+            mockTestItem2 = createMockTestItem('mockTestItem2');
 
+            // create mock testItems to pass into a iterable
             const mockTestItems: [string, TestItem][] = [
                 ['1', mockTestItem1],
                 ['2', mockTestItem2],
-                // Add as many mock TestItems as needed
             ];
-
             const iterableMock = mockTestItems[Symbol.iterator]();
 
+            // create mock testItemCollection
             const testItemCollectionMock = typemoq.Mock.ofType<TestItemCollection>();
-
             testItemCollectionMock
                 .setup((x) => x.forEach(typemoq.It.isAny()))
                 .callback((callback) => {
@@ -173,6 +171,8 @@ suite('Result Resolver tests', () => {
                     }
                 })
                 .returns(() => mockTestItem1);
+
+            // create mock testController
             testControllerMock = typemoq.Mock.ofType<TestController>();
             testControllerMock.setup((t) => t.items).returns(() => testItemCollectionMock.object);
 
@@ -199,17 +199,89 @@ suite('Result Resolver tests', () => {
                     log.push('start');
                 });
 
-            // mock pass
-            passedMock = typemoq.Mock.ofType<TestRun['passed']>();
-            runInstance
-                .setup((r) => r.passed(typemoq.It.isAny()))
-                .returns(() => {
-                    passedMock.object(typemoq.It.isAny());
-                    log.push('start');
-                });
+            // mock getTestCaseNodes to just return the given testNode added
+            sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) => [testNode]);
         });
         teardown(() => {
             sinon.restore();
+        });
+        test('resolveExecution handles failed tests correctly', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(
+                testControllerMock.object,
+                testProvider,
+                workspaceUri,
+            );
+            // add a mock test item to the map of known VSCode ids to run ids
+            resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
+            resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
+
+            // add this mock test to the map of known test items
+            resultResolver.runIdToTestItem.set('mockTestItem1', mockTestItem1);
+            resultResolver.runIdToTestItem.set('mockTestItem2', mockTestItem2);
+
+            // create a successful payload with a single test called mockTestItem1
+            const successPayload: ExecutionTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'success',
+                result: {
+                    mockTestItem1: {
+                        test: 'test',
+                        outcome: 'failure', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
+                        message: 'message',
+                        traceback: 'traceback',
+                        subtest: 'subtest',
+                    },
+                },
+                error: '',
+            };
+
+            // call resolveExecution
+            resultResolver.resolveExecution(successPayload, runInstance.object);
+
+            // verify that the passed function was called for the single test item
+            runInstance.verify((r) => r.skipped(typemoq.It.isAny()), typemoq.Times.once());
+        });
+        test('resolveExecution handles skipped correctly', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(
+                testControllerMock.object,
+                testProvider,
+                workspaceUri,
+            );
+            // add a mock test item to the map of known VSCode ids to run ids
+            resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
+            resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
+
+            // add this mock test to the map of known test items
+            resultResolver.runIdToTestItem.set('mockTestItem1', mockTestItem1);
+            resultResolver.runIdToTestItem.set('mockTestItem2', mockTestItem2);
+
+            // create a successful payload with a single test called mockTestItem1
+            const successPayload: ExecutionTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'success',
+                result: {
+                    mockTestItem1: {
+                        test: 'test',
+                        outcome: 'skipped', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
+                        message: 'message',
+                        traceback: 'traceback',
+                        subtest: 'subtest',
+                    },
+                },
+                error: '',
+            };
+
+            // call resolveExecution
+            resultResolver.resolveExecution(successPayload, runInstance.object);
+
+            // verify that the passed function was called for the single test item
+            runInstance.verify((r) => r.skipped(typemoq.It.isAny()), typemoq.Times.once());
         });
         test('resolveExecution handles success correctly', async () => {
             // test specific constants used expected values
@@ -220,8 +292,15 @@ suite('Result Resolver tests', () => {
                 testProvider,
                 workspaceUri,
             );
+            // add a mock test item to the map of known VSCode ids to run ids
             resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
+            resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
+
+            // add this mock test to the map of known test items
             resultResolver.runIdToTestItem.set('mockTestItem1', mockTestItem1);
+            resultResolver.runIdToTestItem.set('mockTestItem2', mockTestItem2);
+
+            // create a successful payload with a single test called mockTestItem1
             const successPayload: ExecutionTestPayload = {
                 cwd: workspaceUri.fsPath,
                 status: 'success',
@@ -236,27 +315,11 @@ suite('Result Resolver tests', () => {
                 },
                 error: '',
             };
-            // const blankTestItem = ({
-            //     canResolveChildren: false,
-            //     tags: [],
-            //     children: {
-            //         add: () => {
-            //             // empty
-            //         },
-            //     },
-            // } as unknown) as TestItem;
 
-            sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
-                // Custom implementation logic here based on the provided testNode and collection
-
-                // Example implementation: returning a predefined array of TestItem objects
-                [testNode],
-            );
-
+            // call resolveExecution
             resultResolver.resolveExecution(successPayload, runInstance.object);
 
-            // make sure runInstance.passed(grabTestItem); is called once
-            // runInstance.appendOutput('Passed here');
+            // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.passed(typemoq.It.isAny()), typemoq.Times.once());
         });
         // test('resolveExecution handles error correctly', async () => {
