@@ -29,6 +29,7 @@ suite('pytest test execution adapter', () => {
     let debugLauncher: typeMoq.IMock<ITestDebugLauncher>;
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
+    let startTestIdServerStub: sinon.SinonStub<any, any>;
 
     setup(() => {
         testServer = typeMoq.Mock.ofType<ITestServer>();
@@ -65,7 +66,7 @@ suite('pytest test execution adapter', () => {
                 deferred.resolve();
                 return Promise.resolve();
             });
-        sinon.stub(util, 'startTestIdServer').returns(Promise.resolve(54321));
+        startTestIdServerStub = sinon.stub(util, 'startTestIdServer').returns(Promise.resolve(54321));
 
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
@@ -74,6 +75,26 @@ suite('pytest test execution adapter', () => {
     });
     teardown(() => {
         sinon.restore();
+    });
+    test('startTestIdServer called with correct testIds', async () => {
+        const uri = Uri.file(myTestPath);
+        const uuid = 'uuid123';
+        testServer
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => ({
+                dispose: () => {
+                    /* no-body */
+                },
+            }));
+        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
+        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
+
+        const testIds = ['test1id', 'test2id'];
+        await adapter.runTests(uri, testIds, false, testRun.object, execFactory.object);
+
+        sinon.assert.calledWithExactly(startTestIdServerStub, testIds);
     });
     test('pytest execution called with correct args', async () => {
         const uri = Uri.file(myTestPath);
