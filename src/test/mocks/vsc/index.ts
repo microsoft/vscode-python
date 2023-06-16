@@ -506,7 +506,7 @@ export interface TestItemCollection extends Iterable<[id: string, testItem: vsco
 		 * @param callback Function to execute for each entry.
 		 * @param thisArg The `this` context used when invoking the handler function.
 		 */
-		forEach(callback: (item: vscode.TestItem, collection: TestItemCollection) => unknown, thisArg?: any): void;
+		forEach(callback: (item: vscode.TestItem, collection: TestItemCollection) => unknown, thisArg?: unknown): void;
 
 		/**
 		 * Adds the test item to the children. If an item with the same ID already

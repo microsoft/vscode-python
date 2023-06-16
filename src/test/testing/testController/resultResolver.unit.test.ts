@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection } from 'vscode';
+import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection, Range } from 'vscode';
 import * as typemoq from 'typemoq';
 import * as sinon from 'sinon';
 import { TestProvider } from '../../../client/testing/types';
@@ -242,7 +242,7 @@ suite('Result Resolver tests', () => {
             resultResolver.resolveExecution(successPayload, runInstance.object);
 
             // verify that the passed function was called for the single test item
-            runInstance.verify((r) => r.skipped(typemoq.It.isAny()), typemoq.Times.once());
+            runInstance.verify((r) => r.failed(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
         });
         test('resolveExecution handles skipped correctly', async () => {
             // test specific constants used expected values
@@ -322,28 +322,35 @@ suite('Result Resolver tests', () => {
             // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.passed(typemoq.It.isAny()), typemoq.Times.once());
         });
-        // test('resolveExecution handles error correctly', async () => {
-        //     // test specific constants used expected values
-        //     testProvider = 'pytest';
-        //     workspaceUri = Uri.file('/foo/bar');
-        //     resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+        test('resolveExecution handles error correctly', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(
+                testControllerMock.object,
+                testProvider,
+                workspaceUri,
+            );
 
-        //     const errorPayload: ExecutionTestPayload = {
-        //         cwd: workspaceUri.fsPath,
-        //         status: 'error',
-        //         error: 'error',
-        //     };
+            const errorPayload: ExecutionTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'error',
+                error: 'error',
+            };
 
-        //     resultResolver.resolveExecution(errorPayload, runInstance.object);
+            resultResolver.resolveExecution(errorPayload, runInstance.object);
 
-        //     // verify that none of these functions are called
-        //     passedMock.verify((f) => f(typemoq.It.isAny()), typemoq.Times.never());
-        // });
+            // verify that none of these functions are called
+
+            runInstance.verify((r) => r.passed(typemoq.It.isAny()), typemoq.Times.never());
+            runInstance.verify((r) => r.failed(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
+            runInstance.verify((r) => r.skipped(typemoq.It.isAny()), typemoq.Times.never());
+        });
     });
 });
 
 function createMockTestItem(id: string): TestItem {
-    const range = typemoq.Mock.ofType<Range>();
+    const range = new Range(0, 0, 0, 0);
     const mockTestItem = ({
         id,
         canResolveChildren: false,
