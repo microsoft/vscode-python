@@ -63,7 +63,7 @@ extends:
       - script: |
           python ./build/update_ext_version.py --release --for-publishing
         displayName: Update build number
-      
+
       - script: |
           python ./build/update_package_file.py
         displayName: Update telemetry in package.json
@@ -73,3 +73,16 @@ extends:
 
       - script: gulp prePublishBundle
         displayName: Build
+    tsa:
+        enabled: true
+        options:
+            codebaseName: 'devdiv_$(Build.Repository.Name)'
+            serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
+            instanceUrl: 'https://devdiv.visualstudio.com/defaultcollection'
+            projectName: 'DevDiv'
+            areaPath: "DevDiv\\VS Code (compliance tracking only)\\Visual Studio Code Python Extensions"
+            notificationAliases:
+                - 'stbatt@microsoft.com'
+                - 'lszomoru@microsoft.com'
+                - 'brcan@microsoft.com'
+                - 'kanadig@microsoft.com'
