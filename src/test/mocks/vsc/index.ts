@@ -488,71 +488,70 @@ export class TestMessage {
     }
 }
 
-export interface TestItemCollection extends Iterable<[id: string, testItem: vscode.TestItem]> {
-		/**
-		 * Gets the number of items in the collection.
-		 */
-		readonly size: number;
+export interface TestItemCollection extends Iterable<[string, vscode.TestItem]> {
+    /**
+     * Gets the number of items in the collection.
+     */
+    readonly size: number;
 
-		/**
-		 * Replaces the items stored by the collection.
-		 * @param items Items to store.
-		 */
-		replace(items: readonly vscode.TestItem[]): void;
+    /**
+     * Replaces the items stored by the collection.
+     * @param items Items to store.
+     */
+    replace(items: readonly vscode.TestItem[]): void;
 
-		/**
-		 * Iterate over each entry in this collection.
-		 *
-		 * @param callback Function to execute for each entry.
-		 * @param thisArg The `this` context used when invoking the handler function.
-		 */
-		forEach(callback: (item: vscode.TestItem, collection: TestItemCollection) => unknown, thisArg?: unknown): void;
+    /**
+     * Iterate over each entry in this collection.
+     *
+     * @param callback Function to execute for each entry.
+     * @param thisArg The `this` context used when invoking the handler function.
+     */
+    forEach(callback: (item: vscode.TestItem, collection: TestItemCollection) => unknown, thisArg?: unknown): void;
 
-		/**
-		 * Adds the test item to the children. If an item with the same ID already
-		 * exists, it'll be replaced.
-		 * @param item Item to add.
-		 */
-		add(item: vscode.TestItem): void;
+    /**
+     * Adds the test item to the children. If an item with the same ID already
+     * exists, it'll be replaced.
+     * @param item Item to add.
+     */
+    add(item: vscode.TestItem): void;
 
-		/**
-		 * Removes a single test item from the collection.
-		 * @param itemId Item ID to delete.
-		 */
-		delete(itemId: string): void;
+    /**
+     * Removes a single test item from the collection.
+     * @param itemId Item ID to delete.
+     */
+    delete(itemId: string): void;
 
-		/**
-		 * Efficiently gets a test item by ID, if it exists, in the children.
-		 * @param itemId Item ID to get.
-		 * @returns The found item or undefined if it does not exist.
-		 */
-		get(itemId: string): vscode.TestItem | undefined;
-	}
+    /**
+     * Efficiently gets a test item by ID, if it exists, in the children.
+     * @param itemId Item ID to get.
+     * @returns The found item or undefined if it does not exist.
+     */
+    get(itemId: string): vscode.TestItem | undefined;
+}
 
 /**
-	 * Represents a location inside a resource, such as a line
-	 * inside a text file.
-	 */
-	export class Location {
+ * Represents a location inside a resource, such as a line
+ * inside a text file.
+ */
+export class Location {
+    /**
+     * The resource identifier of this location.
+     */
+    uri: vscode.Uri;
 
-		/**
-		 * The resource identifier of this location.
-		 */
-		uri: vscode.Uri;
+    /**
+     * The document range of this location.
+     */
+    range: vscode.Range;
 
-		/**
-		 * The document range of this location.
-		 */
-		range: vscode.Range;
-
-		/**
-		 * Creates a new location object.
-		 *
-		 * @param uri The resource identifier.
-		 * @param rangeOrPosition The range or position. Positions will be converted to an empty range.
-		 */
-        constructor(uri: vscode.Uri, rangeOrPosition: vscode.Range) {
-            this.uri = uri;
-            this.range = rangeOrPosition
-        }
-	}
+    /**
+     * Creates a new location object.
+     *
+     * @param uri The resource identifier.
+     * @param rangeOrPosition The range or position. Positions will be converted to an empty range.
+     */
+    constructor(uri: vscode.Uri, rangeOrPosition: vscode.Range) {
+        this.uri = uri;
+        this.range = rangeOrPosition;
+    }
+}

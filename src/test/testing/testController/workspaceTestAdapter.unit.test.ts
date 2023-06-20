@@ -33,8 +33,6 @@ suite('Workspace test adapter', () => {
         let testController: TestController;
         let log: string[] = [];
 
-        const sandbox = sinon.createSandbox();
-
         setup(() => {
             stubConfigSettings = ({
                 getSettings: () => ({
@@ -114,8 +112,8 @@ suite('Workspace test adapter', () => {
                 });
             };
 
-            discoverTestsStub = sandbox.stub(UnittestTestDiscoveryAdapter.prototype, 'discoverTests');
-            sendTelemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
+            discoverTestsStub = sinon.stub(UnittestTestDiscoveryAdapter.prototype, 'discoverTests');
+            sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
             outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
         });
 
@@ -123,7 +121,7 @@ suite('Workspace test adapter', () => {
             telemetryEvent = [];
             log = [];
             testController.dispose();
-            sandbox.restore();
+            sinon.restore();
         });
 
         test('If discovery failed correctly create error node', async () => {
