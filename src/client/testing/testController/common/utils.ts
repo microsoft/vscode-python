@@ -104,16 +104,23 @@ export async function startTestIdServer(testIds: string[]): Promise<number> {
         });
 
     // Start the server and wait until it is listening
-    await startServer()
-        .then((assignedPort) => {
-            traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
-            return assignedPort;
-            // if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort;
-        })
-        .catch((error) => {
-            traceError('Error starting server for pytest test ids server:', error);
-        });
-    return 0;
+    let returnPort = 0;
+    try {
+        await startServer()
+            .then((assignedPort) => {
+                traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
+                returnPort = assignedPort;
+            })
+            .catch((error) => {
+                traceError('Error starting server for pytest test ids server:', error);
+                return 0;
+            })
+            .finally(() => returnPort);
+        return returnPort;
+    } catch {
+        traceError('Error starting server for pytest test ids server, cannot get port.');
+        return returnPort;
+    }
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
