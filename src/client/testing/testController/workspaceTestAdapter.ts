@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import * as util from 'util';
 import { CancellationToken, TestController, TestItem, TestRun, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -10,10 +9,11 @@ import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestProvider } from '../types';
-import { createErrorTestItem, ErrorTestItemOptions, getTestCaseNodes } from './common/testItemUtilities';
+import { createErrorTestItem, getTestCaseNodes } from './common/testItemUtilities';
 import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './common/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
+import { buildErrorNodeOptions } from './common/utils';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -161,13 +161,4 @@ export class WorkspaceTestAdapter {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: false });
         return Promise.resolve();
     }
-}
-
-function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
-    const labelText = testType === 'pytest' ? 'Pytest Discovery Error' : 'Unittest Discovery Error';
-    return {
-        id: `DiscoveryError:${uri.fsPath}`,
-        label: `${labelText} [${path.basename(uri.fsPath)}]`,
-        error: message,
-    };
 }
