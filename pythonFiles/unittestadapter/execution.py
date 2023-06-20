@@ -242,7 +242,6 @@ if __name__ == "__main__":
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect(("localhost", run_test_ids_port_int))
-        print(f"CLIENT: Server listening on port {run_test_ids_port_int}...")
         buffer = b""
 
         while True:
@@ -263,7 +262,6 @@ if __name__ == "__main__":
                 buffer = b""
 
                 # Process the JSON data
-                print(f"Received JSON data: {test_ids_from_buffer}")
                 break
             except json.JSONDecodeError:
                 # JSON decoding error, the complete JSON object is not yet received
