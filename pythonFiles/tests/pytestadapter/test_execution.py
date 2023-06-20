@@ -103,9 +103,7 @@ def test_bad_id_error_execution():
             expected_execution_test_output.dual_level_nested_folder_execution_expected_output,
         ),
         (
-            [
-                "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function"
-            ],
+            ["folder_a/folder_b/folder_a/test_nest.py::test_function"],
             expected_execution_test_output.double_nested_folder_expected_execution_output,
         ),
         (

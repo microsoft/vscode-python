@@ -827,12 +827,6 @@ export interface IEventNamePropertyMapping {
          * @type {('command' | 'icon')}
          */
         trigger?: 'command' | 'icon';
-        /**
-         * Whether user chose to execute this Python file in a separate terminal or not.
-         *
-         * @type {boolean}
-         */
-        newTerminalPerFile?: boolean;
     };
     /**
      * Telemetry Event sent when user executes code against Django Shell.

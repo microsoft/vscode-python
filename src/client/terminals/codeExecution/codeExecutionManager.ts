@@ -36,31 +36,25 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     }
 
     public registerCommands() {
-        [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon, Commands.Exec_In_Separate_Terminal].forEach(
-            (cmd) => {
-                this.disposableRegistry.push(
-                    this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
-                        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-                        const interpreter = await interpreterService.getActiveInterpreter(file);
-                        if (!interpreter) {
-                            this.commandManager
-                                .executeCommand(Commands.TriggerEnvironmentSelection, file)
-                                .then(noop, noop);
-                            return;
-                        }
-                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
-                        await this.executeFileInTerminal(file, trigger, {
-                            newTerminalPerFile: cmd === Commands.Exec_In_Separate_Terminal,
+        [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach((cmd) => {
+            this.disposableRegistry.push(
+                this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
+                    const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+                    const interpreter = await interpreterService.getActiveInterpreter(file);
+                    if (!interpreter) {
+                        this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
+                        return;
+                    }
+                    const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+                    await this.executeFileInTerminal(file, trigger)
+                        .then(() => {
+                            if (this.shouldTerminalFocusOnStart(file))
+                                this.commandManager.executeCommand('workbench.action.terminal.focus');
                         })
-                            .then(() => {
-                                if (this.shouldTerminalFocusOnStart(file))
-                                    this.commandManager.executeCommand('workbench.action.terminal.focus');
-                            })
-                            .catch((ex) => traceError('Failed to execute file in terminal', ex));
-                    }),
-                );
-            },
-        );
+                        .catch((ex) => traceError('Failed to execute file in terminal', ex));
+                }),
+            );
+        });
         this.disposableRegistry.push(
             this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal as any, async (file: Resource) => {
                 const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -93,16 +87,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             ),
         );
     }
-    private async executeFileInTerminal(
-        file: Resource,
-        trigger: 'command' | 'icon',
-        options?: { newTerminalPerFile: boolean },
-    ): Promise<void> {
-        sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, {
-            scope: 'file',
-            trigger,
-            newTerminalPerFile: options?.newTerminalPerFile,
-        });
+    private async executeFileInTerminal(file: Resource, trigger: 'command' | 'icon') {
+        sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'file', trigger });
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         file = file instanceof Uri ? file : undefined;
         let fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
@@ -124,7 +110,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         }
 
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
-        await executionService.executeFile(fileToExecute, options);
+        await executionService.executeFile(fileToExecute);
     }
 
     @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)

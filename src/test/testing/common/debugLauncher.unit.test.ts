@@ -77,7 +77,7 @@ suite('Unit Tests - Debug Launcher', () => {
         settings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
-        unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>(undefined, TypeMoq.MockBehavior.Strict);
+        unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>();
         settings.setup((p) => p.testing).returns(() => unitTestSettings.object);
 
         debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>(undefined, TypeMoq.MockBehavior.Strict);
@@ -328,6 +328,21 @@ suite('Unit Tests - Debug Launcher', () => {
         expected.name = 'spam';
         setupSuccess(options, 'unittest', expected, [{ name: 'spam', type: DebuggerTypeName, request: 'test' }]);
 
+        await debugLauncher.launchDebugger(options);
+
+        debugService.verifyAll();
+    });
+
+    test('Use cwd value in settings if exist', async () => {
+        unitTestSettings.setup((p) => p.cwd).returns(() => 'path/to/settings/cwd');
+        const options: LaunchOptions = {
+            cwd: 'one/two/three',
+            args: ['/one/two/three/testfile.py'],
+            testProvider: 'unittest',
+        };
+        const expected = getDefaultDebugConfig();
+        expected.cwd = 'path/to/settings/cwd';
+        setupSuccess(options, 'unittest', expected);
         await debugLauncher.launchDebugger(options);
 
         debugService.verifyAll();

@@ -191,13 +191,14 @@ dual_level_nested_folder_execution_expected_output = {
 }
 
 # This is the expected output for the nested_folder tests.
-# └── nested_folder_one
-#    └── nested_folder_two
-#       └── test_nest.py
-#          └── test_function: success
+# └── folder_a
+#    └── folder_b
+#       └── folder_a
+#           └── test_nest.py
+#               └── test_function: success
 double_nested_folder_expected_execution_output = {
-    "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function": {
-        "test": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
+    "folder_a/folder_b/folder_a/test_nest.py::test_function": {
+        "test": "folder_a/folder_b/folder_a/test_nest.py::test_function",
         "outcome": "success",
         "message": None,
         "traceback": None,
@@ -262,8 +263,8 @@ doctest_pytest_expected_execution_output = {
 
 # Will run all tests in the cwd that fit the test file naming pattern.
 no_test_ids_pytest_execution_expected_output = {
-    "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function": {
-        "test": "double_nested_folder/nested_folder_one/nested_folder_two/test_nest.py::test_function",
+    "folder_a/folder_b/folder_a/test_nest.py::test_function": {
+        "test": "folder_a/folder_b/folder_a/test_nest.py::test_function",
         "outcome": "success",
         "message": None,
         "traceback": None,
