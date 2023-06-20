@@ -1,41 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    CancellationToken,
-    Position,
-    TestController,
-    TestItem,
-    Uri,
-    Range,
-    TestMessage,
-    Location,
-    TestRun,
-} from 'vscode';
+import { CancellationToken, TestController, TestItem, Uri, TestMessage, Location, TestRun } from 'vscode';
 import * as util from 'util';
-import * as path from 'path';
-import {
-    DiscoveredTestItem,
-    DiscoveredTestNode,
-    DiscoveredTestPayload,
-    ExecutionTestPayload,
-    ITestResultResolver,
-} from './types';
+import { DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceLog } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
-import {
-    DebugTestTag,
-    ErrorTestItemOptions,
-    RunTestTag,
-    clearAllChildren,
-    createErrorTestItem,
-    getTestCaseNodes,
-} from './testItemUtilities';
+import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testItemUtilities';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
-import { fixLogLines } from './utils';
+import { buildErrorNodeOptions, fixLogLines, populateTestTree } from './utils';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -253,69 +229,5 @@ export class PythonResultResolver implements ITestResultResolver {
         return Promise.resolve();
     }
 }
+
 // had to switch the order of the original parameter since required param cannot follow optional.
-function populateTestTree(
-    testController: TestController,
-    testTreeData: DiscoveredTestNode,
-    testRoot: TestItem | undefined,
-    resultResolver: ITestResultResolver,
-    token?: CancellationToken,
-): void {
-    // If testRoot is undefined, use the info of the root item of testTreeData to create a test item, and append it to the test controller.
-    if (!testRoot) {
-        testRoot = testController.createTestItem(testTreeData.path, testTreeData.name, Uri.file(testTreeData.path));
-
-        testRoot.canResolveChildren = true;
-        testRoot.tags = [RunTestTag, DebugTestTag];
-
-        testController.items.add(testRoot);
-    }
-
-    // Recursively populate the tree with test data.
-    testTreeData.children.forEach((child) => {
-        if (!token?.isCancellationRequested) {
-            if (isTestItem(child)) {
-                const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-                testItem.tags = [RunTestTag, DebugTestTag];
-
-                const range = new Range(
-                    new Position(Number(child.lineno) - 1, 0),
-                    new Position(Number(child.lineno), 0),
-                );
-                testItem.canResolveChildren = false;
-                testItem.range = range;
-                testItem.tags = [RunTestTag, DebugTestTag];
-
-                testRoot!.children.add(testItem);
-                // add to our map
-                resultResolver.runIdToTestItem.set(child.runID, testItem);
-                resultResolver.runIdToVSid.set(child.runID, child.id_);
-                resultResolver.vsIdToRunId.set(child.id_, child.runID);
-            } else {
-                let node = testController.items.get(child.path);
-
-                if (!node) {
-                    node = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
-
-                    node.canResolveChildren = true;
-                    node.tags = [RunTestTag, DebugTestTag];
-                    testRoot!.children.add(node);
-                }
-                populateTestTree(testController, child, node, resultResolver, token);
-            }
-        }
-    });
-}
-
-function isTestItem(test: DiscoveredTestNode | DiscoveredTestItem): test is DiscoveredTestItem {
-    return test.type_ === 'test';
-}
-
-export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
-    const labelText = testType === 'pytest' ? 'Pytest Discovery Error' : 'Unittest Discovery Error';
-    return {
-        id: `DiscoveryError:${uri.fsPath}`,
-        label: `${labelText} [${path.basename(uri.fsPath)}]`,
-        error: message,
-    };
-}

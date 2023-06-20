@@ -49,14 +49,15 @@ suite('Unittest test execution adapter', () => {
         const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
 
         const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
-        adapter.runTests(uri, [], false).then(() => {
+        const testIds = ['test1id', 'test2id'];
+        adapter.runTests(uri, testIds, false).then(() => {
             const expectedOptions: TestCommandOptions = {
                 workspaceFolder: uri,
                 command: { script, args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'] },
                 cwd: uri.fsPath,
                 uuid: '123456789',
                 debugBool: false,
-                testIds: [],
+                testIds,
             };
             assert.deepStrictEqual(options, expectedOptions);
         });
