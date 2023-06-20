@@ -1,9 +1,9 @@
-// // Copyright (c) Microsoft Corporation. All rights reserved.
-// // Licensed under the MIT License.
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
 
-// import * as assert from 'assert';
-// import * as sinon from 'sinon';
-// import * as typemoq from 'typemoq';
+import * as assert from 'assert';
+import * as sinon from 'sinon';
+import * as typemoq from 'typemoq';
 
 import { TestController, TestItem, TestItemCollection, TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
@@ -23,15 +23,15 @@ suite('Workspace test adapter', () => {
         let stubConfigSettings: IConfigurationService;
         let stubResultResolver: ITestResultResolver;
 
-//         let discoverTestsStub: sinon.SinonStub;
-//         let sendTelemetryStub: sinon.SinonStub;
-//         let outputChannel: typemoq.IMock<ITestOutputChannel>;
+        let discoverTestsStub: sinon.SinonStub;
+        let sendTelemetryStub: sinon.SinonStub;
+        let outputChannel: typemoq.IMock<ITestOutputChannel>;
 
-//         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
+        let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
 
-//         // Stubbed test controller (see comment around L.40)
-//         let testController: TestController;
-//         let log: string[] = [];
+        // Stubbed test controller (see comment around L.40)
+        let testController: TestController;
+        let log: string[] = [];
 
         setup(() => {
             stubConfigSettings = ({
@@ -75,34 +75,46 @@ suite('Workspace test adapter', () => {
                 },
             } as unknown) as TestItem;
 
-//             stubResultResolver = ({
-//                 resolveDiscovery: () => {
-//                     // no body
-//                 },
-//                 resolveExecution: () => {
-//                     // no body
-//                 },
-//                 vsIdToRunId: {
-//                     get: sinon.stub().returns('expectedRunId'),
-//                 },
-//             } as unknown) as ITestResultResolver;
+            // const vsIdToRunIdGetStub = sinon.stub(stubResultResolver.vsIdToRunId, 'get');
+            // const expectedRunId = 'expectedRunId';
+            // vsIdToRunIdGetStub.withArgs(sinon.match.any).returns(expectedRunId);
 
-//             // const vsIdToRunIdGetStub = sinon.stub(stubResultResolver.vsIdToRunId, 'get');
-//             // const expectedRunId = 'expectedRunId';
-//             // vsIdToRunIdGetStub.withArgs(sinon.match.any).returns(expectedRunId);
+            // For some reason the 'tests' namespace in vscode returns undefined.
+            // While I figure out how to expose to the tests, they will run
+            // against a stub test controller and stub test items.
+            const testItem = ({
+                canResolveChildren: false,
+                tags: [],
+                children: {
+                    add: () => {
+                        // empty
+                    },
+                },
+            } as unknown) as TestItem;
 
-//             // For some reason the 'tests' namespace in vscode returns undefined.
-//             // While I figure out how to expose to the tests, they will run
-//             // against a stub test controller and stub test items.
-//             const testItem = ({
-//                 canResolveChildren: false,
-//                 tags: [],
-//                 children: {
-//                     add: () => {
-//                         // empty
-//                     },
-//                 },
-//             } as unknown) as TestItem;
+            testController = ({
+                items: {
+                    get: () => {
+                        log.push('get');
+                    },
+                    add: () => {
+                        log.push('add');
+                    },
+                    replace: () => {
+                        log.push('replace');
+                    },
+                    delete: () => {
+                        log.push('delete');
+                    },
+                },
+                createTestItem: () => {
+                    log.push('createTestItem');
+                    return testItem;
+                },
+                dispose: () => {
+                    // empty
+                },
+            } as unknown) as TestController;
 
             discoverTestsStub = sinon.stub(UnittestTestDiscoveryAdapter.prototype, 'discoverTests');
             sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
@@ -247,10 +259,12 @@ suite('Workspace test adapter', () => {
             sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, Uri.parse('foo'), sinon.match.any, testProvider);
         });
 
-//             discoverTestsStub = sandbox.stub(UnittestTestDiscoveryAdapter.prototype, 'discoverTests');
-//             sendTelemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
-//             outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
-//         });
+        teardown(() => {
+            telemetryEvent = [];
+            log = [];
+            testController.dispose();
+            sinon.restore();
+        });
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
                 stubTestServer,
@@ -270,26 +284,24 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-//         test("When discovering tests, the workspace test adapter should call the test discovery adapter's discoverTest method", async () => {
-//             discoverTestsStub.resolves();
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
+                stubTestServer,
+                stubConfigSettings,
+                outputChannel.object,
+            );
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(
+                stubTestServer,
+                stubConfigSettings,
+                outputChannel.object,
+            );
 
-//             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const testExecutionAdapter = new UnittestTestExecutionAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const workspaceTestAdapter = new WorkspaceTestAdapter(
-//                 'unittest',
-//                 testDiscoveryAdapter,
-//                 testExecutionAdapter,
-//                 Uri.parse('foo'),
-//                 stubResultResolver,
-//             );
+            const workspaceTestAdapter = new WorkspaceTestAdapter(
+                'unittest',
+                testDiscoveryAdapter,
+                testExecutionAdapter,
+                Uri.parse('foo'),
+                stubResultResolver,
+            );
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
@@ -570,23 +582,8 @@ suite('Workspace test adapter', () => {
             const one = workspaceTestAdapter.executeTests(testController, runInstance.object, []);
             const two = workspaceTestAdapter.executeTests(testController, runInstance.object, []);
 
-//             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const testExecutionAdapter = new UnittestTestExecutionAdapter(
-//                 stubTestServer,
-//                 stubConfigSettings,
-//                 outputChannel.object,
-//             );
-//             const workspaceTestAdapter = new WorkspaceTestAdapter(
-//                 'unittest',
-//                 testDiscoveryAdapter,
-//                 testExecutionAdapter,
-//                 Uri.parse('foo'),
-//                 stubResultResolver,
-//             );
+        test("When discovering tests, the workspace test adapter should call the test discovery adapter's discoverTest method", async () => {
+            discoverTestsStub.resolves();
 
             sinon.assert.calledOnce(executionTestsStub);
         });
@@ -594,8 +591,8 @@ suite('Workspace test adapter', () => {
         test('If execution failed correctly create error node', async () => {
             executionTestsStub.rejects(new Error('foo'));
 
-//             sinon.assert.calledOnce(discoverTestsStub);
-//         });
+            sinon.assert.calledOnce(discoverTestsStub);
+        });
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
@@ -632,9 +629,8 @@ suite('Workspace test adapter', () => {
         test('If execution failed, send a telemetry event with the "failed" key set to true, and add an error node to the test controller', async () => {
             executionTestsStub.rejects(new Error('foo'));
 
-//             const lastEvent = telemetryEvent[1];
-//             assert.strictEqual(lastEvent.properties.failed, false);
-//         });
+        test('If discovery succeeds, send a telemetry event with the "failed" key set to false', async () => {
+            discoverTestsStub.resolves({ status: 'success' });
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
