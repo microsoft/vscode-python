@@ -21,11 +21,11 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
                 "--uuid",
                 "fake-uuid",
             ],
-            (111, "fake-uuid", None),
+            (111, "fake-uuid"),
         ),
         (
             ["--port", "111", "--uuid", "fake-uuid"],
-            (111, "fake-uuid", None),
+            (111, "fake-uuid"),
         ),
         (
             [
@@ -36,7 +36,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
                 "-v",
                 "-s",
             ],
-            (111, "fake-uuid", None),
+            (111, "fake-uuid"),
         ),
     ],
 )
