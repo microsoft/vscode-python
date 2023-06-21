@@ -13,8 +13,6 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, Union
 
-from pythonFiles.testing_tools import process_json_util
-
 directory_path = pathlib.Path(__file__).parent.parent / "lib" / "python"
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
 PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,9 +20,9 @@ PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PYTHON_FILES)
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
-from testing_tools import socket_manager
+from testing_tools import process_json_util, socket_manager
 from typing_extensions import NotRequired, TypeAlias, TypedDict
-from unittestadapter.utils import parse_unittest_args
+from utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 
@@ -300,11 +298,11 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
 
-    port, uuid = parse_execution_cli_args(argv[:index])
+    PORT, UUID = parse_execution_cli_args(argv[:index])
     if test_ids_from_buffer:
         # Perform test execution.
         payload = run_tests(
-            start_dir, test_ids_from_buffer, pattern, top_level_dir, uuid
+            start_dir, test_ids_from_buffer, pattern, top_level_dir, UUID
         )
     else:
         cwd = os.path.abspath(start_dir)

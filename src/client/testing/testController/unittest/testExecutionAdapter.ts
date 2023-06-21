@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DataReceivedEvent,
@@ -23,8 +23,6 @@ import { startTestIdServer } from '../common/utils';
  */
 
 export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
-    private promiseMap: Map<string, Deferred<ExecutionTestPayload | undefined>> = new Map();
-
     private cwd: string | undefined;
 
     constructor(
@@ -40,14 +38,16 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
         runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
+        const uuid = this.testServer.createUUID(uri.fsPath);
         const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
         });
         try {
-            await this.runTestsNew(uri, testIds, debugBool);
+            await this.runTestsNew(uri, testIds, uuid, debugBool);
         } finally {
+            this.testServer.deleteUUID(uuid);
             disposable.dispose();
             // confirm with testing that this gets called (it must clean this up)
         }
@@ -55,13 +55,17 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         return executionPayload;
     }
 
-    private async runTestsNew(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload> {
+    private async runTestsNew(
+        uri: Uri,
+        testIds: string[],
+        uuid: string,
+        debugBool?: boolean,
+    ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { cwd, unittestArgs } = settings.testing;
 
         const command = buildExecutionCommand(unittestArgs);
         this.cwd = cwd || uri.fsPath;
-        const uuid = this.testServer.createUUID(uri.fsPath);
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
@@ -74,16 +78,15 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         };
 
         const deferred = createDeferred<ExecutionTestPayload>();
-        this.promiseMap.set(uuid, deferred);
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         const runTestIdsPort = await startTestIdServer(testIds);
 
         await this.testServer.sendCommand(options, runTestIdsPort.toString(), () => {
-            // disposable.dispose();
             deferred.resolve();
         });
-        // return deferred.promise;
+        // placeholder until after the rewrite is adopted
+        // TODO: remove after adoption.
         const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
         return executionPayload;
     }
