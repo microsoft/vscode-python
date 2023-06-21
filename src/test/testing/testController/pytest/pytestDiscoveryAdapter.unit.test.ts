@@ -4,11 +4,17 @@
 import * as assert from 'assert';
 import { Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
+import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { DataReceivedEvent, ITestServer } from '../../../../client/testing/testController/common/types';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
+import { ITestServer } from '../../../../client/testing/testController/common/types';
+import {
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    SpawnOptions,
+} from '../../../../client/common/process/types';
 import { createDeferred, Deferred } from '../../../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 
 suite('pytest test discovery adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -18,27 +24,56 @@ suite('pytest test discovery adapter', () => {
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let deferred: Deferred<void>;
     let outputChannel: typeMoq.IMock<ITestOutputChannel>;
+    let portNum: number;
+    let uuid: string;
+    let expectedPath: string;
+    let uri: Uri;
+    let expectedExtraVariables: Record<string, string>;
 
     setup(() => {
+        const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
+        mockExtensionRootDir.setup((m) => m.toString()).returns(() => '/mocked/extension/root/dir');
+
+        // constants
+        portNum = 12345;
+        uuid = 'uuid123';
+        expectedPath = path.join('/', 'my', 'test', 'path');
+        uri = Uri.file(expectedPath);
+        const relativePathToPytest = 'pythonFiles';
+        const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
+        expectedExtraVariables = {
+            PYTHONPATH: fullPluginPath,
+            TEST_UUID: uuid,
+            TEST_PORT: portNum.toString(),
+        };
+
+        // set up test server
         testServer = typeMoq.Mock.ofType<ITestServer>();
-        testServer.setup((t) => t.getPort()).returns(() => 12345);
+        testServer.setup((t) => t.getPort()).returns(() => portNum);
+        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
         testServer
-            .setup((t) => t.onDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => ({
                 dispose: () => {
                     /* no-body */
                 },
             }));
+
+        // set up config service
         configService = ({
             getSettings: () => ({
                 testing: { pytestArgs: ['.'] },
             }),
         } as unknown) as IConfigurationService;
+
+        // set up exec factory
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(execService.object));
+
+        // set up exec service
+        execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         deferred = createDeferred();
         execService
             .setup((x) => x.exec(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -46,49 +81,51 @@ suite('pytest test discovery adapter', () => {
                 deferred.resolve();
                 return Promise.resolve({ stdout: '{}' });
             });
-        execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
     });
-    test('onDataReceivedHandler should parse only if known UUID', async () => {
-        const uri = Uri.file('/my/test/path/');
-        const uuid = 'uuid123';
-        const data = { status: 'success' };
-        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
-        const eventData: DataReceivedEvent = {
-            uuid,
-            data: JSON.stringify(data),
-        };
-
+    test('Discovery should call exec with correct basic args', async () => {
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configService, outputChannel.object);
-        const promise = adapter.discoverTests(uri, execFactory.object);
-        // const promise = adapter.discoverTests(uri);
-        await deferred.promise;
-        adapter.onDataReceivedHandler(eventData);
-        const result = await promise;
-        assert.deepStrictEqual(result, data);
+        await adapter.discoverTests(uri, execFactory.object);
+        const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.'];
+
+        execService.verify(
+            (x) =>
+                x.exec(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        assert.deepEqual(options.extraVariables, expectedExtraVariables);
+                        assert.equal(options.cwd, expectedPath);
+                        assert.equal(options.throwOnStdErr, true);
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
     });
-    test('onDataReceivedHandler should not parse if it is unknown UUID', async () => {
-        const uri = Uri.file('/my/test/path/');
-        const uuid = 'uuid456';
-        let data = { status: 'error' };
-        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
-        const wrongUriEventData: DataReceivedEvent = {
-            uuid: 'incorrect-uuid456',
-            data: JSON.stringify(data),
-        };
-        adapter = new PytestTestDiscoveryAdapter(testServer.object, configService, outputChannel.object);
-        const promise = adapter.discoverTests(uri, execFactory.object);
-        // const promise = adapter.discoverTests(uri);
-        adapter.onDataReceivedHandler(wrongUriEventData);
+    test('Test discovery correctly pulls pytest args from config service settings', async () => {
+        // set up a config service with different pytest args
+        const configServiceNew: IConfigurationService = ({
+            getSettings: () => ({
+                testing: { pytestArgs: ['.', 'abc', 'xyz'] },
+            }),
+        } as unknown) as IConfigurationService;
 
-        data = { status: 'success' };
-        const correctUriEventData: DataReceivedEvent = {
-            uuid,
-            data: JSON.stringify(data),
-        };
-        adapter.onDataReceivedHandler(correctUriEventData);
-        const result = await promise;
-        assert.deepStrictEqual(result, data);
+        adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
+        await adapter.discoverTests(uri, execFactory.object);
+        const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
+        execService.verify(
+            (x) =>
+                x.exec(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        assert.deepEqual(options.extraVariables, expectedExtraVariables);
+                        assert.equal(options.cwd, expectedPath);
+                        assert.equal(options.throwOnStdErr, true);
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
     });
 });

@@ -123,7 +123,7 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
             if ((socket as any).id) {
                 destroyedSocketId = (socket as any).id;
             }
-            this.log('socket disconnected', destroyedSocketId.toString());
+            this.log('socket disconnected', destroyedSocketId?.toString());
             if (socket && socket.destroy) {
                 socket.destroy();
             }
