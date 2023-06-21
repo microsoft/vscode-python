@@ -1,17 +1,30 @@
 import inspect
 import os
+import os.path
 import sys
 import traceback
 import unittest
 
-from ..unittestadapter.utils import config_django_env
+from unittestadapter.utils import setup_django_test_env
+
+sys.path.insert(
+    1,
+    os.path.dirname(  # pythonFiles
+        os.path.dirname(  # pythonFiles/testing_tools
+            os.path.abspath(__file__)  # this file
+        )
+    ),
+)
+
 
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
 top_level_dir = sys.argv[3] if len(sys.argv) >= 4 else None
 sys.path.insert(0, os.getcwd())
 
-config_django_env(start_dir)
+# Setup django env to prevent missing django tests
+setup_django_test_env(start_dir)
+
 
 def get_sourceline(obj):
     try:

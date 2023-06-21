@@ -10,11 +10,12 @@ import sys
 import unittest
 from typing import List, Tuple, Union
 
+from typing_extensions import TypedDict
+
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import TypedDict
 
 # Types
 
@@ -234,25 +235,42 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
         parsed_args.top_level_directory,
     )
 
-def config_django_env(start_dir) -> None:
-    """This will try to set DJANGO_SETTINGS_MODULE and call django.setup in order to make it possible to locate/run django unittests"""
-    from pathlib import Path
-    from ast import literal_eval
-    if Path(start_dir + "/manage.py").is_file():
-        with open(start_dir + "/manage.py", "r") as management_file:
-            contents = management_file.readlines()
-            if any(True for line in contents if line.strip().replace('"""', '') == "Django\'s command-line utility for administrative tasks."):
-                print("django management file found!")
-                for line in contents:
-                    if line.strip().startswith("os.environ.setdefault"):
-                        try:
-                            literal_eval(line.strip().replace('os.environ.setdefault("DJANGO_SETTINGS_MODULE",', "", 1))
-                        except:
-                            pass
-                        else:
-                            eval(line.strip()) # this is the not recommended part!!!
-                            try:
-                                import django
-                                django.setup()
-                            except ModuleNotFoundError:
-                                pass
+
+def setup_django_test_env(root):
+    """Configure Django environment for running Django tests.
+
+    It checks if Django is installed by attempting to import the `django` module.
+    Looks for `manage.py` file to extract the value of `DJANGO_SETTINGS_MODULE`.
+    Sets `DJANGO_SETTINGS_MODULE` environment variable and initializes Django setup.
+    If couldn't find the file or import django during this process, the function fails silently.
+
+    Args:
+        root (str): The root directory of the Django project.
+
+    Returns:
+        None.
+    """
+    import os
+    import re
+
+    try:
+        # Check if Django is installed
+        import django
+
+        # Check if manage.py exists
+        with open(os.path.join(root, "manage.py"), "r") as manage_py:
+            # Look for a line that sets the DJANGO_SETTINGS_MODULE environment variable
+            pattern = r"^os\.environ\.setdefault\((\'|\")DJANGO_SETTINGS_MODULE(\'|\"), (\'|\")(?P<settings_path>[\w.]+)(\'|\")\)$"
+            for line in manage_py.readlines():
+                pattern_matched = re.match(pattern, line.strip())
+                if pattern_matched is not None:
+                    # extract the value required for DJANGO_SETTINGS_MODULE
+                    settings_path = str(
+                        pattern_matched.groupdict().get("settings_path", "")
+                    )
+                    # Set the DJANGO_SETTINGS_MODULE environment variable
+                    os.environ.setdefault("DJANGO_SETTINGS_MODULE", settings_path)
+                    django.setup()
+                    return
+    except (ModuleNotFoundError, FileNotFoundError):
+        return

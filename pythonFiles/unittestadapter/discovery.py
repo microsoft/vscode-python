@@ -23,7 +23,12 @@ sys.path.insert(0, PYTHON_FILES)
 from testing_tools import socket_manager
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
+from unittestadapter.utils import (
+    TestNode,
+    build_test_tree,
+    parse_unittest_args,
+    setup_django_test_env,
+)
 
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
@@ -120,6 +125,9 @@ if __name__ == "__main__":
     index = argv.index("--udiscovery")
 
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+
+    # Setup django env to prevent missing django tests
+    setup_django_test_env(start_dir)
 
     # Perform test discovery.
     port, uuid = parse_discovery_cli_args(argv[:index])

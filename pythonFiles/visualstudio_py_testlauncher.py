@@ -13,10 +13,6 @@
 #
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
-
-__author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
-__version__ = "3.0.0.0"
-
 import json
 import os
 import signal
@@ -25,7 +21,18 @@ import sys
 import traceback
 import unittest
 
-from .unittestadapter.utils import config_django_env
+from unittestadapter.utils import setup_django_test_env
+
+__author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
+__version__ = "3.0.0.0"
+
+
+sys.path.insert(1, os.path.abspath(__file__))  # this file
+
+
+__author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
+__version__ = "3.0.0.0"
+
 
 try:
     import thread
@@ -215,6 +222,31 @@ class ExitCommand(Exception):
 def signal_handler(signal, frame):
     raise ExitCommand()
 
+
+def config_django_env(start_dir):
+    from pathlib import Path
+
+    if Path(start_dir + "/manage.py").is_file():
+        with open(start_dir + "/manage.py", "r") as management_file:
+            contents = management_file.readlines()
+            if any(
+                True
+                for line in contents
+                if line.strip().replace('"""', "")
+                == "Django's command-line utility for administrative tasks."
+            ):
+                print("django management file found!")
+                for line in contents:
+                    if line.strip().startswith("os.environ.setdefault"):
+                        eval(line.strip())  # this is the not recommended part!!!
+                        try:
+                            import django
+
+                            django.setup()
+                        except ModuleNotFoundError:
+                            pass
+
+
 def main():
     import os
     import sys
@@ -328,11 +360,13 @@ def main():
                 opts.us = "."
             if opts.up is None:
                 opts.up = "test*.py"
+            setup_django_test_env(opts.us)
             tests = unittest.defaultTestLoader.discover(opts.us, opts.up)
         else:
             # loadTestsFromNames doesn't work well (with duplicate file names or class names)
             # Easier approach is find the test suite and use that for running
             loader = unittest.TestLoader()
+            setup_django_test_env(opts.us)
             # opts.us will be passed in
             suites = loader.discover(
                 opts.us, pattern=os.path.basename(opts.testFile), top_level_dir=opts.ut
