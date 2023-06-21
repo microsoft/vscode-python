@@ -17,10 +17,7 @@
                 "ms-python.vscode-pylance",
                 "charliermarsh.ruff",
                 "ms-python.pylint"
-            ],
-            "settings": {
-                // "python.defaultInterpreterPath": "/workspaces/vscode-python/.venv/bin/python"
-            }
+            ]
         }
     },
     // Commands to execute on container creation,start.
