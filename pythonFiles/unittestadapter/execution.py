@@ -228,6 +228,7 @@ def run_tests(
     return payload
 
 
+
 def send_run_data(raw_data, port, uuid):
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     status = raw_data["outcome"]
@@ -236,7 +237,6 @@ def send_run_data(raw_data, port, uuid):
     test_dict = {}
     test_dict[test_id] = raw_data
     payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
-
     addr = ("localhost", port)
     data = json.dumps(payload)
     request = f"""Content-Length: {len(data)}
