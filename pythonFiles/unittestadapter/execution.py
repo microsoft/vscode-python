@@ -228,7 +228,6 @@ def run_tests(
     return payload
 
 
-
 def send_run_data(raw_data, port, uuid):
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     status = raw_data["outcome"]
