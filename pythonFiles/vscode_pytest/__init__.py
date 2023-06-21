@@ -120,7 +120,6 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     tests: Dict[str, TestOutcome]
 
 
-collected_tests = testRunResultDict()
 IS_DISCOVERY = False
 
 
@@ -128,6 +127,9 @@ def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+
+collected_tests_so_far = list()
 
 
 def pytest_report_teststatus(report, config):
@@ -138,6 +140,7 @@ def pytest_report_teststatus(report, config):
     report -- the report on the test setup, call, and teardown.
     config -- configuration object.
     """
+    cwd = pathlib.Path.cwd()
 
     if report.when == "call":
         traceback = None
@@ -148,13 +151,23 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        item_result = create_test_outcome(
-            report.nodeid,
-            report_value,
-            message,
-            traceback,
-        )
-        collected_tests[report.nodeid] = item_result
+        node_id = str(report.nodeid)
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
+            item_result = create_test_outcome(
+                node_id,
+                report_value,
+                message,
+                traceback,
+            )
+            collected_test = testRunResultDict()
+            collected_test[node_id] = item_result
+            execution_post(
+                os.fsdecode(cwd),
+                "success",
+                collected_test if collected_test else None,
+            )
+        # collected_tests[report.nodeid] = item_result
 
 
 ERROR_MESSAGE_CONST = {
@@ -196,7 +209,9 @@ def pytest_sessionfinish(session, exitstatus):
                 )
             post_response(os.fsdecode(cwd), session_node)
         except Exception as e:
-            f"Error Occurred, description: {e.args[0] if e.args and e.args[0] else ''} traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
+            ERRORS.append(
+                f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
+            )
             errorNode: TestNode = {
                 "name": "",
                 "path": cwd,
@@ -213,11 +228,12 @@ def pytest_sessionfinish(session, exitstatus):
                 f"Pytest exited with error status: {exitstatus}, {ERROR_MESSAGE_CONST[exitstatus]}"
             )
             exitstatus_bool = "error"
-        execution_post(
-            os.fsdecode(cwd),
-            exitstatus_bool,
-            collected_tests if collected_tests else None,
-        )
+
+            execution_post(
+                os.fsdecode(cwd),
+                exitstatus_bool,
+                None,
+            )
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
