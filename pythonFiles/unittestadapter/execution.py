@@ -137,7 +137,8 @@ class UnittestTestResult(unittest.TextTestResult):
             tb = "".join(formatted)
 
         if subtest:
-            test_id = subtest.id()
+            name_split = subtest.id().split("(")[1]
+            test_id = "(" + name_split
         else:
             test_id = test.id()
 

@@ -101,12 +101,12 @@ def test_subtest_run() -> None:
         os.fspath(TEST_DATA_PATH), [id], "test_subtest.py", None, "fake-uuid"
     )
     subtests_ids = [
-        "test_subtest.NumbersTest.test_even (i=0)",
-        "test_subtest.NumbersTest.test_even (i=1)",
-        "test_subtest.NumbersTest.test_even (i=2)",
-        "test_subtest.NumbersTest.test_even (i=3)",
-        "test_subtest.NumbersTest.test_even (i=4)",
-        "test_subtest.NumbersTest.test_even (i=5)",
+        "(i=0)",
+        "(i=1)",
+        "(i=2)",
+        "(i=3)",
+        "(i=4)",
+        "(i=5)",
     ]
     assert actual
     assert all(item in actual for item in ("cwd", "status"))
