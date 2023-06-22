@@ -113,7 +113,7 @@ suite('Result Resolver tests', () => {
             const payload: DiscoveredTestPayload = {
                 cwd: workspaceUri.fsPath,
                 status: 'error',
-                errors: [errorMessage],
+                error: [errorMessage],
             };
             const errorTestItemOptions: testItemUtilities.ErrorTestItemOptions = {
                 id: 'id',

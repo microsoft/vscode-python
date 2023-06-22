@@ -56,7 +56,7 @@ def pytest_internalerror(excrepr, excinfo):
     excinfo -- the exception information of type ExceptionInfo.
     """
     # call.excinfo.exconly() returns the exception as a string.
-    ERRORS.append(excinfo.exconly())
+    ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
 
 
 def pytest_exception_interact(node, call, report):
@@ -70,7 +70,13 @@ def pytest_exception_interact(node, call, report):
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
     if call.excinfo and call.excinfo.typename != "AssertionError":
-        ERRORS.append(call.excinfo.exconly())
+        ERRORS.append(
+            call.excinfo.exconly() + "\n Check Python Test Logs for more details."
+        )
+    else:
+        ERRORS.append(
+            report.longreprtext + "\n Check Python Test Logs for more details."
+        )
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -80,7 +86,7 @@ def pytest_keyboard_interrupt(excinfo):
     excinfo -- the exception information of type ExceptionInfo.
     """
     # The function execonly() returns the exception as a string.
-    ERRORS.append(excinfo.exconly())
+    ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
 
 
 class TestOutcome(Dict):
@@ -200,6 +206,15 @@ def pytest_sessionfinish(session, exitstatus):
     )
     cwd = pathlib.Path.cwd()
     if IS_DISCOVERY:
+        if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
+            errorNode: TestNode = {
+                "name": "",
+                "path": cwd,
+                "type_": "error",
+                "children": [],
+                "id_": "",
+            }
+            post_response(os.fsdecode(cwd), errorNode)
         try:
             session_node: Union[TestNode, None] = build_test_tree(session)
             if not session_node:
