@@ -16,6 +16,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DebugSessionOptions,
     DecorationRenderOptions,
     Disposable,
     DocumentSelector,
@@ -975,7 +976,7 @@ export interface IDebugService {
     startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession,
+        parentSession?: DebugSession | DebugSessionOptions,
     ): Thenable<boolean>;
 
     /**

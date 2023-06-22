@@ -117,7 +117,7 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         sinon.assert.notCalled(showErrorMessageStub);
     });
-    test('Validate debug config is passed as is', async () => {
+    test('Validate debug config is passed with the correct params', async () => {
         const data: LaunchRequestArguments | AttachRequestArguments = {
             request: 'attach',
             type: 'python',
@@ -140,7 +140,7 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
-        expect(thirdArg).to.deep.equal(session);
+        expect(thirdArg).to.deep.equal({ parentSession: session, lifecycleManagedByParent: true });
         sinon.assert.notCalled(showErrorMessageStub);
     });
     test('Pass data as is if data is attach debug configuration', async () => {
@@ -161,7 +161,7 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
-        expect(thirdArg).to.deep.equal(session);
+        expect(thirdArg).to.deep.equal({ parentSession: session, lifecycleManagedByParent: true });
         sinon.assert.notCalled(showErrorMessageStub);
     });
     test('Validate debug config when parent/root parent was attached', async () => {
@@ -189,7 +189,7 @@ suite('Debug - Attach to Child Process', () => {
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
         expect(secondArg).to.deep.equal(debugConfig);
-        expect(thirdArg).to.deep.equal(session);
+        expect(thirdArg).to.deep.equal({ parentSession: session, lifecycleManagedByParent: true });
         sinon.assert.notCalled(showErrorMessageStub);
     });
 });
