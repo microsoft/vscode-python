@@ -79,7 +79,7 @@ def pytest_keyboard_interrupt(excinfo):
     Keyword arguments:
     excinfo -- the exception information of type ExceptionInfo.
     """
-    # The function execonly() returns the exception as a string.
+    # The function exconly() returns the exception as a string.
     ERRORS.append(excinfo.exconly())
 
 
