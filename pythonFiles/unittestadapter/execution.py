@@ -228,7 +228,6 @@ def run_tests(
 
 
 def send_run_data(raw_data, port, uuid):
-    print("sending run data1")
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     status = raw_data["outcome"]
     cwd = os.path.abspath(START_DIR)
@@ -237,9 +236,7 @@ def send_run_data(raw_data, port, uuid):
     else:
         test_id = raw_data["test"]
     test_dict = {}
-    print("sending run data2")
     test_dict[test_id] = raw_data
-    print("sending run data3")
     payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
     addr = ("localhost", port)
     data = json.dumps(payload)
@@ -248,7 +245,6 @@ Content-Type: application/json
 Request-uuid: {uuid}
 
 {data}"""
-    print("data to send: ", request)
     try:
         with socket_manager.SocketManager(addr) as s:
             if s.socket is not None:
