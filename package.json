@@ -588,13 +588,15 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Autopep8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.formatting.autopep8Path": {
                     "default": "autopep8",
                     "description": "%python.formatting.autopep8Path.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Autopep8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.formatting.blackArgs": {
                     "default": [],
@@ -603,13 +605,15 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Black Formatter extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.formatting.blackPath": {
                     "default": "black",
                     "description": "%python.formatting.blackPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Black Formatter extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.formatting.provider": {
                     "default": "autopep8",
@@ -621,7 +625,8 @@
                         "yapf"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Autopep8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8) or the [Black Formatter extension](https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.formatting.yapfArgs": {
                     "default": [],
@@ -630,13 +635,15 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "Yapf support will soon be deprecated. <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.formatting.yapfPath": {
                     "default": "yapf",
                     "description": "%python.formatting.yapfPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Yapf support will soon be deprecated. <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.globalModuleInstallation": {
                     "default": false,
@@ -669,31 +676,36 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "Bandit support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.banditEnabled": {
                     "default": false,
                     "description": "%python.linting.banditEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "Bandit support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.banditPath": {
                     "default": "bandit",
                     "description": "%python.linting.banditPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Bandit support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.cwd": {
                     "default": null,
                     "description": "%python.linting.cwd.description%",
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.enabled": {
                     "default": true,
                     "description": "%python.linting.enabled.description%",
                     "scope": "resource",
                     "type": "boolean"
+                    // TODO: decide deprecation
                 },
                 "python.linting.flake8Args": {
                     "default": [],
@@ -702,7 +714,8 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Flake8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.flake8CategorySeverity.E": {
                     "default": "Error",
@@ -714,7 +727,9 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Flake8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.linting.flake8CategorySeverity.F": {
                     "default": "Error",
@@ -726,7 +741,9 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Flake8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.interpreter.infoVisibility": {
                     "default": "onPythonRelated",
@@ -754,19 +771,25 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Flake8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.linting.flake8Enabled": {
                     "default": false,
                     "description": "%python.linting.flake8Enabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Flake8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.linting.flake8Path": {
                     "default": "flake8",
                     "description": "%python.linting.flake8Path.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Flake8 extension](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.linting.ignorePatterns": {
                     "default": [
@@ -780,18 +803,21 @@
                     "scope": "resource",
                     "type": "array",
                     "uniqueItems": true
+                    //TODO: decide deprecation
                 },
                 "python.linting.lintOnSave": {
                     "default": true,
                     "description": "%python.linting.lintOnSave.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.maxNumberOfProblems": {
                     "default": 100,
                     "description": "%python.linting.maxNumberOfProblems.description%",
                     "scope": "resource",
-                    "type": "number"
+                    "type": "number",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.mypyArgs": {
                     "default": [
@@ -805,7 +831,8 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Mypy Type Checker extension](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.mypyCategorySeverity.error": {
                     "default": "Error",
@@ -817,7 +844,8 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Mypy Type Checker extension](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.mypyCategorySeverity.note": {
                     "default": "Information",
@@ -829,19 +857,22 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Mypy Type Checker extension](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.mypyEnabled": {
                     "default": false,
                     "description": "%python.linting.mypyEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Mypy Type Checker extension](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.mypyPath": {
                     "default": "mypy",
                     "description": "%python.linting.mypyPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Mypy Type Checker extension](https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.prospectorArgs": {
                     "default": [],
@@ -850,19 +881,23 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "Prospector support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.prospectorEnabled": {
                     "default": false,
                     "description": "%python.linting.prospectorEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "Prospector support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.linting.prospectorPath": {
                     "default": "prospector",
                     "description": "%python.linting.prospectorPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Prospector support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pycodestyleArgs": {
                     "default": [],
@@ -871,7 +906,8 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "Pycodestyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pycodestyleCategorySeverity.E": {
                     "default": "Error",
@@ -883,7 +919,8 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Pycodestyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pycodestyleCategorySeverity.W": {
                     "default": "Warning",
@@ -895,19 +932,22 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Pycodestyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pycodestyleEnabled": {
                     "default": false,
                     "description": "%python.linting.pycodestyleEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "Pycodestyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pycodestylePath": {
                     "default": "pycodestyle",
                     "description": "%python.linting.pycodestylePath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Pycodestyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pydocstyleArgs": {
                     "default": [],
@@ -916,19 +956,22 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "Pydocstyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pydocstyleEnabled": {
                     "default": false,
                     "description": "%python.linting.pydocstyleEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "Pydocstyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pydocstylePath": {
                     "default": "pydocstyle",
                     "description": "%python.linting.pydocstylePath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Pydocstyle support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylamaArgs": {
                     "default": [],
@@ -937,19 +980,22 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "Pylama support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylamaEnabled": {
                     "default": false,
                     "description": "%python.linting.pylamaEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "Pylama support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylamaPath": {
                     "default": "pylama",
                     "description": "%python.linting.pylamaPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "Pylama support will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintArgs": {
                     "default": [],
@@ -958,7 +1004,8 @@
                         "type": "string"
                     },
                     "scope": "resource",
-                    "type": "array"
+                    "type": "array",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintCategorySeverity.convention": {
                     "default": "Information",
@@ -970,7 +1017,8 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintCategorySeverity.error": {
                     "default": "Error",
@@ -982,7 +1030,8 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintCategorySeverity.fatal": {
                     "default": "Error",
@@ -994,7 +1043,8 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintCategorySeverity.refactor": {
                     "default": "Hint",
@@ -1006,7 +1056,8 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintCategorySeverity.warning": {
                     "default": "Warning",
@@ -1018,19 +1069,23 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.pylintEnabled": {
                     "default": false,
                     "description": "%python.linting.pylintEnabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
+
                 },
                 "python.linting.pylintPath": {
                     "default": "pylint",
                     "description": "%python.linting.pylintPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Please use the [Pylint extension](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint). <br>Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.logging.level": {
                     "default": "error",
