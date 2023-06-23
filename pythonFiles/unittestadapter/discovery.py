@@ -54,7 +54,7 @@ class PayloadDict(TypedDict):
     cwd: str
     status: Literal["success", "error"]
     tests: Optional[TestNode]
-    errors: NotRequired[List[str]]
+    error: NotRequired[List[str]]
 
 
 def discover_tests(
@@ -68,7 +68,7 @@ def discover_tests(
     - uuid: UUID sent by the caller of the Python script, that needs to be sent back as an integrity check;
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
-    - errors: Discovery errors if any, not present otherwise.
+    - error: Discovery error if any, not present otherwise.
 
     Payload format for a successful discovery:
     {
@@ -86,31 +86,31 @@ def discover_tests(
     Payload format when there are errors:
     {
         "cwd": <test discovery directory>
-        "errors": [list of errors]
+        "": [list of errors]
         "status": "error",
     }
     """
     cwd = os.path.abspath(start_dir)
     payload: PayloadDict = {"cwd": cwd, "status": "success", "tests": None}
     tests = None
-    errors: List[str] = []
+    error: List[str] = []
 
     try:
         loader = unittest.TestLoader()
         suite = loader.discover(start_dir, pattern, top_level_dir)
 
-        tests, errors = build_test_tree(suite, cwd)  # test tree built succesfully here.
+        tests, error = build_test_tree(suite, cwd)  # test tree built succesfully here.
 
     except Exception:
-        errors.append(traceback.format_exc())
+        error.append(traceback.format_exc())
 
     # Still include the tests in the payload even if there are errors so that the TS
     # side can determine if it is from run or discovery.
     payload["tests"] = tests if tests is not None else None
 
-    if len(errors):
+    if len(error):
         payload["status"] = "error"
-        payload["errors"] = errors
+        payload["error"] = error
 
     return payload
 
