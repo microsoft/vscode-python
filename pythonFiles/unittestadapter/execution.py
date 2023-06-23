@@ -312,4 +312,5 @@ if __name__ == "__main__":
             "cwd": cwd,
             "status": status,
             "error": "No test ids received from buffer",
+            "result": None,
         }
