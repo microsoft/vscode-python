@@ -53,7 +53,7 @@ def parse_discovery_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
 class PayloadDict(TypedDict):
     cwd: str
     status: Literal["success", "error"]
-    tests: NotRequired[TestNode]
+    tests: Optional[TestNode]
     errors: NotRequired[List[str]]
 
 
@@ -91,7 +91,7 @@ def discover_tests(
     }
     """
     cwd = os.path.abspath(start_dir)
-    payload: PayloadDict = {"cwd": cwd, "status": "success"}
+    payload: PayloadDict = {"cwd": cwd, "status": "success", "tests": None}
     tests = None
     errors: List[str] = []
 
@@ -104,8 +104,9 @@ def discover_tests(
     except Exception:
         errors.append(traceback.format_exc())
 
-    if tests is not None:
-        payload["tests"] = tests
+    # Still include the tests in the payload even if there are errors so that the TS
+    # side can determine if it is from run or discovery.
+    payload["tests"] = tests if tests is not None else None
 
     if len(errors):
         payload["status"] = "error"

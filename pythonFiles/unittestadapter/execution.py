@@ -165,7 +165,7 @@ TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, Union[str, None]]]
 class PayloadDict(TypedDict):
     cwd: str
     status: TestExecutionStatus
-    result: NotRequired[TestResultTypeAlias]
+    result: Optional[TestResultTypeAlias]
     not_found: NotRequired[List[str]]
     error: NotRequired[str]
 
@@ -185,7 +185,7 @@ def run_tests(
     cwd = os.path.abspath(start_dir)
     status = TestExecutionStatus.error
     error = None
-    payload: PayloadDict = {"cwd": cwd, "status": status}
+    payload: PayloadDict = {"cwd": cwd, "status": status, "result": None}
 
     try:
         # If it's a file, split path and file name.
