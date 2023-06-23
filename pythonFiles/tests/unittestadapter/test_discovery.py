@@ -146,7 +146,7 @@ def test_empty_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
-    assert "tests" not in actual
+    assert "tests" in actual
     assert "errors" not in actual
 
 
