@@ -4,7 +4,7 @@
 import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { createDeferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
@@ -31,8 +31,6 @@ import { startTestIdServer } from '../common/utils';
  */
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
-    private promiseMap: Map<string, Deferred<ExecutionTestPayload | undefined>> = new Map();
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
@@ -48,6 +46,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
+        const uuid = this.testServer.createUUID(uri.fsPath);
         traceVerbose(uri, testIds, debugBool);
         const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
@@ -55,18 +54,26 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
         });
         try {
-            await this.runTestsNew(uri, testIds, debugBool, executionFactory, debugLauncher);
+            await this.runTestsNew(uri, testIds, uuid, debugBool, executionFactory, debugLauncher);
         } finally {
+            this.testServer.deleteUUID(uuid);
             disposable.dispose();
             // confirm with testing that this gets called (it must clean this up)
         }
-        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        // placeholder until after the rewrite is adopted
+        // TODO: remove after adoption.
+        const executionPayload: ExecutionTestPayload = {
+            cwd: uri.fsPath,
+            status: 'success',
+            error: '',
+        };
         return executionPayload;
     }
 
     private async runTestsNew(
         uri: Uri,
         testIds: string[],
+        uuid: string,
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
@@ -75,8 +82,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         this.configSettings.isTestExecution();
-        const uuid = this.testServer.createUUID(uri.fsPath);
-        this.promiseMap.set(uuid, deferred);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
 

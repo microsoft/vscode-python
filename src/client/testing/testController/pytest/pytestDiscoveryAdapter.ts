@@ -8,7 +8,7 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
+import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceVerbose } from '../../../logging';
 import {
@@ -23,8 +23,6 @@ import {
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
  */
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
-    private promiseMap: Map<string, Deferred<DiscoveredTestPayload | undefined>> = new Map();
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
@@ -55,7 +53,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const uuid = this.testServer.createUUID(uri.fsPath);
-        this.promiseMap.set(uuid, deferred);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
 

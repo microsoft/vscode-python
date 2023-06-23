@@ -13,17 +13,14 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, Union
 
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.append(os.fspath(script_dir / "lib" / "python"))
-from testing_tools import process_json_util
-
+directory_path = pathlib.Path(__file__).parent.parent / "lib" / "python"
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
-PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, PYTHON_FILES)
+PYTHON_FILES = pathlib.Path(__file__).parent.parent
+
+sys.path.insert(0, os.fspath(PYTHON_FILES))
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
-from testing_tools import socket_manager
+from testing_tools import process_json_util, socket_manager
 from typing_extensions import NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
 
@@ -54,6 +51,9 @@ def parse_execution_cli_args(
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
 ]
+PORT = 0
+UUID = 0
+START_DIR = ""
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -148,8 +148,10 @@ class UnittestTestResult(unittest.TextTestResult):
             "traceback": tb,
             "subtest": subtest.id() if subtest else None,
         }
-
         self.formatted[test_id] = result
+        if PORT == 0 or UUID == 0:
+            print("Error sending response, port or uuid unknown to python server.")
+        send_run_data(result, PORT, UUID)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -225,6 +227,33 @@ def run_tests(
     return payload
 
 
+def send_run_data(raw_data, port, uuid):
+    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    status = raw_data["outcome"]
+    cwd = os.path.abspath(START_DIR)
+    if raw_data["subtest"]:
+        test_id = raw_data["subtest"]
+    else:
+        test_id = raw_data["test"]
+    test_dict = {}
+    test_dict[test_id] = raw_data
+    payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
+    addr = ("localhost", port)
+    data = json.dumps(payload)
+    request = f"""Content-Length: {len(data)}
+Content-Type: application/json
+Request-uuid: {uuid}
+
+{data}"""
+    try:
+        with socket_manager.SocketManager(addr) as s:
+            if s.socket is not None:
+                s.socket.sendall(request.encode("utf-8"))
+    except Exception as e:
+        print(f"Error sending response: {e}")
+        print(f"Request data: {request}")
+
+
 if __name__ == "__main__":
     # Get unittest test execution arguments.
     argv = sys.argv[1:]
@@ -270,11 +299,11 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
 
-    port, uuid = parse_execution_cli_args(argv[:index])
+    PORT, UUID = parse_execution_cli_args(argv[:index])
     if test_ids_from_buffer:
         # Perform test execution.
         payload = run_tests(
-            start_dir, test_ids_from_buffer, pattern, top_level_dir, uuid
+            start_dir, test_ids_from_buffer, pattern, top_level_dir, UUID
         )
     else:
         cwd = os.path.abspath(start_dir)
@@ -284,19 +313,3 @@ if __name__ == "__main__":
             "status": status,
             "error": "No test ids received from buffer",
         }
-
-    # Build the request data and send it.
-    addr = ("localhost", port)
-    data = json.dumps(payload)
-    request = f"""Content-Length: {len(data)}
-Content-Type: application/json
-Request-uuid: {uuid}
-
-{data}"""
-    try:
-        with socket_manager.SocketManager(addr) as s:
-            if s.socket is not None:
-                s.socket.sendall(request.encode("utf-8"))
-    except Exception as e:
-        print(f"Error sending response: {e}")
-        print(f"Request data: {request}")

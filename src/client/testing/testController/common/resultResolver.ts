@@ -24,6 +24,8 @@ export class PythonResultResolver implements ITestResultResolver {
 
     public vsIdToRunId: Map<string, string>;
 
+    public subTestStats: Map<string, { passed: number; failed: number }> = new Map();
+
     constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
         this.testController = testController;
         this.testProvider = testProvider;
@@ -47,13 +49,13 @@ export class PythonResultResolver implements ITestResultResolver {
         if (rawTestData.status === 'error') {
             const testingErrorConst =
                 this.testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
-            const { errors } = rawTestData;
-            traceError(testingErrorConst, '\r\n', errors!.join('\r\n\r\n'));
+            const { error } = rawTestData;
+            traceError(testingErrorConst, '\r\n', error?.join('\r\n\r\n') ?? '');
 
             let errorNode = this.testController.items.get(`DiscoveryError:${workspacePath}`);
             const message = util.format(
                 `${testingErrorConst} ${Testing.seePythonOutput}\r\n`,
-                errors!.join('\r\n\r\n'),
+                error?.join('\r\n\r\n') ?? '',
             );
 
             if (errorNode === undefined) {
@@ -88,7 +90,6 @@ export class PythonResultResolver implements ITestResultResolver {
         const rawTestExecData = payload;
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             // Map which holds the subtest information for each test item.
-            const subTestStats: Map<string, { passed: number; failed: number }> = new Map();
 
             // iterate through payload and update the UI accordingly.
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
@@ -163,11 +164,11 @@ export class PythonResultResolver implements ITestResultResolver {
                     const data = rawTestExecData.result[keyTemp];
                     // find the subtest's parent test item
                     if (parentTestItem) {
-                        const subtestStats = subTestStats.get(parentTestCaseId);
+                        const subtestStats = this.subTestStats.get(parentTestCaseId);
                         if (subtestStats) {
                             subtestStats.failed += 1;
                         } else {
-                            subTestStats.set(parentTestCaseId, { failed: 1, passed: 0 });
+                            this.subTestStats.set(parentTestCaseId, { failed: 1, passed: 0 });
                             runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
@@ -200,11 +201,11 @@ export class PythonResultResolver implements ITestResultResolver {
 
                     // find the subtest's parent test item
                     if (parentTestItem) {
-                        const subtestStats = subTestStats.get(parentTestCaseId);
+                        const subtestStats = this.subTestStats.get(parentTestCaseId);
                         if (subtestStats) {
                             subtestStats.passed += 1;
                         } else {
-                            subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
+                            this.subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
                             runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
@@ -229,5 +230,3 @@ export class PythonResultResolver implements ITestResultResolver {
         return Promise.resolve();
     }
 }
-
-// had to switch the order of the original parameter since required param cannot follow optional.

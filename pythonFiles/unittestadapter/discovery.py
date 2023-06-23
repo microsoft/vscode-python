@@ -17,8 +17,8 @@ sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from typing_extensions import Literal
 
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
-PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, PYTHON_FILES)
+PYTHON_FILES = pathlib.Path(__file__).parent.parent
+sys.path.insert(0, os.fspath(PYTHON_FILES))
 
 from testing_tools import socket_manager
 
