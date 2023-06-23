@@ -29,7 +29,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     ) {}
 
     public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
-        // const deferred = createDeferred<DiscoveredTestPayload>();
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
 
@@ -54,8 +53,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         } finally {
             this.testServer.deleteUUID(uuid);
             disposable.dispose();
-            // deferred.resolve();
-            // confirm with testing that this gets called (it must clean this up)
         }
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.

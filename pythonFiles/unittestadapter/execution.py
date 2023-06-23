@@ -15,9 +15,9 @@ from typing import Dict, List, Optional, Tuple, Type, Union
 
 directory_path = pathlib.Path(__file__).parent.parent / "lib" / "python"
 # Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
-PYTHON_FILES = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PYTHON_FILES = pathlib.Path(__file__).parent.parent
 
-sys.path.insert(0, PYTHON_FILES)
+sys.path.insert(0, os.fspath(PYTHON_FILES))
 # Add the lib path to sys.path to find the typing_extensions module.
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import process_json_util, socket_manager

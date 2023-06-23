@@ -173,7 +173,6 @@ def pytest_report_teststatus(report, config):
                 "success",
                 collected_test if collected_test else None,
             )
-        # collected_tests[report.nodeid] = item_result
 
 
 ERROR_MESSAGE_CONST = {
