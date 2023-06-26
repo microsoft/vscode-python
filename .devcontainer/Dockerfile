@@ -3,7 +3,7 @@
 FROM docker.io/library/fedora:latest
 
 # Install supported python versions and nodejs.
-RUN dnf -y --nodocs install /usr/bin/{python3.7,python3.8,python3.9,python3.10,python3.11,git,gcc,conda} && \
+RUN dnf -y --nodocs install /usr/bin/{python3.7,python3.8,python3.9,python3.10,python3.11,git,conda,clang} && \
     dnf clean all
 
 ENV NVM_VERSION=0.39.3
