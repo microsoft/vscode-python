@@ -15,8 +15,7 @@
                 "ms-python.python",
                 "ms-python.black-formatter",
                 "ms-python.vscode-pylance",
-                "charliermarsh.ruff",
-                "ms-python.pylint"
+                "charliermarsh.ruff"
             ]
         }
     },
