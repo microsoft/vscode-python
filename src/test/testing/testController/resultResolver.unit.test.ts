@@ -4,6 +4,7 @@
 import { TestController, Uri, TestItem, CancellationToken, TestRun, TestItemCollection, Range } from 'vscode';
 import * as typemoq from 'typemoq';
 import * as sinon from 'sinon';
+import * as assert from 'assert';
 import { TestProvider } from '../../../client/testing/types';
 import {
     DiscoveredTestNode,
@@ -204,6 +205,58 @@ suite('Result Resolver tests', () => {
         });
         teardown(() => {
             sinon.restore();
+        });
+        test('resolveExecution create correct subtest item for unittest', async () => {
+            // test specific constants used expected values
+            sinon.stub(testItemUtilities, 'clearAllChildren').callsFake(() => undefined);
+            testProvider = 'unittest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(
+                testControllerMock.object,
+                testProvider,
+                workspaceUri,
+            );
+            const mockSubtestItem = createMockTestItem('parentTest subTest');
+            // add a mock test item to the map of known VSCode ids to run ids
+            resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
+            // creates a mock test item with a space which will be used to split the runId
+            resultResolver.runIdToVSid.set('parentTest subTest', 'parentTest subTest');
+
+            // add this mock test to the map of known test items
+            resultResolver.runIdToTestItem.set('parentTest', mockTestItem2);
+            resultResolver.runIdToTestItem.set('parentTest subTest', mockSubtestItem);
+
+            let generatedId: string | undefined;
+            testControllerMock
+                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny()))
+                .callback((id: string) => {
+                    generatedId = id;
+                    console.log('createTestItem function called with id:', id);
+                })
+                .returns(() => ({ id: 'id_this', label: 'label_this', uri: workspaceUri } as TestItem));
+
+            // create a successful payload with a single test called mockTestItem1
+            const successPayload: ExecutionTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'success',
+                result: {
+                    'parentTest subTest': {
+                        test: 'test',
+                        outcome: 'subtest-success', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
+                        message: 'message',
+                        traceback: 'traceback',
+                        subtest: 'subtest',
+                    },
+                },
+                error: '',
+            };
+
+            // call resolveExecution
+            resultResolver.resolveExecution(successPayload, runInstance.object);
+
+            // verify that the passed function was called for the single test item
+            assert.ok(generatedId);
+            assert.strictEqual(generatedId, 'subTest');
         });
         test('resolveExecution handles failed tests correctly', async () => {
             // test specific constants used expected values

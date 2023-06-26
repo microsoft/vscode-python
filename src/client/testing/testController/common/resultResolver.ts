@@ -160,6 +160,7 @@ export class PythonResultResolver implements ITestResultResolver {
                 } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-failure') {
                     // split on " " since the subtest ID has the parent test ID in the first part of the ID.
                     const parentTestCaseId = keyTemp.split(' ')[0];
+                    const subtestId = keyTemp.split(' ')[1];
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
                     const data = rawTestExecData.result[keyTemp];
                     // find the subtest's parent test item
@@ -173,7 +174,6 @@ export class PythonResultResolver implements ITestResultResolver {
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
-                        const subtestId = keyTemp;
                         const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
                         runInstance.appendOutput(fixLogLines(`${subtestId} Failed\r\n`));
                         // create a new test item for the subtest
@@ -197,6 +197,7 @@ export class PythonResultResolver implements ITestResultResolver {
                 } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
                     // split on " " since the subtest ID has the parent test ID in the first part of the ID.
                     const parentTestCaseId = keyTemp.split(' ')[0];
+                    const subtestId = keyTemp.split(' ')[1];
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
 
                     // find the subtest's parent test item
@@ -210,7 +211,6 @@ export class PythonResultResolver implements ITestResultResolver {
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
-                        const subtestId = keyTemp;
                         const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
                         // create a new test item for the subtest
                         if (subTestItem) {
