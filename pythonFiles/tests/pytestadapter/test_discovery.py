@@ -88,6 +88,10 @@ def test_parameterized_error_collect():
     "file, expected_const",
     [
         (
+            "param_same_name",
+            expected_discovery_test_output.param_same_name_expected_output,
+        ),
+        (
             "parametrize_tests.py",
             expected_discovery_test_output.parametrize_tests_expected_output,
         ),

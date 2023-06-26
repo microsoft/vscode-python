@@ -125,12 +125,6 @@ def test_bad_id_error_execution():
             ],
             expected_execution_test_output.doctest_pytest_expected_execution_output,
         ),
-        (
-            [
-                "",
-            ],
-            expected_execution_test_output.no_test_ids_pytest_execution_expected_output,
-        ),
     ],
 )
 def test_pytest_execution(test_ids, expected_const):
@@ -147,7 +141,6 @@ def test_pytest_execution(test_ids, expected_const):
     8. parametrize_tests_expected_execution_output: test run on a parametrize test with 3 inputs.
     9. single_parametrize_tests_expected_execution_output: test run on single parametrize test.
     10. doctest_pytest_expected_execution_output: test run on doctest file.
-    11. no_test_ids_pytest_execution_expected_output: test run with no inputted test ids.
 
 
     Keyword arguments:

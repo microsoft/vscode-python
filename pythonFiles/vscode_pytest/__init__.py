@@ -288,11 +288,12 @@ def build_test_tree(session: pytest.Session) -> TestNode:
         elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
             function_name: str = ""
             # parameterized test cases cut the repetitive part of the name off.
-            name_split = test_node["name"].split("[")[1]
-            test_node["name"] = "[" + name_split
+            name_split = test_node["name"].split("[")
+            test_node["name"] = "[" + name_split[1]
+            parent_path = os.fspath(test_case.path)
             try:
                 function_name = test_case.originalname  # type: ignore
-                function_test_case = function_nodes_dict[function_name]
+                function_test_case = function_nodes_dict[parent_path]
             except AttributeError:  # actual error has occurred
                 ERRORS.append(
                     f"unable to find original name for {test_case.name} with parameterization detected."
@@ -304,7 +305,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 function_test_case: TestNode = create_parameterized_function_node(
                     function_name, test_case.path, test_case.nodeid
                 )
-                function_nodes_dict[function_name] = function_test_case
+                function_nodes_dict[parent_path] = function_test_case
             function_test_case["children"].append(test_node)
             # Now, add the function node to file node.
             try:
