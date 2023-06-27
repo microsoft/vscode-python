@@ -487,6 +487,8 @@ doctest_pytest_expected_output = {
 #          └── [1]
 #          └── [2]
 #          └── [3]
+param1_path = os.fspath(TEST_DATA_PATH / "param_same_name" / "test_param1.py")
+param2_path = os.fspath(TEST_DATA_PATH / "param_same_name" / "test_param2.py")
 param_same_name_expected_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -494,24 +496,24 @@ param_same_name_expected_output = {
     "children": [
         {
             "name": "param_same_name",
-            "path": f"{TEST_DATA_PATH_STR}/param_same_name",
+            "path": os.fspath(TEST_DATA_PATH / "param_same_name"),
             "type_": "folder",
-            "id_": f"{TEST_DATA_PATH_STR}/param_same_name",
+            "id_": os.fspath(TEST_DATA_PATH / "param_same_name"),
             "children": [
                 {
                     "name": "test_param1.py",
-                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param1.py",
+                    "path": param1_path,
                     "type_": "file",
-                    "id_": f"{TEST_DATA_PATH_STR}/param_same_name/test_param1.py",
+                    "id_": param1_path,
                     "children": [
                         {
                             "name": "test_odd_even",
-                            "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param1.py",
+                            "path": param1_path,
                             "type_": "function",
                             "children": [
                                 {
                                     "name": "[a]",
-                                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param1.py",
+                                    "path": param1_path,
                                     "lineno": "6",
                                     "type_": "test",
                                     "id_": "param_same_name/test_param1.py::test_odd_even[a]",
@@ -519,7 +521,7 @@ param_same_name_expected_output = {
                                 },
                                 {
                                     "name": "[b]",
-                                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param1.py",
+                                    "path": param1_path,
                                     "lineno": "6",
                                     "type_": "test",
                                     "id_": "param_same_name/test_param1.py::test_odd_even[b]",
@@ -527,7 +529,7 @@ param_same_name_expected_output = {
                                 },
                                 {
                                     "name": "[c]",
-                                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param1.py",
+                                    "path": param1_path,
                                     "lineno": "6",
                                     "type_": "test",
                                     "id_": "param_same_name/test_param1.py::test_odd_even[c]",
@@ -540,18 +542,18 @@ param_same_name_expected_output = {
                 },
                 {
                     "name": "test_param2.py",
-                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param2.py",
+                    "path": param2_path,
                     "type_": "file",
-                    "id_": f"{TEST_DATA_PATH_STR}/param_same_name/test_param2.py",
+                    "id_": param2_path,
                     "children": [
                         {
                             "name": "test_odd_even",
-                            "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param2.py",
+                            "path": param2_path,
                             "type_": "function",
                             "children": [
                                 {
                                     "name": "[1]",
-                                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param2.py",
+                                    "path": param2_path,
                                     "lineno": "6",
                                     "type_": "test",
                                     "id_": "param_same_name/test_param2.py::test_odd_even[1]",
@@ -559,7 +561,7 @@ param_same_name_expected_output = {
                                 },
                                 {
                                     "name": "[2]",
-                                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param2.py",
+                                    "path": param2_path,
                                     "lineno": "6",
                                     "type_": "test",
                                     "id_": "param_same_name/test_param2.py::test_odd_even[2]",
@@ -567,7 +569,7 @@ param_same_name_expected_output = {
                                 },
                                 {
                                     "name": "[3]",
-                                    "path": f"{TEST_DATA_PATH_STR}/param_same_name/test_param2.py",
+                                    "path": param2_path,
                                     "lineno": "6",
                                     "type_": "test",
                                     "id_": "param_same_name/test_param2.py::test_odd_even[3]",
