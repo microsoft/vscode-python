@@ -142,7 +142,7 @@ export namespace TensorBoard {
     export const launchNativeTensorBoardSessionCodeLens = l10n.t('▶ Launch TensorBoard Session');
     export const launchNativeTensorBoardSessionCodeAction = l10n.t('Launch TensorBoard session');
     export const missingSourceFile = l10n.t(
-        'We could not locate the requested source file on disk. Manually specify the file.',
+        'We could not locate the requested source file on disk. You can manually specify the file.',
     );
     export const selectMissingSourceFile = l10n.t('Choose File');
     export const selectMissingSourceFileDescription = l10n.t(
@@ -212,7 +212,7 @@ export namespace Interpreters {
     );
 
     export const installPythonTerminalMacMessage = l10n.t(
-        '💡 Brew does not seem to be available, download Python from https://www.python.org/downloads. Alternatively, you can install the Python package using some other available package manager.',
+        '💡 Brew does not seem to be available. You can download Python from https://www.python.org/downloads. Alternatively, you can install the Python package using some other available package manager.',
     );
     export const changePythonInterpreter = l10n.t('Change Python Interpreter');
     export const selectedPythonInterpreter = l10n.t('Selected Python Interpreter');
@@ -222,7 +222,7 @@ export namespace InterpreterQuickPickList {
     export const condaEnvWithoutPythonTooltip = l10n.t(
         'Python is not available in this environment, it will automatically be installed upon selecting it',
     );
-    export const noPythonInstalled = l10n.t('Python is not installed, download and install it');
+    export const noPythonInstalled = l10n.t('Python is not installed');
     export const clickForInstructions = l10n.t('Click for instructions...');
     export const globalGroupName = l10n.t('Global');
     export const workspaceGroupName = l10n.t('Workspace');
