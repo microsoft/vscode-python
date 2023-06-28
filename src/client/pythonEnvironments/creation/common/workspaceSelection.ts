@@ -68,6 +68,8 @@ export async function pickWorkspaceFolder(
             placeHolder: CreateEnv.pickWorkspacePlaceholder,
             ignoreFocusOut: true,
             canPickMany: options?.allowMultiSelect,
+            matchOnDescription: true,
+            matchOnDetail: true,
         },
         options?.token,
     );
