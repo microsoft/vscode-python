@@ -399,9 +399,10 @@ def create_session_node(session: pytest.Session) -> TestNode:
     Keyword arguments:
     session -- the pytest session.
     """
+    session_path = session.path if session.path else pathlib.Path.cwd()
     return {
         "name": session.name,
-        "path": session.path,
+        "path": session_path,
         "type_": "folder",
         "children": [],
         "id_": os.fspath(session.path),
