@@ -139,9 +139,10 @@ suite('pytest test execution adapter', () => {
         );
     });
     test('pytest execution respects settings.testing.cwd when present', async () => {
+        const newCwd = path.join('new', 'path');
         configService = ({
             getSettings: () => ({
-                testing: { pytestArgs: ['.'], cwd: 'new/path' },
+                testing: { pytestArgs: ['.'], cwd: newCwd },
             }),
             isTestExecution: () => false,
         } as unknown) as IConfigurationService;
@@ -168,7 +169,7 @@ suite('pytest test execution adapter', () => {
             TEST_UUID: 'uuid123',
             TEST_PORT: '12345',
         };
-        const newCwd = path.join('new/path');
+
         execService.verify(
             (x) =>
                 x.exec(

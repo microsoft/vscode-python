@@ -105,16 +105,16 @@ suite('pytest test discovery adapter', () => {
     });
     test('Test discovery correctly pulls pytest args from config service settings', async () => {
         // set up a config service with different pytest args
+        const expectedPathNew = path.join('other', 'path');
         const configServiceNew: IConfigurationService = ({
             getSettings: () => ({
-                testing: { pytestArgs: ['.', 'abc', 'xyz'], cwd: 'other/path' },
+                testing: { pytestArgs: ['.', 'abc', 'xyz'], cwd: expectedPathNew },
             }),
         } as unknown) as IConfigurationService;
 
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
         await adapter.discoverTests(uri, execFactory.object);
         const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
-        const expectedPathNew = path.join('other', 'path');
         execService.verify(
             (x) =>
                 x.exec(
