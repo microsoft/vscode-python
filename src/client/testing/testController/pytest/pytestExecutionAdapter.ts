@@ -84,12 +84,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         this.configSettings.isTestExecution();
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
+        const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
 
         const spawnOptions: SpawnOptions = {
-            cwd: uri.fsPath,
+            cwd,
             throwOnStdErr: true,
             extraVariables: {
                 PYTHONPATH: pythonPathCommand,
@@ -131,7 +132,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const pytestPort = this.testServer.getPort().toString();
                 const pytestUUID = uuid.toString();
                 const launchOptions: LaunchOptions = {
-                    cwd: uri.fsPath,
+                    cwd,
                     args: testArgs,
                     token: spawnOptions.token,
                     testProvider: PYTEST_PROVIDER,
@@ -156,7 +157,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             return Promise.reject(ex);
         }
 
-        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        const executionPayload: ExecutionTestPayload = { cwd, status: 'success', error: '' };
         return executionPayload;
     }
 }

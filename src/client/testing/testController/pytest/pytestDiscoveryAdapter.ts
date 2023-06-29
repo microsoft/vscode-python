@@ -55,12 +55,13 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const uuid = this.testServer.createUUID(uri.fsPath);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
+        const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
 
         const spawnOptions: SpawnOptions = {
-            cwd: uri.fsPath,
+            cwd,
             throwOnStdErr: true,
             extraVariables: {
                 PYTHONPATH: pythonPathCommand,

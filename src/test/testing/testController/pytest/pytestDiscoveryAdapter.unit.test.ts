@@ -107,20 +107,21 @@ suite('pytest test discovery adapter', () => {
         // set up a config service with different pytest args
         const configServiceNew: IConfigurationService = ({
             getSettings: () => ({
-                testing: { pytestArgs: ['.', 'abc', 'xyz'] },
+                testing: { pytestArgs: ['.', 'abc', 'xyz'], cwd: 'other/path' },
             }),
         } as unknown) as IConfigurationService;
 
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
         await adapter.discoverTests(uri, execFactory.object);
         const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
+        const expectedPathNew = path.join('other', 'path');
         execService.verify(
             (x) =>
                 x.exec(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.deepEqual(options.extraVariables, expectedExtraVariables);
-                        assert.equal(options.cwd, expectedPath);
+                        assert.equal(options.cwd, expectedPathNew);
                         assert.equal(options.throwOnStdErr, true);
                         return true;
                     }),

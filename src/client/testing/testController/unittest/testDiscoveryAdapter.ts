@@ -19,8 +19,6 @@ import {
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
  */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
-    private cwd: string | undefined;
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
@@ -31,16 +29,16 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     public async discoverTests(uri: Uri): Promise<DiscoveredTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
+        const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const command = buildDiscoveryCommand(unittestArgs);
 
-        this.cwd = uri.fsPath;
         const uuid = this.testServer.createUUID(uri.fsPath);
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
             command,
-            cwd: this.cwd,
+            cwd,
             uuid,
             outChannel: this.outputChannel,
         };
@@ -57,7 +55,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
         const discoveryPayload: DiscoveredTestPayload = {
-            cwd: uri.fsPath,
+            cwd,
             status: 'success',
         };
         return discoveryPayload;

@@ -23,8 +23,6 @@ import { startTestIdServer } from '../common/utils';
  */
 
 export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
-    private cwd: string | undefined;
-
     constructor(
         public testServer: ITestServer,
         public configSettings: IConfigurationService,
@@ -62,15 +60,15 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
     ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
-        const { cwd, unittestArgs } = settings.testing;
+        const { unittestArgs } = settings.testing;
+        const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const command = buildExecutionCommand(unittestArgs);
-        this.cwd = cwd || uri.fsPath;
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
             command,
-            cwd: this.cwd,
+            cwd,
             uuid,
             debugBool,
             testIds,
@@ -87,7 +85,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         });
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
-        const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
+        const executionPayload: ExecutionTestPayload = { cwd, status: 'success', error: '' };
         return executionPayload;
     }
 }
