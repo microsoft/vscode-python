@@ -290,7 +290,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # parameterized test cases cut the repetitive part of the name off.
             name_split = test_node["name"].split("[")
             test_node["name"] = "[" + name_split[1]
-            parent_path = os.fspath(test_case.path)
+            parent_path = os.fspath(test_case.path) + "::" + name_split[0]
             try:
                 function_name = test_case.originalname  # type: ignore
                 function_test_case = function_nodes_dict[parent_path]
