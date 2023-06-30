@@ -290,7 +290,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # parameterized test cases cut the repetitive part of the name off.
             name_split = test_node["name"].split("[")
             test_node["name"] = "[" + name_split[1]
-            parent_path = os.fspath(test_case.path) + "::" + name_split[0]
+            parent_path = os.fspath(get_node_path(test_case)) + "::" + name_split[0]
             try:
                 function_name = test_case.originalname  # type: ignore
                 function_test_case = function_nodes_dict[parent_path]
@@ -303,7 +303,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 )
             except KeyError:
                 function_test_case: TestNode = create_parameterized_function_node(
-                    function_name, test_case.path, test_case.nodeid
+                    function_name, get_node_path(test_case), test_case.nodeid
                 )
                 function_nodes_dict[parent_path] = function_test_case
             function_test_case["children"].append(test_node)
@@ -354,7 +354,7 @@ def build_nested_folders(
 
     # Begin the iterator_path one level above the current file.
     iterator_path = file_node["path"].parent
-    while iterator_path != session.path:
+    while iterator_path != get_node_path(session):
         curr_folder_name = iterator_path.name
         try:
             curr_folder_node: TestNode = created_files_folders_dict[
@@ -385,7 +385,7 @@ def create_test_node(
     )
     return {
         "name": test_case.name,
-        "path": test_case.path,
+        "path": get_node_path(test_case),
         "lineno": test_case_loc,
         "type_": "test",
         "id_": test_case.nodeid,
@@ -399,13 +399,13 @@ def create_session_node(session: pytest.Session) -> TestNode:
     Keyword arguments:
     session -- the pytest session.
     """
-    session_path = session.path if session.path else pathlib.Path.cwd()
+    node_path = get_node_path(session)
     return {
         "name": session.name,
-        "path": session_path,
+        "path": node_path,
         "type_": "folder",
         "children": [],
-        "id_": os.fspath(session.path),
+        "id_": os.fspath(node_path),
     }
 
 
@@ -417,7 +417,7 @@ def create_class_node(class_module: pytest.Class) -> TestNode:
     """
     return {
         "name": class_module.name,
-        "path": class_module.path,
+        "path": get_node_path(class_module),
         "type_": "class",
         "children": [],
         "id_": class_module.nodeid,
@@ -451,11 +451,12 @@ def create_file_node(file_module: Any) -> TestNode:
     Keyword arguments:
     file_module -- the pytest file module.
     """
+    node_path = get_node_path(file_module)
     return {
-        "name": file_module.path.name,
-        "path": file_module.path,
+        "name": node_path.name,
+        "path": node_path,
         "type_": "file",
-        "id_": os.fspath(file_module.path),
+        "id_": os.fspath(node_path),
         "children": [],
     }
 
@@ -495,6 +496,10 @@ class ExecutionPayloadDict(Dict):
     result: Union[testRunResultDict, None]
     not_found: Union[List[str], None]  # Currently unused need to check
     error: Union[str, None]  # Currently unused need to check
+
+
+def get_node_path(node: Any) -> pathlib.Path:
+    return getattr(node, "path", pathlib.Path(node.fspath))
 
 
 def execution_post(
