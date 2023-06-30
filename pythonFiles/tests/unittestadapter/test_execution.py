@@ -8,9 +8,9 @@ from typing import List
 
 import pytest
 
-PYTHON_FILES = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-sys.path.insert(0, os.fspath(PYTHON_FILES))
 from unittestadapter.execution import parse_execution_cli_args, run_tests
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"

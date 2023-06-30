@@ -13,13 +13,10 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, Union
 
-directory_path = pathlib.Path(__file__).parent.parent / "lib" / "python"
-# Add the path to pythonFiles to sys.path to find testing_tools.socket_manager.
-PYTHON_FILES = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-sys.path.insert(0, os.fspath(PYTHON_FILES))
-# Add the lib path to sys.path to find the typing_extensions module.
-sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import process_json_util, socket_manager
 from typing_extensions import NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
