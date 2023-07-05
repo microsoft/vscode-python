@@ -1998,7 +1998,7 @@
         "reflect-metadata": "^0.1.12",
         "rxjs": "^6.5.4",
         "rxjs-compat": "^6.5.4",
-        "semver": "^5.5.0",
+        "semver": "^7.5.2",
         "stack-trace": "0.0.10",
         "sudo-prompt": "^9.2.1",
         "tmp": "^0.0.33",
