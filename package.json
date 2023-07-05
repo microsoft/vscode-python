@@ -704,8 +704,8 @@
                     "default": true,
                     "description": "%python.linting.enabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
-                    // TODO: decide deprecation
+                    "type": "boolean",
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.flake8Args": {
                     "default": [],
@@ -802,8 +802,8 @@
                     },
                     "scope": "resource",
                     "type": "array",
-                    "uniqueItems": true
-                    //TODO: decide deprecation
+                    "uniqueItems": true,
+                    "markdownDeprecationMessage": "This setting will soon be deprecated. Learn more [here](https://aka.ms/vscode-python-tools-settings)."
                 },
                 "python.linting.lintOnSave": {
                     "default": true,
