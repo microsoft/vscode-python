@@ -32,6 +32,7 @@ import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
 import { EnvironmentType } from '../../pythonEnvironments/info';
+import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService {
@@ -172,9 +173,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             const activatePath = path.join(path.dirname(interpreter.path), 'activate');
             if (!(await pathExists(activatePath))) {
                 const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
+                const pathVarName = getSearchPathEnvVarNames()[0];
                 envVarCollection.replace(
                     'PATH',
-                    `${path.dirname(interpreter.path)}${path.delimiter}${process.env.Path}`,
+                    `${path.dirname(interpreter.path)}${path.delimiter}${process.env[pathVarName]}`,
                     { applyAtShellIntegration: true },
                 );
                 return;
