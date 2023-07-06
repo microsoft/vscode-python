@@ -5,7 +5,7 @@ on:
 
 jobs:
   classify:
-    name: 'Remove needs labels on issue clos'
+    name: 'Remove needs labels on issue closing'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions
