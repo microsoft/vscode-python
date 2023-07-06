@@ -8,7 +8,7 @@ jobs:
     name: 'Remove needs labels on issue closing'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Remove needs labels on issue close'
+      - name: 'Removes needs labels on issue close'
         uses: actions-ecosystem/action-remove-labels@v1
         with:
           repository: 'microsoft/vscode-github-triage-actions'
