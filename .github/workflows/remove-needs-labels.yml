@@ -14,6 +14,10 @@ jobs:
           labels: |
             needs PR
             needs spike
+            needs community feedback
+            needs proposal
+
+
     # steps:
     #   - name: Checkout Actions
     #     uses: actions/checkout@v3
