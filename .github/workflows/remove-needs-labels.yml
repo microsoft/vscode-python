@@ -1,22 +1,22 @@
-name: 'Remove Needs Label'
+name: Remove Needs Label
 on:
   issues:
     types: [closed]
 
 jobs:
-  classify:
-    name: 'Remove needs labels on issue closing'
+  changed-files-in-pr:
+    name: 'Check for needs label on closed issues'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
+          repository: 'eleanorjboyd/inc_dec_example_repo'
           ref: stable
           path: ./actions
 
       - name: Install Actions
         run: npm install --production --prefix ./actions
 
-      - name: Remove Any Needs Labels
-        uses: ./actions/python-remove-needs-label
+      - name: Check for changed files
+        uses: ./actions/remove-needs-label
