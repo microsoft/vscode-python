@@ -15,7 +15,7 @@ jobs:
           path: ./actions
 
       - name: Install Actions
-        run: npm install --production --prefix ./actions
+        run: npm install --omit=dev --prefix ./actions
 
       - name: Check for changed files
         uses: ./actions/remove-needs-label
