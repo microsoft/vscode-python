@@ -12,7 +12,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: 'eleanorjboyd/inc_dec_example_repo'
-          ref: stable
           path: ./actions
 
       - name: Install Actions
