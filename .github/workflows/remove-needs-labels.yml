@@ -11,7 +11,7 @@ jobs:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
+          repository: 'eleanorjboyd/vscode-github-triage-actions'
           ref: stable
           path: ./actions
 
