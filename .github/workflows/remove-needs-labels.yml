@@ -5,10 +5,10 @@ on:
 
 jobs:
   changed-files-in-pr:
-    name: 'Check for needs label on closed issues'
+    name: 'Removes needs label on closed issues'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Remove needs labels on issue close'
+      - name: 'Removes needs labels on issue close'
         uses: actions-ecosystem/action-remove-labels@v1
         with:
           labels: |
@@ -16,17 +16,3 @@ jobs:
             needs spike
             needs community feedback
             needs proposal
-
-
-    # steps:
-    #   - name: Checkout Actions
-    #     uses: actions/checkout@v3
-    #     with:
-    #       repository: 'eleanorjboyd/inc_dec_example_repo'
-    #       path: ./actions
-
-    #   - name: Install Actions
-    #     run: npm install --prefix ./actions
-
-    #   - name: Check for changed files
-    #     uses: ./actions/remove-needs-label
