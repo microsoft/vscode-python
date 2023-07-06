@@ -18,5 +18,5 @@ jobs:
       - name: Install Actions
         run: npm install --production --prefix ./actions
 
-      - name: Classify PR
+      - name: Remove Any Needs Labels
         uses: ./actions/python-remove-needs-label
