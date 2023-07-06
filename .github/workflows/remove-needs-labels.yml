@@ -15,8 +15,8 @@ jobs:
           ref: stable
           path: ./actions
 
-    #   - name: Install Actions
-    #     run: npm install --prefix ./actions
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
 
       - name: Remove Any Needs Labels
         uses: ./actions/python-remove-needs-label
