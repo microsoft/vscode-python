@@ -5,18 +5,18 @@ on:
 
 jobs:
   classify:
-    name: 'Remove needs labels on issue clos'
+    name: 'Remove needs labels on issue closing'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Actions
         uses: actions/checkout@v3
         with:
-          repository: 'eleanorjboyd/vscode-github-triage-actions'
+          repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
 
       - name: Install Actions
         run: npm install --production --prefix ./actions
 
-      - name: Classify PR
+      - name: Remove Any Needs Labels
         uses: ./actions/python-remove-needs-label
