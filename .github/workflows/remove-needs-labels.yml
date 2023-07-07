@@ -8,11 +8,11 @@ jobs:
     name: 'Remove needs labels on issue closing'
     runs-on: ubuntu-latest
     steps:
-    - name: 'Removes needs labels on issue close'
-      uses: actions-ecosystem/action-remove-labels@v1
-      with:
-        labels: |
-          needs PR
-          needs spike
-          needs community feedback
-          needs proposal
+      - name: 'Removes needs labels on issue close'
+        uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          labels: |
+            needs PR
+            needs spike
+            needs community feedback
+            needs proposal
