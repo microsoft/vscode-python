@@ -1,4 +1,5 @@
 name: PR files
+
 on:
   pull_request:
     types:
@@ -15,15 +16,29 @@ jobs:
     name: 'Check for changed files'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Actions
-        uses: actions/checkout@v3
+      - name: 'package-lock.json matches package.json'
+        uses: brettcannon/check-for-changed-files@v1.1.0
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
-          ref: stable
-          path: ./actions
+          prereq-pattern: 'package.json'
+          file-pattern: 'package-lock.json'
+          skip-label: 'skip package*.json'
+          failure-message: '${prereq-pattern} was edited but ${file-pattern} was not (the ${skip-label} label can be used to pass this check)'
 
-      - name: Install Actions
-        run: npm install --production --prefix ./actions
+      - name: 'package.json matches package-lock.json'
+        uses: brettcannon/check-for-changed-files@v1.1.0
+        with:
+          prereq-pattern: 'package-lock.json'
+          file-pattern: 'package.json'
+          skip-label: 'skip package*.json'
+          failure-message: '${prereq-pattern} was edited but ${file-pattern} was not (the ${skip-label} label can be used to pass this check)'
 
-      - name: Check for changed files
-        uses: ./actions/python-pr-file-check
+      - name: 'Tests'
+        uses: brettcannon/check-for-changed-files@v1.1.0
+        with:
+          prereq-pattern: src/**/*.ts
+          file-pattern: |
+            src/**/*.test.ts
+            src/**/*.testvirtualenvs.ts
+            .github/test_plan.md
+          skip-label: 'skip tests'
+          failure-message: 'TypeScript code was edited without also editing a ${file-pattern} file; see the Testing page in our wiki on testing guidelines (the ${skip-label} label can be used to pass this check)'
