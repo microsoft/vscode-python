@@ -438,6 +438,30 @@ parametrize_tests_expected_output = {
                         },
                     ],
                 },
+                {
+                    "name": "test_under_ten",
+                    "path": parameterize_tests_path,
+                    "type_": "function",
+                    "children": [
+                        {
+                            "name": "[1]",
+                            "path": parameterize_tests_path,
+                            "lineno": "15",
+                            "type_": "test",
+                            "id_": "parametrize_tests.py::test_under_ten[1]",
+                            "runID": "parametrize_tests.py::test_under_ten[1]",
+                        },
+                        {
+                            "name": "[2]",
+                            "path": parameterize_tests_path,
+                            "lineno": "15",
+                            "type_": "test",
+                            "id_": "parametrize_tests.py::test_under_ten[2]",
+                            "runID": "parametrize_tests.py::test_under_ten[2]",
+                        },
+                    ],
+                    "id_": "parametrize_tests.py::test_under_ten",
+                },
             ],
         },
     ],
@@ -469,6 +493,117 @@ doctest_pytest_expected_output = {
                     "id_": "text_docstring.txt::text_docstring.txt",
                     "runID": "text_docstring.txt::text_docstring.txt",
                 }
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
+
+# This is the expected output for the param_same_name tests.
+# └── param_same_name
+#    └── test_param1.py
+#       └── test_odd_even
+#          └── [a]
+#          └── [b]
+#          └── [c]
+#    └── test_param2.py
+#       └── test_odd_even
+#          └── [1]
+#          └── [2]
+#          └── [3]
+param1_path = os.fspath(TEST_DATA_PATH / "param_same_name" / "test_param1.py")
+param2_path = os.fspath(TEST_DATA_PATH / "param_same_name" / "test_param2.py")
+param_same_name_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "param_same_name",
+            "path": os.fspath(TEST_DATA_PATH / "param_same_name"),
+            "type_": "folder",
+            "id_": os.fspath(TEST_DATA_PATH / "param_same_name"),
+            "children": [
+                {
+                    "name": "test_param1.py",
+                    "path": param1_path,
+                    "type_": "file",
+                    "id_": param1_path,
+                    "children": [
+                        {
+                            "name": "test_odd_even",
+                            "path": param1_path,
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[a]",
+                                    "path": param1_path,
+                                    "lineno": "6",
+                                    "type_": "test",
+                                    "id_": "param_same_name/test_param1.py::test_odd_even[a]",
+                                    "runID": "param_same_name/test_param1.py::test_odd_even[a]",
+                                },
+                                {
+                                    "name": "[b]",
+                                    "path": param1_path,
+                                    "lineno": "6",
+                                    "type_": "test",
+                                    "id_": "param_same_name/test_param1.py::test_odd_even[b]",
+                                    "runID": "param_same_name/test_param1.py::test_odd_even[b]",
+                                },
+                                {
+                                    "name": "[c]",
+                                    "path": param1_path,
+                                    "lineno": "6",
+                                    "type_": "test",
+                                    "id_": "param_same_name/test_param1.py::test_odd_even[c]",
+                                    "runID": "param_same_name/test_param1.py::test_odd_even[c]",
+                                },
+                            ],
+                            "id_": "param_same_name/test_param1.py::test_odd_even",
+                        }
+                    ],
+                },
+                {
+                    "name": "test_param2.py",
+                    "path": param2_path,
+                    "type_": "file",
+                    "id_": param2_path,
+                    "children": [
+                        {
+                            "name": "test_odd_even",
+                            "path": param2_path,
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[1]",
+                                    "path": param2_path,
+                                    "lineno": "6",
+                                    "type_": "test",
+                                    "id_": "param_same_name/test_param2.py::test_odd_even[1]",
+                                    "runID": "param_same_name/test_param2.py::test_odd_even[1]",
+                                },
+                                {
+                                    "name": "[2]",
+                                    "path": param2_path,
+                                    "lineno": "6",
+                                    "type_": "test",
+                                    "id_": "param_same_name/test_param2.py::test_odd_even[2]",
+                                    "runID": "param_same_name/test_param2.py::test_odd_even[2]",
+                                },
+                                {
+                                    "name": "[3]",
+                                    "path": param2_path,
+                                    "lineno": "6",
+                                    "type_": "test",
+                                    "id_": "param_same_name/test_param2.py::test_odd_even[3]",
+                                    "runID": "param_same_name/test_param2.py::test_odd_even[3]",
+                                },
+                            ],
+                            "id_": "param_same_name/test_param2.py::test_odd_even",
+                        }
+                    ],
+                },
             ],
         }
     ],

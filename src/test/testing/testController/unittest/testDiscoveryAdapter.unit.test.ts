@@ -54,4 +54,41 @@ suite('Unittest test discovery adapter', () => {
             uuid: '123456789',
         });
     });
+    test('DiscoverTests should respect settings.testings.cwd when present', async () => {
+        let options: TestCommandOptions | undefined;
+        stubConfigSettings = ({
+            getSettings: () => ({
+                testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'], cwd: '/foo' },
+            }),
+        } as unknown) as IConfigurationService;
+
+        const stubTestServer = ({
+            sendCommand(opt: TestCommandOptions): Promise<void> {
+                delete opt.outChannel;
+                options = opt;
+                return Promise.resolve();
+            },
+            onDiscoveryDataReceived: () => {
+                // no body
+            },
+            createUUID: () => '123456789',
+        } as unknown) as ITestServer;
+
+        const uri = Uri.file('/foo/bar');
+        const newCwd = '/foo';
+        const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
+
+        const adapter = new UnittestTestDiscoveryAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
+        adapter.discoverTests(uri);
+
+        assert.deepStrictEqual(options, {
+            workspaceFolder: uri,
+            cwd: newCwd,
+            command: {
+                script,
+                args: ['--udiscovery', '-v', '-s', '.', '-p', 'test*'],
+            },
+            uuid: '123456789',
+        });
+    });
 });

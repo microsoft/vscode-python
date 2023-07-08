@@ -3,9 +3,14 @@
 
 import os
 import pathlib
+import sys
 from typing import List
 
 import pytest
+
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
+
 from unittestadapter.execution import parse_execution_cli_args, run_tests
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
@@ -60,7 +65,7 @@ def test_no_ids_run() -> None:
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    if "result" in actual:
+    if actual["result"] is not None:
         assert len(actual["result"]) == 0
     else:
         raise AssertionError("actual['result'] is None")
@@ -80,7 +85,7 @@ def test_single_ids_run() -> None:
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert "result" in actual
+    assert actual["result"] is not None
     result = actual["result"]
     assert len(result) == 1
     assert id in result
@@ -112,7 +117,7 @@ def test_subtest_run() -> None:
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert "result" in actual
+    assert actual["result"] is not None
     result = actual["result"]
     assert len(result) == 6
     for id in subtests_ids:
@@ -200,7 +205,7 @@ def test_multiple_ids_run(test_ids, pattern, cwd, expected_outcome) -> None:
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == cwd
-    assert "result" in actual
+    assert actual["result"] is not None
     result = actual["result"]
     assert len(result) == len(test_ids)
     for test_id in test_ids:
@@ -225,7 +230,7 @@ def test_failed_tests():
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert "result" in actual
+    assert actual["result"] is not None
     result = actual["result"]
     assert len(result) == len(test_ids)
     for test_id in test_ids:
@@ -250,7 +255,7 @@ def test_unknown_id():
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert "result" in actual
+    assert actual["result"] is not None
     result = actual["result"]
     assert len(result) == len(test_ids)
     assert "unittest.loader._FailedTest.unknown_id" in result

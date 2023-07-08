@@ -231,7 +231,7 @@ export type DiscoveredTestPayload = {
     cwd: string;
     tests?: DiscoveredTestNode;
     status: 'success' | 'error';
-    errors?: string[];
+    error?: string[];
 };
 
 export type ExecutionTestPayload = {

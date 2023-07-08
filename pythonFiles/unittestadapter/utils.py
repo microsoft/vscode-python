@@ -151,14 +151,14 @@ def build_test_tree(
         "id_": <test_directory path>
     }
     """
-    errors = []
+    error = []
     directory_path = pathlib.PurePath(test_directory)
     root = build_test_node(test_directory, directory_path.name, TestNodeTypeEnum.folder)
 
     for test_case in get_test_case(suite):
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            errors.append(str(test_case._exception))  # type: ignore
+            error.append(str(test_case._exception))  # type: ignore
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")
@@ -206,7 +206,7 @@ def build_test_tree(
     if not root["children"]:
         root = None
 
-    return root, errors
+    return root, error
 
 
 def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:

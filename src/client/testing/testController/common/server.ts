@@ -4,6 +4,7 @@
 import * as net from 'net';
 import * as crypto from 'crypto';
 import { Disposable, Event, EventEmitter } from 'vscode';
+import * as path from 'path';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -141,12 +142,15 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     async sendCommand(options: TestCommandOptions, runTestIdPort?: string, callback?: () => void): Promise<void> {
         const { uuid } = options;
+
+        const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+        const pythonPathCommand = [options.cwd, ...pythonPathParts].join(path.delimiter);
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
             outputChannel: options.outChannel,
-            extraVariables: {},
+            extraVariables: { PYTHONPATH: pythonPathCommand },
         };
 
         if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;

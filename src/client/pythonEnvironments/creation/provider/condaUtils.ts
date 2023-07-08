@@ -47,6 +47,8 @@ export async function pickPythonVersion(token?: CancellationToken): Promise<stri
         items,
         {
             placeHolder: CreateEnv.Conda.selectPythonQuickPickPlaceholder,
+            matchOnDescription: true,
+            ignoreFocusOut: true,
         },
         token,
     );

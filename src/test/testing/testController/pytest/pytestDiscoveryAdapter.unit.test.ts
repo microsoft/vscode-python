@@ -105,9 +105,10 @@ suite('pytest test discovery adapter', () => {
     });
     test('Test discovery correctly pulls pytest args from config service settings', async () => {
         // set up a config service with different pytest args
+        const expectedPathNew = path.join('other', 'path');
         const configServiceNew: IConfigurationService = ({
             getSettings: () => ({
-                testing: { pytestArgs: ['.', 'abc', 'xyz'] },
+                testing: { pytestArgs: ['.', 'abc', 'xyz'], cwd: expectedPathNew },
             }),
         } as unknown) as IConfigurationService;
 
@@ -120,7 +121,7 @@ suite('pytest test discovery adapter', () => {
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.deepEqual(options.extraVariables, expectedExtraVariables);
-                        assert.equal(options.cwd, expectedPath);
+                        assert.equal(options.cwd, expectedPathNew);
                         assert.equal(options.throwOnStdErr, true);
                         return true;
                     }),

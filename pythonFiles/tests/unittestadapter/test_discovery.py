@@ -132,7 +132,7 @@ def test_simple_discovery() -> None:
 
     assert actual["status"] == "success"
     assert is_same_tree(actual.get("tests"), expected)
-    assert "errors" not in actual
+    assert "error" not in actual
 
 
 def test_empty_discovery() -> None:
@@ -146,8 +146,8 @@ def test_empty_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
-    assert "tests" not in actual
-    assert "errors" not in actual
+    assert "tests" in actual
+    assert "error" not in actual
 
 
 def test_error_discovery() -> None:
@@ -213,4 +213,4 @@ def test_error_discovery() -> None:
 
     assert actual["status"] == "error"
     assert is_same_tree(expected, actual.get("tests"))
-    assert len(actual.get("errors", [])) == 1
+    assert len(actual.get("error", [])) == 1

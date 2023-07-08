@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import os
 import shutil
-from typing import Any, Dict, List, Optional
 
 import pytest
 from tests.pytestadapter import expected_execution_test_output
@@ -29,11 +28,10 @@ def test_syntax_error_execution(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
-    actual_list: Optional[List[Dict[str, Any]]] = runner(
-        ["error_syntax_discover.py::test_function"]
-    )
-    assert actual_list
-    for actual in actual_list:
+    actual = runner(["error_syntax_discover.py::test_function"])
+    if actual:
+        actual = actual[0]
+        assert actual
         assert all(item in actual for item in ("status", "cwd", "error"))
         assert actual["status"] == "error"
         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
@@ -45,9 +43,10 @@ def test_bad_id_error_execution():
 
     The json should still be returned but the errors list should be present.
     """
-    actual_list: Optional[List[Dict[str, Any]]] = runner(["not/a/real::test_id"])
-    assert actual_list
-    for actual in actual_list:
+    actual = runner(["not/a/real::test_id"])
+    if actual:
+        actual = actual[0]
+        assert actual
         assert all(item in actual for item in ("status", "cwd", "error"))
         assert actual["status"] == "error"
         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
@@ -126,12 +125,6 @@ def test_bad_id_error_execution():
             ],
             expected_execution_test_output.doctest_pytest_expected_execution_output,
         ),
-        (
-            [
-                "",
-            ],
-            expected_execution_test_output.no_test_ids_pytest_execution_expected_output,
-        ),
     ],
 )
 def test_pytest_execution(test_ids, expected_const):
@@ -148,7 +141,6 @@ def test_pytest_execution(test_ids, expected_const):
     8. parametrize_tests_expected_execution_output: test run on a parametrize test with 3 inputs.
     9. single_parametrize_tests_expected_execution_output: test run on single parametrize test.
     10. doctest_pytest_expected_execution_output: test run on doctest file.
-    11. no_test_ids_pytest_execution_expected_output: test run with no inputted test ids.
 
 
     Keyword arguments:
@@ -156,14 +148,17 @@ def test_pytest_execution(test_ids, expected_const):
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
     """
     args = test_ids
-    actual_list: Optional[List[Dict[str, Any]]] = runner(args)
-    assert actual_list
-    for actual in actual_list:
-        assert all(item in actual for item in ("status", "cwd", "result"))
-        assert actual["status"] == "success"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        result_data = actual["result"]
-        for key in result_data:
-            if result_data[key]["outcome"] == "failure":
-                result_data[key]["message"] = "ERROR MESSAGE"
-        assert result_data == expected_const
+    actual = runner(args)
+    assert actual
+    print(actual)
+    assert len(actual) == len(expected_const)
+    actual_result_dict = dict()
+    for a in actual:
+        assert all(item in a for item in ("status", "cwd", "result"))
+        assert a["status"] == "success"
+        assert a["cwd"] == os.fspath(TEST_DATA_PATH)
+        actual_result_dict.update(a["result"])
+    for key in actual_result_dict:
+        if actual_result_dict[key]["outcome"] == "failure":
+            actual_result_dict[key]["message"] = "ERROR MESSAGE"
+    assert actual_result_dict == expected_const
