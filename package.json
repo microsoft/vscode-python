@@ -589,8 +589,8 @@
                     },
                     "scope": "resource",
                     "type": "array",
-                    "markdownDeprecationMessage":  "%python.formatting.autopep8Args.markdownDeprecationMessage%",
-                    "deprecationMessage":  "%python.formatting.autopep8Args.deprecationMessage%"
+                    "markdownDeprecationMessage": "%python.formatting.autopep8Args.markdownDeprecationMessage%",
+                    "deprecationMessage": "%python.formatting.autopep8Args.deprecationMessage%"
                 },
                 "python.formatting.autopep8Path": {
                     "default": "autopep8",
@@ -700,7 +700,7 @@
                     "description": "%python.linting.banditPath.description%",
                     "scope": "machine-overridable",
                     "type": "string",
-                    "markdownDeprecationMessage": "%python.linting.banditPath.markdownDeprecationMessage%", 
+                    "markdownDeprecationMessage": "%python.linting.banditPath.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.banditPath.deprecationMessage%"
                 },
                 "python.linting.cwd": {
@@ -743,7 +743,6 @@
                     "type": "string",
                     "markdownDeprecationMessage": "%python.linting.flake8CategorySeverity.E.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.flake8CategorySeverity.E.deprecationMessage%"
-
                 },
                 "python.linting.flake8CategorySeverity.F": {
                     "default": "Error",
@@ -758,7 +757,6 @@
                     "type": "string",
                     "markdownDeprecationMessage": "%python.linting.flake8CategorySeverity.F.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.flake8CategorySeverity.F.deprecationMessage%"
-
                 },
                 "python.interpreter.infoVisibility": {
                     "default": "onPythonRelated",
@@ -789,7 +787,6 @@
                     "type": "string",
                     "markdownDeprecationMessage": "%python.linting.flake8CategorySeverity.W.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.flake8CategorySeverity.W.deprecationMessage%"
-
                 },
                 "python.linting.flake8Enabled": {
                     "default": false,
@@ -798,7 +795,6 @@
                     "type": "boolean",
                     "markdownDeprecationMessage": "%python.linting.flake8Enabled.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.flake8Enabled.deprecationMessage%"
-
                 },
                 "python.linting.flake8Path": {
                     "default": "flake8",
@@ -807,7 +803,6 @@
                     "type": "string",
                     "markdownDeprecationMessage": "%python.linting.flake8Path.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.flake8Path.deprecationMessage%"
-
                 },
                 "python.linting.ignorePatterns": {
                     "default": [
@@ -918,7 +913,6 @@
                     "type": "boolean",
                     "markdownDeprecationMessage": "%python.linting.prospectorEnabled.markdownDeprecationMessage%",
                     "deprecationMessage": "%python.linting.prospectorEnabled.deprecationMessage%"
-
                 },
                 "python.linting.prospectorPath": {
                     "default": "prospector",
