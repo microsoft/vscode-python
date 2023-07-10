@@ -266,10 +266,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
         test_node = create_test_node(test_case)
         if isinstance(test_case.parent, pytest.Class):
             try:
-                test_class_node = class_nodes_dict[test_case.parent.name]
+                test_class_node = class_nodes_dict[test_case.parent.nodeid]
             except KeyError:
                 test_class_node = create_class_node(test_case.parent)
-                class_nodes_dict[test_case.parent.name] = test_class_node
+                class_nodes_dict[test_case.parent.nodeid] = test_class_node
             test_class_node["children"].append(test_node)
             if test_case.parent.parent:
                 parent_module = test_case.parent.parent

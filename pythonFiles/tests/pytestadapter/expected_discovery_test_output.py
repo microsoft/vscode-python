@@ -106,10 +106,14 @@ unit_pytest_same_file_discovery_expected_output = {
 #    │   └── TestAddFunction
 #    │       ├── test_add_negative_numbers
 #    │       └── test_add_positive_numbers
+#    │   └── TestDuplicateFunction
+#    │       └── test_dup_a
 #    └── test_subtract.py
 #        └── TestSubtractFunction
 #            ├── test_subtract_negative_numbers
 #            └── test_subtract_positive_numbers
+#    │   └── TestDuplicateFunction
+#    │       └── test_dup_s
 unittest_folder_path = os.fspath(TEST_DATA_PATH / "unittest_folder")
 test_add_path = os.fspath(TEST_DATA_PATH / "unittest_folder" / "test_add.py")
 test_subtract_path = os.fspath(TEST_DATA_PATH / "unittest_folder" / "test_subtract.py")
@@ -159,7 +163,26 @@ unittest_folder_discovery_expected_output = {
                                 },
                             ],
                             "id_": "unittest_folder/test_add.py::TestAddFunction",
-                        }
+                        },
+                        {
+                            "name": "TestDuplicateFunction",
+                            "path": test_add_path,
+                            "type_": "class",
+                            "children": [
+                                {
+                                    "name": "test_dup_a",
+                                    "path": test_add_path,
+                                    "lineno": find_test_line_number(
+                                        "test_dup_a",
+                                        test_add_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": "unittest_folder/test_add.py::TestDuplicateFunction::test_dup_a",
+                                    "runID": "unittest_folder/test_add.py::TestDuplicateFunction::test_dup_a",
+                                },
+                            ],
+                            "id_": "unittest_folder/test_add.py::TestDuplicateFunction",
+                        },
                     ],
                 },
                 {
@@ -197,7 +220,26 @@ unittest_folder_discovery_expected_output = {
                                 },
                             ],
                             "id_": "unittest_folder/test_subtract.py::TestSubtractFunction",
-                        }
+                        },
+                        {
+                            "name": "TestDuplicateFunction",
+                            "path": test_subtract_path,
+                            "type_": "class",
+                            "children": [
+                                {
+                                    "name": "test_dup_s",
+                                    "path": test_subtract_path,
+                                    "lineno": find_test_line_number(
+                                        "test_dup_s",
+                                        test_subtract_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": "unittest_folder/test_subtract.py::TestDuplicateFunction::test_dup_s",
+                                    "runID": "unittest_folder/test_subtract.py::TestDuplicateFunction::test_dup_s",
+                                },
+                            ],
+                            "id_": "unittest_folder/test_subtract.py::TestDuplicateFunction",
+                        },
                     ],
                 },
             ],
@@ -205,6 +247,7 @@ unittest_folder_discovery_expected_output = {
     ],
     "id_": TEST_DATA_PATH_STR,
 }
+
 
 # This is the expected output for the dual_level_nested_folder tests
 #  └── dual_level_nested_folder
