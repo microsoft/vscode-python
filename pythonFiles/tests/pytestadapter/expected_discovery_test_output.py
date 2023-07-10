@@ -446,7 +446,10 @@ parametrize_tests_expected_output = {
                         {
                             "name": "[1]",
                             "path": parameterize_tests_path,
-                            "lineno": "15",
+                            "lineno": find_test_line_number(
+                                "test_under_ten[1]",
+                                parameterize_tests_path,
+                            ),
                             "type_": "test",
                             "id_": "parametrize_tests.py::test_under_ten[1]",
                             "runID": "parametrize_tests.py::test_under_ten[1]",
@@ -454,7 +457,10 @@ parametrize_tests_expected_output = {
                         {
                             "name": "[2]",
                             "path": parameterize_tests_path,
-                            "lineno": "15",
+                            "lineno": find_test_line_number(
+                                "test_under_ten[2]",
+                                parameterize_tests_path,
+                            ),
                             "type_": "test",
                             "id_": "parametrize_tests.py::test_under_ten[2]",
                             "runID": "parametrize_tests.py::test_under_ten[2]",

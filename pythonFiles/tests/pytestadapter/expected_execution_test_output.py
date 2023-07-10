@@ -164,6 +164,42 @@ error_raised_exception_execution_expected_output = {
     }
 }
 
+# This is the expected output for the skip_tests.py file.
+# └── test_something: success
+# └── test_another_thing: skipped
+# └── test_decorator_thing: skipped
+# └── test_decorator_thing_2: skipped
+skip_tests_execution_expected_output = {
+    "skip_tests.py::test_something": {
+        "test": "skip_tests.py::test_something",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::test_another_thing": {
+        "test": "skip_tests.py::test_another_thing",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::test_decorator_thing": {
+        "test": "skip_tests.py::test_decorator_thing",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::test_decorator_thing_2": {
+        "test": "skip_tests.py::test_decorator_thing_2",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
 
 # This is the expected output for the dual_level_nested_folder.py tests
 #  └── dual_level_nested_folder

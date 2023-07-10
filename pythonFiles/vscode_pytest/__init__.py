@@ -206,6 +206,35 @@ ERROR_MESSAGE_CONST = {
 }
 
 
+def pytest_runtest_protocol(item, nextitem):
+    if item.own_markers:
+        for marker in item.own_markers:
+            # If the test is marked with skip then it will not hit the pytest_report_teststatus hook,
+            # therefore we need to handle it as skipped here.
+            skip_condition = False
+            if marker.name == "skipif":
+                skip_condition = any(marker.args)
+            if marker.name == "skip" or skip_condition:
+                node_id = str(item.nodeid)
+                report_value = "skipped"
+                cwd = pathlib.Path.cwd()
+                if node_id not in collected_tests_so_far:
+                    collected_tests_so_far.append(node_id)
+                    item_result = create_test_outcome(
+                        node_id,
+                        report_value,
+                        None,
+                        None,
+                    )
+                    collected_test = testRunResultDict()
+                    collected_test[node_id] = item_result
+                    execution_post(
+                        os.fsdecode(cwd),
+                        "success",
+                        collected_test if collected_test else None,
+                    )
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
