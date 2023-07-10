@@ -69,14 +69,37 @@ def pytest_exception_interact(node, call, report):
     """
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
-    if call.excinfo and call.excinfo.typename != "AssertionError":
-        ERRORS.append(
-            call.excinfo.exconly() + "\n Check Python Test Logs for more details."
-        )
+    # See if it is during discovery or execution.
+    # if discovery, then add the error to error logs.
+    if type(report) == pytest.CollectReport:
+        if call.excinfo and call.excinfo.typename != "AssertionError":
+            ERRORS.append(
+                call.excinfo.exconly() + "\n Check Python Test Logs for more details."
+            )
+        else:
+            ERRORS.append(
+                report.longreprtext + "\n Check Python Test Logs for more details."
+            )
     else:
-        ERRORS.append(
-            report.longreprtext + "\n Check Python Test Logs for more details."
-        )
+        # if execution, send this data that the given node failed.
+        report_value = "failure"
+        node_id = str(node.nodeid)
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
+            item_result = create_test_outcome(
+                node_id,
+                report_value,
+                "Test failed with exception",
+                report.longreprtext,
+            )
+            collected_test = testRunResultDict()
+            collected_test[node_id] = item_result
+            cwd = pathlib.Path.cwd()
+            execution_post(
+                os.fsdecode(cwd),
+                "success",
+                collected_test if collected_test else None,
+            )
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -256,6 +279,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     Keyword arguments:
     session -- the pytest session object.
     """
+    print("errors", ERRORS)
     session_node = create_session_node(session)
     session_children_dict: Dict[str, TestNode] = {}
     file_nodes_dict: Dict[Any, TestNode] = {}

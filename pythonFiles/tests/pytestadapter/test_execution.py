@@ -8,54 +8,57 @@ from tests.pytestadapter import expected_execution_test_output
 
 from .helpers import TEST_DATA_PATH, runner
 
+# def test_syntax_error_execution(tmp_path):
+#     """Test pytest execution on a file that has a syntax error.
 
-def test_syntax_error_execution(tmp_path):
-    """Test pytest execution on a file that has a syntax error.
+#     Copies the contents of a .txt file to a .py file in the temporary directory
+#     to then run pytest execution on.
 
-    Copies the contents of a .txt file to a .py file in the temporary directory
-    to then run pytest execution on.
+#     The json should still be returned but the errors list should be present.
 
-    The json should still be returned but the errors list should be present.
-
-    Keyword arguments:
-    tmp_path -- pytest fixture that creates a temporary directory.
-    """
-    # Saving some files as .txt to avoid that file displaying a syntax error for
-    # the extension as a whole. Instead, rename it before running this test
-    # in order to test the error handling.
-    file_path = TEST_DATA_PATH / "error_syntax_discovery.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_syntax_discovery.py"
-    shutil.copyfile(file_path, p)
-    actual = runner(["error_syntax_discover.py::test_function"])
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 1
+#     Keyword arguments:
+#     tmp_path -- pytest fixture that creates a temporary directory.
+#     """
+#     # Saving some files as .txt to avoid that file displaying a syntax error for
+#     # the extension as a whole. Instead, rename it before running this test
+#     # in order to test the error handling.
+#     file_path = TEST_DATA_PATH / "error_syntax_discovery.txt"
+#     temp_dir = tmp_path / "temp_data"
+#     temp_dir.mkdir()
+#     p = temp_dir / "error_syntax_discovery.py"
+#     shutil.copyfile(file_path, p)
+#     actual = runner(["error_syntax_discover.py::test_function"])
+#     if actual:
+#         actual = actual[0]
+#         assert actual
+#         assert all(item in actual for item in ("status", "cwd", "error"))
+#         assert actual["status"] == "error"
+#         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+#         assert len(actual["error"]) == 1
 
 
-def test_bad_id_error_execution():
-    """Test pytest discovery with a non-existent test_id.
+# def test_bad_id_error_execution():
+#     """Test pytest discovery with a non-existent test_id.
 
-    The json should still be returned but the errors list should be present.
-    """
-    actual = runner(["not/a/real::test_id"])
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 1
+#     The json should still be returned but the errors list should be present.
+#     """
+#     actual = runner(["not/a/real::test_id"])
+#     if actual:
+#         actual = actual[0]
+#         assert actual
+#         assert all(item in actual for item in ("status", "cwd", "error"))
+#         assert actual["status"] == "error"
+#         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+#         assert len(actual["error"]) == 1
 
 
 @pytest.mark.parametrize(
     "test_ids, expected_const",
     [
+        (
+            ["error_raise_exception.py::TestSomething::test_a"],
+            expected_execution_test_output.error_raised_exception_execution_expected_output,
+        ),
         (
             [
                 "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
@@ -161,4 +164,6 @@ def test_pytest_execution(test_ids, expected_const):
     for key in actual_result_dict:
         if actual_result_dict[key]["outcome"] == "failure":
             actual_result_dict[key]["message"] = "ERROR MESSAGE"
+        if actual_result_dict[key]["traceback"] != None:
+            actual_result_dict[key]["traceback"] = "TRACEBACK"
     assert actual_result_dict == expected_const

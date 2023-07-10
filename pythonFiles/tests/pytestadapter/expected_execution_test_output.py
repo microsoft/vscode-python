@@ -150,6 +150,21 @@ unit_pytest_same_file_execution_expected_output = {
     },
 }
 
+# This is the expected output for the error_raised_exception.py file.
+# └── error_raise_exception.py
+#   ├── TestSomething
+#   │   └── test_a: failure
+error_raised_exception_execution_expected_output = {
+    "error_raise_exception.py::TestSomething::test_a": {
+        "test": "error_raise_exception.py::TestSomething::test_a",
+        "outcome": "failure",
+        "message": "ERROR MESSAGE",
+        "traceback": "TRACEBACK",
+        "subtest": None,
+    }
+}
+
+
 # This is the expected output for the dual_level_nested_folder.py tests
 #  └── dual_level_nested_folder
 #    └── test_top_folder.py
