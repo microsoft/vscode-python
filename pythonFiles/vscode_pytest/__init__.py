@@ -308,7 +308,6 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     Keyword arguments:
     session -- the pytest session object.
     """
-    print("errors", ERRORS)
     session_node = create_session_node(session)
     session_children_dict: Dict[str, TestNode] = {}
     file_nodes_dict: Dict[Any, TestNode] = {}
