@@ -30,7 +30,7 @@ import {
     RefreshOptions,
     ResolvedEnvironment,
     Resource,
-} from './api/apiTypes';
+} from './api/main';
 import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
 
 type ActiveEnvironmentChangeEvent = {

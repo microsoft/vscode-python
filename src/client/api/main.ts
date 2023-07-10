@@ -388,10 +388,12 @@ export type EnvironmentVariablesChangeEvent = {
     readonly env: EnvironmentVariables;
 };
 
+export const PVSC_EXTENSION_ID = 'ms-python.python';
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace PythonExtension {
     export async function api(): Promise<PythonExtension> {
-        const extension = extensions.getExtension('ms-python.python');
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID);
         if (extension === undefined) {
             throw new Error(`Python extension is not installed or is disabled`);
         }

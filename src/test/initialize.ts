@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import type { PythonExtension } from '../client/api/apiTypes';
+import type { PythonExtension } from '../client/api/main';
 import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
