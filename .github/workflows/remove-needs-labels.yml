@@ -8,15 +8,11 @@ jobs:
     name: 'Remove needs labels on issue closing'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Actions
-        uses: actions/checkout@v3
+      - name: 'Removes needs labels on issue close'
+        uses: actions-ecosystem/action-remove-labels@v1
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
-          ref: stable
-          path: ./actions
-
-      - name: Install Actions
-        run: npm install --production --prefix ./actions
-
-      - name: Remove Any Needs Labels
-        uses: ./actions/python-remove-needs-label
+          labels: |
+            needs PR
+            needs spike
+            needs community feedback
+            needs proposal

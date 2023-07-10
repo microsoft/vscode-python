@@ -13,15 +13,9 @@ jobs:
     name: 'Classify PR'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Actions
-        uses: actions/checkout@v3
+      - name: 'PR impact specified'
+        uses: mheap/github-action-required-labels@v4
         with:
-          repository: 'microsoft/vscode-github-triage-actions'
-          ref: stable
-          path: ./actions
-
-      - name: Install Actions
-        run: npm install --production --prefix ./actions
-
-      - name: Classify PR
-        uses: ./actions/python-pr-labels
+          mode: exactly
+          count: 1
+          labels: 'bug, debt, feature-request, no-changelog'
