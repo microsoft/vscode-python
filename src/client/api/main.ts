@@ -3,6 +3,10 @@
 
 import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensions } from 'vscode';
 
+/*
+ * Do not introduce any breaking changes to this API.
+ * This is the public API for other extensions to interact with this extension.
+ */
 export interface PythonExtension {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.

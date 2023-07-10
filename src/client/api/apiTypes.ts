@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
+import { IDataViewerDataProvider, IJupyterUriProvider } from '../jupyter/types';
 
 /*
  * Do not introduce any breaking changes to this API.
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi {
+export interface PythonExtension {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.
      * @type {Promise<void>}
-     * @memberof IExtensionApi
+     * @memberof PythonExtension
      */
     ready: Promise<void>;
     jupyter: {
