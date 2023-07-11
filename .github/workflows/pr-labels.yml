@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'PR impact specified'
-        uses: mheap/github-action-required-labels@v4
+        uses: mheap/github-action-required-labels@v5
         with:
           mode: exactly
           count: 1
