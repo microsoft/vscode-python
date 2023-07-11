@@ -148,7 +148,7 @@ suite('Environment Identifier', () => {
             test(`Path using forward slashes (${exe})`, async () => {
                 const interpreterPath = path
                     .join(fakeLocalAppDataPath, 'Microsoft', 'WindowsApps', exe)
-                    .replace('\\', '/');
+                    .replace(/\\/g, '/');
                 const envType: PythonEnvKind = await identifyEnvironment(interpreterPath);
                 assert.deepEqual(envType, PythonEnvKind.MicrosoftStore);
             });
