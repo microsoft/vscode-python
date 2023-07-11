@@ -165,7 +165,7 @@ export namespace LanguageService {
         'Only Pylance is supported in untrusted workspaces, setting language server to None.',
     );
 
-    export const reloadAfterLanguageServerChange = l10n.t('Reload the window switching between language servers.');
+    export const reloadAfterLanguageServerChange = l10n.t('Reload the window after switching between language servers.');
 
     export const lsFailedToStart = l10n.t(
         'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.',
@@ -263,7 +263,7 @@ export namespace Installer {
 
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = l10n.t(
-        'Can you take 2 minutes to tell us how the Python extension is working for you?',
+        'Can you please take 2 minutes to tell us how the Python extension is working for you?',
     );
     export const bannerLabelYes = l10n.t('Yes, take survey now');
     export const bannerLabelNo = l10n.t('No, thanks');
@@ -432,7 +432,7 @@ export namespace SwitchToDefaultLS {
 }
 
 export namespace CreateEnv {
-    export const informEnvCreation = l10n.t('Following environment selected:');
+    export const informEnvCreation = l10n.t('The following environment is selected:');
     export const statusTitle = l10n.t('Creating environment');
     export const statusStarting = l10n.t('Starting...');
 
