@@ -142,7 +142,7 @@ export namespace TensorBoard {
     export const launchNativeTensorBoardSessionCodeLens = l10n.t('▶ Launch TensorBoard Session');
     export const launchNativeTensorBoardSessionCodeAction = l10n.t('Launch TensorBoard session');
     export const missingSourceFile = l10n.t(
-        'We could not locate the requested source file on disk. Manually specify the file.',
+        'We could not locate the requested source file on disk. You can manually specify the file.',
     );
     export const selectMissingSourceFile = l10n.t('Choose File');
     export const selectMissingSourceFileDescription = l10n.t(
@@ -165,7 +165,9 @@ export namespace LanguageService {
         'Only Pylance is supported in untrusted workspaces, setting language server to None.',
     );
 
-    export const reloadAfterLanguageServerChange = l10n.t('Reload the window switching between language servers.');
+    export const reloadAfterLanguageServerChange = l10n.t(
+        'Reload the window after switching between language servers.',
+    );
 
     export const lsFailedToStart = l10n.t(
         'We encountered an issue starting the language server. Reverting to Jedi language engine. Check the Python output panel for details.',
@@ -212,7 +214,7 @@ export namespace Interpreters {
     );
 
     export const installPythonTerminalMacMessage = l10n.t(
-        '💡 Brew does not seem to be available, download Python from https://www.python.org/downloads. Alternatively, you can install the Python package using some other available package manager.',
+        '💡 Brew does not seem to be available. You can download Python from https://www.python.org/downloads. Alternatively, you can install the Python package using some other available package manager.',
     );
     export const changePythonInterpreter = l10n.t('Change Python Interpreter');
     export const selectedPythonInterpreter = l10n.t('Selected Python Interpreter');
@@ -222,7 +224,7 @@ export namespace InterpreterQuickPickList {
     export const condaEnvWithoutPythonTooltip = l10n.t(
         'Python is not available in this environment, it will automatically be installed upon selecting it',
     );
-    export const noPythonInstalled = l10n.t('Python is not installed, download and install it');
+    export const noPythonInstalled = l10n.t('Python is not installed');
     export const clickForInstructions = l10n.t('Click for instructions...');
     export const globalGroupName = l10n.t('Global');
     export const workspaceGroupName = l10n.t('Workspace');
@@ -432,7 +434,7 @@ export namespace SwitchToDefaultLS {
 }
 
 export namespace CreateEnv {
-    export const informEnvCreation = l10n.t('Following environment selected:');
+    export const informEnvCreation = l10n.t('The following environment is selected:');
     export const statusTitle = l10n.t('Creating environment');
     export const statusStarting = l10n.t('Starting...');
 
