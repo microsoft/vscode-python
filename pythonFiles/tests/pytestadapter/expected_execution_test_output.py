@@ -169,6 +169,9 @@ error_raised_exception_execution_expected_output = {
 # └── test_another_thing: skipped
 # └── test_decorator_thing: skipped
 # └── test_decorator_thing_2: skipped
+# ├── TestClass
+# │   └── test_class_function_a: skipped
+# │   └── test_class_function_b: skipped
 skip_tests_execution_expected_output = {
     "skip_tests.py::test_something": {
         "test": "skip_tests.py::test_something",
@@ -193,6 +196,20 @@ skip_tests_execution_expected_output = {
     },
     "skip_tests.py::test_decorator_thing_2": {
         "test": "skip_tests.py::test_decorator_thing_2",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::TestClass::test_class_function_a": {
+        "test": "skip_tests.py::TestClass::test_class_function_a",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::TestClass::test_class_function_b": {
+        "test": "skip_tests.py::TestClass::test_class_function_b",
         "outcome": "skipped",
         "message": None,
         "traceback": None,

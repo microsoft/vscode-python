@@ -62,6 +62,8 @@ def test_bad_id_error_execution():
                 "skip_tests.py::test_another_thing",
                 "skip_tests.py::test_decorator_thing",
                 "skip_tests.py::test_decorator_thing_2",
+                "skip_tests.py::TestClass::test_class_function_a",
+                "skip_tests.py::TestClass::test_class_function_b",
             ],
             expected_execution_test_output.skip_tests_execution_expected_output,
         ),

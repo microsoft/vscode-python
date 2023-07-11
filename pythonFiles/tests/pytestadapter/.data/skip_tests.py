@@ -28,3 +28,13 @@ def test_decorator_thing():
 def test_decorator_thing_2():
     # Skip this test as well, with a reason. This one uses a decorator with a condition.
     assert True
+
+
+# With this test, the entire class is skipped.
+@pytest.mark.skip(reason="Skip TestClass")
+class TestClass:
+    def test_class_function_a(self):  # test_marker--test_class_function_a
+        assert True
+
+    def test_class_function_b(self):  # test_marker--test_class_function_b
+        assert False

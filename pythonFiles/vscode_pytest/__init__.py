@@ -207,32 +207,64 @@ ERROR_MESSAGE_CONST = {
 
 
 def pytest_runtest_protocol(item, nextitem):
+    skipped = check_skipped_wrapper(item)
+    if skipped:
+        node_id = str(item.nodeid)
+        report_value = "skipped"
+        cwd = pathlib.Path.cwd()
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
+            item_result = create_test_outcome(
+                node_id,
+                report_value,
+                None,
+                None,
+            )
+            collected_test = testRunResultDict()
+            collected_test[node_id] = item_result
+            execution_post(
+                os.fsdecode(cwd),
+                "success",
+                collected_test if collected_test else None,
+            )
+
+
+def check_skipped_wrapper(item):
+    """A function that checks if a test is skipped or not by check its markers and its parent markers.
+
+    Returns True if the test is marked as skipped at any level, False otherwise.
+
+    Keyword arguments:
+    item -- the pytest item object.
+    """
     if item.own_markers:
-        for marker in item.own_markers:
-            # If the test is marked with skip then it will not hit the pytest_report_teststatus hook,
-            # therefore we need to handle it as skipped here.
-            skip_condition = False
-            if marker.name == "skipif":
-                skip_condition = any(marker.args)
-            if marker.name == "skip" or skip_condition:
-                node_id = str(item.nodeid)
-                report_value = "skipped"
-                cwd = pathlib.Path.cwd()
-                if node_id not in collected_tests_so_far:
-                    collected_tests_so_far.append(node_id)
-                    item_result = create_test_outcome(
-                        node_id,
-                        report_value,
-                        None,
-                        None,
-                    )
-                    collected_test = testRunResultDict()
-                    collected_test[node_id] = item_result
-                    execution_post(
-                        os.fsdecode(cwd),
-                        "success",
-                        collected_test if collected_test else None,
-                    )
+        if check_skipped_condition(item):
+            return True
+    parent = item.parent
+    while isinstance(parent, pytest.Class):
+        if parent.own_markers:
+            if check_skipped_condition(parent):
+                return True
+        parent = parent.parent
+    return False
+
+
+def check_skipped_condition(item):
+    """A helper function that checks if a item has a skip or a true skip condition.
+
+    Keyword arguments:
+    item -- the pytest item object.
+    """
+
+    for marker in item.own_markers:
+        # If the test is marked with skip then it will not hit the pytest_report_teststatus hook,
+        # therefore we need to handle it as skipped here.
+        skip_condition = False
+        if marker.name == "skipif":
+            skip_condition = any(marker.args)
+        if marker.name == "skip" or skip_condition:
+            return True
+    return False
 
 
 def pytest_sessionfinish(session, exitstatus):
