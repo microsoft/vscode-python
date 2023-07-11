@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'package-lock.json matches package.json'
-        uses: brettcannon/check-for-changed-files@v1.1.0
+        uses: brettcannon/check-for-changed-files@v1.1.1
         with:
           prereq-pattern: 'package.json'
           file-pattern: 'package-lock.json'
@@ -25,7 +25,7 @@ jobs:
           failure-message: '${prereq-pattern} was edited but ${file-pattern} was not (the ${skip-label} label can be used to pass this check)'
 
       - name: 'package.json matches package-lock.json'
-        uses: brettcannon/check-for-changed-files@v1.1.0
+        uses: brettcannon/check-for-changed-files@v1.1.1
         with:
           prereq-pattern: 'package-lock.json'
           file-pattern: 'package.json'
@@ -33,7 +33,7 @@ jobs:
           failure-message: '${prereq-pattern} was edited but ${file-pattern} was not (the ${skip-label} label can be used to pass this check)'
 
       - name: 'Tests'
-        uses: brettcannon/check-for-changed-files@v1.1.0
+        uses: brettcannon/check-for-changed-files@v1.1.1
         with:
           prereq-pattern: src/**/*.ts
           file-pattern: |
