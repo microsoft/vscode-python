@@ -139,7 +139,6 @@ export class PythonResultResolver implements ITestResultResolver {
                             if (indiItem.id === grabVSid) {
                                 if (indiItem.uri && indiItem.range) {
                                     runInstance.passed(grabTestItem);
-                                    runInstance.appendOutput('Passed here');
                                 }
                             }
                         });
@@ -152,7 +151,6 @@ export class PythonResultResolver implements ITestResultResolver {
                             if (indiItem.id === grabVSid) {
                                 if (indiItem.uri && indiItem.range) {
                                     runInstance.skipped(grabTestItem);
-                                    runInstance.appendOutput('Skipped here');
                                 }
                             }
                         });
