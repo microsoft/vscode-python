@@ -440,7 +440,7 @@ export namespace CreateEnv {
 
     export const hasVirtualEnv = l10n.t('Workspace folder contains a virtual environment');
 
-    export const noWorkspace = l10n.t('Open a folder when creating an environment using venv.');
+    export const noWorkspace = l10n.t('A workspace is required when creating an environment using venv.');
 
     export const pickWorkspacePlaceholder = l10n.t('Select a workspace to create environment');
 
