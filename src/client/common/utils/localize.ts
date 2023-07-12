@@ -142,7 +142,7 @@ export namespace TensorBoard {
     export const launchNativeTensorBoardSessionCodeLens = l10n.t('▶ Launch TensorBoard Session');
     export const launchNativeTensorBoardSessionCodeAction = l10n.t('Launch TensorBoard session');
     export const missingSourceFile = l10n.t(
-        'We could not locate the requested source file on disk. You can manually specify the file.',
+        'Extension could not locate the requested source file on disk. Please manually specify the file.',
     );
     export const selectMissingSourceFile = l10n.t('Choose File');
     export const selectMissingSourceFileDescription = l10n.t(
