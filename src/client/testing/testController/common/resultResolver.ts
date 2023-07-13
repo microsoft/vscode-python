@@ -65,18 +65,19 @@ export class PythonResultResolver implements ITestResultResolver {
             }
             errorNode.error = message;
         } else {
-            // Remove the error node if necessary,
-            // then parse and insert test data.
+            // remove error node only if no errors exist.
             this.testController.items.delete(`DiscoveryError:${workspacePath}`);
+        }
+        if (rawTestData.tests) {
+            // if any tests exist, they should be populated in the test tree, regardless of whether there were errors or not.
+            // parse and insert test data.
 
-            if (rawTestData.tests) {
-                // If the test root for this folder exists: Workspace refresh, update its children.
-                // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
-                populateTestTree(this.testController, rawTestData.tests, undefined, this, token);
-            } else {
-                // Delete everything from the test controller.
-                this.testController.items.replace([]);
-            }
+            // If the test root for this folder exists: Workspace refresh, update its children.
+            // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
+            populateTestTree(this.testController, rawTestData.tests, undefined, this, token);
+        } else {
+            // Delete everything from the test controller.
+            this.testController.items.replace([]);
         }
 
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
