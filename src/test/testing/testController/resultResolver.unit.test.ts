@@ -101,8 +101,7 @@ suite('Result Resolver tests', () => {
                 cancelationToken, // token
             );
         });
-        // what about if the error node already exists: this.testController.items.get(`DiscoveryError:${workspacePath}`);
-        test('resolveDiscovery should create error node on error with correct params', async () => {
+        test('resolveDiscovery should create error node on error with correct params and no root node with tests in payload', async () => {
             // test specific constants used expected values
             testProvider = 'pytest';
             workspaceUri = Uri.file('/foo/bar');
@@ -135,6 +134,61 @@ suite('Result Resolver tests', () => {
             sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, workspaceUri, expectedErrorMessage, testProvider);
             // header of createErrorTestItem is (options: ErrorTestItemOptions, testController: TestController, uri: Uri)
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
+        });
+        test('resolveDiscovery should create error and root node when error and tests exist on payload', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+            const errorMessage = 'error msg A';
+            const expectedErrorMessage = `${defaultErrorMessage}\r\n ${errorMessage}`;
+
+            // create test result node
+            const tests: DiscoveredTestNode = {
+                path: 'path',
+                name: 'name',
+                type_: 'folder',
+                id_: 'id',
+                children: [],
+            };
+            // stub out return values of functions called in resolveDiscovery
+            const payload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'error',
+                error: [errorMessage],
+                tests,
+            };
+            const errorTestItemOptions: testItemUtilities.ErrorTestItemOptions = {
+                id: 'id',
+                label: 'label',
+                error: 'error',
+            };
+
+            // stub out functionality of buildErrorNodeOptions and createErrorTestItem which are called in resolveDiscovery
+            const buildErrorNodeOptionsStub = sinon.stub(util, 'buildErrorNodeOptions').returns(errorTestItemOptions);
+            const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
+
+            // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+            // call resolve discovery
+            resultResolver.resolveDiscovery(payload, cancelationToken);
+
+            // assert the stub functions were called with the correct parameters
+
+            // builds an error node root
+            sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, workspaceUri, expectedErrorMessage, testProvider);
+            // builds an error item
+            sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
+
+            // also calls populateTestTree with the discovery test results
+            sinon.assert.calledWithMatch(
+                populateTestTreeStub,
+                testController, // testController
+                tests, // testTreeData
+                undefined, // testRoot
+                resultResolver, // resultResolver
+                cancelationToken, // token
+            );
         });
     });
     suite('Test execution result resolver', () => {
