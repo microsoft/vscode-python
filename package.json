@@ -71,7 +71,7 @@
         "onDebugDynamicConfigurations:python",
         "onDebugResolve:python",
         "onWalkthrough:pythonWelcome",
-        "onWalkthrough:pythonWelcomeWithDS",
+        "onWalkthrough:pythonWelcome2",
         "onWalkthrough:pythonDataScienceWelcome",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",

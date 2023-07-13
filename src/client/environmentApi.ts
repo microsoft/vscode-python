@@ -26,11 +26,11 @@ import {
     EnvironmentTools,
     EnvironmentType,
     EnvironmentVariablesChangeEvent,
-    IExtensionApi,
+    PythonExtension,
     RefreshOptions,
     ResolvedEnvironment,
     Resource,
-} from './apiTypes';
+} from './api/main';
 import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
 
 type ActiveEnvironmentChangeEvent = {
@@ -114,7 +114,7 @@ function filterUsingVSCodeContext(e: PythonEnvInfo) {
 export function buildEnvironmentApi(
     discoveryApi: IDiscoveryAPI,
     serviceContainer: IServiceContainer,
-): IExtensionApi['environments'] {
+): PythonExtension['environments'] {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
@@ -180,7 +180,7 @@ export function buildEnvironmentApi(
         onEnvironmentVariablesChanged,
     );
 
-    const environmentApi: IExtensionApi['environments'] = {
+    const environmentApi: PythonExtension['environments'] = {
         getEnvironmentVariables: (resource?: Resource) => {
             sendApiTelemetry('getEnvironmentVariables');
             resource = resource && 'uri' in resource ? resource.uri : resource;

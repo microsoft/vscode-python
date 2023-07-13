@@ -29,7 +29,7 @@ runs:
         cache: 'pip'
         cache-dependency-path: |
           requirements.txt
-          build/debugger-install-requirements.txt
+          build/build-install-requirements.txt
           pythonFiles/jedilsp_requirements/requirements.txt
 
     - name: Upgrade Pip
@@ -46,10 +46,11 @@ runs:
       with:
         options: '-t ./pythonFiles/lib/python --implementation py'
 
-    - name: Install debugpy
+    - name: Install debugpy and get-pip
       run: |
-        python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+        python -m pip --disable-pip-version-check install packaging
         python ./pythonFiles/install_debugpy.py
+        python ./pythonFiles/download_get_pip.py
       shell: bash
 
     - name: Install Jedi LSP

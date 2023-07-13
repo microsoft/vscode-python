@@ -36,8 +36,8 @@ import {
     ActiveEnvironmentPathChangeEvent,
     EnvironmentVariablesChangeEvent,
     EnvironmentsChangeEvent,
-    IExtensionApi,
-} from '../client/apiTypes';
+    PythonExtension,
+} from '../client/api/main';
 
 suite('Python Environment API', () => {
     const workspacePath = 'path/to/workspace';
@@ -57,7 +57,7 @@ suite('Python Environment API', () => {
     let onDidChangeEnvironments: EventEmitter<PythonEnvCollectionChangedEvent>;
     let onDidChangeEnvironmentVariables: EventEmitter<Uri | undefined>;
 
-    let environmentApi: IExtensionApi['environments'];
+    let environmentApi: PythonExtension['environments'];
 
     setup(() => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();

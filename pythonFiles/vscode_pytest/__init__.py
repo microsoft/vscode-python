@@ -69,14 +69,37 @@ def pytest_exception_interact(node, call, report):
     """
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
-    if call.excinfo and call.excinfo.typename != "AssertionError":
-        ERRORS.append(
-            call.excinfo.exconly() + "\n Check Python Test Logs for more details."
-        )
+    # See if it is during discovery or execution.
+    # if discovery, then add the error to error logs.
+    if type(report) == pytest.CollectReport:
+        if call.excinfo and call.excinfo.typename != "AssertionError":
+            ERRORS.append(
+                call.excinfo.exconly() + "\n Check Python Test Logs for more details."
+            )
+        else:
+            ERRORS.append(
+                report.longreprtext + "\n Check Python Test Logs for more details."
+            )
     else:
-        ERRORS.append(
-            report.longreprtext + "\n Check Python Test Logs for more details."
-        )
+        # if execution, send this data that the given node failed.
+        report_value = "failure"
+        node_id = str(node.nodeid)
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
+            item_result = create_test_outcome(
+                node_id,
+                report_value,
+                "Test failed with exception",
+                report.longreprtext,
+            )
+            collected_test = testRunResultDict()
+            collected_test[node_id] = item_result
+            cwd = pathlib.Path.cwd()
+            execution_post(
+                os.fsdecode(cwd),
+                "success",
+                collected_test if collected_test else None,
+            )
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -183,6 +206,67 @@ ERROR_MESSAGE_CONST = {
 }
 
 
+def pytest_runtest_protocol(item, nextitem):
+    skipped = check_skipped_wrapper(item)
+    if skipped:
+        node_id = str(item.nodeid)
+        report_value = "skipped"
+        cwd = pathlib.Path.cwd()
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
+            item_result = create_test_outcome(
+                node_id,
+                report_value,
+                None,
+                None,
+            )
+            collected_test = testRunResultDict()
+            collected_test[node_id] = item_result
+            execution_post(
+                os.fsdecode(cwd),
+                "success",
+                collected_test if collected_test else None,
+            )
+
+
+def check_skipped_wrapper(item):
+    """A function that checks if a test is skipped or not by check its markers and its parent markers.
+
+    Returns True if the test is marked as skipped at any level, False otherwise.
+
+    Keyword arguments:
+    item -- the pytest item object.
+    """
+    if item.own_markers:
+        if check_skipped_condition(item):
+            return True
+    parent = item.parent
+    while isinstance(parent, pytest.Class):
+        if parent.own_markers:
+            if check_skipped_condition(parent):
+                return True
+        parent = parent.parent
+    return False
+
+
+def check_skipped_condition(item):
+    """A helper function that checks if a item has a skip or a true skip condition.
+
+    Keyword arguments:
+    item -- the pytest item object.
+    """
+
+    for marker in item.own_markers:
+        # If the test is marked with skip then it will not hit the pytest_report_teststatus hook,
+        # therefore we need to handle it as skipped here.
+        skip_condition = False
+        if marker.name == "skipif":
+            skip_condition = any(marker.args)
+        if marker.name == "skip" or skip_condition:
+            return True
+    return False
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
@@ -266,10 +350,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
         test_node = create_test_node(test_case)
         if isinstance(test_case.parent, pytest.Class):
             try:
-                test_class_node = class_nodes_dict[test_case.parent.name]
+                test_class_node = class_nodes_dict[test_case.parent.nodeid]
             except KeyError:
                 test_class_node = create_class_node(test_case.parent)
-                class_nodes_dict[test_case.parent.name] = test_class_node
+                class_nodes_dict[test_case.parent.nodeid] = test_class_node
             test_class_node["children"].append(test_node)
             if test_case.parent.parent:
                 parent_module = test_case.parent.parent

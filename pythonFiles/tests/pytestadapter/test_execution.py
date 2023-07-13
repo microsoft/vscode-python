@@ -58,6 +58,21 @@ def test_bad_id_error_execution():
     [
         (
             [
+                "skip_tests.py::test_something",
+                "skip_tests.py::test_another_thing",
+                "skip_tests.py::test_decorator_thing",
+                "skip_tests.py::test_decorator_thing_2",
+                "skip_tests.py::TestClass::test_class_function_a",
+                "skip_tests.py::TestClass::test_class_function_b",
+            ],
+            expected_execution_test_output.skip_tests_execution_expected_output,
+        ),
+        (
+            ["error_raise_exception.py::TestSomething::test_a"],
+            expected_execution_test_output.error_raised_exception_execution_expected_output,
+        ),
+        (
+            [
                 "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
                 "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers",
                 "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
@@ -161,4 +176,6 @@ def test_pytest_execution(test_ids, expected_const):
     for key in actual_result_dict:
         if actual_result_dict[key]["outcome"] == "failure":
             actual_result_dict[key]["message"] = "ERROR MESSAGE"
+        if actual_result_dict[key]["traceback"] != None:
+            actual_result_dict[key]["traceback"] = "TRACEBACK"
     assert actual_result_dict == expected_const

@@ -286,7 +286,7 @@ gulp.task('installDebugpy', async () => {
         '-t',
         './pythonFiles/lib/temp',
         '-r',
-        './build/debugger-install-requirements.txt',
+        './build/build-install-requirements.txt',
     ];
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', depsArgs, undefined, true)
         .then(() => true)
@@ -295,13 +295,23 @@ gulp.task('installDebugpy', async () => {
             return false;
         });
 
-    // Install new DEBUGPY with wheels for python 3.7
+    // Install new DEBUGPY with wheels for python
     const wheelsArgs = ['./pythonFiles/install_debugpy.py'];
     const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
     await spawnAsync(process.env.CI_PYTHON_PATH || 'python', wheelsArgs, wheelsEnv, true)
         .then(() => true)
         .catch((ex) => {
             console.error("Failed to install DEBUGPY wheels using 'python'", ex);
+            return false;
+        });
+
+    // Download get-pip.py
+    const getPipArgs = ['./pythonFiles/download_get_pip.py'];
+    const getPipEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
+    await spawnAsync(process.env.CI_PYTHON_PATH || 'python', getPipArgs, getPipEnv, true)
+        .then(() => true)
+        .catch((ex) => {
+            console.error("Failed to download get-pip wheels using 'python'", ex);
             return false;
         });
 

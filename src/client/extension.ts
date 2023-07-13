@@ -41,7 +41,7 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
-import { IExtensionApi } from './apiTypes';
+import { PythonExtension } from './api/main';
 import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';
@@ -58,8 +58,8 @@ let activatedServiceContainer: IServiceContainer | undefined;
 /////////////////////////////
 // public functions
 
-export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
-    let api: IExtensionApi;
+export async function activate(context: IExtensionContext): Promise<PythonExtension> {
+    let api: PythonExtension;
     let ready: Promise<void>;
     let serviceContainer: IServiceContainer;
     try {
@@ -103,7 +103,7 @@ async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: IStartupDurations,
-): Promise<[IExtensionApi & ProposedExtensionAPI, Promise<void>, IServiceContainer]> {
+): Promise<[PythonExtension & ProposedExtensionAPI, Promise<void>, IServiceContainer]> {
     // Add anything that we got from initializing logs to dispose.
     context.subscriptions.push(...logDispose);
 

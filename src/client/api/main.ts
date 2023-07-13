@@ -1,19 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, WorkspaceFolder } from 'vscode';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
+import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensions } from 'vscode';
 
 /*
  * Do not introduce any breaking changes to this API.
  * This is the public API for other extensions to interact with this extension.
  */
-
-export interface IExtensionApi {
+export interface PythonExtension {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.
      * @type {Promise<void>}
-     * @memberof IExtensionApi
      */
     ready: Promise<void>;
     jupyter: {
@@ -127,6 +124,47 @@ export interface IExtensionApi {
         readonly onDidEnvironmentVariablesChange: Event<EnvironmentVariablesChangeEvent>;
     };
 }
+
+interface IJupyterServerUri {
+    baseUrl: string;
+    token: string;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    authorizationHeader: any; // JSON object for authorization header.
+    expiration?: Date; // Date/time when header expires and should be refreshed.
+    displayName: string;
+}
+
+type JupyterServerUriHandle = string;
+
+export interface IJupyterUriProvider {
+    readonly id: string; // Should be a unique string (like a guid)
+    getQuickPickEntryItems(): QuickPickItem[];
+    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
+    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
+}
+
+interface IDataFrameInfo {
+    columns?: { key: string; type: ColumnType }[];
+    indexColumn?: string;
+    rowCount?: number;
+}
+
+export interface IDataViewerDataProvider {
+    dispose(): void;
+    getDataFrameInfo(): Promise<IDataFrameInfo>;
+    getAllRows(): Promise<IRowsResponse>;
+    getRows(start: number, end: number): Promise<IRowsResponse>;
+}
+
+enum ColumnType {
+    String = 'string',
+    Number = 'number',
+    Bool = 'bool',
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type IRowsResponse = any[];
 
 export type RefreshOptions = {
     /**
@@ -349,3 +387,20 @@ export type EnvironmentVariablesChangeEvent = {
      */
     readonly env: EnvironmentVariables;
 };
+
+export const PVSC_EXTENSION_ID = 'ms-python.python';
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace PythonExtension {
+    export async function api(): Promise<PythonExtension> {
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID);
+        if (extension === undefined) {
+            throw new Error(`Python extension is not installed or is disabled`);
+        }
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+        const pythonApi: PythonExtension = extension.exports;
+        return pythonApi;
+    }
+}

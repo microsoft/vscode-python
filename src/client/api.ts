@@ -10,7 +10,7 @@ import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient
 import { LanguageClient } from 'vscode-languageclient/node';
 import { PYLANCE_NAME } from './activation/node/languageClientFactory';
 import { ILanguageServerOutputChannel } from './activation/types';
-import { IExtensionApi } from './apiTypes';
+import { PythonExtension } from './api/main';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
@@ -29,14 +29,14 @@ export function buildApi(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
     discoveryApi: IDiscoveryAPI,
-): IExtensionApi {
+): PythonExtension {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
     const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
 
-    const api: IExtensionApi & {
+    const api: PythonExtension & {
         /**
          * @deprecated Temporarily exposed for Pylance until we expose this API generally. Will be removed in an
          * iteration or two.
@@ -44,7 +44,7 @@ export function buildApi(
         pylance: ApiForPylance;
     } & {
         /**
-         * @deprecated Use IExtensionApi.environments API instead.
+         * @deprecated Use PythonExtension.environments API instead.
          *
          * Return internal settings within the extension which are stored in VSCode storage
          */
