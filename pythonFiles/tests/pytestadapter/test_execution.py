@@ -174,7 +174,10 @@ def test_pytest_execution(test_ids, expected_const):
         assert a["cwd"] == os.fspath(TEST_DATA_PATH)
         actual_result_dict.update(a["result"])
     for key in actual_result_dict:
-        if actual_result_dict[key]["outcome"] == "failure":
+        if (
+            actual_result_dict[key]["outcome"] == "failure"
+            or actual_result_dict[key]["outcome"] == "error"
+        ):
             actual_result_dict[key]["message"] = "ERROR MESSAGE"
         if actual_result_dict[key]["traceback"] != None:
             actual_result_dict[key]["traceback"] = "TRACEBACK"

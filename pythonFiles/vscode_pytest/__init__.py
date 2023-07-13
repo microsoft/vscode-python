@@ -82,7 +82,9 @@ def pytest_exception_interact(node, call, report):
             )
     else:
         # if execution, send this data that the given node failed.
-        report_value = "failure"
+        report_value = "error"
+        if call.excinfo.typename == "AssertionError":
+            report_value = "failure"
         node_id = str(node.nodeid)
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.append(node_id)
@@ -119,7 +121,7 @@ class TestOutcome(Dict):
     """
 
     test: str
-    outcome: Literal["success", "failure", "skipped"]
+    outcome: Literal["success", "failure", "skipped", "error"]
     message: Union[str, None]
     traceback: Union[str, None]
     subtest: Optional[str]

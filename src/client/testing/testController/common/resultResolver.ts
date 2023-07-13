@@ -102,7 +102,29 @@ export class PythonResultResolver implements ITestResultResolver {
                     testCases.push(...tempArr);
                 });
 
-                if (
+                if (rawTestExecData.result[keyTemp].outcome === 'error') {
+                    const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
+                    const traceback = splitLines(rawTraceback, {
+                        trim: false,
+                        removeEmptyEntries: true,
+                    }).join('\r\n');
+                    const text = `${rawTestExecData.result[keyTemp].test} failed with error: ${
+                        rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
+                    }\r\n${traceback}\r\n`;
+                    const message = new TestMessage(text);
+
+                    const grabVSid = this.runIdToVSid.get(keyTemp);
+                    // search through freshly built array of testItem to find the failed test and update UI.
+                    testCases.forEach((indiItem) => {
+                        if (indiItem.id === grabVSid) {
+                            if (indiItem.uri && indiItem.range) {
+                                message.location = new Location(indiItem.uri, indiItem.range);
+                                runInstance.errored(indiItem, message);
+                                runInstance.appendOutput(fixLogLines(text));
+                            }
+                        }
+                    });
+                } else if (
                     rawTestExecData.result[keyTemp].outcome === 'failure' ||
                     rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
                 ) {

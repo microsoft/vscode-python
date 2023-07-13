@@ -390,6 +390,45 @@ suite('Result Resolver tests', () => {
             // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.skipped(typemoq.It.isAny()), typemoq.Times.once());
         });
+        test('resolveExecution handles error correctly as test outcome', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(
+                testControllerMock.object,
+                testProvider,
+                workspaceUri,
+            );
+            // add a mock test item to the map of known VSCode ids to run ids
+            resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
+            resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
+
+            // add this mock test to the map of known test items
+            resultResolver.runIdToTestItem.set('mockTestItem1', mockTestItem1);
+            resultResolver.runIdToTestItem.set('mockTestItem2', mockTestItem2);
+
+            // create a successful payload with a single test called mockTestItem1
+            const successPayload: ExecutionTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'success',
+                result: {
+                    mockTestItem1: {
+                        test: 'test',
+                        outcome: 'error', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
+                        message: 'message',
+                        traceback: 'traceback',
+                        subtest: 'subtest',
+                    },
+                },
+                error: '',
+            };
+
+            // call resolveExecution
+            resultResolver.resolveExecution(successPayload, runInstance.object);
+
+            // verify that the passed function was called for the single test item
+            runInstance.verify((r) => r.errored(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
+        });
         test('resolveExecution handles success correctly', async () => {
             // test specific constants used expected values
             testProvider = 'pytest';

@@ -157,7 +157,7 @@ unit_pytest_same_file_execution_expected_output = {
 error_raised_exception_execution_expected_output = {
     "error_raise_exception.py::TestSomething::test_a": {
         "test": "error_raise_exception.py::TestSomething::test_a",
-        "outcome": "failure",
+        "outcome": "error",
         "message": "ERROR MESSAGE",
         "traceback": "TRACEBACK",
         "subtest": None,
