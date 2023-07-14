@@ -4,8 +4,6 @@ This npm module implements an API facade for the Python extension in VS Code.
 
 ## Example
 
-The source code of the example can be found [here](TODO Update example extension link here)
-
 First we need to define a `package.json` for the extension that wants to use the API:
 
 ```jsonc
@@ -24,8 +22,26 @@ First we need to define a `package.json` for the extension that wants to use the
 }
 ```
 
-TODO insert example here
+The actual source code to get the active environment to run some script could look like this:
 
 ```typescript
-TODO
+// Load the Python extension API
+const pythonApi: PythonExtension = await PythonExtension.api();
+
+// This will return something like /usr/bin/python
+const environmentPath = pythonApi.environments.getActiveEnvironmentPath();
+
+// `environmentPath.path` carries the value of the setting. Note that this path may point to a folder and not the
+// python binary. Depends entirely on how the env was created.
+// E.g., `conda create -n myenv python` ensures the env has a python binary
+// `conda create -n myenv` does not include a python binary.
+// Also, the path specified may not be valid, use the following to get complete details for this environment if
+// need be.
+
+const environment = await pythonApi.environments.resolveEnvironment(environmentPath);
+if (environment) {
+    // run your script here.
+}
 ```
+
+Check out [the wiki](https://aka.ms/pythonEnvironmentApi) for many more examples and usage.
