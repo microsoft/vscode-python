@@ -4,7 +4,17 @@
 ###############################################################################################
 name: $(Date:yyyyMMdd)$(Rev:.r)
 
-pr: none
+trigger:
+  branches:
+    include:
+      - main
+      - release*
+
+pr:
+  branches:
+    include:
+      - main
+      - release*
 
 resources:
   repositories:
