@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
-        "composite": true,
-        "incremental": true,
         "baseUrl": ".",
+        "paths": {
+            "*": ["types/*"]
+        },
         "module": "commonjs",
         "target": "es2018",
         "outDir": "./out",
@@ -24,8 +25,7 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
-        "removeComments": true,
-        "tsBuildInfoFile": "./out/tsconfig.tsbuildInfo",
+        "removeComments": true
     },
     "exclude": [
         "node_modules",

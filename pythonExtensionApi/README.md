@@ -19,7 +19,7 @@ First we need to define a `package.json` for the extension that wants to use the
 	// Depend on the Python extension facade npm module to get easier API access to the
 	// core extension.
 	"dependencies": {
-		"@vscode/pythonExtensionApi": "..."
+		"@vscode/python-extension": "..."
 	},
 }
 ```
