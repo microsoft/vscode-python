@@ -174,7 +174,12 @@ export interface ITestServer {
     readonly onDataReceived: Event<DataReceivedEvent>;
     readonly onRunDataReceived: Event<DataReceivedEvent>;
     readonly onDiscoveryDataReceived: Event<DataReceivedEvent>;
-    sendCommand(options: TestCommandOptions, runTestIdsPort?: string, callback?: () => void): Promise<void>;
+    sendCommand(
+        options: TestCommandOptions,
+        runTestIdsPort?: string,
+        runInstance?: TestRun,
+        callback?: () => void,
+    ): Promise<void>;
     serverReady(): Promise<void>;
     getPort(): number;
     createUUID(cwd: string): string;

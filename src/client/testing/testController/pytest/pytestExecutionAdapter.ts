@@ -47,18 +47,25 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
+        traceLog('ABCDEFG::: create UUID for run', uuid);
         traceVerbose(uri, testIds, debugBool);
-        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+        const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
         });
+        const dispose = function (testServer: ITestServer) {
+            traceLog('ABCDEFG::: dispose w/ uuid', uuid);
+            testServer.deleteUUID(uuid);
+            disposedDataReceived.dispose();
+        };
+        runInstance?.token.onCancellationRequested(() => {
+            dispose(this.testServer);
+        });
         try {
-            await this.runTestsNew(uri, testIds, uuid, debugBool, executionFactory, debugLauncher);
+            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
         } finally {
-            this.testServer.deleteUUID(uuid);
-            disposable.dispose();
-            // confirm with testing that this gets called (it must clean this up)
+            // dispose(this.testServer);
         }
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
@@ -74,6 +81,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         uuid: string,
+        runInstance?: TestRun,
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
@@ -150,7 +158,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytests with arguments: ${runArgs.join(' ')}\r\n`);
 
-                await execService?.exec(runArgs, spawnOptions);
+                const result = await execService?.execObservable(runArgs, spawnOptions);
+
+                runInstance?.token.onCancellationRequested(() => {
+                    result?.proc?.kill();
+                });
+
+                result?.proc?.on('close', () => {
+                    traceLog('ABCDEFG::: callback on proc close, delete UUID.', uuid);
+                    this.testServer.deleteUUID(uuid);
+                    deferred.resolve();
+                });
             }
         } catch (ex) {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);

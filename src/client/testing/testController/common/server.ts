@@ -3,7 +3,7 @@
 
 import * as net from 'net';
 import * as crypto from 'crypto';
-import { Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter, TestRun } from 'vscode';
 import * as path from 'path';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -40,6 +40,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                         const rpcHeaders = jsonRPCHeaders(buffer.toString());
                         const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
                         const totalContentLength = rpcHeaders.headers.get('Content-Length');
+                        traceLog('ABCDEFG::: testing for UUID, if no error then good', uuid);
                         if (!uuid) {
                             traceError('On data received: Error occurred because payload UUID is undefined');
                             this._onDataReceived.fire({ uuid: '', data: '' });
@@ -120,6 +121,7 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     public deleteUUID(uuid: string): void {
+        traceLog('ABCDEFG::: DELETE IS OCCURRRING');
         this.uuids = this.uuids.filter((u) => u !== uuid);
     }
 
@@ -140,7 +142,12 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
-    async sendCommand(options: TestCommandOptions, runTestIdPort?: string, callback?: () => void): Promise<void> {
+    async sendCommand(
+        options: TestCommandOptions,
+        runTestIdPort?: string,
+        runInstance?: TestRun,
+        callback?: () => void,
+    ): Promise<void> {
         const { uuid } = options;
 
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
@@ -154,7 +161,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
 
         if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;
-        const isRun = !options.testIds;
+        const isRun = runTestIdPort !== undefined;
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
@@ -190,12 +197,20 @@ export class PythonTestServer implements ITestServer, Disposable {
             } else {
                 if (isRun) {
                     // This means it is running the test
-                    traceInfo(`Running unittests with arguments: ${args}\r\n`);
+                    traceInfo(`EJFB Running unittests with arguments: ${args}\r\n`);
                 } else {
                     // This means it is running discovery
-                    traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
+                    traceLog(`EJFB Discovering unittest tests with arguments: ${args}\r\n`);
                 }
-                await execService.exec(args, spawnOptions);
+                const result = await execService.execObservable(args, spawnOptions);
+
+                runInstance?.token.onCancellationRequested(() => {
+                    result?.proc?.kill();
+                });
+                result?.proc?.on('close', () => {
+                    traceLog('ABCDEFG::: callback on proc close, server.', uuid);
+                    callback?.();
+                });
             }
         } catch (ex) {
             this.uuids = this.uuids.filter((u) => u !== uuid);
@@ -206,6 +221,8 @@ export class PythonTestServer implements ITestServer, Disposable {
                     errors: [(ex as Error).message],
                 }),
             });
+        } finally {
+            traceLog('ABCDEFG::: done with send command, NO deletion :)');
         }
     }
 }
