@@ -26,6 +26,7 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
         }
 
         const iterator = async function* (kind: PythonEnvKind) {
+            traceVerbose('Searching for interpreters in posix paths locator');
             // Filter out pyenv shims. They are not actual python binaries, they are used to launch
             // the binaries specified in .python-version file in the cwd. We should not be reporting
             // those binaries as environments.

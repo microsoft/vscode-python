@@ -16,6 +16,7 @@ import { traceError, traceVerbose } from '../../../../logging';
  * all the environments (global or virtual) in that directory.
  */
 async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
+    traceVerbose('Searching for pyenv environments');
     const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });

@@ -87,6 +87,7 @@ export class MicrosoftStoreLocator extends FSWatchingLocator {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
+            traceVerbose('Searching for windows store envs');
             const exes = await getMicrosoftStorePythonExes();
             yield* exes.map(async (executablePath: string) => ({
                 kind,

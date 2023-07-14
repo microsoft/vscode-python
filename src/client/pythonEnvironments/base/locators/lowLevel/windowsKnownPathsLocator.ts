@@ -93,6 +93,7 @@ function getDirFilesLocator(
     // rather than in each low-level locator.  In the meantime we
     // take a naive approach.
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
+        traceVerbose('Searching for windows path interpreters');
         yield* await getEnvs(locator.iterEnvs(query));
         traceVerbose('Finished searching for windows path interpreters');
     }
