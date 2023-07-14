@@ -1,3 +1,5 @@
+pythonExtensionApi/out/
+
 # The following files were grandfathered out of eslint. They can be removed as time permits.
 
 src/test/analysisEngineTest.ts
