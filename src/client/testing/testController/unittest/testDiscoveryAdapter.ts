@@ -14,6 +14,7 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
+import { traceLog } from '../../../logging';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -34,6 +35,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const command = buildDiscoveryCommand(unittestArgs);
 
         const uuid = this.testServer.createUUID(uri.fsPath);
+        traceLog(`ABCDEFG: create UUID ${uuid}`);
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
@@ -46,12 +48,16 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
         });
-        try {
-            await this.callSendCommand(options);
-        } finally {
+
+        await this.callSendCommand(options, () => {
             this.testServer.deleteUUID(uuid);
             disposable.dispose();
-        }
+        });
+
+        // finally {
+        //     this.testServer.deleteUUID(uuid);
+        //     disposable.dispose();
+        // }
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
         const discoveryPayload: DiscoveredTestPayload = {
@@ -61,8 +67,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         return discoveryPayload;
     }
 
-    private async callSendCommand(options: TestCommandOptions): Promise<DiscoveredTestPayload> {
-        await this.testServer.sendCommand(options);
+    private async callSendCommand(options: TestCommandOptions, callback: () => void): Promise<DiscoveredTestPayload> {
+        await this.testServer.sendCommand(options, undefined, undefined, callback);
         const discoveryPayload: DiscoveredTestPayload = { cwd: '', status: 'success' };
         return discoveryPayload;
     }
