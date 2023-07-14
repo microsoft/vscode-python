@@ -34,7 +34,7 @@
 		"compile": "node ../node_modules/typescript/lib/tsc.js -b ./tsconfig.json",
 		"clean": "node ../node_modules/rimraf/bin.js out",
 		"lint": "node ../node_modules/eslint/bin/eslint.js --ext ts src",
-		"all": "npm run clean && npm run compile && npm run lint",
-		"all:publish": "git clean -xfd . && npm install && npm run compile && npm run lint"
+		"all": "npm run clean && npm run compile",
+		"all:publish": "git clean -xfd . && npm install && npm run compile"
     }
 }
