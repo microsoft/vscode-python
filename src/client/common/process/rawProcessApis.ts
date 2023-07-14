@@ -161,6 +161,7 @@ export function plainExec(
     proc.once('error', (ex) => {
         deferred.reject(ex);
         internalDisposables.forEach((d) => d.dispose());
+        disposable.dispose();
     });
 
     return deferred.promise;
