@@ -173,7 +173,7 @@ export interface IPersistentStorage<T> {
  */
 export function getGlobalStorage<T>(context: IExtensionContext, key: string, defaultValue?: T): IPersistentStorage<T> {
     const globalKeysStorage = new PersistentState<KeysStorage[]>(context.globalState, GLOBAL_PERSISTENT_KEYS, []);
-    const found = globalKeysStorage.value.find((value) => value.key === key && value.defaultValue === defaultValue);
+    const found = globalKeysStorage.value.find((value) => value.key === key);
     if (!found) {
         const newValue = [{ key, defaultValue }, ...globalKeysStorage.value];
         globalKeysStorage.updateValue(newValue).ignoreErrors();
