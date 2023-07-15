@@ -100,7 +100,7 @@ export function plainExec(
     const deferred = createDeferred<ExecutionResult<string>>();
     const disposable: IDisposable = {
         dispose: () => {
-            if (!proc.killed && deferred.completed) {
+            if (!proc.killed) {
                 proc.kill();
             }
         },
