@@ -1,8 +1,11 @@
 {
-    "rules": {
-        "padding-line-between-statements": [
-            "error",
-            { "blankLine": "always", "prev": "export", "next": "*" }
-        ]
-    }
+    "overrides": [
+        {
+            "files": ["**/main.d.ts"],
+            "rules": {
+                "@typescript-eslint/no-explicit-any": "off",
+                "padding-line-between-statements": ["error", { "blankLine": "always", "prev": "export", "next": "*" }]
+            }
+        }
+    ]
 }
