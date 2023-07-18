@@ -15,6 +15,7 @@ import {
 } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
+    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
@@ -158,7 +159,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytests with arguments: ${runArgs.join(' ')}\r\n`);
 
-                const result = await execService?.execObservable(runArgs, spawnOptions);
+                const deferred2 = createDeferred<ExecutionResult<string>>();
+                const result = execService?.execObservable(runArgs, spawnOptions);
 
                 runInstance?.token.onCancellationRequested(() => {
                     result?.proc?.kill();
@@ -166,9 +168,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 result?.proc?.on('close', () => {
                     traceLog('ABCDEFG::: callback on proc close, delete UUID.', uuid);
+                    deferred2.resolve({ stdout: '', stderr: '' });
                     this.testServer.deleteUUID(uuid);
                     deferred.resolve();
                 });
+                await deferred2.promise;
             }
         } catch (ex) {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);

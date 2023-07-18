@@ -90,6 +90,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const runTestIdsPort = await startTestIdServer(testIds);
 
         await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, () => {
+            traceLog('ABCDEFG::: resolve deferred, of send command in execution to then call delete UUID');
             this.testServer.deleteUUID(uuid);
             deferred.resolve();
             dispose?.();

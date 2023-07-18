@@ -10,7 +10,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceError, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -78,21 +78,17 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        try {
-            const result = execService?.execObservable(
-                ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs),
-                spawnOptions,
-            );
-            result?.proc?.on('close', () => {
-                traceLog('ABCDEFG::: callback on proc close.');
+        execService
+            ?.exec(['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs), spawnOptions)
+            .then(() => {
                 this.testServer.deleteUUID(uuid);
-                deferred.resolve();
+                return deferred.resolve();
+            })
+            .catch((err) => {
+                traceError(`Error while trying to run pytest discovery, \n${err}\r\n\r\n`);
+                this.testServer.deleteUUID(uuid);
+                return deferred.reject(err);
             });
-        } catch (ex) {
-            traceError(`Error while trying to run pytest discovery, \n${ex}\r\n\r\n`);
-            this.testServer.deleteUUID(uuid);
-            deferred.reject(ex);
-        }
         return deferred.promise;
     }
 }
