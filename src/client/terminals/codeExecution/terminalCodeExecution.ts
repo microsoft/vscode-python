@@ -45,7 +45,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         }
 
         await this.initializeRepl();
-        await this.getTerminalService(resource).sendText(code);
+        await this.getTerminalServiceForREPL(resource).sendText(code);
     }
     public async initializeRepl(resource?: Uri) {
         if (this.replActive && (await this.replActive)) {
