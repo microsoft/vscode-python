@@ -7,6 +7,7 @@ import { Disposable, Event, EventEmitter, TestRun } from 'vscode';
 import * as path from 'path';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
+    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
@@ -15,6 +16,7 @@ import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
+import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -30,6 +32,7 @@ export class PythonTestServer implements ITestServer, Disposable {
     private _onDiscoveryDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
+        traceLog('ABCDEFG::: testing for UUID, if no error then good');
         this.server = net.createServer((socket: net.Socket) => {
             let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
@@ -202,15 +205,19 @@ export class PythonTestServer implements ITestServer, Disposable {
                     // This means it is running discovery
                     traceLog(`EJFB Discovering unittest tests with arguments: ${args}\r\n`);
                 }
-                const result = await execService.execObservable(args, spawnOptions);
+                const deferred = createDeferred<ExecutionResult<string>>();
+
+                const result = execService.execObservable(args, spawnOptions);
 
                 runInstance?.token.onCancellationRequested(() => {
                     result?.proc?.kill();
                 });
                 result?.proc?.on('close', () => {
-                    traceLog('ABCDEFG::: callback on proc close, server.', uuid);
+                    traceLog('Exec server closed.', uuid);
+                    deferred.resolve({ stdout: '', stderr: '' });
                     callback?.();
                 });
+                await deferred.promise;
             }
         } catch (ex) {
             this.uuids = this.uuids.filter((u) => u !== uuid);
