@@ -7,6 +7,7 @@
     "python.command.python.execInTerminal.title": "Run Python File in Terminal",
     "python.command.python.debugInTerminal.title": "Debug Python File",
     "python.command.python.execInTerminalIcon.title": "Run Python File",
+    "python.command.python.execInDedicatedTerminal.title": "Run Python File in Dedicated Terminal",
     "python.command.python.setInterpreter.title": "Select Interpreter",
     "python.command.python.clearWorkspaceInterpreter.title": "Clear Workspace Interpreter Setting",
     "python.command.python.viewOutput.title": "Show Output",
