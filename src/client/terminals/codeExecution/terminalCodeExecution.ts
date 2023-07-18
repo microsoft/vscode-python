@@ -10,7 +10,7 @@ import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
@@ -20,7 +20,6 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
     private replActive?: Promise<boolean>;
-    private _terminalServiceForREPL!: ITerminalService;
     constructor(
         @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
@@ -44,21 +43,27 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             return;
         }
 
-        await this.initializeRepl();
-        await this.getTerminalServiceForREPL(resource).sendText(code);
+        await this.initializeRepl(resource);
+        await this.getTerminalService(resource).sendText(code);
     }
-    public async initializeRepl(resource?: Uri) {
+    public async initializeRepl(resource: Resource) {
+        const terminalService = this.getTerminalService(resource);
         if (this.replActive && (await this.replActive)) {
-            await this._terminalServiceForREPL.show();
+            await terminalService.show();
             return;
         }
         this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
-            await this.getTerminalServiceForREPL(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
+            terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
 
             // Give python repl time to start before we start sending text.
             setTimeout(() => resolve(true), 1000);
         });
+        this.disposables.push(
+            terminalService.onDidCloseTerminal(() => {
+                this.replActive = undefined;
+            }),
+        );
 
         await this.replActive;
     }
@@ -76,7 +81,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         return this.getExecutableInfo(resource, executeArgs);
     }
-    private getTerminalService(resource?: Uri, options?: { newTerminalPerFile: boolean }): ITerminalService {
+    private getTerminalService(resource: Resource, options?: { newTerminalPerFile: boolean }): ITerminalService {
         return this.terminalServiceFactory.getTerminalService({
             resource,
             title: this.terminalTitle,
@@ -103,19 +108,5 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             }
             await this.getTerminalService(file).sendText(`cd ${fileDirPath.fileToCommandArgumentForPythonExt()}`);
         }
-    }
-    private getTerminalServiceForREPL(resource?: Uri): ITerminalService {
-        if (!this._terminalServiceForREPL) {
-            this._terminalServiceForREPL = this.terminalServiceFactory.getTerminalService({
-                resource,
-                title: this.terminalTitle,
-            });
-            this.disposables.push(
-                this._terminalServiceForREPL.onDidCloseTerminal(() => {
-                    this.replActive = undefined;
-                }),
-            );
-        }
-        return this._terminalServiceForREPL;
     }
 }
