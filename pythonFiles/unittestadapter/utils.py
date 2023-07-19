@@ -159,6 +159,14 @@ def build_test_tree(
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
             error.append(str(test_case._exception))  # type: ignore
+        elif test_id.startswith("unittest.loader.ModuleSkipped"):
+            components = test_id.split(".")
+            class_name = f"{components[-1]}.py"
+            # Find/build class node.
+            file_path = os.fsdecode(os.path.join(directory_path, class_name))
+            current_node = get_child_node(
+                class_name, file_path, TestNodeTypeEnum.file, root
+            )
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")
