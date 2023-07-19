@@ -49,11 +49,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             this.testServer.deleteUUID(uuid);
             dispose();
         });
-        try {
-            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, dispose);
-        } finally {
-            // dispose(this.testServer);
-        }
+        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, dispose);
         const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
         return executionPayload;
     }

@@ -25,12 +25,6 @@ import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import { startTestIdServer } from '../common/utils';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-// (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
-/**
- * Wrapper Class for pytest test execution..
- */
-
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
         public testServer: ITestServer,
@@ -61,11 +55,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?.token.onCancellationRequested(() => {
             dispose(this.testServer);
         });
-        try {
-            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
-        } finally {
-            // dispose(this.testServer);
-        }
+        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
+
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
         const executionPayload: ExecutionTestPayload = {
@@ -158,7 +149,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytests with arguments: ${runArgs.join(' ')}\r\n`);
 
-                const deferred2 = createDeferred<ExecutionResult<string>>();
+                const deferredExec = createDeferred<ExecutionResult<string>>();
                 const result = execService?.execObservable(runArgs, spawnOptions);
 
                 runInstance?.token.onCancellationRequested(() => {
@@ -166,11 +157,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 result?.proc?.on('close', () => {
-                    deferred2.resolve({ stdout: '', stderr: '' });
+                    deferredExec.resolve({ stdout: '', stderr: '' });
                     this.testServer.deleteUUID(uuid);
                     deferred.resolve();
                 });
-                await deferred2.promise;
+                await deferredExec.promise;
             }
         } catch (ex) {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
