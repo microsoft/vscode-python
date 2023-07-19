@@ -6,7 +6,7 @@
         },
         "module": "commonjs",
         "target": "es2018",
-        "outDir": "out",
+        "outDir": "./out",
         "lib": [
             "es6",
             "es2018",
@@ -25,20 +25,10 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "resolveJsonModule": true,
-        "removeComments": true
+        "declaration": true
     },
     "exclude": [
         "node_modules",
-        ".vscode-test",
-        ".vscode test",
-        "src/server/node_modules",
-        "src/client/node_modules",
-        "src/server/src/typings",
-        "src/client/src/typings",
-        "src/smoke",
-        "build",
-        "out",
-        "tmp",
-        "pythonExtensionApi"
+        "out"
     ]
 }

@@ -27,7 +27,7 @@ const tsProject = ts.createProject('./tsconfig.json', { typescript });
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
-gulp.task('compile', (done) => {
+gulp.task('compileCore', (done) => {
     let failed = false;
     tsProject
         .src()
@@ -38,6 +38,22 @@ gulp.task('compile', (done) => {
         .js.pipe(gulp.dest('out'))
         .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
 });
+
+const apiTsProject = ts.createProject('./pythonExtensionApi/tsconfig.json', { typescript });
+
+gulp.task('compileApi', (done) => {
+    let failed = false;
+    apiTsProject
+        .src()
+        .pipe(apiTsProject())
+        .on('error', () => {
+            failed = true;
+        })
+        .js.pipe(gulp.dest('./pythonExtensionApi/out'))
+        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+});
+
+gulp.task('compile', gulp.series('compileCore', 'compileApi'));
 
 gulp.task('precommit', (done) => run({ exitOnError: true, mode: 'staged' }, done));
 

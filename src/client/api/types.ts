@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensions } from 'vscode';
+import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem } from 'vscode';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -387,20 +387,3 @@ export type EnvironmentVariablesChangeEvent = {
      */
     readonly env: EnvironmentVariables;
 };
-
-export const PVSC_EXTENSION_ID = 'ms-python.python';
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-export namespace PythonExtension {
-    export async function api(): Promise<PythonExtension> {
-        const extension = extensions.getExtension(PVSC_EXTENSION_ID);
-        if (extension === undefined) {
-            throw new Error(`Python extension is not installed or is disabled`);
-        }
-        if (!extension.isActive) {
-            await extension.activate();
-        }
-        const pythonApi: PythonExtension = extension.exports;
-        return pythonApi;
-    }
-}

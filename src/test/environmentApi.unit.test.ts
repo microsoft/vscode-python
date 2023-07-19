@@ -37,7 +37,7 @@ import {
     EnvironmentVariablesChangeEvent,
     EnvironmentsChangeEvent,
     PythonExtension,
-} from '../client/api/main';
+} from '../client/api/types';
 
 suite('Python Environment API', () => {
     const workspacePath = 'path/to/workspace';

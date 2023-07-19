@@ -4,7 +4,7 @@
 import { Uri, Event } from 'vscode';
 import { PythonEnvKind, EnvPathType } from './pythonEnvironments/base/info';
 import { ProgressNotificationEvent, GetRefreshEnvironmentsOptions } from './pythonEnvironments/base/locator';
-import { Resource } from './api/main';
+import { Resource } from './api/types';
 
 export interface EnvironmentDetailsOptions {
     useCache: boolean;

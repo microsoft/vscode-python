@@ -10,7 +10,7 @@ import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import type { PythonExtension } from '../client/api/main';
+import type { PythonExtension } from '../client/api/types';
 import { IProcessService } from '../client/common/process/types';
 import { IDisposable } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';

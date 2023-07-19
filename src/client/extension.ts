@@ -41,7 +41,7 @@ import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { IStartupDurations } from './types';
 import { runAfterActivation } from './common/utils/runAfterActivation';
 import { IInterpreterService } from './interpreter/contracts';
-import { PythonExtension } from './api/main';
+import { PythonExtension } from './api/types';
 import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';

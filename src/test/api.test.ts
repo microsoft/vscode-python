@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { PythonExtension } from '../client/api/main';
+import { PythonExtension } from '../client/api/types';
 import { ProposedExtensionAPI } from '../client/proposedApiTypes';
 import { initialize } from './initialize';
 

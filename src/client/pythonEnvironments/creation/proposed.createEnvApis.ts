@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 
 import { Event, Disposable, WorkspaceFolder } from 'vscode';
-import { EnvironmentTools } from '../../api/main';
+import { EnvironmentTools } from '../../api/types';
 
 export type CreateEnvironmentUserActions = 'Back' | 'Cancel';
 export type EnvironmentProviderId = string;

@@ -23,6 +23,7 @@ cucumber-report.json
 port.txt
 precommit.hook
 pythonFiles/lib/**
+pythonFiles/get_pip.py
 debug_coverage*/**
 languageServer/**
 languageServer.*/**

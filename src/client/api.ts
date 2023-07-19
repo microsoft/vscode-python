@@ -10,7 +10,7 @@ import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient
 import { LanguageClient } from 'vscode-languageclient/node';
 import { PYLANCE_NAME } from './activation/node/languageClientFactory';
 import { ILanguageServerOutputChannel } from './activation/types';
-import { PythonExtension } from './api/main';
+import { PythonExtension } from './api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';

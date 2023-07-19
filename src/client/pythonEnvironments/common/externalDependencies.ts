@@ -10,7 +10,7 @@ import { IDisposable, IConfigurationService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
-import { traceVerbose } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -93,16 +93,21 @@ export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }
 
-export async function resolveSymbolicLink(absPath: string, stats?: fsapi.Stats): Promise<string> {
+export async function resolveSymbolicLink(absPath: string, stats?: fsapi.Stats, count?: number): Promise<string> {
     stats = stats ?? (await fsapi.lstat(absPath));
     if (stats.isSymbolicLink()) {
+        if (count && count > 5) {
+            traceError(`Detected a potential symbolic link loop at ${absPath}, terminating resolution.`);
+            return absPath;
+        }
         const link = await fsapi.readlink(absPath);
         // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
         // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
         //
         // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
         const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
-        return resolveSymbolicLink(absLinkPath);
+        count = count ? count + 1 : 1;
+        return resolveSymbolicLink(absLinkPath, undefined, count);
     }
     return absPath;
 }
