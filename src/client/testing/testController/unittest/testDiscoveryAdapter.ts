@@ -51,11 +51,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             this.testServer.deleteUUID(uuid);
             disposable.dispose();
         });
-
-        // finally {
-        //     this.testServer.deleteUUID(uuid);
-        //     disposable.dispose();
-        // }
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
         const discoveryPayload: DiscoveredTestPayload = {

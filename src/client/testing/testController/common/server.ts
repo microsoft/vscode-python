@@ -197,10 +197,10 @@ export class PythonTestServer implements ITestServer, Disposable {
             } else {
                 if (isRun) {
                     // This means it is running the test
-                    traceInfo(`EJFB Running unittests with arguments: ${args}\r\n`);
+                    traceInfo(`Running unittests with arguments: ${args}\r\n`);
                 } else {
                     // This means it is running discovery
-                    traceLog(`EJFB Discovering unittest tests with arguments: ${args}\r\n`);
+                    traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
                 }
                 const deferred = createDeferred<ExecutionResult<string>>();
 

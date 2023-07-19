@@ -79,26 +79,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        const deferred2 = createDeferred<ExecutionResult<string>>();
+        const deferredExec = createDeferred<ExecutionResult<string>>();
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
         const result = execService?.execObservable(execArgs, spawnOptions);
 
         result?.proc?.on('close', () => {
-            deferred2.resolve({ stdout: '', stderr: '' });
+            deferredExec.resolve({ stdout: '', stderr: '' });
             this.testServer.deleteUUID(uuid);
             deferred.resolve();
         });
-        await deferred2.promise;
-
-        //     .then(() => {
-        //         this.testServer.deleteUUID(uuid);
-        //         return deferred.resolve();
-        //     })
-        //     .catch((err) => {
-        //         traceError(`Error while trying to run pytest discovery, \n${err}\r\n\r\n`);
-        //         this.testServer.deleteUUID(uuid);
-        //         return deferred.reject(err);
-        //     });
-        // return deferred.promise;
+        await deferredExec.promise;
     }
 }
