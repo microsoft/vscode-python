@@ -152,6 +152,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     deferred.resolve();
+                    this.testServer.deleteUUID(uuid);
                 });
             } else {
                 // combine path to run script with run args
