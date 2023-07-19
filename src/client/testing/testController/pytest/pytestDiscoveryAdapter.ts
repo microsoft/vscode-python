@@ -11,7 +11,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceError, traceLog, traceVerbose } from '../../../logging';
+import { traceLog, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -49,7 +49,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         return discoveryPayload;
     }
 
-    async runPytestDiscovery(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    async runPytestDiscovery(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<void> {
         const deferred = createDeferred<DiscoveredTestPayload>();
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
