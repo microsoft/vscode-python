@@ -226,6 +226,11 @@ export class DebugLauncher implements ITestDebugLauncher {
             const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
             launchArgs.env.PYTHONPATH = pluginPath;
         }
+        if (launchArgs.env && launchArgs.env.PYTHONPATH) {
+            launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${options.cwd}`;
+        } else if (launchArgs.env) {
+            launchArgs.env.PYTHONPATH = options.cwd;
+        }
 
         // Clear out purpose so we can detect if the configuration was used to
         // run via F5 style debugging.
