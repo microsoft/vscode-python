@@ -48,7 +48,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
-        traceLog('ABCDEFG::: create UUID for run', uuid);
         traceVerbose(uri, testIds, debugBool);
         const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
@@ -56,7 +55,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
         });
         const dispose = function (testServer: ITestServer) {
-            traceLog('ABCDEFG::: dispose w/ uuid', uuid);
             testServer.deleteUUID(uuid);
             disposedDataReceived.dispose();
         };
@@ -168,7 +166,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 result?.proc?.on('close', () => {
-                    traceLog('ABCDEFG::: callback on proc close, delete UUID.', uuid);
                     deferred2.resolve({ stdout: '', stderr: '' });
                     this.testServer.deleteUUID(uuid);
                     deferred.resolve();

@@ -84,7 +84,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const result = execService?.execObservable(execArgs, spawnOptions);
 
         result?.proc?.on('close', () => {
-            traceLog('ABCDEFG::: callback on proc close, delete UUID.', uuid);
             deferred2.resolve({ stdout: '', stderr: '' });
             this.testServer.deleteUUID(uuid);
             deferred.resolve();

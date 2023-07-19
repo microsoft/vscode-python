@@ -14,7 +14,6 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
-import { traceLog } from '../../../logging';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -35,7 +34,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const command = buildDiscoveryCommand(unittestArgs);
 
         const uuid = this.testServer.createUUID(uri.fsPath);
-        traceLog(`ABCDEFG: create UUID ${uuid}`);
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,

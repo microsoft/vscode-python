@@ -32,7 +32,6 @@ export class PythonTestServer implements ITestServer, Disposable {
     private _onDiscoveryDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
-        traceLog('ABCDEFG::: testing for UUID, if no error then good');
         this.server = net.createServer((socket: net.Socket) => {
             let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
@@ -43,7 +42,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                         const rpcHeaders = jsonRPCHeaders(buffer.toString());
                         const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
                         const totalContentLength = rpcHeaders.headers.get('Content-Length');
-                        traceLog('ABCDEFG::: testing for UUID, if no error then good', uuid);
                         if (!uuid) {
                             traceError('On data received: Error occurred because payload UUID is undefined');
                             this._onDataReceived.fire({ uuid: '', data: '' });
@@ -124,7 +122,6 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     public deleteUUID(uuid: string): void {
-        traceLog('ABCDEFG::: DELETE IS OCCURRRING');
         this.uuids = this.uuids.filter((u) => u !== uuid);
     }
 
@@ -228,8 +225,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                     errors: [(ex as Error).message],
                 }),
             });
-        } finally {
-            traceLog('ABCDEFG::: done with send command, NO deletion :)');
         }
     }
 }
