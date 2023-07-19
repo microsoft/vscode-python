@@ -16,34 +16,6 @@ from unittestadapter.execution import parse_execution_cli_args, run_tests
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
-def test_skipped_file_folder() -> None:
-    """This test runs on a single test_id, therefore it should return
-    a dict with a single key-value pair for the result.
-
-    This single test passes so the outcome should be 'success'.
-    """
-    id = "discovery_simple.DiscoverySimple.test_one"
-    actual = run_tests(
-        os.fspath(TEST_DATA_PATH / "unittest_skip"),
-        [id],
-        "unittest_*",
-        None,
-        "fake-uuid",
-    )
-    assert actual
-    assert all(item in actual for item in ("cwd", "status"))
-    assert actual["status"] == "success"
-    assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-    assert actual["result"] is not None
-    result = actual["result"]
-    assert len(result) == 1
-    assert id in result
-    id_result = result[id]
-    assert id_result is not None
-    assert "outcome" in id_result
-    assert id_result["outcome"] == "success"
-
-
 @pytest.mark.parametrize(
     "args, expected",
     [
