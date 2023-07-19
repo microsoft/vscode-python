@@ -37,14 +37,12 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
-        traceLog('ABCDEFG::: created UUID', uuid);
         const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
         });
         const dispose = function () {
-            traceLog('ABCDEFG::: no dispose of uuid :)');
             disposedDataReceived.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
@@ -90,7 +88,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const runTestIdsPort = await startTestIdServer(testIds);
 
         await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, () => {
-            traceLog('ABCDEFG::: resolve deferred, of send command in execution to then call delete UUID');
             this.testServer.deleteUUID(uuid);
             deferred.resolve();
             dispose?.();
