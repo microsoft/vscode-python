@@ -97,18 +97,16 @@ export async function resolveSymbolicLink(absPath: string, stats?: fsapi.Stats, 
     stats = stats ?? (await fsapi.lstat(absPath));
     if (stats.isSymbolicLink()) {
         if (count && count > 5) {
-            traceError(`Too many symbolic links encountered: ${absPath}, stop resolving.`);
+            traceError(`Detected a potential symbolic link loop at ${absPath}, terminating resolution.`);
             return absPath;
         }
-        traceVerbose(`Attempt to resolve symbolic link ${absPath}`);
         const link = await fsapi.readlink(absPath);
-        count = count ? count + 1 : 1;
-        traceVerbose(`Resolved symbolic link to ${absPath} -> ${link}`);
         // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
         // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
         //
         // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
         const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
+        count = count ? count + 1 : 1;
         return resolveSymbolicLink(absLinkPath, undefined, count);
     }
     return absPath;
