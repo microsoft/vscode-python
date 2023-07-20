@@ -223,13 +223,20 @@ export class DebugLauncher implements ITestDebugLauncher {
                     `Missing value for debug setup, both port and uuid need to be defined. port: "${options.pytestPort}" uuid: "${options.pytestUUID}"`,
                 );
             }
-            const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-            launchArgs.env.PYTHONPATH = pluginPath;
         }
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        // check if PYTHONPATH is already set in the environment variables
         if (launchArgs.env && launchArgs.env.PYTHONPATH) {
-            launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${options.cwd}`;
+            // add the plugin path or cwd to PYTHONPATH if it is not already there
+            if (!launchArgs.env.PYTHONPATH.includes(pluginPath)) {
+                launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${pluginPath}`;
+            }
+            if (!launchArgs.env.PYTHONPATH.includes(options.cwd)) {
+                launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${options.cwd}`;
+            }
         } else if (launchArgs.env) {
-            launchArgs.env.PYTHONPATH = options.cwd;
+            // if PYTHONPATH is not set in the environment variables, set it to the plugin path and cwd
+            launchArgs.env.PYTHONPATH = `${pluginPath}${path.delimiter}${options.cwd}`;
         }
 
         // Clear out purpose so we can detect if the configuration was used to
