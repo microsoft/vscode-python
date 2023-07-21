@@ -88,6 +88,10 @@ def test_parameterized_error_collect():
     "file, expected_const",
     [
         (
+            "unittest_skiptest_file_level.py",
+            expected_discovery_test_output.unittest_skip_file_level_expected_output,
+        ),
+        (
             "param_same_name",
             expected_discovery_test_output.param_same_name_expected_output,
         ),

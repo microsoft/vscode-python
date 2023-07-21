@@ -100,6 +100,16 @@ unit_pytest_same_file_discovery_expected_output = {
     "id_": TEST_DATA_PATH_STR,
 }
 
+# This is the expected output for the unittest_skip_file_level test.
+# └── unittest_skiptest_file_level.py
+unittest_skip_file_level_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [],
+    "id_": TEST_DATA_PATH_STR,
+}
+
 # This is the expected output for the unittest_folder tests
 # └── unittest_folder
 #    ├── test_add.py
