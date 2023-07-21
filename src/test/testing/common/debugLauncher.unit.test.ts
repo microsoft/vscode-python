@@ -347,7 +347,7 @@ suite('Unit Tests - Debug Launcher', () => {
         expected.cwd = 'path/to/settings/cwd';
         const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pythonPath = `${pluginPath}${path.delimiter}${expected.cwd}`;
-        expected.env.PYTHONPATH = pythonPath
+        expected.env.PYTHONPATH = pythonPath;
 
         setupSuccess(options, 'unittest', expected);
         await debugLauncher.launchDebugger(options);
@@ -373,7 +373,7 @@ suite('Unit Tests - Debug Launcher', () => {
             console: 'integratedTerminal',
             cwd: 'some/dir',
             env: {
-                PYTHONPATH: 'one/two/three'
+                PYTHONPATH: 'one/two/three',
                 SPAM: 'EGGS',
             },
             envFile: 'some/dir/.env',
