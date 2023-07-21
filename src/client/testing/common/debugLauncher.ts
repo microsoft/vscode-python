@@ -231,7 +231,11 @@ export class DebugLauncher implements ITestDebugLauncher {
             if (!launchArgs.env.PYTHONPATH.includes(pluginPath)) {
                 launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${pluginPath}`;
             }
-            if (!launchArgs.env.PYTHONPATH.includes(options.cwd)) {
+            if (launchArgs.cwd) {
+                if (!launchArgs.env.PYTHONPATH.includes(launchArgs.cwd)) {
+                    launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${launchArgs.cwd}`;
+                }
+            } else if (!launchArgs.env.PYTHONPATH.includes(options.cwd)) {
                 launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${options.cwd}`;
             }
         } else if (launchArgs.env) {
