@@ -694,7 +694,7 @@ root_with_config_expected_output = {
                     "path": os.fspath(os.path.join(tests_path, "test_a.py")),
                     "lineno": find_test_line_number(
                         "test_a_function",
-                        os.fspath(os.path.join(tests_path, "test_a.py")),
+                        os.path.join(tests_path, "test_a.py"),
                     ),
                     "type_": "test",
                     "id_": "tests/test_a.py::test_a_function",
@@ -713,7 +713,7 @@ root_with_config_expected_output = {
                     "path": os.fspath(os.path.join(tests_path, "test_b.py")),
                     "lineno": find_test_line_number(
                         "test_b_function",
-                        os.fspath(os.path.join(tests_path, "test_b.py")),
+                        os.path.join(tests_path, "test_b.py"),
                     ),
                     "type_": "test",
                     "id_": "tests/test_b.py::test_b_function",
