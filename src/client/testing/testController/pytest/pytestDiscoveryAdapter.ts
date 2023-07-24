@@ -11,7 +11,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceLog, traceVerbose } from '../../../logging';
+import { traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
