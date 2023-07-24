@@ -19,8 +19,8 @@ import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
@@ -38,6 +38,7 @@ import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda
 import { StopWatch } from '../../common/utils/stopWatch';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
+import { cache } from '../../common/utils/decorators';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -174,6 +175,35 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 );
                 throw ex;
             });
+    }
+
+    @cache(-1, true)
+    public async getProcessEnvironmentVariables(resource: Resource, shell?: string): Promise<EnvironmentVariables> {
+        // Try to get the process environment variables using Python by printing variables, that can be little different
+        // from `process.env` and is preferred when calculating diff.
+        const globalInterpreters = this.interpreterService
+            .getInterpreters()
+            .filter((i) => !virtualEnvTypes.includes(i.envType));
+        const interpreterPath =
+            globalInterpreters.length > 0 && globalInterpreters[0] ? globalInterpreters[0].path : 'python';
+        try {
+            const [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgumentForPythonExt();
+            });
+            const command = `echo '${ENVIRONMENT_PREFIX}' && ${interpreterPath} ${args.join(' ')}`;
+            const processService = await this.processServiceFactory.create(resource);
+            const result = await processService.shellExec(command, {
+                shell: shell,
+                timeout: ENVIRONMENT_TIMEOUT,
+                maxBuffer: 1000 * 1000,
+                throwOnStdErr: false,
+            });
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
+            return returnedEnv ?? process.env;
+        } catch (ex) {
+            return process.env;
+        }
     }
 
     public async getEnvironmentActivationShellCommands(

@@ -33,6 +33,7 @@ import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
+import { EnvironmentVariables } from '../../common/variables/types';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService {
@@ -45,7 +46,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private registeredOnce = false;
 
-    private previousEnvVars = _normCaseKeys(process.env);
+    private previousEnvVars: EnvironmentVariables | undefined;
 
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -127,12 +128,21 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 return;
             }
             envVarCollection.clear();
-            this.previousEnvVars = _normCaseKeys(process.env);
+            this.previousEnvVars = undefined;
             return;
+        }
+        if (!this.previousEnvVars) {
+            this.previousEnvVars = await this.environmentActivationService.getProcessEnvironmentVariables(
+                resource,
+                shell,
+            );
         }
         const previousEnv = this.previousEnvVars;
         this.previousEnvVars = env;
-        Object.keys(env).forEach((key) => {
+        for (const key in env) {
+            if (shouldSkip(key)) {
+                continue;
+            }
             const value = env[key];
             const prevValue = previousEnv[key];
             if (prevValue !== value) {
@@ -144,14 +154,16 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     envVarCollection.delete(key);
                 }
             }
-        });
-        Object.keys(previousEnv).forEach((key) => {
+        }
+
+        for (const key in previousEnv) {
             // If the previous env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
                 envVarCollection.delete(key);
             }
-        });
+        }
+
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
@@ -224,13 +236,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 }
 
-export function _normCaseKeys(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-    const result: NodeJS.ProcessEnv = {};
-    Object.keys(env).forEach((key) => {
-        // `os.environ` script used to get env vars normalizes keys to upper case:
-        // https://github.com/python/cpython/issues/101754
-        // So convert `process.env` keys to upper case to match.
-        result[key.toUpperCase()] = env[key];
-    });
-    return result;
+function shouldSkip(env: string) {
+    return ['_', 'SHLVL'].includes(env);
 }

@@ -31,13 +31,21 @@ import {
 import { Interpreters } from '../../../client/common/utils/localize';
 import { OSType, getOSType } from '../../../client/common/utils/platform';
 import { defaultShells } from '../../../client/interpreter/activation/service';
-import {
-    TerminalEnvVarCollectionService,
-    _normCaseKeys,
-} from '../../../client/interpreter/activation/terminalEnvVarCollectionService';
+import { TerminalEnvVarCollectionService } from '../../../client/interpreter/activation/terminalEnvVarCollectionService';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
+
+function _normCaseKeys(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+    const result: NodeJS.ProcessEnv = {};
+    Object.keys(env).forEach((key) => {
+        // `os.environ` script used to get env vars normalizes keys to upper case:
+        // https://github.com/python/cpython/issues/101754
+        // So convert `process.env` keys to upper case to match.
+        result[key.toUpperCase()] = env[key];
+    });
+    return result;
+}
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
