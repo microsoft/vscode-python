@@ -37,19 +37,18 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
-        const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+        const disposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
         });
-        const dispose = function () {
-            disposedDataReceived.dispose();
-        };
-        runInstance?.token.onCancellationRequested(() => {
+        try {
+            await this.runTestsNew(uri, testIds, uuid, debugBool);
+        } finally {
             this.testServer.deleteUUID(uuid);
-            dispose();
-        });
-        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, dispose);
+            disposable.dispose();
+            // confirm with testing that this gets called (it must clean this up)
+        }
         const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
         return executionPayload;
     }
@@ -58,9 +57,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         uuid: string,
-        runInstance?: TestRun,
         debugBool?: boolean,
-        dispose?: () => void,
     ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
@@ -83,10 +80,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         const runTestIdsPort = await startTestIdServer(testIds);
 
-        await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, () => {
-            this.testServer.deleteUUID(uuid);
+        await this.testServer.sendCommand(options, runTestIdsPort.toString(), () => {
             deferred.resolve();
-            dispose?.();
         });
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.

@@ -3,11 +3,10 @@
 
 import * as net from 'net';
 import * as crypto from 'crypto';
-import { Disposable, Event, EventEmitter, TestRun } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import * as path from 'path';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
-    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
@@ -16,7 +15,6 @@ import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
-import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -142,12 +140,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDataReceived.event;
     }
 
-    async sendCommand(
-        options: TestCommandOptions,
-        runTestIdPort?: string,
-        runInstance?: TestRun,
-        callback?: () => void,
-    ): Promise<void> {
+    async sendCommand(options: TestCommandOptions, runTestIdPort?: string, callback?: () => void): Promise<void> {
         const { uuid } = options;
 
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
@@ -161,7 +154,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
 
         if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;
-        const isRun = runTestIdPort !== undefined;
+        const isRun = !options.testIds;
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
@@ -202,19 +195,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                     // This means it is running discovery
                     traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
                 }
-                const deferred = createDeferred<ExecutionResult<string>>();
-
-                const result = execService.execObservable(args, spawnOptions);
-
-                runInstance?.token.onCancellationRequested(() => {
-                    result?.proc?.kill();
-                });
-                result?.proc?.on('close', () => {
-                    traceLog('Exec server closed.', uuid);
-                    deferred.resolve({ stdout: '', stderr: '' });
-                    callback?.();
-                });
-                await deferred.promise;
+                await execService.exec(args, spawnOptions);
             }
         } catch (ex) {
             this.uuids = this.uuids.filter((u) => u !== uuid);
