@@ -24,7 +24,7 @@
     "onCreateCommand": "bash scripts/onCreateCommand.sh",
 
     "containerEnv": {
-        "CI_PYTHON_PATH": "python"
+        "CI_PYTHON_PATH": "/workspaces/vscode-python/.venv/bin/python"
     }
 
 }
