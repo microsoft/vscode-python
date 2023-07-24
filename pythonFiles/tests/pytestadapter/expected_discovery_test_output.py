@@ -669,9 +669,7 @@ param_same_name_expected_output = {
     "id_": TEST_DATA_PATH_STR,
 }
 
-tests_path = (
-    "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/root/tests"
-)
+tests_path = os.fspath(TEST_DATA_PATH / "root" / "tests")
 # This is the expected output for the root folder tests.
 # └── tests
 #    └── test_a.py
