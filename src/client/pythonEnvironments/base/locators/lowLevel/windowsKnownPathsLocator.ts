@@ -94,8 +94,10 @@ function getDirFilesLocator(
     // take a naive approach.
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         traceVerbose('Searching for windows path interpreters');
-        yield* await getEnvs(locator.iterEnvs(query));
-        traceVerbose('Finished searching for windows path interpreters');
+        yield* await getEnvs(locator.iterEnvs(query)).then((res) => {
+            traceVerbose('Finished searching for windows path interpreters');
+            return res;
+        });
     }
     return {
         providerId: locator.providerId,
