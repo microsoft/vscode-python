@@ -73,7 +73,7 @@ def pytest_exception_interact(node, call, report):
     # if discovery, then add the error to error logs.
     if type(report) == pytest.CollectReport:
         if call.excinfo and call.excinfo.typename != "AssertionError":
-            if (report.outcome == "skipped" and "SkipTest" in str(call)):
+            if report.outcome == "skipped" and "SkipTest" in str(call):
                 return
             ERRORS.append(
                 call.excinfo.exconly() + "\n Check Python Test Logs for more details."
