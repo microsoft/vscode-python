@@ -30,7 +30,7 @@ export const isRemoteGlobalSettingCopiedKey = 'isRemoteGlobalSettingCopiedKey';
 export const defaultInterpreterPathSetting: keyof IPythonSettings = 'defaultInterpreterPath';
 const CI_PYTHON_PATH = getCIPythonPath();
 
-function getCIPythonPath(): string {
+export function getCIPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
         return process.env.CI_PYTHON_PATH;
     }
