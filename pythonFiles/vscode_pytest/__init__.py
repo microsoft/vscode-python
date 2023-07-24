@@ -154,12 +154,21 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
 
 IS_DISCOVERY = False
+RELATIVE_INVOCATION_PATH = ""
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+    invocation_dir = early_config.invocation_params.dir
+    root = early_config.rootpath
+    if invocation_dir != root:
+        try:
+            global RELATIVE_INVOCATION_PATH
+            RELATIVE_INVOCATION_PATH = root.relative_to(invocation_dir)
+        except:
+            pass
 
 
 collected_tests_so_far = list()
@@ -471,13 +480,17 @@ def create_test_node(
     test_case_loc: str = (
         str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
     )
+    id = test_case.nodeid
+    global RELATIVE_INVOCATION_PATH
+    if RELATIVE_INVOCATION_PATH:
+        id = str(pathlib.Path(RELATIVE_INVOCATION_PATH) / test_case.nodeid)
     return {
         "name": test_case.name,
         "path": get_node_path(test_case),
         "lineno": test_case_loc,
         "type_": "test",
-        "id_": test_case.nodeid,
-        "runID": test_case.nodeid,
+        "id_": id,
+        "runID": id,
     }
 
 

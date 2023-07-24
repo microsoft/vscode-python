@@ -668,3 +668,59 @@ param_same_name_expected_output = {
     ],
     "id_": TEST_DATA_PATH_STR,
 }
+
+tests_path = (
+    "/Users/eleanorboyd/vscode-python/pythonFiles/tests/pytestadapter/.data/root/tests"
+)
+# This is the expected output for the root folder tests.
+# └── tests
+#    └── test_a.py
+#       └── test_a_function
+#    └── test_b.py
+#       └── test_b_function
+root_with_config_expected_output = {
+    "name": "tests",
+    "path": tests_path,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_a.py",
+            "path": os.fspath(os.path.join(tests_path, "test_a.py")),
+            "type_": "file",
+            "id_": os.fspath(os.path.join(tests_path, "test_a.py")),
+            "children": [
+                {
+                    "name": "test_a_function",
+                    "path": os.fspath(os.path.join(tests_path, "test_a.py")),
+                    "lineno": find_test_line_number(
+                        "test_a_function",
+                        os.fspath(os.path.join(tests_path, "test_a.py")),
+                    ),
+                    "type_": "test",
+                    "id_": "tests/test_a.py::test_a_function",
+                    "runID": "tests/test_a.py::test_a_function",
+                }
+            ],
+        },
+        {
+            "name": "test_b.py",
+            "path": os.fspath(os.path.join(tests_path, "test_b.py")),
+            "type_": "file",
+            "id_": os.fspath(os.path.join(tests_path, "test_b.py")),
+            "children": [
+                {
+                    "name": "test_b_function",
+                    "path": os.fspath(os.path.join(tests_path, "test_b.py")),
+                    "lineno": find_test_line_number(
+                        "test_b_function",
+                        os.fspath(os.path.join(tests_path, "test_b.py")),
+                    ),
+                    "type_": "test",
+                    "id_": "tests/test_b.py::test_b_function",
+                    "runID": "tests/test_b.py::test_b_function",
+                }
+            ],
+        },
+    ],
+    "id_": tests_path,
+}

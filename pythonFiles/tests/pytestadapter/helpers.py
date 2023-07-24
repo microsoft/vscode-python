@@ -105,6 +105,13 @@ def process_rpc_json(data: str) -> List[Dict[str, Any]]:
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
+    return runner_with_cwd(args, TEST_DATA_PATH)
+
+
+def runner_with_cwd(
+    args: List[str], path: pathlib.Path
+) -> Optional[List[Dict[str, Any]]]:
+    """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
         "-m",
@@ -134,7 +141,7 @@ def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
 
     t2 = threading.Thread(
         target=_run_test_code,
-        args=(process_args, env, TEST_DATA_PATH, completed),
+        args=(process_args, env, path, completed),
     )
     t2.start()
 
