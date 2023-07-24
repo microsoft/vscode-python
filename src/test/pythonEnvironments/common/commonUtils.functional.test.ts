@@ -105,7 +105,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                               // These will match.
                               'python',
                               'python2',
-                              'python2.7',
                               'python3',
                               'python3.7',
                               'python3.8',
@@ -136,7 +135,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                               // These will match.
                               'python',
                               'python2',
-                              'python2.7',
                               'python3',
                               'python3.7',
                               'python3.8',
@@ -166,7 +164,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                               // These will match.
                               'python',
                               'python2',
-                              'python2.7',
                               'python3',
                               'python3.7',
                               'python3.8',
