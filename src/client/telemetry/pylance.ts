@@ -50,7 +50,8 @@
       "numfilesinprogram" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "peakrssmb" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "resolverid" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "rssmb" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+      "rssmb" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "diagnosticsseen" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
