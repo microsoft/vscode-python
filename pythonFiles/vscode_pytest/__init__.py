@@ -87,7 +87,7 @@ def pytest_exception_interact(node, call, report):
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
-        node_id = str(node.nodeid)
+        node_id = get_workspace_node_id(str(node.nodeid))
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
@@ -104,6 +104,14 @@ def pytest_exception_interact(node, call, report):
                 "success",
                 collected_test if collected_test else None,
             )
+
+
+def get_workspace_node_id(testid: str):
+    id = testid
+    global RELATIVE_INVOCATION_PATH
+    if RELATIVE_INVOCATION_PATH:
+        id = str(pathlib.Path(RELATIVE_INVOCATION_PATH) / testid)
+    return id
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -130,7 +138,7 @@ class TestOutcome(Dict):
 
 
 def create_test_outcome(
-    test: str,
+    testid: str,
     outcome: str,
     message: Union[str, None],
     traceback: Union[str, None],
@@ -138,7 +146,7 @@ def create_test_outcome(
 ) -> TestOutcome:
     """A function that creates a TestOutcome object."""
     return TestOutcome(
-        test=test,
+        test=testid,
         outcome=outcome,
         message=message,
         traceback=traceback,  # TODO: traceback
@@ -193,7 +201,7 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        node_id = str(report.nodeid)
+        node_id = get_workspace_node_id(str(report.nodeid))
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
@@ -222,7 +230,7 @@ ERROR_MESSAGE_CONST = {
 def pytest_runtest_protocol(item, nextitem):
     skipped = check_skipped_wrapper(item)
     if skipped:
-        node_id = str(item.nodeid)
+        node_id = get_workspace_node_id(str(item.nodeid))
         report_value = "skipped"
         cwd = pathlib.Path.cwd()
         if node_id not in collected_tests_so_far:
@@ -480,10 +488,7 @@ def create_test_node(
     test_case_loc: str = (
         str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
     )
-    id = test_case.nodeid
-    global RELATIVE_INVOCATION_PATH
-    if RELATIVE_INVOCATION_PATH:
-        id = str(pathlib.Path(RELATIVE_INVOCATION_PATH) / test_case.nodeid)
+    id = get_workspace_node_id(test_case.nodeid)
     return {
         "name": test_case.name,
         "path": get_node_path(test_case),

@@ -395,3 +395,16 @@ no_test_ids_pytest_execution_expected_output = {
         "subtest": None,
     },
 }
+
+# This is the expected output for the root folder with the config file referenced.
+# └── test_a.py
+#    └── test_a_function: success
+config_file_pytest_expected_execution_output = {
+    "tests/test_a.py::test_a_function": {
+        "test": "tests/test_a.py::test_a_function",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}

@@ -165,8 +165,6 @@ def test_pytest_root_dir():
         [
             "--collect-only",
             rd,
-            # "-c",
-            # "tests/pytest.ini",
         ],
         TEST_DATA_PATH / "root",
     )
