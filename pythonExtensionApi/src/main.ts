@@ -10,7 +10,6 @@ import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensio
 export interface PythonExtension {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.
-     * @type {Promise<void>}
      */
     ready: Promise<void>;
     jupyter: {
@@ -21,10 +20,9 @@ export interface PythonExtension {
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
          * Users can append another array of strings of what they want to execute along with relevant arguments to Python.
          * E.g `['/Users/..../pythonVSCode/pythonFiles/lib/python/debugpy', '--listen', 'localhost:57039', '--wait-for-client']`
-         * @param {string} host
-         * @param {number} port
-         * @param {boolean} [waitUntilDebuggerAttaches=true]
-         * @returns {Promise<string[]>}
+         * @param host
+         * @param port
+         * @param waitUntilDebuggerAttaches Defaults to `true`.
          */
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
 
@@ -38,8 +36,8 @@ export interface PythonExtension {
     datascience: {
         /**
          * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
+         * @param dataProvider Instance that will be used by the Data Viewer component to fetch data.
+         * @param title Data Viewer title
          */
         showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
         /**
@@ -316,7 +314,6 @@ export type EnvironmentPath = {
  * was contributed.
  */
 export type EnvironmentTools = KnownEnvironmentTools | string;
-
 /**
  * Tools or plugins the Python extension currently has built-in support for. Note this list is expected to shrink
  * once tools have their own separate extensions.
@@ -335,7 +332,6 @@ export type KnownEnvironmentTools =
  * Type of the environment. It can be {@link KnownEnvironmentTypes} or custom string which was contributed.
  */
 export type EnvironmentType = KnownEnvironmentTypes | string;
-
 /**
  * Environment types the Python extension is aware of. Note this list is expected to shrink once tools have their
  * own separate extensions, in which case they're expected to provide the type themselves.
