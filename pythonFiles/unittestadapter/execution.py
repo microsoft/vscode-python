@@ -25,7 +25,8 @@ sys.path.insert(0, PYTHON_FILES)
 sys.path.insert(0, os.path.join(PYTHON_FILES, "lib", "python"))
 from testing_tools import socket_manager
 from typing_extensions import NotRequired, TypeAlias, TypedDict
-from unittestadapter.utils import parse_unittest_args, setup_django_test_env
+from unittestadapter.utils import parse_unittest_args
+from unittestadapter.django_test_init import setup_django_test_env
 
 DEFAULT_PORT = "45454"
 

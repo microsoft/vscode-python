@@ -15,7 +15,7 @@ sys.path.insert(
     ),
 )
 
-from unittestadapter.utils import setup_django_test_env
+from unittestadapter.django_test_init import setup_django_test_env
 
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
