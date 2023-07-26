@@ -191,7 +191,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             args.forEach((arg, i) => {
                 args[i] = arg.toCommandArgumentForPythonExt();
             });
-            const command = `echo '${ENVIRONMENT_PREFIX}' && ${interpreterPath} ${args.join(' ')}`;
+            const command = `${interpreterPath} ${args.join(' ')}`;
             const processService = await this.processServiceFactory.create(resource);
             const result = await processService.shellExec(command, {
                 shell: shell,
@@ -277,7 +277,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 const activationCommand = fixActivationCommands(activationCommands).join(' && ');
                 // In order to make sure we know where the environment output is,
                 // put in a dummy echo we can look for
-                command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
+                const commandSeparator = [TerminalShellType.powershell, TerminalShellType.powershellCore].includes(shellInfo.shellType) ? ';' : '&&';
+                command = `${activationCommand} ${commandSeparator} echo '${ENVIRONMENT_PREFIX}' ${commandSeparator} python ${args.join(' ')}`;
             }
 
             // Make sure python warnings don't interfere with getting the environment. However
