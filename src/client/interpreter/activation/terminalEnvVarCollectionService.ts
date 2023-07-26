@@ -147,8 +147,16 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             const prevValue = previousEnv[key];
             if (prevValue !== value) {
                 if (value !== undefined) {
-                    traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    envVarCollection.replace(key, value, { applyAtShellIntegration: true });
+                    if (key === 'PS1') {
+                        traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
+                        envVarCollection.prepend(key, value, {
+                            applyAtShellIntegration: true,
+                            applyAtProcessCreation: false,
+                        });
+                    } else {
+                        traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
+                        envVarCollection.replace(key, value, { applyAtShellIntegration: true });
+                    }
                 } else {
                     traceVerbose(`Clearing environment variable ${key} from collection`);
                     envVarCollection.delete(key);
