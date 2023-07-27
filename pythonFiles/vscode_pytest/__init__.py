@@ -69,8 +69,7 @@ def pytest_exception_interact(node, call, report):
     """
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
-    # See if it is during discovery or execution.
-    # if discovery, then add the error to error logs.
+    # If it is during discovery, then add the error to error logs.
     if type(report) == pytest.CollectReport:
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
@@ -83,7 +82,7 @@ def pytest_exception_interact(node, call, report):
                 report.longreprtext + "\n Check Python Test Logs for more details."
             )
     else:
-        # if execution, send this data that the given node failed.
+        # If during execution, send this data that the given node failed.
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
@@ -107,6 +106,15 @@ def pytest_exception_interact(node, call, report):
 
 
 def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
+    """A function that returns the absolute test id. This is necessary because testIds are relative to the rootdir.
+    This does not work for our case since testIds when referenced during run time are relative to the instantiation
+    location. Absolute paths for testIds are necessary for the test tree ensures configurations that change the rootdir
+    of pytest are handled correctly.
+
+    Keyword arguments:
+    test_id -- the pytest id of the test which is relative to the rootdir.
+    testPath -- the path to the file the test is located in, as a pathlib.Path object.
+    """
     split_id = test_id.split("::")[1:]
     absolute_test_id = "::".join([str(testPath), *split_id])
     print("absolute path", absolute_test_id)
@@ -161,9 +169,6 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
 
 IS_DISCOVERY = False
-RELATIVE_INVOCATION_PATH = ""
-SESSION_CONFIG_ROOT = ""
-INVO_DIR = ""
 map_id_to_path = dict()
 
 
@@ -171,17 +176,6 @@ def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
-    # global INVO_DIR
-    # INVO_DIR = early_config.invocation_params.dir
-    # root = early_config.rootpath
-    # global SESSION_CONFIG_ROOT
-    # SESSION_CONFIG_ROOT = root
-    # # if invocation_dir != root:
-    # #     try:
-    # #         global RELATIVE_INVOCATION_PATH
-    # #         RELATIVE_INVOCATION_PATH = root.relative_to(invocation_dir)
-    # #     except:
-    # #         pass
 
 
 collected_tests_so_far = list()
@@ -209,6 +203,7 @@ def pytest_report_teststatus(report, config):
         node_path = map_id_to_path[report.nodeid]
         if not node_path:
             node_path = cwd
+        # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
         if absolute_node_id not in collected_tests_so_far:
             collected_tests_so_far.append(absolute_node_id)
