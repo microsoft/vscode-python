@@ -87,7 +87,7 @@ def pytest_exception_interact(node, call, report):
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
-        node_id = get_workspace_node_id(str(node.nodeid))
+        node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
@@ -106,12 +106,11 @@ def pytest_exception_interact(node, call, report):
             )
 
 
-def get_workspace_node_id(testid: str):
-    id = testid
-    global RELATIVE_INVOCATION_PATH
-    if RELATIVE_INVOCATION_PATH:
-        id = str(pathlib.Path(RELATIVE_INVOCATION_PATH) / testid)
-    return id
+def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
+    split_id = test_id.split("::")[1:]
+    absolute_test_id = "::".join([str(testPath), *split_id])
+    print("absolute path", absolute_test_id)
+    return absolute_test_id
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -163,20 +162,26 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
 IS_DISCOVERY = False
 RELATIVE_INVOCATION_PATH = ""
+SESSION_CONFIG_ROOT = ""
+INVO_DIR = ""
+map_id_to_path = dict()
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
-    invocation_dir = early_config.invocation_params.dir
-    root = early_config.rootpath
-    if invocation_dir != root:
-        try:
-            global RELATIVE_INVOCATION_PATH
-            RELATIVE_INVOCATION_PATH = root.relative_to(invocation_dir)
-        except:
-            pass
+    # global INVO_DIR
+    # INVO_DIR = early_config.invocation_params.dir
+    # root = early_config.rootpath
+    # global SESSION_CONFIG_ROOT
+    # SESSION_CONFIG_ROOT = root
+    # # if invocation_dir != root:
+    # #     try:
+    # #         global RELATIVE_INVOCATION_PATH
+    # #         RELATIVE_INVOCATION_PATH = root.relative_to(invocation_dir)
+    # #     except:
+    # #         pass
 
 
 collected_tests_so_far = list()
@@ -201,17 +206,20 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        node_id = get_workspace_node_id(str(report.nodeid))
-        if node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(node_id)
+        node_path = map_id_to_path[report.nodeid]
+        if not node_path:
+            node_path = cwd
+        absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
+        if absolute_node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(absolute_node_id)
             item_result = create_test_outcome(
-                node_id,
+                absolute_node_id,
                 report_value,
                 message,
                 traceback,
             )
             collected_test = testRunResultDict()
-            collected_test[node_id] = item_result
+            collected_test[absolute_node_id] = item_result
             execution_post(
                 os.fsdecode(cwd),
                 "success",
@@ -228,21 +236,22 @@ ERROR_MESSAGE_CONST = {
 
 
 def pytest_runtest_protocol(item, nextitem):
+    map_id_to_path[item.nodeid] = get_node_path(item)
     skipped = check_skipped_wrapper(item)
     if skipped:
-        node_id = get_workspace_node_id(str(item.nodeid))
+        absolute_node_id = get_absolute_test_id(item.nodeid, get_node_path(item))
         report_value = "skipped"
         cwd = pathlib.Path.cwd()
-        if node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(node_id)
+        if absolute_node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(absolute_node_id)
             item_result = create_test_outcome(
-                node_id,
+                absolute_node_id,
                 report_value,
                 None,
                 None,
             )
             collected_test = testRunResultDict()
-            collected_test[node_id] = item_result
+            collected_test[absolute_node_id] = item_result
             execution_post(
                 os.fsdecode(cwd),
                 "success",
@@ -488,14 +497,14 @@ def create_test_node(
     test_case_loc: str = (
         str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
     )
-    id = get_workspace_node_id(test_case.nodeid)
+    absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
     return {
         "name": test_case.name,
         "path": get_node_path(test_case),
         "lineno": test_case_loc,
         "type_": "test",
-        "id_": id,
-        "runID": id,
+        "id_": test_case.nodeid,
+        "runID": absolute_test_id,
     }
 
 

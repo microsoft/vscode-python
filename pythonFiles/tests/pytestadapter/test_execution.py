@@ -12,7 +12,11 @@ from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
 
 def test_config_file():
     """Test pytest execution when a config file is specified."""
-    args = ["-c", "tests/pytest.ini", "tests/test_a.py::test_a_function"]
+    args = [
+        "-c",
+        "tests/pytest.ini",
+        str(TEST_DATA_PATH / "root" / "tests" / "test_a.py::test_a_function"),
+    ]
     new_cwd = TEST_DATA_PATH / "root"
     actual = runner_with_cwd(args, new_cwd)
     expected_const = (

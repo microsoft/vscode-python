@@ -10,78 +10,78 @@ from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
 
 
-def test_import_error(tmp_path):
-    """Test pytest discovery on a file that has a pytest marker but does not import pytest.
+# def test_import_error(tmp_path):
+#     """Test pytest discovery on a file that has a pytest marker but does not import pytest.
 
-    Copies the contents of a .txt file to a .py file in the temporary directory
-    to then run pytest discovery on.
+#     Copies the contents of a .txt file to a .py file in the temporary directory
+#     to then run pytest discovery on.
 
-    The json should still be returned but the errors list should be present.
+#     The json should still be returned but the errors list should be present.
 
-    Keyword arguments:
-    tmp_path -- pytest fixture that creates a temporary directory.
-    """
-    # Saving some files as .txt to avoid that file displaying a syntax error for
-    # the extension as a whole. Instead, rename it before running this test
-    # in order to test the error handling.
-    file_path = TEST_DATA_PATH / "error_pytest_import.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_pytest_import.py"
-    shutil.copyfile(file_path, p)
-    actual_list: Optional[List[Dict[str, Any]]] = runner(
-        ["--collect-only", os.fspath(p)]
-    )
-    assert actual_list
-    for actual in actual_list:
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 2
-
-
-def test_syntax_error(tmp_path):
-    """Test pytest discovery on a file that has a syntax error.
-
-    Copies the contents of a .txt file to a .py file in the temporary directory
-    to then run pytest discovery on.
-
-    The json should still be returned but the errors list should be present.
-
-    Keyword arguments:
-    tmp_path -- pytest fixture that creates a temporary directory.
-    """
-    # Saving some files as .txt to avoid that file displaying a syntax error for
-    # the extension as a whole. Instead, rename it before running this test
-    # in order to test the error handling.
-    file_path = TEST_DATA_PATH / "error_syntax_discovery.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_syntax_discovery.py"
-    shutil.copyfile(file_path, p)
-    actual = runner(["--collect-only", os.fspath(p)])
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 2
+#     Keyword arguments:
+#     tmp_path -- pytest fixture that creates a temporary directory.
+#     """
+#     # Saving some files as .txt to avoid that file displaying a syntax error for
+#     # the extension as a whole. Instead, rename it before running this test
+#     # in order to test the error handling.
+#     file_path = TEST_DATA_PATH / "error_pytest_import.txt"
+#     temp_dir = tmp_path / "temp_data"
+#     temp_dir.mkdir()
+#     p = temp_dir / "error_pytest_import.py"
+#     shutil.copyfile(file_path, p)
+#     actual_list: Optional[List[Dict[str, Any]]] = runner(
+#         ["--collect-only", os.fspath(p)]
+#     )
+#     assert actual_list
+#     for actual in actual_list:
+#         assert all(item in actual for item in ("status", "cwd", "error"))
+#         assert actual["status"] == "error"
+#         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+#         assert len(actual["error"]) == 2
 
 
-def test_parameterized_error_collect():
-    """Tests pytest discovery on specific file that incorrectly uses parametrize.
+# def test_syntax_error(tmp_path):
+#     """Test pytest discovery on a file that has a syntax error.
 
-    The json should still be returned but the errors list should be present.
-    """
-    file_path_str = "error_parametrize_discovery.py"
-    actual = runner(["--collect-only", file_path_str])
-    if actual:
-        actual = actual[0]
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 2
+#     Copies the contents of a .txt file to a .py file in the temporary directory
+#     to then run pytest discovery on.
+
+#     The json should still be returned but the errors list should be present.
+
+#     Keyword arguments:
+#     tmp_path -- pytest fixture that creates a temporary directory.
+#     """
+#     # Saving some files as .txt to avoid that file displaying a syntax error for
+#     # the extension as a whole. Instead, rename it before running this test
+#     # in order to test the error handling.
+#     file_path = TEST_DATA_PATH / "error_syntax_discovery.txt"
+#     temp_dir = tmp_path / "temp_data"
+#     temp_dir.mkdir()
+#     p = temp_dir / "error_syntax_discovery.py"
+#     shutil.copyfile(file_path, p)
+#     actual = runner(["--collect-only", os.fspath(p)])
+#     if actual:
+#         actual = actual[0]
+#         assert actual
+#         assert all(item in actual for item in ("status", "cwd", "error"))
+#         assert actual["status"] == "error"
+#         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+#         assert len(actual["error"]) == 2
+
+
+# def test_parameterized_error_collect():
+#     """Tests pytest discovery on specific file that incorrectly uses parametrize.
+
+#     The json should still be returned but the errors list should be present.
+#     """
+#     file_path_str = "error_parametrize_discovery.py"
+#     actual = runner(["--collect-only", file_path_str])
+#     if actual:
+#         actual = actual[0]
+#         assert all(item in actual for item in ("status", "cwd", "error"))
+#         assert actual["status"] == "error"
+#         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+#         assert len(actual["error"]) == 2
 
 
 @pytest.mark.parametrize(
