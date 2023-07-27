@@ -1,7 +1,7 @@
 {
     "name": "@vscode/python-extension",
     "description": "An API facade for the Python extension in VS Code",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "author": {
       "name": "Microsoft Corporation"
     },
@@ -25,11 +25,12 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
-    "dependencies": {
+    "peerDependencies": {
         "@types/vscode": "^1.78.0"
     },
     "devDependencies": {
-        "typescript": "5.0.4"
+        "typescript": "5.0.4",
+        "@types/vscode": "^1.78.0"
     },
     "scripts": {
         "prepublishOnly": "echo \"⛔ Can only publish from a secure pipeline ⛔\" && node ../build/fail",
