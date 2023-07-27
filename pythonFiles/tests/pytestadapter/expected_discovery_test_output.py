@@ -1,8 +1,7 @@
 import os
 
-from pythonFiles.vscode_pytest import get_absolute_test_id
 
-from .helpers import TEST_DATA_PATH, find_test_line_number
+from .helpers import TEST_DATA_PATH, find_test_line_number, get_absolute_test_id
 
 # This file contains the expected output dictionaries for tests discovery and is used in test_discovery.py.
 
@@ -40,7 +39,9 @@ simple_discovery_pytest_expected_output = {
                         simple_test_file_path,
                     ),
                     "type_": "test",
-                    "id_": "simple_pytest.py::test_function",
+                    "id_": get_absolute_test_id(
+                        "simple_pytest.py::test_function", simple_test_file_path
+                    ),
                     "runID": get_absolute_test_id(
                         "simple_pytest.py::test_function", simple_test_file_path
                     ),
@@ -81,7 +82,10 @@ unit_pytest_same_file_discovery_expected_output = {
                                 os.fspath(unit_pytest_same_file_path),
                             ),
                             "type_": "test",
-                            "id_": "unittest_pytest_same_file.py::TestExample::test_true_unittest",
+                            "id_": get_absolute_test_id(
+                                "unittest_pytest_same_file.py::TestExample::test_true_unittest",
+                                unit_pytest_same_file_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "unittest_pytest_same_file.py::TestExample::test_true_unittest",
                                 unit_pytest_same_file_path,
@@ -98,7 +102,10 @@ unit_pytest_same_file_discovery_expected_output = {
                         unit_pytest_same_file_path,
                     ),
                     "type_": "test",
-                    "id_": "unittest_pytest_same_file.py::test_true_pytest",
+                    "id_": get_absolute_test_id(
+                        "unittest_pytest_same_file.py::test_true_pytest",
+                        unit_pytest_same_file_path,
+                    ),
                     "runID": get_absolute_test_id(
                         "unittest_pytest_same_file.py::test_true_pytest",
                         unit_pytest_same_file_path,
@@ -167,7 +174,10 @@ unittest_folder_discovery_expected_output = {
                                         os.fspath(test_add_path),
                                     ),
                                     "type_": "test",
-                                    "id_": "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers",
+                                    "id_": get_absolute_test_id(
+                                        "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers",
+                                        test_add_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "unittest_folder/test_add.py::TestAddFunction::test_add_negative_numbers",
                                         test_add_path,
@@ -181,7 +191,10 @@ unittest_folder_discovery_expected_output = {
                                         os.fspath(test_add_path),
                                     ),
                                     "type_": "test",
-                                    "id_": "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
+                                    "id_": get_absolute_test_id(
+                                        "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
+                                        test_add_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "unittest_folder/test_add.py::TestAddFunction::test_add_positive_numbers",
                                         test_add_path,
@@ -203,7 +216,10 @@ unittest_folder_discovery_expected_output = {
                                         os.fspath(test_add_path),
                                     ),
                                     "type_": "test",
-                                    "id_": "unittest_folder/test_add.py::TestDuplicateFunction::test_dup_a",
+                                    "id_": get_absolute_test_id(
+                                        "unittest_folder/test_add.py::TestDuplicateFunction::test_dup_a",
+                                        test_add_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "unittest_folder/test_add.py::TestDuplicateFunction::test_dup_a",
                                         test_add_path,
@@ -233,7 +249,10 @@ unittest_folder_discovery_expected_output = {
                                         os.fspath(test_subtract_path),
                                     ),
                                     "type_": "test",
-                                    "id_": "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
+                                    "id_": get_absolute_test_id(
+                                        "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
+                                        test_subtract_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_negative_numbers",
                                         test_subtract_path,
@@ -247,7 +266,10 @@ unittest_folder_discovery_expected_output = {
                                         os.fspath(test_subtract_path),
                                     ),
                                     "type_": "test",
-                                    "id_": "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
+                                    "id_": get_absolute_test_id(
+                                        "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
+                                        test_subtract_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "unittest_folder/test_subtract.py::TestSubtractFunction::test_subtract_positive_numbers",
                                         test_subtract_path,
@@ -269,7 +291,10 @@ unittest_folder_discovery_expected_output = {
                                         os.fspath(test_subtract_path),
                                     ),
                                     "type_": "test",
-                                    "id_": "unittest_folder/test_subtract.py::TestDuplicateFunction::test_dup_s",
+                                    "id_": get_absolute_test_id(
+                                        "unittest_folder/test_subtract.py::TestDuplicateFunction::test_dup_s",
+                                        test_subtract_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "unittest_folder/test_subtract.py::TestDuplicateFunction::test_dup_s",
                                         test_subtract_path,
@@ -338,7 +363,10 @@ dual_level_nested_folder_expected_output = {
                                 test_top_folder_path,
                             ),
                             "type_": "test",
-                            "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
+                            "id_": get_absolute_test_id(
+                                "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
+                                test_top_folder_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
                                 test_top_folder_path,
@@ -352,7 +380,10 @@ dual_level_nested_folder_expected_output = {
                                 test_top_folder_path,
                             ),
                             "type_": "test",
-                            "id_": "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
+                            "id_": get_absolute_test_id(
+                                "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
+                                test_top_folder_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
                                 test_top_folder_path,
@@ -380,7 +411,10 @@ dual_level_nested_folder_expected_output = {
                                         test_bottom_folder_path,
                                     ),
                                     "type_": "test",
-                                    "id_": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+                                    "id_": get_absolute_test_id(
+                                        "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+                                        test_bottom_folder_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
                                         test_bottom_folder_path,
@@ -394,7 +428,10 @@ dual_level_nested_folder_expected_output = {
                                         test_bottom_folder_path,
                                     ),
                                     "type_": "test",
-                                    "id_": "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+                                    "id_": get_absolute_test_id(
+                                        "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+                                        test_bottom_folder_path,
+                                    ),
                                     "runID": get_absolute_test_id(
                                         "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
                                         test_bottom_folder_path,
@@ -458,7 +495,10 @@ double_nested_folder_expected_output = {
                                                 test_nest_path,
                                             ),
                                             "type_": "test",
-                                            "id_": "folder_a/folder_b/folder_a/test_nest.py::test_function",
+                                            "id_": get_absolute_test_id(
+                                                "folder_a/folder_b/folder_a/test_nest.py::test_function",
+                                                test_nest_path,
+                                            ),
                                             "runID": get_absolute_test_id(
                                                 "folder_a/folder_b/folder_a/test_nest.py::test_function",
                                                 test_nest_path,
@@ -492,7 +532,7 @@ parametrize_tests_expected_output = {
             "name": "parametrize_tests.py",
             "path": os.fspath(parameterize_tests_path),
             "type_": "file",
-            "id_": parameterize_tests_path,
+            "id_": os.fspath(parameterize_tests_path),
             "children": [
                 {
                     "name": "test_adding",
@@ -508,7 +548,10 @@ parametrize_tests_expected_output = {
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
-                            "id_": "parametrize_tests.py::test_adding[3+5-8]",
+                            "id_": get_absolute_test_id(
+                                "parametrize_tests.py::test_adding[3+5-8]",
+                                parameterize_tests_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "parametrize_tests.py::test_adding[3+5-8]",
                                 parameterize_tests_path,
@@ -522,7 +565,10 @@ parametrize_tests_expected_output = {
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
-                            "id_": "parametrize_tests.py::test_adding[2+4-6]",
+                            "id_": get_absolute_test_id(
+                                "parametrize_tests.py::test_adding[2+4-6]",
+                                parameterize_tests_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "parametrize_tests.py::test_adding[2+4-6]",
                                 parameterize_tests_path,
@@ -536,7 +582,10 @@ parametrize_tests_expected_output = {
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
-                            "id_": "parametrize_tests.py::test_adding[6+9-16]",
+                            "id_": get_absolute_test_id(
+                                "parametrize_tests.py::test_adding[6+9-16]",
+                                parameterize_tests_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "parametrize_tests.py::test_adding[6+9-16]",
                                 parameterize_tests_path,
@@ -557,7 +606,10 @@ parametrize_tests_expected_output = {
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
-                            "id_": "parametrize_tests.py::test_under_ten[1]",
+                            "id_": get_absolute_test_id(
+                                "parametrize_tests.py::test_under_ten[1]",
+                                parameterize_tests_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "parametrize_tests.py::test_under_ten[1]",
                                 parameterize_tests_path,
@@ -571,7 +623,10 @@ parametrize_tests_expected_output = {
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
-                            "id_": "parametrize_tests.py::test_under_ten[2]",
+                            "id_": get_absolute_test_id(
+                                "parametrize_tests.py::test_under_ten[2]",
+                                parameterize_tests_path,
+                            ),
                             "runID": get_absolute_test_id(
                                 "parametrize_tests.py::test_under_ten[2]",
                                 parameterize_tests_path,
@@ -608,7 +663,9 @@ doctest_pytest_expected_output = {
                         os.fspath(text_docstring_path),
                     ),
                     "type_": "test",
-                    "id_": "text_docstring.txt::text_docstring.txt",
+                    "id_": get_absolute_test_id(
+                        "text_docstring.txt::text_docstring.txt", text_docstring_path
+                    ),
                     "runID": get_absolute_test_id(
                         "text_docstring.txt::text_docstring.txt", text_docstring_path
                     ),
@@ -660,24 +717,42 @@ param_same_name_expected_output = {
                                     "path": os.fspath(param1_path),
                                     "lineno": "6",
                                     "type_": "test",
-                                    "id_": "param_same_name/test_param1.py::test_odd_even[a]",
-                                    "runID": "param_same_name/test_param1.py::test_odd_even[a]",
+                                    "id_": get_absolute_test_id(
+                                        "param_same_name/test_param1.py::test_odd_even[a]",
+                                        param1_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "param_same_name/test_param1.py::test_odd_even[a]",
+                                        param1_path,
+                                    ),
                                 },
                                 {
                                     "name": "[b]",
                                     "path": os.fspath(param1_path),
                                     "lineno": "6",
                                     "type_": "test",
-                                    "id_": "param_same_name/test_param1.py::test_odd_even[b]",
-                                    "runID": "param_same_name/test_param1.py::test_odd_even[b]",
+                                    "id_": get_absolute_test_id(
+                                        "param_same_name/test_param1.py::test_odd_even[b]",
+                                        param1_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "param_same_name/test_param1.py::test_odd_even[b]",
+                                        param1_path,
+                                    ),
                                 },
                                 {
                                     "name": "[c]",
                                     "path": os.fspath(param1_path),
                                     "lineno": "6",
                                     "type_": "test",
-                                    "id_": "param_same_name/test_param1.py::test_odd_even[c]",
-                                    "runID": "param_same_name/test_param1.py::test_odd_even[c]",
+                                    "id_": get_absolute_test_id(
+                                        "param_same_name/test_param1.py::test_odd_even[c]",
+                                        param1_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "param_same_name/test_param1.py::test_odd_even[c]",
+                                        param1_path,
+                                    ),
                                 },
                             ],
                             "id_": "param_same_name/test_param1.py::test_odd_even",
@@ -700,24 +775,42 @@ param_same_name_expected_output = {
                                     "path": os.fspath(param2_path),
                                     "lineno": "6",
                                     "type_": "test",
-                                    "id_": "param_same_name/test_param2.py::test_odd_even[1]",
-                                    "runID": "param_same_name/test_param2.py::test_odd_even[1]",
+                                    "id_": get_absolute_test_id(
+                                        "param_same_name/test_param2.py::test_odd_even[1]",
+                                        param2_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "param_same_name/test_param2.py::test_odd_even[1]",
+                                        param2_path,
+                                    ),
                                 },
                                 {
                                     "name": "[2]",
                                     "path": os.fspath(param2_path),
                                     "lineno": "6",
                                     "type_": "test",
-                                    "id_": "param_same_name/test_param2.py::test_odd_even[2]",
-                                    "runID": "param_same_name/test_param2.py::test_odd_even[2]",
+                                    "id_": get_absolute_test_id(
+                                        "param_same_name/test_param2.py::test_odd_even[2]",
+                                        param2_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "param_same_name/test_param2.py::test_odd_even[2]",
+                                        param2_path,
+                                    ),
                                 },
                                 {
                                     "name": "[3]",
                                     "path": os.fspath(param2_path),
                                     "lineno": "6",
                                     "type_": "test",
-                                    "id_": "param_same_name/test_param2.py::test_odd_even[3]",
-                                    "runID": "param_same_name/test_param2.py::test_odd_even[3]",
+                                    "id_": get_absolute_test_id(
+                                        "param_same_name/test_param2.py::test_odd_even[3]",
+                                        param2_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "param_same_name/test_param2.py::test_odd_even[3]",
+                                        param2_path,
+                                    ),
                                 },
                             ],
                             "id_": "param_same_name/test_param2.py::test_odd_even",
@@ -730,7 +823,9 @@ param_same_name_expected_output = {
     "id_": TEST_DATA_PATH_STR,
 }
 
-tests_path = os.fspath(TEST_DATA_PATH / "root" / "tests")
+tests_path = TEST_DATA_PATH / "root" / "tests"
+tests_a_path = TEST_DATA_PATH / "root" / "tests" / "test_a.py"
+tests_b_path = TEST_DATA_PATH / "root" / "tests" / "test_b.py"
 # This is the expected output for the root folder tests.
 # └── tests
 #    └── test_a.py
@@ -739,14 +834,14 @@ tests_path = os.fspath(TEST_DATA_PATH / "root" / "tests")
 #       └── test_b_function
 root_with_config_expected_output = {
     "name": "tests",
-    "path": tests_path,
+    "path": os.fspath(tests_path),
     "type_": "folder",
     "children": [
         {
             "name": "test_a.py",
-            "path": os.fspath(os.path.join(tests_path, "test_a.py")),
+            "path": os.fspath(tests_a_path),
             "type_": "file",
-            "id_": os.fspath(os.path.join(tests_path, "test_a.py")),
+            "id_": os.fspath(tests_a_path),
             "children": [
                 {
                     "name": "test_a_function",
@@ -756,16 +851,20 @@ root_with_config_expected_output = {
                         os.path.join(tests_path, "test_a.py"),
                     ),
                     "type_": "test",
-                    "id_": "tests/test_a.py::test_a_function",
-                    "runID": "tests/test_a.py::test_a_function",
+                    "id_": get_absolute_test_id(
+                        "tests/test_a.py::test_a_function", tests_a_path
+                    ),
+                    "runID": get_absolute_test_id(
+                        "tests/test_a.py::test_a_function", tests_a_path
+                    ),
                 }
             ],
         },
         {
             "name": "test_b.py",
-            "path": os.fspath(os.path.join(tests_path, "test_b.py")),
+            "path": os.fspath(tests_b_path),
             "type_": "file",
-            "id_": os.fspath(os.path.join(tests_path, "test_b.py")),
+            "id_": os.fspath(tests_b_path),
             "children": [
                 {
                     "name": "test_b_function",
@@ -775,11 +874,15 @@ root_with_config_expected_output = {
                         os.path.join(tests_path, "test_b.py"),
                     ),
                     "type_": "test",
-                    "id_": "tests/test_b.py::test_b_function",
-                    "runID": "tests/test_b.py::test_b_function",
+                    "id_": get_absolute_test_id(
+                        "tests/test_b.py::test_b_function", tests_b_path
+                    ),
+                    "runID": get_absolute_test_id(
+                        "tests/test_b.py::test_b_function", tests_b_path
+                    ),
                 }
             ],
         },
     ],
-    "id_": tests_path,
+    "id_": os.fspath(tests_path),
 }

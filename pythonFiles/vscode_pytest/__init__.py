@@ -503,7 +503,7 @@ def create_test_node(
         "path": get_node_path(test_case),
         "lineno": test_case_loc,
         "type_": "test",
-        "id_": test_case.nodeid,
+        "id_": absolute_test_id,
         "runID": absolute_test_id,
     }
 

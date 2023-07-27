@@ -16,6 +16,13 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
 
 
+def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
+    split_id = test_id.split("::")[1:]
+    absolute_test_id = "::".join([str(testPath), *split_id])
+    print("absolute path", absolute_test_id)
+    return absolute_test_id
+
+
 def create_server(
     host: str = "127.0.0.1",
     port: int = 0,
