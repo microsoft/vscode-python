@@ -5,16 +5,20 @@ import * as assert from 'assert';
 import { Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
+import { ChildProcess } from 'child_process';
+import { observable } from 'rxjs';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestServer } from '../../../../client/testing/testController/common/types';
 import {
     IPythonExecutionFactory,
     IPythonExecutionService,
+    ObservableExecutionResult,
     SpawnOptions,
 } from '../../../../client/common/process/types';
 import { createDeferred, Deferred } from '../../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
+import { execObservable } from '../../../../client/common/process/rawProcessApis';
 
 suite('pytest test discovery adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -29,6 +33,8 @@ suite('pytest test discovery adapter', () => {
     let expectedPath: string;
     let uri: Uri;
     let expectedExtraVariables: Record<string, string>;
+    let execObservableMock: typeMoq.IMock<ObservableExecutionResult<string>>;
+    let mockProc: typeMoq.IMock<ChildProcess>;
 
     setup(() => {
         const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
@@ -73,14 +79,18 @@ suite('pytest test discovery adapter', () => {
             .returns(() => Promise.resolve(execService.object));
 
         // set up exec service
+        mockProc = typeMoq.Mock.ofType<ChildProcess>();
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         deferred = createDeferred();
         execService
-            .setup((x) => x.exec(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve({ stdout: '{}' });
-            });
+            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => ({
+                proc: mockProc.object,
+                out: deferred.promise,
+                dispose: undefined,
+            }));
+        mockProc.setup((p) => p.on('close', typeMoq.It.isAny())).returns(() => undefined);
+        execObservableMock.object.dispose();
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
     });
