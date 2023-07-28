@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Serializable, SendHandle } from 'child_process';
+import { Serializable, SendHandle, MessageOptions } from 'child_process';
 import { Writable, Readable, Pipe } from 'stream';
-import { EventEmitter, MessageOptions } from 'vscode';
+import { EventEmitter } from 'node:events';
 
 export class MockChildProcess extends EventEmitter {
     constructor(spawnfile: string, spawnargs: string[]) {
@@ -65,14 +65,20 @@ export class MockChildProcess extends EventEmitter {
 
     send(
         message: Serializable,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         sendHandle?: SendHandle,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options?: MessageOptions,
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         callback?: (error: Error | null) => void,
+    ): boolean;
+
+    send(
+        message: Serializable,
+        _sendHandleOrCallback?: SendHandle | ((error: Error | null) => void),
+        _optionsOrCallback?: MessageOptions | ((error: Error | null) => void),
+        _callback?: (error: Error | null) => void,
     ): boolean {
-        this.stdin?.write(message.toString());
+        // Implementation of the send method
+        // For example, you might want to emit a 'message' event
+        this.stdout?.push(message.toString());
         return true;
     }
 
@@ -223,5 +229,10 @@ export class MockChildProcess extends EventEmitter {
             return this.eventMap.get(event);
         }
         return [];
+    }
+
+    kill(_signal?: NodeJS.Signals | number): boolean {
+        this.stdout?.destroy();
+        return true;
     }
 }
