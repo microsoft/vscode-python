@@ -17,7 +17,7 @@
 		"vscode": "^1.78.0"
 	},
     "license": "MIT",
-    "homepage": "https://github.com/Microsoft/vscode-python",
+    "homepage": "https://github.com/microsoft/vscode-python/tree/main/pythonExtensionApi",
     "repository": {
         "type": "git",
         "url": "https://github.com/Microsoft/vscode-python"
