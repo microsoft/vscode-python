@@ -4,21 +4,21 @@ import { Serializable, SendHandle } from 'child_process';
 import { Writable, Readable, Pipe } from 'stream';
 import { EventEmitter, MessageOptions } from 'vscode';
 
-export class MockChildProcess extends EventEmitter<T> {
+export class MockChildProcess extends EventEmitter {
     constructor(spawnfile: string, spawnargs: string[]) {
         super();
         this.spawnfile = spawnfile;
         this.spawnargs = spawnargs;
-        this.stdin = null;
-        this.stdout = null;
+        this.stdin = new Writable();
+        this.stdout = new Readable();
         this.stderr = null;
         this.channel = null;
-        this.stdio = [null, this.stdin, this.stdout, this.stderr, null];
+        this.stdio = [this.stdin, this.stdout, this.stdout, this.stderr, null];
         this.killed = false;
         this.connected = false;
         this.exitCode = null;
         this.signalCode = null;
-        this.listenerList = [];
+        this.eventMap = new Map();
     }
 
     stdin: Writable | null;
@@ -27,7 +27,7 @@ export class MockChildProcess extends EventEmitter<T> {
 
     stderr: Readable | null;
 
-    listenerList: unknown[];
+    eventMap: Map<string, any>;
 
     readonly channel?: Pipe | null | undefined;
 
@@ -72,8 +72,7 @@ export class MockChildProcess extends EventEmitter<T> {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         callback?: (error: Error | null) => void,
     ): boolean {
-        this.stdin = new Writable();
-        this.stdin.write(message.toString());
+        this.stdin?.write(message.toString());
         return true;
     }
 
@@ -92,10 +91,6 @@ export class MockChildProcess extends EventEmitter<T> {
         /* noop */
     }
 
-    addListener(event: string, listener: (...args: any[]) => void): this {
-        return this;
-    }
-
     addListener(event: 'close', listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
 
     addListener(event: 'disconnect', listener: () => void): this;
@@ -108,7 +103,14 @@ export class MockChildProcess extends EventEmitter<T> {
 
     addListener(event: 'spawn', listener: () => void): this;
 
-    emit(event: string | symbol, ...args: unknown[]): boolean;
+    addListener(event: string, listener: (...args: any[]) => void): this {
+        if (this.eventMap.has(event)) {
+            this.eventMap.get(event).push(listener);
+        } else {
+            this.eventMap.set(event, [listener]);
+        }
+        return this;
+    }
 
     emit(event: 'close', code: number | null, signal: NodeJS.Signals | null): boolean;
 
@@ -120,15 +122,16 @@ export class MockChildProcess extends EventEmitter<T> {
 
     emit(event: 'message', message: Serializable, sendHandle: SendHandle): boolean;
 
-    emit(event: 'spawn', listener: () => void): boolean {
-        /* noop */
-        this.emit(event);
-        return true;
-    }
+    emit(event: 'spawn', listener: () => void): boolean;
 
-    on(event: string, listener: (...args: any[]) => void): this {
-        this.listenerList.push({ event, listener });
-        return this;
+    emit(event: string | symbol, ...args: unknown[]): boolean {
+        if (this.eventMap.has(event.toString())) {
+            this.eventMap.get(event.toString()).forEach((listener: (arg0: unknown) => void) => {
+                const argsArray = Array.isArray(args) ? args : [args];
+                listener(argsArray);
+            });
+        }
+        return true;
     }
 
     on(event: 'close', listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
@@ -143,8 +146,12 @@ export class MockChildProcess extends EventEmitter<T> {
 
     on(event: 'spawn', listener: () => void): this;
 
-    once(event: string, listener: (...args: any[]) => void): this {
-        this.listenerList.push({ event, listener });
+    on(event: string, listener: (...args: any[]) => void): this {
+        if (this.eventMap.has(event)) {
+            this.eventMap.get(event).push(listener);
+        } else {
+            this.eventMap.set(event, [listener]);
+        }
         return this;
     }
 
@@ -160,7 +167,14 @@ export class MockChildProcess extends EventEmitter<T> {
 
     once(event: 'spawn', listener: () => void): this;
 
-    prependListener(event: string, listener: (...args: any[]) => void): this;
+    once(event: string, listener: (...args: any[]) => void): this {
+        if (this.eventMap.has(event)) {
+            this.eventMap.get(event).push(listener);
+        } else {
+            this.eventMap.set(event, [listener]);
+        }
+        return this;
+    }
 
     prependListener(event: 'close', listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
 
@@ -174,7 +188,14 @@ export class MockChildProcess extends EventEmitter<T> {
 
     prependListener(event: 'spawn', listener: () => void): this;
 
-    prependOnceListener(event: string, listener: (...args: any[]) => void): this;
+    prependListener(event: string, listener: (...args: any[]) => void): this {
+        if (this.eventMap.has(event)) {
+            this.eventMap.get(event).push(listener);
+        } else {
+            this.eventMap.set(event, [listener]);
+        }
+        return this;
+    }
 
     prependOnceListener(event: 'close', listener: (code: number | null, signal: NodeJS.Signals | null) => void): this;
 
@@ -187,4 +208,20 @@ export class MockChildProcess extends EventEmitter<T> {
     prependOnceListener(event: 'message', listener: (message: Serializable, sendHandle: SendHandle) => void): this;
 
     prependOnceListener(event: 'spawn', listener: () => void): this;
+
+    prependOnceListener(event: string, listener: (...args: any[]) => void): this {
+        if (this.eventMap.has(event)) {
+            this.eventMap.get(event).push(listener);
+        } else {
+            this.eventMap.set(event, [listener]);
+        }
+        return this;
+    }
+
+    trigger(event: string): Array<any> {
+        if (this.eventMap.has(event)) {
+            return this.eventMap.get(event);
+        }
+        return [];
+    }
 }
