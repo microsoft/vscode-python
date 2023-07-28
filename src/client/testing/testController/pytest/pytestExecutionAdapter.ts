@@ -23,7 +23,7 @@ import { removePositionalFoldersAndFiles } from './arguments';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
-import { startTestIdServer } from '../common/utils';
+import * as utils from '../common/utils';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -122,7 +122,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
             traceLog(`Running PYTEST execution for the following test ids: ${testIds}`);
 
-            const pytestRunTestIdsPort = await startTestIdServer(testIds);
+            const pytestRunTestIdsPort = await utils.startTestIdServer(testIds);
             if (spawnOptions.extraVariables)
                 spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
 

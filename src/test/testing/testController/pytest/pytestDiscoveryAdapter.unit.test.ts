@@ -32,7 +32,6 @@ suite('pytest test discovery adapter', () => {
     let expectedPath: string;
     let uri: Uri;
     let expectedExtraVariables: Record<string, string>;
-    //  let execObservableMock: typeMoq.IMock<ObservableExecutionResult<string>>;
     let mockProc: MockChildProcess;
 
     setup(() => {
@@ -71,11 +70,9 @@ suite('pytest test discovery adapter', () => {
             }),
         } as unknown) as IConfigurationService;
 
-        // set up exec service
+        // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
-        // deferred = createDeferred();
-        // create Observable<Output<string>>
         const output = new Observable<Output<string>>(() => {
             /* no op */
         });
