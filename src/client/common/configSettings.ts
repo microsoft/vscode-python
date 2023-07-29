@@ -678,6 +678,7 @@ function getPythonExecutable(pythonPath: string): string {
 function isValidPythonPath(pythonPath: string): boolean {
     return (
         fs.existsSync(pythonPath) &&
+        fs.statSync(pythonPath).isFile() &&
         path.basename(getOSType() === OSType.Windows ? pythonPath.toLowerCase() : pythonPath).startsWith('python')
     );
 }
