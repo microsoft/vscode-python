@@ -95,7 +95,6 @@ suite('pytest test discovery adapter', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred.resolve();
                 return Promise.resolve(execService.object);
             });
@@ -140,7 +139,6 @@ suite('pytest test discovery adapter', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred.resolve();
                 return Promise.resolve(execService.object);
             });
