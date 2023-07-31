@@ -196,13 +196,13 @@ suite('Python Test Server', () => {
         const stubExecutionService2 = ({
             execObservable: () => {
                 client.connect(server.getPort());
-                return ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            })
+                return {
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
             },
         } as unknown) as IPythonExecutionService;
 
@@ -253,13 +253,13 @@ suite('Python Test Server', () => {
         const stubExecutionService2 = ({
             execObservable: () => {
                 client.connect(server.getPort());
-                return ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            })
+                return {
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
             },
         } as unknown) as IPythonExecutionService;
 
@@ -307,13 +307,13 @@ suite('Python Test Server', () => {
         const stubExecutionService2 = ({
             execObservable: () => {
                 client.connect(server.getPort());
-                return ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            })
+                return {
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
             },
         } as unknown) as IPythonExecutionService;
 
@@ -372,19 +372,19 @@ Request-uuid: UUID_HERE
                 /* no op */
             });
             const stubExecutionService2 = ({
-            execObservable: () => {
-                client.connect(server.getPort());
-                return ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
+                execObservable: () => {
+                    client.connect(server.getPort());
+                    return {
+                        proc: mockProc,
+                        out: output,
+                        dispose: () => {
+                            /* no-body */
+                        },
+                    };
                 },
-            })
-            },
-        } as unknown) as IPythonExecutionService;
+            } as unknown) as IPythonExecutionService;
             const stubExecutionFactory2 = ({
-            createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
+                createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
             } as unknown) as IPythonExecutionFactory;
 
             server = new PythonTestServer(stubExecutionFactory2, debugLauncher);
@@ -423,13 +423,13 @@ Request-uuid: UUID_HERE
         const stubExecutionService2 = ({
             execObservable: () => {
                 client.connect(server.getPort());
-                return ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            })
+                return {
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
             },
         } as unknown) as IPythonExecutionService;
 
