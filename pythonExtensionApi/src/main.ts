@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensions } from 'vscode';
+import { CancellationToken, Event, Uri, WorkspaceFolder, extensions } from 'vscode';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -10,21 +10,16 @@ import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensio
 export interface PythonExtension {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.
-     * @type {Promise<void>}
      */
     ready: Promise<void>;
-    jupyter: {
-        registerHooks(): void;
-    };
     debug: {
         /**
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
          * Users can append another array of strings of what they want to execute along with relevant arguments to Python.
          * E.g `['/Users/..../pythonVSCode/pythonFiles/lib/python/debugpy', '--listen', 'localhost:57039', '--wait-for-client']`
-         * @param {string} host
-         * @param {number} port
-         * @param {boolean} [waitUntilDebuggerAttaches=true]
-         * @returns {Promise<string[]>}
+         * @param host
+         * @param port
+         * @param waitUntilDebuggerAttaches Defaults to `true`.
          */
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
 
@@ -33,20 +28,6 @@ export interface PythonExtension {
          * @returns {Promise<string>}
          */
         getDebuggerPackagePath(): Promise<string | undefined>;
-    };
-
-    datascience: {
-        /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     };
 
     /**
@@ -124,47 +105,6 @@ export interface PythonExtension {
         readonly onDidEnvironmentVariablesChange: Event<EnvironmentVariablesChangeEvent>;
     };
 }
-
-interface IJupyterServerUri {
-    baseUrl: string;
-    token: string;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    authorizationHeader: any; // JSON object for authorization header.
-    expiration?: Date; // Date/time when header expires and should be refreshed.
-    displayName: string;
-}
-
-type JupyterServerUriHandle = string;
-
-export interface IJupyterUriProvider {
-    readonly id: string; // Should be a unique string (like a guid)
-    getQuickPickEntryItems(): QuickPickItem[];
-    handleQuickPick(item: QuickPickItem, backEnabled: boolean): Promise<JupyterServerUriHandle | 'back' | undefined>;
-    getServerUri(handle: JupyterServerUriHandle): Promise<IJupyterServerUri>;
-}
-
-interface IDataFrameInfo {
-    columns?: { key: string; type: ColumnType }[];
-    indexColumn?: string;
-    rowCount?: number;
-}
-
-export interface IDataViewerDataProvider {
-    dispose(): void;
-    getDataFrameInfo(): Promise<IDataFrameInfo>;
-    getAllRows(): Promise<IRowsResponse>;
-    getRows(start: number, end: number): Promise<IRowsResponse>;
-}
-
-enum ColumnType {
-    String = 'string',
-    Number = 'number',
-    Bool = 'bool',
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type IRowsResponse = any[];
 
 export type RefreshOptions = {
     /**
@@ -316,7 +256,6 @@ export type EnvironmentPath = {
  * was contributed.
  */
 export type EnvironmentTools = KnownEnvironmentTools | string;
-
 /**
  * Tools or plugins the Python extension currently has built-in support for. Note this list is expected to shrink
  * once tools have their own separate extensions.
@@ -335,7 +274,6 @@ export type KnownEnvironmentTools =
  * Type of the environment. It can be {@link KnownEnvironmentTypes} or custom string which was contributed.
  */
 export type EnvironmentType = KnownEnvironmentTypes | string;
-
 /**
  * Environment types the Python extension is aware of. Note this list is expected to shrink once tools have their
  * own separate extensions, in which case they're expected to provide the type themselves.

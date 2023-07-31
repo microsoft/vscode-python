@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem } from 'vscode';
+import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem, extensions } from 'vscode';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -10,7 +10,6 @@ import { CancellationToken, Event, Uri, WorkspaceFolder, QuickPickItem } from 'v
 export interface PythonExtension {
     /**
      * Promise indicating whether all parts of the extension have completed loading or not.
-     * @type {Promise<void>}
      */
     ready: Promise<void>;
     jupyter: {
@@ -21,10 +20,9 @@ export interface PythonExtension {
          * Generate an array of strings for commands to pass to the Python executable to launch the debugger for remote debugging.
          * Users can append another array of strings of what they want to execute along with relevant arguments to Python.
          * E.g `['/Users/..../pythonVSCode/pythonFiles/lib/python/debugpy', '--listen', 'localhost:57039', '--wait-for-client']`
-         * @param {string} host
-         * @param {number} port
-         * @param {boolean} [waitUntilDebuggerAttaches=true]
-         * @returns {Promise<string[]>}
+         * @param host
+         * @param port
+         * @param waitUntilDebuggerAttaches Defaults to `true`.
          */
         getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean): Promise<string[]>;
 
@@ -33,20 +31,6 @@ export interface PythonExtension {
          * @returns {Promise<string>}
          */
         getDebuggerPackagePath(): Promise<string | undefined>;
-    };
-
-    datascience: {
-        /**
-         * Launches Data Viewer component.
-         * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-         * @param {string} title Data Viewer title
-         */
-        showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-        /**
-         * Registers a remote server provider component that's used to pick remote jupyter server URIs
-         * @param serverProvider object called back when picking jupyter server URI
-         */
-        registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
     };
 
     /**
@@ -387,3 +371,23 @@ export type EnvironmentVariablesChangeEvent = {
      */
     readonly env: EnvironmentVariables;
 };
+
+export const PVSC_EXTENSION_ID = 'ms-python.python';
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace PythonExtension {
+    /**
+     * Returns the API exposed by the Python extension in VS Code.
+     */
+    export async function api(): Promise<PythonExtension> {
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID);
+        if (extension === undefined) {
+            throw new Error(`Python extension is not installed or is disabled`);
+        }
+        if (!extension.isActive) {
+            await extension.activate();
+        }
+        const pythonApi: PythonExtension = extension.exports;
+        return pythonApi;
+    }
+}

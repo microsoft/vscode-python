@@ -33,7 +33,6 @@ import {
     PythonEnvironmentsChangedEvent,
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 /**
@@ -168,17 +167,6 @@ type JupyterExtensionApi = {
      * @param interpreterService
      */
     registerPythonApi(interpreterService: PythonApiForJupyterExtension): void;
-    /**
-     * Launches Data Viewer component.
-     * @param {IDataViewerDataProvider} dataProvider Instance that will be used by the Data Viewer component to fetch data.
-     * @param {string} title Data Viewer title
-     */
-    showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void>;
-    /**
-     * Registers a remote server provider component that's used to pick remote jupyter server URIs
-     * @param serverProvider object called back when picking jupyter server URI
-     */
-    registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void;
 };
 
 @injectable()
@@ -284,24 +272,6 @@ export class JupyterExtensionIntegration {
         if (api) {
             this.registerApi(api);
         }
-    }
-
-    public registerRemoteServerProvider(serverProvider: IJupyterUriProvider): void {
-        this.getExtensionApi()
-            .then((e) => {
-                if (e) {
-                    e.registerRemoteServerProvider(serverProvider);
-                }
-            })
-            .ignoreErrors();
-    }
-
-    public async showDataViewer(dataProvider: IDataViewerDataProvider, title: string): Promise<void> {
-        const api = await this.getExtensionApi();
-        if (api) {
-            return api.showDataViewer(dataProvider, title);
-        }
-        return undefined;
     }
 
     private async getExtensionApi(): Promise<JupyterExtensionApi | undefined> {

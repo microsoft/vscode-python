@@ -15,7 +15,11 @@ import {
     WorkspaceConfiguration,
 } from 'vscode';
 import { IApplicationEnvironment, IWorkspaceService } from '../../client/common/application/types';
-import { defaultInterpreterPathSetting, InterpreterPathService } from '../../client/common/interpreterPathService';
+import {
+    defaultInterpreterPathSetting,
+    getCIPythonPath,
+    InterpreterPathService,
+} from '../../client/common/interpreterPathService';
 import { FileSystemPaths } from '../../client/common/platform/fs-paths';
 import { InterpreterConfigurationScope, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { createDeferred, sleep } from '../../client/common/utils/async';
@@ -447,7 +451,8 @@ suite('Interpreter Path Service', async () => {
             workspaceValue: undefined,
         });
         const settingValue = interpreterPathService.get(resource);
-        expect(settingValue).to.equal('python');
+
+        expect(settingValue).to.equal(getCIPythonPath());
     });
 
     test('If defaultInterpreterPathSetting is changed, an event is fired', async () => {

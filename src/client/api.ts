@@ -4,7 +4,6 @@
 
 'use strict';
 
-import { noop } from 'lodash';
 import { Uri, Event } from 'vscode';
 import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
@@ -17,7 +16,6 @@ import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extens
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
@@ -110,16 +108,6 @@ export function buildApi(
                 // If pythonPath equals an empty string, no interpreter is set.
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
             },
-        },
-        // These are for backwards compatibility. Other extensions are using these APIs and we don't want
-        // to force them to move to the jupyter extension ... yet.
-        datascience: {
-            registerRemoteServerProvider: jupyterIntegration
-                ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
-                : ((noop as unknown) as (serverProvider: IJupyterUriProvider) => void),
-            showDataViewer: jupyterIntegration
-                ? jupyterIntegration.showDataViewer.bind(jupyterIntegration)
-                : ((noop as unknown) as (dataProvider: IDataViewerDataProvider, title: string) => Promise<void>),
         },
         pylance: {
             createClient: (...args: any[]): BaseLanguageClient => {

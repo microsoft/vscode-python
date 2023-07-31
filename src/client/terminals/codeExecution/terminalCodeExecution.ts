@@ -30,7 +30,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     ) {}
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
-        await this.setCwdForFileExecution(file);
+        await this.setCwdForFileExecution(file, options);
         const { command, args } = await this.getExecuteFileArgs(file, [
             file.fsPath.fileToCommandArgumentForPythonExt(),
         ]);
@@ -88,7 +88,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             newTerminalPerFile: options?.newTerminalPerFile,
         });
     }
-    private async setCwdForFileExecution(file: Uri) {
+    private async setCwdForFileExecution(file: Uri, options?: { newTerminalPerFile: boolean }) {
         const pythonSettings = this.configurationService.getSettings(file);
         if (!pythonSettings.terminal.executeInFileDir) {
             return;
@@ -106,7 +106,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                     await this.getTerminalService(file).sendText(`${fileDrive}:`);
                 }
             }
-            await this.getTerminalService(file).sendText(`cd ${fileDirPath.fileToCommandArgumentForPythonExt()}`);
+            await this.getTerminalService(file, options).sendText(
+                `cd ${fileDirPath.fileToCommandArgumentForPythonExt()}`,
+            );
         }
     }
 }

@@ -53,7 +53,7 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
                 },
             ];
         }
-        if (!this.workspaceService.workspaceFile && workspaceFolders.length === 1) {
+        if (workspaceFolders.length === 1) {
             return [
                 {
                     folderUri: workspaceFolders[0].uri,
