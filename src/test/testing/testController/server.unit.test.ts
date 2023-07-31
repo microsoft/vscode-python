@@ -27,8 +27,6 @@ suite('Python Test Server', () => {
     let stubExecutionService: IPythonExecutionService;
     let server: PythonTestServer;
     let sandbox: sinon.SinonSandbox;
-    let execArgs: string[];
-    let spawnOptions: SpawnOptions;
     let v4Stub: sinon.SinonStub;
     let debugLauncher: ITestDebugLauncher;
     let mockProc: MockChildProcess;
@@ -42,11 +40,7 @@ suite('Python Test Server', () => {
 
         v4Stub.returns(fakeUuid);
         stubExecutionService = ({
-            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
-                execArgs = args;
-                spawnOptions = spawnOptionsProvided;
-                return Promise.resolve({ stdout: '', stderr: '' });
-            },
+            execObservable: () => Promise.resolve({ stdout: '', stderr: '' }),
         } as unknown) as IPythonExecutionService;
 
         stubExecutionFactory = ({
@@ -73,7 +67,6 @@ suite('Python Test Server', () => {
 
     teardown(() => {
         sandbox.restore();
-        execArgs = [];
         server.dispose();
     });
 
@@ -201,10 +194,8 @@ suite('Python Test Server', () => {
             /* no op */
         });
         const stubExecutionService2 = ({
-            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+            execObservable: () => {
                 client.connect(server.getPort());
-                execArgs = args;
-                spawnOptions = spawnOptionsProvided;
                 return ({
                 proc: mockProc,
                 out: output,
@@ -260,10 +251,8 @@ suite('Python Test Server', () => {
             /* no op */
         });
         const stubExecutionService2 = ({
-            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+            execObservable: () => {
                 client.connect(server.getPort());
-                execArgs = args;
-                spawnOptions = spawnOptionsProvided;
                 return ({
                 proc: mockProc,
                 out: output,
@@ -316,10 +305,8 @@ suite('Python Test Server', () => {
             /* no op */
         });
         const stubExecutionService2 = ({
-            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+            execObservable: () => {
                 client.connect(server.getPort());
-                execArgs = args;
-                spawnOptions = spawnOptionsProvided;
                 return ({
                 proc: mockProc,
                 out: output,
@@ -385,19 +372,17 @@ Request-uuid: UUID_HERE
                 /* no op */
             });
             const stubExecutionService2 = ({
-                execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
-                    client.connect(server.getPort());
-                    execArgs = args;
-                    spawnOptions = spawnOptionsProvided;
-                    return ({
-                    proc: mockProc,
-                    out: output,
-                    dispose: () => {
-                        /* no-body */
-                    },
-                })
+            execObservable: () => {
+                client.connect(server.getPort());
+                return ({
+                proc: mockProc,
+                out: output,
+                dispose: () => {
+                    /* no-body */
                 },
-            } as unknown) as IPythonExecutionService;
+            })
+            },
+        } as unknown) as IPythonExecutionService;
             const stubExecutionFactory2 = ({
             createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
             } as unknown) as IPythonExecutionFactory;
@@ -436,10 +421,8 @@ Request-uuid: UUID_HERE
             /* no op */
         });
         const stubExecutionService2 = ({
-            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+            execObservable: () => {
                 client.connect(server.getPort());
-                execArgs = args;
-                spawnOptions = spawnOptionsProvided;
                 return ({
                 proc: mockProc,
                 out: output,
