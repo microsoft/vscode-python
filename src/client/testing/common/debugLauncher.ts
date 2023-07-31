@@ -17,6 +17,7 @@ import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
 import { pythonTestAdapterRewriteEnabled } from '../testController/common/utils';
+import { addPathToPythonpath } from './helpers';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -226,21 +227,16 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         // check if PYTHONPATH is already set in the environment variables
-        if (launchArgs.env && launchArgs.env.PYTHONPATH) {
-            // add the plugin path or cwd to PYTHONPATH if it is not already there
-            if (!launchArgs.env.PYTHONPATH.includes(pluginPath)) {
-                launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${pluginPath}`;
-            }
+        if (launchArgs.env) {
+            const additionalPythonPath = [pluginPath];
             if (launchArgs.cwd) {
-                if (!launchArgs.env.PYTHONPATH.includes(launchArgs.cwd)) {
-                    launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${launchArgs.cwd}`;
-                }
-            } else if (!launchArgs.env.PYTHONPATH.includes(options.cwd)) {
-                launchArgs.env.PYTHONPATH = `${launchArgs.env.PYTHONPATH}${path.delimiter}${options.cwd}`;
+                additionalPythonPath.push(launchArgs.cwd);
+            } else if (options.cwd) {
+                additionalPythonPath.push(options.cwd);
             }
-        } else if (launchArgs.env) {
-            // if PYTHONPATH is not set in the environment variables, set it to the plugin path and cwd
-            launchArgs.env.PYTHONPATH = `${pluginPath}${path.delimiter}${options.cwd}`;
+            // add the plugin path or cwd to PYTHONPATH if it is not already there using the following function
+            // this function will handle if PYTHONPATH is undefined
+            addPathToPythonpath(additionalPythonPath, launchArgs.env.PYTHONPATH);
         }
 
         // Clear out purpose so we can detect if the configuration was used to
