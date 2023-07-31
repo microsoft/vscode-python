@@ -33,7 +33,6 @@ import {
     PythonEnvironmentsChangedEvent,
 } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './types';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 /**

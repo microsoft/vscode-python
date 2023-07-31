@@ -4,7 +4,6 @@
 
 'use strict';
 
-import { noop } from 'lodash';
 import { Uri, Event } from 'vscode';
 import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
@@ -17,7 +16,6 @@ import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extens
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
