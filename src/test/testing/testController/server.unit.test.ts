@@ -87,7 +87,6 @@ suite('Python Test Server', () => {
             cwd: '/foo/bar',
             uuid: fakeUuid,
         };
-        console.log('hello', execArgs, spawnOptions);
         const expectedSpawnOptions = {
             cwd: '/foo/bar',
             outputChannel: undefined,
@@ -103,7 +102,6 @@ suite('Python Test Server', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
@@ -143,7 +141,6 @@ suite('Python Test Server', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred.resolve();
                 return Promise.resolve(execService.object);
             });
@@ -163,13 +160,12 @@ suite('Python Test Server', () => {
     });
 
     test('If script execution fails during sendCommand, an onDataReceived event should be fired with the "error" status', async () => {
-        let eventData: { status: string; errors: string[] };
+        let eventData: { status: string; errors: string[] } | undefined;
         stubExecutionService = ({
             execObservable: () => {
                 throw new Error('Failed to execute');
             },
         } as unknown) as IPythonExecutionService;
-        // console.log('ugh', stubExecutionService);
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
@@ -186,45 +182,50 @@ suite('Python Test Server', () => {
 
         await server.sendCommand(options);
 
-        assert.deepStrictEqual(eventData!.status, 'error');
-        assert.deepStrictEqual(eventData!.errors, ['Failed to execute']);
+        assert.notEqual(eventData, undefined);
+        assert.deepStrictEqual(eventData?.status, 'error');
+        assert.deepStrictEqual(eventData?.errors, ['Failed to execute']);
     });
 
     test('If the server receives malformed data, it should display a log message, and not fire an event', async () => {
         let eventData: string | undefined;
         const client = new net.Socket();
-
-        deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                console.log('hello');
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
             uuid: fakeUuid,
         };
+        mockProc = new MockChildProcess('', ['']);
+        const output = new Observable<Output<string>>(() => {
+            /* no op */
+        });
+        const stubExecutionService2 = ({
+            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+                client.connect(server.getPort());
+                execArgs = args;
+                spawnOptions = spawnOptionsProvided;
+                return ({
+                proc: mockProc,
+                out: output,
+                dispose: () => {
+                    /* no-body */
+                },
+            })
+            },
+        } as unknown) as IPythonExecutionService;
 
-        server = new PythonTestServer(execFactory.object, debugLauncher);
+        const stubExecutionFactory2 = ({
+            createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
+        } as unknown) as IPythonExecutionFactory;
+
+        deferred = createDeferred();
+        server = new PythonTestServer(stubExecutionFactory2, debugLauncher);
         await server.serverReady();
         server.onDataReceived(({ data }) => {
             eventData = data;
             deferred.resolve();
         });
-        deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                console.log('hello');
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
 
         client.on('connect', () => {
             console.log('Socket connected, local port:', client.localPort);
@@ -240,40 +241,43 @@ suite('Python Test Server', () => {
         await deferred.promise;
         mockProc.trigger('close');
 
-        await deferred.promise;
         assert.deepStrictEqual(eventData, '');
     });
 
     test('If the server doesnt recognize the UUID it should ignore it', async () => {
         let eventData: string | undefined;
         const client = new net.Socket();
-
-        deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                console.log('hello');
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
             cwd: '/foo/bar',
             uuid: fakeUuid,
         };
-        deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                console.log('hello');
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
 
-        server = new PythonTestServer(execFactory.object, debugLauncher);
+        deferred = createDeferred();
+        mockProc = new MockChildProcess('', ['']);
+        const output = new Observable<Output<string>>(() => {
+            /* no op */
+        });
+        const stubExecutionService2 = ({
+            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+                client.connect(server.getPort());
+                execArgs = args;
+                spawnOptions = spawnOptionsProvided;
+                return ({
+                proc: mockProc,
+                out: output,
+                dispose: () => {
+                    /* no-body */
+                },
+            })
+            },
+        } as unknown) as IPythonExecutionService;
+
+        const stubExecutionFactory2 = ({
+            createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
+        } as unknown) as IPythonExecutionFactory;
+        server = new PythonTestServer(stubExecutionFactory2, debugLauncher);
         await server.serverReady();
         server.onDataReceived(({ data }) => {
             eventData = data;
@@ -307,16 +311,29 @@ suite('Python Test Server', () => {
             uuid: fakeUuid,
         };
         deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                console.log('hello');
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
+        mockProc = new MockChildProcess('', ['']);
+        const output = new Observable<Output<string>>(() => {
+            /* no op */
+        });
+        const stubExecutionService2 = ({
+            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+                client.connect(server.getPort());
+                execArgs = args;
+                spawnOptions = spawnOptionsProvided;
+                return ({
+                proc: mockProc,
+                out: output,
+                dispose: () => {
+                    /* no-body */
+                },
+            })
+            },
+        } as unknown) as IPythonExecutionService;
 
-        server = new PythonTestServer(execFactory.object, debugLauncher);
+        const stubExecutionFactory2 = ({
+            createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
+        } as unknown) as IPythonExecutionFactory;
+        server = new PythonTestServer(stubExecutionFactory2, debugLauncher);
         await server.serverReady();
         server.onDataReceived(({ data }) => {
             eventData = data;
@@ -362,8 +379,30 @@ Request-uuid: UUID_HERE
                 cwd: '/foo/bar',
                 uuid: fakeUuid,
             };
+            deferred = createDeferred();
+            mockProc = new MockChildProcess('', ['']);
+            const output = new Observable<Output<string>>(() => {
+                /* no op */
+            });
+            const stubExecutionService2 = ({
+                execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+                    client.connect(server.getPort());
+                    execArgs = args;
+                    spawnOptions = spawnOptionsProvided;
+                    return ({
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                })
+                },
+            } as unknown) as IPythonExecutionService;
+            const stubExecutionFactory2 = ({
+            createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
+            } as unknown) as IPythonExecutionFactory;
 
-            server = new PythonTestServer(execFactory.object, debugLauncher);
+            server = new PythonTestServer(stubExecutionFactory2, debugLauncher);
             await server.serverReady();
             const uuid = server.createUUID();
             payload = payload.replace('UUID_HERE', uuid);
@@ -392,14 +431,29 @@ Request-uuid: UUID_HERE
         const client = new net.Socket();
 
         deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                console.log('hello');
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
+        mockProc = new MockChildProcess('', ['']);
+        const output = new Observable<Output<string>>(() => {
+            /* no op */
+        });
+        const stubExecutionService2 = ({
+            execObservable: (args: string[], spawnOptionsProvided: SpawnOptions) => {
+                client.connect(server.getPort());
+                execArgs = args;
+                spawnOptions = spawnOptionsProvided;
+                return ({
+                proc: mockProc,
+                out: output,
+                dispose: () => {
+                    /* no-body */
+                },
+            })
+            },
+        } as unknown) as IPythonExecutionService;
+
+        const stubExecutionFactory2 = ({
+            createActivatedEnvironment: () => Promise.resolve(stubExecutionService2),
+        } as unknown) as IPythonExecutionFactory;
+        server = new PythonTestServer(stubExecutionFactory2, debugLauncher);
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
             workspaceFolder: Uri.file('/foo/bar'),
@@ -407,7 +461,6 @@ Request-uuid: UUID_HERE
             uuid: fakeUuid,
         };
 
-        server = new PythonTestServer(execFactory.object, debugLauncher);
         await server.serverReady();
         const uuid = server.createUUID();
         server.onRunDataReceived(({ data }) => {
@@ -432,7 +485,6 @@ Request-uuid: ${uuid}
 
         server.sendCommand(options);
         await deferred.promise;
-        console.log('event data', eventData);
         const expectedResult =
             '{"cwd": "path", "status": "success", "result": "xyz", "not_found": null, "error": null}';
         assert.deepStrictEqual(eventData, expectedResult);

@@ -101,12 +101,10 @@ suite('pytest test execution adapter', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
         utilsStub.callsFake(() => {
-            console.log('hi');
             deferred3.resolve();
             return Promise.resolve(54321);
         });
@@ -142,12 +140,10 @@ suite('pytest test execution adapter', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
         utilsStub.callsFake(() => {
-            console.log('hi');
             deferred3.resolve();
             return Promise.resolve(54321);
         });
@@ -204,12 +200,10 @@ suite('pytest test execution adapter', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => {
-                console.log('hello');
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
         utilsStub.callsFake(() => {
-            console.log('hi');
             deferred3.resolve();
             return Promise.resolve(54321);
         });
@@ -269,7 +263,6 @@ suite('pytest test execution adapter', () => {
     test('Debug launched correctly for pytest', async () => {
         const deferred3 = createDeferred();
         utilsStub.callsFake(() => {
-            console.log('hi');
             deferred3.resolve();
             return Promise.resolve(54321);
         });
