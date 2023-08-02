@@ -34,3 +34,6 @@ ignore = [
     'tests/testing_tools/adapter/pytest/test_cli.py',
     'tests/testing_tools/adapter/pytest/test_discovery.py',
 ]
+
+[tool.ruff]
+line-length = 120
