@@ -211,7 +211,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.autoTestDiscoverOnSaveEnabled) {
                 traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
                 this.watchForSettingsChanges(workspace);
-                this.watchForTestContentChanges(workspace);
+                this.watchForTestContentChangeOnSave();
             }
         });
     }
@@ -527,38 +527,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
     }
 
-    private watchForTestContentChanges(workspace: WorkspaceFolder): void {
-        const pattern = new RelativePattern(workspace, '**/*.py');
-        const watcher = this.workspaceService.createFileSystemWatcher(pattern);
-        this.disposables.push(watcher);
+    private watchForTestContentChangeOnSave(): void {
         this.disposables.push(
             onDidSaveTextDocument(async (doc: TextDocument) => {
-                const file = doc.fileName;
-                // exclude the following documents from calling a test refresh
-                const excludeBool =
-                    file.endsWith('.git') ||
-                    file.endsWith('.pyc') ||
-                    file.includes('__pycache__') ||
-                    file.includes('.venv');
-                if (doc.fileName.endsWith('.py') && !excludeBool) {
+                if (doc.fileName.endsWith('.py')) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
                     this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
                 }
-            }),
-        );
-        this.disposables.push(
-            watcher.onDidCreate((uri) => {
-                traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
-                this.sendTriggerTelemetry('watching');
-                this.refreshData.trigger(uri, false);
-            }),
-        );
-        this.disposables.push(
-            watcher.onDidDelete((uri) => {
-                traceVerbose(`Testing: Trigger refresh after deleting in ${uri.fsPath}`);
-                this.sendTriggerTelemetry('watching');
-                this.refreshData.trigger(uri, false);
             }),
         );
     }
