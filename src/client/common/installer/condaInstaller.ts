@@ -88,18 +88,7 @@ export class CondaInstaller extends ModuleInstaller {
         // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
         // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
         // Do this just for the datascience packages.
-        if (
-            [
-                Product.tensorboard,
-                Product.ipykernel,
-                Product.pandas,
-                Product.nbconvert,
-                Product.jupyter,
-                Product.notebook,
-            ]
-                .map(translateProductToModule)
-                .includes(moduleName)
-        ) {
+        if ([Product.tensorboard].map(translateProductToModule).includes(moduleName)) {
             args.push('-c', 'conda-forge');
         }
         if (info && info.name) {
