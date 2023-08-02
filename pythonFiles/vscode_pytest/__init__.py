@@ -69,7 +69,8 @@ def pytest_exception_interact(node, call, report):
     """
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
-    # If it is during discovery, then add the error to error logs.
+    # See if it is during discovery or execution.
+    # if discovery, then add the error to error logs.
     if type(report) == pytest.CollectReport:
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
@@ -82,11 +83,11 @@ def pytest_exception_interact(node, call, report):
                 report.longreprtext + "\n Check Python Test Logs for more details."
             )
     else:
-        # If during execution, send this data that the given node failed.
+        # if execution, send this data that the given node failed.
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
-        node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
+        node_id = str(node.nodeid)
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
@@ -103,22 +104,6 @@ def pytest_exception_interact(node, call, report):
                 "success",
                 collected_test if collected_test else None,
             )
-
-
-def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
-    """A function that returns the absolute test id. This is necessary because testIds are relative to the rootdir.
-    This does not work for our case since testIds when referenced during run time are relative to the instantiation
-    location. Absolute paths for testIds are necessary for the test tree ensures configurations that change the rootdir
-    of pytest are handled correctly.
-
-    Keyword arguments:
-    test_id -- the pytest id of the test which is relative to the rootdir.
-    testPath -- the path to the file the test is located in, as a pathlib.Path object.
-    """
-    split_id = test_id.split("::")[1:]
-    absolute_test_id = "::".join([str(testPath), *split_id])
-    print("absolute path", absolute_test_id)
-    return absolute_test_id
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -145,7 +130,7 @@ class TestOutcome(Dict):
 
 
 def create_test_outcome(
-    testid: str,
+    test: str,
     outcome: str,
     message: Union[str, None],
     traceback: Union[str, None],
@@ -153,7 +138,7 @@ def create_test_outcome(
 ) -> TestOutcome:
     """A function that creates a TestOutcome object."""
     return TestOutcome(
-        test=testid,
+        test=test,
         outcome=outcome,
         message=message,
         traceback=traceback,  # TODO: traceback
@@ -169,7 +154,6 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
 
 IS_DISCOVERY = False
-map_id_to_path = dict()
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
@@ -200,21 +184,17 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        node_path = map_id_to_path[report.nodeid]
-        if not node_path:
-            node_path = cwd
-        # Calculate the absolute test id and use this as the ID moving forward.
-        absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
-        if absolute_node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(absolute_node_id)
+        node_id = str(report.nodeid)
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
-                absolute_node_id,
+                node_id,
                 report_value,
                 message,
                 traceback,
             )
             collected_test = testRunResultDict()
-            collected_test[absolute_node_id] = item_result
+            collected_test[node_id] = item_result
             execution_post(
                 os.fsdecode(cwd),
                 "success",
@@ -231,22 +211,21 @@ ERROR_MESSAGE_CONST = {
 
 
 def pytest_runtest_protocol(item, nextitem):
-    map_id_to_path[item.nodeid] = get_node_path(item)
     skipped = check_skipped_wrapper(item)
     if skipped:
-        absolute_node_id = get_absolute_test_id(item.nodeid, get_node_path(item))
+        node_id = str(item.nodeid)
         report_value = "skipped"
         cwd = pathlib.Path.cwd()
-        if absolute_node_id not in collected_tests_so_far:
-            collected_tests_so_far.append(absolute_node_id)
+        if node_id not in collected_tests_so_far:
+            collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
-                absolute_node_id,
+                node_id,
                 report_value,
                 None,
                 None,
             )
             collected_test = testRunResultDict()
-            collected_test[absolute_node_id] = item_result
+            collected_test[node_id] = item_result
             execution_post(
                 os.fsdecode(cwd),
                 "success",
@@ -492,14 +471,13 @@ def create_test_node(
     test_case_loc: str = (
         str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
     )
-    absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
     return {
         "name": test_case.name,
         "path": get_node_path(test_case),
         "lineno": test_case_loc,
         "type_": "test",
-        "id_": absolute_test_id,
-        "runID": absolute_test_id,
+        "id_": test_case.nodeid,
+        "runID": test_case.nodeid,
     }
 
 
