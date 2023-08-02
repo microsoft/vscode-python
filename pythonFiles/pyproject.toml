@@ -37,9 +37,8 @@ ignore = [
 
 [tool.ruff]
 line-length = 120
-exclude = ['lib']
-ignore = [
-    # Exempt as same as Pyright
+exclude = [
+    # Ignore testing_tools files same as Pyright way
     'get-pip.py',
     'install_debugpy.py',
     'tensorboard_launcher.py',
