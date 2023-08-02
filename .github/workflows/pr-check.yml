@@ -74,10 +74,11 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
           python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Run Ruff
-        uses: chartboost/ruff-action@v1
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v1
         with:
-          src: './pythonFiles'
+          version: 1.1.308
+          working-directory: 'pythonFiles'
 
   ### Non-smoke tests
   tests:

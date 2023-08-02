@@ -47,3 +47,8 @@ runs:
         python -m black . --check
       working-directory: pythonFiles
       shell: bash
+
+    - name: Run Ruff
+      uses: chartboost/ruff-action@v1
+      with:
+        src: './pythonFiles'
