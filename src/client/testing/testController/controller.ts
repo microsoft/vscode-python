@@ -510,7 +510,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }
             }),
         );
-
+        /* Keep both watchers for create and delete since config files can change test behavior without content
+        due to their impact on pythonPath. */
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
