@@ -15,6 +15,7 @@ import {
     CancellationTokenSource,
     Uri,
     EventEmitter,
+    TextDocument,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
@@ -48,6 +49,7 @@ import { WorkspaceTestAdapter } from './workspaceTestAdapter';
 import { ITestDebugLauncher } from '../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonResultResolver } from './common/resultResolver';
+import { onDidSaveTextDocument } from '../../common/vscodeApis/workspaceApis';
 
 // Types gymnastics to make sure that sendTriggerTelemetry only accepts the correct types.
 type EventPropertyType = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_TRIGGER];
@@ -493,12 +495,22 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(watcher);
 
         this.disposables.push(
-            watcher.onDidChange((uri) => {
-                traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-                this.sendTriggerTelemetry('watching');
-                this.refreshData.trigger(uri, false);
+            onDidSaveTextDocument(async (doc: TextDocument) => {
+                const file = doc.fileName;
+                // refresh on any settings file save
+                if (
+                    file.includes('settings.json') ||
+                    file.includes('pytest.ini') ||
+                    file.includes('setup.cfg') ||
+                    file.includes('pyproject.toml')
+                ) {
+                    traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
+                    this.sendTriggerTelemetry('watching');
+                    this.refreshData.trigger(doc.uri, false);
+                }
             }),
         );
+
         this.disposables.push(
             watcher.onDidCreate((uri) => {
                 traceVerbose(`Testing: Trigger refresh after creating ${uri.fsPath}`);
@@ -519,13 +531,20 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         const pattern = new RelativePattern(workspace, '**/*.py');
         const watcher = this.workspaceService.createFileSystemWatcher(pattern);
         this.disposables.push(watcher);
-
         this.disposables.push(
-            watcher.onDidChange((uri) => {
-                traceVerbose(`Testing: Trigger refresh after change in ${uri.fsPath}`);
-                this.sendTriggerTelemetry('watching');
-                // We want to invalidate tests for code change
-                this.refreshData.trigger(uri, true);
+            onDidSaveTextDocument(async (doc: TextDocument) => {
+                const file = doc.fileName;
+                // exclude the following documents from calling a test refresh
+                const excludeBool =
+                    file.endsWith('.git') ||
+                    file.endsWith('.pyc') ||
+                    file.includes('__pycache__') ||
+                    file.includes('.venv');
+                if (doc.fileName.endsWith('.py') && !excludeBool) {
+                    traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
+                    this.sendTriggerTelemetry('watching');
+                    this.refreshData.trigger(doc.uri, false);
+                }
             }),
         );
         this.disposables.push(
