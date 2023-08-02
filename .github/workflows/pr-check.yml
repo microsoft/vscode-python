@@ -77,7 +77,7 @@ jobs:
       - name: Run Ruff
         uses: chartboost/ruff-action@v1
         with:
-            src: "./pythonFiles"
+          src: './pythonFiles'
 
   ### Non-smoke tests
   tests:
