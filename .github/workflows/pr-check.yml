@@ -74,7 +74,7 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
           python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Run ruff
+      - name: Run Ruff
         uses: chartboost/ruff-action@v1
         with:
             src: "./pythonFiles"
