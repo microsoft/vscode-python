@@ -3,6 +3,8 @@
 
 import unittest
 
+import something_else
+
 
 class DiscoveryErrorOne(unittest.TestCase):
     """Test class for the test_error_discovery test.
