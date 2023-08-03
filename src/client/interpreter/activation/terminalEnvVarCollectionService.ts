@@ -164,13 +164,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             }
         }
 
-        for (const key in previousEnv) {
-            // If the previous env var is not in the current env, clear it from collection.
+        envVarCollection.forEach((key) => {
+            // If a previously set env var is not in the current env, clear it from collection.
             if (!(key in env)) {
                 traceVerbose(`Clearing environment variable ${key} from collection`);
                 envVarCollection.delete(key);
             }
-        }
+        });
 
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
