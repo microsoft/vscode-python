@@ -6,7 +6,6 @@ import os
 import sys
 
 import create_microvenv
-import pytest
 
 
 def test_create_microvenv():

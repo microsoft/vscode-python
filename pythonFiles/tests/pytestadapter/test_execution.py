@@ -5,6 +5,7 @@ import os
 import shutil
 
 import pytest
+
 from tests.pytestadapter import expected_execution_test_output
 
 from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
@@ -205,7 +206,7 @@ def test_pytest_execution(test_ids, expected_const):
     Keyword arguments:
     test_ids -- an array of test_ids to run.
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
-    """
+    """  # noqa: E501
     args = test_ids
     actual = runner(args)
     assert actual
@@ -223,6 +224,6 @@ def test_pytest_execution(test_ids, expected_const):
             or actual_result_dict[key]["outcome"] == "error"
         ):
             actual_result_dict[key]["message"] = "ERROR MESSAGE"
-        if actual_result_dict[key]["traceback"] != None:
+        if actual_result_dict[key]["traceback"] is not None:
             actual_result_dict[key]["traceback"] = "TRACEBACK"
     assert actual_result_dict == expected_const
