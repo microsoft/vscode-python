@@ -155,11 +155,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         }
 
         // Cache only if successful, else keep trying & failing if necessary.
-        const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
+        const memCache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
         return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions, shell)
             .then((vars) => {
-                cache.data = vars;
-                this.activatedEnvVariablesCache.set(cacheKey, cache);
+                memCache.data = vars;
+                this.activatedEnvVariablesCache.set(cacheKey, memCache);
                 sendTelemetryEvent(
                     EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
                     stopWatch.elapsedTime,
@@ -194,7 +194,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const command = `${interpreterPath} ${args.join(' ')}`;
             const processService = await this.processServiceFactory.create(resource);
             const result = await processService.shellExec(command, {
-                shell: shell,
+                shell,
                 timeout: ENVIRONMENT_TIMEOUT,
                 maxBuffer: 1000 * 1000,
                 throwOnStdErr: false,
@@ -277,8 +277,14 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 const activationCommand = fixActivationCommands(activationCommands).join(' && ');
                 // In order to make sure we know where the environment output is,
                 // put in a dummy echo we can look for
-                const commandSeparator = [TerminalShellType.powershell, TerminalShellType.powershellCore].includes(shellInfo.shellType) ? ';' : '&&';
-                command = `${activationCommand} ${commandSeparator} echo '${ENVIRONMENT_PREFIX}' ${commandSeparator} python ${args.join(' ')}`;
+                const commandSeparator = [TerminalShellType.powershell, TerminalShellType.powershellCore].includes(
+                    shellInfo.shellType,
+                )
+                    ? ';'
+                    : '&&';
+                command = `${activationCommand} ${commandSeparator} echo '${ENVIRONMENT_PREFIX}' ${commandSeparator} python ${args.join(
+                    ' ',
+                )}`;
             }
 
             // Make sure python warnings don't interfere with getting the environment. However
