@@ -37,6 +37,7 @@ ignore = [
 
 [tool.ruff]
 line-length = 140
+ignore = ["E402"]
 exclude = [
     # Ignore testing_tools files same as Pyright way
     'get-pip.py',
