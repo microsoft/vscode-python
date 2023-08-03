@@ -107,8 +107,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
+        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
+            envVarCollection.clear();
             return;
         }
         const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
@@ -117,7 +119,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
-        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
