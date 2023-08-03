@@ -60,11 +60,11 @@ def get_source_line(obj) -> str:
     """Get the line number of a test case start line."""
     try:
         sourcelines, lineno = inspect.getsourcelines(obj)
-    except:
+    except Exception:
         try:
             # tornado-specific, see https://github.com/microsoft/vscode-python/issues/17285.
             sourcelines, lineno = inspect.getsourcelines(obj.orig_method)
-        except:
+        except Exception:
             return "*"
 
     # Return the line number of the first line of the test case definition.
@@ -226,7 +226,8 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
     The returned tuple contains the following items
     - start_directory: The directory where to start discovery, defaults to .
     - pattern: The pattern to match test files, defaults to test*.py
-    - top_level_directory: The top-level directory of the project, defaults to None, and unittest will use start_directory behind the scenes.
+    - top_level_directory: The top-level directory of the project, defaults to None,
+      and unittest will use start_directory behind the scenes.
     """
 
     arg_parser = argparse.ArgumentParser()

@@ -118,7 +118,7 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
-    except:
+    except Exception:
         # If there's a problem when parsing statements,
         # append a blank line to end the block and send it as-is.
         source = selection + "\n\n"
