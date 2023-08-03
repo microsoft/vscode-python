@@ -3,7 +3,7 @@
 
 import unittest
 
-import something_else
+import something_else  # type: ignore
 
 
 class DiscoveryErrorOne(unittest.TestCase):
