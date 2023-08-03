@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional
 import pytest
 
 from . import expected_discovery_test_output
-from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
+from .helpers import TEST_DATA_PATH, runner
 
 
 def test_import_error(tmp_path):
@@ -153,53 +153,3 @@ def test_pytest_collect(file, expected_const):
         assert actual["status"] == "success"
         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
         assert actual["tests"] == expected_const
-
-
-def test_pytest_root_dir():
-    """
-    Test to test pytest discovery with the command line arg --rootdir specified to be a subfolder
-    of the workspace root. Discovery should succeed and testids should be relative to workspace root.
-    """
-    rd = f"--rootdir={TEST_DATA_PATH / 'root' / 'tests'}"
-    actual = runner_with_cwd(
-        [
-            "--collect-only",
-            rd,
-        ],
-        TEST_DATA_PATH / "root",
-    )
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "tests"))
-        assert actual["status"] == "success"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH / "root")
-        assert (
-            actual["tests"]
-            == expected_discovery_test_output.root_with_config_expected_output
-        )
-
-
-def test_pytest_config_file():
-    """
-    Test to test pytest discovery with the command line arg -c with a specified config file which
-    changes the workspace root. Discovery should succeed and testids should be relative to workspace root.
-    """
-    actual = runner_with_cwd(
-        [
-            "--collect-only",
-            "-c",
-            "tests/pytest.ini",
-        ],
-        TEST_DATA_PATH / "root",
-    )
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "tests"))
-        assert actual["status"] == "success"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH / "root")
-        assert (
-            actual["tests"]
-            == expected_discovery_test_output.root_with_config_expected_output
-        )

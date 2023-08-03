@@ -16,13 +16,6 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 from typing_extensions import TypedDict
 
 
-def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
-    split_id = test_id.split("::")[1:]
-    absolute_test_id = "::".join([str(testPath), *split_id])
-    print("absolute path", absolute_test_id)
-    return absolute_test_id
-
-
 def create_server(
     host: str = "127.0.0.1",
     port: int = 0,
@@ -112,13 +105,6 @@ def process_rpc_json(data: str) -> List[Dict[str, Any]]:
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
-    return runner_with_cwd(args, TEST_DATA_PATH)
-
-
-def runner_with_cwd(
-    args: List[str], path: pathlib.Path
-) -> Optional[List[Dict[str, Any]]]:
-    """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
         "-m",
@@ -148,7 +134,7 @@ def runner_with_cwd(
 
     t2 = threading.Thread(
         target=_run_test_code,
-        args=(process_args, env, path, completed),
+        args=(process_args, env, TEST_DATA_PATH, completed),
     )
     t2.start()
 
