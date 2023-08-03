@@ -58,4 +58,5 @@ exclude = [
     'tests/testing_tools/adapter/test_util.py',
     'tests/testing_tools/adapter/pytest/test_cli.py',
     'tests/testing_tools/adapter/pytest/test_discovery.py',
+    'pythonFiles/testing_tools/*'
 ]
