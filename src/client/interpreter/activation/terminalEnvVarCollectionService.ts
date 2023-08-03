@@ -139,9 +139,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
         const previousEnv = this.previousEnvVars;
         this.previousEnvVars = env;
-        for (const key in env) {
+        Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
-                continue;
+                return;
             }
             const value = env[key];
             const prevValue = previousEnv[key];
@@ -162,7 +162,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     envVarCollection.delete(key);
                 }
             }
-        }
+        });
 
         envVarCollection.forEach((key) => {
             // If a previously set env var is not in the current env, clear it from collection.
