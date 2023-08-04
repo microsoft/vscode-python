@@ -62,6 +62,6 @@ exclude = [
     'pythonFiles/testing_tools/adapter/pytest/__init__.py',
     'pythonFiles/tests/pytestadapter/expected_execution_test_output.py',
     'pythonFiles/tests/unittestadapter/.data/discovery_error/file_one.py',
-    'pythonFiles/tests/unittestadapter/test_utils.py,
+    'pythonFiles/tests/unittestadapter/test_utils.py',
 
 ]
