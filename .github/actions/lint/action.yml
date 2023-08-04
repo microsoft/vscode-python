@@ -51,6 +51,6 @@ runs:
     - name: Run Ruff
       run: |
         python -m pip install -U ruff
-        python -m ruff . --check
+        python -m ruff check .
       working-directory: pythonFiles
       shell: bash
