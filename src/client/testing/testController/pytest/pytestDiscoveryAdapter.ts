@@ -83,7 +83,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
         const result = execService?.execObservable(execArgs, spawnOptions);
 
-        result?.proc?.on('close', () => {
+        // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
+        // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
+        result?.proc?.stdout?.on('data', (data) => {
+            spawnOptions.outputChannel?.append(data);
+        });
+        result?.proc?.stderr?.on('data', (data) => {
+            spawnOptions.outputChannel?.append(data);
+        });
+        result?.proc?.on('exit', () => {
             deferredExec.resolve({ stdout: '', stderr: '' });
             this.testServer.deleteUUID(uuid);
             deferred.resolve();

@@ -47,6 +47,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
+            disposedDataReceived.dispose();
         });
         const dispose = function (testServer: ITestServer) {
             testServer.deleteUUID(uuid);
@@ -154,6 +155,15 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 runInstance?.token.onCancellationRequested(() => {
                     result?.proc?.kill();
+                });
+
+                // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
+                // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
+                result?.proc?.stdout?.on('data', (data) => {
+                    this.outputChannel?.append(data);
+                });
+                result?.proc?.stderr?.on('data', (data) => {
+                    this.outputChannel?.append(data);
                 });
 
                 result?.proc?.on('close', () => {
