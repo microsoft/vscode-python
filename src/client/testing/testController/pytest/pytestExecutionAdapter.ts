@@ -47,6 +47,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
+            disposedDataReceived.dispose();
         });
         const dispose = function (testServer: ITestServer) {
             testServer.deleteUUID(uuid);
