@@ -261,7 +261,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 );
                 traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
-                    if (interpreter?.envType === EnvironmentType.Venv) {
+                    if (interpreter && [EnvironmentType.Venv, EnvironmentType.Pyenv].includes(interpreter?.envType)) {
                         const key = getSearchPathEnvVarNames()[0];
                         if (env[key]) {
                             env[key] = `${path.dirname(interpreter.path)}${path.delimiter}${env[key]}`;

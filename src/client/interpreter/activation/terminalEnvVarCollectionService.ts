@@ -46,7 +46,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private registeredOnce = false;
 
-    private previousEnvVars: EnvironmentVariables | undefined;
+    private processEnvVars: EnvironmentVariables | undefined;
 
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -91,6 +91,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             this.applicationEnvironment.onDidChangeShell(
                 async (shell: string) => {
                     this.showProgress();
+                    this.processEnvVars = undefined;
                     // Pass in the shell where known instead of relying on the application environment, because of bug
                     // on VSCode: https://github.com/microsoft/vscode/issues/160694
                     await this._applyCollection(undefined, shell).ignoreErrors();
@@ -108,9 +109,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
+        // Clear any previously set env vars from collection.
+        envVarCollection.clear();
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
-            envVarCollection.clear();
             return;
         }
         const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
@@ -128,24 +130,22 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            envVarCollection.clear();
-            this.previousEnvVars = undefined;
+            this.processEnvVars = undefined;
             return;
         }
-        if (!this.previousEnvVars) {
-            this.previousEnvVars = await this.environmentActivationService.getProcessEnvironmentVariables(
+        if (!this.processEnvVars) {
+            this.processEnvVars = await this.environmentActivationService.getProcessEnvironmentVariables(
                 resource,
                 shell,
             );
         }
-        const previousEnv = this.previousEnvVars;
-        this.previousEnvVars = env;
+        const processEnv = this.processEnvVars;
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
             }
             const value = env[key];
-            const prevValue = previousEnv[key];
+            const prevValue = processEnv[key];
             if (prevValue !== value) {
                 if (value !== undefined) {
                     if (key === 'PS1') {
@@ -158,18 +158,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
                         envVarCollection.replace(key, value, { applyAtShellIntegration: true });
                     }
-                } else {
-                    traceVerbose(`Clearing environment variable ${key} from collection`);
-                    envVarCollection.delete(key);
                 }
-            }
-        });
-
-        envVarCollection.forEach((key) => {
-            // If a previously set env var is not in the current env, clear it from collection.
-            if (!(key in env)) {
-                traceVerbose(`Clearing environment variable ${key} from collection`);
-                envVarCollection.delete(key);
             }
         });
 
