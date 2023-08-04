@@ -43,14 +43,16 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             outChannel: this.outputChannel,
         };
 
-        const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
+        const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
-            disposable.dispose();
         });
+        const disposeDataReceiver = function (testServer: ITestServer) {
+            testServer.deleteUUID(uuid);
+            dataReceivedDisposable.dispose();
+        };
 
         await this.callSendCommand(options, () => {
-            this.testServer.deleteUUID(uuid);
-            disposable.dispose();
+            disposeDataReceiver(this.testServer);
         });
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.

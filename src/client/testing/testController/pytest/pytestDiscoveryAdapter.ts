@@ -33,27 +33,30 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         const settings = this.configSettings.getSettings(uri);
+        const uuid = this.testServer.createUUID(uri.fsPath);
         const { pytestArgs } = settings.testing;
         traceVerbose(pytestArgs);
-        const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
+        const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
-            disposable.dispose();
         });
+        const disposeDataReceiver = function (testServer: ITestServer) {
+            testServer.deleteUUID(uuid);
+            dataReceivedDisposable.dispose();
+        };
         try {
-            await this.runPytestDiscovery(uri, executionFactory);
+            await this.runPytestDiscovery(uri, uuid, executionFactory);
         } finally {
-            disposable.dispose();
+            disposeDataReceiver(this.testServer);
         }
         // this is only a placeholder to handle function overloading until rewrite is finished
         const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
         return discoveryPayload;
     }
 
-    async runPytestDiscovery(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<void> {
+    async runPytestDiscovery(uri: Uri, uuid: string, executionFactory?: IPythonExecutionFactory): Promise<void> {
         const deferred = createDeferred<DiscoveredTestPayload>();
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
-        const uuid = this.testServer.createUUID(uri.fsPath);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
@@ -85,7 +88,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         result?.proc?.on('close', () => {
             deferredExec.resolve({ stdout: '', stderr: '' });
-            this.testServer.deleteUUID(uuid);
             deferred.resolve();
         });
         await deferredExec.promise;

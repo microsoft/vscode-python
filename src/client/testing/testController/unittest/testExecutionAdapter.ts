@@ -41,16 +41,15 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
-            disposedDataReceived.dispose();
         });
-        const dispose = function () {
+        const disposeDataReceiver = function (testServer: ITestServer) {
+            testServer.deleteUUID(uuid);
             disposedDataReceived.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
-            this.testServer.deleteUUID(uuid);
-            dispose();
+            disposeDataReceiver(this.testServer);
         });
-        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, dispose);
+        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, disposeDataReceiver);
         const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
         return executionPayload;
     }
@@ -61,7 +60,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         uuid: string,
         runInstance?: TestRun,
         debugBool?: boolean,
-        dispose?: () => void,
+        disposeDataReceiver?: (testServer: ITestServer) => void,
     ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
@@ -85,9 +84,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const runTestIdsPort = await startTestIdServer(testIds);
 
         await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, () => {
-            this.testServer.deleteUUID(uuid);
             deferred.resolve();
-            dispose?.();
+            disposeDataReceiver?.(this.testServer);
         });
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
