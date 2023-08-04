@@ -18,7 +18,7 @@ First we need to define a `package.json` for the extension that wants to use the
 	// core extension.
 	"dependencies": {
 		"@vscode/python-extension": "...",
-        "@types/vscode": "..."
+		"@types/vscode": "..."
 	},
 }
 ```
