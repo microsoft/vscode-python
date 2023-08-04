@@ -5,7 +5,6 @@
 
 import * as sinon from 'sinon';
 import { assert, expect } from 'chai';
-import { cloneDeep } from 'lodash';
 import { mock, instance, when, anything, verify, reset } from 'ts-mockito';
 import {
     EnvironmentVariableCollection,
