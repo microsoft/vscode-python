@@ -1,11 +1,10 @@
-from io import TextIOWrapper
-import sys
 import argparse
 import os
+from io import TextIOWrapper
 
 os.system("color")
-from pathlib import Path
 import re
+from pathlib import Path
 
 parser = argparse.ArgumentParser(description="Parse a test log into its parts")
 parser.add_argument("testlog", type=str, nargs=1, help="Log to parse")
@@ -63,14 +62,14 @@ def splitByPid(testlog):
                     pid = int(match.group(1))
 
                     # See if we've created a log for this pid or not
-                    if not pid in pids:
+                    if pid not in pids:
                         pids.add(pid)
                         logFile = "{}_{}.log".format(baseFile, pid)
                         print("Writing to new log: " + logFile)
                         logs[pid] = Path(logFile).open(mode="w")
 
                 # Add this line to the log
-                if pid != None:
+                if pid is not None:
                     logs[pid].write(line)
     # Close all of the open logs
     for key in logs:
