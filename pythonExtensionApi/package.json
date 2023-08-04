@@ -25,7 +25,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
-    "peerDependencies": {
+    "optionalDependencies": {
         "@types/vscode": "^1.78.0"
     },
     "devDependencies": {
