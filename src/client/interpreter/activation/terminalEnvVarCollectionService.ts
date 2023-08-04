@@ -46,6 +46,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private registeredOnce = false;
 
+    /**
+     * Carries default environment variables for the currently selected shell.
+     */
     private processEnvVars: EnvironmentVariables | undefined;
 
     constructor(
