@@ -157,10 +157,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             applyAtShellIntegration: true,
                             applyAtProcessCreation: false,
                         });
-                    } else {
-                        traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                        envVarCollection.replace(key, value, { applyAtShellIntegration: true });
+                        return;
                     }
+                    traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
+                    envVarCollection.replace(key, value, { applyAtShellIntegration: true });
                 }
             }
         });
