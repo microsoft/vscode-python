@@ -7,7 +7,7 @@ SUCCESS = "success"
 FAILURE = "failure"
 
 TEST_SUBTRACT_FUNCTION_NEGATIVE_NUMBERS_ERROR = "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError"  # noqa: E501
-from .helpers import TEST_DATA_PATH, get_absolute_test_id
+
 
 # This is the expected output for the unittest_folder execute tests
 # └── unittest_folder
