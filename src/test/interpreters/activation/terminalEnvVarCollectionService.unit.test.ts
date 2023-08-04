@@ -9,6 +9,7 @@ import { cloneDeep } from 'lodash';
 import { mock, instance, when, anything, verify, reset } from 'ts-mockito';
 import {
     EnvironmentVariableCollection,
+    EnvironmentVariableMutatorOptions,
     EnvironmentVariableScope,
     ProgressLocation,
     Uri,
@@ -188,6 +189,31 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         verify(collection.clear()).once();
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+    });
+
+    test('If activated variables contain PS1, prefix it using shell integration', async () => {
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(
+                anything(),
+                undefined,
+                undefined,
+                customShell,
+            ),
+        ).thenResolve(envVars);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        let opts: EnvironmentVariableMutatorOptions | undefined;
+        when(collection.prepend('PS1', '(prompt)', anything())).thenCall((_, _v, o) => {
+            opts = o;
+        });
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
+
+        verify(collection.clear()).once();
+        verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
 
     test('Verify envs are not applied if env activation is disabled', async () => {
