@@ -164,7 +164,8 @@ suite('Workspace test adapter', () => {
             const buildErrorNodeOptionsStub = sinon.stub(util, 'buildErrorNodeOptions').returns(errorTestItemOptions);
             const testProvider = 'unittest';
 
-            await workspaceTestAdapter.discoverTests(testController);
+            const abc = await workspaceTestAdapter.discoverTests(testController);
+            console.log(abc);
 
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
             sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, Uri.parse('foo'), sinon.match.any, testProvider);

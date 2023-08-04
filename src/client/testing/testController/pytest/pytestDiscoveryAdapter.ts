@@ -4,14 +4,13 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
-    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceVerbose } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -49,7 +48,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         return discoveryPayload;
     }
 
-    async runPytestDiscovery(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<void> {
+    async runPytestDiscovery(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         const deferred = createDeferred<DiscoveredTestPayload>();
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -79,15 +78,17 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        const deferredExec = createDeferred<ExecutionResult<string>>();
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
-        const result = execService?.execObservable(execArgs, spawnOptions);
-
-        result?.proc?.on('close', () => {
-            deferredExec.resolve({ stdout: '', stderr: '' });
-            this.testServer.deleteUUID(uuid);
-            deferred.resolve();
-        });
-        await deferredExec.promise;
+        execService
+            ?.exec(['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs), spawnOptions)
+            .then(() => {
+                this.testServer.deleteUUID(uuid);
+                return deferred.resolve();
+            })
+            .catch((err) => {
+                traceError(`Error while trying to run pytest discovery, \n${err}\r\n\r\n`);
+                this.testServer.deleteUUID(uuid);
+                return deferred.reject(err);
+            });
+        return deferred.promise;
     }
 }

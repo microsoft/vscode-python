@@ -5,7 +5,6 @@ import * as assert from 'assert';
 import { Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
-import { Observable } from 'rxjs/Observable';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestServer } from '../../../../client/testing/testController/common/types';
@@ -13,11 +12,9 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
     SpawnOptions,
-    Output,
 } from '../../../../client/common/process/types';
+import { createDeferred, Deferred } from '../../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { MockChildProcess } from '../../../mocks/mockChildProcess';
-import { Deferred, createDeferred } from '../../../../client/common/utils/async';
 
 suite('pytest test discovery adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -32,7 +29,6 @@ suite('pytest test discovery adapter', () => {
     let expectedPath: string;
     let uri: Uri;
     let expectedExtraVariables: Record<string, string>;
-    let mockProc: MockChildProcess;
 
     setup(() => {
         const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
@@ -70,46 +66,32 @@ suite('pytest test discovery adapter', () => {
             }),
         } as unknown) as IConfigurationService;
 
-        // set up exec service with child process
-        mockProc = new MockChildProcess('', ['']);
+        // set up exec factory
+        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(execService.object));
+
+        // set up exec service
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
-        const output = new Observable<Output<string>>(() => {
-            /* no op */
-        });
+        deferred = createDeferred();
         execService
-            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
+            .setup((x) => x.exec(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => {
+                deferred.resolve();
+                return Promise.resolve({ stdout: '{}' });
+            });
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
     });
     test('Discovery should call exec with correct basic args', async () => {
-        // set up exec mock
-        deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
-
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configService, outputChannel.object);
-        adapter.discoverTests(uri, execFactory.object);
-        // add in await and trigger
-        await deferred.promise;
-        mockProc.trigger('close');
-
-        // verification
+        await adapter.discoverTests(uri, execFactory.object);
         const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.'];
+
         execService.verify(
             (x) =>
-                x.execObservable(
+                x.exec(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.deepEqual(options.extraVariables, expectedExtraVariables);
@@ -126,34 +108,16 @@ suite('pytest test discovery adapter', () => {
         const expectedPathNew = path.join('other', 'path');
         const configServiceNew: IConfigurationService = ({
             getSettings: () => ({
-                testing: {
-                    pytestArgs: ['.', 'abc', 'xyz'],
-                    cwd: expectedPathNew,
-                },
+                testing: { pytestArgs: ['.', 'abc', 'xyz'], cwd: expectedPathNew },
             }),
         } as unknown) as IConfigurationService;
 
-        // set up exec mock
-        deferred = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
-
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
-        adapter.discoverTests(uri, execFactory.object);
-        // add in await and trigger
-        await deferred.promise;
-        mockProc.trigger('close');
-
-        // verification
+        await adapter.discoverTests(uri, execFactory.object);
         const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
         execService.verify(
             (x) =>
-                x.execObservable(
+                x.exec(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.deepEqual(options.extraVariables, expectedExtraVariables);

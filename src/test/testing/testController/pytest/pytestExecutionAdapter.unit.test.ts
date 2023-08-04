@@ -6,13 +6,11 @@ import { TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
-import { Observable } from 'rxjs/Observable';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { ITestServer } from '../../../../client/testing/testController/common/types';
 import {
     IPythonExecutionFactory,
     IPythonExecutionService,
-    Output,
     SpawnOptions,
 } from '../../../../client/common/process/types';
 import { createDeferred, Deferred } from '../../../../client/common/utils/async';
@@ -20,7 +18,6 @@ import { PytestTestExecutionAdapter } from '../../../../client/testing/testContr
 import { ITestDebugLauncher, LaunchOptions } from '../../../../client/testing/common/types';
 import * as util from '../../../../client/testing/testController/common/utils';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { MockChildProcess } from '../../../mocks/mockChildProcess';
 
 suite('pytest test execution adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -32,8 +29,8 @@ suite('pytest test execution adapter', () => {
     let debugLauncher: typeMoq.IMock<ITestDebugLauncher>;
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
-    let mockProc: MockChildProcess;
-    let utilsStub: sinon.SinonStub;
+    let startTestIdServerStub: sinon.SinonStub<any, any>;
+
     setup(() => {
         testServer = typeMoq.Mock.ofType<ITestServer>();
         testServer.setup((t) => t.getPort()).returns(() => 12345);
@@ -50,24 +47,8 @@ suite('pytest test execution adapter', () => {
             }),
             isTestExecution: () => false,
         } as unknown) as IConfigurationService;
-
-        // set up exec service with child process
-        mockProc = new MockChildProcess('', ['']);
-        const output = new Observable<Output<string>>(() => {
-            /* no op */
-        });
-        execService = typeMoq.Mock.ofType<IPythonExecutionService>();
-        execService
-            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        utilsStub = sinon.stub(util, 'startTestIdServer');
+        execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         debugLauncher = typeMoq.Mock.ofType<ITestDebugLauncher>();
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
@@ -85,6 +66,7 @@ suite('pytest test execution adapter', () => {
                 deferred.resolve();
                 return Promise.resolve();
             });
+        startTestIdServerStub = sinon.stub(util, 'startTestIdServer').returns(Promise.resolve(54321));
 
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
@@ -95,25 +77,10 @@ suite('pytest test execution adapter', () => {
         sinon.restore();
     });
     test('startTestIdServer called with correct testIds', async () => {
-        const deferred2 = createDeferred();
-        const deferred3 = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                deferred2.resolve();
-                return Promise.resolve(execService.object);
-            });
-        utilsStub.callsFake(() => {
-            deferred3.resolve();
-            return Promise.resolve(54321);
-        });
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
-            .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => ({
                 dispose: () => {
                     /* no-body */
@@ -121,38 +88,19 @@ suite('pytest test execution adapter', () => {
             }));
         testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
         adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
+
         const testIds = ['test1id', 'test2id'];
-        adapter.runTests(uri, testIds, false, testRun.object, execFactory.object);
+        await adapter.runTests(uri, testIds, false, testRun.object, execFactory.object);
 
-        // add in await and trigger
-        await deferred2.promise;
-        await deferred3.promise;
-        mockProc.trigger('close');
-
-        // assert
-        sinon.assert.calledWithExactly(utilsStub, testIds);
+        sinon.assert.calledWithExactly(startTestIdServerStub, testIds);
     });
     test('pytest execution called with correct args', async () => {
-        const deferred2 = createDeferred();
-        const deferred3 = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                deferred2.resolve();
-                return Promise.resolve(execService.object);
-            });
-        utilsStub.callsFake(() => {
-            deferred3.resolve();
-            return Promise.resolve(54321);
-        });
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
-            .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => ({
                 dispose: () => {
                     /* no-body */
@@ -160,12 +108,9 @@ suite('pytest test execution adapter', () => {
             }));
         testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
         adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
-        adapter.runTests(uri, [], false, testRun.object, execFactory.object);
-
-        await deferred2.promise;
-        await deferred3.promise;
-        mockProc.trigger('close');
+        await adapter.runTests(uri, [], false, testRun.object, execFactory.object);
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
@@ -178,7 +123,7 @@ suite('pytest test execution adapter', () => {
         //  execService.verify((x) => x.exec(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
         execService.verify(
             (x) =>
-                x.execObservable(
+                x.exec(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.equal(options.extraVariables?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
@@ -194,21 +139,6 @@ suite('pytest test execution adapter', () => {
         );
     });
     test('pytest execution respects settings.testing.cwd when present', async () => {
-        const deferred2 = createDeferred();
-        const deferred3 = createDeferred();
-        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        execFactory
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => {
-                deferred2.resolve();
-                return Promise.resolve(execService.object);
-            });
-        utilsStub.callsFake(() => {
-            deferred3.resolve();
-            return Promise.resolve(54321);
-        });
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const newCwd = path.join('new', 'path');
         configService = ({
             getSettings: () => ({
@@ -219,7 +149,7 @@ suite('pytest test execution adapter', () => {
         const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
-            .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => ({
                 dispose: () => {
                     /* no-body */
@@ -227,12 +157,9 @@ suite('pytest test execution adapter', () => {
             }));
         testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
         adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
-        adapter.runTests(uri, [], false, testRun.object, execFactory.object);
-
-        await deferred2.promise;
-        await deferred3.promise;
-        mockProc.trigger('close');
+        await adapter.runTests(uri, [], false, testRun.object, execFactory.object);
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
@@ -245,7 +172,7 @@ suite('pytest test execution adapter', () => {
 
         execService.verify(
             (x) =>
-                x.execObservable(
+                x.exec(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.equal(options.extraVariables?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
@@ -261,17 +188,10 @@ suite('pytest test execution adapter', () => {
         );
     });
     test('Debug launched correctly for pytest', async () => {
-        const deferred3 = createDeferred();
-        utilsStub.callsFake(() => {
-            deferred3.resolve();
-            return Promise.resolve(54321);
-        });
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
-            .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => ({
                 dispose: () => {
                     /* no-body */
@@ -279,9 +199,9 @@ suite('pytest test execution adapter', () => {
             }));
         testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
         adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
         await adapter.runTests(uri, [], true, testRun.object, execFactory.object, debugLauncher.object);
-        await deferred3.promise;
         debugLauncher.verify(
             (x) =>
                 x.launchDebugger(
