@@ -17,10 +17,13 @@ First we need to define a `package.json` for the extension that wants to use the
 	// Depend on the Python extension facade npm module to get easier API access to the
 	// core extension.
 	"dependencies": {
-		"@vscode/python-extension": "..."
+		"@vscode/python-extension": "...",
+        "@types/vscode": "..."
 	},
 }
 ```
+
+Update `"@types/vscode"` to [a recent version](https://code.visualstudio.com/updates/) of VS Code, say `"^1.81.0"` for VS Code version `"1.81"`, in case there are any conflicts.
 
 The actual source code to get the active environment to run some script could look like this:
 

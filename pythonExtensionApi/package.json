@@ -25,9 +25,6 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
-    "optionalDependencies": {
-        "@types/vscode": "^1.78.0"
-    },
     "devDependencies": {
         "typescript": "5.0.4",
         "@types/vscode": "^1.78.0"
