@@ -68,7 +68,7 @@ export class PythonResultResolver implements ITestResultResolver {
             // remove error node only if no errors exist.
             this.testController.items.delete(`DiscoveryError:${workspacePath}`);
         }
-        if (rawTestData.tests) {
+        if (rawTestData.tests || rawTestData.tests === null) {
             // if any tests exist, they should be populated in the test tree, regardless of whether there were errors or not.
             // parse and insert test data.
 

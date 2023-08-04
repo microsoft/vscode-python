@@ -1,7 +1,7 @@
 {
     "name": "@vscode/python-extension",
     "description": "An API facade for the Python extension in VS Code",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "author": {
       "name": "Microsoft Corporation"
     },
@@ -25,7 +25,7 @@
     "bugs": {
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
-    "peerDependencies": {
+    "optionalDependencies": {
         "@types/vscode": "^1.78.0"
     },
     "devDependencies": {

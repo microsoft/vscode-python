@@ -26,7 +26,6 @@ runs:
         cache-dependency-path: |
           build/test-requirements.txt
           requirements.txt
-          build/smoke-test-requirements.txt
 
     - name: Install dependencies (npm ci)
       run: npm ci --prefer-offline
@@ -41,11 +40,6 @@ runs:
       run: |
         python -m pip install --upgrade -r build/test-requirements.txt
         python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade --pre debugpy
-      shell: bash
-
-    - name: pip install smoke test requirements
-      run: |
-        python -m pip install --upgrade -r build/smoke-test-requirements.txt
       shell: bash
 
     # Bits from the VSIX are reused by smokeTest.ts to speed things up.

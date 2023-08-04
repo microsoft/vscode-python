@@ -29,7 +29,6 @@ source /workspaces/vscode-python/.venv/bin/activate
 npx gulp installPythonLibs
 
 /workspaces/vscode-python/.venv/bin/python -m pip install -r build/test-requirements.txt
-/workspaces/vscode-python/.venv/bin/python -m pip install -r build/smoke-test-requirements.txt
 /workspaces/vscode-python/.venv/bin/python -m pip install -r build/functional-test-requirements.txt
 
 # Below will crash codespace

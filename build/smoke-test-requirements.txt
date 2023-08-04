@@ -1,6 +1,0 @@
-# List of requirements for smoke tests (they will attempt to run a kernel)
-jupyter
-numpy
-matplotlib
-pandas
-livelossplot

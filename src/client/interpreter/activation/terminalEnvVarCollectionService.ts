@@ -33,6 +33,7 @@ import { defaultShells } from './service';
 import { IEnvironmentActivationService } from './types';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
+import { EnvironmentVariables } from '../../common/variables/types';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService {
@@ -45,7 +46,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private registeredOnce = false;
 
-    private previousEnvVars = _normCaseKeys(process.env);
+    /**
+     * Carries default environment variables for the currently selected shell.
+     */
+    private processEnvVars: EnvironmentVariables | undefined;
 
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -90,6 +94,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             this.applicationEnvironment.onDidChangeShell(
                 async (shell: string) => {
                     this.showProgress();
+                    this.processEnvVars = undefined;
                     // Pass in the shell where known instead of relying on the application environment, because of bug
                     // on VSCode: https://github.com/microsoft/vscode/issues/160694
                     await this._applyCollection(undefined, shell).ignoreErrors();
@@ -106,6 +111,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
+        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
+        // Clear any previously set env vars from collection.
+        envVarCollection.clear();
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
@@ -116,7 +124,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
-        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
@@ -126,32 +133,38 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            envVarCollection.clear();
-            this.previousEnvVars = _normCaseKeys(process.env);
+            this.processEnvVars = undefined;
             return;
         }
-        const previousEnv = this.previousEnvVars;
-        this.previousEnvVars = env;
+        if (!this.processEnvVars) {
+            this.processEnvVars = await this.environmentActivationService.getProcessEnvironmentVariables(
+                resource,
+                shell,
+            );
+        }
+        const processEnv = this.processEnvVars;
         Object.keys(env).forEach((key) => {
+            if (shouldSkip(key)) {
+                return;
+            }
             const value = env[key];
-            const prevValue = previousEnv[key];
+            const prevValue = processEnv[key];
             if (prevValue !== value) {
                 if (value !== undefined) {
+                    if (key === 'PS1') {
+                        traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
+                        envVarCollection.prepend(key, value, {
+                            applyAtShellIntegration: true,
+                            applyAtProcessCreation: false,
+                        });
+                        return;
+                    }
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
                     envVarCollection.replace(key, value, { applyAtShellIntegration: true });
-                } else {
-                    traceVerbose(`Clearing environment variable ${key} from collection`);
-                    envVarCollection.delete(key);
                 }
             }
         });
-        Object.keys(previousEnv).forEach((key) => {
-            // If the previous env var is not in the current env, clear it from collection.
-            if (!(key in env)) {
-                traceVerbose(`Clearing environment variable ${key} from collection`);
-                envVarCollection.delete(key);
-            }
-        });
+
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
@@ -224,13 +237,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 }
 
-export function _normCaseKeys(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
-    const result: NodeJS.ProcessEnv = {};
-    Object.keys(env).forEach((key) => {
-        // `os.environ` script used to get env vars normalizes keys to upper case:
-        // https://github.com/python/cpython/issues/101754
-        // So convert `process.env` keys to upper case to match.
-        result[key.toUpperCase()] = env[key];
-    });
-    return result;
+function shouldSkip(env: string) {
+    return ['_', 'SHLVL'].includes(env);
 }
