@@ -45,6 +45,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
+            disposable.dispose();
         });
 
         await this.callSendCommand(options, () => {

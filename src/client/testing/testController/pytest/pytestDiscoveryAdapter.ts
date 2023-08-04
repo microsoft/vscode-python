@@ -36,8 +36,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { pytestArgs } = settings.testing;
         traceVerbose(pytestArgs);
         const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
-            // cancelation token ?
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
+            disposable.dispose();
         });
         try {
             await this.runPytestDiscovery(uri, executionFactory);

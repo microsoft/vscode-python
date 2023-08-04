@@ -41,6 +41,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
+            disposedDataReceived.dispose();
         });
         const dispose = function () {
             disposedDataReceived.dispose();
