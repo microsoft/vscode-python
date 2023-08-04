@@ -191,7 +191,7 @@ suite('Terminal Environment Variable Collection Service', () => {
     });
 
     test('If activated variables contain PS1, prefix it using shell integration', async () => {
-        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env, PS1: '(prompt)' };
         when(
             environmentActivationService.getActivatedEnvironmentVariables(
                 anything(),
