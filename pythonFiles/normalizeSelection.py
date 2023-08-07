@@ -3,11 +3,18 @@
 
 import ast
 import json
+import os
+import pathlib
 import re
 import sys
 import textwrap
 
+script_dir = pathlib.Path('User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python')
+sys.path.append(os.fspath(script_dir))
+import debugpy
 
+debugpy.connect(5678)
+debugpy.breakpoint()
 def split_lines(source):
     """
     Split selection lines in a version-agnostic way.
@@ -125,6 +132,24 @@ def normalize_lines(selection):
 
     return source
 
+top_level_nodes = [] # collection of top level nodes
+
+class file_node_visitor(ast.NodeVisitor):
+    def visit_nodes(self, node):
+        top_level_nodes.append(node)
+        self.generic_visit(node)
+
+def traverse_file(wholeFileContent):
+    # use ast module to parse content of the file
+    parsed_file_content = ast.parse(wholeFileContent)
+    file_node_visitor().visit(parsed_file_content)
+
+    for node in ast.iter_child_nodes(parsed_file_content):
+        top_level_nodes.append(node)
+        line_start = node.lineno
+        line_end = node.end_lineno
+        code_of_node = ast.get_source
+        # ast.get_source_segment(wholeFileContent, node) This is way to get original code of the selected node
 
 if __name__ == "__main__":
     # Content is being sent from the extension as a JSON object.
@@ -134,7 +159,9 @@ if __name__ == "__main__":
     contents = json.loads(raw.decode("utf-8"))
 
     normalized = normalize_lines(contents["code"])
-
+    normalized_whole_file = normalize_lines(contents["wholeFileContent"])
+    traverse_file(contents["wholeFileContent"]) # traverse file
+    file_node_visitor().visit(ast.parse(contents["wholeFileContent"]))
     # Send the normalized code back to the extension in a JSON object.
     data = json.dumps({"normalized": normalized})
 

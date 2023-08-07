@@ -33,7 +33,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
 
-    public async normalizeLines(code: string, resource?: Uri): Promise<string> {
+    public async normalizeLines(code: string, wholeFileContent: string, resource?: Uri): Promise<string> {
         try {
             if (code.trim().length === 0) {
                 return '';
@@ -66,7 +66,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
-            const input = JSON.stringify({ code });
+            const input = JSON.stringify({ code, wholeFileContent });
             observable.proc?.stdin?.write(input);
             observable.proc?.stdin?.end();
 
@@ -110,6 +110,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
         const { selection } = textEditor;
         let code: string;
+        const wholeFileContent = textEditor.document.getText(); // This is a way to get the whole text content from the user
         if (selection.isEmpty) {
             code = textEditor.document.lineAt(selection.start.line).text;
         } else if (selection.isSingleLine) {
