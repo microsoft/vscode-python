@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import { IExtensionApi } from '../client/apiTypes';
+import { PythonExtension } from '../client/api/types';
 import { ProposedExtensionAPI } from '../client/proposedApiTypes';
 import { initialize } from './initialize';
 
 suite('Python API tests', () => {
-    let api: IExtensionApi & ProposedExtensionAPI;
+    let api: PythonExtension & ProposedExtensionAPI;
     suiteSetup(async () => {
         api = await initialize();
     });

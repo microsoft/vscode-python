@@ -17,6 +17,7 @@ import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis
 import { showErrorMessage } from '../../common/vscodeApis/windowApis';
 import { createDeferred } from '../../common/utils/async';
 import { pythonTestAdapterRewriteEnabled } from '../testController/common/utils';
+import { addPathToPythonpath } from './helpers';
 
 @injectable()
 export class DebugLauncher implements ITestDebugLauncher {
@@ -223,8 +224,19 @@ export class DebugLauncher implements ITestDebugLauncher {
                     `Missing value for debug setup, both port and uuid need to be defined. port: "${options.pytestPort}" uuid: "${options.pytestUUID}"`,
                 );
             }
-            const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
-            launchArgs.env.PYTHONPATH = pluginPath;
+        }
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        // check if PYTHONPATH is already set in the environment variables
+        if (launchArgs.env) {
+            const additionalPythonPath = [pluginPath];
+            if (launchArgs.cwd) {
+                additionalPythonPath.push(launchArgs.cwd);
+            } else if (options.cwd) {
+                additionalPythonPath.push(options.cwd);
+            }
+            // add the plugin path or cwd to PYTHONPATH if it is not already there using the following function
+            // this function will handle if PYTHONPATH is undefined
+            addPathToPythonpath(additionalPythonPath, launchArgs.env.PYTHONPATH);
         }
 
         // Clear out purpose so we can detect if the configuration was used to

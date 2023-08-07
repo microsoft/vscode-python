@@ -7,7 +7,7 @@ import * as path from 'path';
 import { uniq } from 'lodash';
 import { getSearchPathEntries } from '../../common/utils/exec';
 import { resolveSymbolicLink } from './externalDependencies';
-import { traceError, traceInfo } from '../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../logging';
 
 /**
  * Determine if the given filename looks like the simplest Python executable.
@@ -123,6 +123,7 @@ export async function getPythonBinFromPosixPaths(searchDirs: string[]): Promise<
             // Ensure that we have a collection of unique global binaries by
             // resolving all symlinks to the target binaries.
             try {
+                traceVerbose(`Attempting to resolve symbolic link: ${filepath}`);
                 const resolvedBin = await resolveSymbolicLink(filepath);
                 if (binToLinkMap.has(resolvedBin)) {
                     binToLinkMap.get(resolvedBin)?.push(filepath);

@@ -117,7 +117,7 @@ export class LspInteractiveWindowMiddlewareAddon implements Middleware, Disposab
     }
 
     private static _asTextContentChange(event: TextDocumentChangeEvent, c2pConverter: Converter): TextContent {
-        const params = c2pConverter.asChangeTextDocumentParams(event);
+        const params = c2pConverter.asChangeTextDocumentParams(event, event.document.uri, event.document.version);
         return { document: params.textDocument, changes: params.contentChanges };
     }
 

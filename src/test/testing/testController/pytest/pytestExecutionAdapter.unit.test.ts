@@ -138,6 +138,55 @@ suite('pytest test execution adapter', () => {
             typeMoq.Times.once(),
         );
     });
+    test('pytest execution respects settings.testing.cwd when present', async () => {
+        const newCwd = path.join('new', 'path');
+        configService = ({
+            getSettings: () => ({
+                testing: { pytestArgs: ['.'], cwd: newCwd },
+            }),
+            isTestExecution: () => false,
+        } as unknown) as IConfigurationService;
+        const uri = Uri.file(myTestPath);
+        const uuid = 'uuid123';
+        testServer
+            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => ({
+                dispose: () => {
+                    /* no-body */
+                },
+            }));
+        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
+        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        adapter = new PytestTestExecutionAdapter(testServer.object, configService, outputChannel.object);
+        await adapter.runTests(uri, [], false, testRun.object, execFactory.object);
+
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
+        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath];
+        const expectedExtraVariables = {
+            PYTHONPATH: pathToPythonFiles,
+            TEST_UUID: 'uuid123',
+            TEST_PORT: '12345',
+        };
+
+        execService.verify(
+            (x) =>
+                x.exec(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        assert.equal(options.extraVariables?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
+                        assert.equal(options.extraVariables?.TEST_UUID, expectedExtraVariables.TEST_UUID);
+                        assert.equal(options.extraVariables?.TEST_PORT, expectedExtraVariables.TEST_PORT);
+                        assert.equal(options.extraVariables?.RUN_TEST_IDS_PORT, '54321');
+                        assert.equal(options.cwd, newCwd);
+                        assert.equal(options.throwOnStdErr, true);
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
     test('Debug launched correctly for pytest', async () => {
         const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';

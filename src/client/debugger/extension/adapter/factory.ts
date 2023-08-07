@@ -203,6 +203,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @memberof DebugAdapterDescriptorFactory
      */
     private async notifySelectInterpreter() {
-        await showErrorMessage(l10n.t('Please install Python or select a Python Interpreter to use the debugger.'));
+        await showErrorMessage(l10n.t('Install Python or select a Python Interpreter to use the debugger.'));
     }
 }

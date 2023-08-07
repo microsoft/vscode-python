@@ -60,11 +60,11 @@ def get_source_line(obj) -> str:
     """Get the line number of a test case start line."""
     try:
         sourcelines, lineno = inspect.getsourcelines(obj)
-    except:
+    except Exception:
         try:
             # tornado-specific, see https://github.com/microsoft/vscode-python/issues/17285.
             sourcelines, lineno = inspect.getsourcelines(obj.orig_method)
-        except:
+        except Exception:
             return "*"
 
     # Return the line number of the first line of the test case definition.
@@ -151,14 +151,22 @@ def build_test_tree(
         "id_": <test_directory path>
     }
     """
-    errors = []
+    error = []
     directory_path = pathlib.PurePath(test_directory)
     root = build_test_node(test_directory, directory_path.name, TestNodeTypeEnum.folder)
 
     for test_case in get_test_case(suite):
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            errors.append(str(test_case._exception))  # type: ignore
+            error.append(str(test_case._exception))  # type: ignore
+        elif test_id.startswith("unittest.loader.ModuleSkipped"):
+            components = test_id.split(".")
+            class_name = f"{components[-1]}.py"
+            # Find/build class node.
+            file_path = os.fsdecode(os.path.join(directory_path, class_name))
+            current_node = get_child_node(
+                class_name, file_path, TestNodeTypeEnum.file, root
+            )
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")
@@ -206,7 +214,7 @@ def build_test_tree(
     if not root["children"]:
         root = None
 
-    return root, errors
+    return root, error
 
 
 def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
@@ -218,7 +226,8 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
     The returned tuple contains the following items
     - start_directory: The directory where to start discovery, defaults to .
     - pattern: The pattern to match test files, defaults to test*.py
-    - top_level_directory: The top-level directory of the project, defaults to None, and unittest will use start_directory behind the scenes.
+    - top_level_directory: The top-level directory of the project, defaults to None,
+      and unittest will use start_directory behind the scenes.
     """
 
     arg_parser = argparse.ArgumentParser()

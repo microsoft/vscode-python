@@ -20,6 +20,7 @@ export class ActiveStateLocator extends LazyResourceBasedLocator {
             traceVerbose(`Couldn't locate the state binary.`);
             return;
         }
+        traceVerbose(`Searching for active state environments`);
         const projects = await state.getProjects();
         if (projects === undefined) {
             traceVerbose(`Couldn't fetch State Tool projects.`);

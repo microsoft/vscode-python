@@ -15,17 +15,10 @@ jobs:
   lock-issues:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Actions
-        uses: actions/checkout@v3
-        with:
-          repository: 'microsoft/vscode-github-triage-actions'
-          ref: stable
-          path: ./actions
-
-      - name: Install Actions
-        run: npm install --production --prefix ./actions
-
       - name: 'Lock Issues'
-        uses: ./actions/python-lock-issues
+        uses: dessant/lock-threads@v4
         with:
-          token: ${{ github.token }}
+          github-token: ${{ github.token }}
+          issue-inactive-days: '30'
+          process-only: 'issues'
+          log-output: true

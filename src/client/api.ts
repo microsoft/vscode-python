@@ -4,20 +4,18 @@
 
 'use strict';
 
-import { noop } from 'lodash';
 import { Uri, Event } from 'vscode';
 import { BaseLanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/node';
 import { PYLANCE_NAME } from './activation/node/languageClientFactory';
 import { ILanguageServerOutputChannel } from './activation/types';
-import { IExtensionApi } from './apiTypes';
+import { PythonExtension } from './api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
-import { IDataViewerDataProvider, IJupyterUriProvider } from './jupyter/types';
 import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
@@ -29,14 +27,21 @@ export function buildApi(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer,
     discoveryApi: IDiscoveryAPI,
-): IExtensionApi {
+): PythonExtension {
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
     const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
 
-    const api: IExtensionApi & {
+    const api: PythonExtension & {
+        /**
+         * Internal API just for Jupyter, hence don't include in the official types.
+         */
+        jupyter: {
+            registerHooks(): void;
+        };
+    } & {
         /**
          * @deprecated Temporarily exposed for Pylance until we expose this API generally. Will be removed in an
          * iteration or two.
@@ -44,7 +49,7 @@ export function buildApi(
         pylance: ApiForPylance;
     } & {
         /**
-         * @deprecated Use IExtensionApi.environments API instead.
+         * @deprecated Use PythonExtension.environments API instead.
          *
          * Return internal settings within the extension which are stored in VSCode storage
          */
@@ -110,16 +115,6 @@ export function buildApi(
                 // If pythonPath equals an empty string, no interpreter is set.
                 return { execCommand: pythonPath === '' ? undefined : [pythonPath] };
             },
-        },
-        // These are for backwards compatibility. Other extensions are using these APIs and we don't want
-        // to force them to move to the jupyter extension ... yet.
-        datascience: {
-            registerRemoteServerProvider: jupyterIntegration
-                ? jupyterIntegration.registerRemoteServerProvider.bind(jupyterIntegration)
-                : ((noop as unknown) as (serverProvider: IJupyterUriProvider) => void),
-            showDataViewer: jupyterIntegration
-                ? jupyterIntegration.showDataViewer.bind(jupyterIntegration)
-                : ((noop as unknown) as (dataProvider: IDataViewerDataProvider, title: string) => Promise<void>),
         },
         pylance: {
             createClient: (...args: any[]): BaseLanguageClient => {

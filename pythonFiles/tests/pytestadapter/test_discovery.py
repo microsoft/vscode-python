@@ -10,6 +10,36 @@ from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, runner
 
 
+def test_import_error(tmp_path):
+    """Test pytest discovery on a file that has a pytest marker but does not import pytest.
+
+    Copies the contents of a .txt file to a .py file in the temporary directory
+    to then run pytest discovery on.
+
+    The json should still be returned but the errors list should be present.
+
+    Keyword arguments:
+    tmp_path -- pytest fixture that creates a temporary directory.
+    """
+    # Saving some files as .txt to avoid that file displaying a syntax error for
+    # the extension as a whole. Instead, rename it before running this test
+    # in order to test the error handling.
+    file_path = TEST_DATA_PATH / "error_pytest_import.txt"
+    temp_dir = tmp_path / "temp_data"
+    temp_dir.mkdir()
+    p = temp_dir / "error_pytest_import.py"
+    shutil.copyfile(file_path, p)
+    actual_list: Optional[List[Dict[str, Any]]] = runner(
+        ["--collect-only", os.fspath(p)]
+    )
+    assert actual_list
+    for actual in actual_list:
+        assert all(item in actual for item in ("status", "cwd", "error"))
+        assert actual["status"] == "error"
+        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
+        assert len(actual["error"]) == 2
+
+
 def test_syntax_error(tmp_path):
     """Test pytest discovery on a file that has a syntax error.
 
@@ -29,11 +59,10 @@ def test_syntax_error(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
-    actual_list: Optional[List[Dict[str, Any]]] = runner(
-        ["--collect-only", os.fspath(p)]
-    )
-    assert actual_list
-    for actual in actual_list:
+    actual = runner(["--collect-only", os.fspath(p)])
+    if actual:
+        actual = actual[0]
+        assert actual
         assert all(item in actual for item in ("status", "cwd", "error"))
         assert actual["status"] == "error"
         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
@@ -46,11 +75,9 @@ def test_parameterized_error_collect():
     The json should still be returned but the errors list should be present.
     """
     file_path_str = "error_parametrize_discovery.py"
-    actual_list: Optional[List[Dict[str, Any]]] = runner(
-        ["--collect-only", file_path_str]
-    )
-    assert actual_list
-    for actual in actual_list:
+    actual = runner(["--collect-only", file_path_str])
+    if actual:
+        actual = actual[0]
         assert all(item in actual for item in ("status", "cwd", "error"))
         assert actual["status"] == "error"
         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
@@ -60,6 +87,14 @@ def test_parameterized_error_collect():
 @pytest.mark.parametrize(
     "file, expected_const",
     [
+        (
+            "unittest_skiptest_file_level.py",
+            expected_discovery_test_output.unittest_skip_file_level_expected_output,
+        ),
+        (
+            "param_same_name",
+            expected_discovery_test_output.param_same_name_expected_output,
+        ),
         (
             "parametrize_tests.py",
             expected_discovery_test_output.parametrize_tests_expected_output,
@@ -105,14 +140,15 @@ def test_pytest_collect(file, expected_const):
     file -- a string with the file or folder to run pytest discovery on.
     expected_const -- the expected output from running pytest discovery on the file.
     """
-    actual_list: Optional[List[Dict[str, Any]]] = runner(
+    actual = runner(
         [
             "--collect-only",
             os.fspath(TEST_DATA_PATH / file),
         ]
     )
-    assert actual_list
-    for actual in actual_list:
+    if actual:
+        actual = actual[0]
+        assert actual
         assert all(item in actual for item in ("status", "cwd", "tests"))
         assert actual["status"] == "success"
         assert actual["cwd"] == os.fspath(TEST_DATA_PATH)

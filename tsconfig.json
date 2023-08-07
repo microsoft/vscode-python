@@ -38,6 +38,7 @@
         "src/smoke",
         "build",
         "out",
-        "tmp"
+        "tmp",
+        "pythonExtensionApi"
     ]
 }

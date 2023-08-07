@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IDebugService } from '../../../common/application/types';
-import { DebugConfiguration, DebugSession, l10n, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, DebugSession, l10n, WorkspaceFolder, DebugSessionOptions } from 'vscode';
 import { noop } from '../../../common/utils/misc';
 import { captureTelemetry } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
@@ -28,11 +28,17 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
     public async attach(data: AttachRequestArguments & DebugConfiguration, parentSession: DebugSession): Promise<void> {
         const debugConfig: AttachRequestArguments & DebugConfiguration = data;
-        const processId = debugConfig.subProcessId!;
         const folder = this.getRelatedWorkspaceFolder(debugConfig);
-        const launched = await this.debugService.startDebugging(folder, debugConfig, parentSession);
+        const debugSessionOption: DebugSessionOptions = {
+            parentSession: parentSession,
+            lifecycleManagedByParent: true,
+        };
+        const launched = await this.debugService.startDebugging(folder, debugConfig, debugSessionOption);
         if (!launched) {
-            showErrorMessage(l10n.t('Failed to launch debugger for child process {0}', processId)).then(noop, noop);
+            showErrorMessage(l10n.t('Failed to launch debugger for child process {0}', debugConfig.subProcessId!)).then(
+                noop,
+                noop,
+            );
         }
     }
 

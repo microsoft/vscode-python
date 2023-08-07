@@ -25,7 +25,7 @@ import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExe
 import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
 import * as sinon from 'sinon';
-import assert from 'assert';
+import { assert } from 'chai';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
@@ -390,6 +390,7 @@ suite('Terminal - Code Execution', () => {
                 const env = await createCondaEnv(condaEnv, procService.object, fileSystem.object);
                 if (!env) {
                     assert(false, 'Should not be undefined for conda version 4.9.0');
+                    return;
                 }
                 const procs = createPythonProcessService(procService.object, env);
                 const condaExecutionService = {
@@ -509,6 +510,7 @@ suite('Terminal - Code Execution', () => {
                 const env = await createCondaEnv(condaEnv, procService.object, fileSystem.object);
                 if (!env) {
                     assert(false, 'Should not be undefined for conda version 4.9.0');
+                    return;
                 }
                 const procs = createPythonProcessService(procService.object, env);
                 const condaExecutionService = {
@@ -648,6 +650,31 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(async (t) => t.sendText('cmd1'), TypeMoq.Times.once());
 
                 await executor.execute('cmd2');
+                terminalService.verify(async (t) => t.sendText('cmd2'), TypeMoq.Times.once());
+            });
+
+            test('Ensure code is sent to the same terminal for a particular resource', async () => {
+                const resource = Uri.file('a');
+                terminalFactory.reset();
+                terminalFactory
+                    .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
+                    .callback((options: TerminalCreationOptions) => {
+                        assert.deepEqual(options.resource, resource);
+                    })
+                    .returns(() => terminalService.object);
+
+                const pythonPath = 'usr/bin/python1234';
+                const terminalArgs = ['-a', 'b', 'c'];
+                platform.setup((p) => p.isWindows).returns(() => false);
+                interpreterService
+                    .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
+
+                await executor.execute('cmd1', resource);
+                terminalService.verify(async (t) => t.sendText('cmd1'), TypeMoq.Times.once());
+
+                await executor.execute('cmd2', resource);
                 terminalService.verify(async (t) => t.sendText('cmd2'), TypeMoq.Times.once());
             });
         });

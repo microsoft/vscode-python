@@ -215,6 +215,9 @@ suite('Unit Tests - Debug Launcher', () => {
         if (!expected.cwd) {
             expected.cwd = workspaceFolders[0].uri.fsPath;
         }
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pythonPath = `${pluginPath}${path.delimiter}${expected.cwd}`;
+        expected.env.PYTHONPATH = pythonPath;
 
         // added by LaunchConfigurationResolver:
         if (!expected.python) {
@@ -342,6 +345,10 @@ suite('Unit Tests - Debug Launcher', () => {
         };
         const expected = getDefaultDebugConfig();
         expected.cwd = 'path/to/settings/cwd';
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pythonPath = `${pluginPath}${path.delimiter}${expected.cwd}`;
+        expected.env.PYTHONPATH = pythonPath;
+
         setupSuccess(options, 'unittest', expected);
         await debugLauncher.launchDebugger(options);
 
@@ -366,6 +373,7 @@ suite('Unit Tests - Debug Launcher', () => {
             console: 'integratedTerminal',
             cwd: 'some/dir',
             env: {
+                PYTHONPATH: 'one/two/three',
                 SPAM: 'EGGS',
             },
             envFile: 'some/dir/.env',

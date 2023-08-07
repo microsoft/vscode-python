@@ -1,6 +1,6 @@
 All dates should align with VS Code's [iteration](https://github.com/microsoft/vscode/labels/iteration-plan) and [endgame](https://github.com/microsoft/vscode/labels/endgame-plan) plans.
 
-Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX.
+Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commits to `main` should only be in response to bugs found during endgame testing until the release candidate is ready.
 
 
 NOTE: the number of this release is in the issue title and can be substituted in wherever you see [YYYY.minor].
@@ -51,6 +51,7 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 -   [ ] Manually add/fix any 3rd-party licenses as appropriate based on what the internal build pipeline detects.
 -   [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython).
 -   [ ] Contact the PM team to begin drafting a blog post.
+-   [ ] Announce to the development team that `main` is open again.
 
 
 # Release (Wednesday, XXX XX)

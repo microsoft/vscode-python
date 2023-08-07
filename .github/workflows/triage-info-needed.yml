@@ -5,7 +5,7 @@ on:
     types: [created]
 
 env:
-  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon"]'
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon","anthonykim1"]'
 
 jobs:
   add_label:

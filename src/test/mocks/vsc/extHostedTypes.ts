@@ -775,7 +775,7 @@ export class SnippetString {
             this._tabstop = nested._tabstop;
             defaultValue = nested.value;
         } else if (typeof defaultValue === 'string') {
-            defaultValue = defaultValue.replace(/\$|}/g, '\\$&');
+            defaultValue = defaultValue.replace(/\$|}/g, '\\$&'); // CodeQL [SM02383] don't escape backslashes here (by design)
         }
 
         this.value += '${';

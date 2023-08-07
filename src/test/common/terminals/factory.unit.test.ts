@@ -105,7 +105,7 @@ suite('Terminal Service Factory', () => {
         expect(notSameAsThirdInstance).to.not.equal(true, 'Instances are the same');
     });
 
-    test('Ensure same terminal is returned when using resources from the same workspace', () => {
+    test('Ensure same terminal is returned when using different resources from the same workspace', () => {
         const file1A = Uri.file('1a');
         const file2A = Uri.file('2a');
         const fileB = Uri.file('b');
@@ -132,6 +132,51 @@ suite('Terminal Service Factory', () => {
 
         const terminalsAreSameForWorkspaceA = terminalForFile1A.terminalService === terminalForFile2A.terminalService;
         expect(terminalsAreSameForWorkspaceA).to.equal(true, 'Instances are not the same for Workspace A');
+
+        const terminalsForWorkspaceABAreDifferent =
+            terminalForFile1A.terminalService === terminalForFileB.terminalService;
+        expect(terminalsForWorkspaceABAreDifferent).to.equal(
+            false,
+            'Instances should be different for different workspaces',
+        );
+    });
+
+    test('When `newTerminalPerFile` is true, ensure different terminal is returned when using different resources from the same workspace', () => {
+        const file1A = Uri.file('1a');
+        const file2A = Uri.file('2a');
+        const fileB = Uri.file('b');
+        const workspaceUriA = Uri.file('A');
+        const workspaceUriB = Uri.file('B');
+        const workspaceFolderA = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        workspaceFolderA.setup((w) => w.uri).returns(() => workspaceUriA);
+        const workspaceFolderB = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        workspaceFolderB.setup((w) => w.uri).returns(() => workspaceUriB);
+
+        workspaceService
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(file1A)))
+            .returns(() => workspaceFolderA.object);
+        workspaceService
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(file2A)))
+            .returns(() => workspaceFolderA.object);
+        workspaceService
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB)))
+            .returns(() => workspaceFolderB.object);
+
+        const terminalForFile1A = factory.getTerminalService({
+            resource: file1A,
+            newTerminalPerFile: true,
+        }) as SynchronousTerminalService;
+        const terminalForFile2A = factory.getTerminalService({
+            resource: file2A,
+            newTerminalPerFile: true,
+        }) as SynchronousTerminalService;
+        const terminalForFileB = factory.getTerminalService({
+            resource: fileB,
+            newTerminalPerFile: true,
+        }) as SynchronousTerminalService;
+
+        const terminalsAreSameForWorkspaceA = terminalForFile1A.terminalService === terminalForFile2A.terminalService;
+        expect(terminalsAreSameForWorkspaceA).to.equal(false, 'Instances are the same for Workspace A');
 
         const terminalsForWorkspaceABAreDifferent =
             terminalForFile1A.terminalService === terminalForFileB.terminalService;

@@ -14,6 +14,7 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     // eslint-disable-next-line class-methods-use-this
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* () {
+            traceVerbose('Searching for windows registry interpreters');
             const interpreters = await getRegistryInterpreters();
             for (const interpreter of interpreters) {
                 try {

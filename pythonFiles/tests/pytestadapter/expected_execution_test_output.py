@@ -5,7 +5,9 @@ TEST_SUBTRACT_FUNCTION = "unittest_folder/test_subtract.py::TestSubtractFunction
 TEST_ADD_FUNCTION = "unittest_folder/test_add.py::TestAddFunction::"
 SUCCESS = "success"
 FAILURE = "failure"
-TEST_SUBTRACT_FUNCTION_NEGATIVE_NUMBERS_ERROR = "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError"
+
+TEST_SUBTRACT_FUNCTION_NEGATIVE_NUMBERS_ERROR = "self = <test_subtract.TestSubtractFunction testMethod=test_subtract_negative_numbers>\n\n    def test_subtract_negative_numbers(  # test_marker--test_subtract_negative_numbers\n        self,\n    ):\n        result = subtract(-2, -3)\n>       self.assertEqual(result, 100000)\nE       AssertionError: 1 != 100000\n\nunittest_folder/test_subtract.py:25: AssertionError"  # noqa: E501
+
 
 # This is the expected output for the unittest_folder execute tests
 # └── unittest_folder
@@ -149,6 +151,74 @@ unit_pytest_same_file_execution_expected_output = {
         "subtest": None,
     },
 }
+
+# This is the expected output for the error_raised_exception.py file.
+# └── error_raise_exception.py
+#   ├── TestSomething
+#   │   └── test_a: failure
+error_raised_exception_execution_expected_output = {
+    "error_raise_exception.py::TestSomething::test_a": {
+        "test": "error_raise_exception.py::TestSomething::test_a",
+        "outcome": "error",
+        "message": "ERROR MESSAGE",
+        "traceback": "TRACEBACK",
+        "subtest": None,
+    }
+}
+
+# This is the expected output for the skip_tests.py file.
+# └── test_something: success
+# └── test_another_thing: skipped
+# └── test_decorator_thing: skipped
+# └── test_decorator_thing_2: skipped
+# ├── TestClass
+# │   └── test_class_function_a: skipped
+# │   └── test_class_function_b: skipped
+skip_tests_execution_expected_output = {
+    "skip_tests.py::test_something": {
+        "test": "skip_tests.py::test_something",
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::test_another_thing": {
+        "test": "skip_tests.py::test_another_thing",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::test_decorator_thing": {
+        "test": "skip_tests.py::test_decorator_thing",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::test_decorator_thing_2": {
+        "test": "skip_tests.py::test_decorator_thing_2",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::TestClass::test_class_function_a": {
+        "test": "skip_tests.py::TestClass::test_class_function_a",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    "skip_tests.py::TestClass::test_class_function_b": {
+        "test": "skip_tests.py::TestClass::test_class_function_b",
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
 
 # This is the expected output for the dual_level_nested_folder.py tests
 #  └── dual_level_nested_folder

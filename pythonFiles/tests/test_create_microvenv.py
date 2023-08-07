@@ -6,7 +6,6 @@ import os
 import sys
 
 import create_microvenv
-import pytest
 
 
 def test_create_microvenv():
@@ -26,4 +25,4 @@ def test_create_microvenv():
     create_microvenv.run_process = run_process
 
     create_microvenv.main()
-    assert run_process_called == True
+    assert run_process_called is True

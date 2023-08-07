@@ -285,7 +285,7 @@ export class MarkdownString {
         // escape markdown syntax tokens: http://daringfireball.net/projects/markdown/syntax#backslash
         this.value += (this.supportThemeIcons ? escapeCodicons(value) : value)
             .replace(/[\\`*_{}[\]()#+\-.!]/g, '\\$&')
-            .replace(/\n/, '\n\n');
+            .replace(/\n/g, '\n\n');
 
         return this;
     }

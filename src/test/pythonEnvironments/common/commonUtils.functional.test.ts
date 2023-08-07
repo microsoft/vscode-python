@@ -86,7 +86,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                           <python3.8>
                           python3 -> sub2/sub2.2/python3
                           python3.7 -> sub2/sub2.1/sub2.1.1/python
-                          python2.7 -> does-not-exist
                 `);
             }
         });
@@ -106,7 +105,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                               // These will match.
                               'python',
                               'python2',
-                              'python2.7',
                               'python3',
                               'python3.7',
                               'python3.8',
@@ -137,7 +135,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                               // These will match.
                               'python',
                               'python2',
-                              'python2.7',
                               'python3',
                               'python3.7',
                               'python3.8',
@@ -167,7 +164,6 @@ suite('pyenvs common utils - finding Python executables', () => {
                               // These will match.
                               'python',
                               'python2',
-                              'python2.7',
                               'python3',
                               'python3.7',
                               'python3.8',
