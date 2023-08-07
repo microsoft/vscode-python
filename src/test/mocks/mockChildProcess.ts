@@ -3,7 +3,7 @@
 import { Serializable, SendHandle, MessageOptions } from 'child_process';
 import { EventEmitter } from 'node:events';
 import { Writable, Readable, Pipe } from 'stream';
-import { MyReadableStream } from './helper';
+import { FakeReadableStream } from './helper';
 
 export class MockChildProcess extends EventEmitter {
     constructor(spawnfile: string, spawnargs: string[]) {
@@ -11,8 +11,8 @@ export class MockChildProcess extends EventEmitter {
         this.spawnfile = spawnfile;
         this.spawnargs = spawnargs;
         this.stdin = new Writable();
-        this.stdout = new MyReadableStream();
-        this.stderr = new MyReadableStream();
+        this.stdout = new FakeReadableStream();
+        this.stderr = new FakeReadableStream();
         this.channel = null;
         this.stdio = [this.stdin, this.stdout, this.stdout, this.stderr, null];
         this.killed = false;

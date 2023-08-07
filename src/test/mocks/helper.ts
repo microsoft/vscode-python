@@ -3,7 +3,7 @@
 
 import { Readable } from 'stream';
 
-export class MyReadableStream extends Readable {
+export class FakeReadableStream extends Readable {
     _read(_size: unknown): void | null {
         // custom reading logic here
         this.push(null); // end the stream
