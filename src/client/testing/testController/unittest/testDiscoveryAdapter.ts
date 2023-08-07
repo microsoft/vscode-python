@@ -46,12 +46,11 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const disposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
         });
-        try {
-            await this.callSendCommand(options);
-        } finally {
+
+        await this.callSendCommand(options, () => {
             this.testServer.deleteUUID(uuid);
             disposable.dispose();
-        }
+        });
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
         const discoveryPayload: DiscoveredTestPayload = {
@@ -61,8 +60,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         return discoveryPayload;
     }
 
-    private async callSendCommand(options: TestCommandOptions): Promise<DiscoveredTestPayload> {
-        await this.testServer.sendCommand(options);
+    private async callSendCommand(options: TestCommandOptions, callback: () => void): Promise<DiscoveredTestPayload> {
+        await this.testServer.sendCommand(options, undefined, undefined, callback);
         const discoveryPayload: DiscoveredTestPayload = { cwd: '', status: 'success' };
         return discoveryPayload;
     }
