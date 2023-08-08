@@ -60,7 +60,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
-            this.context.environmentVariableCollection.clear();
+            const workspaceFolder = this.getWorkspaceFolder(resource);
+            this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
             await this.handleMicroVenv(resource);
             if (!this.registeredOnce) {
                 this.interpreterService.onDidChangeInterpreter(
@@ -153,7 +154,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         return;
                     }
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    envVarCollection.replace(key, value, { applyAtShellIntegration: true });
+                    envVarCollection.replace(key, value, {
+                        applyAtShellIntegration: true,
+                        applyAtProcessCreation: true,
+                    });
                 }
             }
         });
@@ -179,7 +183,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 return;
             }
         }
-        this.context.environmentVariableCollection.clear();
+        this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
     }
 
     private getWorkspaceFolder(resource: Resource): WorkspaceFolder | undefined {
