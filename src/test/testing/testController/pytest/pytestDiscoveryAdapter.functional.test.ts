@@ -1,29 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { TestController, WorkspaceFolder, tests } from 'vscode';
+import { WorkspaceFolder } from 'vscode';
+import * as typeMoq from 'typemoq';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import {
     ITestDiscoveryAdapter,
     ITestResultResolver,
     ITestServer,
 } from '../../../../client/testing/testController/common/types';
-import { PythonResultResolver } from '../../../../client/testing/testController/common/resultResolver';
 import { PythonTestServer } from '../../../../client/testing/testController/common/server';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IPythonExecutionFactory } from '../../../../client/common/process/types';
 import { ITestDebugLauncher } from '../../../../client/testing/common/types';
-import { PYTEST_PROVIDER } from '../../../../client/testing/common/constants';
-import { TestProvider } from '../../../../client/testing/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
-import { IS_SMOKE_TEST, initialize } from '../../../initialize';
+import { initialize } from '../../../initialize';
 
-suite('pytest test discovery adapter', () => {
-    let resultResolver: ITestResultResolver;
+suite('Functional Tests: pytest test discovery adapter ejfb', () => {
+    let resultResolver: typeMoq.IMock<ITestResultResolver>;
     let discoveryAdapter: ITestDiscoveryAdapter;
-    let testController: TestController;
-    let testProvider: TestProvider;
+    // let testController: TestController;
+    // let testProvider: TestProvider;
     let pythonTestServer: ITestServer;
     let pythonExecFactory: IPythonExecutionFactory;
     let debugLauncher: ITestDebugLauncher;
@@ -32,10 +30,10 @@ suite('pytest test discovery adapter', () => {
     let configService: IConfigurationService;
     let testOutputChannel: ITestOutputChannel;
     let serviceContainer: IServiceContainer;
-    suiteSetup(async function () {
-        if (!IS_SMOKE_TEST) {
-            this.skip();
-        }
+    suiteSetup(async () => {
+        // if (!IS_SMOKE_TEST) {
+        //     this.skip();
+        // }
         serviceContainer = (await initialize()).serviceContainer;
     });
 
@@ -50,19 +48,18 @@ suite('pytest test discovery adapter', () => {
         // create objects that were not injected
         const workspaces = workspaceService.workspaceFolders || [];
         [workspace] = workspaces; // usually this is a for-each loop but we know there will only be one workspace
-        testProvider = PYTEST_PROVIDER;
-        testController = tests.createTestController('python-tests', 'Python Tests');
+        // testProvider = PYTEST_PROVIDER;
+        // testController = tests.createTestController('python-tests', 'Python Tests');
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
-        resultResolver = new PythonResultResolver(testController, testProvider, workspace.uri);
-
+        resultResolver = typeMoq.Mock.ofType<ITestResultResolver>();
         discoveryAdapter = new PytestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
             testOutputChannel,
-            resultResolver,
+            resultResolver.object,
         );
     });
-    test('Discovery should call exec with correct basic args', async () => {
+    test('ejfb test', async () => {
         discoveryAdapter.discoverTests(workspace.uri, pythonExecFactory);
     });
 });
