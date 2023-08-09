@@ -106,7 +106,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
-        // Clear any previously set env vars from collection.
+        // Clear any previously set env vars from collection
         envVarCollection.clear();
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
