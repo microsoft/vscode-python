@@ -1147,6 +1147,21 @@
                     "scope": "machine",
                     "type": "string"
                 },
+                "python.missingPackage.severity":{
+                    "default": "Hint",
+                    "description": "%python.missingPackage.severity.description%",
+                    "enum": [
+                        "Error",
+                        "Hint",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource",
+                    "type": "string",
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "%python.pipenvPath.description%",

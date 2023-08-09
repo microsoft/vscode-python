@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 import pytest
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.parent / "installed_check.py"
 TEST_DATA = pathlib.Path(__file__).parent / "test_data"
@@ -29,7 +29,12 @@ def generate_file(base_file: pathlib.Path):
         os.unlink(str(fullpath))
 
 
-def run_on_file(file_path: pathlib.Path) -> List[Dict[str, Union[str, int]]]:
+def run_on_file(
+    file_path: pathlib.Path, severity: Optional[str] = None
+) -> List[Dict[str, Union[str, int]]]:
+    env = os.environ.copy()
+    if severity:
+        env["VSCODE_MISSING_PGK_SEVERITY"] = severity
     result = subprocess.run(
         [
             sys.executable,
@@ -39,6 +44,7 @@ def run_on_file(file_path: pathlib.Path) -> List[Dict[str, Union[str, int]]]:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         check=True,
+        env=env,
     )
     assert result.returncode == 0
     assert result.stderr == b""
@@ -88,3 +94,46 @@ def test_installed_check(test_name: str):
     with generate_file(base_file) as file_path:
         result = run_on_file(file_path)
         assert result == EXPECTED_DATA[test_name]
+
+
+EXPECTED_DATA2 = {
+    "missing-deps": [
+        {
+            "line": 6,
+            "character": 0,
+            "endLine": 6,
+            "endCharacter": 10,
+            "package": "flake8-csv",
+            "code": "not-installed",
+            "severity": 0,
+        },
+        {
+            "line": 10,
+            "character": 0,
+            "endLine": 10,
+            "endCharacter": 11,
+            "package": "levenshtein",
+            "code": "not-installed",
+            "severity": 0,
+        },
+    ],
+    "pyproject-missing-deps": [
+        {
+            "line": 8,
+            "character": 34,
+            "endLine": 8,
+            "endCharacter": 44,
+            "package": "flake8-csv",
+            "code": "not-installed",
+            "severity": 0,
+        }
+    ],
+}
+
+
+@pytest.mark.parametrize("test_name", EXPECTED_DATA2.keys())
+def test_with_severity(test_name: str):
+    base_file = TEST_DATA / f"{test_name}.data"
+    with generate_file(base_file) as file_path:
+        result = run_on_file(file_path, severity="0")
+        assert result == EXPECTED_DATA2[test_name]
