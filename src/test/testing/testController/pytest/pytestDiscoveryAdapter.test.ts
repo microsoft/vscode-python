@@ -15,6 +15,8 @@ import { IServiceContainer } from '../../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../../initialize';
 import { traceLog } from '../../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../../client/testing/testController/pytest/pytestExecutionAdapter';
+import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/testDiscoveryAdapter';
+import { UnittestTestExecutionAdapter } from '../../../../client/testing/testController/unittest/testExecutionAdapter';
 
 suite('Functional Tests: test adapters', () => {
     let resultResolver: typeMoq.IMock<ITestResultResolver>;
@@ -25,12 +27,22 @@ suite('Functional Tests: test adapters', () => {
     let testOutputChannel: ITestOutputChannel;
     let serviceContainer: IServiceContainer;
     let workspaceUri: Uri;
-    const rootPath = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testTestingRootWkspc');
+    const rootPathSmallWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'smallWorkspace',
+    );
+    const rootPathLargeWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'largeWorkspace',
+    );
     suiteSetup(async () => {
         // if (!IS_SMOKE_TEST) {
         //     this.skip();
         // }
-        console.error('suiteSetup');
         serviceContainer = (await initialize()).serviceContainer;
     });
 
@@ -44,16 +56,101 @@ suite('Functional Tests: test adapters', () => {
         // create mock resultResolver object
         resultResolver = typeMoq.Mock.ofType<ITestResultResolver>();
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPath);
-
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
         await pythonTestServer.serverReady();
     });
-    test('pytest discovery adapter', async () => {
+    test('unittest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
-        let actualData: { status: unknown; error: string | any[]; tests: unknown };
+        let actualData: {
+            status: unknown;
+            error: string | any[];
+            tests: unknown;
+        };
+        resultResolver
+            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveDiscovery ${data}`);
+                actualData = data;
+                return Promise.resolve();
+            });
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        // run pytest discovery
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+
+        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+            // verification after discovery is complete
+            resultResolver.verify(
+                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.once(),
+            );
+
+            // 1. Check the status is "success"
+            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+            // 2. Confirm no errors
+            assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+        });
+    });
+
+    test('unittest discovery adapter large workspace', async () => {
+        // result resolver and saved data for assertions
+        let actualData: {
+            status: unknown;
+            error: string | any[];
+            tests: unknown;
+        };
+        resultResolver
+            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveDiscovery ${data}`);
+                actualData = data;
+                return Promise.resolve();
+            });
+
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        // run pytest discovery
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathLargeWorkspace);
+
+        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+            // verification after discovery is complete
+            resultResolver.verify(
+                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.once(),
+            );
+
+            // 1. Check the status is "success"
+            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+            // 2. Confirm no errors
+            assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+        });
+    });
+    test('pytest discovery adapter small workspace', async () => {
+        // result resolver and saved data for assertions
+        let actualData: {
+            status: unknown;
+            error: string | any[];
+            tests: unknown;
+        };
         resultResolver
             .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
@@ -68,6 +165,10 @@ suite('Functional Tests: test adapters', () => {
             testOutputChannel,
             resultResolver.object,
         );
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
             resultResolver.verify(
@@ -83,7 +184,47 @@ suite('Functional Tests: test adapters', () => {
             assert.ok(actualData.tests, 'Expected tests to be present');
         });
     });
-    test('pytest execution adapter', async () => {
+    test('pytest discovery adapter large workspace', async () => {
+        // result resolver and saved data for assertions
+        let actualData: {
+            status: unknown;
+            error: string | any[];
+            tests: unknown;
+        };
+        resultResolver
+            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveDiscovery ${data}`);
+                actualData = data;
+                return Promise.resolve();
+            });
+        // run pytest discovery
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathLargeWorkspace);
+
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+            // verification after discovery is complete
+            resultResolver.verify(
+                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.once(),
+            );
+
+            // 1. Check the status is "success"
+            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+            // 2. Confirm no errors
+            assert.strictEqual(actualData.error.length, 0, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+        });
+    });
+    test('unittest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
             status: unknown;
@@ -97,17 +238,28 @@ suite('Functional Tests: test adapters', () => {
                 actualData = data;
                 return Promise.resolve();
             });
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
+        const executionAdapter = new UnittestTestExecutionAdapter(
             pythonTestServer,
             configService,
             testOutputChannel,
             resultResolver.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
         await executionAdapter
-            .runTests(workspaceUri, [`${rootPath}/test_simple.py::test_a`], false, testRun.object, pythonExecFactory)
+            .runTests(workspaceUri, ['test_simple.SimpleClass.test_simple_unit'], false, testRun.object)
             .finally(() => {
                 // verification after discovery is complete
                 resultResolver.verify(
@@ -122,5 +274,157 @@ suite('Functional Tests: test adapters', () => {
                 // 3. Confirm tests are found
                 assert.ok(actualData.result, 'Expected results to be present');
             });
+    });
+    test('unittest execution adapter large workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveExecution ${data}`);
+                // do the following asserts for each time resolveExecution is called, should be called once per test.
+                // 1. Check the status is "success"
+                assert.strictEqual(data.status, 'success', "Expected status to be 'success'");
+                // 2. Confirm no errors
+                assert.strictEqual(data.error, null, "Expected no errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(data.result, 'Expected results to be present');
+                return Promise.resolve();
+            });
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+
+        // run pytest execution
+        const executionAdapter = new UnittestTestExecutionAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        // ['test_parameterized_subtest.NumbersTest.test_even'];
+        await executionAdapter.runTests(workspaceUri, [], false, testRun.object).finally(() => {
+            // verification after discovery is complete
+            resultResolver.verify(
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.exactly(200),
+            );
+        });
+    });
+    test('pytest execution adapter small workspace', async () => {
+        // result resolver and saved data for assertions
+        let actualData: {
+            status: unknown;
+            error: string | any[];
+            result: unknown;
+        };
+        resultResolver
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveExecution ${data}`);
+                actualData = data;
+                return Promise.resolve();
+            });
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+
+        // run pytest execution
+        const executionAdapter = new PytestTestExecutionAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
+                false,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .finally(() => {
+                // verification after discovery is complete
+                resultResolver.verify(
+                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                    typeMoq.Times.once(),
+                );
+
+                // 1. Check the status is "success"
+                assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+                // 2. Confirm no errors
+                assert.strictEqual(actualData.error, null, "Expected no errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(actualData.result, 'Expected results to be present');
+            });
+    });
+    test('pytest execution adapter large workspace', async () => {
+        resultResolver
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveExecution ${data}`);
+                // do the following asserts for each time resolveExecution is called, should be called once per test.
+                // 1. Check the status is "success"
+                assert.strictEqual(data.status, 'success', "Expected status to be 'success'");
+                // 2. Confirm no errors
+                assert.strictEqual(data.error, null, "Expected no errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(data.result, 'Expected results to be present');
+                return Promise.resolve();
+            });
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathLargeWorkspace);
+
+        // generate list of test_ids
+        const testIds: string[] = [];
+
+        for (let i = 0; i < 200; i = i + 1) {
+            const testId = `${rootPathLargeWorkspace}/test_parameterized.py::test_odd_even[${i}]`;
+            testIds.push(testId);
+        }
+
+        // run pytest execution
+        const executionAdapter = new PytestTestExecutionAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
+            // resolve execution should be called 200 times since there are 200 tests run.
+            resultResolver.verify(
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.exactly(200),
+            );
+        });
     });
 });
