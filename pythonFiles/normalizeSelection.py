@@ -133,13 +133,15 @@ def normalize_lines(selection):
     return source
 
 top_level_nodes = [] # collection of top level nodes
-
+top_level_to_min_difference = {} # dictionary of top level nodes to difference in relative to given code block to run
+min_key = None
 class file_node_visitor(ast.NodeVisitor):
     def visit_nodes(self, node):
         top_level_nodes.append(node)
         self.generic_visit(node)
 
-def traverse_file(wholeFileContent):
+# Function that traverses the file and calculate the minimum viable top level block
+def traverse_file(wholeFileContent, start_line, end_line):
     # use ast module to parse content of the file
     parsed_file_content = ast.parse(wholeFileContent)
     file_node_visitor().visit(parsed_file_content)
@@ -148,8 +150,22 @@ def traverse_file(wholeFileContent):
         top_level_nodes.append(node)
         line_start = node.lineno
         line_end = node.end_lineno
-        code_of_node = ast.get_source
+        code_of_node = ast.get_source_segment(wholeFileContent, node)
         # ast.get_source_segment(wholeFileContent, node) This is way to get original code of the selected node
+
+    # With the given start_line and end_line number from VSCode,
+    # Calculate the absolute difference between each of the top level block and given code (via line number)
+    for top_node in top_level_nodes:
+        top_level_block_start_line = top_node.lineno
+        top_level_block_end_line = top_node.end_lineno
+        abs_difference = abs(start_line - top_level_block_start_line) + abs(end_line - top_level_block_end_line)
+        top_level_to_min_difference[top_node] = abs_difference
+
+    # get the minimum viable block node reference
+    min_key = min(top_level_to_min_difference, key=top_level_to_min_difference.get)
+    min_viable_code = ast.get_source_segment(wholeFileContent, min_key) # Minimum viable code
+    normalized_min_viable_code = normalize_lines(min_viable_code) # Normalized minimum viable code
+    return normalized_min_viable_code # return minimial viable code
 
 if __name__ == "__main__":
     # Content is being sent from the extension as a JSON object.
@@ -160,11 +176,17 @@ if __name__ == "__main__":
 
     normalized = normalize_lines(contents["code"])
     normalized_whole_file = normalize_lines(contents["wholeFileContent"])
-    traverse_file(contents["wholeFileContent"]) # traverse file
+
+    # we also get the activeEditor selection start line and end line from the typescript vscode side
+    # remember to add 1 to each of the received since vscode starts line counting from 0
+    vscode_start_line = contents["startLine"]
+    vscode_end_line = contents["endLine"]
+
+    temp = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line) # traverse file
     file_node_visitor().visit(ast.parse(contents["wholeFileContent"]))
     # Send the normalized code back to the extension in a JSON object.
-    data = json.dumps({"normalized": normalized})
-
+    # data = json.dumps({"normalized": normalized}) # This is how it used to be
+    data = json.dumps({"normalized": temp})
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
     stdout.close()

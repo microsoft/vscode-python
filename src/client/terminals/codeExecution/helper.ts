@@ -3,7 +3,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { l10n, Position, Range, TextEditor, Uri } from 'vscode';
+import { l10n, Position, Range, TextEditor, Uri, commands } from 'vscode';
 
 import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -42,6 +42,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
 
+            const activeEditor = this.documentManager.activeTextEditor;
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
 
@@ -66,7 +67,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
-            const input = JSON.stringify({ code, wholeFileContent });
+            const input = JSON.stringify({
+                code,
+                wholeFileContent,
+                startLine: activeEditor!.selection.start.line,
+                endLine: activeEditor!.selection.end.line,
+            });
             observable.proc?.stdin?.write(input);
             observable.proc?.stdin?.end();
 
@@ -118,6 +124,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         } else {
             code = getMultiLineSelectionText(textEditor);
         }
+        // commands.executeCommand('cursorMove', { to: 'down' }); // trial: move to the next line when you run?
         return code;
     }
 
