@@ -36,6 +36,13 @@ export function buildApi(
 
     const api: PythonExtension & {
         /**
+         * Internal API just for Jupyter, hence don't include in the official types.
+         */
+        jupyter: {
+            registerHooks(): void;
+        };
+    } & {
+        /**
          * @deprecated Temporarily exposed for Pylance until we expose this API generally. Will be removed in an
          * iteration or two.
          */

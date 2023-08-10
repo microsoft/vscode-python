@@ -5,8 +5,9 @@ import importlib
 import os
 import sys
 
-import create_venv
 import pytest
+
+import create_venv
 
 
 @pytest.mark.skipif(
@@ -35,7 +36,7 @@ def test_venv_not_installed_unix():
     create_venv.main(["--name", ".test_venv"])
 
     # run_process is called when the venv does not exist
-    assert run_process_called == True
+    assert run_process_called is True
 
 
 @pytest.mark.skipif(

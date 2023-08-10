@@ -17,8 +17,9 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import process_json_util, socket_manager
 from typing_extensions import NotRequired, TypeAlias, TypedDict
+
+from testing_tools import process_json_util, socket_manager
 from unittestadapter.utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
@@ -194,12 +195,12 @@ def run_tests(
         # Discover tests at path with the file name as a pattern (if any).
         loader = unittest.TestLoader()
 
-        args = {
+        args = {  # noqa: F841
             "start_dir": start_dir,
             "pattern": pattern,
             "top_level_dir": top_level_dir,
         }
-        suite = loader.discover(start_dir, pattern, top_level_dir)
+        suite = loader.discover(start_dir, pattern, top_level_dir)  # noqa: F841
 
         # Run tests.
         runner = unittest.TextTestRunner(resultclass=UnittestTestResult)

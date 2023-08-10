@@ -5,10 +5,10 @@
 
 import * as sinon from 'sinon';
 import { assert, expect } from 'chai';
-import { cloneDeep } from 'lodash';
 import { mock, instance, when, anything, verify, reset } from 'ts-mockito';
 import {
     EnvironmentVariableCollection,
+    EnvironmentVariableMutatorOptions,
     EnvironmentVariableScope,
     ProgressLocation,
     Uri,
@@ -31,10 +31,7 @@ import {
 import { Interpreters } from '../../../client/common/utils/localize';
 import { OSType, getOSType } from '../../../client/common/utils/platform';
 import { defaultShells } from '../../../client/interpreter/activation/service';
-import {
-    TerminalEnvVarCollectionService,
-    _normCaseKeys,
-} from '../../../client/interpreter/activation/terminalEnvVarCollectionService';
+import { TerminalEnvVarCollectionService } from '../../../client/interpreter/activation/terminalEnvVarCollectionService';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -89,11 +86,16 @@ suite('Terminal Environment Variable Collection Service', () => {
             })
             .thenResolve();
         environmentActivationService = mock<IEnvironmentActivationService>();
+        when(environmentActivationService.getProcessEnvironmentVariables(anything(), anything())).thenResolve(
+            process.env,
+        );
         configService = mock<IConfigurationService>();
         when(configService.getSettings(anything())).thenReturn(({
             terminal: { activateEnvironment: true },
             pythonPath: displayPath,
         } as unknown) as IPythonSettings);
+        when(collection.clear()).thenResolve();
+        when(scopedCollection.clear()).thenResolve();
         terminalEnvVarCollectionService = new TerminalEnvVarCollectionService(
             instance(platform),
             instance(interpreterService),
@@ -169,8 +171,7 @@ suite('Terminal Environment Variable Collection Service', () => {
     });
 
     test('If activated variables are returned for custom shell, apply it correctly to the collection', async () => {
-        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ..._normCaseKeys(process.env) };
-        delete envVars.PATH;
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
         when(
             environmentActivationService.getActivatedEnvironmentVariables(
                 anything(),
@@ -185,13 +186,37 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
+        verify(collection.clear()).once();
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(collection.delete('PATH')).once();
+    });
+
+    test('If activated variables contain PS1, prefix it using shell integration', async () => {
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env, PS1: '(prompt)' };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(
+                anything(),
+                undefined,
+                undefined,
+                customShell,
+            ),
+        ).thenResolve(envVars);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        let opts: EnvironmentVariableMutatorOptions | undefined;
+        when(collection.prepend('PS1', '(prompt)', anything())).thenCall((_, _v, o) => {
+            opts = o;
+        });
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
+
+        verify(collection.clear()).once();
+        verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
 
     test('Verify envs are not applied if env activation is disabled', async () => {
-        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ..._normCaseKeys(process.env) };
-        delete envVars.PATH;
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
         when(
             environmentActivationService.getActivatedEnvironmentVariables(
                 anything(),
@@ -211,13 +236,12 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
+        verify(collection.clear()).once();
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).never();
-        verify(collection.delete('PATH')).never();
     });
 
     test('Verify correct options are used when applying envs and setting description', async () => {
-        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ..._normCaseKeys(process.env) };
-        delete envVars.PATH;
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
         const resource = Uri.file('a');
         const workspaceFolder: WorkspaceFolder = {
             uri: Uri.file('workspacePath'),
@@ -233,51 +257,11 @@ suite('Terminal Environment Variable Collection Service', () => {
             assert.deepEqual(options, { applyAtShellIntegration: true });
             return Promise.resolve();
         });
-        when(scopedCollection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(resource, customShell);
 
+        verify(scopedCollection.clear()).once();
         verify(scopedCollection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(scopedCollection.delete('PATH')).once();
-    });
-
-    test('Only relative changes to previously applied variables are applied to the collection', async () => {
-        const envVars: NodeJS.ProcessEnv = {
-            RANDOM_VAR: 'random',
-            CONDA_PREFIX: 'prefix/to/conda',
-            ..._normCaseKeys(process.env),
-        };
-        when(
-            environmentActivationService.getActivatedEnvironmentVariables(
-                anything(),
-                undefined,
-                undefined,
-                customShell,
-            ),
-        ).thenResolve(envVars);
-
-        when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything())).thenResolve();
-
-        await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
-
-        const newEnvVars = cloneDeep(envVars);
-        delete newEnvVars.CONDA_PREFIX;
-        newEnvVars.RANDOM_VAR = undefined; // Deleting the variable from the collection is the same as setting it to undefined.
-        reset(environmentActivationService);
-        when(
-            environmentActivationService.getActivatedEnvironmentVariables(
-                anything(),
-                undefined,
-                undefined,
-                customShell,
-            ),
-        ).thenResolve(newEnvVars);
-
-        await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
-
-        verify(collection.delete('CONDA_PREFIX')).once();
-        verify(collection.delete('RANDOM_VAR')).once();
     });
 
     test('If no activated variables are returned for custom shell, fallback to using default shell', async () => {
@@ -289,7 +273,7 @@ suite('Terminal Environment Variable Collection Service', () => {
                 customShell,
             ),
         ).thenResolve(undefined);
-        const envVars = { CONDA_PREFIX: 'prefix/to/conda', ..._normCaseKeys(process.env) };
+        const envVars = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
         when(
             environmentActivationService.getActivatedEnvironmentVariables(
                 anything(),
@@ -300,12 +284,11 @@ suite('Terminal Environment Variable Collection Service', () => {
         ).thenResolve(envVars);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
-        when(collection.delete(anything())).thenResolve();
 
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(collection.delete(anything())).never();
+        verify(collection.clear()).twice();
     });
 
     test('If no activated variables are returned for default shell, clear collection', async () => {

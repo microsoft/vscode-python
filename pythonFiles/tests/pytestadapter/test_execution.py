@@ -1,12 +1,57 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import json
 import os
 import shutil
 
 import pytest
+
 from tests.pytestadapter import expected_execution_test_output
 
-from .helpers import TEST_DATA_PATH, runner
+from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
+
+
+def test_config_file():
+    """Test pytest execution when a config file is specified."""
+    args = [
+        "-c",
+        "tests/pytest.ini",
+        str(TEST_DATA_PATH / "root" / "tests" / "test_a.py::test_a_function"),
+    ]
+    new_cwd = TEST_DATA_PATH / "root"
+    actual = runner_with_cwd(args, new_cwd)
+    expected_const = (
+        expected_execution_test_output.config_file_pytest_expected_execution_output
+    )
+    assert actual
+    assert len(actual) == len(expected_const)
+    actual_result_dict = dict()
+    for a in actual:
+        assert all(item in a for item in ("status", "cwd", "result"))
+        assert a["status"] == "success"
+        assert a["cwd"] == os.fspath(new_cwd)
+        actual_result_dict.update(a["result"])
+    assert actual_result_dict == expected_const
+
+
+def test_rootdir_specified():
+    """Test pytest execution when a --rootdir is specified."""
+    rd = f"--rootdir={TEST_DATA_PATH / 'root' / 'tests'}"
+    args = [rd, "tests/test_a.py::test_a_function"]
+    new_cwd = TEST_DATA_PATH / "root"
+    actual = runner_with_cwd(args, new_cwd)
+    expected_const = (
+        expected_execution_test_output.config_file_pytest_expected_execution_output
+    )
+    assert actual
+    assert len(actual) == len(expected_const)
+    actual_result_dict = dict()
+    for a in actual:
+        assert all(item in a for item in ("status", "cwd", "result"))
+        assert a["status"] == "success"
+        assert a["cwd"] == os.fspath(new_cwd)
+        actual_result_dict.update(a["result"])
+    assert actual_result_dict == expected_const
 
 
 def test_syntax_error_execution(tmp_path):
@@ -161,7 +206,7 @@ def test_pytest_execution(test_ids, expected_const):
     Keyword arguments:
     test_ids -- an array of test_ids to run.
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
-    """
+    """  # noqa: E501
     args = test_ids
     actual = runner(args)
     assert actual

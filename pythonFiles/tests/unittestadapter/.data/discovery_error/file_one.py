@@ -3,7 +3,7 @@
 
 import unittest
 
-import something_else  # type: ignore
+import something_else  # type: ignore # noqa: F401
 
 
 class DiscoveryErrorOne(unittest.TestCase):

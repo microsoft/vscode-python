@@ -6,6 +6,7 @@ import pathlib
 import unittest
 
 import pytest
+
 from unittestadapter.utils import (
     TestNode,
     TestNodeTypeEnum,
@@ -284,7 +285,8 @@ def test_build_decorated_tree() -> None:
 
 
 def test_build_empty_tree() -> None:
-    """The build_test_tree function should return None if there are no discovered test suites, and an empty list of errors if there are none in the discovered data."""
+    """The build_test_tree function should return None if there are no discovered test suites,
+    and an empty list of errors if there are none in the discovered data."""
 
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "does_not_exist*"
