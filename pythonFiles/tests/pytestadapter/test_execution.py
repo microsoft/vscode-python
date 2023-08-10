@@ -179,6 +179,6 @@ def test_pytest_execution(test_ids, expected_const):
             or actual_result_dict[key]["outcome"] == "error"
         ):
             actual_result_dict[key]["message"] = "ERROR MESSAGE"
-        if actual_result_dict[key]["traceback"] != None:
+        if actual_result_dict[key]["traceback"] is not None:
             actual_result_dict[key]["traceback"] = "TRACEBACK"
     assert actual_result_dict == expected_const
