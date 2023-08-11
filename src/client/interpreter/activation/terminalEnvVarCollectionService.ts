@@ -184,7 +184,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     /**
-     * Call this once we know terminal prompt is set correctly for resoure.
+     * Call this once we know terminal prompt is set correctly for terminal owned by this resource.
      */
     private promptIsSet(resource: Resource) {
         const key = this.getWorkspaceFolder(resource)?.index;
