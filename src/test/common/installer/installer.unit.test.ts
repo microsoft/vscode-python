@@ -307,10 +307,10 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isAnyString(),
                                         TypeMoq.It.isValue('Install'),
                                         TypeMoq.It.isValue('Select Linter'),
-                                        TypeMoq.It.isValue('Do not show again'),
+                                        TypeMoq.It.isValue("Don't show again"),
                                     ),
                                 )
-                                    .returns(async () => 'Do not show again')
+                                    .returns(async () => "Don't show again")
                                     .verifiable(TypeMoq.Times.once());
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                                 let mockPersistVal = false;
@@ -367,7 +367,7 @@ suite('Module Installer only', () => {
                                         TypeMoq.It.isAnyString(),
                                         TypeMoq.It.isValue('Install'),
                                         TypeMoq.It.isValue('Select Linter'),
-                                        TypeMoq.It.isValue('Do not show again'),
+                                        TypeMoq.It.isValue("Don't show again"),
                                     ),
                                 )
                                     .returns(async () => undefined)
@@ -864,7 +864,7 @@ suite('Module Installer only', () => {
 
         test('Ensure 3 options for pylint', async () => {
             const product = Product.pylint;
-            const options = ['Select Linter', 'Do not show again'];
+            const options = ['Select Linter', "Don't show again"];
             const productName = ProductNames.get(product)!;
 
             await installer.promptToInstallImplementation(product, resource);
@@ -875,7 +875,7 @@ suite('Module Installer only', () => {
         });
         test('Ensure select linter command is invoked', async () => {
             const product = Product.pylint;
-            const options = ['Select Linter', 'Do not show again'];
+            const options = ['Select Linter', "Don't show again"];
             const productName = ProductNames.get(product)!;
             when(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
@@ -892,7 +892,7 @@ suite('Module Installer only', () => {
         });
         test('If install button is selected, install linter and return response', async () => {
             const product = Product.pylint;
-            const options = ['Select Linter', 'Do not show again'];
+            const options = ['Select Linter', "Don't show again"];
             const productName = ProductNames.get(product)!;
             when(
                 appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
