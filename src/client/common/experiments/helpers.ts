@@ -6,9 +6,10 @@
 import { env, workspace } from 'vscode';
 import { IExperimentService } from '../types';
 import { TerminalEnvVarActivation } from './groups';
+import { isTestExecution } from '../constants';
 
 export function inTerminalEnvVarExperiment(experimentService: IExperimentService): boolean {
-    if (workspace.workspaceFile && env.remoteName) {
+    if (!isTestExecution() && workspace.workspaceFile && env.remoteName) {
         // TODO: Remove this if statement once https://github.com/microsoft/vscode/issues/180486 is fixed.
         return false;
     }
