@@ -4,6 +4,7 @@
 'use strict';
 
 import { Architecture } from '../../common/utils/platform';
+import { PythonEnvType } from '../base/info';
 import { PythonVersion } from './pythonVersion';
 
 /**
@@ -85,7 +86,7 @@ export type PythonEnvironment = InterpreterInformation & {
     envName?: string;
     envPath?: string;
     cachedEntry?: boolean;
-    type?: string;
+    type?: PythonEnvType;
 };
 
 /**

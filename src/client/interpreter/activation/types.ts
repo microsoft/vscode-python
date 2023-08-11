@@ -25,7 +25,7 @@ export interface IEnvironmentActivationService {
 export const ITerminalEnvVarCollectionService = Symbol('ITerminalEnvVarCollectionService');
 export interface ITerminalEnvVarCollectionService {
     /**
-     * Returns true if we know for sure that the terminal prompt is set correctly for a particular resource.
+     * Returns true if we know with high certainity the terminal prompt is set correctly for a particular resource.
      */
     isTerminalPromptSet(resource?: Resource): boolean;
 }

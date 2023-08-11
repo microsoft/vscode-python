@@ -27,6 +27,8 @@ import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from 
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
+import { TerminalShellType } from '../../common/terminal/types';
+import { OSType, getOSType } from '../../common/utils/platform';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -108,6 +110,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
         // Clear any previously set env vars from collection
         envVarCollection.clear();
+        this.promptIsNotSet();
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
@@ -127,6 +130,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
+            this.promptIsSet(resource);
             this.processEnvVars = undefined;
             return;
         }
@@ -137,6 +141,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             );
         }
         const processEnv = this.processEnvVars;
+        let isPS1Set = false;
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
@@ -146,6 +151,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             if (prevValue !== value) {
                 if (value !== undefined) {
                     if (key === 'PS1') {
+                        isPS1Set = true;
                         traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
                         envVarCollection.prepend(key, value, {
                             applyAtShellIntegration: true,
@@ -165,13 +171,49 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
+
+        await this.setPromptIfEligle(shell, resource, isPS1Set);
     }
 
+    private isPromptSet = new Map<number | undefined, boolean>();
+
     // eslint-disable-next-line class-methods-use-this
-    public isTerminalPromptSet(_resource?: Resource): boolean {
-        // Returns true if we know for sure that the terminal prompt is set correctly for a particular resource.
-        // TODO: For now return false for simplicity.
-        return false;
+    public isTerminalPromptSet(resource?: Resource): boolean {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        return !!this.isPromptSet.get(workspaceFolder?.index);
+    }
+
+    /**
+     * Call this once we know terminal prompt is set correctly for resoure.
+     */
+    private promptIsSet(resource?: Resource) {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        this.isPromptSet.set(workspaceFolder?.index, true);
+    }
+
+    private promptIsNotSet(resource?: Resource) {
+        const workspaceFolder = this.getWorkspaceFolder(resource);
+        this.isPromptSet.delete(workspaceFolder?.index);
+    }
+
+    private async setPromptIfEligle(shell: string, resource: Resource, isPS1Set: boolean) {
+        // Prompts for these shells cannot be set using variables
+        const exceptionShells = [
+            TerminalShellType.powershell,
+            TerminalShellType.powershellCore,
+            TerminalShellType.fish,
+            TerminalShellType.zsh, // TODO: Remove this once https://github.com/microsoft/vscode/issues/188875 is fixed
+        ];
+        const customShellType = identifyShellFromShellPath(shell);
+        if (exceptionShells.includes(customShellType)) {
+            return;
+        }
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const shouldPS1BeSet = interpreter?.type && getOSType() !== OSType.Windows;
+        if (shouldPS1BeSet && !isPS1Set) {
+            return;
+        }
+        this.promptIsSet(resource);
     }
 
     private async handleMicroVenv(resource: Resource) {
