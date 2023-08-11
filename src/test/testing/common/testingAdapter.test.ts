@@ -18,7 +18,7 @@ import { PytestTestExecutionAdapter } from '../../../client/testing/testControll
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
 
-suite('Functional Tests: test adapters', () => {
+suite('End to End Tests: test adapters', () => {
     let resultResolver: typeMoq.IMock<ITestResultResolver>;
     let pythonTestServer: ITestServer;
     let pythonExecFactory: IPythonExecutionFactory;
@@ -40,9 +40,6 @@ suite('Functional Tests: test adapters', () => {
         'largeWorkspace',
     );
     suiteSetup(async () => {
-        // if (!IS_SMOKE_TEST) {
-        //     this.skip();
-        // }
         serviceContainer = (await initialize()).serviceContainer;
     });
 
