@@ -227,7 +227,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 envVarCollection.replace(
                     'PATH',
                     `${path.dirname(interpreter.path)}${path.delimiter}${process.env[pathVarName]}`,
-                    { applyAtShellIntegration: true },
+                    { applyAtShellIntegration: true, applyAtProcessCreation: true },
                 );
                 return;
             }
