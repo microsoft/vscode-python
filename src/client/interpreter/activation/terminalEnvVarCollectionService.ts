@@ -172,7 +172,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
 
-        await this.setPromptIfEligle(shell, resource, isPS1Set);
+        await this.trackTerminalPrompts(shell, resource, isPS1Set);
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();
@@ -196,7 +196,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         this.isPromptSet.delete(key);
     }
 
-    private async setPromptIfEligle(shell: string, resource: Resource, isPS1Set: boolean) {
+    private async trackTerminalPrompts(shell: string, resource: Resource, isPS1Set: boolean) {
         // Prompts for these shells cannot be set using variables
         const exceptionShells = [
             TerminalShellType.powershell,
