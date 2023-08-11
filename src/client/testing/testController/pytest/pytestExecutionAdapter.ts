@@ -43,28 +43,19 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
         traceVerbose(uri, testIds, debugBool);
-        const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+        const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
             }
         });
-        const disposeDataReceiver = function (testServer: ITestServer) {
+        const dispose = function (testServer: ITestServer) {
             testServer.deleteUUID(uuid);
-            dataReceivedDisposable.dispose();
+            disposedDataReceived.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
-            disposeDataReceiver(this.testServer);
+            dispose(this.testServer);
         });
-        await this.runTestsNew(
-            uri,
-            testIds,
-            uuid,
-            runInstance,
-            debugBool,
-            executionFactory,
-            debugLauncher,
-            disposeDataReceiver,
-        );
+        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
 
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
@@ -84,7 +75,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
-        disposeDataReceiver?: (testServer: ITestServer) => void,
     ): Promise<ExecutionTestPayload> {
         const deferred = createDeferred<ExecutionTestPayload>();
         const relativePathToPytest = 'pythonFiles';
@@ -177,8 +167,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 result?.proc?.on('exit', () => {
                     deferredExec.resolve({ stdout: '', stderr: '' });
+                    this.testServer.deleteUUID(uuid);
                     deferred.resolve();
-                    disposeDataReceiver?.(this.testServer);
                 });
                 await deferredExec.promise;
             }
