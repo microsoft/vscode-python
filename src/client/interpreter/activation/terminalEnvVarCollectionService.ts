@@ -28,7 +28,7 @@ import { EnvironmentType } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
-import { OSType, getOSType } from '../../common/utils/platform';
+import { OSType } from '../../common/utils/platform';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -209,7 +209,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             return;
         }
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        const shouldPS1BeSet = interpreter?.type && getOSType() !== OSType.Windows;
+        const shouldPS1BeSet = interpreter?.type && this.platform.osType !== OSType.Windows;
         if (shouldPS1BeSet && !isPS1Set) {
             return;
         }

@@ -32,20 +32,20 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
             return;
         }
         this.disposableRegistry.push(
-            this.terminalManager.onDidOpenTerminal((terminal) => {
+            this.terminalManager.onDidOpenTerminal(async (terminal) => {
                 const cwd =
                     'cwd' in terminal.creationOptions && terminal.creationOptions.cwd
                         ? terminal.creationOptions.cwd
                         : this.activeResourceService.getActiveResource();
                 const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
                 if (!this.terminalEnvVarCollectionService.isTerminalPromptSet(resource)) {
-                    this.showPrompt().ignoreErrors();
+                    await this.notifyUsers();
                 }
             }),
         );
     }
 
-    private async showPrompt(): Promise<void> {
+    private async notifyUsers(): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             terminalEnvCollectionPromptKey,
             true,
