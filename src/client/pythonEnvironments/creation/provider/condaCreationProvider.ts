@@ -247,7 +247,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                     showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
                 }
             }
-            return { path: envPath, workspaceFolder: workspace, action: undefined, error: undefined };
+            return { path: envPath, workspaceFolder: workspace, error: undefined };
         },
     );
 }
