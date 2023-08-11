@@ -23,13 +23,13 @@ import { Interpreters } from '../../common/utils/localize';
 import { traceDecoratorVerbose, traceVerbose } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
-import { IEnvironmentActivationService } from './types';
+import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from './types';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
 
 @injectable()
-export class TerminalEnvVarCollectionService implements IExtensionActivationService {
+export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
@@ -165,6 +165,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    public isTerminalPromptSet(_resource?: Resource): boolean {
+        // Returns true if we know for sure that the terminal prompt is set correctly for a particular resource.
+        // TODO: For now return false for simplicity.
+        return false;
     }
 
     private async handleMicroVenv(resource: Resource) {
