@@ -197,7 +197,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async trackTerminalPrompts(shell: string, resource: Resource, isPS1Set: boolean) {
-        // Prompts for these shells cannot be set using variables
+        // Prompts for these shells cannot be set reliably using variables
         const exceptionShells = [
             TerminalShellType.powershell,
             TerminalShellType.powershellCore,
