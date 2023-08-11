@@ -114,7 +114,7 @@ export function registerTypes(serviceManager: IServiceManager): void {
         ITerminalEnvVarCollectionService,
         TerminalEnvVarCollectionService,
     );
-    serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionSingleActivationService);
+    serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TerminalEnvVarCollectionPrompt,

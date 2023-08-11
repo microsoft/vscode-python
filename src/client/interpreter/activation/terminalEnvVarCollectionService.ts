@@ -110,7 +110,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
         // Clear any previously set env vars from collection
         envVarCollection.clear();
-        this.promptIsNotSet();
+        this.promptIsNotSet(resource);
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
@@ -186,14 +186,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     /**
      * Call this once we know terminal prompt is set correctly for resoure.
      */
-    private promptIsSet(resource?: Resource) {
-        const workspaceFolder = this.getWorkspaceFolder(resource);
-        this.isPromptSet.set(workspaceFolder?.index, true);
+    private promptIsSet(resource: Resource) {
+        const key = this.getWorkspaceFolder(resource)?.index;
+        this.isPromptSet.set(key, true);
     }
 
-    private promptIsNotSet(resource?: Resource) {
-        const workspaceFolder = this.getWorkspaceFolder(resource);
-        this.isPromptSet.delete(workspaceFolder?.index);
+    private promptIsNotSet(resource: Resource) {
+        const key = this.getWorkspaceFolder(resource)?.index;
+        this.isPromptSet.delete(key);
     }
 
     private async setPromptIfEligle(shell: string, resource: Resource, isPS1Set: boolean) {
