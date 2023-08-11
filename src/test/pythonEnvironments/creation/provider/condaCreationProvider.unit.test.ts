@@ -134,7 +134,6 @@ suite('Conda Creation provider tests', () => {
         assert.deepStrictEqual(await promise, {
             path: 'new_environment',
             workspaceFolder: workspace1,
-            action: undefined,
             error: undefined,
         });
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
