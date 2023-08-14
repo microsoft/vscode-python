@@ -98,6 +98,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             deferredExec.resolve({ stdout: '', stderr: '' });
             deferred.resolve();
         });
+
         await deferredExec.promise;
     }
 }

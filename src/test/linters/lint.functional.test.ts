@@ -4,7 +4,6 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as childProcess from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -780,11 +779,6 @@ suite('Linting Functional Tests', () => {
     teardown(() => {
         sinon.restore();
     });
-
-    const pythonPath = childProcess.execSync(`"${PYTHON_PATH}" -c "import sys;print(sys.executable)"`);
-
-    console.log(`Testing linter with python ${pythonPath}`);
-
     // These are integration tests that mock out everything except
     // the filesystem and process execution.
 

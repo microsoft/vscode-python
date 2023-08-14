@@ -175,7 +175,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     this.outputChannel?.append(data);
                 });
 
-                result?.proc?.on('close', () => {
+                result?.proc?.on('exit', () => {
                     deferredExec.resolve({ stdout: '', stderr: '' });
                     deferred.resolve();
                     disposeDataReceiver?.(this.testServer);
