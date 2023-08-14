@@ -729,6 +729,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "editor.load" : {
+          "appName" : {"classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud"},
           "codeloadingtime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "luabud" },
@@ -747,6 +748,10 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.EDITOR_LOAD]: {
+        /**
+         * The name of the application where the Python extension is running
+         */
+        appName?: string | undefined;
         /**
          * The conda version if selected
          */
@@ -1549,7 +1554,7 @@ export interface IEventNamePropertyMapping {
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
     /* __GDPR__
-       "jedi_language_server.request" : { 
+       "jedi_language_server.request" : {
            "method": {"classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig"}
        }
      */

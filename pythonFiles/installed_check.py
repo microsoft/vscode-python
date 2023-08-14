@@ -15,7 +15,11 @@ import tomli
 from importlib_metadata import metadata
 from packaging.requirements import Requirement
 
-DEFAULT_SEVERITY = 3
+DEFAULT_SEVERITY = "3"  # 'Hint'
+try:
+    SEVERITY = int(os.getenv("VSCODE_MISSING_PGK_SEVERITY", DEFAULT_SEVERITY))
+except ValueError:
+    SEVERITY = int(DEFAULT_SEVERITY)
 
 
 def parse_args(argv: Optional[Sequence[str]] = None):
@@ -37,7 +41,8 @@ def parse_requirements(line: str) -> Optional[Requirement]:
         elif req.marker.evaluate():
             return req
     except Exception:
-        return None
+        pass
+    return None
 
 
 def process_requirements(req_file: pathlib.Path) -> List[Dict[str, Union[str, int]]]:
@@ -60,7 +65,7 @@ def process_requirements(req_file: pathlib.Path) -> List[Dict[str, Union[str, in
                         "endCharacter": len(req.name),
                         "package": req.name,
                         "code": "not-installed",
-                        "severity": DEFAULT_SEVERITY,
+                        "severity": SEVERITY,
                     }
                 )
     return diagnostics
@@ -100,7 +105,7 @@ def process_pyproject(req_file: pathlib.Path) -> List[Dict[str, Union[str, int]]
                         "endCharacter": end,
                         "package": req.name,
                         "code": "not-installed",
-                        "severity": DEFAULT_SEVERITY,
+                        "severity": SEVERITY,
                     }
                 )
     return diagnostics

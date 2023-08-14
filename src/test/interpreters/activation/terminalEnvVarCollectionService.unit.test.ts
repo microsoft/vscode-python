@@ -45,7 +45,6 @@ suite('Terminal Environment Variable Collection Service', () => {
     let collection: EnvironmentVariableCollection & {
         getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
     };
-    let scopedCollection: EnvironmentVariableCollection;
     let applicationEnvironment: IApplicationEnvironment;
     let environmentActivationService: IEnvironmentActivationService;
     let workspaceService: IWorkspaceService;
@@ -73,9 +72,7 @@ suite('Terminal Environment Variable Collection Service', () => {
                 getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
             }
         >();
-        scopedCollection = mock<EnvironmentVariableCollection>();
-        when(collection.getScopedEnvironmentVariableCollection(anything())).thenReturn(instance(scopedCollection));
-        when(context.environmentVariableCollection).thenReturn(instance(collection));
+        when(context.getEnvironmentVariableCollection(anything())).thenReturn(instance(collection));
         experimentService = mock<IExperimentService>();
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(true);
         applicationEnvironment = mock<IApplicationEnvironment>();
@@ -95,7 +92,6 @@ suite('Terminal Environment Variable Collection Service', () => {
             pythonPath: displayPath,
         } as unknown) as IPythonSettings);
         when(collection.clear()).thenResolve();
-        when(scopedCollection.clear()).thenResolve();
         terminalEnvVarCollectionService = new TerminalEnvVarCollectionService(
             instance(platform),
             instance(interpreterService),
@@ -253,15 +249,17 @@ suite('Terminal Environment Variable Collection Service', () => {
             environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, customShell),
         ).thenResolve(envVars);
 
-        when(scopedCollection.replace(anything(), anything(), anything())).thenCall((_e, _v, options) => {
-            assert.deepEqual(options, { applyAtShellIntegration: true });
-            return Promise.resolve();
-        });
+        when(collection.replace(anything(), anything(), anything())).thenCall(
+            (_e, _v, options: EnvironmentVariableMutatorOptions) => {
+                assert.deepEqual(options, { applyAtShellIntegration: true, applyAtProcessCreation: true });
+                return Promise.resolve();
+            },
+        );
 
         await terminalEnvVarCollectionService._applyCollection(resource, customShell);
 
-        verify(scopedCollection.clear()).once();
-        verify(scopedCollection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+        verify(collection.clear()).once();
+        verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
     });
 
     test('If no activated variables are returned for custom shell, fallback to using default shell', async () => {

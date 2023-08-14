@@ -46,7 +46,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.79.0-20230526"
+        "vscode": "^1.82.0-20230809"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -1147,6 +1147,21 @@
                     "scope": "machine",
                     "type": "string"
                 },
+                "python.missingPackage.severity":{
+                    "default": "Hint",
+                    "description": "%python.missingPackage.severity.description%",
+                    "enum": [
+                        "Error",
+                        "Hint",
+                        "Information",
+                        "Warning"
+                    ],
+                    "scope": "resource",
+                    "type": "string",
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "%python.pipenvPath.description%",
@@ -2151,7 +2166,7 @@
         "@types/stack-trace": "0.0.29",
         "@types/tmp": "^0.0.33",
         "@types/uuid": "^8.3.4",
-        "@types/vscode": "^1.75.0",
+        "@types/vscode": "^1.81.0",
         "@types/which": "^2.0.1",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",

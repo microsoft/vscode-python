@@ -3,14 +3,7 @@
 
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
-import {
-    ProgressOptions,
-    ProgressLocation,
-    MarkdownString,
-    WorkspaceFolder,
-    EnvironmentVariableCollection,
-    EnvironmentVariableScope,
-} from 'vscode';
+import { ProgressOptions, ProgressLocation, MarkdownString, WorkspaceFolder } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
@@ -67,7 +60,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
-            this.context.environmentVariableCollection.clear();
+            const workspaceFolder = this.getWorkspaceFolder(resource);
+            this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
             await this.handleMicroVenv(resource);
             if (!this.registeredOnce) {
                 this.interpreterService.onDidChangeInterpreter(
@@ -111,8 +105,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
-        const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
-        // Clear any previously set env vars from collection.
+        const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
+        // Clear any previously set env vars from collection
         envVarCollection.clear();
         if (!settings.terminal.activateEnvironment) {
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
@@ -160,7 +154,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         return;
                     }
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    envVarCollection.replace(key, value, { applyAtShellIntegration: true });
+                    envVarCollection.replace(key, value, {
+                        applyAtShellIntegration: true,
+                        applyAtProcessCreation: true,
+                    });
                 }
             }
         });
@@ -170,22 +167,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         envVarCollection.description = description;
     }
 
-    private getEnvironmentVariableCollection(workspaceFolder?: WorkspaceFolder) {
-        const envVarCollection = this.context.environmentVariableCollection as EnvironmentVariableCollection & {
-            getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
-        };
-        return workspaceFolder
-            ? envVarCollection.getScopedEnvironmentVariableCollection({ workspaceFolder })
-            : envVarCollection;
-    }
-
     private async handleMicroVenv(resource: Resource) {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         if (interpreter?.envType === EnvironmentType.Venv) {
             const activatePath = path.join(path.dirname(interpreter.path), 'activate');
             if (!(await pathExists(activatePath))) {
-                const envVarCollection = this.getEnvironmentVariableCollection(workspaceFolder);
+                const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
                 const pathVarName = getSearchPathEnvVarNames()[0];
                 envVarCollection.replace(
                     'PATH',
@@ -195,7 +183,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 return;
             }
         }
-        this.context.environmentVariableCollection.clear();
+        this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
     }
 
     private getWorkspaceFolder(resource: Resource): WorkspaceFolder | undefined {

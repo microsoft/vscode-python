@@ -200,6 +200,7 @@
     "python.linting.pylintPath.deprecationMessage": "This setting will soon be deprecated. Please use the Pylint extension. Learn more here: https://aka.ms/AAlgvkb.",
     "python.logging.level.description": "The logging level the extension logs at, defaults to 'error'",
     "python.logging.level.deprecation": "This setting is deprecated. Please use command `Developer: Set Log Level...` to set logging level.",
+    "python.missingPackage.severity.description": "Set severity of missing packages in requirements.txt or pyproject.toml",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
     "python.sortImports.args.description": "Arguments passed in. Each argument is a separate item in the array.",
