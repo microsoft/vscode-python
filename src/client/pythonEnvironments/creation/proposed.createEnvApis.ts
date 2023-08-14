@@ -105,7 +105,7 @@ export type CreateEnvironmentResult =
           /**
            * Error if any occurred during environment creation.
            */
-          readonly error: Error | undefined;
+          readonly error: Error;
       };
 
 /**

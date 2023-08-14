@@ -77,7 +77,7 @@ async function createCondaEnv(
     args: string[],
     progress: CreateEnvironmentProgress,
     token?: CancellationToken,
-): Promise<string | undefined> {
+): Promise<string> {
     progress.report({
         message: CreateEnv.Conda.creating,
     });
@@ -223,13 +223,14 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 message: CreateEnv.statusStarting,
             });
 
-            let envPath: string | undefined;
-            try {
-                sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
-                    environmentType: 'conda',
-                    pythonVersion: version,
-                });
-                if (workspace) {
+            if (workspace) {
+                let envPath: string | undefined;
+                try {
+                    sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
+                        environmentType: 'conda',
+                        pythonVersion: version,
+                    });
+
                     envPath = await createCondaEnv(
                         workspace,
                         getExecutableCommand(conda),
@@ -237,17 +238,22 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                         progress,
                         token,
                     );
+                } catch (ex) {
+                    traceError(ex);
+                    hasError = true;
+                    throw ex;
+                } finally {
+                    if (hasError) {
+                        showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
+                    }
                 }
-            } catch (ex) {
-                traceError(ex);
-                hasError = true;
-                throw ex;
-            } finally {
-                if (hasError) {
-                    showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
+                if (envPath) {
+                    return { path: envPath, workspaceFolder: workspace };
                 }
+
+                return { error: new Error('Failed to create conda environment. See Output > Python for more info.') };
             }
-            return { path: envPath, workspaceFolder: workspace, error: undefined };
+            return { error: new Error('A workspace is needed to create conda environment') };
         },
     );
 }
