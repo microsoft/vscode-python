@@ -27,5 +27,5 @@ export interface ITerminalEnvVarCollectionService {
     /**
      * Returns true if we know with high certainity the terminal prompt is set correctly for a particular resource.
      */
-    isTerminalPromptSet(resource?: Resource): boolean;
+    isTerminalPromptSetCorrectly(resource?: Resource): boolean;
 }

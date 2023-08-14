@@ -35,6 +35,8 @@ import { TerminalEnvVarCollectionService } from '../../../client/interpreter/act
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -260,6 +262,161 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         verify(collection.clear()).once();
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+    });
+
+    test('Correct track that prompt was set for non-Windows bash where PS1 is set', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', PS1: '(.venv)', ...process.env };
+        const ps1Shell = 'bash';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: PythonEnvType.Virtual,
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, ps1Shell),
+        ).thenResolve(envVars);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, ps1Shell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(true);
+    });
+
+    test('Correct track that prompt was not set for non-Windows zsh where PS1 is set', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', PS1: '(.venv)', ...process.env };
+        const ps1Shell = 'zsh';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: PythonEnvType.Virtual,
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, ps1Shell),
+        ).thenResolve(envVars);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, ps1Shell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(false);
+    });
+
+    test('Correct track that prompt was not set for non-Windows where PS1 is not set', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
+        const ps1Shell = 'zsh';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: PythonEnvType.Conda,
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, ps1Shell),
+        ).thenResolve(envVars);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, ps1Shell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(false);
+    });
+
+    test('Correct track that prompt was set correctly for global interpreters', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const ps1Shell = 'zsh';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: undefined,
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, ps1Shell),
+        ).thenResolve(undefined);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, ps1Shell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(true);
+    });
+
+    test('Correct track that prompt was set for Windows when not using powershell', async () => {
+        when(platform.osType).thenReturn(OSType.Windows);
+        const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', ...process.env };
+        const windowsShell = 'cmd';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: PythonEnvType.Virtual,
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, windowsShell),
+        ).thenResolve(envVars);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, windowsShell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(true);
+    });
+
+    test('Correct track that prompt was not set for Windows when using powershell', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', ...process.env };
+        const windowsShell = 'powershell';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: PythonEnvType.Virtual,
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, windowsShell),
+        ).thenResolve(envVars);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, windowsShell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(false);
     });
 
     test('If no activated variables are returned for custom shell, fallback to using default shell', async () => {

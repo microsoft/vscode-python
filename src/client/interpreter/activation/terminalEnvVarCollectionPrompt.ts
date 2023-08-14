@@ -38,7 +38,7 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
                         ? terminal.creationOptions.cwd
                         : this.activeResourceService.getActiveResource();
                 const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
-                if (!this.terminalEnvVarCollectionService.isTerminalPromptSet(resource)) {
+                if (!this.terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)) {
                     await this.notifyUsers();
                 }
             }),

@@ -58,7 +58,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
                 cwd: resource,
             },
         } as unknown) as Terminal;
-        when(terminalEnvVarCollectionService.isTerminalPromptSet(resource)).thenReturn(false);
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
         when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
 
@@ -76,7 +76,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
                 cwd: resource,
             },
         } as unknown) as Terminal;
-        when(terminalEnvVarCollectionService.isTerminalPromptSet(resource)).thenReturn(false);
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
         when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
 
@@ -96,7 +96,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
                 cwd: resource,
             },
         } as unknown) as Terminal;
-        when(terminalEnvVarCollectionService.isTerminalPromptSet(resource)).thenReturn(false);
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(false);
         when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
 
@@ -114,7 +114,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
                 cwd: resource,
             },
         } as unknown) as Terminal;
-        when(terminalEnvVarCollectionService.isTerminalPromptSet(resource)).thenReturn(true);
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(true);
         when(notificationEnabled.value).thenReturn(true);
         when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
 
@@ -132,7 +132,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
                 cwd: resource,
             },
         } as unknown) as Terminal;
-        when(terminalEnvVarCollectionService.isTerminalPromptSet(resource)).thenReturn(false);
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
         when(notificationEnabled.updateValue(false)).thenResolve();
         when(shell.showInformationMessage(message, ...prompts)).thenReturn(Promise.resolve(Common.doNotShowAgain));
@@ -151,7 +151,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
                 cwd: resource,
             },
         } as unknown) as Terminal;
-        when(terminalEnvVarCollectionService.isTerminalPromptSet(resource)).thenReturn(false);
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
         when(notificationEnabled.updateValue(false)).thenResolve();
         when(shell.showInformationMessage(message, ...prompts)).thenReturn(Promise.resolve(undefined));
