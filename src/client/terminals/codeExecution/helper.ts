@@ -72,6 +72,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 wholeFileContent,
                 startLine: activeEditor!.selection.start.line,
                 endLine: activeEditor!.selection.end.line,
+                emptyHighlight: activeEditor!.selection.isEmpty,
             });
             observable.proc?.stdin?.write(input);
             observable.proc?.stdin?.end();
