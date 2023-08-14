@@ -83,6 +83,30 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         verify(shell.showInformationMessage(message, ...prompts)).once();
     });
 
+    test('Do not show notification if automatic terminal activation is turned off', async () => {
+        reset(configurationService);
+        when(configurationService.getSettings(anything())).thenReturn(({
+            terminal: {
+                activateEnvironment: false,
+            },
+        } as unknown) as IPythonSettings);
+        const resource = Uri.file('a');
+        const terminal = ({
+            creationOptions: {
+                cwd: resource,
+            },
+        } as unknown) as Terminal;
+        when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
+        when(notificationEnabled.value).thenReturn(true);
+        when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
+
+        await terminalEnvVarCollectionPrompt.activate();
+        terminalEventEmitter.fire(terminal);
+        await sleep(1);
+
+        verify(shell.showInformationMessage(message, ...prompts)).never();
+    });
+
     test('When not in experiment, do not show notification for the same', async () => {
         const resource = Uri.file('a');
         const terminal = ({
