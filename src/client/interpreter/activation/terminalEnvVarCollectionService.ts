@@ -129,7 +129,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 await this._applyCollection(resource, defaultShell?.shell);
                 return;
             }
-            await this.trackTerminalPromptStatus(shell, resource, env);
+            await this.trackTerminalPrompt(shell, resource, env);
             this.processEnvVars = undefined;
             return;
         }
@@ -170,7 +170,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
 
-        await this.trackTerminalPromptStatus(shell, resource, env);
+        await this.trackTerminalPrompt(shell, resource, env);
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();
@@ -184,12 +184,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     /**
      * Call this once we know terminal prompt is set correctly for terminal owned by this resource.
      */
-    private setTerminalPromptStatus(resource: Resource) {
+    private terminalPromptIsCorrect(resource: Resource) {
         const key = this.getWorkspaceFolder(resource)?.index;
         this.isPromptSet.set(key, true);
     }
 
-    private clearTerminalPromptStatus(resource: Resource) {
+    private terminalPromptIsNotCorrect(resource: Resource) {
         const key = this.getWorkspaceFolder(resource)?.index;
         this.isPromptSet.delete(key);
     }
@@ -197,10 +197,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     /**
      * Tracks whether prompt for terminal was correctly set.
      */
-    private async trackTerminalPromptStatus(shell: string, resource: Resource, env: EnvironmentVariables | undefined) {
-        this.clearTerminalPromptStatus(resource);
+    private async trackTerminalPrompt(shell: string, resource: Resource, env: EnvironmentVariables | undefined) {
+        this.terminalPromptIsNotCorrect(resource); // Assume terminal prompt is not correct to begin with.
         if (!env) {
-            this.setTerminalPromptStatus(resource);
+            this.terminalPromptIsCorrect(resource);
             return;
         }
         // Prompts for these shells cannot be set reliably using variables
@@ -223,7 +223,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 return;
             }
         }
-        this.setTerminalPromptStatus(resource);
+        this.terminalPromptIsCorrect(resource);
     }
 
     private async handleMicroVenv(resource: Resource) {
