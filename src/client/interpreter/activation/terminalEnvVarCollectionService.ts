@@ -149,7 +149,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             if (prevValue !== value) {
                 if (value !== undefined) {
                     if (key === 'PS1') {
-                        // We cannot have the full PS1 without executing in terminal, which do not. Hence prepend it.
+                        // We cannot have the full PS1 without executing in terminal, which we do not. Hence prepend it.
                         traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
                         envVarCollection.prepend(key, value, {
                             applyAtShellIntegration: true,
