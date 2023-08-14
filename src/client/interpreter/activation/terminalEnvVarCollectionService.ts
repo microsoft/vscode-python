@@ -189,7 +189,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         this.isPromptSet.set(key, true);
     }
 
-    private terminalPromptIsNotCorrect(resource: Resource) {
+    private terminalPromptIsUnknown(resource: Resource) {
         const key = this.getWorkspaceFolder(resource)?.index;
         this.isPromptSet.delete(key);
     }
@@ -198,7 +198,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
      * Tracks whether prompt for terminal was correctly set.
      */
     private async trackTerminalPrompt(shell: string, resource: Resource, env: EnvironmentVariables | undefined) {
-        this.terminalPromptIsNotCorrect(resource); // Assume terminal prompt is not correct to begin with.
+        this.terminalPromptIsUnknown(resource);
         if (!env) {
             this.terminalPromptIsCorrect(resource);
             return;
