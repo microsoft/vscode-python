@@ -6,7 +6,13 @@
 import { mock, when, anything, instance, verify, reset } from 'ts-mockito';
 import { EventEmitter, Terminal, Uri } from 'vscode';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../../client/common/application/types';
-import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings,
+} from '../../../client/common/types';
 import { TerminalEnvVarCollectionPrompt } from '../../../client/interpreter/activation/terminalEnvVarCollectionPrompt';
 import { ITerminalEnvVarCollectionService } from '../../../client/interpreter/activation/types';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
@@ -23,6 +29,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
     let terminalEnvVarCollectionPrompt: TerminalEnvVarCollectionPrompt;
     let terminalEventEmitter: EventEmitter<Terminal>;
     let notificationEnabled: IPersistentState<boolean>;
+    let configurationService: IConfigurationService;
     const prompts = [Common.doNotShowAgain];
     const message = Interpreters.terminalEnvVarCollectionPrompt;
 
@@ -33,6 +40,12 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         activeResourceService = mock<IActiveResourceService>();
         persistentStateFactory = mock<IPersistentStateFactory>();
         terminalEnvVarCollectionService = mock<ITerminalEnvVarCollectionService>();
+        configurationService = mock<IConfigurationService>();
+        when(configurationService.getSettings(anything())).thenReturn(({
+            terminal: {
+                activateEnvironment: true,
+            },
+        } as unknown) as IPythonSettings);
         notificationEnabled = mock<IPersistentState<boolean>>();
         terminalEventEmitter = new EventEmitter<Terminal>();
         when(persistentStateFactory.createGlobalPersistentState(anything(), true)).thenReturn(
@@ -47,6 +60,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
             [],
             instance(activeResourceService),
             instance(terminalEnvVarCollectionService),
+            instance(configurationService),
             instance(experimentService),
         );
     });

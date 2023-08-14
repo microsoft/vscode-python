@@ -4,7 +4,12 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../common/application/types';
-import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentService,
+    IPersistentStateFactory,
+} from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ITerminalEnvVarCollectionService } from './types';
@@ -24,6 +29,7 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
         @inject(ITerminalEnvVarCollectionService)
         private readonly terminalEnvVarCollectionService: ITerminalEnvVarCollectionService,
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
@@ -38,9 +44,15 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
                         ? terminal.creationOptions.cwd
                         : this.activeResourceService.getActiveResource();
                 const resource = typeof cwd === 'string' ? Uri.file(cwd) : cwd;
-                if (!this.terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)) {
-                    await this.notifyUsers();
+                const settings = this.configurationService.getSettings(resource);
+                if (!settings.terminal.activateEnvironment) {
+                    return;
                 }
+                if (this.terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)) {
+                    // No need to show notification if terminal prompt already indicates when env is activated.
+                    return;
+                }
+                await this.notifyUsers();
             }),
         );
     }
