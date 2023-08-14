@@ -4,7 +4,7 @@
 import { CancellationToken, ProgressLocation, WorkspaceFolder } from 'vscode';
 import * as path from 'path';
 import { Commands, PVSC_EXTENSION_ID } from '../../../common/constants';
-import { traceError, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 import { CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
@@ -174,6 +174,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 traceError('Workspace was not selected or found for creating conda environment.');
                 return MultiStepAction.Cancel;
             }
+            traceInfo(`Selected workspace ${workspace.uri.fsPath} for creating conda environment.`);
             return MultiStepAction.Continue;
         },
         undefined,
@@ -196,6 +197,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 traceError('Python version was not selected for creating conda environment.');
                 return MultiStepAction.Cancel;
             }
+            traceInfo(`Selected Python version ${version} for creating conda environment.`);
             return MultiStepAction.Continue;
         },
         undefined,
@@ -217,20 +219,17 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
             progress: CreateEnvironmentProgress,
             token: CancellationToken,
         ): Promise<CreateEnvironmentResult | undefined> => {
-            let hasError = false;
-
             progress.report({
                 message: CreateEnv.statusStarting,
             });
 
-            if (workspace) {
-                let envPath: string | undefined;
-                try {
-                    sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
-                        environmentType: 'conda',
-                        pythonVersion: version,
-                    });
-
+            let envPath: string | undefined;
+            try {
+                sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
+                    environmentType: 'conda',
+                    pythonVersion: version,
+                });
+                if (workspace) {
                     envPath = await createCondaEnv(
                         workspace,
                         getExecutableCommand(conda),
@@ -238,22 +237,20 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                         progress,
                         token,
                     );
-                } catch (ex) {
-                    traceError(ex);
-                    hasError = true;
-                    throw ex;
-                } finally {
-                    if (hasError) {
-                        showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
-                    }
-                }
-                if (envPath) {
-                    return { path: envPath, workspaceFolder: workspace };
-                }
 
-                return { error: new Error('Failed to create conda environment. See Output > Python for more info.') };
+                    if (envPath) {
+                        return { path: envPath, workspaceFolder: workspace };
+                    }
+
+                    throw new Error('Failed to create conda environment. See Output > Python for more info.');
+                } else {
+                    throw new Error('A workspace is needed to create conda environment');
+                }
+            } catch (ex) {
+                traceError(ex);
+                showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
+                throw ex;
             }
-            return { error: new Error('A workspace is needed to create conda environment') };
         },
     );
 }
