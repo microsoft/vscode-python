@@ -779,11 +779,6 @@ suite('Linting Functional Tests', () => {
     teardown(() => {
         sinon.restore();
     });
-
-    // const pythonPath = childProcess.execSync(`"${PYTHON_PATH}" -c "import sys;print(sys.executable)"`);
-
-    // console.log(`Testing linter with python ${pythonPath}`);
-
     // These are integration tests that mock out everything except
     // the filesystem and process execution.
 
