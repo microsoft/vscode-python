@@ -33,5 +33,6 @@ suite('Configuration Service', () => {
         subs = serviceContainer.get<IExtensionContext>(IExtensionContext).subscriptions;
         const newLength = subs.length;
         expect(newLength).to.be.equal(oldLength + 1, 'Subscription not added');
+        // serviceContainer subscriptions are not disposed of as this breaks other tests that use the service container.
     });
 });
