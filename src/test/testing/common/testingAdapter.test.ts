@@ -17,6 +17,7 @@ import { traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
+import { createDeferred } from '../../../client/common/utils/async';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: typeMoq.IMock<ITestResultResolver>;
@@ -282,9 +283,11 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
                 // 2. Confirm tests are found
                 assert.ok(actualData.result, 'Expected results to be present');
+                console.log('finally p1');
             });
     });
     test('unittest execution adapter large workspace', async () => {
+        const count = 0;
         // result resolver and saved data for assertions
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -321,15 +324,23 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
+        console.log('FROM TEST, unit large');
+        const deferred = createDeferred<void>();
         await executionAdapter
             .runTests(workspaceUri, ['test_parameterized_subtest.NumbersTest.test_even'], false, testRun.object)
-            .finally(() => {
+            .then(() => {
                 // verification after discovery is complete
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.atLeast(200),
+                    typeMoq.Times.atLeast(2000),
                 );
+                console.log('hit then');
+            })
+            .finally(() => {
+                deferred.resolve();
             });
+        await deferred.promise;
+        console.log('reached the very end', count);
     });
     test('pytest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -364,6 +375,8 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
+        // const deferred = createDeferred<void>();
+        console.log('run tests for small workspace');
         await executionAdapter
             .runTests(
                 workspaceUri,
@@ -372,8 +385,9 @@ suite('End to End Tests: test adapters', () => {
                 testRun.object,
                 pythonExecFactory,
             )
-            .finally(() => {
+            .then(() => {
                 // verification after discovery is complete
+                console.log('hit then');
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.once(),
@@ -384,9 +398,18 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(actualData.error, null, "Expected no errors in 'error' field");
                 // 3. Confirm tests are found
                 assert.ok(actualData.result, 'Expected results to be present');
+            })
+            .catch((err) => {
+                console.log('hit catch');
+                console.log(err);
+            })
+            .finally(() => {
+                console.log('hit finally');
             });
+        console.log('at very end of pytest small');
     });
     test('pytest execution adapter large workspace', async () => {
+        const errorMessages: string[] = [];
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
@@ -405,7 +428,7 @@ suite('End to End Tests: test adapters', () => {
 
         // generate list of test_ids
         const testIds: string[] = [];
-        for (let i = 0; i < 200; i = i + 1) {
+        for (let i = 0; i < 2000; i = i + 1) {
             const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
             testIds.push(testId);
         }
@@ -426,13 +449,25 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            // resolve execution should be called 200 times since there are 200 tests run.
-            resultResolver.verify(
-                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.atLeast(200),
-            );
-        });
+        console.log('FROM TEST, do the run large');
+        await executionAdapter
+            .runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory)
+            .then(() => {
+                // resolve execution should be called 200 times since there are 200 tests run.
+                console.log('hit then');
+                assert.strictEqual(
+                    errorMessages.length,
+                    0,
+                    ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
+                );
+                resultResolver.verify(
+                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                    typeMoq.Times.atLeast(2000),
+                );
+            })
+            .finally(() => {
+                console.log('hit finally large');
+            });
     });
     test('unittest execution adapter seg fault error handling', async () => {
         const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
