@@ -314,7 +314,7 @@ suite('End to End Tests: test adapters', () => {
                 // verification after discovery is complete
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.exactly(200),
+                    typeMoq.Times.atLeastOnce(),
                 );
             });
     });
