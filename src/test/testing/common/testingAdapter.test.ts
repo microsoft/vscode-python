@@ -392,14 +392,11 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        const parts = rootPathLargeWorkspace.split(path.sep);
-
-        const rootPathLargeWorkspaceAsId = parts.join('/');
 
         // generate list of test_ids
         const testIds: string[] = [];
         for (let i = 0; i < 200; i = i + 1) {
-            const testId = `${rootPathLargeWorkspaceAsId}/test_parameterized_subtest.py::test_odd_even[${i}]`;
+            const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
             testIds.push(testId);
         }
 
