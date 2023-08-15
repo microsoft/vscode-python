@@ -158,8 +158,6 @@ suite('venv Creation provider tests', () => {
         assert.deepStrictEqual(actual, {
             path: 'new_environment',
             workspaceFolder: workspace1,
-            action: undefined,
-            error: undefined,
         });
         interpreterQuickPick.verifyAll();
         progressMock.verifyAll();

@@ -8,7 +8,7 @@ import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { Common, CreateEnv } from '../../../common/utils/localize';
-import { traceError, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
@@ -144,6 +144,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                     traceError('Workspace was not selected or found for creating virtual environment.');
                     return MultiStepAction.Cancel;
                 }
+                traceInfo(`Selected workspace ${workspace.uri.fsPath} for creating virtual environment.`);
                 return MultiStepAction.Continue;
             },
             undefined,
@@ -183,6 +184,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                     traceError('Virtual env creation requires an interpreter.');
                     return MultiStepAction.Cancel;
                 }
+                traceInfo(`Selected interpreter ${interpreter} for creating virtual environment.`);
                 return MultiStepAction.Continue;
             },
             undefined,
@@ -237,8 +239,6 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 progress: CreateEnvironmentProgress,
                 token: CancellationToken,
             ): Promise<CreateEnvironmentResult | undefined> => {
-                let hasError = false;
-
                 progress.report({
                     message: CreateEnv.statusStarting,
                 });
@@ -247,18 +247,19 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 try {
                     if (interpreter && workspace) {
                         envPath = await createVenv(workspace, interpreter, args, progress, token);
+                        if (envPath) {
+                            return { path: envPath, workspaceFolder: workspace };
+                        }
+                        throw new Error('Failed to create virtual environment. See Output > Python for more info.');
                     }
+                    throw new Error(
+                        'Failed to create virtual environment. Either interpreter or workspace is undefined.',
+                    );
                 } catch (ex) {
                     traceError(ex);
-                    hasError = true;
+                    showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
                     throw ex;
-                } finally {
-                    if (hasError) {
-                        showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
-                    }
                 }
-
-                return { path: envPath, workspaceFolder: workspace, action: undefined, error: undefined };
             },
         );
     }
