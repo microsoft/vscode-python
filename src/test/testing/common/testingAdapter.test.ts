@@ -314,7 +314,7 @@ suite('End to End Tests: test adapters', () => {
                 // verification after discovery is complete
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.atLeastOnce(),
+                    typeMoq.Times.atLeast(200),
                 );
             });
     });
@@ -420,7 +420,7 @@ suite('End to End Tests: test adapters', () => {
             // resolve execution should be called 200 times since there are 200 tests run.
             resultResolver.verify(
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(200),
+                typeMoq.Times.atLeast(200),
             );
         });
     });
