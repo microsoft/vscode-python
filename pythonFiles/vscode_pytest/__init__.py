@@ -653,7 +653,7 @@ Request-uuid: {testuuid}
         if __socket is not None and __socket.socket is not None:
             __socket.socket.sendall(request.encode("utf-8"))
         else:
-            print(f"Plugin error connection error[vscode-pytest]")
+            print("Plugin error connection error[vscode-pytest]")
             print(f"[vscode-pytest] data: {request}")
     except Exception as e:
         print(f"Plugin error connection error[vscode-pytest]: {e}")
