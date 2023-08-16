@@ -5,11 +5,20 @@ import * as tomljs from '@iarna/toml';
 import * as fs from 'fs-extra';
 import { flatten, isArray } from 'lodash';
 import * as path from 'path';
-import { CancellationToken, QuickPickItem, RelativePattern, WorkspaceFolder } from 'vscode';
-import { CreateEnv } from '../../../common/utils/localize';
-import { MultiStepAction, MultiStepNode, showQuickPickWithBack } from '../../../common/vscodeApis/windowApis';
+import { CancellationToken, ProgressLocation, QuickPickItem, RelativePattern, WorkspaceFolder } from 'vscode';
+import { Common, CreateEnv } from '../../../common/utils/localize';
+import {
+    MultiStepAction,
+    MultiStepNode,
+    showQuickPickWithBack,
+    withProgress,
+} from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
 import { traceError, traceVerbose } from '../../../logging';
+import { Commands } from '../../../common/constants';
+import { isWindows } from '../../../common/platform/platformService';
+import { getVenvPath, hasVenv } from '../common/commonUtils';
+import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './venvDeleteUtils';
 
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
@@ -225,4 +234,69 @@ export async function pickPackagesToInstall(
     }
 
     return packages;
+}
+
+async function deleteEnvironment(workspaceFolder: WorkspaceFolder, interpreter: string | undefined): Promise<boolean> {
+    const venvPath = getVenvPath(workspaceFolder);
+    return withProgress<boolean>(
+        {
+            location: ProgressLocation.Notification,
+            title: `${CreateEnv.Venv.deletingEnvironmentProgress} ([${Common.showLogs}](command:${Commands.ViewOutput})): ${venvPath}`,
+            cancellable: false,
+        },
+        async () => {
+            if (isWindows()) {
+                return deleteEnvironmentWindows(workspaceFolder, interpreter);
+            }
+            return deleteEnvironmentNonWindows(workspaceFolder);
+        },
+    );
+}
+
+export async function pickExistingVenvAction(
+    workspaceFolder: WorkspaceFolder | undefined,
+    interpreter: string | undefined,
+    context?: MultiStepAction,
+): Promise<MultiStepAction> {
+    if (workspaceFolder && (await hasVenv(workspaceFolder)) && context === MultiStepAction.Continue) {
+        const items: QuickPickItem[] = [
+            { label: CreateEnv.Venv.recreate, description: CreateEnv.Venv.recreateDescription },
+            {
+                label: CreateEnv.Venv.useExisting,
+                description: CreateEnv.Venv.useExistingDescription,
+            },
+        ];
+
+        let selection: QuickPickItem | undefined;
+        try {
+            selection = (await showQuickPickWithBack(
+                items,
+                {
+                    placeHolder: CreateEnv.Venv.existingVenvQuickPickPlaceholder,
+                    ignoreFocusOut: true,
+                },
+                undefined,
+            )) as QuickPickItem | undefined;
+        } catch (ex) {
+            return MultiStepAction.Back;
+        }
+
+        if (selection === undefined) {
+            return MultiStepAction.Cancel;
+        }
+
+        if (selection.label === CreateEnv.Venv.recreate) {
+            if (await deleteEnvironment(workspaceFolder, interpreter)) {
+                return MultiStepAction.Continue;
+            }
+            return MultiStepAction.Cancel;
+        }
+
+        if (selection.label === CreateEnv.Venv.useExisting) {
+            return MultiStepAction.Continue;
+        }
+    } else if (context === MultiStepAction.Back) {
+        return MultiStepAction.Back;
+    }
+    return MultiStepAction.Continue;
 }

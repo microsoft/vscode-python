@@ -35,6 +35,7 @@ suite('venv Creation provider tests', () => {
     let withProgressStub: sinon.SinonStub;
     let showErrorMessageWithLogsStub: sinon.SinonStub;
     let pickPackagesToInstallStub: sinon.SinonStub;
+    let pickExistingVenvActionStub: sinon.SinonStub;
 
     const workspace1 = {
         uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
@@ -43,6 +44,7 @@ suite('venv Creation provider tests', () => {
     };
 
     setup(() => {
+        pickExistingVenvActionStub = sinon.stub(venvUtils, 'pickExistingVenvAction');
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
         execObservableStub = sinon.stub(rawProcessApis, 'execObservable');
         interpreterQuickPick = typemoq.Mock.ofType<IInterpreterQuickPick>();
@@ -54,6 +56,8 @@ suite('venv Creation provider tests', () => {
 
         progressMock = typemoq.Mock.ofType<CreateEnvironmentProgress>();
         venvProvider = new VenvCreationProvider(interpreterQuickPick.object);
+
+        pickExistingVenvActionStub.resolves(windowApis.MultiStepAction.Continue);
     });
 
     teardown(() => {

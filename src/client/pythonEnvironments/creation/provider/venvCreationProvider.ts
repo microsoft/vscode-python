@@ -18,7 +18,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { VenvProgressAndTelemetry, VENV_CREATED_MARKER, VENV_EXISTING_MARKER } from './venvProgressAndTelemetry';
 import { showErrorMessageWithLogs } from '../common/commonUtils';
-import { IPackageInstallSelection, pickPackagesToInstall } from './venvUtils';
+import { IPackageInstallSelection, pickExistingVenvAction, pickPackagesToInstall } from './venvUtils';
 import { InputFlowAction } from '../../../common/utils/multiStepInput';
 import {
     CreateEnvironmentProvider,
@@ -191,6 +191,13 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         );
         workspaceStep.next = interpreterStep;
 
+        const existingEnvStep = new MultiStepNode(
+            interpreterStep,
+            async (context?: MultiStepAction) => pickExistingVenvAction(workspace, interpreter, context),
+            undefined,
+        );
+        interpreterStep.next = existingEnvStep;
+
         let addGitIgnore = true;
         let installPackages = true;
         if (options) {
@@ -199,7 +206,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         }
         let installInfo: IPackageInstallSelection[] | undefined;
         const packagesStep = new MultiStepNode(
-            interpreterStep,
+            existingEnvStep,
             async () => {
                 if (workspace && installPackages) {
                     try {
@@ -220,7 +227,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             },
             undefined,
         );
-        interpreterStep.next = packagesStep;
+        existingEnvStep.next = packagesStep;
 
         const action = await MultiStepNode.run(workspaceStep);
         if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {

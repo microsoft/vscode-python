@@ -1,5 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import * as fs from 'fs-extra';
+import * as path from 'path';
+import { WorkspaceFolder } from 'vscode';
 import { Commands } from '../../../common/constants';
 import { Common } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';
@@ -12,4 +15,12 @@ export async function showErrorMessageWithLogs(message: string): Promise<void> {
     } else if (result === Common.selectPythonInterpreter) {
         await executeCommand(Commands.Set_Interpreter);
     }
+}
+
+export function getVenvPath(workspaceFolder: WorkspaceFolder): string {
+    return path.join(workspaceFolder.uri.fsPath, '.venv');
+}
+
+export async function hasVenv(workspaceFolder: WorkspaceFolder): Promise<boolean> {
+    return fs.pathExists(getVenvPath(workspaceFolder));
 }
