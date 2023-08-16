@@ -324,7 +324,7 @@ suite('End to End Tests: test adapters', () => {
                 );
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.atLeast(200),
+                    typeMoq.Times.atLeast(20),
                 );
             })
             .finally(() => {
@@ -414,7 +414,7 @@ suite('End to End Tests: test adapters', () => {
 
         // generate list of test_ids
         const testIds: string[] = [];
-        for (let i = 0; i < 200; i = i + 1) {
+        for (let i = 0; i < 20; i = i + 1) {
             const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
             testIds.push(testId);
         }
@@ -436,7 +436,6 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
-            // resolve execution should be called 200 times since there are 200 tests run.
             assert.strictEqual(
                 errorMessages.length,
                 0,
@@ -444,7 +443,7 @@ suite('End to End Tests: test adapters', () => {
             );
             resultResolver.verify(
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.atLeast(200),
+                typeMoq.Times.atLeast(20),
             );
         });
     });

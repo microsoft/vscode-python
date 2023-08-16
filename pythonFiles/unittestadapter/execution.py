@@ -225,8 +225,10 @@ def run_tests(
 
     return payload
 
+
 __socket = None
 atexit.register(lambda: __socket.close() if __socket else None)
+
 
 def send_run_data(raw_data, port, uuid):
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
@@ -256,7 +258,7 @@ Request-uuid: {uuid}
 
 {data}"""
     try:
-        if __socket.socket is not None:
+        if __socket is not None and __socket.socket is not None:
             __socket.socket.sendall(request.encode("utf-8"))
     except Exception as ex:
         print(f"Error sending response: {ex}")
