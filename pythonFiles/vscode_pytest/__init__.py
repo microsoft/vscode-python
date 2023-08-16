@@ -1,3 +1,7 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
+import atexit
 import json
 import os
 import pathlib
@@ -606,6 +610,8 @@ class ExecutionPayloadDict(Dict):
 def get_node_path(node: Any) -> pathlib.Path:
     return getattr(node, "path", pathlib.Path(node.fspath))
 
+__socket = None
+atexit.register(lambda: __socket.close() if __socket else None)
 
 def execution_post(
     cwd: str,
@@ -621,13 +627,20 @@ def execution_post(
     """
     testPort = os.getenv("TEST_PORT", 45454)
     testuuid = os.getenv("TEST_UUID")
+    addr = ("localhost", int(testPort))
+    global __socket
+    if __socket is None:
+        try:
+            __socket = socket_manager.SocketManager(addr)
+            __socket.connect()
+        except Exception as e:
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            __socket = None
     payload: ExecutionPayloadDict = ExecutionPayloadDict(
         cwd=cwd, status=status, result=tests, not_found=None, error=None
     )
     if ERRORS:
         payload["error"] = ERRORS
-
-    addr = ("localhost", int(testPort))
     data = json.dumps(payload)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json
@@ -635,9 +648,11 @@ Request-uuid: {testuuid}
 
 {data}"""
     try:
-        with socket_manager.SocketManager(addr) as s:
-            if s.socket is not None:
-                s.socket.sendall(request.encode("utf-8"))
+        if __socket.socket is not None:
+            __socket.socket.sendall(request.encode("utf-8"))
+        else:
+            print(f"Plugin error connection error[vscode-pytest]")
+            print(f"[vscode-pytest] data: {request}")
     except Exception as e:
         print(f"Plugin error connection error[vscode-pytest]: {e}")
         print(f"[vscode-pytest] data: {request}")
