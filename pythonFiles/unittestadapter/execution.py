@@ -256,9 +256,8 @@ Request-uuid: {uuid}
 
 {data}"""
     try:
-        with socket_manager.SocketManager(addr) as s:
-            if __socket.socket is not None:
-                __socket.socket.sendall(request.encode("utf-8"))
+        if __socket.socket is not None:
+            __socket.socket.sendall(request.encode("utf-8"))
     except Exception as ex:
         print(f"Error sending response: {ex}")
         print(f"Request data: {request}")
