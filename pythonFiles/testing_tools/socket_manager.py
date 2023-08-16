@@ -23,6 +23,12 @@ class SocketManager(object):
         self.socket = None
 
     def __enter__(self):
+        return self.connect()
+
+    def __exit__(self, *_):
+        self.close()
+
+    def connect(self):
         self.socket = socket.socket(
             socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
         )
@@ -35,7 +41,7 @@ class SocketManager(object):
 
         return self
 
-    def __exit__(self, *_):
+    def close(self):
         if self.socket:
             try:
                 self.socket.shutdown(socket.SHUT_RDWR)

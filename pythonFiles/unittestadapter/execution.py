@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 import argparse
+import atexit
 import enum
 import json
 import os
@@ -224,9 +225,20 @@ def run_tests(
 
     return payload
 
+__socket = None
+atexit.register(lambda: __socket.close() if __socket else None)
 
 def send_run_data(raw_data, port, uuid):
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    addr = ("localhost", port)
+    global __socket
+    if __socket is None:
+        try:
+            __socket = socket_manager.SocketManager(addr)
+            __socket.connect()
+        except Exception as e:
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            __socket = None
     status = raw_data["outcome"]
     cwd = os.path.abspath(START_DIR)
     if raw_data["subtest"]:
@@ -236,7 +248,7 @@ def send_run_data(raw_data, port, uuid):
     test_dict = {}
     test_dict[test_id] = raw_data
     payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
-    addr = ("localhost", port)
+
     data = json.dumps(payload)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json
@@ -245,10 +257,10 @@ Request-uuid: {uuid}
 {data}"""
     try:
         with socket_manager.SocketManager(addr) as s:
-            if s.socket is not None:
-                s.socket.sendall(request.encode("utf-8"))
-    except Exception as e:
-        print(f"Error sending response: {e}")
+            if __socket.socket is not None:
+                __socket.socket.sendall(request.encode("utf-8"))
+    except Exception as ex:
+        print(f"Error sending response: {ex}")
         print(f"Request data: {request}")
 
 

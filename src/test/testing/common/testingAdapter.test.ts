@@ -6,14 +6,14 @@ import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { ITestResultResolver, ITestServer } from '../../../client/testing/testController/common/types';
+import { ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { traceError, traceLog } from '../../../client/logging';
+import { traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
@@ -21,7 +21,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: typeMoq.IMock<ITestResultResolver>;
-    let pythonTestServer: ITestServer;
+    let pythonTestServer: PythonTestServer;
     let pythonExecFactory: IPythonExecutionFactory;
     let debugLauncher: ITestDebugLauncher;
     let configService: IConfigurationService;
@@ -57,6 +57,9 @@ suite('End to End Tests: test adapters', () => {
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
         await pythonTestServer.serverReady();
+    });
+    teardown(async () => {
+        pythonTestServer.dispose();
     });
     test('unittest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -269,26 +272,23 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
                 // 2. Confirm tests are found
                 assert.ok(actualData.result, 'Expected results to be present');
-                console.log('finally p1');
             });
     });
     test('unittest execution adapter large workspace', async () => {
         let count = 0;
+        const errorMessages: string[] = [];
         // result resolver and saved data for assertions
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
                 count = count + 1;
-                traceError(`resolveExecution ${data}`);
-                traceLog(`resolveExecution ${data}`);
-                // do the following asserts for each time resolveExecution is called, should be called once per test.
-                // 1. Check the status, can be subtest success or failure
-                assert(
-                    data.status === 'subtest-success' || data.status === 'subtest-failure',
-                    "Expected status to be 'subtest-success' or 'subtest-failure'",
-                );
-                // 2. Confirm tests are found
-                assert.ok(data.result, 'Expected results to be present');
+                if (data.status !== 'subtest-success' && data.status !== 'subtest-failure') {
+                    errorMessages.push("Expected status to be 'subtest-success' or 'subtest-failure'");
+                    errorMessages.push(data.message);
+                }
+                if (data.result === null) {
+                    errorMessages.push('Expected results to be present');
+                }
                 return Promise.resolve();
             });
 
@@ -312,23 +312,25 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        console.log('FROM TEST, unit large');
         const deferred = createDeferred<void>();
         await executionAdapter
             .runTests(workspaceUri, ['test_parameterized_subtest.NumbersTest.test_even'], false, testRun.object)
             .then(() => {
                 // verification after discovery is complete
+                assert.strictEqual(
+                    errorMessages.length,
+                    0,
+                    ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
+                );
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.atLeast(2000),
                 );
-                console.log('hit then');
             })
             .finally(() => {
                 deferred.resolve();
             });
         await deferred.promise;
-        console.log('reached the very end', count);
     });
     test('pytest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -340,7 +342,6 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                console.log('resolveExecution PYT MIN');
                 traceLog(`resolveExecution ${data}`);
                 actualData = data;
                 return Promise.resolve();
@@ -365,8 +366,6 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        // const deferred = createDeferred<void>();
-        console.log('run tests for small workspace');
         await executionAdapter
             .runTests(
                 workspaceUri,
@@ -377,7 +376,6 @@ suite('End to End Tests: test adapters', () => {
             )
             .then(() => {
                 // verification after discovery is complete
-                console.log('hit then');
                 resultResolver.verify(
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.once(),
@@ -389,15 +387,7 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(actualData.error, null, "Expected no errors in 'error' field");
                 // 3. Confirm tests are found
                 assert.ok(actualData.result, 'Expected results to be present');
-            })
-            .catch((err) => {
-                console.log('hit catch');
-                console.log(err);
-            })
-            .finally(() => {
-                console.log('hit finally');
             });
-        console.log('at very end of pytest small');
     });
     test('pytest execution adapter large workspace', async () => {
         let count = 0;
@@ -445,24 +435,17 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        console.log('FROM TEST, do the run large');
-        await executionAdapter
-            .runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory)
-            .then(() => {
-                // resolve execution should be called 200 times since there are 200 tests run.
-                console.log('hit then');
-                assert.strictEqual(
-                    errorMessages.length,
-                    0,
-                    ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
-                );
-                resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.atLeast(2000),
-                );
-            })
-            .finally(() => {
-                console.log('hit finally large');
-            });
+        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
+            // resolve execution should be called 2000 times since there are 2000 tests run.
+            assert.strictEqual(
+                errorMessages.length,
+                0,
+                ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
+            );
+            resultResolver.verify(
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.atLeast(2000),
+            );
+        });
     });
 });
