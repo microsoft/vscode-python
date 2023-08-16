@@ -13,7 +13,6 @@ import textwrap
 # sys.path.append(os.fspath(script_dir))
 # import debugpy
 
-
 # debugpy.connect(5678)
 # debugpy.breakpoint()
 def split_lines(source):
@@ -126,7 +125,7 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
-        if selection[-2] == "}":
+        if (selection[-2] == '}'):
             source = source[:-1]
         # source = "\n".join(statements)
     except Exception:
@@ -136,11 +135,8 @@ def normalize_lines(selection):
 
     return source
 
-
-top_level_nodes = []  # collection of top level nodes
-top_level_to_min_difference = (
-    {}
-)  # dictionary of top level nodes to difference in relative to given code block to run
+top_level_nodes = [] # collection of top level nodes
+top_level_to_min_difference = {} # dictionary of top level nodes to difference in relative to given code block to run
 min_key = None
 
 should_run_top_blocks = []
@@ -154,9 +150,9 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
-        line_start = node.lineno
-        line_end = node.end_lineno
-        code_of_node = ast.get_source_segment(wholeFileContent, node)
+        # line_start = node.lineno
+        # line_end = node.end_lineno
+        # code_of_node = ast.get_source_segment(wholeFileContent, node)
         # ast.get_source_segment(wholeFileContent, node) This is way to get original code of the selected node
 
     # With the given start_line and end_line number from VSCode,
@@ -165,9 +161,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         top_level_block_start_line = top_node.lineno
         top_level_block_end_line = top_node.end_lineno
         # top_level_block_end_line = top_node.end_lineno if hasattr(top_node, "end_lineno") else 0
-        abs_difference = abs(start_line - top_level_block_start_line) + abs(
-            end_line - top_level_block_end_line
-        )
+        abs_difference = abs(start_line - top_level_block_start_line) + abs(end_line - top_level_block_end_line)
         top_level_to_min_difference[top_node] = abs_difference
         # Also see if given start and end line is within the top level block 8/13/2023 --------------------------------------------
         # if top_level_block_start_line >= start_line or top_level_block_end_line >= end_line:
@@ -175,40 +169,28 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         #     temp_code += str(ast.get_source_segment(wholeFileContent, top_node))
         #     temp_code += "\n" ----------------------------------------------------
         # We need to handle the case of 1. just hanging cursor vs. actual highlighting/selection.
-        if (
-            was_highlighted
-        ):  # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
-            if (
-                top_level_block_start_line >= start_line
-                and top_level_block_end_line <= end_line
-            ):
+        if was_highlighted: # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
+            if top_level_block_start_line >= start_line and top_level_block_end_line <= end_line:
                 should_run_top_blocks.append(top_node)
                 temp_str = ast.get_source_segment(wholeFileContent, top_node)
                 temp_code += str(temp_str)
                 temp_code += "\n"
-        else:  # not highlighted case. Meaning just a cursor hanging
-            if (
-                start_line >= top_level_block_start_line
-                and end_line <= top_level_block_end_line
-            ):
+        else: # not highlighted case. Meaning just a cursor hanging
+            if start_line >= top_level_block_start_line and end_line <= top_level_block_end_line:
                 should_run_top_blocks.append(top_node)
                 temp_str = ast.get_source_segment(wholeFileContent, top_node)
                 temp_code += str(temp_str)
                 temp_code += "\n"
 
+
     # get the minimum viable block node reference
     min_key = min(top_level_to_min_difference, key=top_level_to_min_difference.get)
-    min_viable_code = ast.get_source_segment(
-        wholeFileContent, min_key
-    )  # Minimum viable code
-    normalized_min_viable_code = normalize_lines(
-        min_viable_code
-    )  # Normalized minimum viable code
+    min_viable_code = ast.get_source_segment(wholeFileContent, min_key) # Minimum viable code
+    normalized_min_viable_code = normalize_lines(min_viable_code) # Normalized minimum viable code
 
     temp_result = normalize_lines(temp_code)
     # return normalized_min_viable_code # return minimial viable code
     return temp_result
-
 
 if __name__ == "__main__":
     # Content is being sent from the extension as a JSON object.
@@ -222,19 +204,14 @@ if __name__ == "__main__":
     # Need to get information on whether there was a selection via Highlight.
     # empty_Highlight = True
     empty_Highlight = False
-    if contents["emptyHighlight"] is True:
+    if contents['emptyHighlight'] is True:
         empty_Highlight = True
     # we also get the activeEditor selection start line and end line from the typescript vscode side
     # remember to add 1 to each of the received since vscode starts line counting from 0
     vscode_start_line = contents["startLine"] + 1
     vscode_end_line = contents["endLine"] + 1
 
-    temp = traverse_file(
-        contents["wholeFileContent"],
-        vscode_start_line,
-        vscode_end_line,
-        not empty_Highlight,
-    )  # traverse file
+    temp = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight) # traverse file
 
     # Send the normalized code back to the extension in a JSON object.
     # data = json.dumps({"normalized": normalized}) # This is how it used to be
