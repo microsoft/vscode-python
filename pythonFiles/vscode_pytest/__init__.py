@@ -614,8 +614,10 @@ class ExecutionPayloadDict(Dict):
 def get_node_path(node: Any) -> pathlib.Path:
     return getattr(node, "path", pathlib.Path(node.fspath))
 
+
 __socket = None
 atexit.register(lambda: __socket.close() if __socket else None)
+
 
 def execution_post(
     cwd: str,
@@ -652,7 +654,7 @@ Request-uuid: {testuuid}
 
 {data}"""
     try:
-        if __socket.socket is not None:
+        if __socket is not None and __socket.socket is not None:
             __socket.socket.sendall(request.encode("utf-8"))
         else:
             print(f"Plugin error connection error[vscode-pytest]")
