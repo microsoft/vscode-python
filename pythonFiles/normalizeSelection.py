@@ -184,9 +184,9 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
 
     # get the minimum viable block node reference
-    min_key = min(top_level_to_min_difference, key=top_level_to_min_difference.get)
-    min_viable_code = ast.get_source_segment(wholeFileContent, min_key) # Minimum viable code
-    normalized_min_viable_code = normalize_lines(min_viable_code) # Normalized minimum viable code
+    # min_key = min(top_level_to_min_difference, key=top_level_to_min_difference.get)
+    # min_viable_code = ast.get_source_segment(wholeFileContent, min_key) # Minimum viable code
+    # normalized_min_viable_code = normalize_lines(min_viable_code) # Normalized minimum viable code
 
     temp_result = normalize_lines(temp_code)
     # return normalized_min_viable_code # return minimial viable code
