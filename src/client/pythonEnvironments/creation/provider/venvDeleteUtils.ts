@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { WorkspaceFolder } from 'vscode';
 import { traceError, traceInfo } from '../../../logging';
-import { showErrorMessageWithLogs } from '../common/commonUtils';
+import { getVenvPath, showErrorMessageWithLogs } from '../common/commonUtils';
 import { CreateEnv } from '../../../common/utils/localize';
 import { sleep } from '../../../common/utils/async';
 import { switchSelectedPython } from './venvSwitchPython';
@@ -40,10 +40,10 @@ async function tryDeleteDir(dir: string): Promise<boolean> {
     }
 }
 
-export async function deleteEnvironmentNonWindows(envDir: string): Promise<boolean> {
-    const name = path.basename(envDir);
-    if (await tryDeleteDir(envDir)) {
-        traceInfo(`Deleted "${name}" dir: ${envDir}`);
+export async function deleteEnvironmentNonWindows(workspaceFolder: WorkspaceFolder): Promise<boolean> {
+    const venvPath = getVenvPath(workspaceFolder);
+    if (await tryDeleteDir(venvPath)) {
+        traceInfo(`Deleted venv dir: ${venvPath}`);
         return true;
     }
     showErrorMessageWithLogs(CreateEnv.Venv.errorDeletingEnvironment);
@@ -51,48 +51,48 @@ export async function deleteEnvironmentNonWindows(envDir: string): Promise<boole
 }
 
 export async function deleteEnvironmentWindows(
-    envDir: string,
-    envPythonBin: string,
     workspaceFolder: WorkspaceFolder,
     interpreter: string | undefined,
 ): Promise<boolean> {
-    const name = path.basename(envDir);
-    if (await tryDeleteFile(envPythonBin)) {
-        traceInfo(`Deleted python executable: ${envPythonBin}`);
-        if (await tryDeleteDir(envDir)) {
-            traceInfo(`Deleted "${name}" dir: ${envDir}`);
+    const venvPath = getVenvPath(workspaceFolder);
+    const venvPythonPath = path.join(venvPath, 'Scripts', 'python.exe');
+
+    if (await tryDeleteFile(venvPythonPath)) {
+        traceInfo(`Deleted python executable: ${venvPythonPath}`);
+        if (await tryDeleteDir(venvPath)) {
+            traceInfo(`Deleted ".venv" dir: ${venvPath}`);
             return true;
         }
 
-        traceError(`Failed to delete "${name}" dir: ${envDir}`);
+        traceError(`Failed to delete ".venv" dir: ${venvPath}`);
         traceError(
-            'This happens if the virtual environment is still in use, or some binary in the "${name}" is still running.',
+            'This happens if the virtual environment is still in use, or some binary in the venv is still running.',
         );
-        traceError(`Please delete the "${name}" manually: [${envDir}]`);
+        traceError(`Please delete the ".venv" manually: [${venvPath}]`);
         showErrorMessageWithLogs(CreateEnv.Venv.errorDeletingEnvironment);
         return false;
     }
-    traceError(`Failed to delete python executable: ${envPythonBin}`);
+    traceError(`Failed to delete python executable: ${venvPythonPath}`);
     traceError('This happens if the virtual environment is still in use.');
 
     if (interpreter) {
-        traceError('We will attempt to switch python temporarily to delete the "${name}"');
+        traceError('We will attempt to switch python temporarily to delete the ".venv"');
 
-        await switchSelectedPython(interpreter, workspaceFolder.uri, 'temporarily to delete the "${name}"');
+        await switchSelectedPython(interpreter, workspaceFolder.uri, 'temporarily to delete the ".venv"');
 
-        traceInfo(`Attempting to delete "${name}" again: ${envDir}`);
+        traceInfo(`Attempting to delete ".venv" again: ${venvPath}`);
         const ms = 500;
         for (let i = 0; i < 5; i = i + 1) {
             traceInfo(`Waiting for ${ms}ms to let processes exit, before a delete attempt.`);
             await sleep(ms);
-            if (await tryDeleteDir(envDir)) {
-                traceInfo(`Deleted "${name}" dir: ${envDir}`);
+            if (await tryDeleteDir(venvPath)) {
+                traceInfo(`Deleted ".venv" dir: ${venvPath}`);
                 return true;
             }
-            traceError(`Failed to delete "${name}" dir [${envDir}] (attempt ${i + 1}/5).`);
+            traceError(`Failed to delete ".venv" dir [${venvPath}] (attempt ${i + 1}/5).`);
         }
     } else {
-        traceError(`Please delete the "${name}" dir manually: [${envDir}] manually.`);
+        traceError(`Please delete the ".venv" dir manually: [${venvPath}] manually.`);
     }
     showErrorMessageWithLogs(CreateEnv.Venv.errorDeletingEnvironment);
     return false;

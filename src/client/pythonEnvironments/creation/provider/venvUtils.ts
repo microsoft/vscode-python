@@ -18,7 +18,7 @@ import { traceError, traceVerbose } from '../../../logging';
 import { Commands } from '../../../common/constants';
 import { isWindows } from '../../../common/platform/platformService';
 import { getVenvPath, hasVenv } from '../common/commonUtils';
-import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './envDeleteUtils';
+import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './venvDeleteUtils';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 
@@ -248,10 +248,9 @@ async function deleteEnvironment(workspaceFolder: WorkspaceFolder, interpreter: 
         },
         async () => {
             if (isWindows()) {
-                const venvPythonPath = path.join(venvPath, 'Scripts', 'python.exe');
-                return deleteEnvironmentWindows(venvPath, venvPythonPath, workspaceFolder, interpreter);
+                return deleteEnvironmentWindows(workspaceFolder, interpreter);
             }
-            return deleteEnvironmentNonWindows(venvPath);
+            return deleteEnvironmentNonWindows(workspaceFolder);
         },
     );
 }
