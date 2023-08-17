@@ -55,6 +55,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         }
 
         const workspaceFolder = LaunchConfigurationResolver.getWorkspaceFolder(folder);
+        // Pass workspace folder so we can get this when we get debug events firing.
+        // Do it here itself instead of `resolveDebugConfigurationWithSubstitutedVariables` which is called after
+        // this method, as in order to calculate substituted variables, this might be needed.
+        debugConfiguration.workspaceFolder = workspaceFolder?.fsPath;
         await this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
         if (debugConfiguration.clientOS === undefined) {
             debugConfiguration.clientOS = getOSType() === OSType.Windows ? 'windows' : 'unix';
@@ -135,8 +139,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             // Populate justMyCode using debugStdLib
             debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
         }
-        // Pass workspace folder so we can get this when we get debug events firing.
-        debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
         if (!debugConfiguration.justMyCode) {
             LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.DebugStdLib);
