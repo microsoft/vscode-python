@@ -92,7 +92,7 @@ export async function deleteEnvironmentWindows(
             traceError(`Failed to delete ".venv" dir [${venvPath}] (attempt ${i + 1}/5).`);
         }
     } else {
-        traceError(`Please delete the ".venv" dir manually: [${venvPath}] manually.`);
+        traceError(`Please delete the ".venv" dir manually: [${venvPath}]`);
     }
     showErrorMessageWithLogs(CreateEnv.Venv.errorDeletingEnvironment);
     return false;
