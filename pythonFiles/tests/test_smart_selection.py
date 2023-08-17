@@ -115,13 +115,26 @@ def test_fstring():
 
     assert result == expected
 
-def test_simple_print():
+def test_list_comp():
     importlib.reload(normalizeSelection)
-    src = textwrap.dedent(
+    hi = textwrap.dedent(
         """\
-        print("Audi")
-
+        names = ['Ahri', 'Bobby', 'Charlie']
+        breed = ['Pomeranian', 'Welsh Corgi', 'Siberian Husky']
+        dogs = [(name, breed) for name, breed in zip(names, breed)]
+        print(dogs)
         """
     )
-    print(normalizeSelection.traverse_file(src, 1, 1, False))
 
+    expected = textwrap.dedent(
+        """\
+        names = ['Ahri', 'Bobby', 'Charlie']
+        breed = ['Pomeranian', 'Welsh Corgi', 'Siberian Husky']
+        dogs = [(name, breed) for name, breed in zip(names, breed)]
+        print(dogs)
+        """
+    )
+
+    result = normalizeSelection.traverse_file(hi, 1, 4, True)
+
+    assert result == expected
