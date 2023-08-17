@@ -141,19 +141,39 @@ min_key = None
 
 should_run_top_blocks = []
 
+def check_exact_exist(top_level_nodes, start_line, end_line):
+    exact_node = None
+    for node in top_level_nodes:
+        if node.lineno == start_line and node.end_lineno == end_line:
+            exact_node = node
+            break
+
+    return exact_node
 
 # Function that traverses the file and calculate the minimum viable top level block
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     # use ast module to parse content of the file
     parsed_file_content = ast.parse(wholeFileContent)
-    temp_code = ""
+    smart_code = ""
 
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
+        if hasattr(node, 'body'):
+            for child_nodes in node.body:
+                top_level_nodes.append(child_nodes)
+
         # line_start = node.lineno
         # line_end = node.end_lineno
         # code_of_node = ast.get_source_segment(wholeFileContent, node)
         # ast.get_source_segment(wholeFileContent, node) This is way to get original code of the selected node
+    # top_level_nodes = sorted(top_level_nodes, key=lambda node: node.lineno) # Sort top level blocks in ascending for binary search
+    # has_exact_match = binary_search_node_by_line_numbers(top_level_nodes, start_line, end_line)
+    exact_node = check_exact_exist(top_level_nodes, start_line, end_line)
+    # Just return the exact top level line, if present.
+    if exact_node is not None:
+        smart_code += str(ast.get_source_segment(wholeFileContent, exact_node))
+        smart_code += "\n"
+        return smart_code
 
     # With the given start_line and end_line number from VSCode,
     # Calculate the absolute difference between each of the top level block and given code (via line number)
@@ -172,25 +192,25 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         if was_highlighted: # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
             if top_level_block_start_line >= start_line and top_level_block_end_line <= end_line:
                 should_run_top_blocks.append(top_node)
-                temp_str = ast.get_source_segment(wholeFileContent, top_node)
-                temp_code += str(temp_str)
-                temp_code += "\n"
+
+                smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
+                smart_code += "\n"
+        elif start_line == top_level_block_start_line and end_line == top_level_block_end_line:
+            should_run_top_blocks.append(top_node)
+
+            smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
+            smart_code += "\n"
+            break # Break out of the loop since we found the exact match.
         else: # not highlighted case. Meaning just a cursor hanging
             if start_line >= top_level_block_start_line and end_line <= top_level_block_end_line:
                 should_run_top_blocks.append(top_node)
-                temp_str = ast.get_source_segment(wholeFileContent, top_node)
-                temp_code += str(temp_str)
-                temp_code += "\n"
 
+                smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
+                smart_code += "\n"
 
-    # get the minimum viable block node reference
-    # min_key = min(top_level_to_min_difference, key=top_level_to_min_difference.get)
-    # min_viable_code = ast.get_source_segment(wholeFileContent, min_key) # Minimum viable code
-    # normalized_min_viable_code = normalize_lines(min_viable_code) # Normalized minimum viable code
+    normalized_smart_result = normalize_lines(smart_code)
 
-    temp_result = normalize_lines(temp_code)
-    # return normalized_min_viable_code # return minimial viable code
-    return temp_result
+    return normalized_smart_result
 
 if __name__ == "__main__":
     # Content is being sent from the extension as a JSON object.
@@ -198,9 +218,8 @@ if __name__ == "__main__":
     stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
     raw = stdin.read()
     contents = json.loads(raw.decode("utf-8"))
-
-    normalized = normalize_lines(contents["code"])
-    normalized_whole_file = normalize_lines(contents["wholeFileContent"])
+    # normalized = normalize_lines(contents["code"])
+    # normalized_whole_file = normalize_lines(contents["wholeFileContent"])
     # Need to get information on whether there was a selection via Highlight.
     # empty_Highlight = True
     empty_Highlight = False
@@ -211,11 +230,19 @@ if __name__ == "__main__":
     vscode_start_line = contents["startLine"] + 1
     vscode_end_line = contents["endLine"] + 1
 
-    temp = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight) # traverse file
+    # temp = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight) # traverse file
 
     # Send the normalized code back to the extension in a JSON object.
+    data = None
+    # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
+    if contents['emptyHighlight'] is True:
+        normalized = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight)
+    else:
+        normalized = normalize_lines(contents["code"])
+
+    data = json.dumps({"normalized": normalized})
     # data = json.dumps({"normalized": normalized}) # This is how it used to be
-    data = json.dumps({"normalized": temp})
+    # data = json.dumps({"normalized": temp}) # 8/16/23 save
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
     stdout.close()
