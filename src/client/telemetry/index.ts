@@ -2121,6 +2121,30 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_BUTTON]: never | undefined;
     /**
+     * Telemetry event if user selected to delete the existing environment.
+     */
+    /* __GDPR__
+       "environment.delete" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "status" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_DELETE]: {
+        environmentType: 'venv' | 'conda';
+        status: 'deleted' | 'failed';
+    };
+    /**
+     * Telemetry event if user selected to re-use the existing environment.
+     */
+    /* __GDPR__
+       "environment.reuse" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_REUSE]: {
+        environmentType: 'venv' | 'conda';
+    };
+    /**
      * Telemetry event sent when a linter or formatter extension is already installed.
      */
     /* __GDPR__

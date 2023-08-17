@@ -19,6 +19,8 @@ import { Commands } from '../../../common/constants';
 import { isWindows } from '../../../common/platform/platformService';
 import { getVenvPath, hasVenv } from '../common/commonUtils';
 import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './venvDeleteUtils';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
@@ -287,12 +289,23 @@ export async function pickExistingVenvAction(
 
         if (selection.label === CreateEnv.Venv.recreate) {
             if (await deleteEnvironment(workspaceFolder, interpreter)) {
+                sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
+                    environmentType: 'venv',
+                    status: 'deleted',
+                });
                 return MultiStepAction.Continue;
             }
+            sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
+                environmentType: 'venv',
+                status: 'failed',
+            });
             return MultiStepAction.Cancel;
         }
 
         if (selection.label === CreateEnv.Venv.useExisting) {
+            sendTelemetryEvent(EventName.ENVIRONMENT_REUSE, undefined, {
+                environmentType: 'venv',
+            });
             return MultiStepAction.Continue;
         }
     } else if (context === MultiStepAction.Back) {
