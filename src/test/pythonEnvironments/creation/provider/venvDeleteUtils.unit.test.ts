@@ -10,7 +10,7 @@ import * as commonUtils from '../../../../client/pythonEnvironments/creation/com
 import {
     deleteEnvironmentNonWindows,
     deleteEnvironmentWindows,
-} from '../../../../client/pythonEnvironments/creation/provider/venvDeleteUtils';
+} from '../../../../client/pythonEnvironments/creation/provider/envDeleteUtils';
 import * as switchPython from '../../../../client/pythonEnvironments/creation/provider/venvSwitchPython';
 import * as asyncApi from '../../../../client/common/utils/async';
 
@@ -27,6 +27,8 @@ suite('Test Delete environments (windows)', () => {
         name: 'workspace1',
         index: 0,
     };
+    const venvPath = path.join(workspace1.uri.fsPath, 'venv');
+    const venvPythonPath = path.join(venvPath, 'scripts', 'python.exe');
 
     setup(() => {
         pathExistsStub = sinon.stub(fs, 'pathExists');
@@ -52,7 +54,7 @@ suite('Test Delete environments (windows)', () => {
     test('Delete venv folder succeeded', async () => {
         rmdirStub.resolves();
         unlinkStub.resolves();
-        assert.ok(await deleteEnvironmentWindows(workspace1, 'python.exe'));
+        assert.ok(await deleteEnvironmentWindows(venvPath, venvPythonPath, workspace1, 'python.exe'));
 
         assert.ok(rmdirStub.calledOnce);
         assert.ok(unlinkStub.calledOnce);
@@ -62,7 +64,7 @@ suite('Test Delete environments (windows)', () => {
     test('Delete python.exe succeeded but venv dir failed', async () => {
         rmdirStub.rejects();
         unlinkStub.resolves();
-        assert.notOk(await deleteEnvironmentWindows(workspace1, 'python.exe'));
+        assert.notOk(await deleteEnvironmentWindows(venvPath, venvPythonPath, workspace1, 'python.exe'));
 
         assert.ok(rmdirStub.calledOnce);
         assert.ok(unlinkStub.calledOnce);
@@ -72,7 +74,7 @@ suite('Test Delete environments (windows)', () => {
     test('Delete python.exe failed first attempt', async () => {
         unlinkStub.rejects();
         rmdirStub.resolves();
-        assert.ok(await deleteEnvironmentWindows(workspace1, 'python.exe'));
+        assert.ok(await deleteEnvironmentWindows(venvPath, venvPythonPath, workspace1, 'python.exe'));
 
         assert.ok(rmdirStub.calledOnce);
         assert.ok(switchPythonStub.calledOnce);
@@ -82,7 +84,7 @@ suite('Test Delete environments (windows)', () => {
     test('Delete python.exe failed all attempts', async () => {
         unlinkStub.rejects();
         rmdirStub.rejects();
-        assert.notOk(await deleteEnvironmentWindows(workspace1, 'python.exe'));
+        assert.notOk(await deleteEnvironmentWindows(venvPath, venvPythonPath, workspace1, 'python.exe'));
         assert.ok(switchPythonStub.calledOnce);
         assert.ok(showErrorMessageWithLogsStub.calledOnce);
     });
@@ -90,7 +92,7 @@ suite('Test Delete environments (windows)', () => {
     test('Delete python.exe failed no interpreter', async () => {
         unlinkStub.rejects();
         rmdirStub.rejects();
-        assert.notOk(await deleteEnvironmentWindows(workspace1, undefined));
+        assert.notOk(await deleteEnvironmentWindows(venvPath, venvPythonPath, workspace1, undefined));
         assert.ok(switchPythonStub.notCalled);
         assert.ok(showErrorMessageWithLogsStub.calledOnce);
     });
@@ -106,6 +108,7 @@ suite('Test Delete environments (linux/mac)', () => {
         name: 'workspace1',
         index: 0,
     };
+    const venvPath = path.join(workspace1.uri.fsPath, 'venv');
 
     setup(() => {
         pathExistsStub = sinon.stub(fs, 'pathExists');
@@ -123,7 +126,7 @@ suite('Test Delete environments (linux/mac)', () => {
         pathExistsStub.resolves(true);
         rmdirStub.resolves();
 
-        assert.ok(await deleteEnvironmentNonWindows(workspace1));
+        assert.ok(await deleteEnvironmentNonWindows(venvPath));
 
         assert.ok(pathExistsStub.calledOnce);
         assert.ok(rmdirStub.calledOnce);
@@ -133,7 +136,7 @@ suite('Test Delete environments (linux/mac)', () => {
     test('Delete venv folder failed', async () => {
         pathExistsStub.resolves(true);
         rmdirStub.rejects();
-        assert.notOk(await deleteEnvironmentNonWindows(workspace1));
+        assert.notOk(await deleteEnvironmentNonWindows(venvPath));
 
         assert.ok(pathExistsStub.calledOnce);
         assert.ok(rmdirStub.calledOnce);
