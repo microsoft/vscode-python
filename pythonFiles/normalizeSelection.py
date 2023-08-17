@@ -142,13 +142,13 @@ min_key = None
 should_run_top_blocks = []
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
-    exact_node = None
+    exact_nodes = []
     for node in top_level_nodes:
         if node.lineno == start_line and node.end_lineno == end_line:
-            exact_node = node
-            break
+            exact_nodes.append(node)
 
-    return exact_node
+
+    return exact_nodes
 
 # Function that traverses the file and calculate the minimum viable top level block
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
@@ -162,17 +162,13 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             for child_nodes in node.body:
                 top_level_nodes.append(child_nodes)
 
-        # line_start = node.lineno
-        # line_end = node.end_lineno
-        # code_of_node = ast.get_source_segment(wholeFileContent, node)
-        # ast.get_source_segment(wholeFileContent, node) This is way to get original code of the selected node
-    # top_level_nodes = sorted(top_level_nodes, key=lambda node: node.lineno) # Sort top level blocks in ascending for binary search
-    # has_exact_match = binary_search_node_by_line_numbers(top_level_nodes, start_line, end_line)
-    exact_node = check_exact_exist(top_level_nodes, start_line, end_line)
+    exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
+
     # Just return the exact top level line, if present.
-    if exact_node is not None:
-        smart_code += str(ast.get_source_segment(wholeFileContent, exact_node))
-        smart_code += "\n"
+    if len(exact_nodes) > 0:
+        for same_line_node in exact_nodes:
+            smart_code += str(ast.get_source_segment(wholeFileContent, same_line_node))
+            smart_code += "\n"
         return smart_code
 
     # With the given start_line and end_line number from VSCode,
@@ -183,11 +179,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         # top_level_block_end_line = top_node.end_lineno if hasattr(top_node, "end_lineno") else 0
         abs_difference = abs(start_line - top_level_block_start_line) + abs(end_line - top_level_block_end_line)
         top_level_to_min_difference[top_node] = abs_difference
-        # Also see if given start and end line is within the top level block 8/13/2023 --------------------------------------------
-        # if top_level_block_start_line >= start_line or top_level_block_end_line >= end_line:
-        #     should_run_top_blocks.append(top_node)
-        #     temp_code += str(ast.get_source_segment(wholeFileContent, top_node))
-        #     temp_code += "\n" ----------------------------------------------------
+
         # We need to handle the case of 1. just hanging cursor vs. actual highlighting/selection.
         if was_highlighted: # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
             if top_level_block_start_line >= start_line and top_level_block_end_line <= end_line:
