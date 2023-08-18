@@ -20,7 +20,7 @@ import {
 } from '../../common/types';
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
-import { traceDecoratorVerbose, traceVerbose } from '../../logging';
+import { traceDecoratorVerbose, traceVerbose, traceWarn } from '../../logging';
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from './types';
@@ -62,8 +62,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     public async activate(resource: Resource): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
-            const workspaceFolder = this.getWorkspaceFolder(resource);
-            this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
+            this.context.environmentVariableCollection.clear();
             await this.handleMicroVenv(resource);
             if (!this.registeredOnce) {
                 this.interpreterService.onDidChangeInterpreter(
@@ -227,22 +226,26 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async handleMicroVenv(resource: Resource) {
-        const workspaceFolder = this.getWorkspaceFolder(resource);
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (interpreter?.envType === EnvironmentType.Venv) {
-            const activatePath = path.join(path.dirname(interpreter.path), 'activate');
-            if (!(await pathExists(activatePath))) {
-                const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
-                const pathVarName = getSearchPathEnvVarNames()[0];
-                envVarCollection.replace(
-                    'PATH',
-                    `${path.dirname(interpreter.path)}${path.delimiter}${process.env[pathVarName]}`,
-                    { applyAtShellIntegration: true, applyAtProcessCreation: true },
-                );
-                return;
+        try {
+            const workspaceFolder = this.getWorkspaceFolder(resource);
+            const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+            if (interpreter?.envType === EnvironmentType.Venv) {
+                const activatePath = path.join(path.dirname(interpreter.path), 'activate');
+                if (!(await pathExists(activatePath))) {
+                    const envVarCollection = this.context.getEnvironmentVariableCollection({ workspaceFolder });
+                    const pathVarName = getSearchPathEnvVarNames()[0];
+                    envVarCollection.replace(
+                        'PATH',
+                        `${path.dirname(interpreter.path)}${path.delimiter}${process.env[pathVarName]}`,
+                        { applyAtShellIntegration: true, applyAtProcessCreation: true },
+                    );
+                    return;
+                }
+                this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
             }
+        } catch (ex) {
+            traceWarn(`Microvenv failed as it is using proposed API which is constantly changing`, ex);
         }
-        this.context.getEnvironmentVariableCollection({ workspaceFolder }).clear();
     }
 
     private getWorkspaceFolder(resource: Resource): WorkspaceFolder | undefined {
