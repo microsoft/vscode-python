@@ -138,7 +138,7 @@ def normalize_lines(selection):
 top_level_nodes = [] # collection of top level nodes
 top_level_to_min_difference = {} # dictionary of top level nodes to difference in relative to given code block to run
 min_key = None
-
+global_next_lineno = None
 should_run_top_blocks = []
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
@@ -167,13 +167,15 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     # Just return the exact top level line, if present.
     if len(exact_nodes) > 0:
         for same_line_node in exact_nodes:
+            should_run_top_blocks.append(same_line_node)
             smart_code += str(ast.get_source_segment(wholeFileContent, same_line_node))
             smart_code += "\n"
+            global_next_lineno = get_next_block_lineno()
         return smart_code
 
     # With the given start_line and end_line number from VSCode,
     # Calculate the absolute difference between each of the top level block and given code (via line number)
-    for top_node in top_level_nodes:
+    for top_node in ast.iter_child_nodes(parsed_file_content):
         top_level_block_start_line = top_node.lineno
         top_level_block_end_line = top_node.end_lineno
         # top_level_block_end_line = top_node.end_lineno if hasattr(top_node, "end_lineno") else 0
@@ -183,11 +185,13 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         # We need to handle the case of 1. just hanging cursor vs. actual highlighting/selection.
         if was_highlighted: # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
             if top_level_block_start_line >= start_line and top_level_block_end_line <= end_line:
+                # global should_run_top_blocks
                 should_run_top_blocks.append(top_node)
 
                 smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
                 smart_code += "\n"
         elif start_line == top_level_block_start_line and end_line == top_level_block_end_line:
+            # global should_run_top_blocks
             should_run_top_blocks.append(top_node)
 
             smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
@@ -195,14 +199,30 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             break # Break out of the loop since we found the exact match.
         else: # not highlighted case. Meaning just a cursor hanging
             if start_line >= top_level_block_start_line and end_line <= top_level_block_end_line:
+                # global should_run_top_blocks
                 should_run_top_blocks.append(top_node)
 
                 smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
                 smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
+    global_next_lineno = get_next_block_lineno()
 
     return normalized_smart_result
+
+# Look at the last top block added, find lineno for the next upcoming block,
+# This will allow us to move cursor in vscode.
+def get_next_block_lineno():
+    last_ran_lineno = int(should_run_top_blocks[-1].end_lineno)
+    temp_next_lineno = int(should_run_top_blocks[-1].end_lineno)
+
+    # next_lineno = should_run_top_blocks[-1].end_lineno
+
+    for reverse_node in top_level_nodes:
+        if reverse_node.lineno > last_ran_lineno:
+            temp_next_lineno = reverse_node.lineno
+            break
+    return temp_next_lineno - 1
 
 if __name__ == "__main__":
     # Content is being sent from the extension as a JSON object.
@@ -231,8 +251,9 @@ if __name__ == "__main__":
         normalized = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight)
     else:
         normalized = normalize_lines(contents["code"])
-
-    data = json.dumps({"normalized": normalized})
+    # next_block_lineno
+    which_line_next = get_next_block_lineno()
+    data = json.dumps({"normalized": normalized, "nextBlockLineno": which_line_next})
     # data = json.dumps({"normalized": normalized}) # This is how it used to be
     # data = json.dumps({"normalized": temp}) # 8/16/23 save
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer

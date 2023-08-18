@@ -80,7 +80,11 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // We expect a serialized JSON object back, with the normalized code under the "normalized" key.
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
-
+            // this.smartMoveCursor(object.nextBlockIndex);
+            // commands.executeCommand('cursorMove', { to: 'down'});
+            // calculate and return offset
+            const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
+            commands.executeCommand('cursorMove', { to: 'down', by: 'line', value:  Number(lineOffset) });
             return parse(object.normalized);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
@@ -117,7 +121,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
         const { selection } = textEditor;
         let code: string;
-        const wholeFileContent = textEditor.document.getText(); // This is a way to get the whole text content from the user
+        // const wholeFileContent = textEditor.document.getText(); // This is a way to get the whole text content from the user
         if (selection.isEmpty) {
             code = textEditor.document.lineAt(selection.start.line).text;
         } else if (selection.isSingleLine) {
