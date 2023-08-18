@@ -124,6 +124,7 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('When not in experiment, do not apply activated variables to the collection and clear it instead', async () => {
         reset(experimentService);
+        when(context.environmentVariableCollection).thenReturn(instance(collection));
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(false);
         const applyCollectionStub = sinon.stub(terminalEnvVarCollectionService, '_applyCollection');
         applyCollectionStub.resolves();
