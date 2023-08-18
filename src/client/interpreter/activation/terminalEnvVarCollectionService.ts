@@ -68,7 +68,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     ) {}
 
     public async activate(resource: Resource): Promise<void> {
-        // TODO: Remove try...catch once proposed APIs being used are finalized.
         try {
             if (!inTerminalEnvVarExperiment(this.experimentService)) {
                 this.context.environmentVariableCollection.clear();
@@ -249,12 +248,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     envVarCollection.replace(
                         'PATH',
                         `${path.dirname(interpreter.path)}${path.delimiter}${process.env[pathVarName]}`,
-                        { applyAtShellIntegration: true },
+                        { applyAtShellIntegration: true, applyAtProcessCreation: true },
                     );
                     return;
                 }
+                this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
             }
-            this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
         } catch (ex) {
             traceWarn(`Microvenv failed as it is using proposed API which is constantly changing`, ex);
         }
