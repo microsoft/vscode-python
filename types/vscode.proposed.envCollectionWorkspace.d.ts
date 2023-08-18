@@ -4,30 +4,34 @@
  *--------------------------------------------------------------------------------------------*/
 
 declare module 'vscode' {
+    // https://github.com/microsoft/vscode/issues/171173
 
-	// https://github.com/microsoft/vscode/issues/182069
+    // export interface ExtensionContext {
+    //     /**
+    //      * Gets the extension's global environment variable collection for this workspace, enabling changes to be
+    //      * applied to terminal environment variables.
+    //      */
+    //     readonly environmentVariableCollection: GlobalEnvironmentVariableCollection;
+    // }
 
-	export interface ExtensionContext {
-		/**
-		 * Gets the extension's environment variable collection for this workspace, enabling changes
-		 * to be applied to terminal environment variables.
-		 *
-		 * @deprecated Use {@link getEnvironmentVariableCollection} instead.
-		 */
-		readonly environmentVariableCollection: EnvironmentVariableCollection;
-		/**
-		 * Gets the extension's environment variable collection for this workspace, enabling changes
-		 * to be applied to terminal environment variables.
-		 *
-		 * @param scope The scope to which the environment variable collection applies to.
-		 */
-		getEnvironmentVariableCollection(scope?: EnvironmentVariableScope): EnvironmentVariableCollection;
-	}
+    export interface GlobalEnvironmentVariableCollection extends EnvironmentVariableCollection {
+        /**
+         * Gets scope-specific environment variable collection for the extension. This enables alterations to
+         * terminal environment variables solely within the designated scope, and is applied in addition to (and
+         * after) the global collection.
+         *
+         * Each object obtained through this method is isolated and does not impact objects for other scopes,
+         * including the global collection.
+         *
+         * @param scope The scope to which the environment variable collection applies to.
+         */
+        getScoped(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
+    }
 
-	export type EnvironmentVariableScope = {
-		/**
-		* Any specific workspace folder to get collection for. If unspecified, collection applicable to all workspace folders is returned.
-		*/
-		workspaceFolder?: WorkspaceFolder;
-	};
+    export type EnvironmentVariableScope = {
+        /**
+         * Any specific workspace folder to get collection for. If unspecified, collection applicable to all workspace folders is returned.
+         */
+        workspaceFolder?: WorkspaceFolder;
+    };
 }
