@@ -112,7 +112,7 @@ suite('Terminal - Code Execution Helper', () => {
                 return ({} as unknown) as ObservableExecutionResult<string>;
             });
 
-        await helper.normalizeLines('print("hello")');
+        await helper.normalizeLines('print("hello")', 'print("hello")');
 
         expect(execArgs).to.contain('normalizeSelection.py');
     });
@@ -124,7 +124,7 @@ suite('Terminal - Code Execution Helper', () => {
             .returns((file, args, options) =>
                 actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
             );
-        const normalizedCode = await helper.normalizeLines(source);
+        const normalizedCode = await helper.normalizeLines(source, source);
         const normalizedExpected = expectedSource.replace(/\r\n/g, '\n');
         expect(normalizedCode).to.be.equal(normalizedExpected);
     }

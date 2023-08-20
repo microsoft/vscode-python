@@ -83,8 +83,11 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // this.smartMoveCursor(object.nextBlockIndex);
             // commands.executeCommand('cursorMove', { to: 'down'});
             // calculate and return offset
-            const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
-            commands.executeCommand('cursorMove', { to: 'down', by: 'line', value:  Number(lineOffset) });
+            // Smart cursor move only for smart shift+enter
+            if (activeEditor!.selection.isEmpty) {
+                const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
+                commands.executeCommand('cursorMove', { to: 'down', by: 'line', value:  Number(lineOffset) });
+            }
             return parse(object.normalized);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');

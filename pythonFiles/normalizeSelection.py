@@ -246,13 +246,15 @@ if __name__ == "__main__":
 
     # Send the normalized code back to the extension in a JSON object.
     data = None
+    which_line_next = 0
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
     if contents['emptyHighlight'] is True:
         normalized = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight)
+        which_line_next = get_next_block_lineno() # Only figure out next block line number for smart shift+enter
     else:
         normalized = normalize_lines(contents["code"])
     # next_block_lineno
-    which_line_next = get_next_block_lineno()
+    # which_line_next = get_next_block_lineno()
     data = json.dumps({"normalized": normalized, "nextBlockLineno": which_line_next})
     # data = json.dumps({"normalized": normalized}) # This is how it used to be
     # data = json.dumps({"normalized": temp}) # 8/16/23 save
