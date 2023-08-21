@@ -1787,7 +1787,7 @@
                     "category": "Python",
                     "command": "python.clearWorkspaceInterpreter",
                     "title": "%python.command.python.clearWorkspaceInterpreter.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
+                    "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "category": "Python",
