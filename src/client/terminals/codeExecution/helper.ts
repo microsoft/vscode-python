@@ -14,8 +14,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
-import { IExperimentService, Resource } from '../../common/types';
-import { EnableREPLSmartSend } from '../../common/experiments/groups';
+import { IExperimentService, IExperimentService, Resource } from '../../common/types';
+import { EnableREPLSmartSend, EnableREPLSmartSend } from '../../common/experiments/groups';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
@@ -26,6 +26,8 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly processServiceFactory: IProcessServiceFactory;
 
     private readonly interpreterService: IInterpreterService;
+
+    // private readonly configSettings: IConfigurationService;
 
     // private readonly configSettings: IConfigurationService;
 
@@ -257,6 +259,11 @@ function getMultiLineSelectionText(textEditor: TextEditor): string {
     //         and n == 0)
     //                   ↑<---------------- To here
     return selectionText;
+}
+
+function pythonSmartSendEnabled(serviceContainer: IServiceContainer): boolean {
+    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
+    return experiment.inExperimentSync(EnableREPLSmartSend.experiment);
 }
 
 function pythonSmartSendEnabled(serviceContainer: IServiceContainer): boolean {
