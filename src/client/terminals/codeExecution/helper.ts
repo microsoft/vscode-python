@@ -14,7 +14,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
-import { Resource } from '../../common/types';
+import { IExperimentService, Resource } from '../../common/types';
+import { EnableREPLSmartSend } from '../../common/experiments/groups';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
@@ -26,11 +27,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly interpreterService: IInterpreterService;
 
+    // private readonly configSettings: IConfigurationService;
+
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
+        // this.configSettings = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     public async normalizeLines(code: string, wholeFileContent: string, resource?: Uri): Promise<string> {
@@ -80,14 +84,16 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // We expect a serialized JSON object back, with the normalized code under the "normalized" key.
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
-            // this.smartMoveCursor(object.nextBlockIndex);
-            // commands.executeCommand('cursorMove', { to: 'down'});
-            // calculate and return offset
-            // Smart cursor move only for smart shift+enter
-            if (activeEditor!.selection.isEmpty) {
+
+            // Let user experience smart shift+enter, advance cursor if in experiment
+            if (pythonSmartSendEnabled(this.serviceContainer)) {
+                // Advance cursor move only for smart shift+enter
+                if (activeEditor!.selection.isEmpty) {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
                 commands.executeCommand('cursorMove', { to: 'down', by: 'line', value:  Number(lineOffset) });
+                }
             }
+
             return parse(object.normalized);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
@@ -250,4 +256,9 @@ function getMultiLineSelectionText(textEditor: TextEditor): string {
     //         and n == 0)
     //                   ↑<---------------- To here
     return selectionText;
+}
+
+function pythonSmartSendEnabled(serviceContainer: IServiceContainer): boolean {
+    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
+    return experiment.inExperimentSync(EnableREPLSmartSend.experiment);
 }

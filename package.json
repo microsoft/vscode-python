@@ -544,14 +544,16 @@
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
-                            "pythonTestAdapter"
+                            "pythonTestAdapter",
+                            "pythonREPLSmartSend"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
-                            "%python.experiments.pythonTestAdapter.description%"
+                            "%python.experiments.pythonTestAdapter.description%",
+                            "%python.experiments.pythonREPLSmartSend.description%"
                         ]
                     },
                     "scope": "machine",
@@ -567,14 +569,16 @@
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
-                            "pythonTestAdapter"
+                            "pythonTestAdapter",
+                            "pythonREPLSmartSend"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
-                            "%python.experiments.pythonTestAdapter.description%"
+                            "%python.experiments.pythonTestAdapter.description%",
+                            "%python.experiments.pythonREPLSmartSend.description%"
                         ]
                     },
                     "scope": "machine",

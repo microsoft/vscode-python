@@ -18,3 +18,7 @@ export enum ShowFormatterExtensionPrompt {
 export enum EnableTestAdapterRewrite {
     experiment = 'pythonTestAdapter',
 }
+// Experiment to enable smart shift+enter, advance cursor.
+export enum EnableREPLSmartSend {
+    experiment = 'pythonREPLSmartSend',
+}
