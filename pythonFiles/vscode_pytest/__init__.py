@@ -46,6 +46,15 @@ class VSCodePytestError(Exception):
 
 
 ERRORS = []
+IS_DISCOVERY = False
+map_id_to_path = dict()
+collected_tests_so_far = list()
+
+
+def pytest_load_initial_conftests(early_config, parser, args):
+    if "--collect-only" in args:
+        global IS_DISCOVERY
+        IS_DISCOVERY = True
 
 
 def pytest_internalerror(excrepr, excinfo):
@@ -70,7 +79,7 @@ def pytest_exception_interact(node, call, report):
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
     # If it is during discovery, then add the error to error logs.
-    if type(report) == pytest.CollectReport:
+    if IS_DISCOVERY:
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
                 return
@@ -166,19 +175,6 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
     outcome: str
     tests: Dict[str, TestOutcome]
-
-
-IS_DISCOVERY = False
-map_id_to_path = dict()
-
-
-def pytest_load_initial_conftests(early_config, parser, args):
-    if "--collect-only" in args:
-        global IS_DISCOVERY
-        IS_DISCOVERY = True
-
-
-collected_tests_so_far = list()
 
 
 def pytest_report_teststatus(report, config):
