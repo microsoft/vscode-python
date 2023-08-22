@@ -37,7 +37,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         // this.configSettings = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public async normalizeLines(code: string, wholeFileContent: string, resource?: Uri): Promise<string> {
+    public async normalizeLines(code: string, wholeFileContent?: string, resource?: Uri): Promise<string> {
         try {
             if (code.trim().length === 0) {
                 return '';
