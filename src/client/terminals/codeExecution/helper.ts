@@ -91,6 +91,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 if (activeEditor!.selection.isEmpty) {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
                 commands.executeCommand('cursorMove', { to: 'down', by: 'line', value:  Number(lineOffset) });
+                commands.executeCommand('cursorEnd');
                 }
             }
 
