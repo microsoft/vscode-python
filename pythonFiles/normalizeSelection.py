@@ -159,8 +159,25 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
         if hasattr(node, 'body'):
-            for child_nodes in node.body:
-                top_level_nodes.append(child_nodes)
+            # Not adding below check will have linting and python type complain
+            if (isinstance(node, ast.Module) or
+                isinstance(node, ast.Interactive) or
+                isinstance(node, ast.Expression) or
+                isinstance(node, ast.FunctionDef) or
+                isinstance(node, ast.AsyncFunctionDef) or
+                isinstance(node, ast.ClassDef) or
+                isinstance(node, ast.For) or
+                isinstance(node, ast.AsyncFor) or
+                isinstance(node, ast.While) or
+                isinstance(node, ast.If) or
+                isinstance(node, ast.With) or
+                isinstance(node, ast.AsyncWith) or
+                isinstance(node, ast.Try) or
+                isinstance(node, ast.Lambda) or
+                isinstance(node, ast.IfExp) or
+                isinstance(node, ast.ExceptHandler)):
+                    for child_nodes in node.body:
+                        top_level_nodes.append(child_nodes)
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
