@@ -60,7 +60,7 @@ function isUri(resource?: Uri | any): resource is Uri {
 /**
  * Create a filter func that determine if the given URI and candidate match.
  *
- * The scheme must match, as well as path.
+ * Only compares path.
  *
  * @param checkParent - if `true`, match if the candidate is rooted under `uri`
  * or if the candidate matches `uri` exactly.
