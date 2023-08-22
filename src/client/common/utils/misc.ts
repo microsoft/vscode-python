@@ -80,9 +80,8 @@ export function getURIFilter(
     }
     const uriRoot = `${uriPath}/`;
     function filter(candidate: Uri): boolean {
-        if (candidate.scheme !== uri.scheme) {
-            return false;
-        }
+        // Do not compare schemes as it is sometimes not available, in
+        // which case file is assumed as scheme.
         let candidatePath = candidate.path;
         while (candidatePath.endsWith('/')) {
             candidatePath = candidatePath.slice(0, -1);
