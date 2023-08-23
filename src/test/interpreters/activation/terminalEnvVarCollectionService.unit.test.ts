@@ -9,9 +9,10 @@ import { mock, instance, when, anything, verify, reset } from 'ts-mockito';
 import {
     EnvironmentVariableCollection,
     EnvironmentVariableMutatorOptions,
-    EnvironmentVariableScope,
+    GlobalEnvironmentVariableCollection,
     ProgressLocation,
     Uri,
+    WorkspaceConfiguration,
     WorkspaceFolder,
 } from 'vscode';
 import {
@@ -44,12 +45,12 @@ suite('Terminal Environment Variable Collection Service', () => {
     let context: IExtensionContext;
     let shell: IApplicationShell;
     let experimentService: IExperimentService;
-    let collection: EnvironmentVariableCollection & {
-        getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
-    };
+    let collection: EnvironmentVariableCollection;
+    let globalCollection: GlobalEnvironmentVariableCollection;
     let applicationEnvironment: IApplicationEnvironment;
     let environmentActivationService: IEnvironmentActivationService;
     let workspaceService: IWorkspaceService;
+    let workspaceConfig: WorkspaceConfiguration;
     let terminalEnvVarCollectionService: TerminalEnvVarCollectionService;
     const progressOptions = {
         location: ProgressLocation.Window,
@@ -62,19 +63,20 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     setup(() => {
         workspaceService = mock<IWorkspaceService>();
+        workspaceConfig = mock<WorkspaceConfiguration>();
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         when(workspaceService.workspaceFolders).thenReturn(undefined);
+        when(workspaceService.getConfiguration('terminal')).thenReturn(instance(workspaceConfig));
+        when(workspaceConfig.get('integrated.shellIntegration.enabled')).thenReturn(true);
         platform = mock<IPlatformService>();
         when(platform.osType).thenReturn(getOSType());
         interpreterService = mock<IInterpreterService>();
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
-        collection = mock<
-            EnvironmentVariableCollection & {
-                getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
-            }
-        >();
-        when(context.environmentVariableCollection).thenReturn(instance(collection));
+        globalCollection = mock<GlobalEnvironmentVariableCollection>();
+        collection = mock<EnvironmentVariableCollection>();
+        when(context.environmentVariableCollection).thenReturn(instance(globalCollection));
+        when(globalCollection.getScoped(anything())).thenReturn(instance(collection));
         experimentService = mock<IExperimentService>();
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(true);
         applicationEnvironment = mock<IApplicationEnvironment>();

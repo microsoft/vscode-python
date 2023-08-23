@@ -232,6 +232,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
+            const config = this.workspaceService
+                .getConfiguration('terminal')
+                .get<boolean>('integrated.shellIntegration.enabled');
+            if (!config) {
+                traceVerbose('PS1 is not set when shell integration is disabled.');
+                return;
+            }
         }
         this.terminalPromptIsCorrect(resource);
     }
@@ -259,9 +266,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
     }
 
-    private getEnvironmentVariableCollection(scope?: EnvironmentVariableScope) {
+    private getEnvironmentVariableCollection(scope: EnvironmentVariableScope = {}) {
         const envVarCollection = this.context.environmentVariableCollection as GlobalEnvironmentVariableCollection;
-        return scope?.workspaceFolder ? envVarCollection.getScoped(scope) : envVarCollection;
+        return envVarCollection.getScoped(scope);
     }
 
     private getWorkspaceFolder(resource: Resource): WorkspaceFolder | undefined {
