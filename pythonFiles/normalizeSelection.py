@@ -125,6 +125,7 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
+        # source = "\n".join(statements)
         if (selection[-2] == '}'):
             source = source[:-1]
         # source = "\n".join(statements)
@@ -266,8 +267,9 @@ if __name__ == "__main__":
     which_line_next = 0
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
     if contents['emptyHighlight'] is True:
-        normalized = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight)
-        which_line_next = get_next_block_lineno() # Only figure out next block line number for smart shift+enter
+        # normalized = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight)
+        # which_line_next = get_next_block_lineno() # Only figure out next block line number for smart shift+
+        normalized = normalize_lines(contents["code"])
     else:
         normalized = normalize_lines(contents["code"])
     # next_block_lineno
