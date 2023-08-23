@@ -632,6 +632,7 @@ def execution_post(
     testuuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
     global __socket
+
     if __socket is None:
         try:
             __socket = socket_manager.SocketManager(addr)
@@ -650,6 +651,28 @@ Content-Type: application/json
 Request-uuid: {testuuid}
 
 {data}"""
+
+    max_retries = 3
+    retries = 0
+    while retries < max_retries:
+        try:
+            if __socket is not None and __socket.socket is not None:
+                __socket.socket.sendall(request.encode("utf-8"))
+                print("Execution post sent successfully!")
+                break  # Exit the loop if the send was successful
+            else:
+                print("Plugin error connection error[vscode-pytest]")
+                print(f"[vscode-pytest] data: {request}")
+        except Exception as e:
+            print(f"Plugin error connection error[vscode-pytest]: {e}")
+            print(f"[vscode-pytest] data: {request}")
+            retries += 1  # Increment retry counter
+            if retries < max_retries:
+                print(f"Retrying ({retries}/{max_retries}) in 2 seconds...")
+                time.sleep(2)  # Wait for a short duration before retrying
+            else:
+                print("Maximum retry attempts reached. Cannot send execution post.")
+
     try:
         if __socket is not None and __socket.socket is not None:
             __socket.socket.sendall(request.encode("utf-8"))
