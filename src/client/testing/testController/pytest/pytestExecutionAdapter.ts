@@ -176,6 +176,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 result?.proc?.on('exit', () => {
+                    setTimeout(() => {
+                        console.log('exit timeout');
+                    }, 3000);
                     deferredExec.resolve({ stdout: '', stderr: '' });
                     deferred.resolve();
                     disposeDataReceiver?.(this.testServer);
