@@ -67,7 +67,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         when(workspaceService.workspaceFolders).thenReturn(undefined);
         when(workspaceService.getConfiguration('terminal')).thenReturn(instance(workspaceConfig));
-        when(workspaceConfig.get('integrated.shellIntegration.enabled')).thenReturn(true);
+        when(workspaceConfig.get<boolean>('integrated.shellIntegration.enabled')).thenReturn(true);
         platform = mock<IPlatformService>();
         when(platform.osType).thenReturn(getOSType());
         interpreterService = mock<IInterpreterService>();
