@@ -63,6 +63,24 @@ suite('End to End Tests: test adapters', () => {
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
         await pythonTestServer.serverReady();
+
+        testOutputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        testOutputChannel
+            .setup((x) => x.append(typeMoq.It.isAny()))
+            .callback((appendVal: any) => {
+                console.log('out - ', appendVal.toString());
+            })
+            .returns(() => {
+                // Whatever you need to return
+            });
+        testOutputChannel
+            .setup((x) => x.appendLine(typeMoq.It.isAny()))
+            .callback((appendVal: any) => {
+                console.log('outL - ', appendVal.toString());
+            })
+            .returns(() => {
+                // Whatever you need to return
+            });
     });
     teardown(async () => {
         pythonTestServer.dispose();
