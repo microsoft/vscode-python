@@ -61,7 +61,7 @@ suite('End to End Tests: test adapters', () => {
         testOutputChannel
             .setup((x) => x.append(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
-                console.log('out - ', appendVal);
+                console.log('out - ', appendVal.toString());
             })
             .returns(() => {
                 // Whatever you need to return
@@ -69,7 +69,7 @@ suite('End to End Tests: test adapters', () => {
         testOutputChannel
             .setup((x) => x.appendLine(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
-                console.log('outL - ', appendVal);
+                console.log('outL - ', appendVal.toString());
             })
             .returns(() => {
                 // Whatever you need to return
