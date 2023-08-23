@@ -36,6 +36,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
                 try {
+                    console.log('raw Data: ', data.toString());
                     let rawData: string = data.toString();
                     buffer = Buffer.concat([buffer, data]);
                     while (buffer.length > 0) {
@@ -65,6 +66,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                                 });
                                 // if the rawData includes result then this is a run request
                             } else if (rawData.includes(`"result":`)) {
+                                console.log('fire run data received');
                                 this._onRunDataReceived.fire({
                                     uuid,
                                     data: rpcContent.extractedJSON,
