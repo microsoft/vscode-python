@@ -627,6 +627,7 @@ def execution_post(
     session_node -- the status of running the tests
     tests -- the tests that were run and their status.
     """
+    print("sending execution post!")
     testPort = os.getenv("TEST_PORT", 45454)
     testuuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
