@@ -74,7 +74,7 @@ suite('Terminal Environment Variable Collection Service', () => {
                 getScopedEnvironmentVariableCollection(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
             }
         >();
-        when(context.getEnvironmentVariableCollection(anything())).thenReturn(instance(collection));
+        when(context.environmentVariableCollection).thenReturn(instance(collection));
         experimentService = mock<IExperimentService>();
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(true);
         applicationEnvironment = mock<IApplicationEnvironment>();
