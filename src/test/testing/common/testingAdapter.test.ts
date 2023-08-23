@@ -25,9 +25,9 @@ suite('End to End Tests: test adapters', () => {
     let pythonExecFactory: IPythonExecutionFactory;
     let debugLauncher: ITestDebugLauncher;
     let configService: IConfigurationService;
-    let testOutputChannel: ITestOutputChannel;
     let serviceContainer: IServiceContainer;
     let workspaceUri: Uri;
+    let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
     const rootPathSmallWorkspace = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -55,7 +55,6 @@ suite('End to End Tests: test adapters', () => {
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-        testOutputChannel = serviceContainer.get<ITestOutputChannel>(ITestOutputChannel);
 
         // create mock resultResolver object
         resultResolver = typeMoq.Mock.ofType<ITestResultResolver>();
@@ -63,6 +62,24 @@ suite('End to End Tests: test adapters', () => {
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
         await pythonTestServer.serverReady();
+
+        testOutputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        testOutputChannel
+            .setup((x) => x.append(typeMoq.It.isAny()))
+            .callback((appendVal: any) => {
+                console.log('out - ', appendVal);
+            })
+            .returns(() => {
+                // Whatever you need to return
+            });
+        testOutputChannel
+            .setup((x) => x.appendLine(typeMoq.It.isAny()))
+            .callback((appendVal: any) => {
+                console.log('outL - ', appendVal);
+            })
+            .returns(() => {
+                // Whatever you need to return
+            });
     });
     teardown(async () => {
         pythonTestServer.dispose();
@@ -90,7 +107,7 @@ suite('End to End Tests: test adapters', () => {
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
 
@@ -143,7 +160,7 @@ suite('End to End Tests: test adapters', () => {
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
 
@@ -180,7 +197,7 @@ suite('End to End Tests: test adapters', () => {
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
 
@@ -219,7 +236,7 @@ suite('End to End Tests: test adapters', () => {
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
 
@@ -262,7 +279,7 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new UnittestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
@@ -314,7 +331,7 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new UnittestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
@@ -367,7 +384,7 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new PytestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
@@ -430,7 +447,7 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new PytestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
+            testOutputChannel.object,
             resultResolver.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
