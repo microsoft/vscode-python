@@ -15,7 +15,7 @@ import { traceError, traceInfo, traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER, createExecutionErrorPayload } from './utils';
+import { containsHeaders, extractJsonPayload } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {
@@ -37,55 +37,33 @@ export class PythonTestServer implements ITestServer, Disposable {
             socket.on('data', (data: Buffer) => {
                 try {
                     console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
-                    let rawData: string = data.toString();
                     buffer = Buffer.concat([buffer, data]);
                     while (buffer.length > 0) {
-                        const rpcHeaders = jsonRPCHeaders(buffer.toString());
-                        const uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
-                        const totalContentLength = rpcHeaders.headers.get('Content-Length');
-                        if (!uuid) {
-                            traceError('On data received: Error occurred because payload UUID is undefined');
-                            this._onDataReceived.fire({ uuid: '', data: '' });
-                            return;
-                        }
-                        if (!this.uuids.includes(uuid)) {
-                            traceError('On data received: Error occurred because the payload UUID is not recognized');
-                            this._onDataReceived.fire({ uuid: '', data: '' });
-                            return;
-                        }
-                        rawData = rpcHeaders.remainingRawData;
-                        const rpcContent = jsonRPCContent(rpcHeaders.headers, rawData);
-                        const extractedData = rpcContent.extractedJSON;
-                        // do not send until we have the full content
-                        if (extractedData.length === Number(totalContentLength)) {
-                            // if the rawData includes tests then this is a discovery request
-                            if (rawData.includes(`"tests":`)) {
-                                this._onDiscoveryDataReceived.fire({
-                                    uuid,
-                                    data: rpcContent.extractedJSON,
-                                });
-                                // if the rawData includes result then this is a run request
-                            } else if (rawData.includes(`"result":`)) {
-                                console.log(
-                                    '\n *** fire run data received: \n',
-                                    rpcContent.extractedJSON,
-                                    '\n *** end',
-                                );
-                                this._onRunDataReceived.fire({
-                                    uuid,
-                                    data: rpcContent.extractedJSON,
-                                });
-                            } else {
-                                traceLog(
-                                    `Error processing test server request: request is not recognized as discovery or run.`,
-                                );
-                                this._onDataReceived.fire({ uuid: '', data: '' });
-                                return;
+                        try {
+                            const extractedJsonPayload = extractJsonPayload(buffer.toString(), this.uuids);
+                            if (
+                                extractedJsonPayload.uuid !== undefined &&
+                                extractedJsonPayload.cleanedJsonData !== undefined
+                            ) {
+                                // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
+                                this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
                             }
-                            // this.uuids = this.uuids.filter((u) => u !== uuid); WHERE DOES THIS GO??
-                            buffer = Buffer.alloc(0);
-                        } else {
-                            break;
+                            buffer = Buffer.from(extractedJsonPayload.remainingRawData);
+                            if (!containsHeaders(extractedJsonPayload.remainingRawData)) {
+                                // if the remaining data does not contain headers, then there is no more data to process.
+                                // break to get more data from the socket.
+                                break;
+                            }
+                            if (buffer.length === 0) {
+                                // if the buffer is empty, then there is no more data to process.
+                                // break to get more data from the socket.
+                                buffer = Buffer.alloc(0);
+                                break;
+                            }
+                        } catch (ex) {
+                            traceError(`Error:: ${ex}`);
+                            this._onDataReceived.fire({ uuid: '', data: '' });
+                            return;
                         }
                     }
                 } catch (ex) {
@@ -111,6 +89,25 @@ export class PythonTestServer implements ITestServer, Disposable {
         this.server.on('connection', () => {
             traceLog('Test server connected to a client.');
         });
+    }
+
+    private _fireDataReceived(uuid: string, extractedJSON: string): void {
+        if (extractedJSON.includes(`"tests":`)) {
+            this._onDiscoveryDataReceived.fire({
+                uuid,
+                data: extractedJSON,
+            });
+            // if the rawData includes result then this is a run request
+        } else if (extractedJSON.includes(`"result":`)) {
+            console.log('\n *** fire run data received: \n', extractedJSON, '\n *** end');
+            this._onRunDataReceived.fire({
+                uuid,
+                data: extractedJSON,
+            });
+        } else {
+            traceLog(`Error processing test server request: request is not recognized as discovery or run.`);
+            this._onDataReceived.fire({ uuid: '', data: '' });
+        }
     }
 
     public serverReady(): Promise<void> {
