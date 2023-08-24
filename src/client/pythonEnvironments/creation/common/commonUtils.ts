@@ -7,6 +7,7 @@ import { Commands } from '../../../common/constants';
 import { Common } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
+import { isWindows } from '../../../common/platform/platformService';
 
 export async function showErrorMessageWithLogs(message: string): Promise<void> {
     const result = await showErrorMessage(message, Common.openOutputPanel, Common.selectPythonInterpreter);
@@ -23,4 +24,11 @@ export function getVenvPath(workspaceFolder: WorkspaceFolder): string {
 
 export async function hasVenv(workspaceFolder: WorkspaceFolder): Promise<boolean> {
     return fs.pathExists(getVenvPath(workspaceFolder));
+}
+
+export function getVenvExecutable(workspaceFolder: WorkspaceFolder): string {
+    if (isWindows()) {
+        return path.join(getVenvPath(workspaceFolder), 'Scripts', 'python.exe');
+    }
+    return path.join(getVenvPath(workspaceFolder), 'bin', 'python');
 }

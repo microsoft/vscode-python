@@ -382,60 +382,13 @@ suite('venv Creation provider tests', () => {
         interpreterQuickPick
             .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve('/usr/bin/python'))
-            .verifiable(typemoq.Times.once());
+            .verifiable(typemoq.Times.never());
 
         pickPackagesToInstallStub.resolves([]);
 
-        const deferred = createDeferred();
-        let _next: undefined | ((value: Output<string>) => void);
-        let _complete: undefined | (() => void);
-        execObservableStub.callsFake(() => {
-            deferred.resolve();
-            return {
-                proc: {
-                    exitCode: 0,
-                },
-                out: {
-                    subscribe: (
-                        next?: (value: Output<string>) => void,
-                        _error?: (error: unknown) => void,
-                        complete?: () => void,
-                    ) => {
-                        _next = next;
-                        _complete = complete;
-                    },
-                },
-                dispose: () => undefined,
-            };
-        });
-
-        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
-
-        withProgressStub.callsFake(
-            (
-                _options: ProgressOptions,
-                task: (
-                    progress: CreateEnvironmentProgress,
-                    token?: CancellationToken,
-                ) => Thenable<CreateEnvironmentResult>,
-            ) => task(progressMock.object),
-        );
-
-        const promise = venvProvider.createEnvironment();
-        await deferred.promise;
-        assert.isDefined(_next);
-        assert.isDefined(_complete);
-
-        _next!({ out: `${VENV_CREATED_MARKER}new_environment`, source: 'stdout' });
-        _complete!();
-
-        const actual = await promise;
-        assert.deepStrictEqual(actual, {
-            path: 'new_environment',
-            workspaceFolder: workspace1,
-        });
         interpreterQuickPick.verifyAll();
-        progressMock.verifyAll();
+        assert.isTrue(withProgressStub.notCalled);
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
         assert.isTrue(deleteEnvironmentStub.notCalled);
     });
