@@ -19,8 +19,6 @@ import { Commands } from '../../../common/constants';
 import { isWindows } from '../../../common/platform/platformService';
 import { getVenvPath, hasVenv } from '../common/commonUtils';
 import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './venvDeleteUtils';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
 
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
@@ -238,7 +236,10 @@ export async function pickPackagesToInstall(
     return packages;
 }
 
-async function deleteEnvironment(workspaceFolder: WorkspaceFolder, interpreter: string | undefined): Promise<boolean> {
+export async function deleteEnvironment(
+    workspaceFolder: WorkspaceFolder,
+    interpreter: string | undefined,
+): Promise<boolean> {
     const venvPath = getVenvPath(workspaceFolder);
     return withProgress<boolean>(
         {
@@ -255,23 +256,26 @@ async function deleteEnvironment(workspaceFolder: WorkspaceFolder, interpreter: 
     );
 }
 
+export enum ExistingVenvAction {
+    Recreate,
+    UseExisting,
+    Create,
+}
+
 export async function pickExistingVenvAction(
     workspaceFolder: WorkspaceFolder | undefined,
-    interpreter: string | undefined,
-    context?: MultiStepAction,
-): Promise<MultiStepAction> {
-    if (workspaceFolder && (await hasVenv(workspaceFolder)) && context === MultiStepAction.Continue) {
-        const items: QuickPickItem[] = [
-            { label: CreateEnv.Venv.recreate, description: CreateEnv.Venv.recreateDescription },
-            {
-                label: CreateEnv.Venv.useExisting,
-                description: CreateEnv.Venv.useExistingDescription,
-            },
-        ];
+): Promise<ExistingVenvAction> {
+    if (workspaceFolder) {
+        if (await hasVenv(workspaceFolder)) {
+            const items: QuickPickItem[] = [
+                { label: CreateEnv.Venv.recreate, description: CreateEnv.Venv.recreateDescription },
+                {
+                    label: CreateEnv.Venv.useExisting,
+                    description: CreateEnv.Venv.useExistingDescription,
+                },
+            ];
 
-        let selection: QuickPickItem | undefined;
-        try {
-            selection = (await showQuickPickWithBack(
+            const selection = (await showQuickPickWithBack(
                 items,
                 {
                     placeHolder: CreateEnv.Venv.existingVenvQuickPickPlaceholder,
@@ -279,37 +283,18 @@ export async function pickExistingVenvAction(
                 },
                 undefined,
             )) as QuickPickItem | undefined;
-        } catch (ex) {
-            return MultiStepAction.Back;
-        }
 
-        if (selection === undefined) {
-            return MultiStepAction.Cancel;
-        }
-
-        if (selection.label === CreateEnv.Venv.recreate) {
-            if (await deleteEnvironment(workspaceFolder, interpreter)) {
-                sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
-                    environmentType: 'venv',
-                    status: 'deleted',
-                });
-                return MultiStepAction.Continue;
+            if (selection?.label === CreateEnv.Venv.recreate) {
+                return ExistingVenvAction.Recreate;
             }
-            sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
-                environmentType: 'venv',
-                status: 'failed',
-            });
-            return MultiStepAction.Cancel;
-        }
 
-        if (selection.label === CreateEnv.Venv.useExisting) {
-            sendTelemetryEvent(EventName.ENVIRONMENT_REUSE, undefined, {
-                environmentType: 'venv',
-            });
-            return MultiStepAction.Continue;
+            if (selection?.label === CreateEnv.Venv.useExisting) {
+                return ExistingVenvAction.UseExisting;
+            }
+        } else {
+            return ExistingVenvAction.Create;
         }
-    } else if (context === MultiStepAction.Back) {
-        return MultiStepAction.Back;
     }
-    return MultiStepAction.Continue;
+
+    throw MultiStepAction.Cancel;
 }

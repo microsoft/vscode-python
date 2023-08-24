@@ -2131,7 +2131,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_DELETE]: {
         environmentType: 'venv' | 'conda';
-        status: 'deleted' | 'failed';
+        status: 'triggered' | 'deleted' | 'failed';
     };
     /**
      * Telemetry event if user selected to re-use the existing environment.
