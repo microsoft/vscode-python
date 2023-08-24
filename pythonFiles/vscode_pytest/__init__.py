@@ -306,12 +306,12 @@ def pytest_sessionfinish(session, exitstatus):
     4: Pytest encountered an internal error or exception during test execution.
     5: Pytest was unable to find any tests to run.
     """
-    print(
-        "pytest session has finished, exit status: ",
-        exitstatus,
-        "in discovery? ",
-        IS_DISCOVERY,
-    )
+    # print(
+    #     "pytest session has finished, exit status: ",
+    #     exitstatus,
+    #     "in discovery? ",
+    #     IS_DISCOVERY,
+    # )
     cwd = pathlib.Path.cwd()
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
@@ -628,7 +628,7 @@ def execution_post(
     session_node -- the status of running the tests
     tests -- the tests that were run and their status.
     """
-    print("sending execution post!", tests)
+    # print("sending execution post!", tests)
     testPort = os.getenv("TEST_PORT", 45454)
     testuuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
@@ -660,6 +660,7 @@ Request-uuid: {testuuid}
             if __socket is not None and __socket.socket is not None:
                 __socket.socket.sendall(request.encode("utf-8"))
                 print("Execution post sent successfully!")
+                print("data sent", tests, "end of data")
                 break  # Exit the loop if the send was successful
             else:
                 print("Plugin error connection error[vscode-pytest]")
@@ -674,15 +675,15 @@ Request-uuid: {testuuid}
             else:
                 print("Maximum retry attempts reached. Cannot send execution post.")
 
-    try:
-        if __socket is not None and __socket.socket is not None:
-            __socket.socket.sendall(request.encode("utf-8"))
-        else:
-            print("Plugin error connection error[vscode-pytest]")
-            print(f"[vscode-pytest] data: {request}")
-    except Exception as e:
-        print(f"Plugin error connection error[vscode-pytest]: {e}")
-        print(f"[vscode-pytest] data: {request}")
+    # try:
+    #     if __socket is not None and __socket.socket is not None:
+    #         __socket.socket.sendall(request.encode("utf-8"))
+    #     else:
+    #         print("Plugin error connection error[vscode-pytest]")
+    #         print(f"[vscode-pytest] data: {request}")
+    # except Exception as e:
+    #     print(f"Plugin error connection error[vscode-pytest]: {e}")
+    #     print(f"[vscode-pytest] data: {request}")
 
 
 class PathEncoder(json.JSONEncoder):

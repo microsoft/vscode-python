@@ -36,7 +36,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
                 try {
-                    console.log('raw Data: ', data.toString());
+                    console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
                     let rawData: string = data.toString();
                     buffer = Buffer.concat([buffer, data]);
                     while (buffer.length > 0) {
