@@ -66,7 +66,11 @@ export class PythonTestServer implements ITestServer, Disposable {
                                 });
                                 // if the rawData includes result then this is a run request
                             } else if (rawData.includes(`"result":`)) {
-                                console.log('fire run data received');
+                                console.log(
+                                    '\n *** fire run data received: \n',
+                                    rpcContent.extractedJSON,
+                                    '\n *** end',
+                                );
                                 this._onRunDataReceived.fire({
                                     uuid,
                                     data: rpcContent.extractedJSON,
