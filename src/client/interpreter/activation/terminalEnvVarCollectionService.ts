@@ -214,7 +214,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
-        envVarCollection.description = description;
+        console.log(description);
 
         await this.trackTerminalPrompt(shell, resource, env);
     }

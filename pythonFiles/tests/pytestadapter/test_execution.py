@@ -23,6 +23,7 @@ def test_config_file():
         expected_execution_test_output.config_file_pytest_expected_execution_output
     )
     assert actual
+    assert actual.pop(-1).get("eot")
     assert len(actual) == len(expected_const)
     actual_result_dict = dict()
     for a in actual:
@@ -43,6 +44,7 @@ def test_rootdir_specified():
         expected_execution_test_output.config_file_pytest_expected_execution_output
     )
     assert actual
+    assert actual.pop(-1).get("eot")
     assert len(actual) == len(expected_const)
     actual_result_dict = dict()
     for a in actual:
@@ -73,6 +75,7 @@ def test_syntax_error_execution(tmp_path):
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
     actual = runner(["error_syntax_discover.py::test_function"])
+    assert actual.pop(-1).get("eot")
     if actual:
         actual = actual[0]
         assert actual
@@ -88,6 +91,7 @@ def test_bad_id_error_execution():
     The json should still be returned but the errors list should be present.
     """
     actual = runner(["not/a/real::test_id"])
+    assert actual.pop(-1).get("eot")
     if actual:
         actual = actual[0]
         assert actual
@@ -209,7 +213,8 @@ def test_pytest_execution(test_ids, expected_const):
     args = test_ids
     actual = runner(args)
     assert actual
-    print(actual)
+    # print(actual)
+    assert actual.pop(-1).get("eot")
     assert len(actual) == len(expected_const)
     actual_result_dict = dict()
     for a in actual:

@@ -33,6 +33,7 @@ def test_import_error(tmp_path):
         ["--collect-only", os.fspath(p)]
     )
     assert actual_list
+    assert actual_list.pop(-1).get("eot")
     for actual in actual_list:
         assert all(item in actual for item in ("status", "cwd", "error"))
         assert actual["status"] == "error"
@@ -60,6 +61,7 @@ def test_syntax_error(tmp_path):
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
     actual = runner(["--collect-only", os.fspath(p)])
+    assert actual.pop(-1).get("eot")
     if actual:
         actual = actual[0]
         assert actual
@@ -76,6 +78,7 @@ def test_parameterized_error_collect():
     """
     file_path_str = "error_parametrize_discovery.py"
     actual = runner(["--collect-only", file_path_str])
+    assert actual.pop(-1).get("eot")
     if actual:
         actual = actual[0]
         assert all(item in actual for item in ("status", "cwd", "error"))
@@ -146,6 +149,7 @@ def test_pytest_collect(file, expected_const):
             os.fspath(TEST_DATA_PATH / file),
         ]
     )
+    assert actual.pop(-1).get("eot")
     if actual:
         actual = actual[0]
         assert actual

@@ -44,8 +44,16 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const uuid = this.testServer.createUUID(uri.fsPath);
         traceVerbose(uri, testIds, debugBool);
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            console.log('data received');
             if (runInstance) {
-                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
+                const eParsed = JSON.parse(e.data);
+                console.log('ee', eParsed);
+                console.log('eot', eParsed.eot);
+                this.resultResolver?.resolveExecution(eParsed, runInstance);
+                if (eParsed.eot === true) {
+                    this.testServer.deleteUUID(uuid);
+                    dataReceivedDisposable.dispose();
+                }
             }
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
