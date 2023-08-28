@@ -358,7 +358,8 @@ def pytest_sessionfinish(session, exitstatus):
                 None,
             )
         # send end of transmission token
-    send_post_request({"eot": True})
+    payload: EOTPayloadDict = {"eot": True}
+    send_post_request(payload)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -617,6 +618,7 @@ class EOTPayloadDict(TypedDict):
 
 
 def get_node_path(node: Any) -> pathlib.Path:
+    """A function that returns the path of a node given the switch to pathlib.Path."""
     return getattr(node, "path", pathlib.Path(node.fspath))
 
 
@@ -627,6 +629,15 @@ atexit.register(lambda: __socket.close() if __socket else None)
 def execution_post(
     cwd: str, status: Literal["success", "error"], tests: Union[testRunResultDict, None]
 ):
+    """
+    Sends a POST request with execution payload details.
+
+    Args:
+        cwd (str): Current working directory.
+        status (Literal["success", "error"]): Execution status indicating success or error.
+        tests (Union[testRunResultDict, None]): Test run results, if available.
+    """
+
     payload: ExecutionPayloadDict = ExecutionPayloadDict(
         cwd=cwd, status=status, result=tests, not_found=None, error=None
     )
@@ -636,6 +647,14 @@ def execution_post(
 
 
 def post_response(cwd: str, session_node: TestNode) -> None:
+    """
+    Sends a POST request with test session details in payload.
+
+    Args:
+        cwd (str): Current working directory.
+        session_node (TestNode): Node information of the test session.
+    """
+
     payload: DiscoveryPayloadDict = {
         "cwd": cwd,
         "status": "success" if not ERRORS else "error",
@@ -656,7 +675,10 @@ class PathEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def send_post_request(payload: dict, cls_encoder=None):
+def send_post_request(
+    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict,
+    cls_encoder=None,
+):
     """
     Sends a post request to the server.
 
@@ -673,8 +695,8 @@ def send_post_request(payload: dict, cls_encoder=None):
         try:
             __socket = socket_manager.SocketManager(addr)
             __socket.connect()
-        except Exception as e:
-            print(f"Plugin error connection error[vscode-pytest]: {e}")
+        except Exception as error:
+            print(f"Plugin error connection error[vscode-pytest]: {error}")
             __socket = None
 
     data = json.dumps(payload, cls=cls_encoder)
@@ -696,8 +718,8 @@ Request-uuid: {testuuid}
             else:
                 print("Plugin error connection error[vscode-pytest]")
                 print(f"[vscode-pytest] data: {request}")
-        except Exception as e:
-            print(f"Plugin error connection error[vscode-pytest]: {e}")
+        except Exception as error:
+            print(f"Plugin error connection error[vscode-pytest]: {error}")
             print(f"[vscode-pytest] data: {request}")
             retries += 1  # Increment retry counter
             if retries < max_retries:
