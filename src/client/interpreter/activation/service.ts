@@ -192,7 +192,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 args[i] = arg.toCommandArgumentForPythonExt();
             });
             const command = `${interpreterPath} ${args.join(' ')}`;
-            const processService = await this.processServiceFactory.create(resource);
+            const processService = await this.processServiceFactory.create(resource, { doNotUseCustomEnvs: true });
             const result = await processService.shellExec(command, {
                 shell,
                 timeout: ENVIRONMENT_TIMEOUT,
