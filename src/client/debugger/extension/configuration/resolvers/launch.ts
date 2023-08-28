@@ -111,8 +111,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         }
         let baseEnvVars: EnvironmentVariables | undefined;
         if (this.isCustomPythonSet || debugConfiguration.console !== 'integratedTerminal') {
-            // We only have an activated environment present in integrated terminal if no custom Python path is
-            // specified. Otherwise, we need to explicitly set the variables.
+            // We only have the right activated environment present in integrated terminal if no custom Python path
+            // is specified. Otherwise, we need to explicitly set the variables.
             baseEnvVars = await this.environmentActivationService.getActivatedEnvironmentVariables(
                 workspaceFolder,
                 await this.interpreterService.getInterpreterDetails(debugConfiguration.python ?? ''),
