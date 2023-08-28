@@ -4,8 +4,8 @@
 import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { Deferred, createDeferred } from '../../../common/utils/async';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     ExecutionTestPayload,
@@ -43,17 +43,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
         traceVerbose(uri, testIds, debugBool);
+        const deferredTillEOT: Deferred<void> = createDeferred<void>();
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             console.log('data received');
             if (runInstance) {
                 const eParsed = JSON.parse(e.data);
-                console.log('ee', eParsed);
-                console.log('eot', eParsed.eot);
-                this.resultResolver?.resolveExecution(eParsed, runInstance);
-                if (eParsed.eot === true) {
-                    this.testServer.deleteUUID(uuid);
-                    dataReceivedDisposable.dispose();
-                }
+                this.resultResolver?.resolveExecution(eParsed, runInstance, deferredTillEOT);
             }
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
@@ -63,16 +58,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?.token.onCancellationRequested(() => {
             disposeDataReceiver(this.testServer);
         });
-        await this.runTestsNew(
-            uri,
-            testIds,
-            uuid,
-            runInstance,
-            debugBool,
-            executionFactory,
-            debugLauncher,
-            disposeDataReceiver,
-        );
+        try {
+            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
+        } finally {
+            await deferredTillEOT.promise;
+            disposeDataReceiver(this.testServer);
+        }
 
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
@@ -92,7 +83,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
-        disposeDataReceiver?: (testServer: ITestServer) => void,
     ): Promise<ExecutionTestPayload> {
         const deferred = createDeferred<ExecutionTestPayload>();
         const relativePathToPytest = 'pythonFiles';
@@ -193,7 +183,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     }
                     deferredExec.resolve({ stdout: '', stderr: '' });
                     deferred.resolve();
-                    disposeDataReceiver?.(this.testServer);
+                    // disposeDataReceiver?.(this.testServer);
                 });
                 await deferredExec.promise;
             }

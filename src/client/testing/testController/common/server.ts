@@ -98,7 +98,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 data: extractedJSON,
             });
             // if the rawData includes result then this is a run request
-        } else if (extractedJSON.includes(`"result":`)) {
+        } else if (extractedJSON.includes(`"result":`) || extractedJSON.includes(`"command_type": "execution"`)) {
             console.log('\n *** fire run data received: \n', extractedJSON, '\n *** end');
             this._onRunDataReceived.fire({
                 uuid,

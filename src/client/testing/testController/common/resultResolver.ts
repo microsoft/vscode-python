@@ -99,8 +99,20 @@ export class PythonResultResolver implements ITestResultResolver {
         return Promise.resolve();
     }
 
-    public resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): Promise<void> {
-        const rawTestExecData = payload;
+    public resolveExecution(
+        payload: ExecutionTestPayload | EOTTestPayload,
+        runInstance: TestRun,
+        deferredTillEOT: Deferred<void>,
+    ): Promise<void> {
+        if (payload !== undefined && 'eot' in payload) {
+            // the payload is an EOT payload, so resolve the deferred promise.
+            const eotPayload = payload as EOTTestPayload;
+            if (eotPayload.eot === true) {
+                deferredTillEOT.resolve();
+                return Promise.resolve();
+            }
+        }
+        const rawTestExecData = payload as ExecutionTestPayload;
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             // Map which holds the subtest information for each test item.
 
