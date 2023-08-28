@@ -1,12 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { TestRun, Uri } from 'vscode';
+import { TestController, TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { EOTTestPayload, ITestResultResolver } from '../../../client/testing/testController/common/types';
+import {
+    EOTTestPayload,
+    ExecutionTestPayload,
+    ITestController,
+    ITestResultResolver,
+} from '../../../client/testing/testController/common/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
@@ -17,10 +22,12 @@ import { traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
-import { createDeferred } from '../../../client/common/utils/async';
+import { PythonResultResolver } from '../../../client/testing/testController/common/resultResolver';
+import { TestProvider } from '../../../client/testing/types';
+import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 
 suite('End to End Tests: test adapters', () => {
-    let resultResolver: typeMoq.IMock<ITestResultResolver>;
+    let resultResolver: ITestResultResolver;
     let pythonTestServer: PythonTestServer;
     let pythonExecFactory: IPythonExecutionFactory;
     let debugLauncher: ITestDebugLauncher;
@@ -56,9 +63,9 @@ suite('End to End Tests: test adapters', () => {
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
         testOutputChannel = serviceContainer.get<ITestOutputChannel>(ITestOutputChannel);
+        testController = serviceContainer.get<TestController>(ITestController);
 
         // create mock resultResolver object
-        resultResolver = typeMoq.Mock.ofType<ITestResultResolver>();
 
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
@@ -88,44 +95,35 @@ suite('End to End Tests: test adapters', () => {
     test('unittest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
-            status: unknown;
-            error: string | any[];
-            tests: unknown;
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
         };
-        resultResolver
-            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, deferredTillEOT) => {
-                traceLog(`resolveDiscovery ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                actualData = payload;
-                return Promise.resolve();
-            });
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
 
         // set workspace to test workspace folder and set up settings
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
             // verification after discovery is complete
-            resultResolver.verify(
-                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(2),
-            );
 
             // 1. Check the status is "success"
             assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
@@ -133,31 +131,27 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
+
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
 
     test('unittest discovery adapter large workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
-            status: unknown;
-            error: string | any[];
-            tests: unknown;
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
         };
-        resultResolver
-            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, deferredTillEOT) => {
-                traceLog(`resolveDiscovery ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                actualData = payload;
-                return Promise.resolve();
-            });
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
 
         // set settings to work for the given workspace
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
@@ -166,53 +160,43 @@ suite('End to End Tests: test adapters', () => {
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
-            // verification after discovery is complete
-            resultResolver.verify(
-                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(2),
-            );
-
             // 1. Check the status is "success"
             assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
+
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
     test('pytest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
-            status: unknown;
-            error: string | any[];
-            tests: unknown;
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
         };
-        resultResolver
-            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, deferredTillEOT) => {
-                traceLog(`resolveDiscovery ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                actualData = payload;
-                return Promise.resolve();
-            });
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
 
         // set workspace to test workspace folder
@@ -220,47 +204,39 @@ suite('End to End Tests: test adapters', () => {
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
-            resultResolver.verify(
-                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(2),
-            );
 
             // 1. Check the status is "success"
             assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
             // 2. Confirm no errors
-            assert.strictEqual(actualData.error.length, 0, "Expected no errors in 'error' field");
+            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
+
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
     test('pytest discovery adapter large workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
-            status: unknown;
-            error: string | any[];
-            tests: unknown;
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
         };
-        resultResolver
-            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, deferredTillEOT) => {
-                traceLog(`resolveDiscovery ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                actualData = payload;
-                return Promise.resolve();
-            });
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
 
         // set workspace to test workspace folder
@@ -268,41 +244,28 @@ suite('End to End Tests: test adapters', () => {
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
-            resultResolver.verify(
-                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(2),
-            );
-
             // 1. Check the status is "success"
             assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
             // 2. Confirm no errors
-            assert.strictEqual(actualData.error.length, 0, "Expected no errors in 'error' field");
+            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
+
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
     test('unittest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
-        let actualData: {
-            status: unknown;
-            error: string | any[];
-            result: unknown;
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveExecution = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            // the payloads that get to the _resolveExecution are all data and should be successful.
+            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+            assert.ok(payload.result, 'Expected results to be present');
+            return Promise.resolve();
         };
-        resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, _run, deferredTillEOT) => {
-                traceLog(`resolveExecution ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                actualData = payload;
-                return Promise.resolve();
-            });
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
@@ -311,8 +274,8 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new UnittestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -326,42 +289,22 @@ suite('End to End Tests: test adapters', () => {
         await executionAdapter
             .runTests(workspaceUri, ['test_simple.SimpleClass.test_simple_unit'], false, testRun.object)
             .finally(() => {
-                // verification after execution is complete
-                resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.exactly(2),
-                );
-                // 1. Check the status is "success"
-                assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
-                // 2. Confirm tests are found
-                assert.ok(actualData.result, 'Expected results to be present');
+                // verify that the _resolveExecution was called once per test
+                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
             });
     });
     test('unittest execution adapter large workspace', async () => {
-        let count = 0;
-        const errorMessages: string[] = [];
         // result resolver and saved data for assertions
-        resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, _run, deferredTillEOT) => {
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                count = count + 1;
-                if (payload.status !== 'subtest-success' && payload.status !== 'subtest-failure') {
-                    errorMessages.push("Expected status to be 'subtest-success' or 'subtest-failure'");
-                    errorMessages.push(payload.message);
-                }
-                if (payload.result === null) {
-                    errorMessages.push('Expected results to be present');
-                }
-                return Promise.resolve();
-            });
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveExecution = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            // the payloads that get to the _resolveExecution are all data and should be successful.
+            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+            assert.ok(payload.result, 'Expected results to be present');
+            return Promise.resolve();
+        };
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
@@ -371,8 +314,8 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new UnittestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -386,40 +329,22 @@ suite('End to End Tests: test adapters', () => {
         await executionAdapter
             .runTests(workspaceUri, ['test_parameterized_subtest.NumbersTest.test_even'], false, testRun.object)
             .then(() => {
-                // verification after discovery is complete
-                assert.strictEqual(
-                    errorMessages.length,
-                    0,
-                    ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
-                );
-                resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.exactly(4),
-                );
+                // verify that the _resolveExecution was called once per test
+                assert.strictEqual(callCount, 3, 'Expected _resolveExecution to be called once');
             });
     });
     test('pytest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
-        let actualData: {
-            status: unknown;
-            error: string | any[];
-            result: unknown;
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveExecution = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            // the payloads that get to the _resolveExecution are all data and should be successful.
+            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+            assert.ok(payload.result, 'Expected results to be present');
+            return Promise.resolve();
         };
-        resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, _run, deferredTillEOT) => {
-                traceLog(`resolveExecution ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                actualData = payload;
-                return Promise.resolve();
-            });
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
 
@@ -427,8 +352,8 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new PytestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -462,31 +387,17 @@ suite('End to End Tests: test adapters', () => {
             });
     });
     test('pytest execution adapter large workspace', async () => {
-        const errorMessages: string[] = [];
-        resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((payload, _run, deferredTillEOT) => {
-                traceLog(`resolveExecution ${payload}`);
-                if ('eot' in payload) {
-                    // the payload is an EOT payload, so resolve the deferred promise.
-                    const eotPayload = payload as EOTTestPayload;
-                    if (eotPayload.eot === true) {
-                        deferredTillEOT.resolve();
-                        return Promise.resolve();
-                    }
-                }
-                // Check the following for each time resolveExecution is called to collect any errors.
-                if (payload.status !== 'success') {
-                    errorMessages.push("Expected status to be 'success'");
-                }
-                if (payload.error !== null) {
-                    errorMessages.push("Expected no errors in 'error' field");
-                }
-                if (payload.result === null) {
-                    errorMessages.push('Expected results to be present');
-                }
-                return Promise.resolve();
-            });
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveExecution = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            // the payloads that get to the _resolveExecution are all data and should be successful.
+            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+            assert.ok(payload.result, 'Expected results to be present');
+            return Promise.resolve();
+        };
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
@@ -502,8 +413,8 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new PytestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolver,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun

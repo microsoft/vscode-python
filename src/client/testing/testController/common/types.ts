@@ -202,6 +202,8 @@ export interface ITestResultResolver {
         runInstance: TestRun,
         deferredTillEOT: Deferred<void>,
     ): Promise<void>;
+    _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void>;
+    _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): Promise<void>;
 }
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature

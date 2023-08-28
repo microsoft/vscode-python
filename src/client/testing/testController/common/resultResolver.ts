@@ -41,21 +41,24 @@ export class PythonResultResolver implements ITestResultResolver {
         deferredTillEOT: Deferred<void>,
         token?: CancellationToken,
     ): Promise<void> {
-        const workspacePath = this.workspaceUri.fsPath;
-        traceLog('Using result resolver for discovery');
-
         if (!payload) {
             // No test data is available
             return Promise.resolve();
         }
         if ('eot' in payload) {
             // the payload is an EOT payload, so resolve the deferred promise.
+            traceLog('ResultResolver EOT received for discovery.');
             const eotPayload = payload as EOTTestPayload;
             if (eotPayload.eot === true) {
                 deferredTillEOT.resolve();
                 return Promise.resolve();
             }
         }
+        return this._resolveDiscovery(payload as DiscoveredTestPayload, token);
+    }
+
+    public _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void> {
+        const workspacePath = this.workspaceUri.fsPath;
         const rawTestData = payload as DiscoveredTestPayload;
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
@@ -106,12 +109,17 @@ export class PythonResultResolver implements ITestResultResolver {
     ): Promise<void> {
         if (payload !== undefined && 'eot' in payload) {
             // the payload is an EOT payload, so resolve the deferred promise.
+            traceLog('ResultResolver EOT received for discovery.');
             const eotPayload = payload as EOTTestPayload;
             if (eotPayload.eot === true) {
                 deferredTillEOT.resolve();
                 return Promise.resolve();
             }
         }
+        return this._resolveExecution(payload as ExecutionTestPayload, runInstance);
+    }
+
+    public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): Promise<void> {
         const rawTestExecData = payload as ExecutionTestPayload;
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             // Map which holds the subtest information for each test item.
