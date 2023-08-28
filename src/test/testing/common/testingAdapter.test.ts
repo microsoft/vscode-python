@@ -6,12 +6,7 @@ import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import {
-    EOTTestPayload,
-    ExecutionTestPayload,
-    ITestController,
-    ITestResultResolver,
-} from '../../../client/testing/testController/common/types';
+import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
