@@ -65,6 +65,5 @@
         "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative",
-    "debug.javascript.usePreview": false,
-    "python.defaultInterpreterPath": ".venv/bin/python"
+    "debug.javascript.usePreview": false
 }
