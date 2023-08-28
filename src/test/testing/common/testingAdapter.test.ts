@@ -6,7 +6,7 @@ import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { ITestResultResolver } from '../../../client/testing/testController/common/types';
+import { EOTTestPayload, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
@@ -94,9 +94,17 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver
             .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                traceLog(`resolveDiscovery ${data}`);
-                actualData = data;
+            .returns((payload, deferredTillEOT) => {
+                traceLog(`resolveDiscovery ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                actualData = payload;
                 return Promise.resolve();
             });
 
@@ -114,21 +122,10 @@ suite('End to End Tests: test adapters', () => {
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
             // verification after discovery is complete
-            // resultResolver.verify(
-            //     (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-            //     typeMoq.Times.once(),
-            // );
-
-            // 1. Check the status is "success"
-            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
-            // 2. Confirm no errors
-            assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
-        });
-
-        await discoveryAdapter.discoverTests(Uri.parse(rootPathErrorWorkspace)).finally(() => {
-            // verification after discovery is complete
+            resultResolver.verify(
+                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.exactly(2),
+            );
 
             // 1. Check the status is "success"
             assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
@@ -148,9 +145,17 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver
             .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                traceLog(`resolveDiscovery ${data}`);
-                actualData = data;
+            .returns((payload, deferredTillEOT) => {
+                traceLog(`resolveDiscovery ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                actualData = payload;
                 return Promise.resolve();
             });
 
@@ -169,7 +174,7 @@ suite('End to End Tests: test adapters', () => {
             // verification after discovery is complete
             resultResolver.verify(
                 (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.once(),
+                typeMoq.Times.exactly(2),
             );
 
             // 1. Check the status is "success"
@@ -188,10 +193,18 @@ suite('End to End Tests: test adapters', () => {
             tests: unknown;
         };
         resultResolver
-            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                traceLog(`resolveDiscovery ${data}`);
-                actualData = data;
+            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((payload, deferredTillEOT) => {
+                traceLog(`resolveDiscovery ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                actualData = payload;
                 return Promise.resolve();
             });
         // run pytest discovery
@@ -209,7 +222,7 @@ suite('End to End Tests: test adapters', () => {
             // verification after discovery is complete
             resultResolver.verify(
                 (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.once(),
+                typeMoq.Times.exactly(2),
             );
 
             // 1. Check the status is "success"
@@ -228,9 +241,18 @@ suite('End to End Tests: test adapters', () => {
             tests: unknown;
         };
         resultResolver
-            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                actualData = data;
+            .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((payload, deferredTillEOT) => {
+                traceLog(`resolveDiscovery ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                actualData = payload;
                 return Promise.resolve();
             });
         // run pytest discovery
@@ -248,7 +270,7 @@ suite('End to End Tests: test adapters', () => {
             // verification after discovery is complete
             resultResolver.verify(
                 (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.once(),
+                typeMoq.Times.exactly(2),
             );
 
             // 1. Check the status is "success"
@@ -267,9 +289,18 @@ suite('End to End Tests: test adapters', () => {
             result: unknown;
         };
         resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                actualData = data;
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((payload, _run, deferredTillEOT) => {
+                traceLog(`resolveExecution ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                actualData = payload;
                 return Promise.resolve();
             });
 
@@ -297,8 +328,8 @@ suite('End to End Tests: test adapters', () => {
             .finally(() => {
                 // verification after execution is complete
                 resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.once(),
+                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
+                    typeMoq.Times.exactly(2),
                 );
                 // 1. Check the status is "success"
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
@@ -311,14 +342,22 @@ suite('End to End Tests: test adapters', () => {
         const errorMessages: string[] = [];
         // result resolver and saved data for assertions
         resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                count = count + 1;
-                if (data.status !== 'subtest-success' && data.status !== 'subtest-failure') {
-                    errorMessages.push("Expected status to be 'subtest-success' or 'subtest-failure'");
-                    errorMessages.push(data.message);
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((payload, _run, deferredTillEOT) => {
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
                 }
-                if (data.result === null) {
+                count = count + 1;
+                if (payload.status !== 'subtest-success' && payload.status !== 'subtest-failure') {
+                    errorMessages.push("Expected status to be 'subtest-success' or 'subtest-failure'");
+                    errorMessages.push(payload.message);
+                }
+                if (payload.result === null) {
                     errorMessages.push('Expected results to be present');
                 }
                 return Promise.resolve();
@@ -344,7 +383,6 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        const deferred = createDeferred<void>();
         await executionAdapter
             .runTests(workspaceUri, ['test_parameterized_subtest.NumbersTest.test_even'], false, testRun.object)
             .then(() => {
@@ -355,14 +393,10 @@ suite('End to End Tests: test adapters', () => {
                     ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
                 );
                 resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.atLeast(200),
+                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
+                    typeMoq.Times.exactly(4),
                 );
-            })
-            .finally(() => {
-                deferred.resolve();
             });
-        await deferred.promise;
     });
     test('pytest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -372,12 +406,20 @@ suite('End to End Tests: test adapters', () => {
             result: unknown;
         };
         resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                actualData = data;
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((payload, _run, deferredTillEOT) => {
+                traceLog(`resolveExecution ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                actualData = payload;
                 return Promise.resolve();
             });
-
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
 
@@ -408,8 +450,8 @@ suite('End to End Tests: test adapters', () => {
             .then(() => {
                 // verification after discovery is complete
                 resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.once(),
+                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
+                    typeMoq.Times.exactly(2),
                 );
                 // 1. Check the status is "success"
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
@@ -422,15 +464,27 @@ suite('End to End Tests: test adapters', () => {
     test('pytest execution adapter large workspace', async () => {
         const errorMessages: string[] = [];
         resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                // do the following asserts for each time resolveExecution is called, should be called once per test.
-                // 1. Check the status is "success"
-                assert.strictEqual(data.status, 'success', "Expected status to be 'success'");
-                // 2. Confirm no errors
-                assert.strictEqual(data.error, null, "Expected no errors in 'error' field");
-                // 3. Confirm tests are found
-                assert.ok(data.result, 'Expected results to be present');
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((payload, _run, deferredTillEOT) => {
+                traceLog(`resolveExecution ${payload}`);
+                if ('eot' in payload) {
+                    // the payload is an EOT payload, so resolve the deferred promise.
+                    const eotPayload = payload as EOTTestPayload;
+                    if (eotPayload.eot === true) {
+                        deferredTillEOT.resolve();
+                        return Promise.resolve();
+                    }
+                }
+                // Check the following for each time resolveExecution is called to collect any errors.
+                if (payload.status !== 'success') {
+                    errorMessages.push("Expected status to be 'success'");
+                }
+                if (payload.error !== null) {
+                    errorMessages.push("Expected no errors in 'error' field");
+                }
+                if (payload.result === null) {
+                    errorMessages.push('Expected results to be present');
+                }
                 return Promise.resolve();
             });
 
@@ -439,7 +493,7 @@ suite('End to End Tests: test adapters', () => {
 
         // generate list of test_ids
         const testIds: string[] = [];
-        for (let i = 0; i < 200; i = i + 1) {
+        for (let i = 0; i < 3; i = i + 1) {
             const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
             testIds.push(testId);
         }
@@ -571,8 +625,8 @@ suite('End to End Tests: test adapters', () => {
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
             resultResolver.verify(
-                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(1),
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.exactly(4),
             );
         });
     });

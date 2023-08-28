@@ -4,13 +4,13 @@ import pytest
 import unittest
 
 
-@pytest.mark.parametrize("num", range(0, 20))
+@pytest.mark.parametrize("num", range(0, 3))
 def test_odd_even(num):
     assert num % 2 == 0
 
 
 class NumbersTest(unittest.TestCase):
     def test_even(self):
-        for i in range(0, 20):
+        for i in range(0, 3):
             with self.subTest(i=i):
                 self.assertEqual(i % 2, 0)

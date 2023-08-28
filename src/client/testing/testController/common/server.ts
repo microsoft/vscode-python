@@ -236,7 +236,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                         });
                     }
                     deferred.resolve({ stdout: '', stderr: '' });
-                    callback?.();
                 });
                 await deferred.promise;
             }

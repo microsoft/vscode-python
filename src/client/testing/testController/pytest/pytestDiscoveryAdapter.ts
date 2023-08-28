@@ -47,8 +47,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         try {
             await this.runPytestDiscovery(uri, uuid, executionFactory);
-            await deferredTillEOT.promise;
         } finally {
+            await deferredTillEOT.promise;
             disposeDataReceiver(this.testServer);
         }
         // this is only a placeholder to handle function overloading until rewrite is finished

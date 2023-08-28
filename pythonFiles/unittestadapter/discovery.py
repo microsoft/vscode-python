@@ -48,6 +48,13 @@ class PayloadDict(TypedDict):
     error: NotRequired[List[str]]
 
 
+class EOTPayloadDict(TypedDict):
+    """A dictionary that is used to send a end of transmission post request to the server."""
+
+    command_type: Literal["discovery"] | Literal["execution"]
+    eot: bool
+
+
 def discover_tests(
     start_dir: str, pattern: str, top_level_dir: Optional[str], uuid: Optional[str]
 ) -> PayloadDict:
@@ -106,17 +113,7 @@ def discover_tests(
     return payload
 
 
-if __name__ == "__main__":
-    # Get unittest discovery arguments.
-    argv = sys.argv[1:]
-    index = argv.index("--udiscovery")
-
-    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
-
-    # Perform test discovery.
-    port, uuid = parse_discovery_cli_args(argv[:index])
-    payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
-
+def post_response(payload: PayloadDict | EOTPayloadDict, port: int, uuid: str) -> None:
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
     data = json.dumps(payload)
@@ -132,3 +129,20 @@ Request-uuid: {uuid}
     except Exception as e:
         print(f"Error sending response: {e}")
         print(f"Request data: {request}")
+
+
+if __name__ == "__main__":
+    # Get unittest discovery arguments.
+    argv = sys.argv[1:]
+    index = argv.index("--udiscovery")
+
+    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+
+    # Perform test discovery.
+    port, uuid = parse_discovery_cli_args(argv[:index])
+    # Post this discovery payload.
+    payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
+    post_response(payload, port, uuid)
+    # Post EOT token.
+    eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
+    post_response(eot_payload, port, uuid)

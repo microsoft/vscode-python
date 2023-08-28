@@ -14,6 +14,7 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
+import { Deferred, createDeferred } from '../../../common/utils/async';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -34,7 +35,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const command = buildDiscoveryCommand(unittestArgs);
 
         const uuid = this.testServer.createUUID(uri.fsPath);
-
+        const deferredTillEOT: Deferred<void> = createDeferred<void>();
         const options: TestCommandOptions = {
             workspaceFolder: uri,
             command,
@@ -44,16 +45,16 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
 
         const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
-            this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
+            this.resultResolver?.resolveDiscovery(JSON.parse(e.data), deferredTillEOT);
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
             testServer.deleteUUID(uuid);
             dataReceivedDisposable.dispose();
         };
 
-        await this.callSendCommand(options, () => {
-            disposeDataReceiver(this.testServer);
-        });
+        await this.callSendCommand(options);
+        await deferredTillEOT.promise;
+        disposeDataReceiver(this.testServer);
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
         const discoveryPayload: DiscoveredTestPayload = {

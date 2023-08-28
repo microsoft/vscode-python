@@ -18,7 +18,7 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import NotRequired, TypeAlias, TypedDict
+from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
 
 from testing_tools import process_json_util, socket_manager
 from unittestadapter.utils import parse_unittest_args
@@ -169,6 +169,13 @@ class PayloadDict(TypedDict):
     error: NotRequired[str]
 
 
+class EOTPayloadDict(TypedDict):
+    """A dictionary that is used to send a end of transmission post request to the server."""
+
+    command_type: Literal["discovery"] | Literal["execution"]
+    eot: bool
+
+
 # Args: start_path path to a directory or a file, list of ids that may be empty.
 # Edge cases:
 # - if tests got deleted since the VS Code side last ran discovery and the current test run,
@@ -231,16 +238,6 @@ atexit.register(lambda: __socket.close() if __socket else None)
 
 
 def send_run_data(raw_data, port, uuid):
-    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
-    addr = ("localhost", port)
-    global __socket
-    if __socket is None:
-        try:
-            __socket = socket_manager.SocketManager(addr)
-            __socket.connect()
-        except Exception as e:
-            print(f"Plugin error connection error[vscode-pytest]: {e}")
-            __socket = None
     status = raw_data["outcome"]
     cwd = os.path.abspath(START_DIR)
     if raw_data["subtest"]:
@@ -250,7 +247,20 @@ def send_run_data(raw_data, port, uuid):
     test_dict = {}
     test_dict[test_id] = raw_data
     payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
+    post_response(payload, port, uuid)
 
+
+def post_response(payload: PayloadDict | EOTPayloadDict, port: int, uuid: str) -> None:
+    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
+    addr = ("localhost", port)
+    global __socket
+    if __socket is None:
+        try:
+            __socket = socket_manager.SocketManager(addr)
+            __socket.connect()
+        except Exception as error:
+            print(f"Plugin error connection error[vscode-pytest]: {error}")
+            __socket = None
     data = json.dumps(payload)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json
@@ -325,3 +335,5 @@ if __name__ == "__main__":
             "error": "No test ids received from buffer",
             "result": None,
         }
+    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+    post_response(eot_payload, PORT, UUID)

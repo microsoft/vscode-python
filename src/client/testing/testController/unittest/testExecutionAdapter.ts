@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { TestRun, Uri } from 'vscode';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
+import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DataReceivedEvent,
@@ -37,9 +37,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
+        const deferredTillEOT: Deferred<void> = createDeferred<void>();
         const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
-                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance);
+                this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance, deferredTillEOT);
             }
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
@@ -49,7 +50,13 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?.token.onCancellationRequested(() => {
             disposeDataReceiver(this.testServer);
         });
-        await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, disposeDataReceiver);
+        try {
+            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, disposeDataReceiver);
+            await deferredTillEOT.promise;
+            disposeDataReceiver(this.testServer);
+        } catch (error) {
+            traceLog(error);
+        }
         const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
         return executionPayload;
     }
