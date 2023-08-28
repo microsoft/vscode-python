@@ -3,7 +3,7 @@
 
 import { CancellationToken, TestController, TestItem, Uri, TestMessage, Location, TestRun } from 'vscode';
 import * as util from 'util';
-import { DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
+import { DiscoveredTestPayload, EOTTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceLog } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
@@ -12,6 +12,7 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
 import { buildErrorNodeOptions, fixLogLines, populateTestTree } from './utils';
+import { Deferred } from '../../../common/utils/async';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -35,16 +36,27 @@ export class PythonResultResolver implements ITestResultResolver {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void> {
+    public resolveDiscovery(
+        payload: DiscoveredTestPayload | EOTTestPayload,
+        deferredTillEOT: Deferred<void>,
+        token?: CancellationToken,
+    ): Promise<void> {
         const workspacePath = this.workspaceUri.fsPath;
         traceLog('Using result resolver for discovery');
 
-        const rawTestData = payload;
-        if (!rawTestData) {
+        if (!payload) {
             // No test data is available
             return Promise.resolve();
         }
-
+        if ('eot' in payload) {
+            // the payload is an EOT payload, so resolve the deferred promise.
+            const eotPayload = payload as EOTTestPayload;
+            if (eotPayload.eot === true) {
+                deferredTillEOT.resolve();
+                return Promise.resolve();
+            }
+        }
+        const rawTestData = payload as DiscoveredTestPayload;
         // Check if there were any errors in the discovery process.
         if (rawTestData.status === 'error') {
             const testingErrorConst =

@@ -49,15 +49,15 @@ export class PythonTestServer implements ITestServer, Disposable {
                                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
                             }
                             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
-                            if (!containsHeaders(extractedJsonPayload.remainingRawData)) {
-                                // if the remaining data does not contain headers, then there is no more data to process.
-                                // break to get more data from the socket.
-                                break;
-                            }
                             if (buffer.length === 0) {
                                 // if the buffer is empty, then there is no more data to process.
                                 // break to get more data from the socket.
                                 buffer = Buffer.alloc(0);
+                                break;
+                            }
+                            if (!containsHeaders(extractedJsonPayload.remainingRawData)) {
+                                // if the remaining data does not contain headers, then there is no more data to process.
+                                // break to get more data from the socket.
                                 break;
                             }
                         } catch (ex) {
@@ -92,7 +92,7 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     private _fireDataReceived(uuid: string, extractedJSON: string): void {
-        if (extractedJSON.includes(`"tests":`)) {
+        if (extractedJSON.includes(`"tests":`) || extractedJSON.includes(`"command_type": "discovery"`)) {
             this._onDiscoveryDataReceived.fire({
                 uuid,
                 data: extractedJSON,

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { Disposable } from 'vscode-languageserver-protocol';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionResult,
@@ -9,7 +10,7 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { createDeferred } from '../../../common/utils/async';
+import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceVerbose } from '../../../logging';
 import {
@@ -36,8 +37,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const uuid = this.testServer.createUUID(uri.fsPath);
         const { pytestArgs } = settings.testing;
         traceVerbose(pytestArgs);
-        const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived((e: DataReceivedEvent) => {
-            this.resultResolver?.resolveDiscovery(JSON.parse(e.data));
+        const deferredTillEOT: Deferred<void> = createDeferred<void>();
+        const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived(async (e: DataReceivedEvent) => {
+            this.resultResolver?.resolveDiscovery(JSON.parse(e.data), deferredTillEOT);
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
             testServer.deleteUUID(uuid);
@@ -45,6 +47,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         try {
             await this.runPytestDiscovery(uri, uuid, executionFactory);
+            await deferredTillEOT.promise;
         } finally {
             disposeDataReceiver(this.testServer);
         }

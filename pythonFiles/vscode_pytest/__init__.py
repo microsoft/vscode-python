@@ -358,7 +358,8 @@ def pytest_sessionfinish(session, exitstatus):
                 None,
             )
         # send end of transmission token
-    payload: EOTPayloadDict = {"eot": True}
+    command_type = "discovery" if IS_DISCOVERY else "execution"
+    payload: EOTPayloadDict = {"command_type": command_type, "eot": True}
     send_post_request(payload)
 
 
@@ -614,6 +615,7 @@ class ExecutionPayloadDict(Dict):
 class EOTPayloadDict(TypedDict):
     """A dictionary that is used to send a end of transmission post request to the server."""
 
+    command_type: Literal["discovery"] | Literal["execution"]
     eot: bool
 
 
