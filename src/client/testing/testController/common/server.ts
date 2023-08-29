@@ -33,43 +33,9 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
         this.server = net.createServer((socket: net.Socket) => {
-            let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
+            const buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
-                try {
-                    console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
-                    buffer = Buffer.concat([buffer, data]);
-                    while (buffer.length > 0) {
-                        try {
-                            const extractedJsonPayload = extractJsonPayload(buffer.toString(), this.uuids);
-                            if (
-                                extractedJsonPayload.uuid !== undefined &&
-                                extractedJsonPayload.cleanedJsonData !== undefined
-                            ) {
-                                // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
-                                this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
-                            }
-                            buffer = Buffer.from(extractedJsonPayload.remainingRawData);
-                            if (buffer.length === 0) {
-                                // if the buffer is empty, then there is no more data to process.
-                                // break to get more data from the socket.
-                                buffer = Buffer.alloc(0);
-                                break;
-                            }
-                            if (!containsHeaders(extractedJsonPayload.remainingRawData)) {
-                                // if the remaining data does not contain headers, then there is no more data to process.
-                                // break to get more data from the socket.
-                                break;
-                            }
-                        } catch (ex) {
-                            traceError(`Error:: ${ex}`);
-                            this._onDataReceived.fire({ uuid: '', data: '' });
-                            return;
-                        }
-                    }
-                } catch (ex) {
-                    traceError(`Error processing test server request: ${ex} observe`);
-                    this._onDataReceived.fire({ uuid: '', data: '' });
-                }
+                this._resolveData(buffer, data);
             });
         });
         this.ready = new Promise((resolve, _reject) => {
@@ -89,6 +55,41 @@ export class PythonTestServer implements ITestServer, Disposable {
         this.server.on('connection', () => {
             traceLog('Test server connected to a client.');
         });
+    }
+
+    public _resolveData(buffer: Buffer, data: Buffer): void {
+        try {
+            console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
+            buffer = Buffer.concat([buffer, data]);
+            while (buffer.length > 0) {
+                try {
+                    const extractedJsonPayload = extractJsonPayload(buffer.toString(), this.uuids);
+                    if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
+                        // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
+                        this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
+                    }
+                    buffer = Buffer.from(extractedJsonPayload.remainingRawData);
+                    if (buffer.length === 0) {
+                        // if the buffer is empty, then there is no more data to process.
+                        // break to get more data from the socket.
+                        buffer = Buffer.alloc(0);
+                        break;
+                    }
+                    if (!containsHeaders(extractedJsonPayload.remainingRawData)) {
+                        // if the remaining data does not contain headers, then there is no more data to process.
+                        // break to get more data from the socket.
+                        break;
+                    }
+                } catch (ex) {
+                    traceError(`Error:: ${ex}`);
+                    this._onDataReceived.fire({ uuid: '', data: '' });
+                    return;
+                }
+            }
+        } catch (ex) {
+            traceError(`Error processing test server request: ${ex} observe`);
+            this._onDataReceived.fire({ uuid: '', data: '' });
+        }
     }
 
     private _fireDataReceived(uuid: string, extractedJSON: string): void {
