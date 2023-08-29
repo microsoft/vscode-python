@@ -18,6 +18,8 @@ import { ITerminalEnvVarCollectionService } from '../../../client/interpreter/ac
 import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { TerminalEnvVarActivation } from '../../../client/common/experiments/groups';
 import { sleep } from '../../core';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Variable Collection Prompt', () => {
     let shell: IApplicationShell;
@@ -30,12 +32,18 @@ suite('Terminal Environment Variable Collection Prompt', () => {
     let terminalEventEmitter: EventEmitter<Terminal>;
     let notificationEnabled: IPersistentState<boolean>;
     let configurationService: IConfigurationService;
+    let interpreterService: IInterpreterService;
     const prompts = [Common.doNotShowAgain];
-    const message = Interpreters.terminalEnvVarCollectionPrompt;
+    const envName = 'env';
+    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format(` (${envName})`);
 
     setup(async () => {
         shell = mock<IApplicationShell>();
         terminalManager = mock<ITerminalManager>();
+        interpreterService = mock<IInterpreterService>();
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            envName,
+        } as unknown) as PythonEnvironment);
         experimentService = mock<IExperimentService>();
         activeResourceService = mock<IActiveResourceService>();
         persistentStateFactory = mock<IPersistentStateFactory>();
@@ -61,6 +69,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
             instance(activeResourceService),
             instance(terminalEnvVarCollectionService),
             instance(configurationService),
+            instance(interpreterService),
             instance(experimentService),
         );
     });
@@ -74,13 +83,13 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         } as unknown) as Terminal;
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
-        when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await terminalEnvVarCollectionPrompt.activate();
         terminalEventEmitter.fire(terminal);
         await sleep(1);
 
-        verify(shell.showInformationMessage(message, ...prompts)).once();
+        verify(shell.showInformationMessage(expectedMessage, ...prompts)).once();
     });
 
     test('Do not show notification if automatic terminal activation is turned off', async () => {
@@ -98,13 +107,13 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         } as unknown) as Terminal;
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
-        when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await terminalEnvVarCollectionPrompt.activate();
         terminalEventEmitter.fire(terminal);
         await sleep(1);
 
-        verify(shell.showInformationMessage(message, ...prompts)).never();
+        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
     });
 
     test('When not in experiment, do not show notification for the same', async () => {
@@ -116,7 +125,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         } as unknown) as Terminal;
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
-        when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         reset(experimentService);
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(false);
@@ -124,7 +133,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         terminalEventEmitter.fire(terminal);
         await sleep(1);
 
-        verify(shell.showInformationMessage(message, ...prompts)).never();
+        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
     });
 
     test('Do not show notification if notification is disabled', async () => {
@@ -136,13 +145,13 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         } as unknown) as Terminal;
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(false);
-        when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await terminalEnvVarCollectionPrompt.activate();
         terminalEventEmitter.fire(terminal);
         await sleep(1);
 
-        verify(shell.showInformationMessage(message, ...prompts)).never();
+        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
     });
 
     test('Do not show notification when a new terminal is opened for which there is prompt set', async () => {
@@ -154,13 +163,13 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         } as unknown) as Terminal;
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(true);
         when(notificationEnabled.value).thenReturn(true);
-        when(shell.showInformationMessage(message, ...prompts)).thenResolve(undefined);
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await terminalEnvVarCollectionPrompt.activate();
         terminalEventEmitter.fire(terminal);
         await sleep(1);
 
-        verify(shell.showInformationMessage(message, ...prompts)).never();
+        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
     });
 
     test("Disable notification if `Don't show again` is clicked", async () => {
@@ -173,7 +182,9 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
         when(notificationEnabled.updateValue(false)).thenResolve();
-        when(shell.showInformationMessage(message, ...prompts)).thenReturn(Promise.resolve(Common.doNotShowAgain));
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenReturn(
+            Promise.resolve(Common.doNotShowAgain),
+        );
 
         await terminalEnvVarCollectionPrompt.activate();
         terminalEventEmitter.fire(terminal);
@@ -192,7 +203,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         when(terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)).thenReturn(false);
         when(notificationEnabled.value).thenReturn(true);
         when(notificationEnabled.updateValue(false)).thenResolve();
-        when(shell.showInformationMessage(message, ...prompts)).thenReturn(Promise.resolve(undefined));
+        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(undefined));
 
         await terminalEnvVarCollectionPrompt.activate();
         terminalEventEmitter.fire(terminal);

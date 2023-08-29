@@ -9,11 +9,13 @@ import {
     IDisposableRegistry,
     IExperimentService,
     IPersistentStateFactory,
+    Resource,
 } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ITerminalEnvVarCollectionService } from './types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
+import { IInterpreterService } from '../contracts';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
@@ -30,6 +32,7 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
         @inject(ITerminalEnvVarCollectionService)
         private readonly terminalEnvVarCollectionService: ITerminalEnvVarCollectionService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
@@ -52,12 +55,12 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
                     // No need to show notification if terminal prompt already indicates when env is activated.
                     return;
                 }
-                await this.notifyUsers();
+                await this.notifyUsers(resource);
             }),
         );
     }
 
-    private async notifyUsers(): Promise<void> {
+    private async notifyUsers(resource: Resource): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             terminalEnvCollectionPromptKey,
             true,
@@ -66,8 +69,10 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
             return;
         }
         const prompts = [Common.doNotShowAgain];
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const terminalPromptName = interpreter?.envName ? ` (${interpreter.envName})` : '';
         const selection = await this.appShell.showInformationMessage(
-            Interpreters.terminalEnvVarCollectionPrompt,
+            Interpreters.terminalEnvVarCollectionPrompt.format(terminalPromptName),
             ...prompts,
         );
         if (!selection) {
