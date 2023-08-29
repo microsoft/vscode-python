@@ -327,7 +327,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 } catch (ex) {
                     traceError(ex);
                     showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
-                    throw ex;
+                    return { error: ex as Error };
                 }
             },
         );

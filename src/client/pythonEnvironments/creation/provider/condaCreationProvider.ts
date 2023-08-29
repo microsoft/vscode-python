@@ -249,7 +249,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
             } catch (ex) {
                 traceError(ex);
                 showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
-                throw ex;
+                return { error: ex as Error };
             }
         },
     );

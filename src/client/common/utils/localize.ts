@@ -468,7 +468,9 @@ export namespace CreateEnv {
         export const recreateDescription = l10n.t('Delete existing ".venv" environment and create a new one');
         export const useExisting = l10n.t('Use Existing');
         export const useExistingDescription = l10n.t('Use existing ".venv" environment with no changes to it');
-        export const existingVenvQuickPickPlaceholder = l10n.t('Use or Recreate existing environment?');
+        export const existingVenvQuickPickPlaceholder = l10n.t(
+            'Choose an option to handle the existing ".venv" environment',
+        );
         export const deletingEnvironmentProgress = l10n.t('Deleting existing ".venv" environment...');
         export const errorDeletingEnvironment = l10n.t('Error while deleting existing ".venv" environment.');
     }
