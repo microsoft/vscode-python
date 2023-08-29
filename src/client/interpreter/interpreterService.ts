@@ -138,7 +138,12 @@ export class InterpreterService implements Disposable, IInterpreterService {
                     return false;
                 }
                 const document = this.docManager.activeTextEditor?.document;
-                if (document?.fileName.endsWith('settings.json') || document?.fileName.includes(PVSC_EXTENSION_ID)) {
+                // Output channel for MS Python related extensions. These contain "ms-python" in their ID.
+                const pythonOutputChannelPattern = PVSC_EXTENSION_ID.split('.')[0];
+                if (
+                    document?.fileName.endsWith('settings.json') ||
+                    document?.fileName.includes(pythonOutputChannelPattern)
+                ) {
                     return false;
                 }
                 return document?.languageId !== PYTHON_LANGUAGE;
