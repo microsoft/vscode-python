@@ -8,7 +8,11 @@ import { Uri } from 'vscode';
 import * as path from 'path';
 import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
 import * as workspaceApis from '../../../../client/common/vscodeApis/workspaceApis';
-import { pickPackagesToInstall } from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
+import {
+    ExistingVenvAction,
+    pickExistingVenvAction,
+    pickPackagesToInstall,
+} from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { CreateEnv } from '../../../../client/common/utils/localize';
 
@@ -344,5 +348,67 @@ suite('Venv Utils test', () => {
             },
         ]);
         assert.isTrue(readFileStub.notCalled);
+    });
+});
+
+suite('Test pick existing venv action', () => {
+    let withProgressStub: sinon.SinonStub;
+    let showQuickPickWithBackStub: sinon.SinonStub;
+    let pathExistsStub: sinon.SinonStub;
+
+    const workspace1 = {
+        uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
+        name: 'workspace1',
+        index: 0,
+    };
+
+    setup(() => {
+        pathExistsStub = sinon.stub(fs, 'pathExists');
+        withProgressStub = sinon.stub(windowApis, 'withProgress');
+        showQuickPickWithBackStub = sinon.stub(windowApis, 'showQuickPickWithBack');
+    });
+    teardown(() => {
+        sinon.restore();
+    });
+
+    test('User selects existing venv', async () => {
+        pathExistsStub.resolves(true);
+        showQuickPickWithBackStub.resolves({
+            label: CreateEnv.Venv.useExisting,
+            description: CreateEnv.Venv.useExistingDescription,
+        });
+        const actual = await pickExistingVenvAction(workspace1);
+        assert.deepStrictEqual(actual, ExistingVenvAction.UseExisting);
+    });
+
+    test('User presses escape', async () => {
+        pathExistsStub.resolves(true);
+        showQuickPickWithBackStub.resolves(undefined);
+        await assert.isRejected(pickExistingVenvAction(workspace1));
+    });
+
+    test('User selects delete venv', async () => {
+        pathExistsStub.resolves(true);
+        showQuickPickWithBackStub.resolves({
+            label: CreateEnv.Venv.recreate,
+            description: CreateEnv.Venv.recreateDescription,
+        });
+        withProgressStub.resolves(true);
+        const actual = await pickExistingVenvAction(workspace1);
+        assert.deepStrictEqual(actual, ExistingVenvAction.Recreate);
+    });
+
+    test('User clicks on back', async () => {
+        pathExistsStub.resolves(true);
+        // We use reject with "Back" to simulate the user clicking on back.
+        showQuickPickWithBackStub.rejects(windowApis.MultiStepAction.Back);
+        withProgressStub.resolves(false);
+        await assert.isRejected(pickExistingVenvAction(workspace1));
+    });
+
+    test('No venv found', async () => {
+        pathExistsStub.resolves(false);
+        const actual = await pickExistingVenvAction(workspace1);
+        assert.deepStrictEqual(actual, ExistingVenvAction.Create);
     });
 });

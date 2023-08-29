@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import { workspace } from 'vscode';
-import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
-import { disposeAll } from '../../../client/common/utils/resourceLifecycle';
+import { IConfigurationService, IDisposableRegistry, IExtensionContext } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from '../../initialize';
@@ -23,15 +22,17 @@ suite('Configuration Service', () => {
 
     test('Ensure async registry works', async () => {
         const asyncRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        let disposed = false;
+        let subs = serviceContainer.get<IExtensionContext>(IExtensionContext).subscriptions;
+        const oldLength = subs.length;
         const disposable = {
             dispose(): Promise<void> {
-                disposed = true;
                 return Promise.resolve();
             },
         };
         asyncRegistry.push(disposable);
-        await disposeAll(asyncRegistry);
-        expect(disposed).to.be.equal(true, "Didn't dispose during async registry cleanup");
+        subs = serviceContainer.get<IExtensionContext>(IExtensionContext).subscriptions;
+        const newLength = subs.length;
+        expect(newLength).to.be.equal(oldLength + 1, 'Subscription not added');
+        // serviceContainer subscriptions are not disposed of as this breaks other tests that use the service container.
     });
 });

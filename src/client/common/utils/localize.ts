@@ -63,7 +63,7 @@ export namespace Common {
     export const openOutputPanel = l10n.t('Show output');
     export const noIWillDoItLater = l10n.t('No, I will do it later');
     export const notNow = l10n.t('Not now');
-    export const doNotShowAgain = l10n.t('Do not show again');
+    export const doNotShowAgain = l10n.t("Don't show again");
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
@@ -198,6 +198,9 @@ export namespace Interpreters {
     );
     export const activatingTerminals = l10n.t('Reactivating terminals...');
     export const activateTerminalDescription = l10n.t('Activated environment for');
+    export const terminalEnvVarCollectionPrompt = l10n.t(
+        'The Python extension automatically activates all terminals using the selected environment. You can hover over the terminal tab to see more information about the activation. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
+    );
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
     );
@@ -461,6 +464,13 @@ export namespace CreateEnv {
         export const error = l10n.t('Creating virtual environment failed with error.');
         export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml');
         export const requirementsQuickPickTitle = l10n.t('Select dependencies to install');
+        export const recreate = l10n.t('Recreate');
+        export const recreateDescription = l10n.t('Delete existing ".venv" environment and create a new one');
+        export const useExisting = l10n.t('Use Existing');
+        export const useExistingDescription = l10n.t('Use existing ".venv" environment with no changes to it');
+        export const existingVenvQuickPickPlaceholder = l10n.t('Use or Recreate existing environment?');
+        export const deletingEnvironmentProgress = l10n.t('Deleting existing ".venv" environment...');
+        export const errorDeletingEnvironment = l10n.t('Error while deleting existing ".venv" environment.');
     }
 
     export namespace Conda {

@@ -17,8 +17,10 @@ export class ProcessServiceFactory implements IProcessServiceFactory {
         @inject(IProcessLogger) private readonly processLogger: IProcessLogger,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
     ) {}
-    public async create(resource?: Uri): Promise<IProcessService> {
-        const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
+    public async create(resource?: Uri, options?: { doNotUseCustomEnvs: boolean }): Promise<IProcessService> {
+        const customEnvVars = options?.doNotUseCustomEnvs
+            ? undefined
+            : await this.envVarsService.getEnvironmentVariables(resource);
         const proc: IProcessService = new ProcessService(customEnvVars);
         this.disposableRegistry.push(proc);
         return proc.on('exec', this.processLogger.logProcess.bind(this.processLogger));

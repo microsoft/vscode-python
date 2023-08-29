@@ -355,7 +355,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         platformService.verifyAll();
     });
 
-    test("Disable prompt if 'Do not show again' option is clicked", async () => {
+    test('Disable prompt if "Don\'t show again" option is clicked', async () => {
         const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell

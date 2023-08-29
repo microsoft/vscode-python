@@ -4,7 +4,7 @@
 import { CancellationToken, ProgressLocation, WorkspaceFolder } from 'vscode';
 import * as path from 'path';
 import { Commands, PVSC_EXTENSION_ID } from '../../../common/constants';
-import { traceError, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 import { CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
@@ -77,7 +77,7 @@ async function createCondaEnv(
     args: string[],
     progress: CreateEnvironmentProgress,
     token?: CancellationToken,
-): Promise<string | undefined> {
+): Promise<string> {
     progress.report({
         message: CreateEnv.Conda.creating,
     });
@@ -174,6 +174,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 traceError('Workspace was not selected or found for creating conda environment.');
                 return MultiStepAction.Cancel;
             }
+            traceInfo(`Selected workspace ${workspace.uri.fsPath} for creating conda environment.`);
             return MultiStepAction.Continue;
         },
         undefined,
@@ -196,6 +197,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                 traceError('Python version was not selected for creating conda environment.');
                 return MultiStepAction.Cancel;
             }
+            traceInfo(`Selected Python version ${version} for creating conda environment.`);
             return MultiStepAction.Continue;
         },
         undefined,
@@ -217,8 +219,6 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
             progress: CreateEnvironmentProgress,
             token: CancellationToken,
         ): Promise<CreateEnvironmentResult | undefined> => {
-            let hasError = false;
-
             progress.report({
                 message: CreateEnv.statusStarting,
             });
@@ -237,17 +237,20 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
                         progress,
                         token,
                     );
+
+                    if (envPath) {
+                        return { path: envPath, workspaceFolder: workspace };
+                    }
+
+                    throw new Error('Failed to create conda environment. See Output > Python for more info.');
+                } else {
+                    throw new Error('A workspace is needed to create conda environment');
                 }
             } catch (ex) {
                 traceError(ex);
-                hasError = true;
+                showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
                 throw ex;
-            } finally {
-                if (hasError) {
-                    showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
-                }
             }
-            return { path: envPath, workspaceFolder: workspace, action: undefined, error: undefined };
         },
     );
 }

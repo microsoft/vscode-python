@@ -6,6 +6,7 @@ import { installedCheckScript } from '../../../common/process/internal/scripts';
 import { plainExec } from '../../../common/process/rawProcessApis';
 import { IInterpreterPathService } from '../../../common/types';
 import { traceInfo, traceVerbose, traceError } from '../../../logging';
+import { getConfiguration } from '../../../common/vscodeApis/workspaceApis';
 
 interface PackageDiagnostic {
     package: string;
@@ -39,6 +40,21 @@ function parseDiagnostics(data: string): Diagnostic[] {
     return diagnostics;
 }
 
+function getMissingPackageSeverity(doc: TextDocument): number {
+    const config = getConfiguration('python', doc.uri);
+    const severity: string = config.get<string>('missingPackage.severity', 'Hint');
+    if (severity === 'Error') {
+        return DiagnosticSeverity.Error;
+    }
+    if (severity === 'Warning') {
+        return DiagnosticSeverity.Warning;
+    }
+    if (severity === 'Information') {
+        return DiagnosticSeverity.Information;
+    }
+    return DiagnosticSeverity.Hint;
+}
+
 export async function getInstalledPackagesDiagnostics(
     interpreterPathService: IInterpreterPathService,
     doc: TextDocument,
@@ -47,7 +63,11 @@ export async function getInstalledPackagesDiagnostics(
     const scriptPath = installedCheckScript();
     try {
         traceInfo('Running installed packages checker: ', interpreter, scriptPath, doc.uri.fsPath);
-        const result = await plainExec(interpreter, [scriptPath, doc.uri.fsPath]);
+        const result = await plainExec(interpreter, [scriptPath, doc.uri.fsPath], {
+            env: {
+                VSCODE_MISSING_PGK_SEVERITY: `${getMissingPackageSeverity(doc)}`,
+            },
+        });
         traceVerbose('Installed packages check result:\n', result.stdout);
         if (result.stderr) {
             traceError('Installed packages check error:\n', result.stderr);

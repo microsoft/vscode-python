@@ -5,10 +5,12 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
-import { Diagnostic, TextDocument, Range, Uri } from 'vscode';
+import { Diagnostic, TextDocument, Range, Uri, WorkspaceConfiguration, ConfigurationScope } from 'vscode';
 import * as rawProcessApis from '../../../../client/common/process/rawProcessApis';
 import { getInstalledPackagesDiagnostics } from '../../../../client/pythonEnvironments/creation/common/installCheckUtils';
 import { IInterpreterPathService } from '../../../../client/common/types';
+import * as workspaceApis from '../../../../client/common/vscodeApis/workspaceApis';
+import { SpawnOptions } from '../../../../client/common/process/types';
 
 chaiUse(chaiAsPromised);
 
@@ -37,10 +39,20 @@ const MISSING_PACKAGES: Diagnostic[] = [
 suite('Install check diagnostics tests', () => {
     let plainExecStub: sinon.SinonStub;
     let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+    let getConfigurationStub: sinon.SinonStub;
+    let configMock: typemoq.IMock<WorkspaceConfiguration>;
 
     setup(() => {
+        configMock = typemoq.Mock.ofType<WorkspaceConfiguration>();
         plainExecStub = sinon.stub(rawProcessApis, 'plainExec');
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
+        getConfigurationStub.callsFake((section?: string, _scope?: ConfigurationScope | null) => {
+            if (section === 'python') {
+                return configMock.object;
+            }
+            return undefined;
+        });
     });
 
     teardown(() => {
@@ -48,18 +60,55 @@ suite('Install check diagnostics tests', () => {
     });
 
     test('Test parse diagnostics', async () => {
+        configMock
+            .setup((c) => c.get<string>('missingPackage.severity', 'Hint'))
+            .returns(() => 'Error')
+            .verifiable(typemoq.Times.atLeastOnce());
         plainExecStub.resolves({ stdout: MISSING_PACKAGES_STR, stderr: '' });
         const someFile = getSomeRequirementFile();
         const result = await getInstalledPackagesDiagnostics(interpreterPathService.object, someFile.object);
 
         assert.deepStrictEqual(result, MISSING_PACKAGES);
+        configMock.verifyAll();
     });
 
     test('Test parse empty diagnostics', async () => {
+        configMock
+            .setup((c) => c.get<string>('missingPackage.severity', 'Hint'))
+            .returns(() => 'Error')
+            .verifiable(typemoq.Times.atLeastOnce());
         plainExecStub.resolves({ stdout: '', stderr: '' });
         const someFile = getSomeRequirementFile();
         const result = await getInstalledPackagesDiagnostics(interpreterPathService.object, someFile.object);
 
         assert.deepStrictEqual(result, []);
+        configMock.verifyAll();
+    });
+
+    [
+        ['Error', '0'],
+        ['Warning', '1'],
+        ['Information', '2'],
+        ['Hint', '3'],
+    ].forEach((severityType: string[]) => {
+        const setting = severityType[0];
+        const expected = severityType[1];
+        test(`Test missing package severity: ${setting}`, async () => {
+            configMock
+                .setup((c) => c.get<string>('missingPackage.severity', 'Hint'))
+                .returns(() => setting)
+                .verifiable(typemoq.Times.atLeastOnce());
+            let severity: string | undefined;
+            plainExecStub.callsFake((_cmd: string, _args: string[], options: SpawnOptions) => {
+                severity = options.env?.VSCODE_MISSING_PGK_SEVERITY;
+                return { stdout: '', stderr: '' };
+            });
+            const someFile = getSomeRequirementFile();
+            const result = await getInstalledPackagesDiagnostics(interpreterPathService.object, someFile.object);
+
+            assert.deepStrictEqual(result, []);
+            assert.deepStrictEqual(severity, expected);
+            configMock.verifyAll();
+        });
     });
 });

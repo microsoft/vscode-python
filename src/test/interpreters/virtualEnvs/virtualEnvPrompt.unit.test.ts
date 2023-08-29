@@ -223,7 +223,7 @@ suite('Virtual Environment Prompt', () => {
         notificationPromptEnabled.verifyAll();
     });
 
-    test("If user selects 'Do not show again', prompt is disabled", async () => {
+    test('If user selects "Don\'t show again", prompt is disabled', async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const prompts = [Common.bannerLabelYes, Common.bannerLabelNo, Common.doNotShowAgain];

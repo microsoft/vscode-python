@@ -87,7 +87,13 @@ export function areEnvsDeepEqual(env1: PythonEnvInfo, env2: PythonEnvInfo): bool
     env2Clone.source = env2Clone.source.sort();
     const searchLocation1 = env1.searchLocation?.fsPath ?? '';
     const searchLocation2 = env2.searchLocation?.fsPath ?? '';
-    return isEqual(env1Clone, env2Clone) && arePathsSame(searchLocation1, searchLocation2);
+    const searchLocation1Scheme = env1.searchLocation?.scheme ?? '';
+    const searchLocation2Scheme = env2.searchLocation?.scheme ?? '';
+    return (
+        isEqual(env1Clone, env2Clone) &&
+        arePathsSame(searchLocation1, searchLocation2) &&
+        searchLocation1Scheme === searchLocation2Scheme
+    );
 }
 
 /**

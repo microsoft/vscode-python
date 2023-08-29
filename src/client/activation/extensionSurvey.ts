@@ -83,10 +83,10 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
     @traceDecoratorError('Failed to display prompt for extension survey')
     public async showSurvey() {
         const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
-        const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = [
+        const telemetrySelections: ['Yes', 'Maybe later', "Don't show again"] = [
             'Yes',
             'Maybe later',
-            'Do not show again',
+            "Don't show again",
         ];
         const selection = await this.appShell.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts);
         sendTelemetryEvent(EventName.EXTENSION_SURVEY_PROMPT, undefined, {

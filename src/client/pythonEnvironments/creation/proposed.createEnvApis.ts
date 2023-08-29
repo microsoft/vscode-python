@@ -40,40 +40,83 @@ export interface EnvironmentWillCreateEvent {
     /**
      * Options used to create a Python environment.
      */
-    options: CreateEnvironmentOptions | undefined;
+    readonly options: CreateEnvironmentOptions | undefined;
 }
+
+export type CreateEnvironmentResult =
+    | {
+          /**
+           * Workspace folder associated with the environment.
+           */
+          readonly workspaceFolder?: WorkspaceFolder;
+
+          /**
+           * Path to the executable python in the environment
+           */
+          readonly path: string;
+
+          /**
+           * User action that resulted in exit from the create environment flow.
+           */
+          readonly action?: CreateEnvironmentUserActions;
+
+          /**
+           * Error if any occurred during environment creation.
+           */
+          readonly error?: Error;
+      }
+    | {
+          /**
+           * Workspace folder associated with the environment.
+           */
+          readonly workspaceFolder?: WorkspaceFolder;
+
+          /**
+           * Path to the executable python in the environment
+           */
+          readonly path?: string;
+
+          /**
+           * User action that resulted in exit from the create environment flow.
+           */
+          readonly action: CreateEnvironmentUserActions;
+
+          /**
+           * Error if any occurred during environment creation.
+           */
+          readonly error?: Error;
+      }
+    | {
+          /**
+           * Workspace folder associated with the environment.
+           */
+          readonly workspaceFolder?: WorkspaceFolder;
+
+          /**
+           * Path to the executable python in the environment
+           */
+          readonly path?: string;
+
+          /**
+           * User action that resulted in exit from the create environment flow.
+           */
+          readonly action?: CreateEnvironmentUserActions;
+
+          /**
+           * Error if any occurred during environment creation.
+           */
+          readonly error: Error;
+      };
 
 /**
  * Params passed on `onDidCreateEnvironment` event handler.
  */
-export interface EnvironmentDidCreateEvent extends CreateEnvironmentResult {
+export type EnvironmentDidCreateEvent = CreateEnvironmentResult & {
     /**
      * Options used to create the Python environment.
      */
-    options: CreateEnvironmentOptions | undefined;
-}
-
-export interface CreateEnvironmentResult {
-    /**
-     * Workspace folder associated with the environment.
-     */
-    workspaceFolder: WorkspaceFolder | undefined;
-
-    /**
-     * Path to the executable python in the environment
-     */
-    path: string | undefined;
-
-    /**
-     * User action that resulted in exit from the create environment flow.
-     */
-    action: CreateEnvironmentUserActions | undefined;
-
-    /**
-     * Error if any occurred during environment creation.
-     */
-    error: Error | undefined;
-}
+    readonly options: CreateEnvironmentOptions | undefined;
+};
 
 /**
  * Extensions that want to contribute their own environment creation can do that by registering an object
@@ -120,14 +163,14 @@ export interface ProposedCreateEnvironmentAPI {
      * provider (including internal providers). This will also receive any options passed in
      * or defaults used to create environment.
      */
-    onWillCreateEnvironment: Event<EnvironmentWillCreateEvent>;
+    readonly onWillCreateEnvironment: Event<EnvironmentWillCreateEvent>;
 
     /**
      * This API can be used to detect when the environment provider exits for any registered
      * provider (including internal providers). This will also receive created environment path,
      * any errors, or user actions taken from the provider.
      */
-    onDidCreateEnvironment: Event<EnvironmentDidCreateEvent>;
+    readonly onDidCreateEnvironment: Event<EnvironmentDidCreateEvent>;
 
     /**
      * This API will show a QuickPick to select an environment provider from available list of

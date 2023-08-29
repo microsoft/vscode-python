@@ -220,7 +220,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: 'Select Python Interpreter', command: cmd },
-                { prompt: 'Do not show again', command: cmdIgnore },
+                { prompt: "Don't show again", command: cmdIgnore },
             ]);
         });
         test('Should not display a message if No Interpreters diagnostic has been ignored', async () => {

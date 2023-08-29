@@ -60,7 +60,7 @@ function isUri(resource?: Uri | any): resource is Uri {
 /**
  * Create a filter func that determine if the given URI and candidate match.
  *
- * The scheme must match, as well as path.
+ * Only compares path.
  *
  * @param checkParent - if `true`, match if the candidate is rooted under `uri`
  * or if the candidate matches `uri` exactly.
@@ -80,9 +80,8 @@ export function getURIFilter(
     }
     const uriRoot = `${uriPath}/`;
     function filter(candidate: Uri): boolean {
-        if (candidate.scheme !== uri.scheme) {
-            return false;
-        }
+        // Do not compare schemes as it is sometimes not available, in
+        // which case file is assumed as scheme.
         let candidatePath = candidate.path;
         while (candidatePath.endsWith('/')) {
             candidatePath = candidatePath.slice(0, -1);

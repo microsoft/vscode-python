@@ -55,7 +55,7 @@ export interface IProcessService extends IDisposable {
 export const IProcessServiceFactory = Symbol('IProcessServiceFactory');
 
 export interface IProcessServiceFactory {
-    create(resource?: Uri): Promise<IProcessService>;
+    create(resource?: Uri, options?: { doNotUseCustomEnvs: boolean }): Promise<IProcessService>;
 }
 
 export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');

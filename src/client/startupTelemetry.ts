@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as vscode from 'vscode';
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
 import { ITerminalHelper } from './common/terminal/types';
@@ -81,6 +82,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // TODO: If any one of these parts fails we send no info.  We should
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
+    const appName = vscode.env.appName;
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const workspaceFolderCount = workspaceService.workspaceFolders?.length || 0;
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
@@ -129,5 +131,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         hasPythonThree,
         usingUserDefinedInterpreter,
         usingGlobalInterpreter,
+        appName,
     };
 }

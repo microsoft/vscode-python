@@ -35,6 +35,8 @@ suite('venv Creation provider tests', () => {
     let withProgressStub: sinon.SinonStub;
     let showErrorMessageWithLogsStub: sinon.SinonStub;
     let pickPackagesToInstallStub: sinon.SinonStub;
+    let pickExistingVenvActionStub: sinon.SinonStub;
+    let deleteEnvironmentStub: sinon.SinonStub;
 
     const workspace1 = {
         uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
@@ -43,6 +45,8 @@ suite('venv Creation provider tests', () => {
     };
 
     setup(() => {
+        pickExistingVenvActionStub = sinon.stub(venvUtils, 'pickExistingVenvAction');
+        deleteEnvironmentStub = sinon.stub(venvUtils, 'deleteEnvironment');
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
         execObservableStub = sinon.stub(rawProcessApis, 'execObservable');
         interpreterQuickPick = typemoq.Mock.ofType<IInterpreterQuickPick>();
@@ -54,6 +58,9 @@ suite('venv Creation provider tests', () => {
 
         progressMock = typemoq.Mock.ofType<CreateEnvironmentProgress>();
         venvProvider = new VenvCreationProvider(interpreterQuickPick.object);
+
+        pickExistingVenvActionStub.resolves(venvUtils.ExistingVenvAction.Create);
+        deleteEnvironmentStub.resolves(true);
     });
 
     teardown(() => {
@@ -70,6 +77,8 @@ suite('venv Creation provider tests', () => {
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
         interpreterQuickPick.verifyAll();
         assert.isTrue(pickPackagesToInstallStub.notCalled);
+        assert.isTrue(pickExistingVenvActionStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
     });
 
     test('No Python selected', async () => {
@@ -85,6 +94,7 @@ suite('venv Creation provider tests', () => {
         assert.isTrue(pickWorkspaceFolderStub.calledOnce);
         interpreterQuickPick.verifyAll();
         assert.isTrue(pickPackagesToInstallStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
     });
 
     test('User pressed Esc while selecting dependencies', async () => {
@@ -99,6 +109,7 @@ suite('venv Creation provider tests', () => {
 
         await assert.isRejected(venvProvider.createEnvironment());
         assert.isTrue(pickPackagesToInstallStub.calledOnce);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
     });
 
     test('Create venv with python selected by user no packages selected', async () => {
@@ -158,12 +169,11 @@ suite('venv Creation provider tests', () => {
         assert.deepStrictEqual(actual, {
             path: 'new_environment',
             workspaceFolder: workspace1,
-            action: undefined,
-            error: undefined,
         });
         interpreterQuickPick.verifyAll();
         progressMock.verifyAll();
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
     });
 
     test('Create venv failed', async () => {
@@ -218,6 +228,7 @@ suite('venv Creation provider tests', () => {
         _complete!();
         await assert.isRejected(promise);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
     });
 
     test('Create venv failed (non-zero exit code)', async () => {
@@ -276,5 +287,109 @@ suite('venv Creation provider tests', () => {
         interpreterQuickPick.verifyAll();
         progressMock.verifyAll();
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
+    });
+
+    test('Create venv with pre-existing .venv, user selects re-create', async () => {
+        pickExistingVenvActionStub.resolves(venvUtils.ExistingVenvAction.Recreate);
+        pickWorkspaceFolderStub.resolves(workspace1);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves([]);
+
+        const deferred = createDeferred();
+        let _next: undefined | ((value: Output<string>) => void);
+        let _complete: undefined | (() => void);
+        execObservableStub.callsFake(() => {
+            deferred.resolve();
+            return {
+                proc: {
+                    exitCode: 0,
+                },
+                out: {
+                    subscribe: (
+                        next?: (value: Output<string>) => void,
+                        _error?: (error: unknown) => void,
+                        complete?: () => void,
+                    ) => {
+                        _next = next;
+                        _complete = complete;
+                    },
+                },
+                dispose: () => undefined,
+            };
+        });
+
+        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
+
+        withProgressStub.callsFake(
+            (
+                _options: ProgressOptions,
+                task: (
+                    progress: CreateEnvironmentProgress,
+                    token?: CancellationToken,
+                ) => Thenable<CreateEnvironmentResult>,
+            ) => task(progressMock.object),
+        );
+
+        const promise = venvProvider.createEnvironment();
+        await deferred.promise;
+        assert.isDefined(_next);
+        assert.isDefined(_complete);
+
+        _next!({ out: `${VENV_CREATED_MARKER}new_environment`, source: 'stdout' });
+        _complete!();
+
+        const actual = await promise;
+        assert.deepStrictEqual(actual, {
+            path: 'new_environment',
+            workspaceFolder: workspace1,
+        });
+        interpreterQuickPick.verifyAll();
+        progressMock.verifyAll();
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.calledOnce);
+    });
+
+    test('Create venv with pre-existing .venv, user selects re-create, delete env failed', async () => {
+        pickExistingVenvActionStub.resolves(venvUtils.ExistingVenvAction.Recreate);
+        pickWorkspaceFolderStub.resolves(workspace1);
+        deleteEnvironmentStub.resolves(false);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.once());
+
+        pickPackagesToInstallStub.resolves([]);
+
+        await assert.isRejected(venvProvider.createEnvironment());
+
+        interpreterQuickPick.verifyAll();
+        assert.isTrue(withProgressStub.notCalled);
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.calledOnce);
+    });
+
+    test('Create venv with pre-existing .venv, user selects use existing', async () => {
+        pickExistingVenvActionStub.resolves(venvUtils.ExistingVenvAction.UseExisting);
+        pickWorkspaceFolderStub.resolves(workspace1);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.never());
+
+        pickPackagesToInstallStub.resolves([]);
+
+        interpreterQuickPick.verifyAll();
+        assert.isTrue(withProgressStub.notCalled);
+        assert.isTrue(pickPackagesToInstallStub.notCalled);
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
     });
 });
