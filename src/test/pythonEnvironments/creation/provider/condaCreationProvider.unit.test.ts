@@ -185,7 +185,8 @@ suite('Conda Creation provider tests', () => {
         assert.isDefined(_error);
         _error!('bad arguments');
         _complete!();
-        await assert.isRejected(promise);
+        const result = await promise;
+        assert.ok(result?.error);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
     });
 
@@ -241,7 +242,8 @@ suite('Conda Creation provider tests', () => {
 
         _next!({ out: `${CONDA_ENV_CREATED_MARKER}new_environment`, source: 'stdout' });
         _complete!();
-        await assert.isRejected(promise);
+        const result = await promise;
+        assert.ok(result?.error);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
     });
 });

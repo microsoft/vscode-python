@@ -128,7 +128,9 @@ async function createCondaEnv(
             dispose();
             if (proc?.exitCode !== 0) {
                 traceError('Error while running venv creation script: ', progressAndTelemetry.getLastError());
-                deferred.reject(progressAndTelemetry.getLastError());
+                deferred.reject(
+                    progressAndTelemetry.getLastError() || `Conda env creation failed with exitCode: ${proc?.exitCode}`,
+                );
             } else {
                 deferred.resolve(condaEnvPath);
             }
