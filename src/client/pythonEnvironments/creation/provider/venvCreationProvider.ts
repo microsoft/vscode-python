@@ -120,7 +120,10 @@ async function createVenv(
             dispose();
             if (proc?.exitCode !== 0) {
                 traceError('Error while running venv creation script: ', progressAndTelemetry.getLastError());
-                deferred.reject(progressAndTelemetry.getLastError());
+                deferred.reject(
+                    progressAndTelemetry.getLastError() ||
+                        `Failed to create virtual environment with exitCode: ${proc?.exitCode}`,
+                );
             } else {
                 deferred.resolve(venvPath);
             }
