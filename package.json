@@ -23,9 +23,7 @@
         "envShellEvent",
         "testObserver",
         "quickPickItemTooltip",
-        "envCollectionWorkspace",
-        "saveEditor",
-        "envCollectionOptions"
+        "saveEditor"
     ],
     "author": {
         "name": "Microsoft Corporation"
