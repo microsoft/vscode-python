@@ -31,7 +31,7 @@ import { traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../.
 import { IInterpreterService } from '../contracts';
 import { defaultShells } from './service';
 import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from './types';
-import { EnvironmentType } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
@@ -43,6 +43,15 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         untrustedWorkspace: false,
         virtualWorkspace: false,
     };
+
+    /**
+     * Prompts for these shells cannot be set reliably using variables
+     */
+    private noPromptVariableShells = [
+        TerminalShellType.powershell,
+        TerminalShellType.powershellCore,
+        TerminalShellType.fish,
+    ];
 
     private deferred: Deferred<void> | undefined;
 
@@ -150,6 +159,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             );
         }
         const processEnv = this.processEnvVars;
+
+        // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
+        env.PS1 = await this.getPS1(shell, resource, env);
+
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
@@ -213,15 +226,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             this.terminalPromptIsCorrect(resource);
             return;
         }
-        // Prompts for these shells cannot be set reliably using variables
-        const exceptionShells = [
-            TerminalShellType.powershell,
-            TerminalShellType.powershellCore,
-            TerminalShellType.fish,
-            TerminalShellType.zsh, // TODO: Remove this once https://github.com/microsoft/vscode/issues/188875 is fixed
-        ];
         const customShellType = identifyShellFromShellPath(shell);
-        if (exceptionShells.includes(customShellType)) {
+        if (this.noPromptVariableShells.includes(customShellType)) {
             return;
         }
         if (this.platform.osType !== OSType.Windows) {
@@ -241,6 +247,26 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             }
         }
         this.terminalPromptIsCorrect(resource);
+    }
+
+    private async getPS1(shell: string, resource: Resource, env: EnvironmentVariables) {
+        if (env.PS1) {
+            return env.PS1;
+        }
+        const customShellType = identifyShellFromShellPath(shell);
+        if (this.noPromptVariableShells.includes(customShellType)) {
+            return undefined;
+        }
+        if (this.platform.osType !== OSType.Windows) {
+            // These shells are expected to set PS1 variable for terminal prompt for virtual/conda environments.
+            const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+            const shouldPS1BeSet = interpreter?.type !== undefined;
+            if (shouldPS1BeSet && !env.PS1) {
+                // PS1 should be set but no PS1 was set.
+                return getPromptForEnv(interpreter);
+            }
+        }
+        return undefined;
     }
 
     private async handleMicroVenv(resource: Resource) {
@@ -312,4 +338,17 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
 function shouldSkip(env: string) {
     return ['_', 'SHLVL'].includes(env);
+}
+
+function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
+    if (!interpreter) {
+        return undefined;
+    }
+    if (interpreter.envName) {
+        return `(${interpreter.envName}) `;
+    }
+    if (interpreter.envPath) {
+        return `(${path.basename(interpreter.envPath)}) `;
+    }
+    return undefined;
 }
