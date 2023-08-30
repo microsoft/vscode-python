@@ -35,7 +35,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
     let interpreterService: IInterpreterService;
     const prompts = [Common.doNotShowAgain];
     const envName = 'env';
-    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format(` (${envName})`);
+    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format(` "(${envName})"`);
 
     setup(async () => {
         shell = mock<IApplicationShell>();
