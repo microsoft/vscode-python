@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
-import path from 'path';
+import * as path from 'path';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../common/application/types';
 import {
     IConfigurationService,
