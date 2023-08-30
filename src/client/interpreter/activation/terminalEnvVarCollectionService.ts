@@ -345,6 +345,10 @@ function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
         return undefined;
     }
     if (interpreter.envName) {
+        if (interpreter.envName === 'base') {
+            // If conda base environment is selected, it can lead to "(base)" appearing twice if we return the env name.
+            return undefined;
+        }
         return `(${interpreter.envName}) `;
     }
     if (interpreter.envPath) {

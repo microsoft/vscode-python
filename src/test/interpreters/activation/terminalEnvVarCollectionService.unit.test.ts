@@ -349,6 +349,34 @@ suite('Terminal Environment Variable Collection Service', () => {
         expect(result).to.equal(true);
     });
 
+    test('Correct track that prompt was not set for non-Windows where PS1 is not set but env name is base', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
+        const ps1Shell = 'zsh';
+        const resource = Uri.file('a');
+        const workspaceFolder: WorkspaceFolder = {
+            uri: Uri.file('workspacePath'),
+            name: 'workspace1',
+            index: 0,
+        };
+        when(interpreterService.getActiveInterpreter(resource)).thenResolve(({
+            type: PythonEnvType.Conda,
+            envName: 'base',
+            envPath: 'prefix/to/conda',
+        } as unknown) as PythonEnvironment);
+        when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(resource, undefined, undefined, ps1Shell),
+        ).thenResolve(envVars);
+        when(collection.replace(anything(), anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(resource, ps1Shell);
+
+        const result = terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource);
+
+        expect(result).to.equal(false);
+    });
+
     test('Correct track that prompt was not set for non-Windows fish where PS1 is not set', async () => {
         when(platform.osType).thenReturn(OSType.Linux);
         const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };

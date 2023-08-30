@@ -91,10 +91,10 @@ function getPromptName(interpreter?: PythonEnvironment) {
         return '';
     }
     if (interpreter.envName) {
-        return ` "(${interpreter.envName})"`;
+        return `, i.e "(${interpreter.envName})"`;
     }
     if (interpreter.envPath) {
-        return ` "(${path.basename(interpreter.envPath)})"`;
+        return `, i.e "(${path.basename(interpreter.envPath)})"`;
     }
     return '';
 }
