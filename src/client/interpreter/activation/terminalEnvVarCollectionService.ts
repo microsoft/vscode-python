@@ -191,8 +191,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                                 applyAtShellIntegration: true,
                                 applyAtProcessCreation: true,
                             });
-                            return;
+                        } else {
+                            traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
+                            envVarCollection.prepend(key, value, {
+                                applyAtShellIntegration: true,
+                                applyAtProcessCreation: true,
+                            });
                         }
+                        return;
                     }
                     traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
                     envVarCollection.replace(key, value, {
