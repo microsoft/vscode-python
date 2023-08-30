@@ -4,7 +4,7 @@
 'use strict';
 
 import { mock, when, anything, instance, verify, reset } from 'ts-mockito';
-import { EventEmitter, Terminal, Uri } from 'vscode';
+import { EventEmitter, Terminal, Uri, l10n } from 'vscode';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../../client/common/application/types';
 import {
     IConfigurationService,
@@ -35,7 +35,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
     let interpreterService: IInterpreterService;
     const prompts = [Common.doNotShowAgain];
     const envName = 'env';
-    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format(`, i.e "(${envName})"`);
+    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format(`, ${l10n.t('i.e')} "(${envName})"`);
 
     setup(async () => {
         shell = mock<IApplicationShell>();

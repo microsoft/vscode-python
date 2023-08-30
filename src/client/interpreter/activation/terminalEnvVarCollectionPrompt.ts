@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Uri, l10n } from 'vscode';
 import * as path from 'path';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../common/application/types';
 import {
@@ -91,10 +91,10 @@ function getPromptName(interpreter?: PythonEnvironment) {
         return '';
     }
     if (interpreter.envName) {
-        return `, i.e "(${interpreter.envName})"`;
+        return `, ${l10n.t('i.e')} "(${interpreter.envName})"`;
     }
     if (interpreter.envPath) {
-        return `, i.e "(${path.basename(interpreter.envPath)})"`;
+        return `, ${l10n.t('i.e')} "(${path.basename(interpreter.envPath)})"`;
     }
     return '';
 }
