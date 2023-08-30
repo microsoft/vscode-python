@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import path from 'path';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../common/application/types';
 import {
     IConfigurationService,
@@ -16,6 +17,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ITerminalEnvVarCollectionService } from './types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IInterpreterService } from '../contracts';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
@@ -70,7 +72,7 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
         }
         const prompts = [Common.doNotShowAgain];
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        const terminalPromptName = interpreter?.envName ? ` (${interpreter.envName})` : '';
+        const terminalPromptName = getPromptName(interpreter);
         const selection = await this.appShell.showInformationMessage(
             Interpreters.terminalEnvVarCollectionPrompt.format(terminalPromptName),
             ...prompts,
@@ -82,4 +84,17 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
             await notificationPromptEnabled.updateValue(false);
         }
     }
+}
+
+function getPromptName(interpreter?: PythonEnvironment) {
+    if (!interpreter) {
+        return '';
+    }
+    if (interpreter.envName) {
+        return ` "(${interpreter.envName})"`;
+    }
+    if (interpreter.envPath) {
+        return ` "(${path.basename(interpreter.envPath)})"`;
+    }
+    return '';
 }
