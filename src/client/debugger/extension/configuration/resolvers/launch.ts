@@ -19,7 +19,7 @@ import { getProgram, IDebugEnvironmentVariablesService } from './helper';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
-    private isPythonSet = false;
+    private isCustomPythonSet = false;
 
     constructor(
         @inject(IDiagnosticsService)
@@ -38,7 +38,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments,
         _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
-        this.isPythonSet = debugConfiguration.python !== undefined;
+        this.isCustomPythonSet = debugConfiguration.python !== undefined;
         if (
             debugConfiguration.name === undefined &&
             debugConfiguration.type === undefined &&
@@ -110,7 +110,9 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.envFile = settings.envFile;
         }
         let baseEnvVars: EnvironmentVariables | undefined;
-        if (this.isPythonSet) {
+        if (this.isCustomPythonSet || debugConfiguration.console !== 'integratedTerminal') {
+            // We only have the right activated environment present in integrated terminal if no custom Python path
+            // is specified. Otherwise, we need to explicitly set the variables.
             baseEnvVars = await this.environmentActivationService.getActivatedEnvironmentVariables(
                 workspaceFolder,
                 await this.interpreterService.getInterpreterDetails(debugConfiguration.python ?? ''),

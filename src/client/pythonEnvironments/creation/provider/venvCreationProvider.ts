@@ -120,7 +120,10 @@ async function createVenv(
             dispose();
             if (proc?.exitCode !== 0) {
                 traceError('Error while running venv creation script: ', progressAndTelemetry.getLastError());
-                deferred.reject(progressAndTelemetry.getLastError());
+                deferred.reject(
+                    progressAndTelemetry.getLastError() ||
+                        `Failed to create virtual environment with exitCode: ${proc?.exitCode}`,
+                );
             } else {
                 deferred.resolve(venvPath);
             }
@@ -327,7 +330,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                 } catch (ex) {
                     traceError(ex);
                     showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
-                    throw ex;
+                    return { error: ex as Error };
                 }
             },
         );

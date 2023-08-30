@@ -226,7 +226,8 @@ suite('venv Creation provider tests', () => {
         assert.isDefined(_error);
         _error!('bad arguments');
         _complete!();
-        await assert.isRejected(promise);
+        const result = await promise;
+        assert.ok(result?.error);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
         assert.isTrue(deleteEnvironmentStub.notCalled);
     });
@@ -283,7 +284,8 @@ suite('venv Creation provider tests', () => {
 
         _next!({ out: `${VENV_CREATED_MARKER}new_environment`, source: 'stdout' });
         _complete!();
-        await assert.isRejected(promise);
+        const result = await promise;
+        assert.ok(result?.error);
         interpreterQuickPick.verifyAll();
         progressMock.verifyAll();
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);

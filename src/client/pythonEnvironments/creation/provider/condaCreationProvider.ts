@@ -128,7 +128,9 @@ async function createCondaEnv(
             dispose();
             if (proc?.exitCode !== 0) {
                 traceError('Error while running venv creation script: ', progressAndTelemetry.getLastError());
-                deferred.reject(progressAndTelemetry.getLastError());
+                deferred.reject(
+                    progressAndTelemetry.getLastError() || `Conda env creation failed with exitCode: ${proc?.exitCode}`,
+                );
             } else {
                 deferred.resolve(condaEnvPath);
             }
@@ -249,7 +251,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
             } catch (ex) {
                 traceError(ex);
                 showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
-                throw ex;
+                return { error: ex as Error };
             }
         },
     );
