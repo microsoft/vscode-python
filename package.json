@@ -1145,7 +1145,7 @@
                     "scope": "machine",
                     "type": "string"
                 },
-                "python.missingPackage.severity":{
+                "python.missingPackage.severity": {
                     "default": "Hint",
                     "description": "%python.missingPackage.severity.description%",
                     "enum": [
