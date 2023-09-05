@@ -5,12 +5,22 @@ import * as tomljs from '@iarna/toml';
 import * as fs from 'fs-extra';
 import { flatten, isArray } from 'lodash';
 import * as path from 'path';
-import { CancellationToken, ProgressLocation, QuickPickItem, RelativePattern, WorkspaceFolder } from 'vscode';
+import {
+    CancellationToken,
+    ProgressLocation,
+    QuickPickItem,
+    QuickPickItemButtonEvent,
+    RelativePattern,
+    ThemeIcon,
+    Uri,
+    WorkspaceFolder,
+} from 'vscode';
 import { Common, CreateEnv } from '../../../common/utils/localize';
 import {
     MultiStepAction,
     MultiStepNode,
     showQuickPickWithBack,
+    showTextDocument,
     withProgress,
 } from '../../../common/vscodeApis/windowApis';
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
@@ -78,8 +88,13 @@ async function pickTomlExtras(extras: string[], token?: CancellationToken): Prom
     return undefined;
 }
 
-async function pickRequirementsFiles(files: string[], token?: CancellationToken): Promise<string[] | undefined> {
+async function pickRequirementsFiles(
+    files: string[],
+    root: string,
+    token?: CancellationToken,
+): Promise<string[] | undefined> {
     const items: QuickPickItem[] = files
+        .map((p) => path.relative(root, p))
         .sort((a, b) => {
             const al: number = a.split(/[\\\/]/).length;
             const bl: number = b.split(/[\\\/]/).length;
@@ -91,7 +106,15 @@ async function pickRequirementsFiles(files: string[], token?: CancellationToken)
             }
             return al - bl;
         })
-        .map((e) => ({ label: e }));
+        .map((e) => ({
+            label: e,
+            buttons: [
+                {
+                    iconPath: new ThemeIcon('go-to-file'),
+                    tooltip: CreateEnv.Venv.openRequirementsFile,
+                },
+            ],
+        }));
 
     const selection = await showQuickPickWithBack(
         items,
@@ -101,6 +124,11 @@ async function pickRequirementsFiles(files: string[], token?: CancellationToken)
             canPickMany: true,
         },
         token,
+        async (e: QuickPickItemButtonEvent<QuickPickItem>) => {
+            if (e.item.label) {
+                await showTextDocument(Uri.file(path.join(root, e.item.label)));
+            }
+        },
     );
 
     if (selection && isArray(selection)) {
@@ -195,14 +223,11 @@ export async function pickPackagesToInstall(
         tomlStep,
         async (context?: MultiStepAction) => {
             traceVerbose('Looking for pip requirements.');
-            const requirementFiles = (await getPipRequirementsFiles(workspaceFolder, token))?.map((p) =>
-                path.relative(workspaceFolder.uri.fsPath, p),
-            );
-
+            const requirementFiles = await getPipRequirementsFiles(workspaceFolder, token);
             if (requirementFiles && requirementFiles.length > 0) {
                 traceVerbose('Found pip requirements.');
                 try {
-                    const result = await pickRequirementsFiles(requirementFiles, token);
+                    const result = await pickRequirementsFiles(requirementFiles, workspaceFolder.uri.fsPath, token);
                     const installList = result?.map((p) => path.join(workspaceFolder.uri.fsPath, p));
                     if (installList) {
                         installList.forEach((i) => {
