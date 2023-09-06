@@ -37,13 +37,13 @@ extends:
         testPlatforms:
           - name: Linux
             nodeVersions:
-              - 16.17.1
+              - 18.17.1
           - name: MacOS
             nodeVersions:
-              - 16.17.1
+              - 18.17.1
           - name: Windows
             nodeVersions:
-              - 16.17.1
+              - 18.17.1
         testSteps:
           - template: /build/azure-pipelines/templates/test-steps.yml@self
             parameters:
