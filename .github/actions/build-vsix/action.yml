@@ -84,7 +84,7 @@ runs:
       shell: bash
 
     - name: Upload VSIX
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.artifact_name }}
         path: ${{ inputs.vsix_name }}
