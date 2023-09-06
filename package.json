@@ -1142,7 +1142,7 @@
                     "scope": "machine",
                     "type": "string"
                 },
-                "python.missingPackage.severity":{
+                "python.missingPackage.severity": {
                     "default": "Hint",
                     "description": "%python.missingPackage.severity.description%",
                     "enum": [
@@ -2104,7 +2104,7 @@
     },
     "dependencies": {
         "@iarna/toml": "^2.2.5",
-        "@vscode/extension-telemetry": "^0.7.7",
+        "@vscode/extension-telemetry": "^0.8.4",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "arch": "^2.1.0",
         "diff-match-patch": "^1.0.0",
