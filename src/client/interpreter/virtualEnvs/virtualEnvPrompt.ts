@@ -32,6 +32,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     ) {}
 
     public async activate(resource: Uri): Promise<void> {
+        // Random commit
         const disposable = this.pyenvs.onDidCreate(resource, () => this.handleNewEnvironment(resource));
         this.disposableRegistry.push(disposable);
     }
