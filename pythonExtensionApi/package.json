@@ -13,7 +13,7 @@
 	"main": "./out/main.js",
 	"types": "./out/main.d.ts",
 	"engines": {
-		"node": ">=16.17.1",
+		"node": ">=18.17.1",
 		"vscode": "^1.78.0"
 	},
     "license": "MIT",
