@@ -1,0 +1,27 @@
+name: "Add milestone to closed issue"
+on:
+  issues:
+    types: [closed, reopened]
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Actions
+        uses: actions/checkout@v3
+        with:
+          repository: "karrtikr/vscode-github-triage-actions"
+          ref: stable
+          path: ./actions
+      - name: Checkout Repo
+        if: github.event_name != 'issues'
+        uses: actions/checkout@v3
+        with:
+          path: ./repo
+          fetch-depth: 0
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
+      - name: "Add milestone to closed issue"
+        uses: ./actions/python-add-milestone
+        with:
+          token: ${{secrets.GITHUB_TOKEN}}
