@@ -77,11 +77,13 @@ export function containsHeaders(rawData: string): boolean {
     );
 }
 
-export function checkUuid(uuid: string | undefined, uuids: Array<string>): string {
+export function checkUuid(uuid: string | undefined, uuids: Array<string>): string | undefined {
     if (!uuid) {
-        throw new Error('On data received: Error occurred because payload UUID is undefined');
+        // no UUID found, this could occurred if the payload is full yet so send back without erroring
+        return undefined;
     }
     if (!uuids.includes(uuid)) {
+        // no UUID found, this could occurred if the payload is full yet so send back without erroring
         throw new Error('On data received: Error occurred because the payload UUID is not recognized');
     }
     return uuid;

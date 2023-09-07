@@ -16,13 +16,9 @@ import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { traceLog } from '../../../client/logging';
+import { initialize } from '../../initialize';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
-// import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
-// import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
 import { PythonResultResolver } from '../../../client/testing/testController/common/resultResolver';
-// import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import {
@@ -32,7 +28,6 @@ import {
     DataWithPayloadChunks,
     PAYLOAD_SPLIT_MULTI_CHUNK_ARRAY,
 } from '../testController/payloadTestCases';
-import { sleep } from '../../core';
 
 const FAKE_UUID = 'fake-u-u-i-d';
 export interface TestCase {
@@ -41,9 +36,18 @@ export interface TestCase {
 }
 
 const testCases: Array<TestCase> = [
-    // { name: 'single payload single chunk', value: PAYLOAD_SINGLE_CHUNK(FAKE_UUID) },
-    // { name: 'multiple payloads per buffer chunk', value: PAYLOAD_MULTI_CHUNK(FAKE_UUID) },
-    // { name: 'single payload across multiple buffer chunks', value: PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY(FAKE_UUID) },
+    {
+        name: 'single payload single chunk',
+        value: PAYLOAD_SINGLE_CHUNK(FAKE_UUID),
+    },
+    {
+        name: 'multiple payloads per buffer chunk',
+        value: PAYLOAD_MULTI_CHUNK(FAKE_UUID),
+    },
+    {
+        name: 'single payload across multiple buffer chunks',
+        value: PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY(FAKE_UUID),
+    },
     {
         name: 'two chunks, payload split and two payloads in a chunk',
         value: PAYLOAD_SPLIT_MULTI_CHUNK_ARRAY(FAKE_UUID),
@@ -144,8 +148,12 @@ suite('EOT tests', () => {
                 // payload is a string array, each string represents one line written to the buffer
                 const { payloadArray } = testCase.value;
                 for (let i = 0; i < payloadArray.length; i = i + 1) {
-                    client.write(payloadArray[i]);
-                    await sleep(3);
+                    await (async (clientSub, payloadSub) => {
+                        if (!clientSub.write(payloadSub)) {
+                            // If write returns false, wait for the 'drain' event before proceeding
+                            await new Promise((resolve) => clientSub.once('drain', resolve));
+                        }
+                    })(client, payloadArray[i]);
                 }
                 client.end();
             });
@@ -191,6 +199,8 @@ suite('EOT tests', () => {
                         actualCollectedResult,
                         "Expected collected result to match 'data'",
                     );
+                    // nervous about this not testing race conditions correctly
+                    // client.end();
                     // verify that the _resolveExecution was called once per test
                     // assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
                 });

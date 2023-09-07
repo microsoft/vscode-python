@@ -33,9 +33,26 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     constructor(private executionFactory: IPythonExecutionFactory, private debugLauncher: ITestDebugLauncher) {
         this.server = net.createServer((socket: net.Socket) => {
-            const buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
+            let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
-                this._resolveData(buffer, data);
+                console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
+                buffer = Buffer.concat([buffer, data]); // get the new data and add it to the buffer
+                while (buffer.length > 0) {
+                    try {
+                        // try to resolve data, returned unresolved data
+                        const remainingBuffer = this._resolveData(buffer);
+                        if (remainingBuffer.length === buffer.length) {
+                            // if the remaining buffer is exactly the same as the buffer before processing,
+                            // then there is no more data to process so loop should be exited.
+                            break;
+                        }
+                        buffer = remainingBuffer;
+                    } catch (ex) {
+                        traceError(`Error processing test server request: ${ex} observe`);
+                        buffer = Buffer.alloc(0);
+                        this._onDataReceived.fire({ uuid: '', data: '' });
+                    }
+                }
             });
         });
         this.ready = new Promise((resolve, _reject) => {
@@ -59,44 +76,24 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     savedBuffer = '';
 
-    public _resolveData(buffer: Buffer, data: Buffer): void {
+    public _resolveData(buffer: Buffer): Buffer {
         try {
-            console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
-            buffer = Buffer.concat([buffer, data]);
-            while (buffer.length > 0) {
-                try {
-                    const bufferFromString = this.savedBuffer + buffer.toString();
-                    const extractedJsonPayload = extractJsonPayload(bufferFromString, this.uuids);
-                    // what payload is so small it doesn't include the whole UUID
-                    if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
-                        // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
-                        this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
-                    }
-                    buffer = Buffer.from(extractedJsonPayload.remainingRawData);
-                    if (buffer.length === 0) {
-                        // if the buffer is empty, then there is no more data to process.
-                        // break to get more data from the socket.
-                        this.savedBuffer = '';
-                        buffer = Buffer.alloc(0);
-                        break;
-                    }
-                    if (containsHeaders(extractedJsonPayload.remainingRawData)) {
-                        // if the remaining data does not contain headers, then there is no more data to process.
-                        // break to get more data from the socket.
-                        //  buffer = Buffer.alloc(0);
-                        this.savedBuffer = extractedJsonPayload.remainingRawData;
-                        break;
-                    }
-                } catch (ex) {
-                    traceError(`Error:: ${ex}`);
-                    this._onDataReceived.fire({ uuid: '', data: '' });
-                    return;
-                }
+            const extractedJsonPayload = extractJsonPayload(buffer.toString(), this.uuids);
+            // what payload is so small it doesn't include the whole UUID think got this
+            if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
+                // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
+                this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
+            }
+            buffer = Buffer.from(extractedJsonPayload.remainingRawData);
+            if (buffer.length === 0) {
+                // if the buffer is empty, then there is no more data to process so buffer should be cleared.
+                buffer = Buffer.alloc(0);
             }
         } catch (ex) {
-            traceError(`Error processing test server request: ${ex} observe`);
+            traceError(`Error:: ${ex}`);
             this._onDataReceived.fire({ uuid: '', data: '' });
         }
+        return buffer;
     }
 
     private _fireDataReceived(uuid: string, extractedJSON: string): void {
