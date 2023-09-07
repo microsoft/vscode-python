@@ -2190,7 +2190,7 @@
         "flat": "^5.0.2",
         "get-port": "^5.1.1",
         "gulp": "^4.0.0",
-        "gulp-typescript": "^6.0.0-alpha.1",
+        "gulp-typescript": "^5.0.0",
         "mocha": "^9.2.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
