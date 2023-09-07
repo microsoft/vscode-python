@@ -217,8 +217,8 @@ export class PythonResultResolver implements ITestResultResolver {
                     }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
                     // split on " " since the subtest ID has the parent test ID in the first part of the ID.
-                    const parentTestCaseId = keyTemp.split(' ')[0];
-                    const subtestId = keyTemp.split(' ')[1];
+                    const parentTestCaseId = keyTemp.split(' [')[0];
+                    const subtestId = `[${keyTemp.split(' [')[1]}`;
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
 
                     // find the subtest's parent test item
