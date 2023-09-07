@@ -59,7 +59,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             disposeDataReceiver(this.testServer);
         });
         try {
-            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
+            this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
         } finally {
             await deferredTillEOT.promise;
             disposeDataReceiver(this.testServer);

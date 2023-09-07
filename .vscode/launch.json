@@ -101,7 +101,7 @@
                 "--extensionTestsPath=${workspaceFolder}/out/test"
             ],
             "env": {
-                "VSC_PYTHON_CI_TEST_GREP": "" // Modify this to run a subset of the single workspace tests
+                "VSC_PYTHON_CI_TEST_GREP": "EOT tests" // Modify this to run a subset of the single workspace tests
             },
             "stopOnEntry": false,
             "sourceMaps": true,
@@ -160,7 +160,8 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                //"--grep", "<suite name>",
+                "--grep",
+                "Python Test Server",
                 "--timeout=300000"
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],

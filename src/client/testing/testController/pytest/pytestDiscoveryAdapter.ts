@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { Disposable } from 'vscode-languageserver-protocol';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionResult,

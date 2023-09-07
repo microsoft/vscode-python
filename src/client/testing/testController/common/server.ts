@@ -57,13 +57,17 @@ export class PythonTestServer implements ITestServer, Disposable {
         });
     }
 
+    savedBuffer = '';
+
     public _resolveData(buffer: Buffer, data: Buffer): void {
         try {
             console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
             buffer = Buffer.concat([buffer, data]);
             while (buffer.length > 0) {
                 try {
-                    const extractedJsonPayload = extractJsonPayload(buffer.toString(), this.uuids);
+                    const bufferFromString = this.savedBuffer + buffer.toString();
+                    const extractedJsonPayload = extractJsonPayload(bufferFromString, this.uuids);
+                    // what payload is so small it doesn't include the whole UUID
                     if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
                         // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
                         this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
@@ -72,12 +76,15 @@ export class PythonTestServer implements ITestServer, Disposable {
                     if (buffer.length === 0) {
                         // if the buffer is empty, then there is no more data to process.
                         // break to get more data from the socket.
+                        this.savedBuffer = '';
                         buffer = Buffer.alloc(0);
                         break;
                     }
-                    if (!containsHeaders(extractedJsonPayload.remainingRawData)) {
+                    if (containsHeaders(extractedJsonPayload.remainingRawData)) {
                         // if the remaining data does not contain headers, then there is no more data to process.
                         // break to get more data from the socket.
+                        //  buffer = Buffer.alloc(0);
+                        this.savedBuffer = extractedJsonPayload.remainingRawData;
                         break;
                     }
                 } catch (ex) {
