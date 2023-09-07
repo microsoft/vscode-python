@@ -39,18 +39,19 @@ gulp.task('compileCore', (done) => {
         .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
 });
 
-const apiTsProject = ts.createProject('./pythonExtensionApi/tsconfig.json', { typescript });
-
 gulp.task('compileApi', (done) => {
-    let failed = false;
-    apiTsProject
-        .src()
-        .pipe(apiTsProject())
-        .on('error', () => {
-            failed = true;
+    spawnAsync('npm', ['run', 'compileApi'], undefined, true)
+        .then((stdout) => {
+            if (stdout.includes('error')) {
+                done(new Error(stdout));
+            } else {
+                done();
+            }
         })
-        .js.pipe(gulp.dest('./pythonExtensionApi/out'))
-        .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
+        .catch((ex) => {
+            console.log(ex);
+            done(new Error('TypeScript compilation errors', ex));
+        });
 });
 
 gulp.task('compile', gulp.series('compileCore', 'compileApi'));
