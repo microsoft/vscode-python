@@ -1,7 +1,7 @@
 {
     "name": "@vscode/python-extension",
     "description": "An API facade for the Python extension in VS Code",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "author": {
       "name": "Microsoft Corporation"
     },
