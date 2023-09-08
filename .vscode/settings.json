@@ -70,7 +70,6 @@
     "git.branchRandomName.enable": true,
     "git.branchProtection": [
 		"main",
-		"distro",
 		"release/*"
 	],
     "git.pullBeforeCheckout": true,
