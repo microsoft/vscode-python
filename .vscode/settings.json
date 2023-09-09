@@ -65,5 +65,14 @@
         "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative",
-    "debug.javascript.usePreview": false
+    "debug.javascript.usePreview": false,
+    // Branch name suggestion.
+    "git.branchRandomName.enable": true,
+    "git.branchProtection": [
+		"main",
+		"release/*"
+	],
+    "git.pullBeforeCheckout": true,
+    // Open merge editor for resolving conflicts.
+    "git.mergeEditor": true,
 }
