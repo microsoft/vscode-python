@@ -39,7 +39,7 @@ export async function getCondaBaseEnv(): Promise<string | undefined> {
 }
 
 export async function pickPythonVersion(token?: CancellationToken): Promise<string | undefined> {
-    const items: QuickPickItem[] = ['3.10', '3.11', '3.9', '3.8', '3.7'].map((v) => ({
+    const items: QuickPickItem[] = ['3.10', '3.11', '3.9', '3.8'].map((v) => ({
         label: v === RECOMMENDED_CONDA_PYTHON ? `${Octicons.Star} Python` : 'Python',
         description: v,
     }));
