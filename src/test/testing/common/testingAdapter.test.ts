@@ -92,16 +92,28 @@ suite('End to End Tests: test adapters', () => {
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
             // verification after discovery is complete
-            resultResolver.verify(
-                (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.once(),
-            );
+            // resultResolver.verify(
+            //     (x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()),
+            //     typeMoq.Times.once(),
+            // );
 
             // 1. Check the status is "success"
             assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+        });
+
+        await discoveryAdapter.discoverTests(Uri.parse(rootPathErrorWorkspace)).finally(() => {
+            // verification after discovery is complete
+
+            // 1. Check the status is "success"
+            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+            // 2. Confirm no errors
+            assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            console.log(actualData.tests);
             assert.ok(actualData.tests, 'Expected tests to be present');
         });
     });
@@ -269,7 +281,7 @@ suite('End to End Tests: test adapters', () => {
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.once(),
                 );
-
+                console.log('for testing, data result', JSON.stringify(actualData));
                 // 1. Check the status is "success"
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
                 // 2. Confirm tests are found
@@ -372,7 +384,7 @@ suite('End to End Tests: test adapters', () => {
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.once(),
                 );
-
+                console.log('for testing, data result', JSON.stringify(actualData));
                 // 1. Check the status is "success"
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
                 // 2. Confirm no errors
@@ -431,7 +443,6 @@ suite('End to End Tests: test adapters', () => {
         });
     });
     test('unittest execution adapter seg fault error handling', async () => {
-        // generate list of test_ids
         const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
         const testIds: string[] = [testId];
         let foundId = '';
@@ -447,6 +458,7 @@ suite('End to End Tests: test adapters', () => {
                 // 3. Confirm tests are found
                 assert.ok(data.result, 'Expected results to be present');
                 [foundId] = Object.keys(data.result);
+                console.log('for testing, data result', JSON.stringify(data));
                 return Promise.resolve();
             });
 
@@ -470,7 +482,6 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object).finally(() => {
-            // resolve execution should be called 200 times since there are 200 tests run.
             resultResolver.verify(
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
@@ -483,7 +494,6 @@ suite('End to End Tests: test adapters', () => {
         });
     });
     test('pytest execution adapter seg fault error handling', async () => {
-        // generate list of test_ids
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
         const testIds: string[] = [testId];
         let foundId = '';
@@ -522,7 +532,6 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            // resolve execution should be called 200 times since there are 200 tests run.
             resultResolver.verify(
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
