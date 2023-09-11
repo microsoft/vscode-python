@@ -475,7 +475,11 @@ suite('End to End Tests: test adapters', () => {
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
             );
-            assert.strictEqual(foundId, testId, 'Expected testId to be present');
+            assert.strictEqual(
+                foundId,
+                testId,
+                `Expected testId to be present, expected: ${testId} actual: ${foundId}`,
+            );
         });
     });
     test('pytest execution adapter seg fault error handling', async () => {
@@ -523,7 +527,11 @@ suite('End to End Tests: test adapters', () => {
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
             );
-            assert.strictEqual(foundId, testId, 'Expected testId to be present');
+            assert.strictEqual(
+                foundId,
+                testId,
+                `Expected testId to be present, expected: ${testId} actual: ${foundId}`,
+            );
         });
     });
 });
