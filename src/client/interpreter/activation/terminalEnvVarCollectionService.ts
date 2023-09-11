@@ -133,12 +133,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
         }
-        const env = await this.environmentActivationService.getActivatedEnvironmentVariables(
+        const activatedEnv = await this.environmentActivationService.getActivatedEnvironmentVariables(
             resource,
             undefined,
             undefined,
             shell,
         );
+        const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
@@ -158,7 +159,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 shell,
             );
         }
-        const processEnv = this.processEnvVars;
+        const processEnv = normCaseKeys(this.processEnvVars);
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
@@ -375,4 +376,15 @@ function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
         return `(${path.basename(interpreter.envPath)}) `;
     }
     return undefined;
+}
+
+function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
+    const result: EnvironmentVariables = {};
+    Object.keys(env).forEach((key) => {
+        // `os.environ` script used to get env vars normalizes keys to upper case:
+        // https://github.com/python/cpython/issues/101754
+        // So convert `process.env` keys to upper case to match.
+        result[key.toUpperCase()] = env[key];
+    });
+    return result;
 }
