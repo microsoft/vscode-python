@@ -13,7 +13,7 @@ import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { traceError, traceLog } from '../../../client/logging';
+import { traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';

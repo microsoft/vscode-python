@@ -5,7 +5,7 @@ import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     ExecutionTestPayload,
