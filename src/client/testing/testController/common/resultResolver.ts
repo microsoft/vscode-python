@@ -216,9 +216,11 @@ export class PythonResultResolver implements ITestResultResolver {
                         throw new Error('Parent test item not found');
                     }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
-                    // split on " " since the subtest ID has the parent test ID in the first part of the ID.
-                    const parentTestCaseId = keyTemp.split(' ')[0];
-                    const subtestId = keyTemp.split(' ')[1];
+                    // split only on first " [" since the subtest ID has the parent test ID in the first part of the ID.
+                    const index = keyTemp.indexOf(' [');
+                    const parentTestCaseId = keyTemp.substring(0, index);
+                    // add one to index to remove the space from the start of the subtest ID
+                    const subtestId = keyTemp.substring(index + 1, keyTemp.length);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
 
                     // find the subtest's parent test item

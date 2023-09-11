@@ -270,15 +270,16 @@ suite('Result Resolver tests', () => {
                 testProvider,
                 workspaceUri,
             );
-            const mockSubtestItem = createMockTestItem('parentTest subTest');
+            const subtestName = 'parentTest [subTest with spaces and [brackets]]';
+            const mockSubtestItem = createMockTestItem(subtestName);
             // add a mock test item to the map of known VSCode ids to run ids
             resultResolver.runIdToVSid.set('mockTestItem2', 'mockTestItem2');
             // creates a mock test item with a space which will be used to split the runId
-            resultResolver.runIdToVSid.set('parentTest subTest', 'parentTest subTest');
+            resultResolver.runIdToVSid.set(subtestName, subtestName);
 
             // add this mock test to the map of known test items
             resultResolver.runIdToTestItem.set('parentTest', mockTestItem2);
-            resultResolver.runIdToTestItem.set('parentTest subTest', mockSubtestItem);
+            resultResolver.runIdToTestItem.set(subtestName, mockSubtestItem);
 
             let generatedId: string | undefined;
             testControllerMock
@@ -294,12 +295,12 @@ suite('Result Resolver tests', () => {
                 cwd: workspaceUri.fsPath,
                 status: 'success',
                 result: {
-                    'parentTest subTest': {
-                        test: 'test',
+                    'parentTest [subTest with spaces and [brackets]]': {
+                        test: 'parentTest',
                         outcome: 'subtest-success', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
                         message: 'message',
                         traceback: 'traceback',
-                        subtest: 'subtest',
+                        subtest: subtestName,
                     },
                 },
                 error: '',
@@ -310,7 +311,7 @@ suite('Result Resolver tests', () => {
 
             // verify that the passed function was called for the single test item
             assert.ok(generatedId);
-            assert.strictEqual(generatedId, 'subTest');
+            assert.strictEqual(generatedId, '[subTest with spaces and [brackets]]');
         });
         test('resolveExecution handles failed tests correctly', async () => {
             // test specific constants used expected values
