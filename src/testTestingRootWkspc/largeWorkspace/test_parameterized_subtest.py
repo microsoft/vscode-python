@@ -6,7 +6,7 @@ import unittest
 
 @pytest.mark.parametrize("num", range(0, 200))
 def test_odd_even(num):
-    return num % 2 == 0
+    assert num % 2 == 0
 
 
 class NumbersTest(unittest.TestCase):
