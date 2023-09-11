@@ -209,7 +209,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceLog(`resolveDiscovery ${data}`);
+                console.log(`resolveDiscovery ${data}`);
                 actualData = data;
                 return Promise.resolve();
             });
@@ -249,7 +249,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceLog(`resolveExecution ${data}`);
+                console.log(`resolveExecution ${data}`);
                 actualData = data;
                 return Promise.resolve();
             });
@@ -293,7 +293,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceError(`resolveExecution ${data}`);
+                console.log(`resolveExecution ${data}`);
                 traceLog(`resolveExecution ${data}`);
                 // do the following asserts for each time resolveExecution is called, should be called once per test.
                 // 1. Check the status, can be subtest success or failure
@@ -346,7 +346,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceLog(`resolveExecution ${data}`);
+                console.log(`resolveExecution ${data}`);
                 actualData = data;
                 return Promise.resolve();
             });
@@ -397,7 +397,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceLog(`resolveExecution ${data}`);
+                console.log(`resolveExecution ${data}`);
                 // do the following asserts for each time resolveExecution is called, should be called once per test.
                 // 1. Check the status is "success"
                 assert.strictEqual(data.status, 'success', "Expected status to be 'success'");
@@ -449,7 +449,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceLog(`resolveExecution ${data}`);
+                console.log(`resolveExecution ${data}`);
                 // do the following asserts for each time resolveExecution is called, should be called once per test.
                 // 1. Check the status is "success"
                 assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
@@ -500,7 +500,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                traceLog(`resolveExecution ${data}`);
+                console.log(`resolveExecution ${data}`);
                 // do the following asserts for each time resolveExecution is called, should be called once per test.
                 // 1. Check the status is "success"
                 assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
