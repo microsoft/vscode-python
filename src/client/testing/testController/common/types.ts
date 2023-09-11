@@ -185,7 +185,6 @@ export interface ITestServer {
     getPort(): number;
     createUUID(cwd: string): string;
     deleteUUID(uuid: string): void;
-    triggerDataReceivedEvent(data: DataReceivedEvent): void;
     triggerRunDataReceivedEvent(data: DataReceivedEvent): void;
 }
 export interface ITestResultResolver {

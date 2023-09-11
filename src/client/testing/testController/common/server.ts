@@ -133,10 +133,6 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDiscoveryDataReceived.event;
     }
 
-    public triggerDataReceivedEvent(payload: DataReceivedEvent): void {
-        this._onDataReceived.fire(payload);
-    }
-
     public triggerRunDataReceivedEvent(payload: DataReceivedEvent): void {
         this._onRunDataReceived.fire(payload);
     }
