@@ -113,7 +113,7 @@ suite('End to End Tests: test adapters', () => {
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
-            console.log(actualData.tests);
+            console.log('actual data', actualData.tests);
             assert.ok(actualData.tests, 'Expected tests to be present');
         });
     });
