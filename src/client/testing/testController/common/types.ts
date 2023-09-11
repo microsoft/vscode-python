@@ -178,12 +178,15 @@ export interface ITestServer {
         options: TestCommandOptions,
         runTestIdsPort?: string,
         runInstance?: TestRun,
+        testIds?: string[],
         callback?: () => void,
     ): Promise<void>;
     serverReady(): Promise<void>;
     getPort(): number;
     createUUID(cwd: string): string;
     deleteUUID(uuid: string): void;
+    triggerDataReceivedEvent(data: DataReceivedEvent): void;
+    triggerRunDataReceivedEvent(data: DataReceivedEvent): void;
 }
 export interface ITestResultResolver {
     runIdToVSid: Map<string, string>;

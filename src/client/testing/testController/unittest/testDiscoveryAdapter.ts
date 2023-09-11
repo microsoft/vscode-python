@@ -64,7 +64,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     }
 
     private async callSendCommand(options: TestCommandOptions, callback: () => void): Promise<DiscoveredTestPayload> {
-        await this.testServer.sendCommand(options, undefined, undefined, callback);
+        await this.testServer.sendCommand(options, undefined, undefined, [], callback);
         const discoveryPayload: DiscoveredTestPayload = { cwd: '', status: 'success' };
         return discoveryPayload;
     }

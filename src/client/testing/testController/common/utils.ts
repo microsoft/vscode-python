@@ -9,7 +9,7 @@ import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
 import { IExperimentService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
-import { DiscoveredTestItem, DiscoveredTestNode, ITestResultResolver } from './types';
+import { DiscoveredTestItem, DiscoveredTestNode, ExecutionTestPayload, ITestResultResolver } from './types';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -187,4 +187,28 @@ export function populateTestTree(
 
 function isTestItem(test: DiscoveredTestNode | DiscoveredTestItem): test is DiscoveredTestItem {
     return test.type_ === 'test';
+}
+
+export function createExecutionErrorPayload(
+    code: number | null,
+    signal: NodeJS.Signals | null,
+    testIds: string[],
+    cwd: string,
+): ExecutionTestPayload {
+    const etp: ExecutionTestPayload = {
+        cwd,
+        status: 'error',
+        error: 'Test run failed, the python test process was terminated before it could exit on its own.',
+        result: {},
+    };
+    // add error result for each attempted test.
+    for (let i = 0; i < testIds.length; i = i + 1) {
+        const test = testIds[i];
+        etp.result![test] = {
+            test,
+            outcome: 'error',
+            message: ` \n The python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
+        };
+    }
+    return etp;
 }

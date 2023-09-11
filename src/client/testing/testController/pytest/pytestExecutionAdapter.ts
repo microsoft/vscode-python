@@ -175,7 +175,15 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     this.outputChannel?.append(data.toString());
                 });
 
-                result?.proc?.on('exit', () => {
+                result?.proc?.on('exit', (code, signal) => {
+                    // if the child has testIds then this is a run request
+                    if (code !== 0 && testIds) {
+                        // if the child process exited with a non-zero exit code, then we need to send the error payload.
+                        this.testServer.triggerRunDataReceivedEvent({
+                            uuid,
+                            data: JSON.stringify(utils.createExecutionErrorPayload(code, signal, testIds, cwd)),
+                        });
+                    }
                     deferredExec.resolve({ stdout: '', stderr: '' });
                     deferred.resolve();
                     disposeDataReceiver?.(this.testServer);

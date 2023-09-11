@@ -39,6 +39,12 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'largeWorkspace',
     );
+    const rootPathErrorWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'errorWorkspace',
+    );
     suiteSetup(async () => {
         serviceContainer = (await initialize()).serviceContainer;
     });
@@ -422,6 +428,102 @@ suite('End to End Tests: test adapters', () => {
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(200),
             );
+        });
+    });
+    test('unittest execution adapter seg fault error handling', async () => {
+        // generate list of test_ids
+        const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
+        const testIds: string[] = [testId];
+        let foundId = '';
+        resultResolver
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveExecution ${data}`);
+                // do the following asserts for each time resolveExecution is called, should be called once per test.
+                // 1. Check the status is "success"
+                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+                // 2. Confirm no errors
+                assert.ok(data.error, "Expected errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(data.result, 'Expected results to be present');
+                [foundId] = Object.keys(data.result);
+                return Promise.resolve();
+            });
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathErrorWorkspace);
+
+        // run pytest execution
+        const executionAdapter = new UnittestTestExecutionAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object).finally(() => {
+            // resolve execution should be called 200 times since there are 200 tests run.
+            resultResolver.verify(
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.exactly(1),
+            );
+            assert.strictEqual(foundId, testId, 'Expected testId to be present');
+        });
+    });
+    test('pytest execution adapter seg fault error handling', async () => {
+        // generate list of test_ids
+        const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
+        const testIds: string[] = [testId];
+        let foundId = '';
+        resultResolver
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((data) => {
+                traceLog(`resolveExecution ${data}`);
+                // do the following asserts for each time resolveExecution is called, should be called once per test.
+                // 1. Check the status is "success"
+                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+                // 2. Confirm no errors
+                assert.ok(data.error, "Expected errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(data.result, 'Expected results to be present');
+                [foundId] = Object.keys(data.result);
+                return Promise.resolve();
+            });
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathErrorWorkspace);
+
+        // run pytest execution
+        const executionAdapter = new PytestTestExecutionAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel,
+            resultResolver.object,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
+            // resolve execution should be called 200 times since there are 200 tests run.
+            resultResolver.verify(
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+                typeMoq.Times.exactly(1),
+            );
+            assert.strictEqual(foundId, testId, 'Expected testId to be present');
         });
     });
 });

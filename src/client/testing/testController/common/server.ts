@@ -15,7 +15,7 @@ import { traceError, traceInfo, traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER } from './utils';
+import { jsonRPCHeaders, jsonRPCContent, JSONRPC_UUID_HEADER, createExecutionErrorPayload } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {
@@ -133,6 +133,14 @@ export class PythonTestServer implements ITestServer, Disposable {
         return this._onDiscoveryDataReceived.event;
     }
 
+    public triggerDataReceivedEvent(payload: DataReceivedEvent): void {
+        this._onDataReceived.fire(payload);
+    }
+
+    public triggerRunDataReceivedEvent(payload: DataReceivedEvent): void {
+        this._onRunDataReceived.fire(payload);
+    }
+
     public dispose(): void {
         this.server.close();
         this._onDataReceived.dispose();
@@ -146,6 +154,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         options: TestCommandOptions,
         runTestIdPort?: string,
         runInstance?: TestRun,
+        testIds?: string[],
         callback?: () => void,
     ): Promise<void> {
         const { uuid } = options;
@@ -218,8 +227,15 @@ export class PythonTestServer implements ITestServer, Disposable {
                 result?.proc?.stderr?.on('data', (data) => {
                     spawnOptions?.outputChannel?.append(data.toString());
                 });
-                result?.proc?.on('exit', () => {
-                    traceLog('Exec server closed.', uuid);
+                result?.proc?.on('exit', (code, signal) => {
+                    // if the child has testIds then this is a run request
+                    if (code !== 0 && testIds) {
+                        // if the child process exited with a non-zero exit code, then we need to send the error payload.
+                        this._onRunDataReceived.fire({
+                            uuid,
+                            data: JSON.stringify(createExecutionErrorPayload(code, signal, testIds, options.cwd)),
+                        });
+                    }
                     deferred.resolve({ stdout: '', stderr: '' });
                     callback?.();
                 });

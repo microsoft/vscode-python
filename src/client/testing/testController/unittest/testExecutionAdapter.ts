@@ -83,7 +83,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         const runTestIdsPort = await startTestIdServer(testIds);
 
-        await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, () => {
+        await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, testIds, () => {
             deferred.resolve();
             disposeDataReceiver?.(this.testServer);
         });
