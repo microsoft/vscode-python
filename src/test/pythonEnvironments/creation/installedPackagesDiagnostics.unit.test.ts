@@ -62,7 +62,7 @@ function getPyProjectTomlFile(): typemoq.IMock<TextDocument> {
         .setup((p) => p.getText(typemoq.It.isAny()))
         .returns(
             () =>
-                '[build-system]\nrequires = ["flit_core >=3.2,<4"]\nbuild-backend = "flit_core.buildapi"\n\n[project]\nname = "something"\nversion = "2023.0.0"\nrequires-python = ">=3.7"\ndependencies = ["attrs>=21.3.0", "flake8-csv"]\n    ',
+                '[build-system]\nrequires = ["flit_core >=3.2,<4"]\nbuild-backend = "flit_core.buildapi"\n\n[project]\nname = "something"\nversion = "2023.0.0"\nrequires-python = ">=3.8"\ndependencies = ["attrs>=21.3.0", "flake8-csv"]\n    ',
         );
     return someFile;
 }
@@ -76,7 +76,7 @@ function getSomeTomlFile(): typemoq.IMock<TextDocument> {
         .setup((p) => p.getText(typemoq.It.isAny()))
         .returns(
             () =>
-                '[build-system]\nrequires = ["flit_core >=3.2,<4"]\nbuild-backend = "flit_core.buildapi"\n\n[something]\nname = "something"\nversion = "2023.0.0"\nrequires-python = ">=3.7"\ndependencies = ["attrs>=21.3.0", "flake8-csv"]\n    ',
+                '[build-system]\nrequires = ["flit_core >=3.2,<4"]\nbuild-backend = "flit_core.buildapi"\n\n[something]\nname = "something"\nversion = "2023.0.0"\nrequires-python = ">=3.8"\ndependencies = ["attrs>=21.3.0", "flake8-csv"]\n    ',
         );
     return someFile;
 }
