@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import os
 import shutil
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -23,15 +24,19 @@ def test_config_file():
         expected_execution_test_output.config_file_pytest_expected_execution_output
     )
     assert actual
-    assert actual.pop(-1).get("eot")
-    assert len(actual) == len(expected_const)
+    actual_list: List[Dict[str, Any]] = actual
+    assert actual_list.pop(-1).get("eot")
+    assert len(actual_list) == len(expected_const)
     actual_result_dict = dict()
-    for a in actual:
-        assert all(item in a for item in ("status", "cwd", "result"))
-        assert a["status"] == "success"
-        assert a["cwd"] == os.fspath(new_cwd)
-        actual_result_dict.update(a["result"])
-    assert actual_result_dict == expected_const
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "result")
+            )
+            assert actual_item.get("status") == "success"
+            assert actual_item.get("cwd") == os.fspath(new_cwd)
+            actual_result_dict.update(actual_item["result"])
+        assert actual_result_dict == expected_const
 
 
 def test_rootdir_specified():
@@ -44,15 +49,19 @@ def test_rootdir_specified():
         expected_execution_test_output.config_file_pytest_expected_execution_output
     )
     assert actual
-    assert actual.pop(-1).get("eot")
-    assert len(actual) == len(expected_const)
+    actual_list: List[Dict[str, Any]] = actual
+    assert actual_list.pop(-1).get("eot")
+    assert len(actual_list) == len(expected_const)
     actual_result_dict = dict()
-    for a in actual:
-        assert all(item in a for item in ("status", "cwd", "result"))
-        assert a["status"] == "success"
-        assert a["cwd"] == os.fspath(new_cwd)
-        actual_result_dict.update(a["result"])
-    assert actual_result_dict == expected_const
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "result")
+            )
+            assert actual_item.get("status") == "success"
+            assert actual_item.get("cwd") == os.fspath(new_cwd)
+            actual_result_dict.update(actual_item["result"])
+        assert actual_result_dict == expected_const
 
 
 def test_syntax_error_execution(tmp_path):
@@ -75,14 +84,23 @@ def test_syntax_error_execution(tmp_path):
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
     actual = runner(["error_syntax_discover.py::test_function"])
-    assert actual.pop(-1).get("eot")
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 1
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    assert actual_list.pop(-1).get("eot")
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            )
+            assert actual_item.get("status") == "error"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+            error_content = actual_item.get("error")
+            if error_content is not None and isinstance(
+                error_content, (list, tuple, str)
+            ):  # You can add other types if needed
+                assert len(error_content) == 1
+            else:
+                assert False
 
 
 def test_bad_id_error_execution():
@@ -91,14 +109,23 @@ def test_bad_id_error_execution():
     The json should still be returned but the errors list should be present.
     """
     actual = runner(["not/a/real::test_id"])
-    assert actual.pop(-1).get("eot")
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 1
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    assert actual_list.pop(-1).get("eot")
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            )
+            assert actual_item.get("status") == "error"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+            error_content = actual_item.get("error")
+            if error_content is not None and isinstance(
+                error_content, (list, tuple, str)
+            ):  # You can add other types if needed
+                assert len(error_content) == 1
+            else:
+                assert False
 
 
 @pytest.mark.parametrize(
@@ -209,19 +236,22 @@ def test_pytest_execution(test_ids, expected_const):
     Keyword arguments:
     test_ids -- an array of test_ids to run.
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
-    """  # noqa: E501
+    """
     args = test_ids
     actual = runner(args)
     assert actual
-    # print(actual)
-    assert actual.pop(-1).get("eot")
-    assert len(actual) == len(expected_const)
+    actual_list: List[Dict[str, Any]] = actual
+    assert actual_list.pop(-1).get("eot")
+    assert len(actual_list) == len(expected_const)
     actual_result_dict = dict()
-    for a in actual:
-        assert all(item in a for item in ("status", "cwd", "result"))
-        assert a["status"] == "success"
-        assert a["cwd"] == os.fspath(TEST_DATA_PATH)
-        actual_result_dict.update(a["result"])
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "result")
+            )
+            assert actual_item.get("status") == "success"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+            actual_result_dict.update(actual_item["result"])
     for key in actual_result_dict:
         if (
             actual_result_dict[key]["outcome"] == "failure"
