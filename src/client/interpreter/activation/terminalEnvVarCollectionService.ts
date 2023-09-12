@@ -127,9 +127,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
-        // Clear any previously set env vars from collection
-        envVarCollection.clear();
         if (!settings.terminal.activateEnvironment) {
+            envVarCollection.clear();
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
         }
@@ -150,6 +149,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 return;
             }
             await this.trackTerminalPrompt(shell, resource, env);
+            envVarCollection.clear();
             this.processEnvVars = undefined;
             return;
         }
@@ -164,6 +164,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
 
+        // Clear any previously set env vars from collection
+        envVarCollection.clear();
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
