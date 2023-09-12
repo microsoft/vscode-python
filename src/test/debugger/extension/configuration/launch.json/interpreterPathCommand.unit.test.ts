@@ -56,7 +56,7 @@ suite('Interpreter Path Command', () => {
     test('If `args[1]` is defined, it is used to retrieve setting from config', async () => {
         const args = ['command', 'folderPath'];
         when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
-            assert.deepEqual(arg, Uri.parse('folderPath'));
+            assert.deepEqual(arg, Uri.file('folderPath'));
 
             return Promise.resolve({ path: 'settingValue' }) as unknown;
         });
