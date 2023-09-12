@@ -141,8 +141,13 @@ if __name__ == "__main__":
     # Perform test discovery.
     port, uuid = parse_discovery_cli_args(argv[:index])
     # Post this discovery payload.
-    payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
-    post_response(payload, port, uuid)
-    # Post EOT token.
-    eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-    post_response(eot_payload, port, uuid)
+    if uuid is not None:
+        payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
+        post_response(payload, port, uuid)
+        # Post EOT token.
+        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
+        post_response(eot_payload, port, uuid)
+    else:
+        print("Error: no uuid provided or parsed.")
+        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
+        post_response(eot_payload, port, "")
