@@ -219,11 +219,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 result?.proc?.stdout?.on('data', (data) => {
                     spawnOptions?.outputChannel?.append(data.toString());
-                    console.log(data.toString());
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     spawnOptions?.outputChannel?.append(data.toString());
-                    console.log(data.toString());
                 });
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
