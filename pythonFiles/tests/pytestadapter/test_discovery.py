@@ -29,16 +29,26 @@ def test_import_error(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_pytest_import.py"
     shutil.copyfile(file_path, p)
-    actual_list: Optional[List[Dict[str, Any]]] = runner(
-        ["--collect-only", os.fspath(p)]
-    )
-    assert actual_list
-    assert actual_list.pop(-1).get("eot")
-    for actual in actual_list:
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 2
+    actual: Optional[List[Dict[str, Any]]] = runner(["--collect-only", os.fspath(p)])
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            )
+            assert actual_item.get("status") == "error"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+
+            # Ensure that 'error' is a list and then check its length
+            error_content = actual_item.get("error")
+            if error_content is not None and isinstance(
+                error_content, (list, tuple, str)
+            ):  # You can add other types if needed
+                assert len(error_content) == 2
+            else:
+                assert False
 
 
 def test_syntax_error(tmp_path):
@@ -61,14 +71,25 @@ def test_syntax_error(tmp_path):
     p = temp_dir / "error_syntax_discovery.py"
     shutil.copyfile(file_path, p)
     actual = runner(["--collect-only", os.fspath(p)])
-    assert actual.pop(-1).get("eot")
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 2
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            )
+            assert actual_item.get("status") == "error"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+
+            # Ensure that 'error' is a list and then check its length
+            error_content = actual_item.get("error")
+            if error_content is not None and isinstance(
+                error_content, (list, tuple, str)
+            ):  # You can add other types if needed
+                assert len(error_content) == 2
+            else:
+                assert False
 
 
 def test_parameterized_error_collect():
@@ -78,13 +99,25 @@ def test_parameterized_error_collect():
     """
     file_path_str = "error_parametrize_discovery.py"
     actual = runner(["--collect-only", file_path_str])
-    assert actual.pop(-1).get("eot")
-    if actual:
-        actual = actual[0]
-        assert all(item in actual for item in ("status", "cwd", "error"))
-        assert actual["status"] == "error"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert len(actual["error"]) == 2
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        for actual_item in actual_list:
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            )
+            assert actual_item.get("status") == "error"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+
+            # Ensure that 'error' is a list and then check its length
+            error_content = actual_item.get("error")
+            if error_content is not None and isinstance(
+                error_content, (list, tuple, str)
+            ):  # You can add other types if needed
+                assert len(error_content) == 2
+            else:
+                assert False
 
 
 @pytest.mark.parametrize(
@@ -149,14 +182,16 @@ def test_pytest_collect(file, expected_const):
             os.fspath(TEST_DATA_PATH / file),
         ]
     )
-    assert actual.pop(-1).get("eot")
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "tests"))
-        assert actual["status"] == "success"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH)
-        assert actual["tests"] == expected_const
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success"
+        assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+        assert actual_item.get("tests") == expected_const
 
 
 def test_pytest_root_dir():
@@ -172,14 +207,16 @@ def test_pytest_root_dir():
         ],
         TEST_DATA_PATH / "root",
     )
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "tests"))
-        assert actual["status"] == "success"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH / "root")
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success"
+        assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH / "root")
         assert (
-            actual["tests"]
+            actual_item.get("tests")
             == expected_discovery_test_output.root_with_config_expected_output
         )
 
@@ -197,13 +234,15 @@ def test_pytest_config_file():
         ],
         TEST_DATA_PATH / "root",
     )
-    if actual:
-        actual = actual[0]
-        assert actual
-        assert all(item in actual for item in ("status", "cwd", "tests"))
-        assert actual["status"] == "success"
-        assert actual["cwd"] == os.fspath(TEST_DATA_PATH / "root")
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success"
+        assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH / "root")
         assert (
-            actual["tests"]
+            actual_item.get("tests")
             == expected_discovery_test_output.root_with_config_expected_output
         )
