@@ -570,7 +570,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
-        verify(collection.clear()).twice();
+        verify(collection.clear()).once();
     });
 
     test('If no activated variables are returned for default shell, clear collection', async () => {
