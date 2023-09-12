@@ -94,6 +94,7 @@ def test_two_layer_dictionary():
 
     assert result == expected
 
+
 def test_fstring():
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
@@ -114,6 +115,7 @@ def test_fstring():
     result = normalizeSelection.traverse_file(src, 1, 4, True)
 
     assert result == expected
+
 
 def test_list_comp():
     importlib.reload(normalizeSelection)

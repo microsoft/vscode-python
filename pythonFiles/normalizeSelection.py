@@ -13,6 +13,7 @@ import textwrap
 # sys.path.append(os.fspath(script_dir))
 # import debugpy
 
+
 # debugpy.connect(5678)
 # debugpy.breakpoint()
 def split_lines(source):
@@ -126,7 +127,7 @@ def normalize_lines(selection):
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
         # source = "\n".join(statements)
-        if (selection[-2] == '}'):
+        if selection[-2] == "}":
             source = source[:-1]
         # source = "\n".join(statements)
     except Exception:
@@ -136,11 +137,15 @@ def normalize_lines(selection):
 
     return source
 
-top_level_nodes = [] # collection of top level nodes
-top_level_to_min_difference = {} # dictionary of top level nodes to difference in relative to given code block to run
+
+top_level_nodes = []  # collection of top level nodes
+top_level_to_min_difference = (
+    {}
+)  # dictionary of top level nodes to difference in relative to given code block to run
 min_key = None
 global_next_lineno = None
 should_run_top_blocks = []
+
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
     exact_nodes = []
@@ -148,8 +153,8 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
         if node.lineno == start_line and node.end_lineno == end_line:
             exact_nodes.append(node)
 
-
     return exact_nodes
+
 
 # Function that traverses the file and calculate the minimum viable top level block
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
@@ -159,26 +164,28 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
-        if hasattr(node, 'body'):
+        if hasattr(node, "body"):
             # Not adding below check will have linting and python type complain
-            if (isinstance(node, ast.Module) or
-                isinstance(node, ast.Interactive) or
-                isinstance(node, ast.Expression) or
-                isinstance(node, ast.FunctionDef) or
-                isinstance(node, ast.AsyncFunctionDef) or
-                isinstance(node, ast.ClassDef) or
-                isinstance(node, ast.For) or
-                isinstance(node, ast.AsyncFor) or
-                isinstance(node, ast.While) or
-                isinstance(node, ast.If) or
-                isinstance(node, ast.With) or
-                isinstance(node, ast.AsyncWith) or
-                isinstance(node, ast.Try) or
-                isinstance(node, ast.Lambda) or
-                isinstance(node, ast.IfExp) or
-                isinstance(node, ast.ExceptHandler)):
-                    for child_nodes in node.body:
-                        top_level_nodes.append(child_nodes)
+            if (
+                isinstance(node, ast.Module)
+                or isinstance(node, ast.Interactive)
+                or isinstance(node, ast.Expression)
+                or isinstance(node, ast.FunctionDef)
+                or isinstance(node, ast.AsyncFunctionDef)
+                or isinstance(node, ast.ClassDef)
+                or isinstance(node, ast.For)
+                or isinstance(node, ast.AsyncFor)
+                or isinstance(node, ast.While)
+                or isinstance(node, ast.If)
+                or isinstance(node, ast.With)
+                or isinstance(node, ast.AsyncWith)
+                or isinstance(node, ast.Try)
+                or isinstance(node, ast.Lambda)
+                or isinstance(node, ast.IfExp)
+                or isinstance(node, ast.ExceptHandler)
+            ):
+                for child_nodes in node.body:
+                    top_level_nodes.append(child_nodes)
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
@@ -197,26 +204,39 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         top_level_block_start_line = top_node.lineno
         top_level_block_end_line = top_node.end_lineno
         # top_level_block_end_line = top_node.end_lineno if hasattr(top_node, "end_lineno") else 0
-        abs_difference = abs(start_line - top_level_block_start_line) + abs(end_line - top_level_block_end_line)
+        abs_difference = abs(start_line - top_level_block_start_line) + abs(
+            end_line - top_level_block_end_line
+        )
         top_level_to_min_difference[top_node] = abs_difference
 
         # We need to handle the case of 1. just hanging cursor vs. actual highlighting/selection.
-        if was_highlighted: # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
-            if top_level_block_start_line >= start_line and top_level_block_end_line <= end_line:
+        if (
+            was_highlighted
+        ):  # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
+            if (
+                top_level_block_start_line >= start_line
+                and top_level_block_end_line <= end_line
+            ):
                 # global should_run_top_blocks
                 should_run_top_blocks.append(top_node)
 
                 smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
                 smart_code += "\n"
-        elif start_line == top_level_block_start_line and end_line == top_level_block_end_line:
+        elif (
+            start_line == top_level_block_start_line
+            and end_line == top_level_block_end_line
+        ):
             # global should_run_top_blocks
             should_run_top_blocks.append(top_node)
 
             smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
             smart_code += "\n"
-            break # Break out of the loop since we found the exact match.
-        else: # not highlighted case. Meaning just a cursor hanging
-            if start_line >= top_level_block_start_line and end_line <= top_level_block_end_line:
+            break  # Break out of the loop since we found the exact match.
+        else:  # not highlighted case. Meaning just a cursor hanging
+            if (
+                start_line >= top_level_block_start_line
+                and end_line <= top_level_block_end_line
+            ):
                 # global should_run_top_blocks
                 should_run_top_blocks.append(top_node)
 
@@ -227,6 +247,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     global_next_lineno = get_next_block_lineno()
 
     return normalized_smart_result
+
 
 # Look at the last top block added, find lineno for the next upcoming block,
 # This will allow us to move cursor in vscode.
@@ -242,6 +263,7 @@ def get_next_block_lineno():
             break
     return temp_next_lineno - 1
 
+
 if __name__ == "__main__":
     # Content is being sent from the extension as a JSON object.
     # Decode the data from the raw bytes.
@@ -253,7 +275,7 @@ if __name__ == "__main__":
     # Need to get information on whether there was a selection via Highlight.
     # empty_Highlight = True
     empty_Highlight = False
-    if contents['emptyHighlight'] is True:
+    if contents["emptyHighlight"] is True:
         empty_Highlight = True
     # we also get the activeEditor selection start line and end line from the typescript vscode side
     # remember to add 1 to each of the received since vscode starts line counting from 0
@@ -266,9 +288,16 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
-    if contents['emptyHighlight'] is True:
-        normalized = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight)
-        which_line_next = get_next_block_lineno() # Only figure out next block line number for smart shift+
+    if contents["emptyHighlight"] is True:
+        normalized = traverse_file(
+            contents["wholeFileContent"],
+            vscode_start_line,
+            vscode_end_line,
+            not empty_Highlight,
+        )
+        which_line_next = (
+            get_next_block_lineno()
+        )  # Only figure out next block line number for smart shift+
         # normalized = normalize_lines(contents["code"])
     else:
         normalized = normalize_lines(contents["code"])
