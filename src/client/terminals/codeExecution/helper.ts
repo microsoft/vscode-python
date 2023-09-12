@@ -265,8 +265,3 @@ function pythonSmartSendEnabled(serviceContainer: IServiceContainer): boolean {
     const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
     return experiment.inExperimentSync(EnableREPLSmartSend.experiment);
 }
-
-function pythonSmartSendEnabled(serviceContainer: IServiceContainer): boolean {
-    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
-    return experiment.inExperimentSync(EnableREPLSmartSend.experiment);
-}
