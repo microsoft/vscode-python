@@ -32,3 +32,11 @@ export function getVenvExecutable(workspaceFolder: WorkspaceFolder): string {
     }
     return path.join(getVenvPath(workspaceFolder), 'bin', 'python');
 }
+
+export function getPrefixCondaEnvPath(workspaceFolder: WorkspaceFolder): string {
+    return path.join(workspaceFolder.uri.fsPath, '.conda');
+}
+
+export async function hasPrefixCondaEnv(workspaceFolder: WorkspaceFolder): Promise<boolean> {
+    return fs.pathExists(getPrefixCondaEnvPath(workspaceFolder));
+}

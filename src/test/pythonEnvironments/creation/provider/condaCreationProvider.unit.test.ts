@@ -35,6 +35,7 @@ suite('Conda Creation provider tests', () => {
     let execObservableStub: sinon.SinonStub;
     let withProgressStub: sinon.SinonStub;
     let showErrorMessageWithLogsStub: sinon.SinonStub;
+    let pickExistingCondaActionStub: sinon.SinonStub;
 
     setup(() => {
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
@@ -45,6 +46,9 @@ suite('Conda Creation provider tests', () => {
 
         showErrorMessageWithLogsStub = sinon.stub(commonUtils, 'showErrorMessageWithLogs');
         showErrorMessageWithLogsStub.resolves();
+
+        pickExistingCondaActionStub = sinon.stub(condaUtils, 'pickExistingCondaAction');
+        pickExistingCondaActionStub.resolves(condaUtils.ExistingCondaAction.Create);
 
         progressMock = typemoq.Mock.ofType<CreateEnvironmentProgress>();
         condaProvider = condaCreationProvider();
@@ -77,6 +81,7 @@ suite('Conda Creation provider tests', () => {
         pickPythonVersionStub.resolves(undefined);
 
         await assert.isRejected(condaProvider.createEnvironment());
+        assert.isTrue(pickExistingCondaActionStub.calledOnce);
     });
 
     test('Create conda environment', async () => {
@@ -136,6 +141,7 @@ suite('Conda Creation provider tests', () => {
             workspaceFolder: workspace1,
         });
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(pickExistingCondaActionStub.calledOnce);
     });
 
     test('Create conda environment failed', async () => {
@@ -188,6 +194,7 @@ suite('Conda Creation provider tests', () => {
         const result = await promise;
         assert.ok(result?.error);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
+        assert.isTrue(pickExistingCondaActionStub.calledOnce);
     });
 
     test('Create conda environment failed (non-zero exit code)', async () => {
@@ -245,5 +252,6 @@ suite('Conda Creation provider tests', () => {
         const result = await promise;
         assert.ok(result?.error);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
+        assert.isTrue(pickExistingCondaActionStub.calledOnce);
     });
 });

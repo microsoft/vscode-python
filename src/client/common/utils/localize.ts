@@ -464,8 +464,10 @@ export namespace CreateEnv {
         export const error = l10n.t('Creating virtual environment failed with error.');
         export const tomlExtrasQuickPickTitle = l10n.t('Select optional dependencies to install from pyproject.toml');
         export const requirementsQuickPickTitle = l10n.t('Select dependencies to install');
-        export const recreate = l10n.t('Recreate');
-        export const recreateDescription = l10n.t('Delete existing ".venv" environment and create a new one');
+        export const recreate = l10n.t('Delete and Recreate');
+        export const recreateDescription = l10n.t(
+            'Delete existing ".venv" directory and create a new ".venv" environment',
+        );
         export const useExisting = l10n.t('Use Existing');
         export const useExistingDescription = l10n.t('Use existing ".venv" environment with no changes to it');
         export const existingVenvQuickPickPlaceholder = l10n.t(
@@ -485,6 +487,16 @@ export namespace CreateEnv {
         );
         export const creating = l10n.t('Creating conda environment...');
         export const providerDescription = l10n.t('Creates a `.conda` Conda environment in the current workspace');
+
+        export const recreate = l10n.t('Delete and Recreate');
+        export const recreateDescription = l10n.t('Delete existing ".conda" environment and create a new one');
+        export const useExisting = l10n.t('Use Existing');
+        export const useExistingDescription = l10n.t('Use existing ".conda" environment with no changes to it');
+        export const existingCondaQuickPickPlaceholder = l10n.t(
+            'Choose an option to handle the existing ".conda" environment',
+        );
+        export const deletingEnvironmentProgress = l10n.t('Deleting existing ".conda" environment...');
+        export const errorDeletingEnvironment = l10n.t('Error while deleting existing ".conda" environment.');
     }
 }
 

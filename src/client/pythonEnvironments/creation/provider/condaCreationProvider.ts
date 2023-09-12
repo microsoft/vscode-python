@@ -9,11 +9,18 @@ import { CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
-import { getEnvironmentVariable, getOSType, OSType } from '../../../common/utils/platform';
+import { getOSType, OSType } from '../../../common/utils/platform';
 import { createCondaScript } from '../../../common/process/internal/scripts';
 import { Common, CreateEnv } from '../../../common/utils/localize';
-import { getCondaBaseEnv, pickPythonVersion } from './condaUtils';
-import { showErrorMessageWithLogs } from '../common/commonUtils';
+import {
+    ExistingCondaAction,
+    deleteEnvironment,
+    getCondaBaseEnv,
+    getPathEnvVariableForConda,
+    pickExistingCondaAction,
+    pickPythonVersion,
+} from './condaUtils';
+import { getPrefixCondaEnvPath, showErrorMessageWithLogs } from '../common/commonUtils';
 import { MultiStepAction, MultiStepNode, withProgress } from '../../../common/vscodeApis/windowApis';
 import { EventName } from '../../../telemetry/constants';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -83,22 +90,7 @@ async function createCondaEnv(
     });
 
     const deferred = createDeferred<string>();
-    let pathEnv = getEnvironmentVariable('PATH') || getEnvironmentVariable('Path') || '';
-    if (getOSType() === OSType.Windows) {
-        // On windows `conda.bat` is used, which adds the following bin directories to PATH
-        // then launches `conda.exe` which is a stub to `python.exe -m conda`. Here, we are
-        // instead using the `python.exe` that ships with conda to run a python script that
-        // handles conda env creation and package installation.
-        // See conda issue: https://github.com/conda/conda/issues/11399
-        const root = path.dirname(command);
-        const libPath1 = path.join(root, 'Library', 'bin');
-        const libPath2 = path.join(root, 'Library', 'mingw-w64', 'bin');
-        const libPath3 = path.join(root, 'Library', 'usr', 'bin');
-        const libPath4 = path.join(root, 'bin');
-        const libPath5 = path.join(root, 'Scripts');
-        const libPath = [libPath1, libPath2, libPath3, libPath4, libPath5].join(path.delimiter);
-        pathEnv = `${libPath}${path.delimiter}${pathEnv}`;
-    }
+    const pathEnv = getPathEnvVariableForConda(command);
     traceLog('Running Conda Env creation script: ', [command, ...args]);
     const { proc, out, dispose } = execObservable(command, args, {
         mergeStdOutErr: true,
@@ -182,6 +174,29 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
         undefined,
     );
 
+    let existingCondaAction: ExistingCondaAction | undefined;
+    const existingEnvStep = new MultiStepNode(
+        workspaceStep,
+        async (context?: MultiStepAction) => {
+            if (workspace && context === MultiStepAction.Continue) {
+                try {
+                    existingCondaAction = await pickExistingCondaAction(workspace);
+                    return MultiStepAction.Continue;
+                } catch (ex) {
+                    if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                        return ex;
+                    }
+                    throw ex;
+                }
+            } else if (context === MultiStepAction.Back) {
+                return MultiStepAction.Back;
+            }
+            return MultiStepAction.Continue;
+        },
+        undefined,
+    );
+    workspaceStep.next = existingEnvStep;
+
     let version: string | undefined;
     const versionStep = new MultiStepNode(
         workspaceStep,
@@ -204,11 +219,37 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
         },
         undefined,
     );
-    workspaceStep.next = versionStep;
+    existingEnvStep.next = versionStep;
 
     const action = await MultiStepNode.run(workspaceStep);
     if (action === MultiStepAction.Back || action === MultiStepAction.Cancel) {
         throw action;
+    }
+
+    if (workspace) {
+        if (existingCondaAction === ExistingCondaAction.Recreate) {
+            sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
+                environmentType: 'conda',
+                status: 'triggered',
+            });
+            if (await deleteEnvironment(workspace, getExecutableCommand(conda))) {
+                sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
+                    environmentType: 'conda',
+                    status: 'deleted',
+                });
+            } else {
+                sendTelemetryEvent(EventName.ENVIRONMENT_DELETE, undefined, {
+                    environmentType: 'conda',
+                    status: 'failed',
+                });
+                throw MultiStepAction.Cancel;
+            }
+        } else if (existingCondaAction === ExistingCondaAction.UseExisting) {
+            sendTelemetryEvent(EventName.ENVIRONMENT_REUSE, undefined, {
+                environmentType: 'conda',
+            });
+            return { path: getPrefixCondaEnvPath(workspace), workspaceFolder: workspace };
+        }
     }
 
     return withProgress(
