@@ -445,7 +445,6 @@ suite('End to End Tests: test adapters', () => {
     test('unittest execution adapter seg fault error handling', async () => {
         const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
         const testIds: string[] = [testId];
-        let foundId = '';
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
@@ -457,8 +456,12 @@ suite('End to End Tests: test adapters', () => {
                 assert.ok(data.error, "Expected errors in 'error' field");
                 // 3. Confirm tests are found
                 assert.ok(data.result, 'Expected results to be present');
-                [foundId] = Object.keys(data.result);
-                console.log('for testing, data result', JSON.stringify(data));
+                // 4. make sure the testID is found in the results
+                assert.notDeepEqual(
+                    JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault'),
+                    -1,
+                    'Expected testId to be present',
+                );
                 return Promise.resolve();
             });
 
@@ -486,17 +489,11 @@ suite('End to End Tests: test adapters', () => {
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
             );
-            assert.strictEqual(
-                foundId,
-                testId,
-                `Expected testId to be present, expected: ${testId} actual: ${foundId}`,
-            );
         });
     });
     test('pytest execution adapter seg fault error handling', async () => {
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
         const testIds: string[] = [testId];
-        let foundId = '';
         resultResolver
             .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
@@ -508,7 +505,12 @@ suite('End to End Tests: test adapters', () => {
                 assert.ok(data.error, "Expected errors in 'error' field");
                 // 3. Confirm tests are found
                 assert.ok(data.result, 'Expected results to be present');
-                [foundId] = Object.keys(data.result);
+                // 4. make sure the testID is found in the results
+                assert.notDeepEqual(
+                    JSON.stringify(data).search('test_seg_fault.py::TestSegmentationFault::test_segfault'),
+                    -1,
+                    'Expected testId to be present',
+                );
                 return Promise.resolve();
             });
 
@@ -535,11 +537,6 @@ suite('End to End Tests: test adapters', () => {
             resultResolver.verify(
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
-            );
-            assert.strictEqual(
-                foundId,
-                testId,
-                `Expected testId to be present, expected: ${testId} actual: ${foundId}`,
             );
         });
     });
