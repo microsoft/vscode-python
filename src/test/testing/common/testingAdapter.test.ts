@@ -208,7 +208,6 @@ suite('End to End Tests: test adapters', () => {
         resultResolver
             .setup((x) => x.resolveDiscovery(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
-                console.log(`resolveDiscovery ${data}`);
                 actualData = data;
                 return Promise.resolve();
             });
@@ -279,7 +278,6 @@ suite('End to End Tests: test adapters', () => {
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.once(),
                 );
-                console.log('for testing, data result', JSON.stringify(actualData));
                 // 1. Check the status is "success"
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
                 // 2. Confirm tests are found
@@ -380,7 +378,6 @@ suite('End to End Tests: test adapters', () => {
                     (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
                     typeMoq.Times.once(),
                 );
-                console.log('for testing, data result', JSON.stringify(actualData));
                 // 1. Check the status is "success"
                 assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
                 // 2. Confirm no errors
