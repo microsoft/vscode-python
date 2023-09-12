@@ -157,9 +157,6 @@ export class PythonResultResolver implements ITestResultResolver {
                 ) {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
-                    console.log('grabTestItem', grabTestItem);
-                    console.log('grabVSid', grabVSid);
-                    console.log('key', keyTemp);
                     if (grabTestItem !== undefined) {
                         testCases.forEach((indiItem) => {
                             if (indiItem.id === grabVSid) {

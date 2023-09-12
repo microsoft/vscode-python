@@ -130,7 +130,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             if (debugBool && !testArgs.some((a) => a.startsWith('--capture') || a === '-s')) {
                 testArgs.push('--capture', 'no');
             }
-            console.log(`Running PYTEST execution for the following test ids: ${testIds}`);
 
             const pytestRunTestIdsPort = await utils.startTestIdServer(testIds);
             if (spawnOptions.extraVariables)
@@ -170,11 +169,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 result?.proc?.stdout?.on('data', (data) => {
                     this.outputChannel?.append(data.toString());
-                    console.log(data.toString());
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     this.outputChannel?.append(data.toString());
-                    console.log(data.toString());
                 });
 
                 result?.proc?.on('exit', (code, signal) => {
