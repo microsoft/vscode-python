@@ -41,7 +41,7 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
 
         let workspaceFolderUri;
         try {
-            workspaceFolderUri = workspaceFolder ? Uri.parse(workspaceFolder) : undefined;
+            workspaceFolderUri = workspaceFolder ? Uri.file(workspaceFolder) : undefined;
         } catch (ex) {
             workspaceFolderUri = undefined;
         }
