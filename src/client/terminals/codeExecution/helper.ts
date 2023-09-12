@@ -14,8 +14,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
-import { IExperimentService, IExperimentService, Resource } from '../../common/types';
-import { EnableREPLSmartSend, EnableREPLSmartSend } from '../../common/experiments/groups';
+import { IExperimentService, Resource } from '../../common/types';
+import { EnableREPLSmartSend } from '../../common/experiments/groups';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
