@@ -381,9 +381,6 @@ function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
 function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
     const result: EnvironmentVariables = {};
     Object.keys(env).forEach((key) => {
-        // `os.environ` script used to get env vars normalizes keys to upper case:
-        // https://github.com/python/cpython/issues/101754
-        // So convert `process.env` keys to upper case to match.
         result[key.toUpperCase()] = env[key];
     });
     return result;
