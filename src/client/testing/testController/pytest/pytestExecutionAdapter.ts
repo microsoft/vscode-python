@@ -55,10 +55,19 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             dataReceivedDisposable.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
-            disposeDataReceiver(this.testServer);
+            deferredTillEOT.resolve();
         });
         try {
-            this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, executionFactory, debugLauncher);
+            this.runTestsNew(
+                uri,
+                testIds,
+                uuid,
+                runInstance,
+                debugBool,
+                executionFactory,
+                debugLauncher,
+                deferredTillEOT,
+            );
         } finally {
             await deferredTillEOT.promise;
             disposeDataReceiver(this.testServer);
@@ -82,8 +91,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        deferredTillEOT?: Deferred<void>,
     ): Promise<ExecutionTestPayload> {
-        const deferred = createDeferred<ExecutionTestPayload>();
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         this.configSettings.isTestExecution();
@@ -146,8 +155,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
-                    deferred.resolve();
-                    this.testServer.deleteUUID(uuid);
+                    deferredTillEOT?.resolve();
                 });
             } else {
                 // combine path to run script with run args
@@ -186,7 +194,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         });
                     }
                     deferredExec.resolve({ stdout: '', stderr: '' });
-                    deferred.resolve();
                     // disposeDataReceiver?.(this.testServer);
                 });
                 await deferredExec.promise;

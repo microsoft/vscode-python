@@ -2,7 +2,7 @@
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the MIT License.
 import * as assert from 'assert';
-import { TestRun, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
@@ -22,6 +22,7 @@ import * as util from '../../../../client/testing/testController/common/utils';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { traceInfo } from '../../../../client/logging';
+import { UnittestTestExecutionAdapter } from '../../../../client/testing/testController/unittest/testExecutionAdapter';
 
 suite('pytest test execution adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -309,6 +310,132 @@ suite('pytest test execution adapter', () => {
                 ),
             typeMoq.Times.once(),
         );
+        testServer.verify((x) => x.deleteUUID(typeMoq.It.isAny()), typeMoq.Times.once());
+    });
+    test('PYTEST cancelation token called mid-run resolves correctly', async () => {
+        // mock test run and cancelation token
+        const testRunMock = typeMoq.Mock.ofType<TestRun>();
+        const cancellationToken = new CancellationTokenSource();
+        const { token } = cancellationToken;
+        testRunMock.setup((t) => t.token).returns(() => token);
+        // mock exec service and exec factory
+        const execServiceMock = typeMoq.Mock.ofType<IPythonExecutionService>();
+        execServiceMock
+            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => {
+                cancellationToken.cancel();
+                return {
+                    proc: mockProc,
+                    out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
+            });
+        const execFactoryMock = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactoryMock
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(execServiceMock.object));
+        execFactoryMock.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execServiceMock.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+
+        const deferredStartServer = createDeferred();
+        utilsStartServerStub.callsFake(() => {
+            deferredStartServer.resolve();
+            return Promise.resolve(54321);
+        });
+        // mock EOT token
+        const deferredEOT = createDeferred();
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
+        utilsCreateEOTStub.callsFake(() => deferredEOT);
+        // set up test server
+        testServer
+            .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => ({
+                dispose: () => {
+                    /* no-body */
+                },
+            }));
+        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => 'uuid123');
+        adapter = new PytestTestExecutionAdapter(
+            testServer.object,
+            configService,
+            typeMoq.Mock.ofType<ITestOutputChannel>().object,
+        );
+        await adapter.runTests(
+            Uri.file(myTestPath),
+            [],
+            false,
+            testRunMock.object,
+            execFactoryMock.object,
+            debugLauncher.object,
+        );
+        // wait for server to start to keep test from failing
+        await deferredStartServer.promise;
+
+        testServer.verify((x) => x.deleteUUID(typeMoq.It.isAny()), typeMoq.Times.once());
+    });
+    test('UNITTEST cancelation token called mid-run resolves correctly', async () => {
+        // mock test run and cancelation token
+        const testRunMock = typeMoq.Mock.ofType<TestRun>();
+        const cancellationToken = new CancellationTokenSource();
+        const { token } = cancellationToken;
+        testRunMock.setup((t) => t.token).returns(() => token);
+        // mock exec service and exec factory
+        const execServiceMock = typeMoq.Mock.ofType<IPythonExecutionService>();
+        execServiceMock
+            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => {
+                cancellationToken.cancel();
+                return {
+                    proc: mockProc,
+                    out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
+            });
+        const execFactoryMock = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactoryMock
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(execServiceMock.object));
+        execFactoryMock.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execServiceMock.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+
+        const deferredStartServer = createDeferred();
+        utilsStartServerStub.callsFake(() => {
+            deferredStartServer.resolve();
+            return Promise.resolve(54321);
+        });
+        // mock EOT token
+        const deferredEOT = createDeferred();
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
+        utilsCreateEOTStub.callsFake(() => deferredEOT);
+        // set up test server
+        testServer
+            .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => ({
+                dispose: () => {
+                    /* no-body */
+                },
+            }));
+        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => 'uuid123');
+        adapter = new UnittestTestExecutionAdapter(
+            testServer.object,
+            configService,
+            typeMoq.Mock.ofType<ITestOutputChannel>().object,
+        );
+        await adapter.runTests(
+            Uri.file(myTestPath),
+            [],
+            false,
+            testRunMock.object,
+            execFactoryMock.object,
+            debugLauncher.object,
+        );
+        // wait for server to start to keep test from failing
+        await deferredStartServer.promise;
+
         testServer.verify((x) => x.deleteUUID(typeMoq.It.isAny()), typeMoq.Times.once());
     });
 });

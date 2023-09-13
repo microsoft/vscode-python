@@ -48,10 +48,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             disposedDataReceived.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
-            disposeDataReceiver(this.testServer);
+            deferredTillEOT.resolve();
         });
         try {
-            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, disposeDataReceiver);
+            await this.runTestsNew(uri, testIds, uuid, runInstance, debugBool, deferredTillEOT);
             await deferredTillEOT.promise;
             disposeDataReceiver(this.testServer);
         } catch (error) {
@@ -67,7 +67,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         uuid: string,
         runInstance?: TestRun,
         debugBool?: boolean,
-        disposeDataReceiver?: (testServer: ITestServer) => void,
+        deferredTillEOT?: Deferred<void>,
     ): Promise<ExecutionTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
@@ -84,15 +84,12 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             testIds,
             outChannel: this.outputChannel,
         };
-
-        const deferred = createDeferred<ExecutionTestPayload>();
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         const runTestIdsPort = await startTestIdServer(testIds);
 
         await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, testIds, () => {
-            deferred.resolve();
-            disposeDataReceiver?.(this.testServer);
+            deferredTillEOT?.resolve();
         });
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
