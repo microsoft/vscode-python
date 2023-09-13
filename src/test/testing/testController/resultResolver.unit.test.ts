@@ -15,6 +15,7 @@ import * as testItemUtilities from '../../../client/testing/testController/commo
 import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
 import * as util from '../../../client/testing/testController/common/utils';
 import { Deferred, createDeferred } from '../../../client/common/utils/async';
+import { traceLog } from '../../../client/logging';
 
 suite('Result Resolver tests', () => {
     suite('Test discovery', () => {
@@ -290,7 +291,7 @@ suite('Result Resolver tests', () => {
                 .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((id: string) => {
                     generatedId = id;
-                    console.log('createTestItem function called with id:', id);
+                    traceLog('createTestItem function called with id:', id);
                 })
                 .returns(() => ({ id: 'id_this', label: 'label_this', uri: workspaceUri } as TestItem));
 

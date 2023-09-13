@@ -70,7 +70,7 @@ suite('End to End Tests: test adapters', () => {
         testOutputChannel
             .setup((x) => x.append(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
-                console.log('out - ', appendVal.toString());
+                traceLog('output channel - ', appendVal.toString());
             })
             .returns(() => {
                 // Whatever you need to return
@@ -78,7 +78,7 @@ suite('End to End Tests: test adapters', () => {
         testOutputChannel
             .setup((x) => x.appendLine(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
-                console.log('outL - ', appendVal.toString());
+                traceLog('output channel ', appendVal.toString());
             })
             .returns(() => {
                 // Whatever you need to return
@@ -416,28 +416,29 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 3, 'Expected _resolveExecution to be called once');
         });
     });
-    test('unittest execution adapter seg fault error handling', async () => {
-        const resultResolverMock: typeMoq.IMock<ITestResultResolver> = typeMoq.Mock.ofType<ITestResultResolver>();
+    test('UNITTEST execution adapter seg fault error handling', async () => {
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveExecution = async (data, _token?) => {
+            // do the following asserts for each time resolveExecution is called, should be called once per test.
+            // 1. Check the status is "success"
+            assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+            // 2. Confirm no errors
+            assert.ok(data.error, "Expected errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(data.result, 'Expected results to be present');
+            // 4. make sure the testID is found in the results
+            assert.notDeepEqual(
+                JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault'),
+                -1,
+                'Expected testId to be present',
+            );
+            callCount = callCount + 1;
+            return Promise.resolve();
+        };
+
         const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
         const testIds: string[] = [testId];
-        resultResolverMock
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                // do the following asserts for each time resolveExecution is called, should be called once per test.
-                // 1. Check the status is "success"
-                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
-                // 2. Confirm no errors
-                assert.ok(data.error, "Expected errors in 'error' field");
-                // 3. Confirm tests are found
-                assert.ok(data.result, 'Expected results to be present');
-                // 4. make sure the testID is found in the results
-                assert.notDeepEqual(
-                    JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault'),
-                    -1,
-                    'Expected testId to be present',
-                );
-                return Promise.resolve();
-            });
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathErrorWorkspace);
@@ -447,7 +448,7 @@ suite('End to End Tests: test adapters', () => {
             pythonTestServer,
             configService,
             testOutputChannel.object,
-            resultResolverMock.object,
+            resultResolver,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -459,34 +460,32 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object).finally(() => {
-            resultResolverMock.verify(
-                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(1),
-            );
+            assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
         });
     });
     test('pytest execution adapter seg fault error handling', async () => {
-        const resultResolverMock: typeMoq.IMock<ITestResultResolver> = typeMoq.Mock.ofType<ITestResultResolver>();
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveExecution = async (data, _token?) => {
+            // do the following asserts for each time resolveExecution is called, should be called once per test.
+            // 1. Check the status is "success"
+            assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+            // 2. Confirm no errors
+            assert.ok(data.error, "Expected errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(data.result, 'Expected results to be present');
+            // 4. make sure the testID is found in the results
+            assert.notDeepEqual(
+                JSON.stringify(data).search('test_seg_fault.py::TestSegmentationFault::test_segfault'),
+                -1,
+                'Expected testId to be present',
+            );
+            callCount = callCount + 1;
+            return Promise.resolve();
+        };
+
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
         const testIds: string[] = [testId];
-        resultResolverMock
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns((data) => {
-                // do the following asserts for each time resolveExecution is called, should be called once per test.
-                // 1. Check the status is "success"
-                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
-                // 2. Confirm no errors
-                assert.ok(data.error, "Expected errors in 'error' field");
-                // 3. Confirm tests are found
-                assert.ok(data.result, 'Expected results to be present');
-                // 4. make sure the testID is found in the results
-                assert.notDeepEqual(
-                    JSON.stringify(data).search('test_seg_fault.py::TestSegmentationFault::test_segfault'),
-                    -1,
-                    'Expected testId to be present',
-                );
-                return Promise.resolve();
-            });
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathErrorWorkspace);
@@ -496,7 +495,7 @@ suite('End to End Tests: test adapters', () => {
             pythonTestServer,
             configService,
             testOutputChannel.object,
-            resultResolverMock.object,
+            resultResolver,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -508,10 +507,7 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            resultResolverMock.verify(
-                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(1),
-            );
+            assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
         });
     });
 });

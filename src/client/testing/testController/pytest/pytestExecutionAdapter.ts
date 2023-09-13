@@ -45,7 +45,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         traceVerbose(uri, testIds, debugBool);
         const deferredTillEOT: Deferred<void> = utils.createEOTDeferred();
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
-            console.log('data received');
             if (runInstance) {
                 const eParsed = JSON.parse(e.data);
                 this.resultResolver?.resolveExecution(eParsed, runInstance, deferredTillEOT);
@@ -179,6 +178,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         this.testServer.triggerRunDataReceivedEvent({
                             uuid,
                             data: JSON.stringify(utils.createExecutionErrorPayload(code, signal, testIds, cwd)),
+                        });
+                        // then send a EOT payload
+                        this.testServer.triggerRunDataReceivedEvent({
+                            uuid,
+                            data: JSON.stringify(utils.createEOTPayload(true)),
                         });
                     }
                     deferredExec.resolve({ stdout: '', stderr: '' });

@@ -28,6 +28,7 @@ import {
     DataWithPayloadChunks,
     PAYLOAD_SPLIT_MULTI_CHUNK_ARRAY,
 } from '../testController/payloadTestCases';
+import { traceLog } from '../../../client/logging';
 
 const FAKE_UUID = 'fake-u-u-i-d';
 export interface TestCase {
@@ -82,7 +83,7 @@ suite('EOT tests', () => {
         // create client to act as python server which sends testing result response
         client = new net.Socket();
         client.on('error', (error) => {
-            console.log('Socket connection error:', error);
+            traceLog('Socket connection error:', error);
         });
 
         const mockProc = new MockChildProcess('', ['']);
@@ -122,7 +123,7 @@ suite('EOT tests', () => {
         testOutputChannel
             .setup((x) => x.append(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
-                console.log('out - ', appendVal.toString());
+                traceLog('out - ', appendVal.toString());
             })
             .returns(() => {
                 // Whatever you need to return
@@ -130,7 +131,7 @@ suite('EOT tests', () => {
         testOutputChannel
             .setup((x) => x.appendLine(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
-                console.log('outL - ', appendVal.toString());
+                traceLog('outL - ', appendVal.toString());
             })
             .returns(() => {
                 // Whatever you need to return
@@ -144,7 +145,7 @@ suite('EOT tests', () => {
         test(`Testing Payloads: ${testCase.name}`, async () => {
             let actualCollectedResult = '';
             client.on('connect', async () => {
-                console.log('socket connected, sending stubbed data');
+                traceLog('socket connected, sending stubbed data');
                 // payload is a string array, each string represents one line written to the buffer
                 const { payloadArray } = testCase.value;
                 for (let i = 0; i < payloadArray.length; i = i + 1) {

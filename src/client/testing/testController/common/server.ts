@@ -15,7 +15,7 @@ import { traceError, traceInfo, traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { createExecutionErrorPayload, extractJsonPayload } from './utils';
+import { createEOTPayload, createExecutionErrorPayload, extractJsonPayload } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {
@@ -35,7 +35,6 @@ export class PythonTestServer implements ITestServer, Disposable {
         this.server = net.createServer((socket: net.Socket) => {
             let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
-                console.log('\n&&&& raw Data: ', data.toString(), '&&&& \n');
                 buffer = Buffer.concat([buffer, data]); // get the new data and add it to the buffer
                 while (buffer.length > 0) {
                     try {
@@ -104,7 +103,6 @@ export class PythonTestServer implements ITestServer, Disposable {
             });
             // if the rawData includes result then this is a run request
         } else if (extractedJSON.includes(`"result":`) || extractedJSON.includes(`"command_type": "execution"`)) {
-            console.log('\n *** fire run data received: \n', extractedJSON, '\n *** end');
             this._onRunDataReceived.fire({
                 uuid,
                 data: extractedJSON,
@@ -238,6 +236,11 @@ export class PythonTestServer implements ITestServer, Disposable {
                         this._onRunDataReceived.fire({
                             uuid,
                             data: JSON.stringify(createExecutionErrorPayload(code, signal, testIds, options.cwd)),
+                        });
+                        // then send a EOT payload
+                        this._onRunDataReceived.fire({
+                            uuid,
+                            data: JSON.stringify(createEOTPayload(true)),
                         });
                     }
                     deferred.resolve({ stdout: '', stderr: '' });

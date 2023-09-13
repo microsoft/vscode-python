@@ -25,6 +25,7 @@ import {
     PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY,
     DataWithPayloadChunks,
 } from './payloadTestCases';
+import { traceLog } from '../../../client/logging';
 
 const testCases = [
     {
@@ -127,7 +128,7 @@ suite('Python Test Server, DataWithPayloadChunks', () => {
                 deferred.resolve();
             });
             client.on('connect', () => {
-                console.log('Socket connected, local port:', client.localPort);
+                traceLog('Socket connected, local port:', client.localPort);
                 // since this test is a single payload as a single chunk there should be a single line in the payload.
                 for (const line of dataWithPayloadChunks.payloadArray) {
                     client.write(line);
@@ -135,7 +136,7 @@ suite('Python Test Server, DataWithPayloadChunks', () => {
                 client.end();
             });
             client.on('error', (error) => {
-                console.log('Socket connection error:', error);
+                traceLog('Socket connection error:', error);
             });
 
             server.sendCommand(options);

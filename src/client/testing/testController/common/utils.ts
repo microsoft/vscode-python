@@ -9,7 +9,13 @@ import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
 import { IExperimentService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
-import { DiscoveredTestItem, DiscoveredTestNode, ExecutionTestPayload, ITestResultResolver } from './types';
+import {
+    DiscoveredTestItem,
+    DiscoveredTestNode,
+    EOTTestPayload,
+    ExecutionTestPayload,
+    ITestResultResolver,
+} from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 
 export function fixLogLines(content: string): string {
@@ -291,4 +297,11 @@ export function createExecutionErrorPayload(
         };
     }
     return etp;
+}
+
+export function createEOTPayload(executionBool: boolean): EOTTestPayload {
+    return {
+        commandType: executionBool ? 'execution' : 'discovery',
+        eot: true,
+    } as EOTTestPayload;
 }
