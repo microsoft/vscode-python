@@ -30,6 +30,10 @@ import { isWindows } from '../../../common/platform/platformService';
 import { getVenvPath, hasVenv } from '../common/commonUtils';
 import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './venvDeleteUtils';
 
+export const OPEN_REQUIREMENTS_BUTTON = {
+    iconPath: new ThemeIcon('go-to-file'),
+    tooltip: CreateEnv.Venv.openRequirementsFile,
+};
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
 async function getPipRequirementsFiles(
     workspaceFolder: WorkspaceFolder,
@@ -108,12 +112,7 @@ async function pickRequirementsFiles(
         })
         .map((e) => ({
             label: e,
-            buttons: [
-                {
-                    iconPath: new ThemeIcon('go-to-file'),
-                    tooltip: CreateEnv.Venv.openRequirementsFile,
-                },
-            ],
+            buttons: [OPEN_REQUIREMENTS_BUTTON],
         }));
 
     const selection = await showQuickPickWithBack(
