@@ -21,6 +21,7 @@ import { ITestDebugLauncher, LaunchOptions } from '../../../../client/testing/co
 import * as util from '../../../../client/testing/testController/common/utils';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
+import { traceInfo } from '../../../../client/logging';
 
 suite('pytest test execution adapter', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -33,7 +34,7 @@ suite('pytest test execution adapter', () => {
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
     let mockProc: MockChildProcess;
-    let utilsStub: sinon.SinonStub;
+    let utilsStartServerStub: sinon.SinonStub;
     setup(() => {
         testServer = typeMoq.Mock.ofType<ITestServer>();
         testServer.setup((t) => t.getPort()).returns(() => 12345);
@@ -51,6 +52,8 @@ suite('pytest test execution adapter', () => {
             isTestExecution: () => false,
         } as unknown) as IConfigurationService;
 
+        // mock out the result resolver
+
         // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);
         const output = new Observable<Output<string>>(() => {
@@ -67,7 +70,7 @@ suite('pytest test execution adapter', () => {
                 },
             }));
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        utilsStub = sinon.stub(util, 'startTestIdServer');
+        utilsStartServerStub = sinon.stub(util, 'startTestIdServer');
         debugLauncher = typeMoq.Mock.ofType<ITestDebugLauncher>();
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
@@ -79,13 +82,6 @@ suite('pytest test execution adapter', () => {
                 deferred.resolve();
                 return Promise.resolve({ stdout: '{}' });
             });
-        debugLauncher
-            .setup((d) => d.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve();
-            });
-
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
@@ -104,7 +100,7 @@ suite('pytest test execution adapter', () => {
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
-        utilsStub.callsFake(() => {
+        utilsStartServerStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve(54321);
         });
@@ -131,7 +127,7 @@ suite('pytest test execution adapter', () => {
         mockProc.trigger('close');
 
         // assert
-        sinon.assert.calledWithExactly(utilsStub, testIds);
+        sinon.assert.calledWithExactly(utilsStartServerStub, testIds);
     });
     test('pytest execution called with correct args', async () => {
         const deferred2 = createDeferred();
@@ -143,7 +139,7 @@ suite('pytest test execution adapter', () => {
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
-        utilsStub.callsFake(() => {
+        utilsStartServerStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve(54321);
         });
@@ -175,7 +171,6 @@ suite('pytest test execution adapter', () => {
             TEST_UUID: 'uuid123',
             TEST_PORT: '12345',
         };
-        //  execService.verify((x) => x.exec(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
         execService.verify(
             (x) =>
                 x.execObservable(
@@ -203,7 +198,7 @@ suite('pytest test execution adapter', () => {
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
-        utilsStub.callsFake(() => {
+        utilsStartServerStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve(54321);
         });
@@ -262,12 +257,28 @@ suite('pytest test execution adapter', () => {
     });
     test('Debug launched correctly for pytest', async () => {
         const deferred3 = createDeferred();
-        utilsStub.callsFake(() => {
+        const deferredEOT = createDeferred();
+        utilsStartServerStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve(54321);
         });
+        debugLauncher
+            .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(async () => {
+                traceInfo('stubs launch debugger');
+                deferredEOT.resolve();
+            });
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
+        utilsCreateEOTStub.callsFake(() => deferredEOT);
         const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
         const uri = Uri.file(myTestPath);
         const uuid = 'uuid123';
         testServer
@@ -298,5 +309,6 @@ suite('pytest test execution adapter', () => {
                 ),
             typeMoq.Times.once(),
         );
+        testServer.verify((x) => x.deleteUUID(typeMoq.It.isAny()), typeMoq.Times.once());
     });
 });

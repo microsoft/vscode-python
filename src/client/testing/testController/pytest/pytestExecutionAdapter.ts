@@ -5,7 +5,7 @@ import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     ExecutionTestPayload,
@@ -43,7 +43,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
         traceVerbose(uri, testIds, debugBool);
-        const deferredTillEOT: Deferred<void> = createDeferred<void>();
+        const deferredTillEOT: Deferred<void> = utils.createEOTDeferred();
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             console.log('data received');
             if (runInstance) {

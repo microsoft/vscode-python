@@ -12,7 +12,7 @@ import { Uri } from 'vscode';
 import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../../client/common/process/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
-import { createDeferred } from '../../../client/common/utils/async';
+import { Deferred, createDeferred } from '../../../client/common/utils/async';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import {
     PAYLOAD_MULTI_CHUNK,

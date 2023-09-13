@@ -14,7 +14,7 @@ import { PythonTestServer } from '../../../client/testing/testController/common/
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { Deferred, createDeferred } from '../../../client/common/utils/async';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
-import { PAYLOAD_MULTI_CHUNK, PAYLOAD_SINGLE_CHUNK, PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY } from './payloadTestCases';
+import { PAYLOAD_SINGLE_CHUNK, PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY } from './payloadTestCases';
 
 suite('Python Test Server', () => {
     const FAKE_UUID = 'fake-uuid';

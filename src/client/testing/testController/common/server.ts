@@ -15,7 +15,7 @@ import { traceError, traceInfo, traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { containsHeaders, extractJsonPayload } from './utils';
+import { createExecutionErrorPayload, extractJsonPayload } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {

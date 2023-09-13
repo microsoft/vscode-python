@@ -14,6 +14,7 @@ import {
 import * as testItemUtilities from '../../../client/testing/testController/common/testItemUtilities';
 import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
 import * as util from '../../../client/testing/testController/common/utils';
+import { Deferred, createDeferred } from '../../../client/common/utils/async';
 
 suite('Result Resolver tests', () => {
     suite('Test discovery', () => {
@@ -87,7 +88,8 @@ suite('Result Resolver tests', () => {
             const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
 
             // call resolve discovery
-            resultResolver.resolveDiscovery(payload, cancelationToken);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveDiscovery(payload, deferredTillEOT, cancelationToken);
 
             // assert the stub functions were called with the correct parameters
 
@@ -126,7 +128,8 @@ suite('Result Resolver tests', () => {
             const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
 
             // call resolve discovery
-            resultResolver.resolveDiscovery(payload);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveDiscovery(payload, deferredTillEOT, cancelationToken);
 
             // assert the stub functions were called with the correct parameters
 
@@ -171,7 +174,8 @@ suite('Result Resolver tests', () => {
             // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
             const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
             // call resolve discovery
-            resultResolver.resolveDiscovery(payload, cancelationToken);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveDiscovery(payload, deferredTillEOT, cancelationToken);
 
             // assert the stub functions were called with the correct parameters
 
@@ -307,7 +311,8 @@ suite('Result Resolver tests', () => {
             };
 
             // call resolveExecution
-            resultResolver.resolveExecution(successPayload, runInstance.object);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveExecution(successPayload, runInstance.object, deferredTillEOT);
 
             // verify that the passed function was called for the single test item
             assert.ok(generatedId);
@@ -347,7 +352,8 @@ suite('Result Resolver tests', () => {
             };
 
             // call resolveExecution
-            resultResolver.resolveExecution(successPayload, runInstance.object);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveExecution(successPayload, runInstance.object, deferredTillEOT);
 
             // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.failed(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
@@ -386,7 +392,8 @@ suite('Result Resolver tests', () => {
             };
 
             // call resolveExecution
-            resultResolver.resolveExecution(successPayload, runInstance.object);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveExecution(successPayload, runInstance.object, deferredTillEOT);
 
             // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.skipped(typemoq.It.isAny()), typemoq.Times.once());
@@ -425,7 +432,8 @@ suite('Result Resolver tests', () => {
             };
 
             // call resolveExecution
-            resultResolver.resolveExecution(successPayload, runInstance.object);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveExecution(successPayload, runInstance.object, deferredTillEOT);
 
             // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.errored(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
@@ -464,7 +472,8 @@ suite('Result Resolver tests', () => {
             };
 
             // call resolveExecution
-            resultResolver.resolveExecution(successPayload, runInstance.object);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveExecution(successPayload, runInstance.object, deferredTillEOT);
 
             // verify that the passed function was called for the single test item
             runInstance.verify((r) => r.passed(typemoq.It.isAny()), typemoq.Times.once());
@@ -485,7 +494,8 @@ suite('Result Resolver tests', () => {
                 error: 'error',
             };
 
-            resultResolver.resolveExecution(errorPayload, runInstance.object);
+            const deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveExecution(errorPayload, runInstance.object, deferredTillEOT);
 
             // verify that none of these functions are called
 

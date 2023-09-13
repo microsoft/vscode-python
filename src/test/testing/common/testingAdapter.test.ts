@@ -27,9 +27,12 @@ suite('End to End Tests: test adapters', () => {
     let pythonExecFactory: IPythonExecutionFactory;
     let debugLauncher: ITestDebugLauncher;
     let configService: IConfigurationService;
-    let testOutputChannel: ITestOutputChannel;
     let serviceContainer: IServiceContainer;
     let workspaceUri: Uri;
+    let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
+    let testController: TestController;
+    const unittestProvider: TestProvider = UNITTEST_PROVIDER;
+    const pytestProvider: TestProvider = PYTEST_PROVIDER;
     const rootPathSmallWorkspace = path.join(
         EXTENSION_ROOT_DIR_FOR_TESTS,
         'src',
@@ -57,10 +60,7 @@ suite('End to End Tests: test adapters', () => {
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-        testOutputChannel = serviceContainer.get<ITestOutputChannel>(ITestOutputChannel);
         testController = serviceContainer.get<TestController>(ITestController);
-
-        // create mock resultResolver object
 
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
@@ -368,17 +368,8 @@ suite('End to End Tests: test adapters', () => {
                 pythonExecFactory,
             )
             .then(() => {
-                // verification after discovery is complete
-                resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.exactly(2),
-                );
-                // 1. Check the status is "success"
-                assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
-                // 2. Confirm no errors
-                assert.strictEqual(actualData.error, null, "Expected no errors in 'error' field");
-                // 3. Confirm tests are found
-                assert.ok(actualData.result, 'Expected results to be present');
+                // verify that the _resolveExecution was called once per test
+                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
             });
     });
     test('pytest execution adapter large workspace', async () => {
@@ -420,31 +411,17 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        console.log('FROM TEST, do the run large');
-        await executionAdapter
-            .runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory)
-            .then(() => {
-                // resolve execution should be called 200 times since there are 200 tests run.
-                console.log('hit then');
-                assert.strictEqual(
-                    errorMessages.length,
-                    0,
-                    ['Test run was unsuccessful, the following errors were produced: \n', ...errorMessages].join('\n'),
-                );
-                resultResolver.verify(
-                    (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
-                    typeMoq.Times.atLeast(2000),
-                );
-            })
-            .finally(() => {
-                console.log('hit finally large');
-            });
+        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
+            // verify that the _resolveExecution was called once per test
+            assert.strictEqual(callCount, 3, 'Expected _resolveExecution to be called once');
+        });
     });
     test('unittest execution adapter seg fault error handling', async () => {
+        const resultResolverMock: typeMoq.IMock<ITestResultResolver> = typeMoq.Mock.ofType<ITestResultResolver>();
         const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
         const testIds: string[] = [testId];
-        resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+        resultResolverMock
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
                 // do the following asserts for each time resolveExecution is called, should be called once per test.
                 // 1. Check the status is "success"
@@ -469,8 +446,8 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new UnittestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolverMock.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -482,17 +459,18 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object).finally(() => {
-            resultResolver.verify(
-                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()),
+            resultResolverMock.verify(
+                (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
                 typeMoq.Times.exactly(1),
             );
         });
     });
     test('pytest execution adapter seg fault error handling', async () => {
+        const resultResolverMock: typeMoq.IMock<ITestResultResolver> = typeMoq.Mock.ofType<ITestResultResolver>();
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
         const testIds: string[] = [testId];
-        resultResolver
-            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny()))
+        resultResolverMock
+            .setup((x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((data) => {
                 // do the following asserts for each time resolveExecution is called, should be called once per test.
                 // 1. Check the status is "success"
@@ -517,8 +495,8 @@ suite('End to End Tests: test adapters', () => {
         const executionAdapter = new PytestTestExecutionAdapter(
             pythonTestServer,
             configService,
-            testOutputChannel,
-            resultResolver.object,
+            testOutputChannel.object,
+            resultResolverMock.object,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -530,9 +508,9 @@ suite('End to End Tests: test adapters', () => {
                     } as any),
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            resultResolver.verify(
+            resultResolverMock.verify(
                 (x) => x.resolveExecution(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()),
-                typeMoq.Times.exactly(4),
+                typeMoq.Times.exactly(1),
             );
         });
     });

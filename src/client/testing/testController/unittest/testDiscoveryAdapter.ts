@@ -52,7 +52,9 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             dataReceivedDisposable.dispose();
         };
 
-        await this.callSendCommand(options);
+        await this.callSendCommand(options, () => {
+            disposeDataReceiver?.(this.testServer);
+        });
         await deferredTillEOT.promise;
         disposeDataReceiver(this.testServer);
         // placeholder until after the rewrite is adopted

@@ -10,6 +10,7 @@ import { IExperimentService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
 import { DiscoveredTestItem, DiscoveredTestNode, ExecutionTestPayload, ITestResultResolver } from './types';
+import { Deferred, createDeferred } from '../../../common/utils/async';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -34,6 +35,10 @@ export interface ExtractOutput {
 export const JSONRPC_UUID_HEADER = 'Request-uuid';
 export const JSONRPC_CONTENT_LENGTH_HEADER = 'Content-Length';
 export const JSONRPC_CONTENT_TYPE_HEADER = 'Content-Type';
+
+export function createEOTDeferred(): Deferred<void> {
+    return createDeferred<void>();
+}
 
 export function extractJsonPayload(rawData: string, uuids: Array<string>): ExtractOutput {
     /**
@@ -64,17 +69,6 @@ export function extractJsonPayload(rawData: string, uuids: Array<string>): Extra
     }
     // wait for the remaining
     return { uuid: undefined, cleanedJsonData: undefined, remainingRawData: rawData };
-}
-
-export function containsHeaders(rawData: string): boolean {
-    /**
-     * Checks if the provided raw data contains JSON-RPC specific headers.
-     */
-    return (
-        rawData.includes(JSONRPC_CONTENT_LENGTH_HEADER) &&
-        rawData.includes(JSONRPC_CONTENT_TYPE_HEADER) &&
-        rawData.includes(JSONRPC_UUID_HEADER)
-    );
 }
 
 export function checkUuid(uuid: string | undefined, uuids: Array<string>): string | undefined {
