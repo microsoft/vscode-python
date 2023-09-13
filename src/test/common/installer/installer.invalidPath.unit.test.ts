@@ -14,10 +14,10 @@ import { ProductInstaller } from '../../../client/common/installer/productInstal
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { IPersistentState, IPersistentStateFactory, Product, ProductType } from '../../../client/common/types';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { getProductsForInstallerTests } from '../productsToTest';
 
 use(chaiAsPromised);
 
@@ -26,7 +26,7 @@ suite('Module Installer - Invalid Paths', () => {
         ['moduleName', path.join('users', 'dev', 'tool', 'executable')].forEach((pathToExecutable) => {
             const isExecutableAModule = path.basename(pathToExecutable) === pathToExecutable;
 
-            getNamesAndValues<Product>(Product).forEach((product) => {
+            getProductsForInstallerTests().forEach((product) => {
                 let installer: ProductInstaller;
                 let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                 let app: TypeMoq.IMock<IApplicationShell>;
@@ -78,7 +78,6 @@ suite('Module Installer - Invalid Paths', () => {
                 });
 
                 switch (product.value) {
-                    case Product.isort:
                     case Product.unittest: {
                         return;
                     }

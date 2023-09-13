@@ -26,18 +26,18 @@ import {
     Product,
     ProductType,
 } from '../../../client/common/types';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IFormatterHelper } from '../../../client/formatters/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
 import { ITestsHelper } from '../../../client/testing/common/types';
 import { ITestingSettings } from '../../../client/testing/configuration/types';
+import { getProductsForInstallerTests } from '../productsToTest';
 
 use(chaiAsPromised);
 
 suite('Product Path', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
-        getNamesAndValues<Product>(Product).forEach((product) => {
+        getProductsForInstallerTests().forEach((product) => {
             class TestBaseProductPathsService extends BaseProductPathsService {
                 public getExecutableNameFromSettings(_: Product, _resource?: Uri): string {
                     return '';
@@ -75,9 +75,6 @@ suite('Product Path', () => {
                     .returns(() => new ProductService());
             });
 
-            if (product.value === Product.isort) {
-                return;
-            }
             suite('Method isExecutableAModule()', () => {
                 test('Returns true if User has customized the executable name', () => {
                     productInstaller.translateProductToModuleName = () => 'moduleName';

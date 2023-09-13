@@ -34,17 +34,17 @@ import {
     ProductType,
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../common';
+import { getProductsForInstallerTests } from '../productsToTest';
 
 use(chaiAsPromised);
 
 suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
-        getNamesAndValues<Product>(Product)
+        getProductsForInstallerTests()
             .concat([{ name: 'Unknown product', value: 404 }])
 
             .forEach((product) => {
@@ -163,9 +163,6 @@ suite('Module Installer only', () => {
                             app.verifyAll();
                             assert.ok(getProductType.calledOnce);
                         });
-                        return;
-                    }
-                    case Product.isort: {
                         return;
                     }
                     case Product.unittest: {
