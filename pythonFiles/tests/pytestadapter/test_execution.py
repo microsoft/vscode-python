@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 import os
 import shutil
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 import pytest
 
@@ -226,7 +226,8 @@ def test_pytest_execution(test_ids, expected_const):
     3. uf_single_method_execution_expected_output: test run on a single method in a file.
     4. uf_non_adjacent_tests_execution_expected_output: test run on unittests in two files with single selection in test explorer.
     5. unit_pytest_same_file_execution_expected_output: test run on a file with both unittest and pytest tests.
-    6. dual_level_nested_folder_execution_expected_output: test run on a file with one test file at the top level and one test file in a nested folder.
+    6. dual_level_nested_folder_execution_expected_output: test run on a file with one test file
+    at the top level and one test file in a nested folder.
     7. double_nested_folder_expected_execution_output: test run on a double nested folder.
     8. parametrize_tests_expected_execution_output: test run on a parametrize test with 3 inputs.
     9. single_parametrize_tests_expected_execution_output: test run on single parametrize test.
