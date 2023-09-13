@@ -1,8 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
-import sys
+
 import textwrap
 
 # __file__ = "/Users/anthonykim/Desktop/vscode-python/pythonFiles/normalizeSelection.py"
