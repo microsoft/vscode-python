@@ -53,7 +53,7 @@ if __name__ == "__main__":
                 buffer = b""
 
                 # Process the JSON data
-                print(f"Received JSON data: {test_ids_from_buffer}")
+                print(f"Received JSON data in run script")
                 break
             except json.JSONDecodeError:
                 # JSON decoding error, the complete JSON object is not yet received

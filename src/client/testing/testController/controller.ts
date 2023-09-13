@@ -371,6 +371,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
 
         const dispose = token.onCancellationRequested(() => {
+            runInstance.appendOutput(`Run instance cancelled.\r\n`);
             runInstance.end();
         });
 

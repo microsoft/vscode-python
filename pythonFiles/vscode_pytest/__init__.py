@@ -306,12 +306,6 @@ def pytest_sessionfinish(session, exitstatus):
     4: Pytest encountered an internal error or exception during test execution.
     5: Pytest was unable to find any tests to run.
     """
-    # print(
-    #     "pytest session has finished, exit status: ",
-    #     exitstatus,
-    #     "in discovery? ",
-    #     IS_DISCOVERY,
-    # )
     cwd = pathlib.Path.cwd()
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
@@ -714,8 +708,8 @@ Request-uuid: {testuuid}
         try:
             if __socket is not None and __socket.socket is not None:
                 __socket.socket.sendall(request.encode("utf-8"))
-                print("Post request sent successfully!")
-                print("data sent", payload, "end of data")
+                # print("Post request sent successfully!")
+                # print("data sent", payload, "end of data")
                 break  # Exit the loop if the send was successful
             else:
                 print("Plugin error connection error[vscode-pytest]")
