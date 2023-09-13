@@ -336,4 +336,8 @@ if __name__ == "__main__":
             "result": None,
         }
     eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    post_response(eot_payload, PORT, UUID)
+    if UUID is None:
+        print("Error sending response, uuid unknown to python server.")
+        post_response(eot_payload, PORT, "unknown")
+    else:
+        post_response(eot_payload, PORT, UUID)
