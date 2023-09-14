@@ -257,6 +257,10 @@ export function execObservable(
             subscriber.error(ex);
             internalDisposables.forEach((d) => d.dispose());
         });
+        if (options.stdinStr) {
+            proc.stdin?.write(options.stdinStr);
+            proc.stdin?.end();
+        }
     });
 
     return {
