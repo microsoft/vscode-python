@@ -84,6 +84,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 startLine: activeEditor!.selection.start.line,
                 endLine: activeEditor!.selection.end.line,
                 emptyHighlight: activeEditor!.selection.isEmpty,
+                smartSendExperimentEnabled: pythonSmartSendEnabled(this.serviceContainer),
             });
             observable.proc?.stdin?.write(input);
             observable.proc?.stdin?.end();

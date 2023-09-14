@@ -290,7 +290,8 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
-    if contents["emptyHighlight"] is True:
+    # Experiment also has to be enable to use smart selection.
+    if contents["emptyHighlight"] is True and contents["smartSendExperimentEnabled"] is True:
         normalized = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
