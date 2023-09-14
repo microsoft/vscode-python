@@ -8,6 +8,7 @@ import pathlib
 import re
 import sys
 import textwrap
+from typing import Iterable
 
 # script_dir = pathlib.Path('User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python')
 # sys.path.append(os.fspath(script_dir))
@@ -184,8 +185,9 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
                 or isinstance(node, ast.IfExp)
                 or isinstance(node, ast.ExceptHandler)
             ):
-                for child_nodes in node.body:
-                    top_level_nodes.append(child_nodes)
+                if isinstance(node.body, Iterable):
+                    for child_nodes in node.body:
+                        top_level_nodes.append(child_nodes)
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
