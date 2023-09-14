@@ -196,7 +196,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
-
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
 
@@ -253,12 +252,19 @@ suite('End to End Tests: test adapters', () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg: string | undefined = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
-            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
-            assert.ok(payload.result, 'Expected results to be present');
+            try {
+                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.ok(payload.result, 'Expected results to be present');
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
             return Promise.resolve();
         };
 
@@ -286,18 +292,30 @@ suite('End to End Tests: test adapters', () => {
             .finally(() => {
                 // verify that the _resolveExecution was called once per test
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
             });
     });
     test('unittest execution adapter large workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg: string | undefined = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
-            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
-            assert.ok(payload.result, 'Expected results to be present');
+            try {
+                const validStatuses = ['subtest-success', 'subtest-failure'];
+                assert.ok(
+                    validStatuses.includes(payload.status),
+                    `Expected status to be one of ${validStatuses.join(', ')}`,
+                );
+                assert.ok(payload.result, 'Expected results to be present');
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
             return Promise.resolve();
         };
 
@@ -325,19 +343,27 @@ suite('End to End Tests: test adapters', () => {
             .runTests(workspaceUri, ['test_parameterized_subtest.NumbersTest.test_even'], false, testRun.object)
             .then(() => {
                 // verify that the _resolveExecution was called once per test
-                assert.strictEqual(callCount, 3, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
             });
     });
     test('pytest execution adapter small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg: string | undefined = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
-            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
-            assert.ok(payload.result, 'Expected results to be present');
+            try {
+                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.ok(payload.result, 'Expected results to be present');
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
             return Promise.resolve();
         };
         // set workspace to test workspace folder
@@ -370,18 +396,26 @@ suite('End to End Tests: test adapters', () => {
             .then(() => {
                 // verify that the _resolveExecution was called once per test
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
             });
     });
     test('pytest execution adapter large workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg: string | undefined = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
-            assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
-            assert.ok(payload.result, 'Expected results to be present');
+            try {
+                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.ok(payload.result, 'Expected results to be present');
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
             return Promise.resolve();
         };
 
@@ -390,7 +424,7 @@ suite('End to End Tests: test adapters', () => {
 
         // generate list of test_ids
         const testIds: string[] = [];
-        for (let i = 0; i < 3; i = i + 1) {
+        for (let i = 0; i < 2000; i = i + 1) {
             const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
             testIds.push(testId);
         }
@@ -413,27 +447,45 @@ suite('End to End Tests: test adapters', () => {
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
             // verify that the _resolveExecution was called once per test
-            assert.strictEqual(callCount, 3, 'Expected _resolveExecution to be called once');
+            assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+            assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
-    test('UNITTEST execution adapter seg fault error handling', async () => {
+    test('unittest execution adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg: string | undefined = '';
+        resultResolver._resolveExecution = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            // the payloads that get to the _resolveExecution are all data and should be successful.
+            try {
+                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.ok(payload.result, 'Expected results to be present');
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
+            return Promise.resolve();
+        };
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
-            // 1. Check the status is "success"
-            assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
-            // 2. Confirm no errors
-            assert.ok(data.error, "Expected errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(data.result, 'Expected results to be present');
-            // 4. make sure the testID is found in the results
-            assert.notDeepEqual(
-                JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault'),
-                -1,
-                'Expected testId to be present',
-            );
             callCount = callCount + 1;
+            try {
+                // 1. Check the status is "success"
+                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+                // 2. Confirm no errors
+                assert.ok(data.error, "Expected errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(data.result, 'Expected results to be present');
+                // 4. make sure the testID is found in the results
+                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
+                assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
             return Promise.resolve();
         };
 
@@ -461,26 +513,34 @@ suite('End to End Tests: test adapters', () => {
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object).finally(() => {
             assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+            assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
     test('pytest execution adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg: string | undefined = '';
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
-            // 1. Check the status is "success"
-            assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
-            // 2. Confirm no errors
-            assert.ok(data.error, "Expected errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(data.result, 'Expected results to be present');
-            // 4. make sure the testID is found in the results
-            assert.notDeepEqual(
-                JSON.stringify(data).search('test_seg_fault.py::TestSegmentationFault::test_segfault'),
-                -1,
-                'Expected testId to be present',
-            );
             callCount = callCount + 1;
+            try {
+                // 1. Check the status is "success"
+                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+                // 2. Confirm no errors
+                assert.ok(data.error, "Expected errors in 'error' field");
+                // 3. Confirm tests are found
+                assert.ok(data.result, 'Expected results to be present');
+                // 4. make sure the testID is found in the results
+                assert.notDeepEqual(
+                    JSON.stringify(data).search('test_seg_fault.py::TestSegmentationFault::test_segfault'),
+                    -1,
+                    'Expected testId to be present',
+                );
+            } catch (err) {
+                failureMsg = err?.toString();
+                failureOccurred = true;
+            }
             return Promise.resolve();
         };
 
@@ -508,6 +568,7 @@ suite('End to End Tests: test adapters', () => {
             );
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
             assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+            assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
 });
