@@ -1,9 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import contextlib
 import importlib
+import io
+import json
 import os
 import sys
+from typing import List
 
 import pytest
 
@@ -224,3 +228,58 @@ def test_create_venv_missing_pip():
 
     create_venv.run_process = run_process
     create_venv.main([])
+
+
+class TestArgs:
+    stdin: bool
+    requirements: List[str]
+
+    def __init__(self, stdin: bool, requirements: List[str]):
+        self.stdin = stdin
+        self.requirements = requirements
+
+
+@contextlib.contextmanager
+def redirect_io(stream: str, new_stream):
+    """Redirect stdio streams to a custom stream."""
+    old_stream = getattr(sys, stream)
+    setattr(sys, stream, new_stream)
+    yield
+    setattr(sys, stream, old_stream)
+
+
+class CustomIO(io.TextIOWrapper):
+    """Custom stream object to replace stdio."""
+
+    name = None
+
+    def __init__(self, name, encoding="utf-8", newline=None):
+        self._buffer = io.BytesIO()
+        self._buffer.name = name
+        super().__init__(self._buffer, encoding=encoding, newline=newline)
+
+    def close(self):
+        """Provide this close method which is used by some tools."""
+        # This is intentionally empty.
+
+    def get_value(self) -> str:
+        """Returns value from the buffer as string."""
+        self.seek(0)
+        return self.read()
+
+
+def test_requirements_from_stdin():
+    importlib.reload(create_venv)
+
+    cli_requirements = [f"cli-requirement{i}.txt" for i in range(3)]
+    args = TestArgs(stdin=True, requirements=cli_requirements)
+
+    stdin_requirements = [f"stdin-requirement{i}.txt" for i in range(20)]
+    text = json.dumps({"requirements": stdin_requirements})
+    str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+    with redirect_io("stdin", str_input):
+        str_input.write(text)
+        str_input.seek(0)
+        actual = create_venv.get_requirements_from_args(args)
+
+    assert actual == stdin_requirements + cli_requirements

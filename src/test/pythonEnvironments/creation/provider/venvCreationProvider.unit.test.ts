@@ -15,7 +15,7 @@ import * as rawProcessApis from '../../../../client/common/process/rawProcessApi
 import * as commonUtils from '../../../../client/pythonEnvironments/creation/common/commonUtils';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { createDeferred } from '../../../../client/common/utils/async';
-import { Output } from '../../../../client/common/process/types';
+import { Output, SpawnOptions } from '../../../../client/common/process/types';
 import { VENV_CREATED_MARKER } from '../../../../client/pythonEnvironments/creation/provider/venvProgressAndTelemetry';
 import { CreateEnv } from '../../../../client/common/utils/localize';
 import * as venvUtils from '../../../../client/pythonEnvironments/creation/provider/venvUtils';
@@ -393,5 +393,158 @@ suite('venv Creation provider tests', () => {
         assert.isTrue(pickPackagesToInstallStub.notCalled);
         assert.isTrue(showErrorMessageWithLogsStub.notCalled);
         assert.isTrue(deleteEnvironmentStub.notCalled);
+    });
+
+    test('Create venv with 1000 requirement files', async () => {
+        pickWorkspaceFolderStub.resolves(workspace1);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.once());
+
+        const requirements = Array.from({ length: 1000 }, (_, i) => ({
+            installType: 'requirements',
+            installItem: `requirements${i}.txt`,
+        }));
+        pickPackagesToInstallStub.resolves(requirements);
+        const expected = JSON.stringify({ requirements: requirements.map((r) => r.installItem) });
+
+        const deferred = createDeferred();
+        let _next: undefined | ((value: Output<string>) => void);
+        let _complete: undefined | (() => void);
+        let stdin: undefined | string;
+        let hasStdinArg = false;
+        execObservableStub.callsFake((_c, argv: string[], options) => {
+            stdin = options?.stdinStr;
+            hasStdinArg = argv.includes('--stdin');
+            deferred.resolve();
+            return {
+                proc: {
+                    exitCode: 0,
+                },
+                out: {
+                    subscribe: (
+                        next?: (value: Output<string>) => void,
+                        _error?: (error: unknown) => void,
+                        complete?: () => void,
+                    ) => {
+                        _next = next;
+                        _complete = complete;
+                    },
+                },
+                dispose: () => undefined,
+            };
+        });
+
+        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
+
+        withProgressStub.callsFake(
+            (
+                _options: ProgressOptions,
+                task: (
+                    progress: CreateEnvironmentProgress,
+                    token?: CancellationToken,
+                ) => Thenable<CreateEnvironmentResult>,
+            ) => task(progressMock.object),
+        );
+
+        const promise = venvProvider.createEnvironment();
+        await deferred.promise;
+        assert.isDefined(_next);
+        assert.isDefined(_complete);
+
+        _next!({ out: `${VENV_CREATED_MARKER}new_environment`, source: 'stdout' });
+        _complete!();
+
+        const actual = await promise;
+        assert.deepStrictEqual(actual, {
+            path: 'new_environment',
+            workspaceFolder: workspace1,
+        });
+        interpreterQuickPick.verifyAll();
+        progressMock.verifyAll();
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
+        assert.strictEqual(stdin, expected);
+        assert.isTrue(hasStdinArg);
+    });
+
+    test('Create venv with 5 requirement files', async () => {
+        pickWorkspaceFolderStub.resolves(workspace1);
+
+        interpreterQuickPick
+            .setup((i) => i.getInterpreterViaQuickPick(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => Promise.resolve('/usr/bin/python'))
+            .verifiable(typemoq.Times.once());
+
+        const requirements = Array.from({ length: 5 }, (_, i) => ({
+            installType: 'requirements',
+            installItem: `requirements${i}.txt`,
+        }));
+        pickPackagesToInstallStub.resolves(requirements);
+        const expectedRequirements = requirements.map((r) => r.installItem).sort();
+
+        const deferred = createDeferred();
+        let _next: undefined | ((value: Output<string>) => void);
+        let _complete: undefined | (() => void);
+        let stdin: undefined | string;
+        let hasStdinArg = false;
+        let actualRequirements: string[] = [];
+        execObservableStub.callsFake((_c, argv: string[], options: SpawnOptions) => {
+            stdin = options?.stdinStr;
+            actualRequirements = argv.filter((arg) => arg.startsWith('requirements')).sort();
+            hasStdinArg = argv.includes('--stdin');
+            deferred.resolve();
+            return {
+                proc: {
+                    exitCode: 0,
+                },
+                out: {
+                    subscribe: (
+                        next?: (value: Output<string>) => void,
+                        _error?: (error: unknown) => void,
+                        complete?: () => void,
+                    ) => {
+                        _next = next;
+                        _complete = complete;
+                    },
+                },
+                dispose: () => undefined,
+            };
+        });
+
+        progressMock.setup((p) => p.report({ message: CreateEnv.statusStarting })).verifiable(typemoq.Times.once());
+
+        withProgressStub.callsFake(
+            (
+                _options: ProgressOptions,
+                task: (
+                    progress: CreateEnvironmentProgress,
+                    token?: CancellationToken,
+                ) => Thenable<CreateEnvironmentResult>,
+            ) => task(progressMock.object),
+        );
+
+        const promise = venvProvider.createEnvironment();
+        await deferred.promise;
+        assert.isDefined(_next);
+        assert.isDefined(_complete);
+
+        _next!({ out: `${VENV_CREATED_MARKER}new_environment`, source: 'stdout' });
+        _complete!();
+
+        const actual = await promise;
+        assert.deepStrictEqual(actual, {
+            path: 'new_environment',
+            workspaceFolder: workspace1,
+        });
+        interpreterQuickPick.verifyAll();
+        progressMock.verifyAll();
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(deleteEnvironmentStub.notCalled);
+        assert.isUndefined(stdin);
+        assert.deepStrictEqual(actualRequirements, expectedRequirements);
+        assert.isFalse(hasStdinArg);
     });
 });
