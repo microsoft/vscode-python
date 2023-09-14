@@ -821,11 +821,11 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.EXECUTION_CODE]: {
         /**
-         * Whether the user executed a file in the terminal or just the selected text.
+         * Whether the user executed a file in the terminal or just the selected text or line by shift+enter.
          *
          * @type {('file' | 'selection')}
          */
-        scope: 'file' | 'selection';
+        scope: 'file' | 'selection' | 'line';
         /**
          * How was the code executed (through the command or by clicking the `Run File` icon).
          *
