@@ -16,6 +16,8 @@ import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
 import { IExperimentService, Resource } from '../../common/types';
 import { EnableREPLSmartSend } from '../../common/experiments/groups';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
@@ -70,7 +72,10 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                     normalizeOutput.resolve(normalized);
                 },
             });
-
+            // If there is no explicit selection, we are exeucting 'line' or 'block'.
+            if (activeEditor!.selection.isEmpty) {
+                sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'line' });
+            }
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
             const input = JSON.stringify({
