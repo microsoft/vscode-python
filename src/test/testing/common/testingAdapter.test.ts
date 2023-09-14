@@ -253,7 +253,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
-        let failureMsg: string | undefined = '';
+        let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
@@ -262,7 +262,7 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
@@ -300,7 +300,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
-        let failureMsg: string | undefined = '';
+        let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
@@ -313,7 +313,7 @@ suite('End to End Tests: test adapters', () => {
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
@@ -352,7 +352,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
-        let failureMsg: string | undefined = '';
+        let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
@@ -361,7 +361,7 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
@@ -404,7 +404,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
-        let failureMsg: string | undefined = '';
+        let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
@@ -413,7 +413,7 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
@@ -455,7 +455,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
-        let failureMsg: string | undefined = '';
+        let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
@@ -464,7 +464,7 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
@@ -483,7 +483,7 @@ suite('End to End Tests: test adapters', () => {
                 const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
                 assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
@@ -520,7 +520,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
-        let failureMsg: string | undefined = '';
+        let failureMsg = '';
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
@@ -538,7 +538,7 @@ suite('End to End Tests: test adapters', () => {
                     'Expected testId to be present',
                 );
             } catch (err) {
-                failureMsg = err?.toString();
+                failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
             return Promise.resolve();
