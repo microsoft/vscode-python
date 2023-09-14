@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import argparse
 import contextlib
 import importlib
 import io
 import json
 import os
 import sys
-from typing import List
 
 import pytest
 
@@ -230,15 +230,6 @@ def test_create_venv_missing_pip():
     create_venv.main([])
 
 
-class TestArgs:
-    stdin: bool
-    requirements: List[str]
-
-    def __init__(self, stdin: bool, requirements: List[str]):
-        self.stdin = stdin
-        self.requirements = requirements
-
-
 @contextlib.contextmanager
 def redirect_io(stream: str, new_stream):
     """Redirect stdio streams to a custom stream."""
@@ -251,9 +242,9 @@ def redirect_io(stream: str, new_stream):
 class CustomIO(io.TextIOWrapper):
     """Custom stream object to replace stdio."""
 
-    name = None
+    name: str = "customio"
 
-    def __init__(self, name, encoding="utf-8", newline=None):
+    def __init__(self, name: str, encoding="utf-8", newline=None):
         self._buffer = io.BytesIO()
         self._buffer.name = name
         super().__init__(self._buffer, encoding=encoding, newline=newline)
@@ -272,7 +263,8 @@ def test_requirements_from_stdin():
     importlib.reload(create_venv)
 
     cli_requirements = [f"cli-requirement{i}.txt" for i in range(3)]
-    args = TestArgs(stdin=True, requirements=cli_requirements)
+    args = argparse.Namespace()
+    args.__dict__.update({"stdin": True, "requirements": cli_requirements})
 
     stdin_requirements = [f"stdin-requirement{i}.txt" for i in range(20)]
     text = json.dumps({"requirements": stdin_requirements})
