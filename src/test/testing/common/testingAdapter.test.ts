@@ -485,7 +485,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
-            console.log(`unittest execution adapter seg fault error handling \n  ${data}`);
+            console.log(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
                 // 1. Check the status is "success"
                 assert.strictEqual(
@@ -541,7 +541,7 @@ suite('End to End Tests: test adapters', () => {
         let failureMsg = '';
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
-            console.log(`unittest execution adapter seg fault error handling \n  ${data}`);
+            console.log(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
             try {
                 // 1. Check the status is "success"
