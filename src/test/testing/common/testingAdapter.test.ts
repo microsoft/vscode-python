@@ -121,7 +121,11 @@ suite('End to End Tests: test adapters', () => {
             // verification after discovery is complete
 
             // 1. Check the status is "success"
-            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            );
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
@@ -161,7 +165,11 @@ suite('End to End Tests: test adapters', () => {
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
             // 1. Check the status is "success"
-            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            );
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
@@ -200,8 +208,11 @@ suite('End to End Tests: test adapters', () => {
             // verification after discovery is complete
 
             // 1. Check the status is "success"
-            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
-            // 2. Confirm no errors
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            ); // 2. Confirm no errors
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
@@ -239,8 +250,11 @@ suite('End to End Tests: test adapters', () => {
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
             // 1. Check the status is "success"
-            assert.strictEqual(actualData.status, 'success', "Expected status to be 'success'");
-            // 2. Confirm no errors
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            ); // 2. Confirm no errors
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
@@ -259,7 +273,11 @@ suite('End to End Tests: test adapters', () => {
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.strictEqual(
+                    payload.status,
+                    'success',
+                    `Expected status to be 'success', instead status is ${payload.status}`,
+                );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
@@ -309,7 +327,7 @@ suite('End to End Tests: test adapters', () => {
                 const validStatuses = ['subtest-success', 'subtest-failure'];
                 assert.ok(
                     validStatuses.includes(payload.status),
-                    `Expected status to be one of ${validStatuses.join(', ')}`,
+                    `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${payload.status}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
@@ -358,7 +376,11 @@ suite('End to End Tests: test adapters', () => {
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.strictEqual(
+                    payload.status,
+                    'success',
+                    `Expected status to be 'success', instead status is ${payload.status}`,
+                );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
@@ -410,7 +432,11 @@ suite('End to End Tests: test adapters', () => {
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
-                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
+                assert.strictEqual(
+                    payload.status,
+                    'success',
+                    `Expected status to be 'success', instead status is ${payload.status}`,
+                );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
@@ -456,25 +482,17 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            // the payloads that get to the _resolveExecution are all data and should be successful.
-            try {
-                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
-                assert.ok(payload.result, 'Expected results to be present');
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
+            console.log(`unittest execution adapter seg fault error handling \n  ${data}`);
             try {
                 // 1. Check the status is "success"
-                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+                assert.strictEqual(
+                    data.status,
+                    'error',
+                    `Expected status to be 'error', instead status is ${data.status}`,
+                );
                 // 2. Confirm no errors
                 assert.ok(data.error, "Expected errors in 'error' field");
                 // 3. Confirm tests are found
@@ -523,10 +541,15 @@ suite('End to End Tests: test adapters', () => {
         let failureMsg = '';
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
+            console.log(`unittest execution adapter seg fault error handling \n  ${data}`);
             callCount = callCount + 1;
             try {
                 // 1. Check the status is "success"
-                assert.strictEqual(data.status, 'error', "Expected status to be 'error'");
+                assert.strictEqual(
+                    data.status,
+                    'error',
+                    `Expected status to be 'error', instead status is ${data.status}`,
+                );
                 // 2. Confirm no errors
                 assert.ok(data.error, "Expected errors in 'error' field");
                 // 3. Confirm tests are found
