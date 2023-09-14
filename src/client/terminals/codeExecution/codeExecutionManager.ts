@@ -147,7 +147,10 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
-        const wholeFileContent = activeEditor!.document.getText();
+        let wholeFileContent = '';
+        if (activeEditor && activeEditor.document) {
+            wholeFileContent = activeEditor.document.getText();
+        }
         const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!, wholeFileContent);
         if (!normalizedCode || normalizedCode.trim().length === 0) {
             return;
