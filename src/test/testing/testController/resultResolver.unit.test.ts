@@ -286,7 +286,6 @@ suite('Result Resolver tests', () => {
                 .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((id: string) => {
                     generatedId = id;
-                    console.log('createTestItem function called with id:', id);
                 })
                 .returns(() => ({ id: 'id_this', label: 'label_this', uri: workspaceUri } as TestItem));
 
@@ -295,7 +294,7 @@ suite('Result Resolver tests', () => {
                 cwd: workspaceUri.fsPath,
                 status: 'success',
                 result: {
-                    'parentTest [subTest with spaces and [brackets]]': {
+                    'parentTest (i=subTest with spaces and (braces))': {
                         test: 'parentTest',
                         outcome: 'subtest-success', // failure, passed-unexpected, skipped, success, expected-failure, subtest-failure, subtest-succcess
                         message: 'message',
@@ -311,7 +310,7 @@ suite('Result Resolver tests', () => {
 
             // verify that the passed function was called for the single test item
             assert.ok(generatedId);
-            assert.strictEqual(generatedId, '[subTest with spaces and [brackets]]');
+            assert.strictEqual(generatedId, '(i=subTest with spaces and (braces))');
         });
         test('resolveExecution handles failed tests correctly', async () => {
             // test specific constants used expected values
