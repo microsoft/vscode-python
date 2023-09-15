@@ -594,46 +594,46 @@ parametrize_tests_expected_output = {
                     ],
                 },
                 {
-                    "name": "test_under_ten",
+                    "name": "test_string",
                     "path": os.fspath(parameterize_tests_path),
                     "type_": "function",
                     "children": [
                         {
-                            "name": "[1]",
+                            "name": "[hello]",
                             "path": os.fspath(parameterize_tests_path),
                             "lineno": find_test_line_number(
-                                "test_under_ten[1]",
+                                "test_string[hello]",
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
                             "id_": get_absolute_test_id(
-                                "parametrize_tests.py::test_under_ten[1]",
+                                "parametrize_tests.py::test_string[hello]",
                                 parameterize_tests_path,
                             ),
                             "runID": get_absolute_test_id(
-                                "parametrize_tests.py::test_under_ten[1]",
+                                "parametrize_tests.py::test_string[hello]",
                                 parameterize_tests_path,
                             ),
                         },
                         {
-                            "name": "[2]",
+                            "name": "[complicated split [] ()]",
                             "path": os.fspath(parameterize_tests_path),
                             "lineno": find_test_line_number(
-                                "test_under_ten[2]",
+                                "test_string[1]",
                                 parameterize_tests_path,
                             ),
                             "type_": "test",
                             "id_": get_absolute_test_id(
-                                "parametrize_tests.py::test_under_ten[2]",
+                                "parametrize_tests.py::test_string[complicated split [] ()]",
                                 parameterize_tests_path,
                             ),
                             "runID": get_absolute_test_id(
-                                "parametrize_tests.py::test_under_ten[2]",
+                                "parametrize_tests.py::test_string[complicated split [] ()]",
                                 parameterize_tests_path,
                             ),
                         },
                     ],
-                    "id_": "parametrize_tests.py::test_under_ten",
+                    "id_": "parametrize_tests.py::test_string",
                 },
             ],
         },
