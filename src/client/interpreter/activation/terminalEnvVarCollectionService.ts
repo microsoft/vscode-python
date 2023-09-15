@@ -36,6 +36,7 @@ import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
+import { normCase } from '../../common/platform/fs-paths';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -383,7 +384,7 @@ function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
 function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
     const result: EnvironmentVariables = {};
     Object.keys(env).forEach((key) => {
-        result[key.toUpperCase()] = env[key];
+        result[normCase(key)] = env[key];
     });
     return result;
 }
