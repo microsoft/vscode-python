@@ -557,7 +557,9 @@ suite('End to End Tests: test adapters', () => {
                 }
                 assert.ok(data.result, 'Expected results to be present');
                 // make sure the testID is found in the results
-                const indexOfTest = JSON.stringify(data).search('test_seg_fault::TestSegmentationFault::test_segfault');
+                const indexOfTest = JSON.stringify(data).search(
+                    'test_seg_fault.py::TestSegmentationFault::test_segfault',
+                );
                 assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
