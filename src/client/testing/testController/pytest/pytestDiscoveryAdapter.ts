@@ -11,7 +11,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -32,15 +32,13 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     ) {}
 
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        const settings = this.configSettings.getSettings(uri);
         const uuid = this.testServer.createUUID(uri.fsPath);
-        const { pytestArgs } = settings.testing;
-        traceVerbose(pytestArgs);
         const deferredTillEOT: Deferred<void> = createDeferred<void>();
         const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived(async (e: DataReceivedEvent) => {
             this.resultResolver?.resolveDiscovery(JSON.parse(e.data), deferredTillEOT);
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
+            traceInfo(`Disposing data receiver for ${uri.fsPath} and deleting UUID; pytest discovery.`);
             testServer.deleteUUID(uuid);
             dataReceivedDisposable.dispose();
         };
@@ -86,6 +84,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         // delete UUID following entire discovery finishing.
         const deferredExec = createDeferred<ExecutionResult<string>>();
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')}`);
         const result = execService?.execObservable(execArgs, spawnOptions);
 
         // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
@@ -96,7 +95,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         result?.proc?.stderr?.on('data', (data) => {
             spawnOptions.outputChannel?.append(data.toString());
         });
-        result?.proc?.on('exit', () => {
+        result?.proc?.on('exit', (code, signal) => {
+            if (code !== 0) {
+                traceError(
+                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
+                );
+            }
             deferredExec.resolve({ stdout: '', stderr: '' });
             deferred.resolve();
         });

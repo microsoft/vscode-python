@@ -15,7 +15,7 @@ import {
     TestCommandOptions,
     TestExecutionCommand,
 } from '../common/types';
-import { traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 import { startTestIdServer } from '../common/utils';
 
 /**
@@ -41,13 +41,17 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const disposedDataReceived = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 this.resultResolver?.resolveExecution(JSON.parse(e.data), runInstance, deferredTillEOT);
+            } else {
+                traceError('No run instance found, cannot resolve execution.');
             }
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
+            traceInfo(`Disposing data receiver for ${uri.fsPath} and deleting UUID; unittest execution.`);
             testServer.deleteUUID(uuid);
             disposedDataReceived.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
+            traceInfo("Test run cancelled, resolving 'till EOT' deferred.");
             deferredTillEOT.resolve();
         });
         try {
@@ -55,7 +59,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             await deferredTillEOT.promise;
             disposeDataReceiver(this.testServer);
         } catch (error) {
-            traceLog(error);
+            traceError(`Error in running unittest tests: ${error}`);
         }
         const executionPayload: ExecutionTestPayload = { cwd: uri.fsPath, status: 'success', error: '' };
         return executionPayload;

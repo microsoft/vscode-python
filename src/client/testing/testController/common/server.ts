@@ -47,7 +47,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                         }
                         buffer = remainingBuffer;
                     } catch (ex) {
-                        traceError(`Error processing test server request: ${ex} observe`);
+                        traceError(`Error reading data from buffer: ${ex} observed.`);
                         buffer = Buffer.alloc(0);
                         this._onDataReceived.fire({ uuid: '', data: '' });
                     }
@@ -81,6 +81,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             // what payload is so small it doesn't include the whole UUID think got this
             if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
                 // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
+                traceInfo(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
@@ -89,7 +90,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 buffer = Buffer.alloc(0);
             }
         } catch (ex) {
-            traceError(`Error:: ${ex}`);
+            traceError(`Error attempting to resolve data: ${ex}`);
             this._onDataReceived.fire({ uuid: '', data: '' });
         }
         return buffer;
@@ -108,7 +109,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 data: extractedJSON,
             });
         } else {
-            traceLog(`Error processing test server request: request is not recognized as discovery or run.`);
+            traceError(`Error processing test server request: request is not recognized as discovery or run.`);
             this._onDataReceived.fire({ uuid: '', data: '' });
         }
     }
@@ -214,10 +215,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                     traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
                 }
                 const deferred = createDeferred<ExecutionResult<string>>();
-
                 const result = execService.execObservable(args, spawnOptions);
-
                 runInstance?.token.onCancellationRequested(() => {
+                    traceInfo('Test run cancelled, killing unittest subprocess.');
                     result?.proc?.kill();
                 });
 
@@ -232,6 +232,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
                     if (code !== 0 && testIds) {
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
+                        );
                         // if the child process exited with a non-zero exit code, then we need to send the error payload.
                         this._onRunDataReceived.fire({
                             uuid,
@@ -248,6 +251,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 await deferred.promise;
             }
         } catch (ex) {
+            traceError(`Error while server attempting to run unittest command: ${ex}`);
             this.uuids = this.uuids.filter((u) => u !== uuid);
             this._onDataReceived.fire({
                 uuid,

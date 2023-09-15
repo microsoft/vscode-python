@@ -109,7 +109,7 @@ export class PythonResultResolver implements ITestResultResolver {
     ): Promise<void> {
         if (payload !== undefined && 'eot' in payload) {
             // the payload is an EOT payload, so resolve the deferred promise.
-            traceLog('ResultResolver EOT received for discovery.');
+            traceLog('ResultResolver EOT received for execution.');
             const eotPayload = payload as EOTTestPayload;
             if (eotPayload.eot === true) {
                 deferredTillEOT.resolve();
