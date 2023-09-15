@@ -487,17 +487,18 @@ suite('End to End Tests: test adapters', () => {
             callCount = callCount + 1;
             console.log(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
-                // 1. Check the status is "success"
-                assert.strictEqual(
-                    data.status,
-                    'error',
-                    `Expected status to be 'error', instead status is ${data.status}`,
-                );
-                // 2. Confirm no errors
-                assert.ok(data.error, "Expected errors in 'error' field");
-                // 3. Confirm tests are found
+                if (data.status === 'error') {
+                    assert.ok(data.error, "Expected errors in 'error' field");
+                } else {
+                    const indexOfTest = JSON.stringify(data.result).search('error');
+                    assert.notDeepEqual(
+                        indexOfTest,
+                        -1,
+                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
+                    );
+                }
                 assert.ok(data.result, 'Expected results to be present');
-                // 4. make sure the testID is found in the results
+                // make sure the testID is found in the results
                 const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
                 assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
             } catch (err) {
@@ -541,25 +542,23 @@ suite('End to End Tests: test adapters', () => {
         let failureMsg = '';
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
-            console.log(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
             try {
-                // 1. Check the status is "success"
-                assert.strictEqual(
-                    data.status,
-                    'error',
-                    `Expected status to be 'error', instead status is ${data.status}`,
-                );
-                // 2. Confirm no errors
-                assert.ok(data.error, "Expected errors in 'error' field");
-                // 3. Confirm tests are found
+                if (data.status === 'error') {
+                    assert.ok(data.error, "Expected errors in 'error' field");
+                } else {
+                    const indexOfTest = JSON.stringify(data.result).search('error');
+                    assert.notDeepEqual(
+                        indexOfTest,
+                        -1,
+                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
+                    );
+                }
                 assert.ok(data.result, 'Expected results to be present');
-                // 4. make sure the testID is found in the results
-                assert.notDeepEqual(
-                    JSON.stringify(data).search('test_seg_fault.py::TestSegmentationFault::test_segfault'),
-                    -1,
-                    'Expected testId to be present',
-                );
+                // make sure the testID is found in the results
+                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
+                assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
