@@ -488,7 +488,13 @@ suite('End to End Tests: test adapters', () => {
             console.log(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
                 if (data.status === 'error') {
-                    assert.ok(data.error, "Expected errors in 'error' field");
+                    if (data.error === undefined) {
+                        // Dereference a NULL pointer
+                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
+                        assert.notDeepEqual(indexOfTest, -1, 'Expected test to have a null pointer');
+                    } else {
+                        assert.ok(data.error, "Expected errors in 'error' field");
+                    }
                 } else {
                     const indexOfTest = JSON.stringify(data.result).search('error');
                     assert.notDeepEqual(
