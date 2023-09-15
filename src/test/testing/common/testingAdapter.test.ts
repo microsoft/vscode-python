@@ -5,7 +5,6 @@ import { TestController, TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
-import * as os from 'os';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
