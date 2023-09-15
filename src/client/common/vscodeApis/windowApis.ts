@@ -16,8 +16,14 @@ import {
     TextEditor,
     window,
     Disposable,
+    QuickPickItemButtonEvent,
+    Uri,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
+
+export function showTextDocument(uri: Uri): Thenable<TextEditor> {
+    return window.showTextDocument(uri);
+}
 
 export function showQuickPick<T extends QuickPickItem>(
     items: readonly T[] | Thenable<readonly T[]>,
@@ -91,6 +97,7 @@ export async function showQuickPickWithBack<T extends QuickPickItem>(
     items: readonly T[],
     options?: QuickPickOptions,
     token?: CancellationToken,
+    itemButtonHandler?: (e: QuickPickItemButtonEvent<T>) => void,
 ): Promise<T | T[] | undefined> {
     const quickPick: QuickPick<T> = window.createQuickPick<T>();
     const disposables: Disposable[] = [quickPick];
@@ -128,6 +135,11 @@ export async function showQuickPickWithBack<T extends QuickPickItem>(
         quickPick.onDidHide(() => {
             if (!deferred.completed) {
                 deferred.resolve(undefined);
+            }
+        }),
+        quickPick.onDidTriggerItemButton((e) => {
+            if (itemButtonHandler) {
+                itemButtonHandler(e);
             }
         }),
     );

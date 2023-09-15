@@ -3,6 +3,7 @@
 
 import argparse
 import importlib.util as import_util
+import json
 import os
 import pathlib
 import subprocess
@@ -55,6 +56,12 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         help="Name of the virtual environment.",
         metavar="NAME",
         action="store",
+    )
+    parser.add_argument(
+        "--stdin",
+        action="store_true",
+        default=False,
+        help="Read arguments from stdin.",
     )
     return parser.parse_args(argv)
 
@@ -152,6 +159,16 @@ def install_pip(name: str):
     )
 
 
+def get_requirements_from_args(args: argparse.Namespace) -> List[str]:
+    requirements = []
+    if args.stdin:
+        data = json.loads(sys.stdin.read())
+        requirements = data.get("requirements", [])
+    if args.requirements:
+        requirements.extend(args.requirements)
+    return requirements
+
+
 def main(argv: Optional[Sequence[str]] = None) -> None:
     if argv is None:
         argv = []
@@ -223,9 +240,10 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         print(f"VENV_INSTALLING_PYPROJECT: {args.toml}")
         install_toml(venv_path, args.extras)
 
-    if args.requirements:
-        print(f"VENV_INSTALLING_REQUIREMENTS: {args.requirements}")
-        install_requirements(venv_path, args.requirements)
+    requirements = get_requirements_from_args(args)
+    if requirements:
+        print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
+        install_requirements(venv_path, requirements)
 
 
 if __name__ == "__main__":
