@@ -5,6 +5,7 @@ import { TestController, TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
+import * as os from 'os';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
@@ -557,7 +558,7 @@ suite('End to End Tests: test adapters', () => {
                 }
                 assert.ok(data.result, 'Expected results to be present');
                 // make sure the testID is found in the results
-                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
+                const indexOfTest = JSON.stringify(data).search('test_seg_fault::TestSegmentationFault::test_segfault');
                 assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
