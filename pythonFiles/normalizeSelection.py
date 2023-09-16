@@ -166,7 +166,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
         if hasattr(node, "body"):
-            # Not adding below check will have linting and python type complain
+            # Check if node has attribute body, then we have to go add child blocks.
             if (
                 isinstance(node, ast.Module)
                 or isinstance(node, ast.Interactive)
@@ -205,7 +205,6 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     for top_node in ast.iter_child_nodes(parsed_file_content):
         top_level_block_start_line = top_node.lineno
         top_level_block_end_line = top_node.end_lineno
-        # top_level_block_end_line = top_node.end_lineno if hasattr(top_node, "end_lineno") else 0
         abs_difference = abs(start_line - top_level_block_start_line) + abs(
             end_line - top_level_block_end_line
         )
@@ -219,7 +218,6 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
                 top_level_block_start_line >= start_line
                 and top_level_block_end_line <= end_line
             ):
-                # global should_run_top_blocks
                 should_run_top_blocks.append(top_node)
 
                 smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
@@ -246,7 +244,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
                 smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
-    global_next_lineno = get_next_block_lineno()
+    # global_next_lineno = get_next_block_lineno()
 
     return normalized_smart_result
 
