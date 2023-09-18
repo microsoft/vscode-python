@@ -80,7 +80,6 @@ jobs:
           version: 1.1.308
           working-directory: 'pythonFiles'
 
-
   python-tests:
     name: Python Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
@@ -119,7 +118,6 @@ jobs:
 
       - name: Run Python unit tests
         run: python pythonFiles/tests/run_all.py
-
 
   tests:
     name: Tests

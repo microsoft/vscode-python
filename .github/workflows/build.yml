@@ -114,24 +114,24 @@ jobs:
       run:
         working-directory: ${{ env.special-working-directory }}
     strategy:
-        fail-fast: false
-        matrix:
-          # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-          # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
-          os: [ubuntu-latest, windows-latest]
-          # Run the tests on the oldest and most recent versions of Python.
-          python: ['3.8', '3.x']
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
+        os: [ubuntu-latest, windows-latest]
+        # Run the tests on the oldest and most recent versions of Python.
+        python: ['3.8', '3.x']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-            path: ${{ env.special-working-directory-relative }}
+          path: ${{ env.special-working-directory-relative }}
 
       - name: Use Python ${{ matrix.python }}
         uses: actions/setup-python@v4
         with:
-            python-version: ${{ matrix.python }}
+          python-version: ${{ matrix.python }}
 
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
