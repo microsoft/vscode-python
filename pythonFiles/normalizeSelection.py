@@ -8,13 +8,7 @@ import sys
 import textwrap
 from typing import Iterable
 
-# script_dir = pathlib.Path('User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python')
-# sys.path.append(os.fspath(script_dir))
-# import debugpy
 
-
-# debugpy.connect(5678)
-# debugpy.breakpoint()
 def split_lines(source):
     """
     Split selection lines in a version-agnostic way.
@@ -125,10 +119,8 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
-        # source = "\n".join(statements)
         if selection[-2] == "}":
             source = source[:-1]
-        # source = "\n".join(statements)
     except Exception:
         # If there's a problem when parsing statements,
         # append a blank line to end the block and send it as-is.
@@ -155,9 +147,9 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
     return exact_nodes
 
 
-# Function that traverses the file and calculate the minimum viable top level block
+# Function that traverses the file and calculate the minimum viable top level block.
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
-    # use ast module to parse content of the file
+    # Use ast module to parse content of the file.
     parsed_file_content = ast.parse(wholeFileContent)
     smart_code = ""
 
@@ -195,7 +187,6 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             should_run_top_blocks.append(same_line_node)
             smart_code += str(ast.get_source_segment(wholeFileContent, same_line_node))
             smart_code += "\n"
-            # global_next_lineno = get_next_block_lineno()
         return smart_code
 
     # With the given start_line and end_line number from VSCode,
@@ -207,53 +198,36 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             end_line - top_level_block_end_line
         )
         top_level_to_min_difference[top_node] = abs_difference
-
-        # We need to handle the case of 1. just hanging cursor vs. actual highlighting/selection.
+        # Handle case for same line run.
         if (
-            was_highlighted
-        ):  # There was actual highlighting of some text # Smart Selection disbled for part of the broken send.
-            if (
-                top_level_block_start_line >= start_line
-                and top_level_block_end_line <= end_line
-            ):
-                should_run_top_blocks.append(top_node)
-
-                smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
-                smart_code += "\n"
-        elif (
             start_line == top_level_block_start_line
             and end_line == top_level_block_end_line
         ):
-            # global should_run_top_blocks
             should_run_top_blocks.append(top_node)
 
             smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
             smart_code += "\n"
             break  # Break out of the loop since we found the exact match.
-        else:  # not highlighted case. Meaning just a cursor hanging
+        else:  # Case to apply smart selection for multiple line.
             if (
                 start_line >= top_level_block_start_line
                 and end_line <= top_level_block_end_line
             ):
-                # global should_run_top_blocks
                 should_run_top_blocks.append(top_node)
 
                 smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
                 smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
-    # global_next_lineno = get_next_block_lineno()
 
     return normalized_smart_result
 
 
 # Look at the last top block added, find lineno for the next upcoming block,
-# This will allow us to move cursor in vscode.
+# This will allow us to move cursor in VS Code.
 def get_next_block_lineno():
     last_ran_lineno = int(should_run_top_blocks[-1].end_lineno)
     temp_next_lineno = int(should_run_top_blocks[-1].end_lineno)
-
-    # next_lineno = should_run_top_blocks[-1].end_lineno
 
     for reverse_node in top_level_nodes:
         if reverse_node.lineno > last_ran_lineno:
@@ -268,29 +242,21 @@ if __name__ == "__main__":
     stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
     raw = stdin.read()
     contents = json.loads(raw.decode("utf-8"))
-    # normalized = normalize_lines(contents["code"])
-    # normalized_whole_file = normalize_lines(contents["wholeFileContent"])
     # Need to get information on whether there was a selection via Highlight.
-    # empty_Highlight = True
     empty_Highlight = False
     if contents["emptyHighlight"] is True:
         empty_Highlight = True
-    # we also get the activeEditor selection start line and end line from the typescript vscode side
-    # remember to add 1 to each of the received since vscode starts line counting from 0
+    # We also get the activeEditor selection start line and end line from the typescript VS Code side.
+    # Remember to add 1 to each of the received since vscode starts line counting from 0 .
     vscode_start_line = contents["startLine"] + 1
     vscode_end_line = contents["endLine"] + 1
-
-    # temp = traverse_file(contents["wholeFileContent"], vscode_start_line, vscode_end_line, not empty_Highlight) # traverse file
 
     # Send the normalized code back to the extension in a JSON object.
     data = None
     which_line_next = 0
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
     # Experiment also has to be enable to use smart selection.
-    if (
-        contents["emptyHighlight"] is True
-        and contents["smartSendExperimentEnabled"] is True
-    ):
+    if empty_Highlight is True and contents["smartSendExperimentEnabled"] is True:
         normalized = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
@@ -299,15 +265,11 @@ if __name__ == "__main__":
         )
         which_line_next = (
             get_next_block_lineno()
-        )  # Only figure out next block line number for smart shift+
-        # normalized = normalize_lines(contents["code"])
+        )  # Only figure out next block line number for smart shift+enter.
     else:
         normalized = normalize_lines(contents["code"])
-    # next_block_lineno
-    # which_line_next = get_next_block_lineno()
+
     data = json.dumps({"normalized": normalized, "nextBlockLineno": which_line_next})
-    # data = json.dumps({"normalized": normalized}) # This is how it used to be
-    # data = json.dumps({"normalized": temp}) # 8/16/23 save
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
     stdout.close()
