@@ -92,48 +92,53 @@ def test_two_layer_dictionary():
     assert result == expected
 
 
-def test_fstring():
+def test_run_whole_func():
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
-        name = "Ahri"
-        age = 10
-        print(f'My name is {name}')
+        def my_dogs():
+            print("Corgi")
+            print("Husky")
+            print("Corgi2")
+            print("Husky2")
+            print("no dogs")
         """
     )
-
+    # Expected to printing statement line by line
     expected = textwrap.dedent(
         """\
-        name = "Ahri"
-        age = 10
-        print(f'My name is {name}')
+        def my_dogs():
+            print("Corgi")
+            print("Husky")
+            print("Corgi2")
+            print("Husky2")
+            print("no dogs")
+
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 4, True)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
 
     assert result == expected
 
-
-def test_list_comp():
+def test_small_forloop():
     importlib.reload(normalizeSelection)
-    hi = textwrap.dedent(
+    src = textwrap.dedent(
         """\
-        names = ['Ahri', 'Bobby', 'Charlie']
-        breed = ['Pomeranian', 'Welsh Corgi', 'Siberian Husky']
-        dogs = [(name, breed) for name, breed in zip(names, breed)]
-        print(dogs)
+        for i in range(1, 6):
+            print(i)
+            print("Please also send this print statement")
         """
     )
-
     expected = textwrap.dedent(
         """\
-        names = ['Ahri', 'Bobby', 'Charlie']
-        breed = ['Pomeranian', 'Welsh Corgi', 'Siberian Husky']
-        dogs = [(name, breed) for name, breed in zip(names, breed)]
-        print(dogs)
+        for i in range(1, 6):
+            print(i)
+            print("Please also send this print statement")
+
         """
     )
 
-    result = normalizeSelection.traverse_file(hi, 1, 4, True)
+    # Cover the whole for loop block with multiple inner statements
+    result = normalizeSelection.traverse_file(src,1,1,False)
 
     assert result == expected
