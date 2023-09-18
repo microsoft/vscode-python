@@ -305,20 +305,12 @@ export function createDiscoveryErrorPayload(
     signal: NodeJS.Signals | null,
     cwd: string,
 ): DiscoveredTestPayload {
-    const discoveryErrorNode: DiscoveredTestNode = {
-        path: cwd,
-        name: 'Error on Discovery',
-        children: [],
-        id_: '0',
-        type_: 'folder',
-    };
     return {
         cwd,
         status: 'error',
         error: [
             ` \n The python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
         ],
-        tests: discoveryErrorNode,
     };
 }
 

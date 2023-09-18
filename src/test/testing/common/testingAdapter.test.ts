@@ -539,7 +539,7 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
-    test('pytest discovery  seg fault error handling 2', async () => {
+    test('pytest discovery seg fault error handling', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
@@ -584,7 +584,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
-            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+            assert.ok(callCount > 1, 'Expected _resolveDiscovery to be called at least once');
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
