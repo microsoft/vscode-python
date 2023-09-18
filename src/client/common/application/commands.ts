@@ -23,8 +23,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.ClearWorkspaceInterpreter]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
-    [Commands.Run_Linter]: [];
-    [Commands.Enable_Linter]: [];
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
@@ -35,7 +33,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
-    [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];
     [Commands.Enable_SourceMap_Support]: [];
     [Commands.Exec_Selection_In_Terminal]: [];

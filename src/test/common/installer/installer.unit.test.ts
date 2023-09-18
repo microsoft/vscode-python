@@ -6,24 +6,11 @@
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
-import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { CommandManager } from '../../../client/common/application/commandManager';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { Commands } from '../../../client/common/constants';
-import { ExperimentService } from '../../../client/common/experiments/service';
+import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
-import {
-    FormatterInstaller,
-    LinterInstaller,
-    ProductInstaller,
-} from '../../../client/common/installer/productInstaller';
-import { ProductNames } from '../../../client/common/installer/productNames';
-import { LinterProductPathService } from '../../../client/common/installer/productPath';
+import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductService } from '../../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
@@ -39,9 +26,7 @@ import {
     IPythonExecutionService,
 } from '../../../client/common/process/types';
 import {
-    IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     InstallerResponse,
     IPersistentState,
     IPersistentStateFactory,
@@ -49,20 +34,17 @@ import {
     ProductType,
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
-import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { LinterManager } from '../../../client/linters/linterManager';
-import { ILinterManager } from '../../../client/linters/types';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { sleep } from '../../common';
+import { getProductsForInstallerTests } from '../productsToTest';
 
 use(chaiAsPromised);
 
 suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach((resource) => {
-        getNamesAndValues<Product>(Product)
+        getProductsForInstallerTests()
             .concat([{ name: 'Unknown product', value: 404 }])
 
             .forEach((product) => {
@@ -181,9 +163,6 @@ suite('Module Installer only', () => {
                             app.verifyAll();
                             assert.ok(getProductType.calledOnce);
                         });
-                        return;
-                    }
-                    case Product.isort: {
                         return;
                     }
                     case Product.unittest: {
@@ -638,273 +617,5 @@ suite('Module Installer only', () => {
                     workspaceService.verifyAll();
                 });
             });
-
-        suite('Test FormatterInstaller.promptToInstallImplementation', () => {
-            class FormatterInstallerTest extends FormatterInstaller {
-                public async promptToInstallImplementation(product: Product, uri?: Uri): Promise<InstallerResponse> {
-                    return super.promptToInstallImplementation(product, uri);
-                }
-
-                // eslint-disable-next-line class-methods-use-this
-                protected getStoredResponse(_key: string) {
-                    return false;
-                }
-
-                // eslint-disable-next-line class-methods-use-this
-                protected isExecutableAModule(_product: Product, _resource?: Uri) {
-                    return true;
-                }
-            }
-            let installer: FormatterInstallerTest;
-            let appShell: IApplicationShell;
-            let configService: IConfigurationService;
-            let workspaceService: IWorkspaceService;
-            let productService: IProductService;
-            let cmdManager: ICommandManager;
-            setup(() => {
-                const serviceContainer = mock(ServiceContainer);
-                appShell = mock(ApplicationShell);
-                configService = mock(ConfigurationService);
-                workspaceService = mock(WorkspaceService);
-                productService = mock(ProductService);
-                cmdManager = mock(CommandManager);
-
-                when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
-                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
-                    instance(configService),
-                );
-                when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-                when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
-                when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(cmdManager));
-
-                installer = new FormatterInstallerTest(instance(serviceContainer));
-            });
-
-            teardown(() => {
-                sinon.restore();
-            });
-
-            test('If nothing is selected, return Ignore as response', async () => {
-                const product = Product.autopep8;
-                when(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).thenReturn((undefined as unknown) as Thenable<string | undefined>);
-
-                const response = await installer.promptToInstallImplementation(product, resource);
-
-                verify(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).once();
-                expect(response).to.equal(InstallerResponse.Ignore);
-            });
-
-            test('If `Yes` is selected, install product', async () => {
-                const product = Product.autopep8;
-                const install = sinon.stub(FormatterInstaller.prototype, 'install');
-                install.resolves(InstallerResponse.Installed);
-
-                when(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).thenReturn(('Yes' as unknown) as Thenable<string | undefined>);
-                const response = await installer.promptToInstallImplementation(product, resource);
-
-                verify(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).once();
-                expect(response).to.equal(InstallerResponse.Installed);
-                assert.ok(install.calledOnceWith(product, resource, undefined));
-            });
-
-            test('If `Use black` is selected, install black formatter', async () => {
-                const product = Product.autopep8;
-                const install = sinon.stub(FormatterInstaller.prototype, 'install');
-                install.resolves(InstallerResponse.Installed);
-
-                when(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).thenReturn(('Use black' as unknown) as Thenable<string | undefined>);
-                when(configService.updateSetting('formatting.provider', 'black', resource)).thenResolve();
-
-                const response = await installer.promptToInstallImplementation(product, resource);
-
-                verify(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).once();
-                expect(response).to.equal(InstallerResponse.Installed);
-                verify(configService.updateSetting('formatting.provider', 'black', resource)).once();
-                assert.ok(install.calledOnceWith(Product.black, resource, undefined));
-            });
-
-            test('If `Use yapf` is selected, install black formatter', async () => {
-                const product = Product.autopep8;
-                const install = sinon.stub(FormatterInstaller.prototype, 'install');
-                install.resolves(InstallerResponse.Installed);
-
-                when(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).thenReturn(('Use yapf' as unknown) as Thenable<string | undefined>);
-                when(configService.updateSetting('formatting.provider', 'yapf', resource)).thenResolve();
-
-                const response = await installer.promptToInstallImplementation(product, resource);
-
-                verify(
-                    appShell.showErrorMessage(
-                        `Formatter autopep8 is not installed. Install?`,
-                        'Yes',
-                        'Use black',
-                        'Use yapf',
-                    ),
-                ).once();
-                expect(response).to.equal(InstallerResponse.Installed);
-                verify(configService.updateSetting('formatting.provider', 'yapf', resource)).once();
-                assert.ok(install.calledOnceWith(Product.yapf, resource, undefined));
-            });
-        });
-    });
-});
-
-[undefined, Uri.file('resource')].forEach((resource) => {
-    suite(`Test LinterInstaller with resource: ${resource}`, () => {
-        class LinterInstallerTest extends LinterInstaller {
-            public isModuleExecutable = true;
-
-            public async promptToInstallImplementation(product: Product, uri?: Uri): Promise<InstallerResponse> {
-                return super.promptToInstallImplementation(product, uri);
-            }
-
-            // eslint-disable-next-line class-methods-use-this
-            protected getStoredResponse(_key: string) {
-                return false;
-            }
-
-            protected isExecutableAModule(_product: Product, _resource?: Uri) {
-                return this.isModuleExecutable;
-            }
-        }
-
-        let installer: LinterInstallerTest;
-        let appShell: IApplicationShell;
-        let configService: IConfigurationService;
-        let workspaceService: IWorkspaceService;
-        let productService: IProductService;
-        let cmdManager: ICommandManager;
-        let experimentsService: IExperimentService;
-        let linterManager: ILinterManager;
-        let serviceContainer: IServiceContainer;
-        let productPathService: IProductPathService;
-        setup(() => {
-            serviceContainer = mock(ServiceContainer);
-            appShell = mock(ApplicationShell);
-            configService = mock(ConfigurationService);
-            workspaceService = mock(WorkspaceService);
-            productService = mock(ProductService);
-            cmdManager = mock(CommandManager);
-            experimentsService = mock(ExperimentService);
-            linterManager = mock(LinterManager);
-            productPathService = mock(LinterProductPathService);
-
-            when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
-            when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
-                instance(configService),
-            );
-            when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-            when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
-            when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(cmdManager));
-
-            const exp = instance(experimentsService);
-            when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(exp);
-            when(experimentsService.inExperiment(anything())).thenResolve(false);
-
-            when(serviceContainer.get<ILinterManager>(ILinterManager)).thenReturn(instance(linterManager));
-            when(serviceContainer.get<IProductPathService>(IProductPathService, ProductType.Linter)).thenReturn(
-                instance(productPathService),
-            );
-
-            installer = new LinterInstallerTest(instance(serviceContainer));
-        });
-
-        teardown(() => {
-            sinon.restore();
-        });
-
-        test('Ensure 3 options for pylint', async () => {
-            const product = Product.pylint;
-            const options = ['Select Linter', "Don't show again"];
-            const productName = ProductNames.get(product)!;
-
-            await installer.promptToInstallImplementation(product, resource);
-
-            verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).once();
-        });
-        test('Ensure select linter command is invoked', async () => {
-            const product = Product.pylint;
-            const options = ['Select Linter', "Don't show again"];
-            const productName = ProductNames.get(product)!;
-            when(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).thenResolve(('Select Linter' as unknown) as void);
-            when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
-
-            const response = await installer.promptToInstallImplementation(product, resource);
-
-            verify(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).once();
-            verify(cmdManager.executeCommand(Commands.Set_Linter)).once();
-            expect(response).to.be.equal(InstallerResponse.Ignore);
-        });
-        test('If install button is selected, install linter and return response', async () => {
-            const product = Product.pylint;
-            const options = ['Select Linter', "Don't show again"];
-            const productName = ProductNames.get(product)!;
-            when(
-                appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1]),
-            ).thenResolve(('Install' as unknown) as void);
-            when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
-            const install = sinon.stub(LinterInstaller.prototype, 'install');
-            install.resolves(InstallerResponse.Installed);
-
-            const response = await installer.promptToInstallImplementation(product, resource);
-
-            expect(response).to.be.equal(InstallerResponse.Installed);
-            assert.ok(install.calledOnceWith(product, resource, undefined));
-        });
     });
 });
