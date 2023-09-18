@@ -120,6 +120,7 @@ def test_run_whole_func():
 
     assert result == expected
 
+
 def test_small_forloop():
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
@@ -139,6 +140,6 @@ def test_small_forloop():
     )
 
     # Cover the whole for loop block with multiple inner statements
-    result = normalizeSelection.traverse_file(src,1,1,False)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
 
     assert result == expected
