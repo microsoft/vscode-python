@@ -609,7 +609,7 @@ class ExecutionPayloadDict(Dict):
 class EOTPayloadDict(TypedDict):
     """A dictionary that is used to send a end of transmission post request to the server."""
 
-    command_type: Literal["discovery"] | Literal["execution"]
+    command_type: Union[Literal["discovery"], Literal["execution"]]
     eot: bool
 
 
@@ -672,7 +672,7 @@ class PathEncoder(json.JSONEncoder):
 
 
 def send_post_request(
-    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict,
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict],
     cls_encoder=None,
 ):
     """
