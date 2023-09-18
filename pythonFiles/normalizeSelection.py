@@ -3,8 +3,6 @@
 
 import ast
 import json
-import os
-import pathlib
 import re
 import sys
 import textwrap
@@ -197,7 +195,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             should_run_top_blocks.append(same_line_node)
             smart_code += str(ast.get_source_segment(wholeFileContent, same_line_node))
             smart_code += "\n"
-            global_next_lineno = get_next_block_lineno()
+            # global_next_lineno = get_next_block_lineno()
         return smart_code
 
     # With the given start_line and end_line number from VSCode,
