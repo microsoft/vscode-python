@@ -51,6 +51,12 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'errorWorkspace',
     );
+    const rootPathDiscoveryErrorWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'discoveryErrorWorkspace',
+    );
     suiteSetup(async () => {
         serviceContainer = (await initialize()).serviceContainer;
     });
@@ -474,6 +480,111 @@ suite('End to End Tests: test adapters', () => {
         await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
             // verify that the _resolveExecution was called once per test
             assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+            assert.strictEqual(failureOccurred, false, failureMsg);
+        });
+    });
+    test('unittest discovery adapter seg fault error handling', async () => {
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg = '';
+        resultResolver._resolveDiscovery = async (data, _token?) => {
+            // do the following asserts for each time resolveExecution is called, should be called once per test.
+            callCount = callCount + 1;
+            console.log(`unittest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            try {
+                if (data.status === 'error') {
+                    if (data.error === undefined) {
+                        // Dereference a NULL pointer
+                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
+                        assert.notDeepEqual(indexOfTest, -1, 'Expected test to have a null pointer');
+                    } else {
+                        assert.ok(data.error, "Expected errors in 'error' field");
+                    }
+                } else {
+                    const indexOfTest = JSON.stringify(data.tests).search('error');
+                    assert.notDeepEqual(
+                        indexOfTest,
+                        -1,
+                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
+                    );
+                }
+            } catch (err) {
+                failureMsg = err ? (err as Error).toString() : '';
+                failureOccurred = true;
+            }
+            return Promise.resolve();
+        };
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
+
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+            assert.strictEqual(failureOccurred, false, failureMsg);
+        });
+    });
+    test('pytest discovery  seg fault error handling 2', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg = '';
+        resultResolver._resolveDiscovery = async (data, _token?) => {
+            // do the following asserts for each time resolveExecution is called, should be called once per test.
+            callCount = callCount + 1;
+            console.log(`pytest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            try {
+                if (data.status === 'error') {
+                    if (data.error === undefined) {
+                        // Dereference a NULL pointer
+                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
+                        assert.notDeepEqual(indexOfTest, -1, 'Expected test to have a null pointer');
+                    } else {
+                        assert.ok(data.error, "Expected errors in 'error' field");
+                    }
+                } else {
+                    const indexOfTest = JSON.stringify(data.tests).search('error');
+                    assert.notDeepEqual(
+                        indexOfTest,
+                        -1,
+                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
+                    );
+                }
+            } catch (err) {
+                failureMsg = err ? (err as Error).toString() : '';
+                failureOccurred = true;
+            }
+            return Promise.resolve();
+        };
+        // run pytest discovery
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+        );
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+            // verification after discovery is complete
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });

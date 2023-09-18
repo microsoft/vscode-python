@@ -187,6 +187,7 @@ export interface ITestServer {
     createUUID(cwd: string): string;
     deleteUUID(uuid: string): void;
     triggerRunDataReceivedEvent(data: DataReceivedEvent): void;
+    triggerDiscoveryDataReceivedEvent(data: DataReceivedEvent): void;
 }
 export interface ITestResultResolver {
     runIdToVSid: Map<string, string>;

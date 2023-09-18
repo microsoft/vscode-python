@@ -12,6 +12,7 @@ import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilit
 import {
     DiscoveredTestItem,
     DiscoveredTestNode,
+    DiscoveredTestPayload,
     EOTTestPayload,
     ExecutionTestPayload,
     ITestResultResolver,
@@ -297,6 +298,28 @@ export function createExecutionErrorPayload(
         };
     }
     return etp;
+}
+
+export function createDiscoveryErrorPayload(
+    code: number | null,
+    signal: NodeJS.Signals | null,
+    cwd: string,
+): DiscoveredTestPayload {
+    const discoveryErrorNode: DiscoveredTestNode = {
+        path: cwd,
+        name: 'Error on Discovery',
+        children: [],
+        id_: '0',
+        type_: 'folder',
+    };
+    return {
+        cwd,
+        status: 'error',
+        error: [
+            ` \n The python test process was terminated before it could exit on its own, the process errored with: Code: ${code}, Signal: ${signal}`,
+        ],
+        tests: discoveryErrorNode,
+    };
 }
 
 export function createEOTPayload(executionBool: boolean): EOTTestPayload {
