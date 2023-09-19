@@ -144,7 +144,11 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
     return exact_nodes
 
 
-# Function that traverses the file and calculate the minimum viable top level block.
+"""
+Traverse through a user's given file content and find, collect all appropriate lines
+that should be sent to the REPL in case of smart selection.
+Then call the normalize_lines function to normalize our smartly selected code block.
+"""
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     # Use ast module to parse content of the file.
     parsed_file_content = ast.parse(wholeFileContent)
@@ -186,8 +190,9 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             smart_code += "\n"
         return smart_code
 
-    # With the given start_line and end_line number from VSCode,
-    # Calculate the absolute difference between each of the top level block and given code (via line number)
+    # Iterate through all of the nodes from the parsed file content,
+    # and add the appropriate source code line(s) to be sent to the REPL, dependent on
+    # user is trying to send and execute single line/statement or multiple with smart selection.
     for top_node in ast.iter_child_nodes(parsed_file_content):
         top_level_block_start_line = top_node.lineno
         top_level_block_end_line = top_node.end_lineno
@@ -201,15 +206,24 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
             smart_code += "\n"
             break  # Break out of the loop since we found the exact match.
-        else:  # Case to apply smart selection for multiple line.
-            if (
-                start_line >= top_level_block_start_line
-                and end_line <= top_level_block_end_line
-            ):
-                should_run_top_blocks.append(top_node)
+        elif (
+            start_line >= top_level_block_start_line
+            and end_line <= top_level_block_end_line
+        ):
+            # Case to apply smart selection for multiple line.
+            # This is the case for when we have to add multiple lines that should be included in the smart send.
+            # For example:
+            #    'my_dictionary': {
+            #      'Audi': 'Germany',
+            #      'BMW': 'Germany',
+            #      'Genesis': 'Korea',
+            #     }
+            # with the mouse cursor at 'BMW': 'Germany', should send all of the lines that pertains to my_dictionary.
 
-                smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
-                smart_code += "\n"
+            should_run_top_blocks.append(top_node)
+
+            smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
+            smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
 

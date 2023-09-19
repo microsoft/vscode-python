@@ -29,7 +29,8 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly interpreterService: IInterpreterService;
 
-    /* tslint:disable:no-unused-variable */
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error TS6133: 'configSettings' is declared but its value is never read.
     private readonly configSettings: IConfigurationService;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
