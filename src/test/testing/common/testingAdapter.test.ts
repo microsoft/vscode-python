@@ -586,7 +586,7 @@ suite('End to End Tests: test adapters', () => {
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
             assert.ok(
-                callCount > 1,
+                callCount >= 1,
                 `Expected _resolveDiscovery to be called at least once, call count was instead ${callCount}`,
             );
             assert.strictEqual(failureOccurred, false, failureMsg);
