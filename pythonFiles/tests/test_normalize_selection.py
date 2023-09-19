@@ -226,6 +226,7 @@ class TestNormalizationScript(object):
             """\
             name = "Ahri"
             age = 10
+
             print(f'My name is {name}')
             """
         )
@@ -248,7 +249,9 @@ class TestNormalizationScript(object):
             names = ['Ahri', 'Bobby', 'Charlie']
             breed = ['Pomeranian', 'Welsh Corgi', 'Siberian Husky']
             dogs = [(name, breed) for name, breed in zip(names, breed)]
+
             print(dogs)
+            my_family_dog = 'Corgi'
             """
         )
 
@@ -258,6 +261,7 @@ class TestNormalizationScript(object):
             breed = ['Pomeranian', 'Welsh Corgi', 'Siberian Husky']
             dogs = [(name, breed) for name, breed in zip(names, breed)]
             print(dogs)
+            my_family_dog = 'Corgi'
             """
         )
 
