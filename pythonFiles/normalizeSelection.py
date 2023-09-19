@@ -144,14 +144,12 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
     return exact_nodes
 
 
-"""
-Traverse through a user's given file content and find, collect all appropriate lines
-that should be sent to the REPL in case of smart selection.
-Then call the normalize_lines function to normalize our smartly selected code block.
-"""
-
-
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
+    """
+    Traverse through a user's given file content and find, collect all appropriate lines
+    that should be sent to the REPL in case of smart selection.
+    Then call the normalize_lines function to normalize our smartly selected code block.
+    """
     # Use ast module to parse content of the file.
     parsed_file_content = ast.parse(wholeFileContent)
     smart_code = ""
@@ -238,8 +236,9 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     return normalized_smart_result
 
 
+# Intent on code;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 # Look at the last top block added, find lineno for the next upcoming block,
-# This will allow us to move cursor in VS Code.
+# This will allow us to move cursor in VS Code. #Send the list, receive it.-----------------------------
 def get_next_block_lineno():
     last_ran_lineno = int(should_run_top_blocks[-1].end_lineno)
     temp_next_lineno = int(should_run_top_blocks[-1].end_lineno)

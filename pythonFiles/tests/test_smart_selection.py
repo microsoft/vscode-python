@@ -104,7 +104,7 @@ def test_run_whole_func():
             print("no dogs")
         """
     )
-    # Expected to printing statement line by line
+
     expected = textwrap.dedent(
         """\
         def my_dogs():
@@ -140,6 +140,89 @@ def test_small_forloop():
     )
 
     # Cover the whole for loop block with multiple inner statements
+    # Make sure to contain all of the print statements included.
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
     assert result == expected
+
+
+def inner_for_loop_component():
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        for i in range(1, 6):
+            print(i)
+            print("Please also send this print statement")
+        """
+    )
+    result = normalizeSelection.traverse_file(src, 2, 2, False)
+    expected = textwrap.dedent(
+        """\
+            print(i)
+            """
+    )
+    # Pressing shift+enter inside a for loop,
+    # specifically on a viable expression
+    # by itself, such as print(i)
+    # should only return that exact expression
+    assert result == expected
+
+
+def test_dict_comprehension():
+    """
+    Having the mouse cursor on the first line,
+    and pressing shift+enter should return the
+    whole dictionary, respecting user's code style.
+    """
+
+    importlib.reload
+    src = textwrap.dedent(
+        """\
+        my_dict_comp = {temp_mover:
+        temp_mover for temp_mover in range(1, 7)}
+        """
+    )
+
+    expected = textwrap.dedent(
+        """\
+        my_dict_comp = {temp_mover:
+        temp_mover for temp_mover in range(1, 7)}
+        """
+    )
+
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+
+    assert result == expected
+
+
+def test_send_whole_generator():
+    """
+    Pressing shift+enter on the first line, which is the '('
+    should be returning the whole generator expression instead of just the '('
+    """
+
+    importlib.reload
+    src = textwrap.dedent(
+        """\
+        (
+            my_first_var
+            for my_first_var in range(1, 10)
+            if my_first_var % 2 == 0
+        )
+        """
+    )
+
+    expected = textwrap.dedent(
+        """\
+        (
+            my_first_var
+            for my_first_var in range(1, 10)
+            if my_first_var % 2 == 0
+        )
+
+        """
+    )
+
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+
+    assert expected == result
