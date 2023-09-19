@@ -29,6 +29,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly interpreterService: IInterpreterService;
 
+    /* tslint:disable:no-unused-variable */
     private readonly configSettings: IConfigurationService;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
