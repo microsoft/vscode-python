@@ -194,7 +194,9 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     if len(exact_nodes) > 0:
         for same_line_node in exact_nodes:
             should_run_top_blocks.append(same_line_node)
-            smart_code += f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
+            smart_code += (
+                f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
+            )
         return smart_code
 
     # Iterate through all of the nodes from the parsed file content,
@@ -256,9 +258,8 @@ if __name__ == "__main__":
     raw = stdin.read()
     contents = json.loads(raw.decode("utf-8"))
     # Need to get information on whether there was a selection via Highlight.
-    empty_Highlight = False
-    if contents["emptyHighlight"] is True:
-        empty_Highlight = True
+    empty_Highlight = contents.get("emptyHighlight", False)
+
     # We also get the activeEditor selection start line and end line from the typescript VS Code side.
     # Remember to add 1 to each of the received since vscode starts line counting from 0 .
     vscode_start_line = contents["startLine"] + 1
