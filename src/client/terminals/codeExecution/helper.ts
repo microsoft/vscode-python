@@ -99,8 +99,10 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
 
-            const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
-            this.moveToNextBlock(lineOffset, activeEditor);
+            if (activeEditor?.selection) {
+                const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
+                this.moveToNextBlock(lineOffset, activeEditor);
+            }
 
             return parse(object.normalized);
         } catch (ex) {
