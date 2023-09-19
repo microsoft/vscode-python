@@ -154,31 +154,20 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     parsed_file_content = ast.parse(wholeFileContent)
     smart_code = ""
 
+    # Iterate through the top level nodes in user's file document,
+    # and add to our top_level_nodes array.
+    # then for each of the top level, if it is valid ast_types with
+    # node.body, we will add all the child nodes that pertains to that
+    # top block code to the array as well.
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
-        if hasattr(node, "body"):
-            # Check if node has attribute body, then we have to go add child blocks.
-            if (
-                isinstance(node, ast.Module)
-                or isinstance(node, ast.Interactive)
-                or isinstance(node, ast.Expression)
-                or isinstance(node, ast.FunctionDef)
-                or isinstance(node, ast.AsyncFunctionDef)
-                or isinstance(node, ast.ClassDef)
-                or isinstance(node, ast.For)
-                or isinstance(node, ast.AsyncFor)
-                or isinstance(node, ast.While)
-                or isinstance(node, ast.If)
-                or isinstance(node, ast.With)
-                or isinstance(node, ast.AsyncWith)
-                or isinstance(node, ast.Try)
-                or isinstance(node, ast.Lambda)
-                or isinstance(node, ast.IfExp)
-                or isinstance(node, ast.ExceptHandler)
-            ):
-                if isinstance(node.body, Iterable):
-                    for child_nodes in node.body:
-                        top_level_nodes.append(child_nodes)
+
+        ast_types_with_nodebody = (ast.Module, ast.Interactive, ast.Expression, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef,
+                          ast.For, ast.AsyncFor, ast.While, ast.If, ast.With, ast.AsyncWith,
+                          ast.Try, ast.Lambda, ast.IfExp, ast.ExceptHandler)
+        if isinstance(node, ast_types_with_nodebody) and isinstance(node.body, Iterable):
+            for child_nodes in node.body:
+                top_level_nodes.append(child_nodes)
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
