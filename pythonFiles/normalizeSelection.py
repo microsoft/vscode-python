@@ -188,6 +188,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
+
     # Just return the exact top level line, if present.
     if len(exact_nodes) > 0:
         for same_line_node in exact_nodes:
@@ -269,7 +270,7 @@ if __name__ == "__main__":
     which_line_next = 0
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
     # Experiment also has to be enable to use smart selection.
-    if empty_Highlight is True and contents["smartSendExperimentEnabled"] is True:
+    if empty_Highlight and contents.get("smartSendExperimentEnabled"):
         normalized = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
