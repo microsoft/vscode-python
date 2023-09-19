@@ -129,10 +129,7 @@ def normalize_lines(selection):
     return source
 
 
-top_level_nodes = []  # collection of top level nodes
-top_level_to_min_difference = (
-    {}
-)  # dictionary of top level nodes to difference in relative to given code block to run
+top_level_nodes = []
 min_key = None
 global_next_lineno = None
 should_run_top_blocks = []
@@ -194,11 +191,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     for top_node in ast.iter_child_nodes(parsed_file_content):
         top_level_block_start_line = top_node.lineno
         top_level_block_end_line = top_node.end_lineno
-        abs_difference = abs(start_line - top_level_block_start_line) + abs(
-            end_line - top_level_block_end_line
-        )
-        top_level_to_min_difference[top_node] = abs_difference
-        # Handle case for same line run.
+
         if (
             start_line == top_level_block_start_line
             and end_line == top_level_block_end_line
