@@ -34,7 +34,9 @@ def test_smart_shift_enter_multiple_statements():
 
         """
     )
-    # Expected to printing statement line by line
+    # Expected to printing statement line by line,
+    # for when multiple print statements are ran
+    # from the same line.
     expected = textwrap.dedent(
         """\
         print("Audi")
@@ -43,7 +45,6 @@ def test_smart_shift_enter_multiple_statements():
         """
     )
     result = normalizeSelection.traverse_file(src, 8, 8, False)
-    # print(result)
     assert result == expected
 
 
@@ -147,6 +148,12 @@ def test_small_forloop():
 
 
 def inner_for_loop_component():
+    """
+    Pressing shift+enter inside a for loop,
+    specifically on a viable expression
+    by itself, such as print(i)
+    should only return that exact expression
+    """
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -161,10 +168,7 @@ def inner_for_loop_component():
             print(i)
             """
     )
-    # Pressing shift+enter inside a for loop,
-    # specifically on a viable expression
-    # by itself, such as print(i)
-    # should only return that exact expression
+
     assert result == expected
 
 
@@ -225,4 +229,33 @@ def test_send_whole_generator():
 
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
+    assert expected == result
+
+
+def test_multiline_lambda():
+    """
+    Shift+enter on part of the lambda expression
+    should return the whole lambda expression,
+    regardless of whether all the component of
+    lambda expression is on the same or not.
+    """
+
+    importlib.reload
+    src = textwrap.dedent(
+        """\
+        my_lambda = lambda x: (
+            x + 1
+        )
+        """
+    )
+    expected = textwrap.dedent(
+        """\
+        my_lambda = lambda x: (
+            x + 1
+        )
+
+        """
+    )
+
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
     assert expected == result
