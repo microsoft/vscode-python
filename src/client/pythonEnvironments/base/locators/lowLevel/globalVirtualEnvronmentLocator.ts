@@ -40,7 +40,8 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
         const subDirs = ['Envs', '.direnv', '.venvs', '.virtualenvs', path.join('.local', 'share', 'virtualenvs')];
-        if (getOSType() !== OSType.Windows) {
+        if (![OSType.Windows, OSType.OSX].includes(getOSType())) {
+            // Not a case insensitive platform, push both upper and lower cases.
             subDirs.push('envs');
         }
         const filtered = await asyncFilter(
