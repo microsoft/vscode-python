@@ -257,7 +257,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                     } else if (code !== 0) {
                         // This occurs when we are running discovery
                         traceError(
-                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
                         );
                         this._onDiscoveryDataReceived.fire({
                             uuid,

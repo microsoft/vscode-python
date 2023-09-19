@@ -491,7 +491,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver._resolveDiscovery = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
-            console.log(`unittest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            traceLog(`unittest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
                 if (data.status === 'error') {
                     if (data.error === undefined) {
@@ -548,8 +548,8 @@ suite('End to End Tests: test adapters', () => {
         resultResolver._resolveDiscovery = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
-            console.log(`add one to call count, is now ${callCount}`);
-            console.log(`pytest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            traceLog(`add one to call count, is now ${callCount}`);
+            traceLog(`pytest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
                 if (data.status === 'error') {
                     if (data.error === undefined) {
@@ -600,7 +600,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
-            console.log(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            traceLog(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
                 if (data.status === 'error') {
                     if (data.error === undefined) {
