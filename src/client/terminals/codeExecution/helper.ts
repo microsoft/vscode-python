@@ -99,20 +99,31 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
 
-            // Let user experience smart shift+enter, advance cursor if in experiment
-            if (pythonSmartSendEnabled(this.serviceContainer)) {
-                // Advance cursor move only for smart shift+enter
-                if (activeEditor && activeEditor.selection && activeEditor!.selection.isEmpty) {
-                    const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
-                    commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) });
-                    commands.executeCommand('cursorEnd');
-                }
-            }
+            const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line;
+            this.moveToNextBlock(lineOffset, activeEditor);
 
             return parse(object.normalized);
         } catch (ex) {
             traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
+        }
+    }
+
+    public async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
+        /**
+         * Depending on whether or not user is in experiment for smart send,
+         * dynamically move the cursor to the next block of code.
+         * The cursor movement is not moved by one everytime,
+         * since with the smart selection, the next executable code block
+         * can be multiple lines away.
+         * Intended to provide smooth shift+enter user experience
+         * bringing user's cursor to the next executable block of code when used with smart selection.
+         */
+        if (pythonSmartSendEnabled(this.serviceContainer)) {
+            if (activeEditor?.selection?.isEmpty) {
+                commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) });
+                commands.executeCommand('cursorEnd');
+            }
         }
     }
 
