@@ -143,7 +143,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
         const { selection } = textEditor;
         let code: string;
-        // const wholeFileContent = textEditor.document.getText(); // This is a way to get the whole text content from the user
+
         if (selection.isEmpty) {
             code = textEditor.document.lineAt(selection.start.line).text;
         } else if (selection.isSingleLine) {
@@ -151,7 +151,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         } else {
             code = getMultiLineSelectionText(textEditor);
         }
-        // commands.executeCommand('cursorMove', { to: 'down' }); // trial: move to the next line when you run?
+
         return code;
     }
 
