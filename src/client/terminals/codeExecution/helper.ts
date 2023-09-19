@@ -78,9 +78,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             }
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
             // We're using a JSON object so that we don't have to worry about encoding, or escaping non-ASCII characters.
-            const startLineVal = activeEditor && activeEditor.selection ? activeEditor.selection.start.line : 0;
-            const endLineVal = activeEditor && activeEditor.selection ? activeEditor.selection.end.line : 0;
-            const emptyHighlightVal = activeEditor && activeEditor.selection ? activeEditor.selection.isEmpty : true;
+            const startLineVal = activeEditor?.selection?.start.line ?? 0;
+            const endLineVal = activeEditor?.selection?.end.line ?? 0;
+            const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
             const smartSendExperimentEnabledVal = pythonSmartSendEnabled(this.serviceContainer)
                 ? pythonSmartSendEnabled(this.serviceContainer)
                 : false;
