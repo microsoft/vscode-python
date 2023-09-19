@@ -14,7 +14,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
-import { IExperimentService, Resource } from '../../common/types';
+import { IConfigurationService, IExperimentService, Resource } from '../../common/types';
 import { EnableREPLSmartSend } from '../../common/experiments/groups';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -29,16 +29,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly interpreterService: IInterpreterService;
 
-    // private readonly configSettings: IConfigurationService;
-
-    // private readonly configSettings: IConfigurationService;
+    private readonly configSettings: IConfigurationService;
 
     constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        // this.configSettings = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.configSettings = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
     public async normalizeLines(code: string, wholeFileContent?: string, resource?: Uri): Promise<string> {
