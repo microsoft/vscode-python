@@ -548,6 +548,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver._resolveDiscovery = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
+            console.log(`add one to call count, is now ${callCount}`);
             console.log(`pytest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             try {
                 if (data.status === 'error') {
@@ -584,7 +585,10 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
-            assert.ok(callCount > 1, 'Expected _resolveDiscovery to be called at least once');
+            assert.ok(
+                callCount > 1,
+                `Expected _resolveDiscovery to be called at least once, call count was instead ${callCount}`,
+            );
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
