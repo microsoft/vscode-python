@@ -149,6 +149,8 @@ Traverse through a user's given file content and find, collect all appropriate l
 that should be sent to the REPL in case of smart selection.
 Then call the normalize_lines function to normalize our smartly selected code block.
 """
+
+
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     # Use ast module to parse content of the file.
     parsed_file_content = ast.parse(wholeFileContent)
@@ -162,10 +164,27 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
 
-        ast_types_with_nodebody = (ast.Module, ast.Interactive, ast.Expression, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef,
-                          ast.For, ast.AsyncFor, ast.While, ast.If, ast.With, ast.AsyncWith,
-                          ast.Try, ast.Lambda, ast.IfExp, ast.ExceptHandler)
-        if isinstance(node, ast_types_with_nodebody) and isinstance(node.body, Iterable):
+        ast_types_with_nodebody = (
+            ast.Module,
+            ast.Interactive,
+            ast.Expression,
+            ast.FunctionDef,
+            ast.AsyncFunctionDef,
+            ast.ClassDef,
+            ast.For,
+            ast.AsyncFor,
+            ast.While,
+            ast.If,
+            ast.With,
+            ast.AsyncWith,
+            ast.Try,
+            ast.Lambda,
+            ast.IfExp,
+            ast.ExceptHandler,
+        )
+        if isinstance(node, ast_types_with_nodebody) and isinstance(
+            node.body, Iterable
+        ):
             for child_nodes in node.body:
                 top_level_nodes.append(child_nodes)
 
