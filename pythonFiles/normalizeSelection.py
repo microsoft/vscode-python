@@ -188,7 +188,6 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
-
     # Just return the exact top level line, if present.
     if len(exact_nodes) > 0:
         for same_line_node in exact_nodes:

@@ -110,6 +110,7 @@ def test_run_whole_func():
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
+        print("Decide which dog you will choose")
         def my_dogs():
             print("Corgi")
             print("Husky")
@@ -130,7 +131,7 @@ def test_run_whole_func():
 
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 2, 2, False)
 
     assert result == expected
 
