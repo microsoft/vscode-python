@@ -194,8 +194,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     if len(exact_nodes) > 0:
         for same_line_node in exact_nodes:
             should_run_top_blocks.append(same_line_node)
-            smart_code += str(ast.get_source_segment(wholeFileContent, same_line_node))
-            smart_code += "\n"
+            smart_code += f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
         return smart_code
 
     # Iterate through all of the nodes from the parsed file content,
@@ -211,8 +210,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         ):
             should_run_top_blocks.append(top_node)
 
-            smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
-            smart_code += "\n"
+            smart_code += f"{ast.get_source_segment(wholeFileContent, top_node)}\n"
             break  # Break out of the loop since we found the exact match.
         elif (
             start_line >= top_level_block_start_line
