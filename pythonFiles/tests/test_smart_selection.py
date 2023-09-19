@@ -172,7 +172,7 @@ def test_dict_comprehension():
     """
     Having the mouse cursor on the first line,
     and pressing shift+enter should return the
-    whole dictionary, respecting user's code style.
+    whole dictionary comp, respecting user's code style.
     """
 
     importlib.reload

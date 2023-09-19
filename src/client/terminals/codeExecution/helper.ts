@@ -73,7 +73,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 },
             });
             // If there is no explicit selection, we are exeucting 'line' or 'block'.
-            if (activeEditor && activeEditor.selection && activeEditor!.selection.isEmpty) {
+            if (activeEditor?.selection?.isEmpty) {
                 sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'line' });
             }
             // The normalization script expects a serialized JSON object, with the selection under the "code" key.
