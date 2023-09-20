@@ -4,7 +4,7 @@
 import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { Deferred, createDeferred, sleep } from '../../../common/utils/async';
 import { traceError, traceInfo } from '../../../logging';
 import {
     DataReceivedEvent,
@@ -125,8 +125,15 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
         try {
+            const colorOff = pytestArgs.includes('--color=no');
             // Remove positional test folders and files, we will add as needed per node
             const testArgs = removePositionalFoldersAndFiles(pytestArgs);
+            // If the user didn't explicit dictate the color, then add it
+            if (!colorOff) {
+                if (!testArgs.includes('--color=yes')) {
+                    testArgs.push('--color=yes');
+                }
+            }
 
             // if user has provided `--rootdir` then use that, otherwise add `cwd`
             if (testArgs.filter((a) => a.startsWith('--rootdir')).length === 0) {
@@ -166,7 +173,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 const deferredExec = createDeferred<ExecutionResult<string>>();
                 const result = execService?.execObservable(runArgs, spawnOptions);
-
                 runInstance?.token.onCancellationRequested(() => {
                     traceInfo('Test run cancelled, killing pytest subprocess.');
                     result?.proc?.kill();
@@ -175,10 +181,16 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 result?.proc?.stdout?.on('data', (data) => {
-                    this.outputChannel?.append(data.toString());
+                    const out = utils.fixLogLines(data.toString());
+                    runInstance?.appendOutput(`${out}\r\n`);
+                    // with traceInfo, gets full message, without traceInfo, gets truncated
+                    // traceInfo(`${out}\r\n`);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
-                    this.outputChannel?.append(data.toString());
+                    const out = utils.fixLogLines(data.toString());
+                    runInstance?.appendOutput(`${out}\r\n`);
+                    // traceInfo(`${out}\r\n`);
+                    // console.log(`${out}\r\n`);
                 });
 
                 result?.proc?.on('exit', (code, signal) => {

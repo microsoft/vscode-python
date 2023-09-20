@@ -129,6 +129,7 @@ def runner_with_cwd(
         "pytest",
         "-p",
         "vscode_pytest",
+        "-s",
     ] + args
     listener: socket.socket = create_server()
     _, port = listener.getsockname()

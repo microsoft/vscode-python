@@ -20,6 +20,7 @@ import {
     createEOTPayload,
     createExecutionErrorPayload,
     extractJsonPayload,
+    fixLogLines,
 } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 
@@ -86,7 +87,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             // what payload is so small it doesn't include the whole UUID think got this
             if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
                 // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
-                traceInfo(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
+                traceLog(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
@@ -170,6 +171,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         callback?: () => void,
     ): Promise<void> {
         const { uuid } = options;
+        const isDiscovery = testIds === undefined;
 
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [options.cwd, ...pythonPathParts].join(path.delimiter);
@@ -189,13 +191,21 @@ export class PythonTestServer implements ITestServer, Disposable {
             resource: options.workspaceFolder,
         };
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
-
         // Add the generated UUID to the data to be sent (expecting to receive it back).
         // first check if we have testIds passed in (in case of execution) and
         // insert appropriate flag and test id array
         const args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
             options.command.args,
         );
+
+        // If the user didn't explicit dictate the color during run, then add it
+        if (isRun) {
+            if (!args.includes('--color=no')) {
+                if (!args.includes('--color=yes')) {
+                    args.push('--color=yes');
+                }
+            }
+        }
 
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);
@@ -232,15 +242,28 @@ export class PythonTestServer implements ITestServer, Disposable {
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-                result?.proc?.stdout?.on('data', (data) => {
-                    spawnOptions?.outputChannel?.append(data.toString());
-                });
-                result?.proc?.stderr?.on('data', (data) => {
-                    spawnOptions?.outputChannel?.append(data.toString());
-                });
+                // Discovery output should be sent to the output channel, run output should be sent to the test run instance.
+                if (isDiscovery) {
+                    result?.proc?.stdout?.on('data', (data) => {
+                        const out = fixLogLines(data.toString());
+                        traceLog(out);
+                    });
+                    result?.proc?.stderr?.on('data', (data) => {
+                        const out = fixLogLines(data.toString());
+                        traceLog(out);
+                    });
+                } else {
+                    result?.proc?.stdout?.on('data', (data) => {
+                        runInstance?.appendOutput(`${fixLogLines(data.toString())}\r\n`);
+                    });
+                    result?.proc?.stderr?.on('data', (data) => {
+                        runInstance?.appendOutput(`${fixLogLines(data.toString())}\r\n`);
+                    });
+                }
+
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
-                    if (code !== 0 && testIds && testIds?.length !== 0) {
+                    if (code !== 0 && !isDiscovery) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
                         );

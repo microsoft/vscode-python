@@ -11,7 +11,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -19,7 +19,7 @@ import {
     ITestResultResolver,
     ITestServer,
 } from '../common/types';
-import { createDiscoveryErrorPayload, createEOTPayload } from '../common/utils';
+import { createDiscoveryErrorPayload, createEOTPayload, fixLogLines } from '../common/utils';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -84,17 +84,24 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
         const deferredExec = createDeferred<ExecutionResult<string>>();
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+
+        let execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        // filter out color=yes from pytestArgs
+        execArgs = execArgs.filter((item) => item !== '--color=yes');
         traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')}`);
         const result = execService?.execObservable(execArgs, spawnOptions);
 
         // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
         result?.proc?.stdout?.on('data', (data) => {
-            spawnOptions.outputChannel?.append(data.toString());
+            const out = fixLogLines(data.toString());
+            traceLog(out);
+            // spawnOptions.outputChannel?.append(data.toString());
         });
         result?.proc?.stderr?.on('data', (data) => {
-            spawnOptions.outputChannel?.append(data.toString());
+            const out = fixLogLines(data.toString());
+            traceError(out);
+            // spawnOptions.outputChannel?.append(data.toString());
         });
         result?.proc?.on('exit', (code, signal) => {
             if (code !== 0) {
@@ -112,7 +119,10 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                     data: JSON.stringify(createEOTPayload(true)),
                 });
             }
-            deferredExec.resolve({ stdout: '', stderr: '' });
+            deferredExec.resolve({
+                stdout: '',
+                stderr: '',
+            });
             deferred.resolve();
         });
 
