@@ -340,7 +340,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                   return false;
               })
             : undefined;
-        if(activeItem) {
+        if (activeItem) {
             quickPick.activeItems = [activeItem];
         }
     }

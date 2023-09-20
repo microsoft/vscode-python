@@ -156,12 +156,12 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
             initialize(input);
         }
         if (activeItem) {
-            if(typeof activeItem === 'function') {
-                activeItem(input).then((item) =>{
+            if (typeof activeItem === 'function') {
+                activeItem(input).then((item) => {
                     if (input.activeItems.length === 0) {
-                        input.activeItems = [item]; 
+                        input.activeItems = [item];
                     }
-                })
+                });
             }
         } else {
             input.activeItems = [];
