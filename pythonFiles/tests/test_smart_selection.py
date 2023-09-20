@@ -27,7 +27,7 @@ def test_part_dictionary():
     )
 
     result = normalizeSelection.traverse_file(src, 3, 3, False)
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def test_smart_shift_enter_multiple_statements():
@@ -58,7 +58,7 @@ def test_smart_shift_enter_multiple_statements():
         """
     )
     result = normalizeSelection.traverse_file(src, 8, 8, False)
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def test_two_layer_dictionary():
@@ -103,7 +103,7 @@ def test_two_layer_dictionary():
     )
     result = normalizeSelection.traverse_file(src, 6, 7, False)
 
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def test_run_whole_func():
@@ -133,7 +133,7 @@ def test_run_whole_func():
     )
     result = normalizeSelection.traverse_file(src, 2, 2, False)
 
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def test_small_forloop():
@@ -158,7 +158,7 @@ def test_small_forloop():
     # Make sure to contain all of the print statements included.
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def inner_for_loop_component():
@@ -183,7 +183,7 @@ def inner_for_loop_component():
             """
     )
 
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def test_dict_comprehension():
@@ -210,7 +210,7 @@ def test_dict_comprehension():
 
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
-    assert result == expected
+    assert result["normalized_smart_result"] == expected
 
 
 def test_send_whole_generator():
@@ -243,7 +243,7 @@ def test_send_whole_generator():
 
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
-    assert expected == result
+    assert result["normalized_smart_result"] == expected
 
 
 def test_multiline_lambda():
@@ -272,4 +272,4 @@ def test_multiline_lambda():
     )
 
     result = normalizeSelection.traverse_file(src, 1, 1, False)
-    assert expected == result
+    assert result["normalized_smart_result"] == expected
