@@ -282,12 +282,15 @@ if __name__ == "__main__":
         )
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]
-    else:
-        normalized = normalize_lines(contents["code"])
-
-    data = json.dumps(
+        data = json.dumps(
         {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
     )
+    else:
+        normalized = normalize_lines(contents["code"])
+        data = json.dumps(
+        {"normalized": normalized}
+    )
+
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
     stdout.close()
