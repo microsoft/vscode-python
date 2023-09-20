@@ -281,6 +281,7 @@ if __name__ == "__main__":
             not empty_Highlight,
         )
         normalized = result["normalized_smart_result"]
+        which_line_next = result["which_line_next"]
     else:
         normalized = normalize_lines(contents["code"])
 
