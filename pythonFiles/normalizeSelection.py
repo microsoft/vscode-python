@@ -132,7 +132,6 @@ def normalize_lines(selection):
 top_level_nodes = []
 min_key = None
 global_next_lineno = None
-should_run_top_blocks = []
 
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
@@ -153,7 +152,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     # Use ast module to parse content of the file.
     parsed_file_content = ast.parse(wholeFileContent)
     smart_code = ""
-
+    should_run_top_blocks = []
     # Iterate through the top level nodes in user's file document,
     # and add to our top_level_nodes array.
     # then for each of the top level, if it is valid ast_types with
@@ -195,7 +194,8 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             smart_code += (
                 f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
             )
-        return smart_code
+            which_line_next = get_next_block_lineno(should_run_top_blocks)
+        return {"normalized_smart_result": smart_code, "which_line_next": which_line_next}
 
     # Iterate through all of the nodes from the parsed file content,
     # and add the appropriate source code line(s) to be sent to the REPL, dependent on
@@ -232,16 +232,16 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
-
-    return normalized_smart_result
+    which_line_next = get_next_block_lineno(should_run_top_blocks)
+    return {"normalized_smart_result": normalized_smart_result, "which_line_next": which_line_next}
 
 
 # Intent on code;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 # Look at the last top block added, find lineno for the next upcoming block,
 # This will allow us to move cursor in VS Code. #Send the list, receive it.-----------------------------
-def get_next_block_lineno():
-    last_ran_lineno = int(should_run_top_blocks[-1].end_lineno)
-    temp_next_lineno = int(should_run_top_blocks[-1].end_lineno)
+def get_next_block_lineno(which_line_next):
+    last_ran_lineno = int(which_line_next[-1].end_lineno)
+    temp_next_lineno = int(which_line_next[-1].end_lineno)
 
     for reverse_node in top_level_nodes:
         if reverse_node.lineno > last_ran_lineno:
@@ -270,19 +270,17 @@ if __name__ == "__main__":
     # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
     # Experiment also has to be enable to use smart selection.
     if empty_Highlight and contents.get("smartSendExperimentEnabled"):
-        normalized = traverse_file(
+        result = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
             vscode_end_line,
             not empty_Highlight,
         )
-        which_line_next = (
-            get_next_block_lineno()
-        )  # Only figure out next block line number for smart shift+enter.
+        normalized = result["normalized_smart_result"]
     else:
         normalized = normalize_lines(contents["code"])
 
-    data = json.dumps({"normalized": normalized, "nextBlockLineno": which_line_next})
+    data = json.dumps({"normalized": normalized, "nextBlockLineno": result["which_line_next"]})
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
     stdout.close()
