@@ -131,7 +131,6 @@ def normalize_lines(selection):
 
 top_level_nodes = []
 min_key = None
-global_next_lineno = None
 
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
@@ -195,7 +194,10 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
                 f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
             )
             which_line_next = get_next_block_lineno(should_run_top_blocks)
-        return {"normalized_smart_result": smart_code, "which_line_next": which_line_next}
+        return {
+            "normalized_smart_result": smart_code,
+            "which_line_next": which_line_next,
+        }
 
     # Iterate through all of the nodes from the parsed file content,
     # and add the appropriate source code line(s) to be sent to the REPL, dependent on
@@ -233,12 +235,14 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
     normalized_smart_result = normalize_lines(smart_code)
     which_line_next = get_next_block_lineno(should_run_top_blocks)
-    return {"normalized_smart_result": normalized_smart_result, "which_line_next": which_line_next}
+    return {
+        "normalized_smart_result": normalized_smart_result,
+        "which_line_next": which_line_next,
+    }
 
 
-# Intent on code;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 # Look at the last top block added, find lineno for the next upcoming block,
-# This will allow us to move cursor in VS Code. #Send the list, receive it.-----------------------------
+# This will allow us to move cursor in VS Code.
 def get_next_block_lineno(which_line_next):
     last_ran_lineno = int(which_line_next[-1].end_lineno)
     temp_next_lineno = int(which_line_next[-1].end_lineno)
@@ -280,7 +284,9 @@ if __name__ == "__main__":
     else:
         normalized = normalize_lines(contents["code"])
 
-    data = json.dumps({"normalized": normalized, "nextBlockLineno": result["which_line_next"]})
+    data = json.dumps(
+        {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
+    )
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))
     stdout.close()
