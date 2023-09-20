@@ -188,6 +188,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
     # Just return the exact top level line, if present.
     if len(exact_nodes) > 0:
+        which_line_next = 0
         for same_line_node in exact_nodes:
             should_run_top_blocks.append(same_line_node)
             smart_code += (
