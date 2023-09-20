@@ -30,6 +30,33 @@ def test_part_dictionary():
     assert result["normalized_smart_result"] == expected
 
 
+def test_nested_loop():
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        for i in range(1, 6):
+            for j in range(1, 6):
+                for x in range(1, 5):
+                    for y in range(1, 5):
+                        for z in range(1,10):
+                            print(i, j, x, y, z)
+        """
+    )
+    expected = textwrap.dedent(
+        """\
+        for i in range(1, 6):
+            for j in range(1, 6):
+                for x in range(1, 5):
+                    for y in range(1, 5):
+                        for z in range(1,10):
+                            print(i, j, x, y, z)
+
+        """
+    )
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    assert result["normalized_smart_result"] == expected
+
+
 def test_smart_shift_enter_multiple_statements():
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
@@ -274,6 +301,7 @@ def test_multiline_lambda():
     result = normalizeSelection.traverse_file(src, 1, 1, False)
     assert result["normalized_smart_result"] == expected
 
+
 def test_send_whole_class():
     """
     Shift+enter on a class definition
@@ -289,7 +317,8 @@ def test_send_whole_class():
             def add_call(self, name, args=None, kwargs=None):
                 self.calls.append((name, args, kwargs))
         print("We should be here after running whole class")
-        """)
+        """
+    )
     result = normalizeSelection.traverse_file(src, 1, 1, False)
     expected = textwrap.dedent(
         """\
@@ -302,6 +331,7 @@ def test_send_whole_class():
         """
     )
     assert result["normalized_smart_result"] == expected
+
 
 def test_send_whole_if_statement():
     """
@@ -318,7 +348,8 @@ def test_send_whole_if_statement():
             print('also send this')
 
         print('cursor here afterwards')
-        """)
+        """
+    )
     expected = textwrap.dedent(
         """\
         if True:
@@ -326,9 +357,11 @@ def test_send_whole_if_statement():
         else:
             print('also send this')
 
-        """)
+        """
+    )
     result = normalizeSelection.traverse_file(src, 1, 1, False)
     assert result["normalized_smart_result"] == expected
+
 
 def test_send_try():
     importlib.reload(normalizeSelection)
@@ -340,7 +373,8 @@ def test_send_try():
             print("error")
 
         print("Not running this")
-        """)
+        """
+    )
     expected = textwrap.dedent(
         """\
         try:
@@ -348,6 +382,7 @@ def test_send_try():
         except:
             print("error")
 
-        """)
+        """
+    )
     result = normalizeSelection.traverse_file(src, 1, 1, False)
     assert result["normalized_smart_result"] == expected

@@ -124,6 +124,7 @@ def test_skip_multi_comp_lambda():
     # next executable statement as the lambda expression
     assert result["which_line_next"] == 7
 
+
 def test_move_whole_class():
     """
     Shift+enter on a class definition
@@ -139,10 +140,12 @@ def test_move_whole_class():
             def add_call(self, name, args=None, kwargs=None):
                 self.calls.append((name, args, kwargs))
         print("We should be here after running whole class")
-        """)
+        """
+    )
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
     assert result["which_line_next"] == 7
+
 
 def test_def_to_def():
     importlib.reload(normalizeSelection)
@@ -158,10 +161,12 @@ def test_def_to_def():
         # Skip here
         def next_func():
             print("Not here but above")
-        """)
+        """
+    )
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
     assert result["which_line_next"] == 9
+
 
 def test_try_catch_move():
     importlib.reload(normalizeSelection)
@@ -173,7 +178,26 @@ def test_try_catch_move():
             print("error")
 
         print("Should be here afterwards")
-        """)
+        """
+    )
 
     result = normalizeSelection.traverse_file(src, 1, 1, False)
     assert result["which_line_next"] == 6
+
+
+def test_skip_nested():
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        for i in range(1, 6):
+            for j in range(1, 6):
+                for x in range(1, 5):
+                    for y in range(1, 5):
+                        for z in range(1,10):
+                            print(i, j, x, y, z)
+
+        print("Cursor should be here after running line 1")
+        """
+    )
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    assert result["which_line_next"] == 8

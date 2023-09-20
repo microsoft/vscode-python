@@ -148,7 +148,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     that should be sent to the REPL in case of smart selection.
     Then call the normalize_lines function to normalize our smartly selected code block.
     """
-    # Use ast module to parse content of the file.
+    # We need to collect ast nodes to iterate through.
     parsed_file_content = ast.parse(wholeFileContent)
     smart_code = ""
     should_run_top_blocks = []
@@ -200,8 +200,8 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             "which_line_next": which_line_next,
         }
 
-    # Iterate through all of the nodes from the parsed file content,
-    # and add the appropriate source code line(s) to be sent to the REPL, dependent on
+    # For each of the nodes in the parsed file content,
+    # add the appropriate source code line(s) to be sent to the REPL, dependent on
     # user is trying to send and execute single line/statement or multiple with smart selection.
     for top_node in ast.iter_child_nodes(parsed_file_content):
         top_level_block_start_line = top_node.lineno
@@ -214,7 +214,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             should_run_top_blocks.append(top_node)
 
             smart_code += f"{ast.get_source_segment(wholeFileContent, top_node)}\n"
-            break  # Break out of the loop since we found the exact match.
+            break  # If we found exact match, don't waste computation in parsing extra nodes.
         elif (
             start_line >= top_level_block_start_line
             and end_line <= top_level_block_end_line
@@ -243,7 +243,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
 
 # Look at the last top block added, find lineno for the next upcoming block,
-# This will allow us to move cursor in VS Code.
+# This will be used in calculating lineOffset to move cursor in VS Code.
 def get_next_block_lineno(which_line_next):
     last_ran_lineno = int(which_line_next[-1].end_lineno)
     temp_next_lineno = int(which_line_next[-1].end_lineno)
@@ -261,7 +261,7 @@ if __name__ == "__main__":
     stdin = sys.stdin if sys.version_info < (3,) else sys.stdin.buffer
     raw = stdin.read()
     contents = json.loads(raw.decode("utf-8"))
-    # Need to get information on whether there was a selection via Highlight.
+    # Empty highlight means user has not explicitly selected specific text.
     empty_Highlight = contents.get("emptyHighlight", False)
 
     # We also get the activeEditor selection start line and end line from the typescript VS Code side.
