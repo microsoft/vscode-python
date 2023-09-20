@@ -16,13 +16,7 @@ import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging'
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import {
-    createDiscoveryErrorPayload,
-    createEOTPayload,
-    createExecutionErrorPayload,
-    extractJsonPayload,
-    fixLogLines,
-} from './utils';
+import { createEOTPayload, createExecutionErrorPayload, extractJsonPayload } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 import { EnvironmentVariables } from '../../../api/types';
 
@@ -198,7 +192,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
         const args = [options.command.script].concat(options.command.args);
-          
+
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);
         }
