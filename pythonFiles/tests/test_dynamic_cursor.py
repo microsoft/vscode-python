@@ -124,3 +124,41 @@ def test_skip_multi_comp_lambda():
     # next executable statement as the lambda expression
     assert result["which_line_next"] == 7
 
+def test_move_whole_class():
+    """
+    Shift+enter on a class definition
+    should move the cursor after running whole class.
+    """
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        class Stub(object):
+            def __init__(self):
+                self.calls = []
+
+            def add_call(self, name, args=None, kwargs=None):
+                self.calls.append((name, args, kwargs))
+        print("We should be here after running whole class")
+        """)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+
+    assert result["which_line_next"] == 7
+
+def test_def_to_def():
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        def my_dogs():
+            print("Corgi")
+            print("Husky")
+            print("Corgi2")
+            print("Husky2")
+            print("no dogs")
+
+        # Skip here
+        def next_func():
+            print("Not here but above")
+        """)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+
+    assert result["which_line_next"] == 9

@@ -219,7 +219,7 @@ def test_send_whole_generator():
     should be returning the whole generator expression instead of just the '('
     """
 
-    importlib.reload
+    importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
         (
@@ -254,7 +254,7 @@ def test_multiline_lambda():
     lambda expression is on the same or not.
     """
 
-    importlib.reload
+    importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
         my_lambda = lambda x: (
@@ -273,3 +273,34 @@ def test_multiline_lambda():
 
     result = normalizeSelection.traverse_file(src, 1, 1, False)
     assert result["normalized_smart_result"] == expected
+
+def test_send_whole_class():
+    """
+    Shift+enter on a class definition
+    should send the whole class definition
+    """
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        class Stub(object):
+            def __init__(self):
+                self.calls = []
+
+            def add_call(self, name, args=None, kwargs=None):
+                self.calls.append((name, args, kwargs))
+        print("We should be here after running whole class")
+        """)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    expected = textwrap.dedent(
+        """\
+        class Stub(object):
+            def __init__(self):
+                self.calls = []
+            def add_call(self, name, args=None, kwargs=None):
+                self.calls.append((name, args, kwargs))
+
+        """
+    )
+    assert result["normalized_smart_result"] == expected
+
+
