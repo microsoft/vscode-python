@@ -252,7 +252,7 @@ def get_next_block_lineno(which_line_next):
         if reverse_node.lineno > last_ran_lineno:
             temp_next_lineno = reverse_node.lineno
             break
-    return temp_next_lineno - 1
+    return temp_next_lineno
 
 
 if __name__ == "__main__":
