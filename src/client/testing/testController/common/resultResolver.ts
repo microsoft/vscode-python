@@ -92,7 +92,12 @@ export class PythonResultResolver implements ITestResultResolver {
             populateTestTree(this.testController, rawTestData.tests, undefined, this, token);
         } else {
             // Delete everything from the test controller.
+            const errorNode = this.testController.items.get(`DiscoveryError:${workspacePath}`);
             this.testController.items.replace([]);
+            // Add back the error node if it exists.
+            if (errorNode !== undefined) {
+                this.testController.items.add(errorNode);
+            }
         }
 
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {

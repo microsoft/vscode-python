@@ -18,6 +18,24 @@ export class StandardErrorHandler extends BaseErrorHandler {
         const info = linterManager.getLinterInfo(execInfo.product!);
 
         traceError(`There was an error in running the linter ${info.id}`, error);
+        if (info.id === LinterId.PyLint) {
+            traceError('Support for "pylint" is moved to ms-python.pylint extension.');
+            traceError(
+                'Please install the extension from: https://marketplace.visualstudio.com/items?itemName=ms-python.pylint',
+            );
+        } else if (info.id === LinterId.Flake8) {
+            traceError('Support for "flake8" is moved to ms-python.flake8 extension.');
+            traceError(
+                'Please install the extension from: https://marketplace.visualstudio.com/items?itemName=ms-python.flake8',
+            );
+        } else if (info.id === LinterId.MyPy) {
+            traceError('Support for "mypy" is moved to ms-python.mypy-type-checker extension.');
+            traceError(
+                'Please install the extension from: https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker',
+            );
+        }
+        traceError(`If the error is due to missing ${info.id}, please install ${info.id} using pip manually.`);
+        traceError('Learn more here: https://aka.ms/AAlgvkb');
         traceLog(`Linting with ${info.id} failed.`);
         traceLog(error.toString());
 

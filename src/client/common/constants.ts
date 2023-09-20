@@ -40,7 +40,6 @@ export namespace Commands {
     export const Create_Environment_Button = 'python.createEnvironment-button';
     export const Create_Terminal = 'python.createTerminal';
     export const Debug_In_Terminal = 'python.debugInTerminal';
-    export const Enable_Linter = 'python.enableLinting';
     export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
@@ -56,9 +55,7 @@ export namespace Commands {
     export const PickLocalProcess = 'python.pickLocalProcess';
     export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
-    export const Run_Linter = 'python.runLinting';
     export const Set_Interpreter = 'python.setInterpreter';
-    export const Set_Linter = 'python.setLinter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Sort_Imports = 'python.sortImports';
     export const Start_REPL = 'python.startREPL';

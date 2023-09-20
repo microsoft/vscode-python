@@ -19,6 +19,7 @@ import {
     ITestResultResolver,
     ITestServer,
 } from '../common/types';
+import { createDiscoveryErrorPayload, createEOTPayload } from '../common/utils';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -100,6 +101,16 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
                 );
+                // if the child process exited with a non-zero exit code, then we need to send the error payload.
+                this.testServer.triggerDiscoveryDataReceivedEvent({
+                    uuid,
+                    data: JSON.stringify(createDiscoveryErrorPayload(code, signal, cwd)),
+                });
+                // then send a EOT payload
+                this.testServer.triggerDiscoveryDataReceivedEvent({
+                    uuid,
+                    data: JSON.stringify(createEOTPayload(true)),
+                });
             }
             deferredExec.resolve({ stdout: '', stderr: '' });
             deferred.resolve();

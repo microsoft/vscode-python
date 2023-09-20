@@ -15,7 +15,12 @@ import { traceError, traceInfo, traceLog } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { createEOTPayload, createExecutionErrorPayload, extractJsonPayload } from './utils';
+import {
+    createDiscoveryErrorPayload,
+    createEOTPayload,
+    createExecutionErrorPayload,
+    extractJsonPayload,
+} from './utils';
 import { createDeferred } from '../../../common/utils/async';
 
 export class PythonTestServer implements ITestServer, Disposable {
@@ -144,6 +149,10 @@ export class PythonTestServer implements ITestServer, Disposable {
         this._onRunDataReceived.fire(payload);
     }
 
+    public triggerDiscoveryDataReceivedEvent(payload: DataReceivedEvent): void {
+        this._onDiscoveryDataReceived.fire(payload);
+    }
+
     public dispose(): void {
         this.server.close();
         this._onDataReceived.dispose();
@@ -231,7 +240,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 });
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
-                    if (code !== 0 && testIds) {
+                    if (code !== 0 && testIds && testIds?.length !== 0) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
                         );
@@ -242,6 +251,20 @@ export class PythonTestServer implements ITestServer, Disposable {
                         });
                         // then send a EOT payload
                         this._onRunDataReceived.fire({
+                            uuid,
+                            data: JSON.stringify(createEOTPayload(true)),
+                        });
+                    } else if (code !== 0) {
+                        // This occurs when we are running discovery
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
+                        );
+                        this._onDiscoveryDataReceived.fire({
+                            uuid,
+                            data: JSON.stringify(createDiscoveryErrorPayload(code, signal, options.cwd)),
+                        });
+                        // then send a EOT payload
+                        this._onDiscoveryDataReceived.fire({
                             uuid,
                             data: JSON.stringify(createEOTPayload(true)),
                         });

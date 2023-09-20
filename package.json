@@ -366,11 +366,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.enableLinting",
-                "title": "%python.command.python.enableLinting.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.enableSourceMapSupport",
                 "title": "%python.command.python.enableSourceMapSupport.title%"
             },
@@ -432,18 +427,8 @@
             },
             {
                 "category": "Python",
-                "command": "python.runLinting",
-                "title": "%python.command.python.runLinting.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.setInterpreter",
                 "title": "%python.command.python.setInterpreter.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.setLinter",
-                "title": "%python.command.python.setLinter.title%"
             },
             {
                 "category": "Python Refactor",
@@ -1809,12 +1794,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.enableLinting",
-                    "title": "%python.command.python.enableLinting.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
-                },
-                {
-                    "category": "Python",
                     "command": "python.enableSourceMapSupport",
                     "title": "%python.command.python.enableSourceMapSupport.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
@@ -1887,21 +1866,9 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.runLinting",
-                    "title": "%python.command.python.runLinting.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
-                },
-                {
-                    "category": "Python",
                     "command": "python.setInterpreter",
                     "title": "%python.command.python.setInterpreter.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.setLinter",
-                    "title": "%python.command.python.setLinter.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
                 },
                 {
                     "category": "Python Refactor",

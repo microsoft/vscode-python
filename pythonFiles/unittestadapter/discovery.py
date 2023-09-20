@@ -51,7 +51,7 @@ class PayloadDict(TypedDict):
 class EOTPayloadDict(TypedDict):
     """A dictionary that is used to send a end of transmission post request to the server."""
 
-    command_type: Literal["discovery"] | Literal["execution"]
+    command_type: Union[Literal["discovery"], Literal["execution"]]
     eot: bool
 
 
@@ -113,7 +113,9 @@ def discover_tests(
     return payload
 
 
-def post_response(payload: PayloadDict | EOTPayloadDict, port: int, uuid: str) -> None:
+def post_response(
+    payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str
+) -> None:
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
     data = json.dumps(payload)

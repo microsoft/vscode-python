@@ -28,7 +28,6 @@ import { IDebugConfigurationService, IDynamicDebugConfigurationService } from '.
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
-import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
@@ -167,8 +166,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             const pythonSettings = configuration.getSettings();
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-
-            disposables.push(new LinterCommands(serviceManager));
 
             if (
                 pythonSettings &&
