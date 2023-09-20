@@ -303,4 +303,51 @@ def test_send_whole_class():
     )
     assert result["normalized_smart_result"] == expected
 
+def test_send_whole_if_statement():
+    """
+    Shift+enter on an if statement
+    should send the whole if statement
+    including statements inside and else.
+    """
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        if True:
+            print('send this')
+        else:
+            print('also send this')
 
+        print('cursor here afterwards')
+        """)
+    expected = textwrap.dedent(
+        """\
+        if True:
+            print('send this')
+        else:
+            print('also send this')
+
+        """)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    assert result["normalized_smart_result"] == expected
+
+def test_send_try():
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        try:
+            1+1
+        except:
+            print("error")
+
+        print("Not running this")
+        """)
+    expected = textwrap.dedent(
+        """\
+        try:
+            1+1
+        except:
+            print("error")
+
+        """)
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    assert result["normalized_smart_result"] == expected

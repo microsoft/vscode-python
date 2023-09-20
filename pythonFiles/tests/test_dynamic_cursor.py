@@ -162,3 +162,18 @@ def test_def_to_def():
     result = normalizeSelection.traverse_file(src, 1, 1, False)
 
     assert result["which_line_next"] == 9
+
+def test_try_catch_move():
+    importlib.reload(normalizeSelection)
+    src = textwrap.dedent(
+        """\
+        try:
+            1+1
+        except:
+            print("error")
+
+        print("Should be here afterwards")
+        """)
+
+    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    assert result["which_line_next"] == 6
