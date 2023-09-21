@@ -16,7 +16,6 @@ import { PytestTestExecutionAdapter } from '../../../client/testing/testControll
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import * as util from '../../../client/testing/testController/common/utils';
-import { sleep } from '../../core';
 
 suite('Execution Flow Run Adapters', () => {
     let testServer: typeMoq.IMock<ITestServer>;
@@ -97,7 +96,6 @@ suite('Execution Flow Run Adapters', () => {
         execServiceMock
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {
-                sleep(100);
                 cancellationToken.cancel();
                 return {
                     proc: mockProc,
