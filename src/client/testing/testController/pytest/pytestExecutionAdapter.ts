@@ -4,8 +4,8 @@
 import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
-import { traceError, traceInfo } from '../../../logging';
+import { Deferred } from '../../../common/utils/async';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     ExecutionTestPayload,
@@ -15,7 +15,6 @@ import {
 } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
-    ExecutionResult,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
@@ -42,7 +41,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
-        const deferredTillEOT: Deferred<void> = utils.createEOTDeferred();
+        // deferredTillEOT is resolved when all data sent over payload is received
+        // deferredTillExecClose is resolved when all stdout and stderr is read
+        const deferredTillEOT: Deferred<void> = utils.createTestingDeferred();
+        const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 const eParsed = JSON.parse(e.data);
@@ -60,6 +62,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             traceInfo("Test run cancelled, resolving 'till EOT' deferred.");
             deferredTillEOT.resolve();
         });
+
         try {
             this.runTestsNew(
                 uri,
@@ -70,9 +73,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 executionFactory,
                 debugLauncher,
                 deferredTillEOT,
+                deferredTillExecClose,
             );
         } finally {
             await deferredTillEOT.promise;
+            traceVerbose('deferredTill EOT resolved');
+            await deferredTillExecClose.promise;
+            traceVerbose('deferredTillExecClose Exec resolved');
             disposeDataReceiver(this.testServer);
         }
 
@@ -95,6 +102,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         deferredTillEOT?: Deferred<void>,
+        deferredToExecClose?: Deferred<void>,
     ): Promise<ExecutionTestPayload> {
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -164,7 +172,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytest with arguments: ${runArgs.join(' ')}\r\n`);
 
-                const deferredExec = createDeferred<ExecutionResult<string>>();
                 const result = execService?.execObservable(runArgs, spawnOptions);
 
                 runInstance?.token.onCancellationRequested(() => {
@@ -175,20 +182,27 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 result?.proc?.stdout?.on('data', (data) => {
-                    this.outputChannel?.append(data.toString());
+                    const out = utils.fixLogLines(data.toString());
+                    runInstance?.appendOutput(`${out}\r\n`);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
-                    this.outputChannel?.append(data.toString());
+                    const out = utils.fixLogLines(data.toString());
+                    runInstance?.appendOutput(`${out}\r\n`);
+                });
+                result?.proc?.on('exit', (code, signal) => {
+                    if (code !== 0 && testIds) {
+                        traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}.`);
+                    }
                 });
 
-                result?.proc?.on('exit', (code, signal) => {
-                    traceInfo('Test run finished, subprocess exited.');
+                result?.proc?.on('close', (code, signal) => {
+                    traceVerbose('Test run finished, subprocess closed.');
                     // if the child has testIds then this is a run request
+                    // if the child process exited with a non-zero exit code, then we need to send the error payload.
                     if (code !== 0 && testIds) {
                         traceError(
-                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
+                            `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
                         );
-                        // if the child process exited with a non-zero exit code, then we need to send the error payload.
                         this.testServer.triggerRunDataReceivedEvent({
                             uuid,
                             data: JSON.stringify(utils.createExecutionErrorPayload(code, signal, testIds, cwd)),
@@ -199,15 +213,15 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                             data: JSON.stringify(utils.createEOTPayload(true)),
                         });
                     }
-                    deferredExec.resolve({ stdout: '', stderr: '' });
+                    // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
+                    // due to the sync reading of the output.
+                    deferredToExecClose?.resolve();
                 });
-                await deferredExec.promise;
             }
         } catch (ex) {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
-
         const executionPayload: ExecutionTestPayload = { cwd, status: 'success', error: '' };
         return executionPayload;
     }

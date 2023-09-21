@@ -43,7 +43,7 @@ export const JSONRPC_UUID_HEADER = 'Request-uuid';
 export const JSONRPC_CONTENT_LENGTH_HEADER = 'Content-Length';
 export const JSONRPC_CONTENT_TYPE_HEADER = 'Content-Type';
 
-export function createEOTDeferred(): Deferred<void> {
+export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 

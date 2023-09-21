@@ -268,7 +268,7 @@ suite('pytest test execution adapter', () => {
                 traceInfo('stubs launch debugger');
                 deferredEOT.resolve();
             });
-        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
         utilsCreateEOTStub.callsFake(() => deferredEOT);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
