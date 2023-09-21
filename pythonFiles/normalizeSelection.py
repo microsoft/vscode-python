@@ -144,19 +144,22 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
 
 def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     """
-    Traverse through a user's given file content and find, collect all appropriate lines
+    Intended to traverse through a user's given file content and find, collect all appropriate lines
     that should be sent to the REPL in case of smart selection.
+    This could be exact statement such as just a single line print statement,
+    or a multiline dictionary, or differently styled multi-line list comprehension, etc.
     Then call the normalize_lines function to normalize our smartly selected code block.
     """
-    # We need to collect ast nodes to iterate through.
+
     parsed_file_content = ast.parse(wholeFileContent)
     smart_code = ""
     should_run_top_blocks = []
-    # Iterate through the top level nodes in user's file document,
-    # and add to our top_level_nodes array.
-    # then for each of the top level, if it is valid ast_types with
-    # node.body, we will add all the child nodes that pertains to that
-    # top block code to the array as well.
+
+    # Purpose of this loop is to fetch and collect all the
+    # AST top level nodes, and its node.body as child nodes.
+    # Individual nodes will contain information like
+    # the start line, end line and get source segment information
+    # that will be used to smartly select, and send normalized code.
     for node in ast.iter_child_nodes(parsed_file_content):
         top_level_nodes.append(node)
 

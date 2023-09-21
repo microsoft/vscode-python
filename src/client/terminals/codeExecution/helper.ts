@@ -120,13 +120,15 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
      * Intended to provide smooth shift+enter user experience
      * bringing user's cursor to the next executable block of code when used with smart selection.
      */
-    public async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
+    // eslint-disable-next-line class-methods-use-this
+    private async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
         if (pythonSmartSendEnabled(this.serviceContainer)) {
             if (activeEditor?.selection?.isEmpty) {
-                commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) });
-                commands.executeCommand('cursorEnd');
+                await commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) });
+                await commands.executeCommand('cursorEnd');
             }
         }
+        return Promise.resolve();
     }
 
     public async getFileToExecute(): Promise<Uri | undefined> {
