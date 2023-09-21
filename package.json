@@ -489,6 +489,19 @@
                         "experimental"
                     ]
                 },
+                "python.createEnvironment.trigger": {
+                    "default": "off",
+                    "markdownDescription": "%python.createEnvironment.trigger.description%",
+                    "scope": "machine-overridable",
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "prompt"
+                    ],
+                    "tags": [
+                        "experimental"
+                    ]
+                },
                 "python.condaPath": {
                     "default": "",
                     "description": "%python.condaPath.description%",

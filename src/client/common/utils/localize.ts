@@ -499,6 +499,14 @@ export namespace CreateEnv {
         export const deletingEnvironmentProgress = l10n.t('Deleting existing ".conda" environment...');
         export const errorDeletingEnvironment = l10n.t('Error while deleting existing ".conda" environment.');
     }
+
+    export namespace Trigger {
+        export const workspaceTriggerMessage = l10n.t(
+            'A virtual environment is not currently selected for your Python interpreter. Would you like to create a virtual environment?',
+        );
+        export const createEnvironment = l10n.t('Create Environment');
+        export const disableCheck = l10n.t('Disable');
+    }
 }
 
 export namespace ToolsExtensions {
