@@ -248,12 +248,13 @@ suite('Terminal Environment Variable Collection Service', () => {
         assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
     });
 
-    test('Prepend full PATH otherwise', async () => {
+    test('Prepend full PATH with separator otherwise', async () => {
         const processEnv = { PATH: 'hello/1/2/3' };
         reset(environmentActivationService);
         when(environmentActivationService.getProcessEnvironmentVariables(anything(), anything())).thenResolve(
             processEnv,
         );
+        const separator = getOSType() === OSType.Windows ? ';' : ':';
         const finalPath = 'hello/3/2/1';
         const envVars: NodeJS.ProcessEnv = { PATH: finalPath };
         when(
@@ -275,7 +276,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
 
         verify(collection.clear()).once();
-        verify(collection.prepend('PATH', finalPath, anything())).once();
+        verify(collection.prepend('PATH', `${finalPath}${separator}`, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
         assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
     });

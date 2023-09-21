@@ -35,7 +35,7 @@ import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/inf
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
-import { OSType } from '../../common/utils/platform';
+import { OSType, getOSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 
 @injectable()
@@ -63,6 +63,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
      */
     private processEnvVars: EnvironmentVariables | undefined;
 
+    private separator: string;
+
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -75,7 +77,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-    ) {}
+    ) {
+        this.separator = platform.osType === OSType.Windows ? ';' : ':';
+    }
 
     public async activate(resource: Resource): Promise<void> {
         try {
@@ -196,6 +200,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                                 applyAtProcessCreation: true,
                             });
                         } else {
+                            if (!value.endsWith(this.separator)) {
+                                value = value.concat(this.separator);
+                            }
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
                             envVarCollection.prepend(key, value, {
                                 applyAtShellIntegration: true,
