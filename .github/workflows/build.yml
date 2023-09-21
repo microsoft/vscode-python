@@ -120,7 +120,7 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['3.8', '3.x']
+        python: ['3.8', '3.x', '3.12-dev']
 
     steps:
       - name: Checkout
