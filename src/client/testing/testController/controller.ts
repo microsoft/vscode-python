@@ -462,7 +462,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             );
                         }
                     }
-                    console.log('somewhere in the middle here');
                     if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
                         unconfiguredWorkspaces.push(workspace);
                     }
@@ -471,7 +470,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
         } finally {
             runInstance.appendOutput(`Finished running tests!\r\n`);
-            console.log('run instance ended');
             runInstance.end();
             dispose.dispose();
             if (unconfiguredWorkspaces.length > 0) {

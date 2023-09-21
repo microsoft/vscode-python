@@ -5,6 +5,7 @@ import * as net from 'net';
 import * as crypto from 'crypto';
 import { Disposable, Event, EventEmitter, TestRun } from 'vscode';
 import * as path from 'path';
+import { ChildProcess } from 'child_process';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionResult,
@@ -223,12 +224,22 @@ export class PythonTestServer implements ITestServer, Disposable {
                     // This means it is running discovery
                     traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
                 }
-                const deferred = createDeferred<ExecutionResult<string>>();
-                const result = execService.execObservable(args, spawnOptions);
+                const deferredTillExecClose = createDeferred<ExecutionResult<string>>();
+
+                let resultProc: ChildProcess | undefined;
+
                 runInstance?.token.onCancellationRequested(() => {
                     traceInfo('Test run cancelled, killing unittest subprocess.');
-                    result?.proc?.kill();
+                    // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
+                    if (resultProc) {
+                        resultProc?.kill();
+                    } else {
+                        deferredTillExecClose?.resolve();
+                    }
                 });
+
+                const result = execService?.execObservable(args, spawnOptions);
+                resultProc = result?.proc;
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
@@ -275,9 +286,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                             data: JSON.stringify(createEOTPayload(true)),
                         });
                     }
-                    deferred.resolve({ stdout: '', stderr: '' });
+                    deferredTillExecClose.resolve({ stdout: '', stderr: '' });
                 });
-                await deferred.promise;
+                await deferredTillExecClose.promise;
             }
         } catch (ex) {
             traceError(`Error while server attempting to run unittest command: ${ex}`);

@@ -166,6 +166,11 @@ suite('Execution Flow Run Adapters', () => {
         const execServiceMock = typeMoq.Mock.ofType<IPythonExecutionService>();
         debugLauncher
             .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .callback((_options, callback) => {
+                if (callback) {
+                    callback();
+                }
+            })
             .returns(async () => {
                 cancellationToken.cancel();
                 return Promise.resolve();

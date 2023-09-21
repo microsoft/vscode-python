@@ -3,6 +3,7 @@
 
 import { TestRun, Uri } from 'vscode';
 import * as path from 'path';
+import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
@@ -126,8 +127,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
-        // deferredTillExecClose is resolved when all stdout and stderr is read
-        const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
         try {
             // Remove positional test folders and files, we will add as needed per node
             const testArgs = removePositionalFoldersAndFiles(pytestArgs);
@@ -161,19 +160,25 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     deferredTillEOT?.resolve();
-                    deferredTillExecClose?.resolve();
                 });
             } else {
+                // deferredTillExecClose is resolved when all stdout and stderr is read
+                const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
                 // combine path to run script with run args
                 const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
                 const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytest with arguments: ${runArgs.join(' ')}\r\n`);
 
-                let resultProc: any;
+                let resultProc: ChildProcess | undefined;
 
                 runInstance?.token.onCancellationRequested(() => {
                     traceInfo('Test run cancelled, killing pytest subprocess.');
-                    resultProc?.kill();
+                    // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
+                    if (resultProc) {
+                        resultProc?.kill();
+                    } else {
+                        deferredTillExecClose?.resolve();
+                    }
                 });
 
                 const result = execService?.execObservable(runArgs, spawnOptions);
@@ -217,12 +222,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     // due to the sync reading of the output.
                     deferredTillExecClose?.resolve();
                 });
+                await deferredTillExecClose?.promise;
             }
         } catch (ex) {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
-        await deferredTillExecClose?.promise;
+
         const executionPayload: ExecutionTestPayload = {
             cwd,
             status: 'success',
