@@ -35,7 +35,7 @@ import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/inf
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
-import { OSType, getOSType } from '../../common/utils/platform';
+import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 
 @injectable()
