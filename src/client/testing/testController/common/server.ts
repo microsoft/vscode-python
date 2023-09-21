@@ -86,7 +86,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             // what payload is so small it doesn't include the whole UUID think got this
             if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
                 // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
-                traceInfo(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
+                traceLog(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
@@ -238,6 +238,12 @@ export class PythonTestServer implements ITestServer, Disposable {
                 result?.proc?.stderr?.on('data', (data) => {
                     spawnOptions?.outputChannel?.append(data.toString());
                 });
+                result?.proc?.on('exit', (code, signal) => {
+                    if (code !== 0) {
+                        traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}`);
+                    }
+                });
+
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
                     if (code !== 0 && testIds && testIds?.length !== 0) {

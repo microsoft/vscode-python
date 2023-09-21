@@ -42,9 +42,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     ): Promise<ExecutionTestPayload> {
         const uuid = this.testServer.createUUID(uri.fsPath);
         // deferredTillEOT is resolved when all data sent over payload is received
-        // deferredTillExecClose is resolved when all stdout and stderr is read
         const deferredTillEOT: Deferred<void> = utils.createTestingDeferred();
-        const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
+
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
             if (runInstance) {
                 const eParsed = JSON.parse(e.data);
@@ -64,7 +63,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         });
 
         try {
-            this.runTestsNew(
+            await this.runTestsNew(
                 uri,
                 testIds,
                 uuid,
@@ -73,13 +72,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 executionFactory,
                 debugLauncher,
                 deferredTillEOT,
-                deferredTillExecClose,
             );
         } finally {
             await deferredTillEOT.promise;
             traceVerbose('deferredTill EOT resolved');
-            await deferredTillExecClose.promise;
-            traceVerbose('deferredTillExecClose Exec resolved');
             disposeDataReceiver(this.testServer);
         }
 
@@ -102,7 +98,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         deferredTillEOT?: Deferred<void>,
-        deferredToExecClose?: Deferred<void>,
     ): Promise<ExecutionTestPayload> {
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -131,7 +126,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
-
+        // deferredTillExecClose is resolved when all stdout and stderr is read
+        const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
         try {
             // Remove positional test folders and files, we will add as needed per node
             const testArgs = removePositionalFoldersAndFiles(pytestArgs);
@@ -165,6 +161,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     deferredTillEOT?.resolve();
+                    deferredTillExecClose?.resolve();
                 });
             } else {
                 // combine path to run script with run args
@@ -172,12 +169,15 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytest with arguments: ${runArgs.join(' ')}\r\n`);
 
-                const result = execService?.execObservable(runArgs, spawnOptions);
+                let resultProc: any;
 
                 runInstance?.token.onCancellationRequested(() => {
                     traceInfo('Test run cancelled, killing pytest subprocess.');
-                    result?.proc?.kill();
+                    resultProc?.kill();
                 });
+
+                const result = execService?.execObservable(runArgs, spawnOptions);
+                resultProc = result?.proc;
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
@@ -215,14 +215,19 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     }
                     // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
                     // due to the sync reading of the output.
-                    deferredToExecClose?.resolve();
+                    deferredTillExecClose?.resolve();
                 });
             }
         } catch (ex) {
             traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
-        const executionPayload: ExecutionTestPayload = { cwd, status: 'success', error: '' };
+        await deferredTillExecClose?.promise;
+        const executionPayload: ExecutionTestPayload = {
+            cwd,
+            status: 'success',
+            error: '',
+        };
         return executionPayload;
     }
 }
