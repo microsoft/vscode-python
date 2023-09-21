@@ -31,6 +31,7 @@ import {
 import {
     EnvGroups,
     InterpreterStateArgs,
+    QuickPickType,
     SetInterpreterCommand,
 } from '../../../../client/interpreter/configuration/interpreterSelector/commands/setInterpreter';
 import {
@@ -265,8 +266,14 @@ suite('Set Interpreter Command', () => {
             delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
-            const activeItem = await actualParameters!.activeItem;
-            assert.deepStrictEqual(activeItem, recommended);
+            if (typeof actualParameters!.activeItem === 'function') {
+                const activeItem = await actualParameters!.activeItem(({ items: suggestions } as unknown) as QuickPick<
+                    QuickPickType
+                >);
+                assert.deepStrictEqual(activeItem, recommended);
+            } else {
+                assert(false, 'Not a function');
+            }
             delete actualParameters!.activeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
         });
@@ -308,8 +315,14 @@ suite('Set Interpreter Command', () => {
             delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
-            const activeItem = await actualParameters!.activeItem;
-            assert.deepStrictEqual(activeItem, noPythonInstalled);
+            if (typeof actualParameters!.activeItem === 'function') {
+                const activeItem = await actualParameters!.activeItem(({ items: suggestions } as unknown) as QuickPick<
+                    QuickPickType
+                >);
+                assert.deepStrictEqual(activeItem, noPythonInstalled);
+            } else {
+                assert(false, 'Not a function');
+            }
             delete actualParameters!.activeItem;
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
         });
@@ -666,8 +679,14 @@ suite('Set Interpreter Command', () => {
             delete actualParameters!.initialize;
             delete actualParameters!.customButtonSetups;
             delete actualParameters!.onChangeItem;
-            const activeItem = await actualParameters!.activeItem;
-            assert.deepStrictEqual(activeItem, recommended);
+            if (typeof actualParameters!.activeItem === 'function') {
+                const activeItem = await actualParameters!.activeItem(({ items: suggestions } as unknown) as QuickPick<
+                    QuickPickType
+                >);
+                assert.deepStrictEqual(activeItem, recommended);
+            } else {
+                assert(false, 'Not a function');
+            }
             delete actualParameters!.activeItem;
 
             assert.deepStrictEqual(actualParameters, expectedParameters, 'Params not equal');
