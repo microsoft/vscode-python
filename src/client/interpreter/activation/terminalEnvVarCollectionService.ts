@@ -374,6 +374,11 @@ function shouldPS1BeSet(type: PythonEnvType | undefined, env: EnvironmentVariabl
         const isPromptDisabled = promptDisabledVar && promptDisabledVar !== undefined;
         return !isPromptDisabled;
     }
+    if (type === PythonEnvType.Conda) {
+        const promptEnabledVar = env.CONDA_PROMPT_MODIFIER;
+        const isPromptEnabled = promptEnabledVar && promptEnabledVar !== '';
+        return !!isPromptEnabled;
+    }
     return type !== undefined;
 }
 
