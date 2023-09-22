@@ -415,7 +415,7 @@ export namespace Testing {
     export const cancelUnittestExecution = l10n.t('Canceled unittest test execution');
     export const errorUnittestExecution = l10n.t('Unittest test execution error');
     export const cancelPytestExecution = l10n.t('Canceled pytest test execution');
-    export const errorPytestExecution = l10n.t('Pytest test execution error');
+    export const errorPytestExecution = l10n.t('pytest test execution error');
 }
 
 export namespace OutdatedDebugger {
