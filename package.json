@@ -431,11 +431,6 @@
                 "title": "%python.command.python.setInterpreter.title%"
             },
             {
-                "category": "Python Refactor",
-                "command": "python.sortImports",
-                "title": "%python.command.python.sortImports.title%"
-            },
-            {
                 "category": "Python",
                 "command": "python.startREPL",
                 "title": "%python.command.python.startREPL.title%"
@@ -1871,12 +1866,6 @@
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {
-                    "category": "Python Refactor",
-                    "command": "python.sortImports",
-                    "title": "%python.command.python.sortImports.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
-                },
-                {
                     "category": "Python",
                     "command": "python.startREPL",
                     "title": "%python.command.python.startREPL.title%",
@@ -1913,12 +1902,6 @@
                     "submenu": "python.run",
                     "group": "Python",
                     "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted"
-                },
-                {
-                    "command": "python.sortImports",
-                    "group": "Refactor",
-                    "title": "%python.command.python.sortImports.title%",
-                    "when": "editorLangId == python && !notebookEditorFocused && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "submenu": "python.runFileInteractive",
