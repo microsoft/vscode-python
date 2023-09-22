@@ -189,6 +189,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             resource: options.workspaceFolder,
         };
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
+        traceInfo(`Test Port Number: ${this.getPort()}`);
 
         // Add the generated UUID to the data to be sent (expecting to receive it back).
         // first check if we have testIds passed in (in case of execution) and
