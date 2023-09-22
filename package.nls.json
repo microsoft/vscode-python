@@ -16,6 +16,7 @@
     "python.command.python.configureTests.title": "Configure Tests",
     "python.command.testing.rerunFailedTests.title": "Rerun Failed Tests",
     "python.command.python.execSelectionInTerminal.title": "Run Selection/Line in Python Terminal",
+    "python.menu.execSelectionInTerminal.title": "Run Selection/Line",
     "python.command.python.execSelectionInDjangoShell.title": "Run Selection/Line in Django Shell",
     "python.command.python.reportIssue.title": "Report Issue...",
     "python.command.python.enableSourceMapSupport.title": "Enable Source Map Support For Extension Debugging",

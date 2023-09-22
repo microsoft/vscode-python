@@ -400,6 +400,7 @@
             {
                 "category": "Python",
                 "command": "python.execSelectionInTerminal",
+                "shortTitle": "%python.menu.execSelectionInTerminal.title%",
                 "title": "%python.command.python.execSelectionInTerminal.title%"
             },
             {
