@@ -292,10 +292,13 @@ export async function pickExistingVenvAction(
     if (workspaceFolder) {
         if (await hasVenv(workspaceFolder)) {
             const items: QuickPickItem[] = [
-                { label: CreateEnv.Venv.recreate, description: CreateEnv.Venv.recreateDescription },
                 {
                     label: CreateEnv.Venv.useExisting,
                     description: CreateEnv.Venv.useExistingDescription,
+                },
+                {
+                    label: CreateEnv.Venv.recreate,
+                    description: CreateEnv.Venv.recreateDescription,
                 },
             ];
 
