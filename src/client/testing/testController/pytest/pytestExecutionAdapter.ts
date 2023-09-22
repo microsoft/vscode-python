@@ -202,6 +202,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     traceVerbose('Test run finished, subprocess closed.');
                     // if the child has testIds then this is a run request
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
+                    if (Array.isArray(code)) {
+                        // Get the first value if it's an array
+                        code = 0;
+                    }
                     if (code !== 0 && testIds) {
                         traceError(
                             `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,

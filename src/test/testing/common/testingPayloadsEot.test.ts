@@ -66,6 +66,7 @@ suite('EOT tests', () => {
     let testController: TestController;
     let stubExecutionFactory: typeMoq.IMock<IPythonExecutionFactory>;
     let client: net.Socket;
+    let mockProc: MockChildProcess;
     const sandbox = sinon.createSandbox();
     // const unittestProvider: TestProvider = UNITTEST_PROVIDER;
     // const pytestProvider: TestProvider = PYTEST_PROVIDER;
@@ -86,7 +87,7 @@ suite('EOT tests', () => {
             traceLog('Socket connection error:', error);
         });
 
-        const mockProc = new MockChildProcess('', ['']);
+        mockProc = new MockChildProcess('', ['']);
         const output2 = new Observable<Output<string>>(() => {
             /* no op */
         });
@@ -156,15 +157,17 @@ suite('EOT tests', () => {
                         }
                     })(client, payloadArray[i]);
                 }
+                mockProc.emit('close', 0, null);
                 client.end();
             });
 
             resultResolver = new PythonResultResolver(testController, PYTEST_PROVIDER, workspaceUri);
             resultResolver._resolveExecution = async (payload, _token?) => {
                 // the payloads that get to the _resolveExecution are all data and should be successful.
+                actualCollectedResult = actualCollectedResult + JSON.stringify(payload.result);
                 assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
                 assert.ok(payload.result, 'Expected results to be present');
-                actualCollectedResult = actualCollectedResult + JSON.stringify(payload.result);
+
                 return Promise.resolve();
             };
             // set workspace to test workspace folder
@@ -200,10 +203,6 @@ suite('EOT tests', () => {
                         actualCollectedResult,
                         "Expected collected result to match 'data'",
                     );
-                    // nervous about this not testing race conditions correctly
-                    // client.end();
-                    // verify that the _resolveExecution was called once per test
-                    // assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
                 });
         });
     });
