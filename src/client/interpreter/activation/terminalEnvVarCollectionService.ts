@@ -375,6 +375,8 @@ function shouldPS1BeSet(type: PythonEnvType | undefined, env: EnvironmentVariabl
         return !isPromptDisabled;
     }
     if (type === PythonEnvType.Conda) {
+        // Instead of checking config value using `conda config --get changeps1`, simply check
+        // `CONDA_PROMPT_MODIFER` to avoid the cost of launching the conda binary.
         const promptEnabledVar = env.CONDA_PROMPT_MODIFIER;
         const isPromptEnabled = promptEnabledVar && promptEnabledVar !== '';
         return !!isPromptEnabled;

@@ -216,6 +216,85 @@ suite('Terminal Environment Variable Collection Service', () => {
         assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
 
+    test('Respect VIRTUAL_ENV_DISABLE_PROMPT when setting PS1 for venv', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = {
+            VIRTUAL_BIN: 'prefix/to/conda',
+            ...process.env,
+            VIRTUAL_ENV_DISABLE_PROMPT: '1',
+        };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(anything(), undefined, undefined, 'bash'),
+        ).thenResolve(envVars);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            type: PythonEnvType.Virtual,
+            envName: 'envName',
+            envPath: 'prefix/to/conda',
+        } as unknown) as PythonEnvironment);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        when(collection.prepend('PS1', anything(), anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, 'bash');
+
+        verify(collection.prepend('PS1', anything(), anything())).never();
+    });
+
+    test('Otherwise set PS1 for venv even if PS1 is not returned', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = {
+            VIRTUAL_BIN: 'prefix/to/conda',
+            ...process.env,
+        };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(anything(), undefined, undefined, 'bash'),
+        ).thenResolve(envVars);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            type: PythonEnvType.Virtual,
+            envName: 'envName',
+            envPath: 'prefix/to/conda',
+        } as unknown) as PythonEnvironment);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        when(collection.prepend('PS1', '(envName) ', anything())).thenReturn();
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, 'bash');
+
+        verify(collection.prepend('PS1', '(envName) ', anything())).once();
+    });
+
+    test('Respect CONDA_PROMPT_MODIFIER when setting PS1 for conda', async () => {
+        when(platform.osType).thenReturn(OSType.Linux);
+        const envVars: NodeJS.ProcessEnv = {
+            CONDA_PREFIX: 'prefix/to/conda',
+            ...process.env,
+            CONDA_PROMPT_MODIFIER: '(envName)',
+        };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(anything(), undefined, undefined, 'bash'),
+        ).thenResolve(envVars);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            type: PythonEnvType.Conda,
+            envName: 'envName',
+            envPath: 'prefix/to/conda',
+        } as unknown) as PythonEnvironment);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        let opts: EnvironmentVariableMutatorOptions | undefined;
+        when(collection.prepend('PS1', '(envName) ', anything())).thenCall((_, _v, o) => {
+            opts = o;
+        });
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, 'bash');
+
+        verify(collection.clear()).once();
+        verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+    });
+
     test('Prepend only "prepend portion of PATH" where applicable', async () => {
         const processEnv = { PATH: 'hello/1/2/3' };
         reset(environmentActivationService);
@@ -416,7 +495,11 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('Correct track that prompt was not set for non-Windows where PS1 is not set but env name is base', async () => {
         when(platform.osType).thenReturn(OSType.Linux);
-        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env };
+        const envVars: NodeJS.ProcessEnv = {
+            CONDA_PREFIX: 'prefix/to/conda',
+            ...process.env,
+            CONDA_PROMPT_MODIFIER: '(base)',
+        };
         const ps1Shell = 'zsh';
         const resource = Uri.file('a');
         const workspaceFolder: WorkspaceFolder = {
