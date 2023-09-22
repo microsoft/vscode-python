@@ -47,7 +47,7 @@ export interface IQuickPickParameters<T extends QuickPickItem, E = any> {
     totalSteps?: number;
     canGoBack?: boolean;
     items: T[];
-    activeItem?: T | Promise<T>;
+    activeItem?: T | ((quickPick: QuickPick<T>) => Promise<T>);
     placeholder: string | undefined;
     customButtonSetups?: QuickInputButtonSetup[];
     matchOnDescription?: boolean;
@@ -156,7 +156,13 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
             initialize(input);
         }
         if (activeItem) {
-            input.activeItems = [await activeItem];
+            if (typeof activeItem === 'function') {
+                activeItem(input).then((item) => {
+                    if (input.activeItems.length === 0) {
+                        input.activeItems = [item];
+                    }
+                });
+            }
         } else {
             input.activeItems = [];
         }
