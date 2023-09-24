@@ -13,33 +13,32 @@ attrs==23.1.0 \
 cattrs==23.1.2 \
     --hash=sha256:b2bb14311ac17bed0d58785e5a60f022e5431aca3932e3fc5cc8ed8639de50a4 \
     --hash=sha256:db1c821b8c537382b2c7c66678c3790091ca0275ac486c76f3c8f3920e83c657
-    # via lsprotocol
+    # via
+    #   jedi-language-server
+    #   lsprotocol
 docstring-to-markdown==0.12 \
     --hash=sha256:40004224b412bd6f64c0f3b85bb357a41341afd66c4b4896709efa56827fb2bb \
     --hash=sha256:7df6311a887dccf9e770f51242ec002b19f0591994c4783be49d24cdc1df3737
     # via jedi-language-server
-exceptiongroup==1.1.2 \
-    --hash=sha256:12c3e887d6485d16943a309616de20ae5582633e0a2eda17f4e10fd61c1e8af5 \
-    --hash=sha256:e346e69d186172ca7cf029c8c1d16235aa0e04035e5750b4b95039e65204328f
+exceptiongroup==1.1.3 \
+    --hash=sha256:097acd85d473d75af5bb98e41b61ff7fe35efe6675e4f9370ec6ec5126d160e9 \
+    --hash=sha256:343280667a4585d195ca1cf9cef84a4e178c4b6cf2274caef9859782b567d5e3
     # via cattrs
-importlib-metadata==3.10.1 \
-    --hash=sha256:2ec0faae539743ae6aaa84b49a169670a465f7f5d64e6add98388cc29fd1f2f6 \
-    --hash=sha256:c9356b657de65c53744046fa8f7358afe0714a1af7d570c00c3835c2d724a7c1
-    # via
-    #   attrs
-    #   jedi-language-server
-    #   typeguard
-jedi==0.18.2 \
-    --hash=sha256:203c1fd9d969ab8f2119ec0a3342e0b49910045abe6af0a3ae83a5764d54639e \
-    --hash=sha256:bae794c30d07f6d910d32a7048af09b5a39ed740918da923c6b780790ebac612
+importlib-metadata==6.8.0 \
+    --hash=sha256:3ebb78df84a805d7698245025b975d9d67053cd94c79245ba4b3eb694abe68bb \
+    --hash=sha256:dbace7892d8c0c4ac1ad096662232f831d4e64f4c4545bd53016a3e9d4654743
+    # via typeguard
+jedi==0.19.0 \
+    --hash=sha256:bcf9894f1753969cbac8022a8c2eaee06bfa3724e4192470aaffe7eb6272b0c4 \
+    --hash=sha256:cb8ce23fbccff0025e9386b5cf85e892f94c9b822378f8da49970471335ac64e
     # via jedi-language-server
-jedi-language-server==0.40.0 \
-    --hash=sha256:53e590400b5cd2f6e363e77a4d824b1883798994b731cb0b4370d103748d30e2 \
-    --hash=sha256:bacbae2930b6a8a0f1f284c211672fceec94b4808b0415d1c3352fa4b1ac5ad6
+jedi-language-server==0.41.1 \
+    --hash=sha256:3f15ca5cc28e728564f7d63583e171b418025582447ce023512e3f2b2d71ebae \
+    --hash=sha256:ca9b3e7f48b70f0988d85ffde4f01dd1ab94c8e0f69e8c6424e6657117b44f91
     # via -r pythonFiles\jedilsp_requirements\requirements.in
-lsprotocol==2023.0.0a2 \
-    --hash=sha256:80aae7e39171b49025876a524937c10be2eb986f4be700ca22ee7d186b8488aa \
-    --hash=sha256:c4f2f77712b50d065b17f9b50d2b88c480dc2ce4bbaa56eea8269dbf54bc9701
+lsprotocol==2023.0.0b1 \
+    --hash=sha256:ade2cd0fa0ede7965698cb59cd05d3adbd19178fd73e83f72ef57a032fbb9d62 \
+    --hash=sha256:f7a2d4655cbd5639f373ddd1789807450c543341fa0a32b064ad30dbb9f510d4
     # via
     #   jedi-language-server
     #   pygls
@@ -47,44 +46,6 @@ parso==0.8.3 \
     --hash=sha256:8c07be290bb59f03588915921e29e8a50002acaf2cdc5fa0e0114f91709fafa0 \
     --hash=sha256:c001d4636cd3aecdaf33cbb40aebb59b094be2a74c556778ef5576c175e19e75
     # via jedi
-pydantic==1.10.12 \
-    --hash=sha256:0fe8a415cea8f340e7a9af9c54fc71a649b43e8ca3cc732986116b3cb135d303 \
-    --hash=sha256:1289c180abd4bd4555bb927c42ee42abc3aee02b0fb2d1223fb7c6e5bef87dbe \
-    --hash=sha256:1eb2085c13bce1612da8537b2d90f549c8cbb05c67e8f22854e201bde5d98a47 \
-    --hash=sha256:2031de0967c279df0d8a1c72b4ffc411ecd06bac607a212892757db7462fc494 \
-    --hash=sha256:2a7bac939fa326db1ab741c9d7f44c565a1d1e80908b3797f7f81a4f86bc8d33 \
-    --hash=sha256:2d5a58feb9a39f481eda4d5ca220aa8b9d4f21a41274760b9bc66bfd72595b86 \
-    --hash=sha256:2f9a6fab5f82ada41d56b0602606a5506aab165ca54e52bc4545028382ef1c5d \
-    --hash=sha256:2fcfb5296d7877af406ba1547dfde9943b1256d8928732267e2653c26938cd9c \
-    --hash=sha256:549a8e3d81df0a85226963611950b12d2d334f214436a19537b2efed61b7639a \
-    --hash=sha256:598da88dfa127b666852bef6d0d796573a8cf5009ffd62104094a4fe39599565 \
-    --hash=sha256:5d1197e462e0364906cbc19681605cb7c036f2475c899b6f296104ad42b9f5fb \
-    --hash=sha256:69328e15cfda2c392da4e713443c7dbffa1505bc9d566e71e55abe14c97ddc62 \
-    --hash=sha256:6a9dfa722316f4acf4460afdf5d41d5246a80e249c7ff475c43a3a1e9d75cf62 \
-    --hash=sha256:6b30bcb8cbfccfcf02acb8f1a261143fab622831d9c0989707e0e659f77a18e0 \
-    --hash=sha256:6c076be61cd0177a8433c0adcb03475baf4ee91edf5a4e550161ad57fc90f523 \
-    --hash=sha256:771735dc43cf8383959dc9b90aa281f0b6092321ca98677c5fb6125a6f56d58d \
-    --hash=sha256:795e34e6cc065f8f498c89b894a3c6da294a936ee71e644e4bd44de048af1405 \
-    --hash=sha256:87afda5539d5140cb8ba9e8b8c8865cb5b1463924d38490d73d3ccfd80896b3f \
-    --hash=sha256:8fb2aa3ab3728d950bcc885a2e9eff6c8fc40bc0b7bb434e555c215491bcf48b \
-    --hash=sha256:a1fcb59f2f355ec350073af41d927bf83a63b50e640f4dbaa01053a28b7a7718 \
-    --hash=sha256:a5e7add47a5b5a40c49b3036d464e3c7802f8ae0d1e66035ea16aa5b7a3923ed \
-    --hash=sha256:a73f489aebd0c2121ed974054cb2759af8a9f747de120acd2c3394cf84176ccb \
-    --hash=sha256:ab26038b8375581dc832a63c948f261ae0aa21f1d34c1293469f135fa92972a5 \
-    --hash=sha256:b0d191db0f92dfcb1dec210ca244fdae5cbe918c6050b342d619c09d31eea0cc \
-    --hash=sha256:b749a43aa51e32839c9d71dc67eb1e4221bb04af1033a32e3923d46f9effa942 \
-    --hash=sha256:b7ccf02d7eb340b216ec33e53a3a629856afe1c6e0ef91d84a4e6f2fb2ca70fe \
-    --hash=sha256:ba5b2e6fe6ca2b7e013398bc7d7b170e21cce322d266ffcd57cca313e54fb246 \
-    --hash=sha256:ba5c4a8552bff16c61882db58544116d021d0b31ee7c66958d14cf386a5b5350 \
-    --hash=sha256:c79e6a11a07da7374f46970410b41d5e266f7f38f6a17a9c4823db80dadf4303 \
-    --hash=sha256:ca48477862372ac3770969b9d75f1bf66131d386dba79506c46d75e6b48c1e09 \
-    --hash=sha256:dea7adcc33d5d105896401a1f37d56b47d443a2b2605ff8a969a0ed5543f7e33 \
-    --hash=sha256:e0a16d274b588767602b7646fa05af2782576a6cf1022f4ba74cbb4db66f6ca8 \
-    --hash=sha256:e4129b528c6baa99a429f97ce733fff478ec955513630e61b49804b6cf9b224a \
-    --hash=sha256:e5f805d2d5d0a41633651a73fa4ecdd0b3d7a49de4ec3fadf062fe16501ddbf1 \
-    --hash=sha256:ef6c96b2baa2100ec91a4b428f80d8f28a3c9e53568219b6c298c1125572ebc6 \
-    --hash=sha256:fdbdd1d630195689f325c9ef1a12900524dceb503b00a987663ff4f58669b93d
-    # via jedi-language-server
 pygls==1.0.2 \
     --hash=sha256:6d278d29fa6559b0f7a448263c85cb64ec6e9369548b02f1a7944060848b21f9 \
     --hash=sha256:888ed63d1f650b4fc64d603d73d37545386ec533c0caac921aed80f80ea946a4
@@ -95,15 +56,14 @@ typeguard==3.0.2 \
     --hash=sha256:bbe993854385284ab42fd5bd3bee6f6556577ce8b50696d6cb956d704f286c8e \
     --hash=sha256:fee5297fdb28f8e9efcb8142b5ee219e02375509cd77ea9d270b5af826358d5a
     # via pygls
-typing-extensions==4.7.1 \
-    --hash=sha256:440d5dd3af93b060174bf433bccd69b0babc3b15b1a8dca43789fd7f61514b36 \
-    --hash=sha256:b75ddc264f0ba5615db7ba217daeb99701ad295353c45f9e95963337ceeeffb2
+typing-extensions==4.8.0 \
+    --hash=sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0 \
+    --hash=sha256:df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef
     # via
     #   cattrs
-    #   importlib-metadata
-    #   pydantic
+    #   jedi-language-server
     #   typeguard
-zipp==3.15.0 \
-    --hash=sha256:112929ad649da941c23de50f356a2b5570c954b65150642bccdd66bf194d224b \
-    --hash=sha256:48904fc76a60e542af151aded95726c1a5c34ed43ab4134b597665c86d7ad556
+zipp==3.17.0 \
+    --hash=sha256:0e923e726174922dce09c53c59ad483ff7bbb8e572e00c7f7c46b88556409f31 \
+    --hash=sha256:84e64a1c28cf7e91ed2078bb8cc8c259cb19b76942096c8d7b84947690cabaf0
     # via importlib-metadata
