@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { uniq } from 'lodash';
+import { toLower, uniq, uniqBy } from 'lodash';
 import * as path from 'path';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
@@ -39,11 +39,14 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
 
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
-        const subDirs = ['Envs', '.direnv', '.venvs', '.virtualenvs', path.join('.local', 'share', 'virtualenvs')];
-        if (![OSType.Windows, OSType.OSX].includes(getOSType())) {
-            // Not a case insensitive platform, push both upper and lower cases.
-            subDirs.push('envs');
-        }
+        const subDirs = [
+            'envs',
+            'Envs',
+            '.direnv',
+            '.venvs',
+            '.virtualenvs',
+            path.join('.local', 'share', 'virtualenvs'),
+        ];
         const filtered = await asyncFilter(
             subDirs.map((d) => path.join(homeDir, d)),
             pathExists,
@@ -51,7 +54,7 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
         filtered.forEach((d) => venvDirs.push(d));
     }
 
-    return uniq(venvDirs);
+    return [OSType.Windows, OSType.OSX].includes(getOSType()) ? uniqBy(venvDirs, toLower) : uniq(venvDirs);
 }
 
 /**

@@ -50,7 +50,7 @@ import { BaseInterpreterSelectorCommand } from './base';
 const untildify = require('untildify');
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
-type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
+export type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
 
 function isInterpreterQuickPickItem(item: QuickPickType): item is IInterpreterQuickPickItem {
     return 'interpreter' in item;
@@ -177,7 +177,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             items: suggestions,
             sortByLabel: !preserveOrderWhenFiltering,
             keepScrollPosition: true,
-            activeItem: this.getActiveItem(state.workspace, suggestions), // Use a promise here to ensure quickpick is initialized synchronously.
+            activeItem: (quickPick) => this.getActiveItem(state.workspace, quickPick), // Use a promise here to ensure quickpick is initialized synchronously.
             matchOnDetail: true,
             matchOnDescription: true,
             title,
@@ -277,8 +277,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         return getGroupedQuickPickItems(items, recommended, workspaceFolder?.uri.fsPath);
     }
 
-    private async getActiveItem(resource: Resource, suggestions: QuickPickType[]) {
+    private async getActiveItem(resource: Resource, quickPick: QuickPick<QuickPickType>) {
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const suggestions = quickPick.items;
         const activeInterpreterItem = suggestions.find(
             (i) => isInterpreterQuickPickItem(i) && i.interpreter.id === interpreter?.id,
         );
@@ -339,7 +340,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
                   return false;
               })
             : undefined;
-        quickPick.activeItems = activeItem ? [activeItem] : [];
+        if (activeItem) {
+            quickPick.activeItems = [activeItem];
+        }
     }
 
     /**
