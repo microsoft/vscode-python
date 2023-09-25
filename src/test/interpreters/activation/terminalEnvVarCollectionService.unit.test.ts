@@ -191,6 +191,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
     });
 
+    // eslint-disable-next-line consistent-return
     test('If activated variables contain PS1, prefix it using shell integration', async function () {
         if (getOSType() === OSType.Windows) {
             return this.skip();
