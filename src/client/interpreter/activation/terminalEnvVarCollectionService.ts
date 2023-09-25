@@ -282,21 +282,24 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async getPS1(shell: string, resource: Resource, env: EnvironmentVariables) {
-        if (env.PS1) {
-            return env.PS1;
-        }
         const customShellType = identifyShellFromShellPath(shell);
         if (this.noPromptVariableShells.includes(customShellType)) {
-            return undefined;
+            return env.PS1;
         }
         if (this.platform.osType !== OSType.Windows) {
             // These shells are expected to set PS1 variable for terminal prompt for virtual/conda environments.
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const shouldSetPS1 = shouldPS1BeSet(interpreter?.type, env);
-            if (shouldSetPS1 && !env.PS1) {
-                // PS1 should be set but no PS1 was set.
-                return getPromptForEnv(interpreter);
+            if (shouldSetPS1) {
+                const prompt = getPromptForEnv(interpreter);
+                if (prompt) {
+                    return prompt;
+                }
             }
+        }
+        if (env.PS1) {
+            // Prefer PS1 set by env vars, as env.PS1 may or may not contain the full PS1: #22056.
+            return env.PS1;
         }
         return undefined;
     }
@@ -369,6 +372,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 }
 
 function shouldPS1BeSet(type: PythonEnvType | undefined, env: EnvironmentVariables): boolean {
+    if (env.PS1) {
+        // Activated variables contain PS1, meaning it was supposed to be set.
+        return true;
+    }
     if (type === PythonEnvType.Virtual) {
         const promptDisabledVar = env.VIRTUAL_ENV_DISABLE_PROMPT;
         const isPromptDisabled = promptDisabledVar && promptDisabledVar !== undefined;
