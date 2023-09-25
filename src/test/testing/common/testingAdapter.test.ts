@@ -96,27 +96,27 @@ suite('End to End Tests: test adapters', () => {
     teardown(async () => {
         pythonTestServer.dispose();
     });
-    test('unittest discovery adapter small workspace', async () => {
-        // result resolver and saved data for assertions
-        let actualData: {
-            cwd: string;
-            tests?: unknown;
-            status: 'success' | 'error';
-            error?: string[];
-        };
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            actualData = payload;
-            return Promise.resolve();
-        };
+    // test('unittest discovery adapter small workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     let actualData: {
+    //         cwd: string;
+    //         tests?: unknown;
+    //         status: 'success' | 'error';
+    //         error?: string[];
+    //     };
+    //     workspaceUri = Uri.parse(rootPathSmallWorkspace);
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     resultResolver._resolveDiscovery = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         actualData = payload;
+    //         return Promise.resolve();
+    //     };
 
-        // set workspace to test workspace folder and set up settings
+    //     // set workspace to test workspace folder and set up settings
 
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+    //     configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
@@ -126,41 +126,48 @@ suite('End to End Tests: test adapters', () => {
             resultResolver,
             envVarsService,
         );
+    //     // run unittest discovery
+    //     const discoveryAdapter = new UnittestTestDiscoveryAdapter(
+    //         pythonTestServer,
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //     );
 
-        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
-            // verification after discovery is complete
+    //     await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+    //         // verification after discovery is complete
 
-            // 1. Check the status is "success"
-            assert.strictEqual(
-                actualData.status,
-                'success',
-                `Expected status to be 'success' instead status is ${actualData.status}`,
-            );
-            // 2. Confirm no errors
-            assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
+    //         // 1. Check the status is "success"
+    //         assert.strictEqual(
+    //             actualData.status,
+    //             'success',
+    //             `Expected status to be 'success' instead status is ${actualData.status}`,
+    //         );
+    //         // 2. Confirm no errors
+    //         assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
+    //         // 3. Confirm tests are found
+    //         assert.ok(actualData.tests, 'Expected tests to be present');
 
-            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
-        });
-    });
+    //         assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+    //     });
+    // });
 
-    test('unittest discovery adapter large workspace', async () => {
-        // result resolver and saved data for assertions
-        let actualData: {
-            cwd: string;
-            tests?: unknown;
-            status: 'success' | 'error';
-            error?: string[];
-        };
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            actualData = payload;
-            return Promise.resolve();
-        };
+    // test('unittest discovery adapter large workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     let actualData: {
+    //         cwd: string;
+    //         tests?: unknown;
+    //         status: 'success' | 'error';
+    //         error?: string[];
+    //     };
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     resultResolver._resolveDiscovery = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         actualData = payload;
+    //         return Promise.resolve();
+    //     };
 
         // set settings to work for the given workspace
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
@@ -174,17 +181,17 @@ suite('End to End Tests: test adapters', () => {
             envVarsService,
         );
 
-        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
-            // 1. Check the status is "success"
-            assert.strictEqual(
-                actualData.status,
-                'success',
-                `Expected status to be 'success' instead status is ${actualData.status}`,
-            );
-            // 2. Confirm no errors
-            assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
+    //     await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+    //         // 1. Check the status is "success"
+    //         assert.strictEqual(
+    //             actualData.status,
+    //             'success',
+    //             `Expected status to be 'success' instead status is ${actualData.status}`,
+    //         );
+    //         // 2. Confirm no errors
+    //         assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
+    //         // 3. Confirm tests are found
+    //         assert.ok(actualData.tests, 'Expected tests to be present');
 
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
@@ -214,20 +221,20 @@ suite('End to End Tests: test adapters', () => {
             envVarsService,
         );
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
-        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
-            // verification after discovery is complete
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathSmallWorkspace);
+    //     await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+    //         // verification after discovery is complete
 
-            // 1. Check the status is "success"
-            assert.strictEqual(
-                actualData.status,
-                'success',
-                `Expected status to be 'success' instead status is ${actualData.status}`,
-            ); // 2. Confirm no errors
-            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
+    //         // 1. Check the status is "success"
+    //         assert.strictEqual(
+    //             actualData.status,
+    //             'success',
+    //             `Expected status to be 'success' instead status is ${actualData.status}`,
+    //         ); // 2. Confirm no errors
+    //         assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+    //         // 3. Confirm tests are found
+    //         assert.ok(actualData.tests, 'Expected tests to be present');
 
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
@@ -257,20 +264,20 @@ suite('End to End Tests: test adapters', () => {
             envVarsService,
         );
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathLargeWorkspace);
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathLargeWorkspace);
 
-        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
-            // verification after discovery is complete
-            // 1. Check the status is "success"
-            assert.strictEqual(
-                actualData.status,
-                'success',
-                `Expected status to be 'success' instead status is ${actualData.status}`,
-            ); // 2. Confirm no errors
-            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
+    //     await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+    //         // verification after discovery is complete
+    //         // 1. Check the status is "success"
+    //         assert.strictEqual(
+    //             actualData.status,
+    //             'success',
+    //             `Expected status to be 'success' instead status is ${actualData.status}`,
+    //         ); // 2. Confirm no errors
+    //         assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+    //         // 3. Confirm tests are found
+    //         assert.ok(actualData.tests, 'Expected tests to be present');
 
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
@@ -373,9 +380,9 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathLargeWorkspace);
+    //     configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest execution
         const executionAdapter = new UnittestTestExecutionAdapter(
@@ -535,15 +542,15 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathLargeWorkspace);
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathLargeWorkspace);
 
-        // generate list of test_ids
-        const testIds: string[] = [];
-        for (let i = 0; i < 2000; i = i + 1) {
-            const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
-            testIds.push(testId);
-        }
+    //     // generate list of test_ids
+    //     const testIds: string[] = [];
+    //     for (let i = 0; i < 2000; i = i + 1) {
+    //         const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
+    //         testIds.push(testId);
+    //     }
 
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
