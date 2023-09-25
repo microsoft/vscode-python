@@ -5,7 +5,12 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import { l10n, Position, Range, TextEditor, Uri, commands } from 'vscode';
 
-import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IProcessServiceFactory } from '../../common/process/types';
@@ -29,6 +34,8 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly interpreterService: IInterpreterService;
 
+    private readonly commandManager: ICommandManager;
+
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error TS6133: 'configSettings' is declared but its value is never read.
     private readonly configSettings: IConfigurationService;
@@ -39,6 +46,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.configSettings = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
     }
 
     public async normalizeLines(code: string, wholeFileContent?: string, resource?: Uri): Promise<string> {
@@ -121,11 +129,23 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
      * bringing user's cursor to the next executable block of code when used with smart selection.
      */
     // eslint-disable-next-line class-methods-use-this
-    private async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
+    public async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
         if (pythonSmartSendEnabled(this.serviceContainer)) {
             if (activeEditor?.selection?.isEmpty) {
-                await commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) });
-                await commands.executeCommand('cursorEnd');
+                // await commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) }); // dont import from vscode directly
+                // await commands.executeCommand('cursorEnd');
+                // const dictionarySecond = {
+                //     to: 'down',
+                //     by: 'line',
+                //     value: Number(lineOffset),
+                // };
+
+                await this.commandManager.executeCommand('cursorMove', {
+                    to: 'down',
+                    by: 'line',
+                    value: Number(lineOffset),
+                });
+                await this.commandManager.executeCommand('cursorEnd');
             }
         }
         return Promise.resolve();
