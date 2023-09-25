@@ -388,7 +388,7 @@ function shouldPS1BeSet(type: PythonEnvType | undefined, env: EnvironmentVariabl
         const isPromptEnabled = promptEnabledVar && promptEnabledVar !== '';
         return !!isPromptEnabled;
     }
-    return type !== undefined;
+    return false;
 }
 
 function shouldSkip(env: string) {
