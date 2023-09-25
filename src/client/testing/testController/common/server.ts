@@ -240,29 +240,40 @@ export class PythonTestServer implements ITestServer, Disposable {
                     result?.proc?.kill();
                 });
 
-                // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-                // Discovery output should be sent to the output channel, run output should be sent to the test run instance.
+                // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
+                // TOOD: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
                 if (isDiscovery) {
                     result?.proc?.stdout?.on('data', (data) => {
                         const out = fixLogLines(data.toString());
                         traceLog(out);
+                        spawnOptions?.outputChannel?.append(`${out}`);
                     });
                     result?.proc?.stderr?.on('data', (data) => {
                         const out = fixLogLines(data.toString());
-                        traceLog(out);
+                        traceError(out);
+                        spawnOptions?.outputChannel?.append(`${out}`);
                     });
                 } else {
                     result?.proc?.stdout?.on('data', (data) => {
-                        runInstance?.appendOutput(`${fixLogLines(data.toString())}\r\n`);
+                        const out = fixLogLines(data.toString());
+                        runInstance?.appendOutput(`${out}\r\n`);
+                        spawnOptions?.outputChannel?.append(out);
                     });
                     result?.proc?.stderr?.on('data', (data) => {
-                        runInstance?.appendOutput(`${fixLogLines(data.toString())}\r\n`);
+                        const out = fixLogLines(data.toString());
+                        runInstance?.appendOutput(`${out}\r\n`);
+                        spawnOptions?.outputChannel?.append(out);
                     });
                 }
 
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
+                    spawnOptions?.outputChannel?.append(
+                        'Starting now, all test run output will be sent to the Test Result panel' +
+                            ' and test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +
+                            ' The "Python Test Log" channel will be deprecated within the next month. See ___ for details.',
+                    );
                     if (code !== 0 && !isDiscovery) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
