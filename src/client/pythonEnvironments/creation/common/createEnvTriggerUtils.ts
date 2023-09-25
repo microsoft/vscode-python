@@ -10,6 +10,10 @@ import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { PythonExtension } from '../../../api/types';
 import { traceVerbose } from '../../../logging';
 import { getConfiguration } from '../../../common/vscodeApis/workspaceApis';
+import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../../common/persistentState';
+
+export const CREATE_ENV_TRIGGER_SETTING_PART = 'createEnvironment.trigger';
+export const CREATE_ENV_TRIGGER_SETTING = `python.${CREATE_ENV_TRIGGER_SETTING_PART}`;
 
 export async function fileContainsInlineDependencies(_uri: Uri): Promise<boolean> {
     // This is a placeholder for the real implementation of inline dependencies support
@@ -46,7 +50,7 @@ export async function hasKnownFiles(workspace: WorkspaceFolder): Promise<boolean
 }
 
 export async function isGlobalPythonSelected(workspace: WorkspaceFolder): Promise<boolean> {
-    const extension = getExtension(PVSC_EXTENSION_ID);
+    const extension = getExtension<PythonExtension>(PVSC_EXTENSION_ID);
     if (!extension) {
         return false;
     }
@@ -69,10 +73,11 @@ export async function isGlobalPythonSelected(workspace: WorkspaceFolder): Promis
 export function shouldPromptToCreateEnv(): boolean {
     const config = getConfiguration('python');
     if (config) {
-        const value = config.get<string>('createEnvironment.trigger', 'off');
+        const value = config.get<string>(CREATE_ENV_TRIGGER_SETTING_PART, 'off');
         return value !== 'off';
     }
-    return false;
+
+    return getWorkspaceStateValue<string>(CREATE_ENV_TRIGGER_SETTING, 'off') !== 'off';
 }
 
 /**
@@ -83,6 +88,15 @@ export function disableCreateEnvironmentTrigger(): void {
     if (config) {
         config.update('createEnvironment.trigger', 'off', ConfigurationTarget.Global);
     }
+}
+
+/**
+ * Sets trigger to 'off' in workspace persistent state. This disables trigger check
+ * for the current workspace only. In multi root case, it is disabled for all folders
+ * in the multi root workspace.
+ */
+export async function disableWorkspaceCreateEnvironmentTrigger(): Promise<void> {
+    await updateWorkspaceStateValue(CREATE_ENV_TRIGGER_SETTING, 'off');
 }
 
 let _alreadyCreateEnvCriteriaCheck = false;

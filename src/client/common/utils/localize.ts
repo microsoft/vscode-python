@@ -504,8 +504,9 @@ export namespace CreateEnv {
         export const workspaceTriggerMessage = l10n.t(
             'A virtual environment is not currently selected for your Python interpreter. Would you like to create a virtual environment?',
         );
-        export const createEnvironment = l10n.t('Create Environment');
+        export const createEnvironment = l10n.t('Create');
         export const disableCheck = l10n.t('Disable');
+        export const disableCheckWorkspace = l10n.t('Disable (Workspace)');
     }
 }
 

@@ -10,6 +10,7 @@ import {
     shouldPromptToCreateEnv,
     isCreateEnvWorkspaceCheckNotRun,
     disableCreateEnvironmentTrigger,
+    disableWorkspaceCreateEnvironmentTrigger,
 } from './common/createEnvTriggerUtils';
 import { getWorkspaceFolder } from '../../common/vscodeApis/workspaceApis';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
@@ -76,6 +77,7 @@ async function createEnvironmentCheckForWorkspace(uri: Uri): Promise<void> {
     const selection = await showInformationMessage(
         CreateEnv.Trigger.workspaceTriggerMessage,
         CreateEnv.Trigger.createEnvironment,
+        CreateEnv.Trigger.disableCheckWorkspace,
         CreateEnv.Trigger.disableCheck,
     );
 
@@ -87,6 +89,8 @@ async function createEnvironmentCheckForWorkspace(uri: Uri): Promise<void> {
         }
     } else if (selection === CreateEnv.Trigger.disableCheck) {
         disableCreateEnvironmentTrigger();
+    } else if (selection === CreateEnv.Trigger.disableCheckWorkspace) {
+        disableWorkspaceCreateEnvironmentTrigger();
     }
 }
 
