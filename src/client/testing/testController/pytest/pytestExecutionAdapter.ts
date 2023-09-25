@@ -124,15 +124,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         try {
-            const colorOff = pytestArgs.includes('--color=no');
             // Remove positional test folders and files, we will add as needed per node
             const testArgs = removePositionalFoldersAndFiles(pytestArgs);
-            // If the user didn't explicit dictate the color, then add it
-            if (!colorOff) {
-                if (!testArgs.includes('--color=yes')) {
-                    testArgs.push('--color=yes');
-                }
-            }
 
             // if user has provided `--rootdir` then use that, otherwise add `cwd`
             if (testArgs.filter((a) => a.startsWith('--rootdir')).length === 0) {
