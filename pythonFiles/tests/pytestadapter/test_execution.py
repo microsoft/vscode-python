@@ -10,9 +10,6 @@ from tests.pytestadapter import expected_execution_test_output
 
 from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
 
-# uncomment this line to skip all tests in this module
-# pytestmark = pytest.mark.skip(reason="Skipping all tests in this module")
-
 
 def test_config_file():
     """Test pytest execution when a config file is specified."""

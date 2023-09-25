@@ -11,7 +11,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { traceError, traceInfo, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
@@ -87,7 +87,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             // what payload is so small it doesn't include the whole UUID think got this
             if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
                 // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
-                traceLog(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
+                traceVerbose(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
@@ -197,16 +197,6 @@ export class PythonTestServer implements ITestServer, Disposable {
         const args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
             options.command.args,
         );
-
-        // If the user didn't explicit dictate the color during run, then add it
-        if (isRun) {
-            if (!args.includes('--color=no')) {
-                if (!args.includes('--color=yes')) {
-                    args.push('--color=yes');
-                }
-            }
-        }
-
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);
         }
@@ -242,17 +232,16 @@ export class PythonTestServer implements ITestServer, Disposable {
 
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
-                // TOOD: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
+                // TODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
+                let collectedOutput = '';
                 if (isDiscovery) {
                     result?.proc?.stdout?.on('data', (data) => {
                         const out = fixLogLines(data.toString());
-                        traceLog(out);
-                        spawnOptions?.outputChannel?.append(`${out}`);
+                        collectedOutput += out;
                     });
                     result?.proc?.stderr?.on('data', (data) => {
                         const out = fixLogLines(data.toString());
-                        traceError(out);
-                        spawnOptions?.outputChannel?.append(`${out}`);
+                        collectedOutput += out;
                     });
                 } else {
                     result?.proc?.stdout?.on('data', (data) => {
@@ -274,7 +263,29 @@ export class PythonTestServer implements ITestServer, Disposable {
                             ' and test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +
                             ' The "Python Test Log" channel will be deprecated within the next month. See ___ for details.',
                     );
-                    if (code !== 0 && !isDiscovery) {
+                    if (isDiscovery) {
+                        // Collect all discovery output and log it at process finish to avoid dividing it between log lines.
+                        traceLog(`\r\n${collectedOutput}`);
+                        spawnOptions?.outputChannel?.append(`${collectedOutput}`);
+
+                        if (code !== 0) {
+                            // This occurs when we are running discovery
+                            traceError(
+                                `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
+                            );
+                            this._onDiscoveryDataReceived.fire({
+                                uuid,
+                                data: JSON.stringify(createDiscoveryErrorPayload(code, signal, options.cwd)),
+                            });
+                            // then send a EOT payload
+                            this._onDiscoveryDataReceived.fire({
+                                uuid,
+                                data: JSON.stringify(createEOTPayload(true)),
+                            });
+                        }
+                    } else if (code !== 0) {
+                        // This occurs when we are running the test and there is an error which occurs.
+
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
                         );
@@ -285,20 +296,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                         });
                         // then send a EOT payload
                         this._onRunDataReceived.fire({
-                            uuid,
-                            data: JSON.stringify(createEOTPayload(true)),
-                        });
-                    } else if (code !== 0) {
-                        // This occurs when we are running discovery
-                        traceError(
-                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
-                        );
-                        this._onDiscoveryDataReceived.fire({
-                            uuid,
-                            data: JSON.stringify(createDiscoveryErrorPayload(code, signal, options.cwd)),
-                        });
-                        // then send a EOT payload
-                        this._onDiscoveryDataReceived.fire({
                             uuid,
                             data: JSON.stringify(createEOTPayload(true)),
                         });

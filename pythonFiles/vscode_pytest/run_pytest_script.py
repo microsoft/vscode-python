@@ -51,8 +51,6 @@ if __name__ == "__main__":
                 )
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
-
-                # Process the JSON data.
                 print("Received JSON data in run script")
                 break
             except json.JSONDecodeError:

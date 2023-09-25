@@ -125,15 +125,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
         try {
-            const colorOff = pytestArgs.includes('--color=no');
             // Remove positional test folders and files, we will add as needed per node
             const testArgs = removePositionalFoldersAndFiles(pytestArgs);
-            // If the user didn't explicit dictate the color, then add it
-            if (!colorOff) {
-                if (!testArgs.includes('--color=yes')) {
-                    testArgs.push('--color=yes');
-                }
-            }
 
             // if user has provided `--rootdir` then use that, otherwise add `cwd`
             if (testArgs.filter((a) => a.startsWith('--rootdir')).length === 0) {
@@ -180,7 +173,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-                // TOODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
+                // TODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = utils.fixLogLines(data.toString());
                     runInstance?.appendOutput(`${out}`);

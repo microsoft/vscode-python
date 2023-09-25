@@ -312,8 +312,6 @@ if __name__ == "__main__":
                 )
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
-
-                # Process the JSON data
                 break
             except json.JSONDecodeError:
                 # JSON decoding error, the complete JSON object is not yet received
