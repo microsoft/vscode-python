@@ -35,7 +35,7 @@ export const OPEN_REQUIREMENTS_BUTTON = {
     tooltip: CreateEnv.Venv.openRequirementsFile,
 };
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
-async function getPipRequirementsFiles(
+export async function getPipRequirementsFiles(
     workspaceFolder: WorkspaceFolder,
     token?: CancellationToken,
 ): Promise<string[] | undefined> {
@@ -292,10 +292,13 @@ export async function pickExistingVenvAction(
     if (workspaceFolder) {
         if (await hasVenv(workspaceFolder)) {
             const items: QuickPickItem[] = [
-                { label: CreateEnv.Venv.recreate, description: CreateEnv.Venv.recreateDescription },
                 {
                     label: CreateEnv.Venv.useExisting,
                     description: CreateEnv.Venv.useExistingDescription,
+                },
+                {
+                    label: CreateEnv.Venv.recreate,
+                    description: CreateEnv.Venv.recreateDescription,
                 },
             ];
 

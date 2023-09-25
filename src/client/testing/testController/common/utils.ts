@@ -211,7 +211,7 @@ export async function startTestIdServer(testIds: string[]): Promise<number> {
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
-    const labelText = testType === 'pytest' ? 'Pytest Discovery Error' : 'Unittest Discovery Error';
+    const labelText = testType === 'pytest' ? 'pytest Discovery Error' : 'Unittest Discovery Error';
     return {
         id: `DiscoveryError:${uri.fsPath}`,
         label: `${labelText} [${path.basename(uri.fsPath)}]`,

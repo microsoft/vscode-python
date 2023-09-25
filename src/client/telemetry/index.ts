@@ -2145,6 +2145,34 @@ export interface IEventNamePropertyMapping {
         environmentType: 'venv' | 'conda';
     };
     /**
+     * Telemetry event sent when a check for environment creation conditions is triggered.
+     */
+    /* __GDPR__
+       "environemt.check.trigger" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_CHECK_TRIGGER]: {
+        trigger:
+            | 'run-in-terminal'
+            | 'debug-in-terminal'
+            | 'run-selection'
+            | 'on-workspace-load'
+            | 'as-command'
+            | 'debug';
+    };
+    /**
+     * Telemetry event sent when a check for environment creation condition is computed.
+     */
+    /* __GDPR__
+       "environemt.check.result" : {
+          "result" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_CHECK_RESULT]: {
+        result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
+    };
+    /**
      * Telemetry event sent when a linter or formatter extension is already installed.
      */
     /* __GDPR__

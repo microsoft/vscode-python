@@ -53,6 +53,8 @@ import { DynamicPythonDebugConfigurationService } from './debugger/extension/con
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
 import { registerInstallFormatterPrompt } from './providers/prompts/installFormatterPrompt';
 import { registerAllCreateEnvironmentFeatures } from './pythonEnvironments/creation/registrations';
+import { registerCreateEnvironmentTriggers } from './pythonEnvironments/creation/createEnvironmentTrigger';
+import { initializePersistentStateForTriggers } from './common/persistentState';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -199,6 +201,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             );
 
             registerInstallFormatterPrompt(serviceContainer);
+            registerCreateEnvironmentTriggers(disposables);
+            initializePersistentStateForTriggers(ext.context);
         }
     }
 

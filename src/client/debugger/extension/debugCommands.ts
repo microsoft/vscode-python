@@ -14,6 +14,10 @@ import { DebugPurpose, LaunchRequestArguments } from '../types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { noop } from '../../common/utils/misc';
 import { getConfigurationsByUri } from './configuration/launch.json/launchJsonReader';
+import {
+    CreateEnvironmentCheckKind,
+    triggerCreateEnvironmentCheckNonBlocking,
+} from '../../pythonEnvironments/creation/createEnvironmentTrigger';
 
 @injectable()
 export class DebugCommands implements IExtensionSingleActivationService {
@@ -35,6 +39,8 @@ export class DebugCommands implements IExtensionSingleActivationService {
                     this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);
                     return;
                 }
+                sendTelemetryEvent(EventName.ENVIRONMENT_CHECK_TRIGGER, undefined, { trigger: 'debug-in-terminal' });
+                triggerCreateEnvironmentCheckNonBlocking(CreateEnvironmentCheckKind.File, file);
                 const config = await DebugCommands.getDebugConfiguration(file);
                 this.debugService.startDebugging(undefined, config);
             }),

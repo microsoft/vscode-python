@@ -37,6 +37,7 @@ import { EnvironmentVariables } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
+import { PythonEnvType } from '../../pythonEnvironments/base/info';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -63,6 +64,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
      */
     private processEnvVars: EnvironmentVariables | undefined;
 
+    private separator: string;
+
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -75,7 +78,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-    ) {}
+    ) {
+        this.separator = platform.osType === OSType.Windows ? ';' : ':';
+    }
 
     public async activate(resource: Resource): Promise<void> {
         try {
@@ -196,6 +201,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                                 applyAtProcessCreation: true,
                             });
                         } else {
+                            if (!value.endsWith(this.separator)) {
+                                value = value.concat(this.separator);
+                            }
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
                             envVarCollection.prepend(key, value, {
                                 applyAtShellIntegration: true,
@@ -257,8 +265,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         if (this.platform.osType !== OSType.Windows) {
             // These shells are expected to set PS1 variable for terminal prompt for virtual/conda environments.
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-            const shouldPS1BeSet = interpreter?.type !== undefined;
-            if (shouldPS1BeSet && !env.PS1) {
+            const shouldSetPS1 = shouldPS1BeSet(interpreter?.type, env);
+            if (shouldSetPS1 && !env.PS1) {
                 // PS1 should be set but no PS1 was set.
                 return;
             }
@@ -284,8 +292,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         if (this.platform.osType !== OSType.Windows) {
             // These shells are expected to set PS1 variable for terminal prompt for virtual/conda environments.
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-            const shouldPS1BeSet = interpreter?.type !== undefined;
-            if (shouldPS1BeSet && !env.PS1) {
+            const shouldSetPS1 = shouldPS1BeSet(interpreter?.type, env);
+            if (shouldSetPS1 && !env.PS1) {
                 // PS1 should be set but no PS1 was set.
                 return getPromptForEnv(interpreter);
             }
@@ -358,6 +366,22 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             return this.deferred.promise;
         });
     }
+}
+
+function shouldPS1BeSet(type: PythonEnvType | undefined, env: EnvironmentVariables): boolean {
+    if (type === PythonEnvType.Virtual) {
+        const promptDisabledVar = env.VIRTUAL_ENV_DISABLE_PROMPT;
+        const isPromptDisabled = promptDisabledVar && promptDisabledVar !== undefined;
+        return !isPromptDisabled;
+    }
+    if (type === PythonEnvType.Conda) {
+        // Instead of checking config value using `conda config --get changeps1`, simply check
+        // `CONDA_PROMPT_MODIFER` to avoid the cost of launching the conda binary.
+        const promptEnabledVar = env.CONDA_PROMPT_MODIFIER;
+        const isPromptEnabled = promptEnabledVar && promptEnabledVar !== '';
+        return !!isPromptEnabled;
+    }
+    return type !== undefined;
 }
 
 function shouldSkip(env: string) {

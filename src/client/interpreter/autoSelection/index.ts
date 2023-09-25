@@ -181,6 +181,11 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         return this.stateFactory.createWorkspacePersistentState(key, undefined);
     }
 
+    private getAutoSelectionQueriedOnceState(): IPersistentState<boolean | undefined> {
+        const key = `autoSelectionInterpretersQueriedOnce`;
+        return this.stateFactory.createWorkspacePersistentState(key, undefined);
+    }
+
     /**
      * Auto-selection logic:
      * 1. If there are cached interpreters (not the first session in this workspace)
@@ -200,7 +205,12 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             });
         }
 
-        await this.interpreterService.refreshPromise;
+        const globalQueriedState = this.getAutoSelectionQueriedOnceState();
+        if (!globalQueriedState.value) {
+            // Global interpreters are loaded the first time an extension loads, after which we don't need to
+            // wait on global interpreter promise refresh.
+            await this.interpreterService.refreshPromise;
+        }
         const interpreters = this.interpreterService.getInterpreters(resource);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
@@ -215,6 +225,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         }
 
         queriedState.updateValue(true);
+        globalQueriedState.updateValue(true);
 
         this.didAutoSelectedInterpreterEmitter.fire();
     }

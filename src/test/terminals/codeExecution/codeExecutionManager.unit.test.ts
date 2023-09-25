@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
@@ -13,6 +14,7 @@ import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } fr
 import { IConfigurationService } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import * as triggerApis from '../../../client/pythonEnvironments/creation/createEnvironmentTrigger';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -24,6 +26,7 @@ suite('Terminal - Code Execution Manager', () => {
     let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    let triggerCreateEnvironmentCheckNonBlockingStub: sinon.SinonStub;
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem.setup((f) => f.readFile(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
@@ -52,8 +55,14 @@ suite('Terminal - Code Execution Manager', () => {
             configService.object,
             serviceContainer.object,
         );
+        triggerCreateEnvironmentCheckNonBlockingStub = sinon.stub(
+            triggerApis,
+            'triggerCreateEnvironmentCheckNonBlocking',
+        );
+        triggerCreateEnvironmentCheckNonBlockingStub.returns(undefined);
     });
     teardown(() => {
+        sinon.restore();
         disposables.forEach((disposable) => {
             if (disposable) {
                 disposable.dispose();

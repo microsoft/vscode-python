@@ -115,9 +115,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 // Do not trigger another refresh if a refresh has previously finished.
                 return Promise.resolve();
             }
-            refreshPromise = this.startRefresh(query);
+            refreshPromise = this.startRefresh(query).then(() => this.sendTelemetry(query, stopWatch));
         }
-        return refreshPromise.then(() => this.sendTelemetry(query, stopWatch));
+        return refreshPromise;
     }
 
     private startRefresh(query: PythonLocatorQuery | undefined): Promise<void> {

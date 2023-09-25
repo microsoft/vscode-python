@@ -235,7 +235,7 @@ export class PytestController implements ITestFrameworkController {
                 testController.items.add(
                     createErrorTestItem(testController, {
                         id: `DiscoveryError:${workspace.uri.fsPath}`,
-                        label: `Pytest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
+                        label: `pytest Discovery Error [${path.basename(workspace.uri.fsPath)}]`,
                         error: util.format(
                             `${cancel} discovering pytest tests (see Output > Python):\r\n`,
                             message.length > 0 ? message : ex,
