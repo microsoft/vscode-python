@@ -133,9 +133,9 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     ) {}
 
     public async activate(): Promise<void> {
-        this.cmdManager?.registerCommand(Commands.ClearStorage, () => {
-            clearWorkspaceState();
-            this.cleanAllPersistentStates();
+        this.cmdManager?.registerCommand(Commands.ClearStorage, async () => {
+            await clearWorkspaceState();
+            await this.cleanAllPersistentStates();
         });
         const globalKeysStorageDeprecated = this.createGlobalPersistentState(GLOBAL_PERSISTENT_KEYS_DEPRECATED, []);
         const workspaceKeysStorageDeprecated = this.createWorkspacePersistentState(
