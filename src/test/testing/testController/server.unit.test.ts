@@ -216,7 +216,7 @@ suite('Python Test Server, Send command etc', () => {
         mockProc.trigger('close');
 
         const port = server.getPort();
-        const expectedArgs = ['myscript', '--port', `${port}`, '--uuid', FAKE_UUID, '-foo', 'foo', '--color=yes'];
+        const expectedArgs = ['myscript', '--port', `${port}`, '--uuid', FAKE_UUID, '-foo', 'foo'];
         execService.verify((x) => x.execObservable(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
     });
 

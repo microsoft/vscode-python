@@ -85,9 +85,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         // delete UUID following entire discovery finishing.
         const deferredExec = createDeferred<ExecutionResult<string>>();
 
-        let execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
-        // filter out color=yes from pytestArgs
-        execArgs = execArgs.filter((item) => item !== '--color=yes');
+        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
         traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')}`);
         const result = execService?.execObservable(execArgs, spawnOptions);
 
