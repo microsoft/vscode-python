@@ -596,3 +596,31 @@ config_file_pytest_expected_execution_output = {
         "subtest": None,
     }
 }
+
+
+# This is the expected output for the test logging file.
+# └── test_logging.py
+#    └── test_logging2: failure
+#    └── test_logging: success
+test_logging_path = TEST_DATA_PATH / "test_logging.py"
+
+logging_test_expected_execution_output = {
+    get_absolute_test_id("test_logging.py::test_logging2", test_logging_path): {
+        "test": get_absolute_test_id(
+            "test_logging.py::test_logging2", test_logging_path
+        ),
+        "outcome": "failure",
+        "message": "ERROR MESSAGE",
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id("test_logging.py::test_logging", test_logging_path): {
+        "test": get_absolute_test_id(
+            "test_logging.py::test_logging", test_logging_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
