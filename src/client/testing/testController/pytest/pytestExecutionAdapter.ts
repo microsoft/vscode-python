@@ -183,14 +183,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = utils.fixLogLines(data.toString());
                     runInstance?.appendOutput(`${out}\r\n`);
-                    // with traceInfo, gets full message, without traceInfo, gets truncated
-                    // traceInfo(`${out}\r\n`);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = utils.fixLogLines(data.toString());
                     runInstance?.appendOutput(`${out}\r\n`);
-                    // traceInfo(`${out}\r\n`);
-                    // console.log(`${out}\r\n`);
                 });
 
                 result?.proc?.on('exit', (code, signal) => {

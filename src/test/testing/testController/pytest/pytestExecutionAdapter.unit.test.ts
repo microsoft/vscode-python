@@ -165,7 +165,7 @@ suite('pytest test execution adapter', () => {
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
-        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath];
+        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath, '--color=yes'];
         const expectedExtraVariables = {
             PYTHONPATH: pathToPythonFiles,
             TEST_UUID: 'uuid123',
@@ -231,7 +231,7 @@ suite('pytest test execution adapter', () => {
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
-        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath];
+        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath, '--color=yes'];
         const expectedExtraVariables = {
             PYTHONPATH: pathToPythonFiles,
             TEST_UUID: 'uuid123',
@@ -298,7 +298,13 @@ suite('pytest test execution adapter', () => {
                 x.launchDebugger(
                     typeMoq.It.is<LaunchOptions>((launchOptions) => {
                         assert.equal(launchOptions.cwd, uri.fsPath);
-                        assert.deepEqual(launchOptions.args, ['--rootdir', myTestPath, '--capture', 'no']);
+                        assert.deepEqual(launchOptions.args, [
+                            '--rootdir',
+                            myTestPath,
+                            '--color=yes',
+                            '--capture',
+                            'no',
+                        ]);
                         assert.equal(launchOptions.testProvider, 'pytest');
                         assert.equal(launchOptions.pytestPort, '12345');
                         assert.equal(launchOptions.pytestUUID, 'uuid123');
