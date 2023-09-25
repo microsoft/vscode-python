@@ -452,7 +452,7 @@ export class Conda {
             traceVerbose(`${command} info --json: ${result.stdout}`);
             return JSON.parse(result.stdout);
         }
-        throw new Error(`Launching ${command} timeout out`);
+        throw new Error(`Launching '${command} info --json' timed out`);
     }
 
     /**
