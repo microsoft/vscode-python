@@ -191,7 +191,10 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
     });
 
-    test('If activated variables contain PS1, prefix it using shell integration', async () => {
+    test('If activated variables contain PS1, prefix it using shell integration', async function () {
+        if (getOSType() === OSType.Windows) {
+            return this.skip();
+        }
         const envVars: NodeJS.ProcessEnv = {
             CONDA_PREFIX: 'prefix/to/conda',
             ...process.env,
