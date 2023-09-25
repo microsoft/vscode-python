@@ -133,9 +133,9 @@ export class MockChildProcess extends EventEmitter {
 
     emit(event: string | symbol, ...args: unknown[]): boolean {
         if (this.eventMap.has(event.toString())) {
-            this.eventMap.get(event.toString()).forEach((listener: (arg0: unknown) => void) => {
-                const argsArray = Array.isArray(args) ? args : [args];
-                listener(argsArray);
+            this.eventMap.get(event.toString()).forEach((listener: (...arg0: unknown[]) => void) => {
+                const argsArray: unknown[] = Array.isArray(args) ? args : [args];
+                listener(...argsArray);
             });
         }
         return true;
