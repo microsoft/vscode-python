@@ -265,12 +265,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                 }
 
                 result?.proc?.on('exit', (code, signal) => {
-                    if (code !== 0) {
-                        traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}`);
-                    }
-                });
-
-                result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
                     spawnOptions?.outputChannel?.append(
                         'Starting now, all test run output will be sent to the Test Result panel' +
