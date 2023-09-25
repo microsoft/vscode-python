@@ -257,12 +257,12 @@ export class PythonTestServer implements ITestServer, Disposable {
                 } else {
                     result?.proc?.stdout?.on('data', (data) => {
                         const out = fixLogLines(data.toString());
-                        runInstance?.appendOutput(`${out}\r\n`);
+                        runInstance?.appendOutput(`${out}`);
                         spawnOptions?.outputChannel?.append(out);
                     });
                     result?.proc?.stderr?.on('data', (data) => {
                         const out = fixLogLines(data.toString());
-                        runInstance?.appendOutput(`${out}\r\n`);
+                        runInstance?.appendOutput(`${out}`);
                         spawnOptions?.outputChannel?.append(out);
                     });
                 }

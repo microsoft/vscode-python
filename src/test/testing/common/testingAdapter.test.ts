@@ -268,7 +268,7 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
-    test('unittest execution adapter small workspace', async () => {
+    test('unittest execution adapter small workspace with correct output', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
@@ -413,7 +413,7 @@ suite('End to End Tests: test adapters', () => {
                 );
             });
     });
-    test('pytest execution adapter small workspace', async () => {
+    test('pytest execution adapter small workspace with correct output', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;

@@ -183,12 +183,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 // TOODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = utils.fixLogLines(data.toString());
-                    runInstance?.appendOutput(`${out}\r\n`);
+                    runInstance?.appendOutput(`${out}`);
                     this.outputChannel?.append(out);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = utils.fixLogLines(data.toString());
-                    runInstance?.appendOutput(`${out}\r\n`);
+                    runInstance?.appendOutput(`${out}`);
                     this.outputChannel?.append(out);
                 });
 
