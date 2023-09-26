@@ -102,21 +102,17 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             if (!this.registeredOnce) {
                 this.interpreterService.onDidChangeInterpreter(
                     async (r) => {
-                        this.showProgress();
                         await this._applyCollection(r).ignoreErrors();
-                        this.hideProgress();
                     },
                     this,
                     this.disposables,
                 );
                 this.applicationEnvironment.onDidChangeShell(
                     async (shell: string) => {
-                        this.showProgress();
                         this.processEnvVars = undefined;
                         // Pass in the shell where known instead of relying on the application environment, because of bug
                         // on VSCode: https://github.com/microsoft/vscode/issues/160694
                         await this._applyCollection(undefined, shell).ignoreErrors();
-                        this.hideProgress();
                     },
                     this,
                     this.disposables,
@@ -130,6 +126,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
+        this.showProgress();
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
@@ -224,6 +221,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
+        this.hideProgress();
 
         await this.trackTerminalPrompt(shell, resource, env);
     }
