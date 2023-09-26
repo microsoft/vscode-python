@@ -36,6 +36,7 @@ suite('Conda Creation provider tests', () => {
     let withProgressStub: sinon.SinonStub;
     let showErrorMessageWithLogsStub: sinon.SinonStub;
     let pickExistingCondaActionStub: sinon.SinonStub;
+    let getPrefixCondaEnvPathStub: sinon.SinonStub;
 
     setup(() => {
         pickWorkspaceFolderStub = sinon.stub(wsSelect, 'pickWorkspaceFolder');
@@ -49,6 +50,8 @@ suite('Conda Creation provider tests', () => {
 
         pickExistingCondaActionStub = sinon.stub(condaUtils, 'pickExistingCondaAction');
         pickExistingCondaActionStub.resolves(condaUtils.ExistingCondaAction.Create);
+
+        getPrefixCondaEnvPathStub = sinon.stub(commonUtils, 'getPrefixCondaEnvPath');
 
         progressMock = typemoq.Mock.ofType<CreateEnvironmentProgress>();
         condaProvider = condaCreationProvider();
@@ -253,5 +256,25 @@ suite('Conda Creation provider tests', () => {
         assert.ok(result?.error);
         assert.isTrue(showErrorMessageWithLogsStub.calledOnce);
         assert.isTrue(pickExistingCondaActionStub.calledOnce);
+    });
+
+    test('Use existing conda environment', async () => {
+        getCondaBaseEnvStub.resolves('/usr/bin/conda');
+        const workspace1 = {
+            uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
+            name: 'workspace1',
+            index: 0,
+        };
+        pickWorkspaceFolderStub.resolves(workspace1);
+        pickExistingCondaActionStub.resolves(condaUtils.ExistingCondaAction.UseExisting);
+        getPrefixCondaEnvPathStub.returns('existing_environment');
+
+        const result = await condaProvider.createEnvironment();
+        assert.isTrue(showErrorMessageWithLogsStub.notCalled);
+        assert.isTrue(pickPythonVersionStub.notCalled);
+        assert.isTrue(execObservableStub.notCalled);
+        assert.isTrue(withProgressStub.notCalled);
+
+        assert.deepStrictEqual(result, { path: 'existing_environment', workspaceFolder: workspace1 });
     });
 });
