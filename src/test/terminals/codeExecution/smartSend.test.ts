@@ -1,13 +1,23 @@
 import * as TypeMoq from 'typemoq';
-import { TextEditor, Selection } from 'vscode';
+import * as path from 'path';
+import { TextEditor, Selection, window, Uri, Position, TextDocument } from 'vscode';
+import * as fs from 'fs-extra';
+import { SemVer } from 'semver';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
-import { IProcessServiceFactory } from '../../../client/common/process/types';
+import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IConfigurationService, IExperimentService } from '../../../client/common/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { EnableREPLSmartSend } from '../../../client/common/experiments/groups';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { PYTHON_PATH } from '../../common';
+import { Architecture } from '../../../client/common/utils/platform';
+import { ProcessService } from '../../../client/common/process/proc';
+
+const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
 suite('REPL - Smart Send', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
@@ -22,6 +32,19 @@ suite('REPL - Smart Send', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let codeExecutionHelper: ICodeExecutionHelper;
     let experimentService: TypeMoq.IMock<IExperimentService>;
+
+    let processService: TypeMoq.IMock<IProcessService>;
+
+    let document: TypeMoq.IMock<TextDocument>;
+    const workingPython: PythonEnvironment = {
+        path: PYTHON_PATH,
+        version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        displayName: 'Python',
+        envType: EnvironmentType.Unknown,
+        architecture: Architecture.x64,
+    };
 
     // suite set up only run once for each suite. Very start
     // set up --- before each test
@@ -40,13 +63,19 @@ suite('REPL - Smart Send', () => {
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        processService = TypeMoq.Mock.ofType<IProcessService>();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        processService.setup((x: any) => x.then).returns(() => undefined);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IDocumentManager)))
             .returns(() => documentManager.object);
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell)))
             .returns(() => applicationShell.object);
+        processServiceFactory
+            .setup((p) => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(processService.object));
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IProcessServiceFactory)))
             .returns(() => processServiceFactory.object);
@@ -60,7 +89,26 @@ suite('REPL - Smart Send', () => {
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IExperimentService)))
             .returns(() => experimentService.object);
+        // interpreterService
+        //     .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+        //     .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(workingPython));
+        // processServiceFactory.setup((p) => p.create()).returns(() => Promise.resolve(processService.object));
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // processService.setup((p) => (p as any).then).returns(() => undefined);
+
+        /// /////////////////
+        // processServiceFactory
+        //     .setup((p) => p.create(TypeMoq.It.isAny()))
+        //     .returns(() => Promise.resolve(processService.object));
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // processService.setup((p) => (p as any).then).returns(() => undefined);
+
         codeExecutionHelper = new CodeExecutionHelper(serviceContainer.object);
+        document = TypeMoq.Mock.ofType<TextDocument>();
     });
 
     test('Test executeCommand with cursorMove is called', async () => {
@@ -80,7 +128,6 @@ suite('REPL - Smart Send', () => {
         // just use Typemoq
         // verify arugments that executeCommand is being passed
         // verify that executeCommand is called once for each argument
-
         commandManager
             .setup((c) =>
                 c.executeCommand('cursorMove', {
@@ -102,5 +149,41 @@ suite('REPL - Smart Send', () => {
         } catch (error) {
             console.log(error);
         }
+    });
+
+    test('Smart selection before normalization', async () => {
+        experimentService
+            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
+            .returns(() => true);
+
+        // editor.setup((e) => e.selection).returns(() => new Selection(0, 0, 0, 0));
+        // const textEditor = await window.showTextDocument(Uri.file(path.join(TEST_FILES_PATH, `sample_raw.py`)));
+
+        // const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
+        // const selection = TypeMoq.Mock.ofType<Selection>();
+        // selection.setup((s) => s.isEmpty).returns(() => true);
+
+        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const firstIndexPosition = new Position(0, 0);
+        const selection = TypeMoq.Mock.ofType<Selection>();
+        // activeEditor.setup((e) => e.selection).returns(() => selection.object);
+        const wholeFileContent = await fs.readFile(path.join(TEST_FILES_PATH, `sample_smart_selection.py`), 'utf8');
+
+        selection.setup((s) => s.anchor).returns(() => firstIndexPosition);
+        selection.setup((s) => s.active).returns(() => firstIndexPosition);
+        selection.setup((s) => s.isEmpty).returns(() => true);
+        activeEditor.setup((e) => e.selection).returns(() => selection.object);
+
+        documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
+        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => wholeFileContent);
+        const actualProcessService = new ProcessService();
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) =>
+                actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
+            );
+        // Imitiate we are sending from the very first line.
+        const normalizedCode = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        console.log('hi');
     });
 });
