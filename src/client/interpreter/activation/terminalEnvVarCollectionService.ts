@@ -125,8 +125,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
     }
 
-    public async _applyCollection(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
+    public async _applyCollection(resource: Resource, shell?: string): Promise<void> {
         this.showProgress();
+        await this._applyCollectionImpl(resource, shell);
+        this.hideProgress();
+    }
+
+    private async _applyCollectionImpl(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
@@ -221,7 +226,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const displayPath = this.pathUtils.getDisplayName(settings.pythonPath, workspaceFolder?.uri.fsPath);
         const description = new MarkdownString(`${Interpreters.activateTerminalDescription} \`${displayPath}\``);
         envVarCollection.description = description;
-        this.hideProgress();
 
         await this.trackTerminalPrompt(shell, resource, env);
     }
