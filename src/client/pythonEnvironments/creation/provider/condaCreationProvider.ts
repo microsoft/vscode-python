@@ -200,21 +200,30 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
     let version: string | undefined;
     const versionStep = new MultiStepNode(
         workspaceStep,
-        async () => {
-            try {
-                version = await pickPythonVersion();
-            } catch (ex) {
-                if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
-                    return ex;
+        async (context) => {
+            if (
+                existingCondaAction === ExistingCondaAction.Recreate ||
+                existingCondaAction === ExistingCondaAction.Create
+            ) {
+                try {
+                    version = await pickPythonVersion();
+                } catch (ex) {
+                    if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
+                        return ex;
+                    }
+                    throw ex;
                 }
-                throw ex;
+                if (version === undefined) {
+                    traceError('Python version was not selected for creating conda environment.');
+                    return MultiStepAction.Cancel;
+                }
+                traceInfo(`Selected Python version ${version} for creating conda environment.`);
+            } else if (existingCondaAction === ExistingCondaAction.UseExisting) {
+                if (context === MultiStepAction.Back) {
+                    return MultiStepAction.Back;
+                }
             }
 
-            if (version === undefined) {
-                traceError('Python version was not selected for creating conda environment.');
-                return MultiStepAction.Cancel;
-            }
-            traceInfo(`Selected Python version ${version} for creating conda environment.`);
             return MultiStepAction.Continue;
         },
         undefined,
