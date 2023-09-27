@@ -27,6 +27,7 @@ import {
     PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY,
     DataWithPayloadChunks,
     PAYLOAD_SPLIT_MULTI_CHUNK_ARRAY,
+    PAYLOAD_ONLY_HEADER_MULTI_CHUNK,
 } from '../testController/payloadTestCases';
 import { traceLog } from '../../../client/logging';
 
@@ -37,6 +38,10 @@ export interface TestCase {
 }
 
 const testCases: Array<TestCase> = [
+    {
+        name: 'header in single chunk edge case',
+        value: PAYLOAD_ONLY_HEADER_MULTI_CHUNK(FAKE_UUID),
+    },
     {
         name: 'single payload single chunk',
         value: PAYLOAD_SINGLE_CHUNK(FAKE_UUID),

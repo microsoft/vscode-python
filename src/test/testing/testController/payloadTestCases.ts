@@ -82,6 +82,25 @@ export function PAYLOAD_MULTI_CHUNK(uuid: string): DataWithPayloadChunks {
     };
 }
 
+// more than one payload, split so the first one is only 'Content-Length' to confirm headers
+// with null values are ignored
+export function PAYLOAD_ONLY_HEADER_MULTI_CHUNK(uuid: string): DataWithPayloadChunks {
+    const payloadArray: string[] = [];
+    const result = JSON.stringify(SINGLE_UNITTEST_SUBTEST.result);
+
+    const val = createPayload(uuid, SINGLE_UNITTEST_SUBTEST);
+    const firstSpaceIndex = val.indexOf(' ');
+    const payload1 = val.substring(0, firstSpaceIndex);
+    const payload2 = val.substring(firstSpaceIndex);
+    payloadArray.push(payload1);
+    payloadArray.push(payload2);
+    payloadArray.push(EOT_PAYLOAD);
+    return {
+        payloadArray,
+        data: result,
+    };
+}
+
 // single payload divided by an arbitrary character and split across payloads
 export function PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY(uuid: string): DataWithPayloadChunks {
     const payload = createPayload(uuid, SINGLE_PYTEST_PAYLOAD);
