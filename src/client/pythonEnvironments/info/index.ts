@@ -110,7 +110,7 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
             return 'virtualenv';
         }
         case EnvironmentType.MicrosoftStore: {
-            return 'microsoft store';
+            return 'Microsoft Store';
         }
         case EnvironmentType.Poetry: {
             return 'poetry';
@@ -119,7 +119,7 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
             return 'virtualenvwrapper';
         }
         case EnvironmentType.ActiveState: {
-            return 'activestate';
+            return 'ActiveState';
         }
         default: {
             return '';
