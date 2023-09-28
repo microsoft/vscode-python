@@ -114,7 +114,7 @@ export function parseJsonRPCHeadersAndData(rawData: string): ParsedRPCHeadersAnd
             break;
         }
         const [key, value] = line.split(':');
-        if (value.trim()) {
+        if (value && value.trim()) {
             if ([JSONRPC_UUID_HEADER, JSONRPC_CONTENT_LENGTH_HEADER, JSONRPC_CONTENT_TYPE_HEADER].includes(key)) {
                 headerMap.set(key.trim(), value.trim());
             }
