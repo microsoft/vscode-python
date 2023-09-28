@@ -12,15 +12,15 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
     for (const [candidate, value] of [
         // Note that Unknown is excluded here.
         [PythonEnvKind.System, 'system'],
-        [PythonEnvKind.MicrosoftStore, 'microsoft store'],
+        [PythonEnvKind.MicrosoftStore, 'Microsoft Store'],
         [PythonEnvKind.Pyenv, 'pyenv'],
-        [PythonEnvKind.Poetry, 'poetry'],
+        [PythonEnvKind.Poetry, 'Poetry'],
         [PythonEnvKind.Custom, 'custom'],
         // For now we treat OtherGlobal like Unknown.
         [PythonEnvKind.Venv, 'venv'],
         [PythonEnvKind.VirtualEnv, 'virtualenv'],
         [PythonEnvKind.VirtualEnvWrapper, 'virtualenv'],
-        [PythonEnvKind.Pipenv, 'pipenv'],
+        [PythonEnvKind.Pipenv, 'Pipenv'],
         [PythonEnvKind.Conda, 'conda'],
         [PythonEnvKind.ActiveState, 'ActiveState'],
         // For now we treat OtherVirtual like Unknown.
