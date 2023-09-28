@@ -12,7 +12,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { traceError, traceInfo, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
@@ -87,7 +87,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             // what payload is so small it doesn't include the whole UUID think got this
             if (extractedJsonPayload.uuid !== undefined && extractedJsonPayload.cleanedJsonData !== undefined) {
                 // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
-                traceLog(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
+                traceVerbose(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
