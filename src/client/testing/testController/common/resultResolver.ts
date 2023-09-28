@@ -11,7 +11,7 @@ import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testI
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
-import { buildErrorNodeOptions, fixLogLines, populateTestTree } from './utils';
+import { buildErrorNodeOptions, fixLogLines, populateTestTree, splitTestNameWithRegex } from './utils';
 import { Deferred } from '../../../common/utils/async';
 
 export class PythonResultResolver implements ITestResultResolver {
@@ -216,9 +216,8 @@ export class PythonResultResolver implements ITestResultResolver {
                         });
                     }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-failure') {
-                    // split on " " since the subtest ID has the parent test ID in the first part of the ID.
-                    const parentTestCaseId = keyTemp.split(' ')[0];
-                    const subtestId = keyTemp.split(' ')[1];
+                    // split on [] or () based on how the subtest is setup.
+                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
                     const data = rawTestExecData.result[keyTemp];
                     // find the subtest's parent test item
@@ -227,7 +226,10 @@ export class PythonResultResolver implements ITestResultResolver {
                         if (subtestStats) {
                             subtestStats.failed += 1;
                         } else {
-                            this.subTestStats.set(parentTestCaseId, { failed: 1, passed: 0 });
+                            this.subTestStats.set(parentTestCaseId, {
+                                failed: 1,
+                                passed: 0,
+                            });
                             runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
@@ -253,11 +255,8 @@ export class PythonResultResolver implements ITestResultResolver {
                         throw new Error('Parent test item not found');
                     }
                 } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
-                    // split only on first " [" since the subtest ID has the parent test ID in the first part of the ID.
-                    const index = keyTemp.indexOf(' [');
-                    const parentTestCaseId = keyTemp.substring(0, index);
-                    // add one to index to remove the space from the start of the subtest ID
-                    const subtestId = keyTemp.substring(index + 1, keyTemp.length);
+                    // split on [] or () based on how the subtest is setup.
+                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
 
                     // find the subtest's parent test item
