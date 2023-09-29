@@ -104,57 +104,58 @@ ${data}${secondPayload}`;
         assert.deepStrictEqual(rpcContent.remainingRawData, '');
     });
 
-suite('Test Controller Utils: Other', () => {
-    interface TestCase {
-        name: string;
-        input: string;
-        expectedParent: string;
-        expectedSubtest: string;
-    }
+    suite('Test Controller Utils: Other', () => {
+        interface TestCase {
+            name: string;
+            input: string;
+            expectedParent: string;
+            expectedSubtest: string;
+        }
 
-    const testCases: Array<TestCase> = [
-        {
-            name: 'Single parameter, named',
-            input: 'test_package.ClassName.test_method (param=value)',
-            expectedParent: 'test_package.ClassName.test_method',
-            expectedSubtest: '(param=value)',
-        },
-        {
-            name: 'Single parameter, unnamed',
-            input: 'test_package.ClassName.test_method [value]',
-            expectedParent: 'test_package.ClassName.test_method',
-            expectedSubtest: '[value]',
-        },
-        {
-            name: 'Multiple parameters, named',
-            input: 'test_package.ClassName.test_method (param1=value1, param2=value2)',
-            expectedParent: 'test_package.ClassName.test_method',
-            expectedSubtest: '(param1=value1, param2=value2)',
-        },
-        {
-            name: 'Multiple parameters, unnamed',
-            input: 'test_package.ClassName.test_method [value1, value2]',
-            expectedParent: 'test_package.ClassName.test_method',
-            expectedSubtest: '[value1, value2]',
-        },
-        {
-            name: 'Names with special characters',
-            input: 'test_package.ClassName.test_method (param1=value/1, param2=value+2)',
-            expectedParent: 'test_package.ClassName.test_method',
-            expectedSubtest: '(param1=value/1, param2=value+2)',
-        },
-        {
-            name: 'Names with spaces',
-            input: 'test_package.ClassName.test_method ["a b c d"]',
-            expectedParent: 'test_package.ClassName.test_method',
-            expectedSubtest: '["a b c d"]',
-        },
-    ];
+        const testCases: Array<TestCase> = [
+            {
+                name: 'Single parameter, named',
+                input: 'test_package.ClassName.test_method (param=value)',
+                expectedParent: 'test_package.ClassName.test_method',
+                expectedSubtest: '(param=value)',
+            },
+            {
+                name: 'Single parameter, unnamed',
+                input: 'test_package.ClassName.test_method [value]',
+                expectedParent: 'test_package.ClassName.test_method',
+                expectedSubtest: '[value]',
+            },
+            {
+                name: 'Multiple parameters, named',
+                input: 'test_package.ClassName.test_method (param1=value1, param2=value2)',
+                expectedParent: 'test_package.ClassName.test_method',
+                expectedSubtest: '(param1=value1, param2=value2)',
+            },
+            {
+                name: 'Multiple parameters, unnamed',
+                input: 'test_package.ClassName.test_method [value1, value2]',
+                expectedParent: 'test_package.ClassName.test_method',
+                expectedSubtest: '[value1, value2]',
+            },
+            {
+                name: 'Names with special characters',
+                input: 'test_package.ClassName.test_method (param1=value/1, param2=value+2)',
+                expectedParent: 'test_package.ClassName.test_method',
+                expectedSubtest: '(param1=value/1, param2=value+2)',
+            },
+            {
+                name: 'Names with spaces',
+                input: 'test_package.ClassName.test_method ["a b c d"]',
+                expectedParent: 'test_package.ClassName.test_method',
+                expectedSubtest: '["a b c d"]',
+            },
+        ];
 
-    testCases.forEach((testCase) => {
-        test(`splitTestNameWithRegex: ${testCase.name}`, () => {
-            const splitResult = splitTestNameWithRegex(testCase.input);
-            assert.deepStrictEqual(splitResult, [testCase.expectedParent, testCase.expectedSubtest]);
+        testCases.forEach((testCase) => {
+            test(`splitTestNameWithRegex: ${testCase.name}`, () => {
+                const splitResult = splitTestNameWithRegex(testCase.input);
+                assert.deepStrictEqual(splitResult, [testCase.expectedParent, testCase.expectedSubtest]);
+            });
         });
     });
 });
