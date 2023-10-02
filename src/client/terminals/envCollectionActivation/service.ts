@@ -28,9 +28,9 @@ import {
 import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
 import { traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../../logging';
-import { IInterpreterService } from '../contracts';
-import { defaultShells } from './service';
-import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from './types';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { defaultShells } from '../../interpreter/activation/service';
+import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from '../../interpreter/activation/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
