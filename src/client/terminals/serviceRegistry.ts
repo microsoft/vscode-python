@@ -13,6 +13,7 @@ import { IExtensionActivationService, IExtensionSingleActivationService } from '
 import { ITerminalEnvVarCollectionService } from '../interpreter/activation/types';
 import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from './envCollectionActivation/service';
+import { TerminalDeactivateLimitationPrompt } from './envCollectionActivation/deactivatePrompt';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
@@ -40,5 +41,9 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TerminalIndicatorPrompt,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        TerminalDeactivateLimitationPrompt,
     );
 }
