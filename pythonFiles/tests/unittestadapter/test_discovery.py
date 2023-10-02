@@ -6,11 +6,7 @@ import pathlib
 from typing import List
 
 import pytest
-from unittestadapter.discovery import (
-    DEFAULT_PORT,
-    discover_tests,
-    parse_discovery_cli_args,
-)
+from unittestadapter.discovery import discover_tests
 from unittestadapter.utils import TestNodeTypeEnum, parse_unittest_args
 
 from . import expected_discovery_test_output
