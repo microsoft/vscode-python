@@ -179,7 +179,11 @@ export class PythonTestServer implements ITestServer, Disposable {
             cwd: options.cwd,
             throwOnStdErr: true,
             outputChannel: options.outChannel,
-            extraVariables: { PYTHONPATH: pythonPathCommand },
+            extraVariables: {
+                PYTHONPATH: pythonPathCommand,
+                TEST_UUID: uuid.toString(),
+                TEST_PORT: this.getPort().toString(),
+            },
         };
 
         if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;
@@ -191,12 +195,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         };
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
 
-        // Add the generated UUID to the data to be sent (expecting to receive it back).
-        // first check if we have testIds passed in (in case of execution) and
-        // insert appropriate flag and test id array
-        const args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
-            options.command.args,
-        );
+        const args = [options.command.script].concat(options.command.args);
 
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);

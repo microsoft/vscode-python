@@ -683,7 +683,7 @@ def send_post_request(
     cls_encoder -- a custom encoder if needed.
     """
     testPort = os.getenv("TEST_PORT", 45454)
-    testuuid = os.getenv("TEST_UUID")
+    testUuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
     global __socket
 
@@ -698,7 +698,7 @@ def send_post_request(
     data = json.dumps(payload, cls=cls_encoder)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json
-Request-uuid: {testuuid}
+Request-uuid: {testUuid}
 
 {data}"""
 
