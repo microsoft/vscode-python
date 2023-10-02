@@ -32,10 +32,11 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
     protected static handledDiagnosticCodeKeys: string[] = [];
     protected readonly filterService: IDiagnosticFilterService;
     constructor(
-        @unmanaged() private readonly supportedDiagnosticCodes: string[],
-        @unmanaged() protected serviceContainer: IServiceContainer,
-        @unmanaged() protected disposableRegistry: IDisposableRegistry,
-        @unmanaged() public readonly runInBackground: boolean = false,
+        // @ts-ignore: TS1239
+        @unmanaged() private readonly supportedDiagnosticCodes: string[], // @ts-ignore: TS1239
+        @unmanaged() protected serviceContainer: IServiceContainer, // @ts-ignore: TS1239
+        @unmanaged() protected disposableRegistry: IDisposableRegistry, // @ts-ignore: TS1239
+        @unmanaged() public readonly runInBackground: boolean = false, // @ts-ignore: TS1239
         @unmanaged() public readonly runInUntrustedWorkspace: boolean = false,
     ) {
         this.filterService = serviceContainer.get<IDiagnosticFilterService>(IDiagnosticFilterService);

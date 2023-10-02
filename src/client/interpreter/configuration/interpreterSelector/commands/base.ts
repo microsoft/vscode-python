@@ -19,11 +19,12 @@ export abstract class BaseInterpreterSelectorCommand implements IExtensionSingle
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     protected disposables: Disposable[] = [];
     constructor(
-        @unmanaged() protected readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
-        @unmanaged() protected readonly commandManager: ICommandManager,
-        @unmanaged() protected readonly applicationShell: IApplicationShell,
-        @unmanaged() protected readonly workspaceService: IWorkspaceService,
-        @unmanaged() protected readonly pathUtils: IPathUtils,
+        // @ts-ignore: TS1239
+        @unmanaged() protected readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager, // @ts-ignore: TS1239
+        @unmanaged() protected readonly commandManager: ICommandManager, // @ts-ignore: TS1239
+        @unmanaged() protected readonly applicationShell: IApplicationShell, // @ts-ignore: TS1239
+        @unmanaged() protected readonly workspaceService: IWorkspaceService, // @ts-ignore: TS1239
+        @unmanaged() protected readonly pathUtils: IPathUtils, // @ts-ignore: TS1239
         @unmanaged() protected readonly configurationService: IConfigurationService,
     ) {
         this.disposables.push(this);

@@ -50,6 +50,7 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
 @injectable()
 export abstract class BaseShellDetector implements IShellDetector {
+    // @ts-ignore: TS1239
     constructor(@unmanaged() public readonly priority: number) {}
     public abstract identify(
         telemetryProperties: ShellIdentificationTelemetry,
