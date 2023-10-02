@@ -173,7 +173,7 @@ export class ApplicationShell implements IApplicationShell {
     public createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
         return languages.createLanguageStatusItem(id, selector);
     }
-    public onDidWriteTerminalData(): Event<TerminalDataWriteEvent> {
+    public get onDidWriteTerminalData(): Event<TerminalDataWriteEvent> {
         return window.onDidWriteTerminalData;
     }
 }
