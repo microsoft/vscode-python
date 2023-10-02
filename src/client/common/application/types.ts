@@ -39,6 +39,7 @@ import {
     StatusBarAlignment,
     StatusBarItem,
     Terminal,
+    TerminalDataWriteEvent,
     TerminalOptions,
     TextDocument,
     TextDocumentChangeEvent,
@@ -74,6 +75,13 @@ export interface IApplicationShell {
      * changes. The value of the event represents whether the window is focused.
      */
     readonly onDidChangeWindowState: Event<WindowState>;
+
+    /**
+     * An event which fires when the terminal's child pseudo-device is written to (the shell).
+     * In other words, this provides access to the raw data stream from the process running
+     * within the terminal, including VT sequences.
+     */
+    readonly onDidWriteTerminalData: Event<TerminalDataWriteEvent>;
 
     showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
 

@@ -26,6 +26,7 @@ import {
     SaveDialogOptions,
     StatusBarAlignment,
     StatusBarItem,
+    TerminalDataWriteEvent,
     TextDocument,
     TextEditor,
     TreeView,
@@ -171,5 +172,8 @@ export class ApplicationShell implements IApplicationShell {
     }
     public createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
         return languages.createLanguageStatusItem(id, selector);
+    }
+    public onDidWriteTerminalData(): Event<TerminalDataWriteEvent> {
+        return window.onDidWriteTerminalData;
     }
 }
