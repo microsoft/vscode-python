@@ -3,7 +3,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { l10n, Position, Range, TextEditor, Uri, commands } from 'vscode';
+import { l10n, Position, Range, TextEditor, Uri } from 'vscode';
 
 import {
     IApplicationShell,

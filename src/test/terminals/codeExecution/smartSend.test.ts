@@ -1,8 +1,9 @@
 import * as TypeMoq from 'typemoq';
 import * as path from 'path';
-import { TextEditor, Selection, window, Uri, Position, TextDocument } from 'vscode';
+import { TextEditor, Selection, Position, TextDocument } from 'vscode';
 import * as fs from 'fs-extra';
 import { SemVer } from 'semver';
+import { assert, expect } from 'chai';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../../client/common/application/types';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -54,7 +55,6 @@ suite('REPL - Smart Send', () => {
 
     // all object that is common to every test. What each test needs
     setup(() => {
-        // Create mock
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
@@ -89,23 +89,9 @@ suite('REPL - Smart Send', () => {
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(IExperimentService)))
             .returns(() => experimentService.object);
-        // interpreterService
-        //     .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(workingPython));
-        // processServiceFactory.setup((p) => p.create()).returns(() => Promise.resolve(processService.object));
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        // processService.setup((p) => (p as any).then).returns(() => undefined);
-
-        /// /////////////////
-        // processServiceFactory
-        //     .setup((p) => p.create(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(processService.object));
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        // processService.setup((p) => (p as any).then).returns(() => undefined);
 
         codeExecutionHelper = new CodeExecutionHelper(serviceContainer.object);
         document = TypeMoq.Mock.ofType<TextDocument>();
@@ -116,57 +102,75 @@ suite('REPL - Smart Send', () => {
         const selection = TypeMoq.Mock.ofType<Selection>();
         selection.setup((s) => s.isEmpty).returns(() => true);
         activeEditor.setup((e) => e.selection).returns(() => selection.object);
-        // experimentService
-        //     .setup((exp) => exp.inExperiment(EnableREPLSmartSend.experiment))
-        //     .returns(() => Promise.resolve(true))
-        //     .verifiable(TypeMoq.Times.once());
+
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
             .returns(() => true);
-        // mock experiment service.
-        // mock what happens when commandManager.executeCommand
-        // just use Typemoq
-        // verify arugments that executeCommand is being passed
-        // verify that executeCommand is called once for each argument
+
+        // Callback function here:
+        // When executeCommand iscalled, instead of calling actual executeCommand,
+        // Call this function and make sure arg2 is equal to the object we want.
+        // This is a better approach to verify complex argument.
         commandManager
-            .setup((c) =>
-                c.executeCommand('cursorMove', {
+            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
+            .callback((_, arg2) => {
+                assert.deepEqual(arg2, {
                     to: 'down',
                     by: 'line',
-                    value: Number(3),
-                }),
-            )
+                    value: 3,
+                });
+                return Promise.resolve();
+            })
             .verifiable(TypeMoq.Times.once());
         commandManager
             .setup((c) => c.executeCommand('cursorEnd'))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        // .returns(() => Promise.resolve())
-        try {
-            await codeExecutionHelper.moveToNextBlock(3, activeEditor.object);
 
-            commandManager.verifyAll();
-        } catch (error) {
-            console.log(error);
-        }
+        await codeExecutionHelper.moveToNextBlock(3, activeEditor.object);
+
+        commandManager.verifyAll();
     });
 
-    test('Smart selection before normalization', async () => {
+    test('Cursor is not moved when not in SmartSend experiment', async () => {
+        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const selection = TypeMoq.Mock.ofType<Selection>();
+        selection.setup((s) => s.isEmpty).returns(() => true);
+        activeEditor.setup((e) => e.selection).returns(() => selection.object);
+
+        experimentService.setup((exp) => exp.inExperimentSync(TypeMoq.It.isAny())).returns(() => false);
+        commandManager
+            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
+            .callback((_, arg2) => {
+                assert.deepEqual(arg2, {
+                    to: 'down',
+                    by: 'line',
+                    value: 3,
+                });
+                return Promise.resolve();
+            })
+            .verifiable(TypeMoq.Times.never());
+
+        commandManager
+            .setup((c) => c.executeCommand('cursorEnd'))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.never());
+
+        await codeExecutionHelper.moveToNextBlock(3, activeEditor.object);
+        commandManager.verifyAll();
+    });
+
+    // make test to make sure when not at experiment, never call move cursor test- done
+    // When there is selection, never call cursor test- work in progress
+
+    test('Smart send should perform smart selection and move cursor', async () => {
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
             .returns(() => true);
 
-        // editor.setup((e) => e.selection).returns(() => new Selection(0, 0, 0, 0));
-        // const textEditor = await window.showTextDocument(Uri.file(path.join(TEST_FILES_PATH, `sample_raw.py`)));
-
-        // const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
-        // const selection = TypeMoq.Mock.ofType<Selection>();
-        // selection.setup((s) => s.isEmpty).returns(() => true);
-
         const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
         const firstIndexPosition = new Position(0, 0);
         const selection = TypeMoq.Mock.ofType<Selection>();
-        // activeEditor.setup((e) => e.selection).returns(() => selection.object);
         const wholeFileContent = await fs.readFile(path.join(TEST_FILES_PATH, `sample_smart_selection.py`), 'utf8');
 
         selection.setup((s) => s.anchor).returns(() => firstIndexPosition);
@@ -177,13 +181,38 @@ suite('REPL - Smart Send', () => {
         documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
         document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => wholeFileContent);
         const actualProcessService = new ProcessService();
+
+        const { execObservable } = actualProcessService;
+
         processService
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) =>
-                actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
-            );
-        // Imitiate we are sending from the very first line.
-        const normalizedCode = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
-        console.log('hi');
+            .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
+
+        const actualSmartOutput = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+
+        // my_dict = {  <----- smart shift+enter here
+        //     "key1": "value1",
+        //     "key2": "value2"
+        // } <---- cursor should be here afterwards, hence offset 3
+        commandManager
+            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
+            .callback((_, arg2) => {
+                assert.deepEqual(arg2, {
+                    to: 'down',
+                    by: 'line',
+                    value: 3,
+                });
+                return Promise.resolve();
+            })
+            .verifiable(TypeMoq.Times.once());
+
+        commandManager
+            .setup((c) => c.executeCommand('cursorEnd'))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+
+        const expectedSmartOutput = 'my_dict = {\n    "key1": "value1",\n    "key2": "value2"\n}\n';
+        expect(actualSmartOutput).to.be.equal(expectedSmartOutput);
+        commandManager.verifyAll();
     });
 });
