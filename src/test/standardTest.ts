@@ -99,7 +99,6 @@ async function start() {
         version: channel,
         extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' },
     };
-    console.log('Test options', JSON.stringify(options));
     await runTests(options);
 }
 start().catch((ex) => {
