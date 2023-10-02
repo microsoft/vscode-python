@@ -190,6 +190,16 @@ suite('Python Test Server, Send command etc', () => {
                         RUN_TEST_IDS_PORT_CONST,
                         'Expect test id port to be in extra variables and set correctly',
                     );
+                    assert.strictEqual(
+                        options2.extraVariables.TEST_UUID,
+                        FAKE_UUID,
+                        'Expect test uuid to be in extra variables and set correctly',
+                    );
+                    assert.strictEqual(
+                        options2.extraVariables.TEST_PORT,
+                        12345,
+                        'Expect server port to be set correctly as a env var',
+                    );
                 } catch (e) {
                     assert(false, 'Error parsing data, extra variables do not match');
                 }
@@ -203,6 +213,8 @@ suite('Python Test Server, Send command etc', () => {
                 return Promise.resolve(execService.object);
             });
         server = new PythonTestServer(execFactory.object, debugLauncher);
+        sinon.stub(server, 'getPort').returns(12345);
+        // const portServer = server.getPort();
         await server.serverReady();
         const options = {
             command: { script: 'myscript', args: ['-foo', 'foo'] },
@@ -215,8 +227,7 @@ suite('Python Test Server, Send command etc', () => {
         await deferred2.promise;
         mockProc.trigger('close');
 
-        const port = server.getPort();
-        const expectedArgs = ['myscript', '--port', `${port}`, '--uuid', FAKE_UUID, '-foo', 'foo'];
+        const expectedArgs = ['myscript', '-foo', 'foo'];
         execService.verify((x) => x.execObservable(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
     });
 
@@ -254,8 +265,7 @@ suite('Python Test Server, Send command etc', () => {
         await deferred.promise;
         mockProc.trigger('close');
 
-        const port = server.getPort();
-        const expected = ['python', 'myscript', '--port', `${port}`, '--uuid', FAKE_UUID, '-foo', 'foo'].join(' ');
+        const expected = ['python', 'myscript', '-foo', 'foo'].join(' ');
 
         assert.deepStrictEqual(output2, [expected]);
     });
