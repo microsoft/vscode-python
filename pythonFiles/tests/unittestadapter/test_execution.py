@@ -4,7 +4,6 @@
 import os
 import pathlib
 import sys
-from typing import List
 
 import pytest
 

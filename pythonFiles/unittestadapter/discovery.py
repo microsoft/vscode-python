@@ -1,14 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import argparse
 import json
 import os
 import pathlib
 import sys
 import traceback
 import unittest
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
