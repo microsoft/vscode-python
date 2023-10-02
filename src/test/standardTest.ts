@@ -86,6 +86,7 @@ async function start() {
             : ['--disable-extensions'];
     await installJupyterExtension(vscodeExecutablePath);
     await installPylanceExtension(vscodeExecutablePath);
+    console.log('VS Code executable', vscodeExecutablePath);
     const launchArgs = baseLaunchArgs
         .concat([workspacePath])
         .concat(channel === 'insiders' ? ['--enable-proposed-api'] : [])
