@@ -163,6 +163,53 @@ suite('REPL - Smart Send', () => {
     // make test to make sure when not at experiment, never call move cursor test- done
     // When there is selection, never call cursor test- work in progress
 
+    test('Cursor is not moved when explicit selection is present', async () => {
+        experimentService
+            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
+            .returns(() => true);
+
+        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const firstIndexPosition = new Position(0, 0);
+        const selection = TypeMoq.Mock.ofType<Selection>();
+        const wholeFileContent = await fs.readFile(path.join(TEST_FILES_PATH, `sample_smart_selection.py`), 'utf8');
+
+        selection.setup((s) => s.anchor).returns(() => firstIndexPosition);
+        selection.setup((s) => s.active).returns(() => firstIndexPosition);
+        selection.setup((s) => s.isEmpty).returns(() => false);
+        activeEditor.setup((e) => e.selection).returns(() => selection.object);
+
+        documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
+        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => wholeFileContent);
+        const actualProcessService = new ProcessService();
+
+        const { execObservable } = actualProcessService;
+
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
+
+        await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+
+        commandManager
+            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
+            .callback((_, arg2) => {
+                assert.deepEqual(arg2, {
+                    to: 'down',
+                    by: 'line',
+                    value: 3,
+                });
+                return Promise.resolve();
+            })
+            .verifiable(TypeMoq.Times.never());
+
+        commandManager
+            .setup((c) => c.executeCommand('cursorEnd'))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.never());
+
+        commandManager.verifyAll();
+    });
+
     test('Smart send should perform smart selection and move cursor', async () => {
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
@@ -215,4 +262,6 @@ suite('REPL - Smart Send', () => {
         expect(actualSmartOutput).to.be.equal(expectedSmartOutput);
         commandManager.verifyAll();
     });
+
+    // Do not perform smart selection when there is explicit selection
 });
