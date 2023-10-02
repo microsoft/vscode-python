@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/typescript-node:16-bookworm
+FROM mcr.microsoft.com/devcontainers/typescript-node:18-bookworm
 
 RUN apt-get install -y wget bzip2
 

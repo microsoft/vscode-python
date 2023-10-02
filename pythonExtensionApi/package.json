@@ -13,7 +13,7 @@
 	"main": "./out/main.js",
 	"types": "./out/main.d.ts",
 	"engines": {
-		"node": ">=16.17.1",
+		"node": ">=18.17.1",
 		"vscode": "^1.78.0"
 	},
     "license": "MIT",
@@ -27,7 +27,8 @@
     },
     "devDependencies": {
         "typescript": "5.0.4",
-        "@types/vscode": "^1.78.0"
+        "@types/vscode": "^1.78.0",
+        "source-map": "^0.8.0-beta.0"
     },
     "scripts": {
         "prepublishOnly": "echo \"⛔ Can only publish from a secure pipeline ⛔\" && node ../build/fail",

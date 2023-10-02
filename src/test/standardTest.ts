@@ -6,6 +6,7 @@ import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTest
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 import { getChannel } from './utils/vscode';
+import { TestOptions } from '@vscode/test-electron/out/runTest';
 
 // If running smoke tests, we don't have access to this.
 if (process.env.TEST_FILES_SUFFIX !== 'smoke.test') {
@@ -85,18 +86,20 @@ async function start() {
             : ['--disable-extensions'];
     await installJupyterExtension(vscodeExecutablePath);
     await installPylanceExtension(vscodeExecutablePath);
+    console.log('VS Code executable', vscodeExecutablePath);
     const launchArgs = baseLaunchArgs
         .concat([workspacePath])
         .concat(channel === 'insiders' ? ['--enable-proposed-api'] : [])
         .concat(['--timeout', '5000']);
     console.log(`Starting vscode ${channel} with args ${launchArgs.join(' ')}`);
-    await runTests({
+    const options: TestOptions = {
         extensionDevelopmentPath: extensionDevelopmentPath,
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test'),
         launchArgs,
         version: channel,
         extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' },
-    });
+    };
+    await runTests(options);
 }
 start().catch((ex) => {
     console.error('End Standard tests (with errors)', ex);
