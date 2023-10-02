@@ -2129,7 +2129,6 @@
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^6.2.0",
-        "@typescript-eslint/eslint-plugin-tslint": "^6.2.0",
         "@typescript-eslint/parser": "^6.2.0",
         "@vscode/test-electron": "^2.3.4",
         "@vscode/vsce": "^2.18.0",
