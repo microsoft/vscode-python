@@ -136,6 +136,7 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon
             .stub(fs.promises, 'readdir' as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+            // @ts-ignore
             .callsFake(async (filePath: fs.PathLike, options?: { withFileTypes?: boolean }) => {
                 if (typeof filePath !== 'string') {
                     throw new Error(`expected path to be string, got ${typeof path}`);
@@ -171,6 +172,7 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon
             .stub(fsapi, 'readFile' as any) // eslint-disable-line @typescript-eslint/no-explicit-any
+            // @ts-ignore
             .callsFake(async (filePath: string | Buffer | number, encoding: string) => {
                 if (typeof filePath !== 'string') {
                     throw new Error(`expected filePath to be string, got ${typeof filePath}`);

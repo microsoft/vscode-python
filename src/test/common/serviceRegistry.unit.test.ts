@@ -130,7 +130,7 @@ suite('Common - Service Registry', () => {
                     .setup((s) =>
                         s.addSingleton(
                             typemoq.It.isValue(mapping[0] as any),
-                            typemoq.It.is((value) => mapping[1] === value),
+                            typemoq.It.is((value: any) => value === mapping[1]),
                         ),
                     )
                     .verifiable(typemoq.Times.atLeastOnce());

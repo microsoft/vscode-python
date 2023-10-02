@@ -92,6 +92,7 @@ export enum ProductType {
     RefactoringLibrary = 'RefactoringLibrary',
     DataScience = 'DataScience',
     Python = 'Python',
+    WorkspaceSymbols = 'WorkspaceSymbols',
 }
 
 export enum Product {
@@ -115,6 +116,7 @@ export enum Product {
     pip = 27,
     ensurepip = 28,
     python = 29,
+    unknown = 404,
 }
 
 export const IInstaller = Symbol('IInstaller');
