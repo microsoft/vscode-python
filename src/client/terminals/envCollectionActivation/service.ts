@@ -30,7 +30,7 @@ import { Interpreters } from '../../common/utils/localize';
 import { traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../../logging';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { defaultShells } from '../../interpreter/activation/service';
-import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from '../../interpreter/activation/types';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
@@ -38,6 +38,7 @@ import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
+import { ITerminalEnvVarCollectionService } from '../types';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {

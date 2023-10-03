@@ -8,12 +8,17 @@ import { DjangoShellCodeExecutionProvider } from './codeExecution/djangoShellCod
 import { CodeExecutionHelper } from './codeExecution/helper';
 import { ReplProvider } from './codeExecution/repl';
 import { TerminalCodeExecutionProvider } from './codeExecution/terminalCodeExecution';
-import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService, ITerminalAutoActivation } from './types';
-import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
-import { ITerminalEnvVarCollectionService } from '../interpreter/activation/types';
-import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
+import {
+    ICodeExecutionHelper,
+    ICodeExecutionManager,
+    ICodeExecutionService,
+    ITerminalAutoActivation,
+    ITerminalEnvVarCollectionService,
+} from './types';
 import { TerminalEnvVarCollectionService } from './envCollectionActivation/service';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { TerminalDeactivateLimitationPrompt } from './envCollectionActivation/deactivatePrompt';
+import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
@@ -37,7 +42,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         ITerminalEnvVarCollectionService,
         TerminalEnvVarCollectionService,
     );
-    serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TerminalIndicatorPrompt,
@@ -46,4 +50,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         TerminalDeactivateLimitationPrompt,
     );
+    serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
 }

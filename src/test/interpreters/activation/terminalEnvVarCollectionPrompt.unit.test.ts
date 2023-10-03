@@ -14,12 +14,12 @@ import {
     IPythonSettings,
 } from '../../../client/common/types';
 import { TerminalIndicatorPrompt } from '../../../client/terminals/envCollectionActivation/indicatorPrompt';
-import { ITerminalEnvVarCollectionService } from '../../../client/interpreter/activation/types';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { TerminalEnvVarActivation } from '../../../client/common/experiments/groups';
 import { sleep } from '../../core';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { ITerminalEnvVarCollectionService } from '../../../client/terminals/types';
 
 suite('Terminal Environment Variable Collection Prompt', () => {
     let shell: IApplicationShell;
