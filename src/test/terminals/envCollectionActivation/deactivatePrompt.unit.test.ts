@@ -5,7 +5,7 @@
 
 import { mock, when, anything, instance, verify, reset } from 'ts-mockito';
 import { EventEmitter, Terminal, TerminalDataWriteEvent, Uri } from 'vscode';
-import { IApplicationShell } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IApplicationShell } from '../../../client/common/application/types';
 import {
     IBrowserService,
     IExperimentService,
@@ -19,11 +19,13 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { TerminalDeactivateLimitationPrompt } from '../../../client/terminals/envCollectionActivation/deactivatePrompt';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
+import { TerminalShellType } from '../../../client/common/terminal/types';
 
 suite('Terminal Deactivation Limitation Prompt', () => {
     let shell: IApplicationShell;
     let experimentService: IExperimentService;
     let persistentStateFactory: IPersistentStateFactory;
+    let appEnvironment: IApplicationEnvironment;
     let deactivatePrompt: TerminalDeactivateLimitationPrompt;
     let terminalWriteEvent: EventEmitter<TerminalDataWriteEvent>;
     let notificationEnabled: IPersistentState<boolean>;
@@ -37,6 +39,8 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         interpreterService = mock<IInterpreterService>();
         experimentService = mock<IExperimentService>();
         persistentStateFactory = mock<IPersistentStateFactory>();
+        appEnvironment = mock<IApplicationEnvironment>();
+        when(appEnvironment.shell).thenReturn('bash');
         browserService = mock<IBrowserService>();
         notificationEnabled = mock<IPersistentState<boolean>>();
         terminalWriteEvent = new EventEmitter<TerminalDataWriteEvent>();
@@ -51,6 +55,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
             [],
             instance(interpreterService),
             instance(browserService),
+            instance(appEnvironment),
             instance(experimentService),
         );
     });
@@ -66,13 +71,35 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showInformationMessage(expectedMessage, ...prompts)).once();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
+    });
+
+    test('When using cmd, do not show notification for the same', async () => {
+        const resource = Uri.file('a');
+        const terminal = ({
+            creationOptions: {
+                cwd: resource,
+            },
+        } as unknown) as Terminal;
+        reset(appEnvironment);
+        when(appEnvironment.shell).thenReturn(TerminalShellType.commandPrompt);
+        when(notificationEnabled.value).thenReturn(true);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            type: PythonEnvType.Virtual,
+        } as unknown) as PythonEnvironment);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenResolve(undefined);
+
+        await deactivatePrompt.activate();
+        terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
+        await sleep(1);
+
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
     });
 
     test('When not in experiment, do not show notification for the same', async () => {
@@ -88,13 +115,13 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).never();
     });
 
     test('Do not show notification if notification is disabled', async () => {
@@ -108,13 +135,13 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).never();
     });
 
     test('Do not show notification when virtual env is not activated for terminal', async () => {
@@ -128,13 +155,13 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Conda,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showInformationMessage(expectedMessage, ...prompts)).never();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).never();
     });
 
     test("Disable notification if `Don't show again` is clicked", async () => {
@@ -148,9 +175,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenReturn(
-            Promise.resolve(Common.doNotShowAgain),
-        );
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(Common.doNotShowAgain));
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
@@ -170,15 +195,13 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenReturn(
-            Promise.resolve(Common.seeInstructions),
-        );
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(Common.seeInstructions));
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showInformationMessage(expectedMessage, ...prompts)).once();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
         verify(browserService.launch(anything())).once();
     });
 
@@ -193,13 +216,13 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
-        when(shell.showInformationMessage(expectedMessage, ...prompts)).thenResolve(undefined);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenResolve(undefined);
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showInformationMessage(expectedMessage, ...prompts)).once();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
         verify(notificationEnabled.updateValue(false)).never();
         verify(browserService.launch(anything())).never();
     });
