@@ -26,7 +26,6 @@ import {
     SaveDialogOptions,
     StatusBarAlignment,
     StatusBarItem,
-    TerminalDataWriteEvent,
     TextDocument,
     TextEditor,
     TreeView,
@@ -38,7 +37,7 @@ import {
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
 } from 'vscode';
-import { IApplicationShell } from './types';
+import { IApplicationShell, TerminalDataWriteEvent } from './types';
 
 @injectable()
 export class ApplicationShell implements IApplicationShell {

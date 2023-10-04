@@ -39,7 +39,6 @@ import {
     StatusBarAlignment,
     StatusBarItem,
     Terminal,
-    TerminalDataWriteEvent,
     TerminalOptions,
     TextDocument,
     TextDocumentChangeEvent,
@@ -67,6 +66,17 @@ import { Channel } from '../constants';
 import { Resource } from '../types';
 import { ICommandNameArgumentTypeMapping } from './commands';
 import { ExtensionContextKey } from './contextKeys';
+
+export interface TerminalDataWriteEvent {
+    /**
+     * The {@link Terminal} for which the data was written.
+     */
+    readonly terminal: Terminal;
+    /**
+     * The data being written.
+     */
+    readonly data: string;
+}
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
