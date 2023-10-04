@@ -1329,6 +1329,24 @@ export interface IEventNamePropertyMapping {
         selection: 'Allow' | 'Close' | undefined;
     };
     /**
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved with a few simple steps.'
+     */
+    /* __GDPR__
+       "terminal_deactivate_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.TERMINAL_DEACTIVATE_PROMPT]: {
+        /**
+         * `See Instructions` When 'See Instructions' option is selected
+         * `Done, it works` When 'Done, it works' option is selected
+         * `Don't show again` When 'Don't show again' option is selected
+         */
+        selection: 'See Instructions' | 'Done, it works' | "Don't show again" | undefined;
+    };
+    /**
      * Telemetry event sent with details when user attempts to run in interactive window when Jupyter is not installed.
      */
     /* __GDPR__

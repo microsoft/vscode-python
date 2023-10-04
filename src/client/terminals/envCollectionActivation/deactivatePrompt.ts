@@ -12,6 +12,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 
@@ -66,10 +68,18 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             return;
         }
         const prompts = [Common.seeInstructions, Interpreters.deactivateDoneButton, Common.doNotShowAgain];
+        const telemetrySelections: ['See Instructions', 'Done, it works', "Don't show again"] = [
+            'See Instructions',
+            'Done, it works',
+            "Don't show again",
+        ];
         const selection = await this.appShell.showWarningMessage(Interpreters.terminalDeactivatePrompt, ...prompts);
         if (!selection) {
             return;
         }
+        sendTelemetryEvent(EventName.TERMINAL_DEACTIVATE_PROMPT, undefined, {
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
+        });
         if (selection === prompts[0]) {
             const url = `https://aka.ms/AAmx2ft`;
             this.browserService.launch(url);
