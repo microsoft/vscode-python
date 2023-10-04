@@ -200,8 +200,9 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        node_path = map_id_to_path[report.nodeid]
-        if not node_path:
+        try:
+            node_path = map_id_to_path[report.nodeid]
+        except KeyError:
             node_path = cwd
         # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
