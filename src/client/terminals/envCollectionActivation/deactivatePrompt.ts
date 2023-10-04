@@ -65,7 +65,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = [Common.seeInstructions, Common.doNotShowAgain];
+        const prompts = [Common.seeInstructions, Interpreters.deactivateDoneButton, Common.doNotShowAgain];
         const selection = await this.appShell.showWarningMessage(Interpreters.terminalDeactivatePrompt, ...prompts);
         if (!selection) {
             return;
@@ -74,7 +74,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             const url = `https://aka.ms/AAmx2ft`;
             this.browserService.launch(url);
         }
-        if (selection === prompts[1]) {
+        if (selection === prompts[1] || selection === prompts[2]) {
             await notificationPromptEnabled.updateValue(false);
         }
     }

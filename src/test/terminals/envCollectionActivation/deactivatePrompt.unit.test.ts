@@ -31,7 +31,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
     let notificationEnabled: IPersistentState<boolean>;
     let browserService: IBrowserService;
     let interpreterService: IInterpreterService;
-    const prompts = [Common.seeInstructions, Common.doNotShowAgain];
+    const prompts = [Common.seeInstructions, Interpreters.deactivateDoneButton, Common.doNotShowAgain];
     const expectedMessage = Interpreters.terminalDeactivatePrompt;
 
     setup(async () => {
@@ -176,6 +176,28 @@ suite('Terminal Deactivation Limitation Prompt', () => {
             type: PythonEnvType.Virtual,
         } as unknown) as PythonEnvironment);
         when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(Common.doNotShowAgain));
+
+        await deactivatePrompt.activate();
+        terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
+        await sleep(1);
+
+        verify(notificationEnabled.updateValue(false)).once();
+    });
+
+    test('Disable notification if `Done, it works` is clicked', async () => {
+        const resource = Uri.file('a');
+        const terminal = ({
+            creationOptions: {
+                cwd: resource,
+            },
+        } as unknown) as Terminal;
+        when(notificationEnabled.value).thenReturn(true);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            type: PythonEnvType.Virtual,
+        } as unknown) as PythonEnvironment);
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(
+            Promise.resolve(Interpreters.deactivateDoneButton),
+        );
 
         await deactivatePrompt.activate();
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
