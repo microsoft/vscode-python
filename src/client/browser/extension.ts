@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 import * as vscode from 'vscode';
-import TelemetryReporter from '@vscode/extension-telemetry';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { LanguageServerType } from '../activation/types';
-import { AppinsightsKey, PYLANCE_EXTENSION_ID } from '../common/constants';
+import { PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
 import { PylanceApi } from '../activation/node/pylanceApi';
@@ -21,9 +20,7 @@ let languageClient: LanguageClient | undefined;
 let pylanceApi: PylanceApi | undefined;
 
 export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
-    const reporter = getTelemetryReporter();
-
-    const activationPromise = Promise.resolve(buildApi(reporter));
+    const activationPromise = Promise.resolve(buildApi());
     const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         // Make sure we run pylance once we activated core extension.
@@ -115,52 +112,21 @@ async function runPylance(
             vscode.commands.registerCommand('python.viewLanguageServerOutput', () => client.outputChannel.show()),
         );
 
-        client.onTelemetry(
-            (telemetryEvent: {
-                EventName: EventName;
-                Properties: { method: string };
-                Measurements: number | Record<string, number> | undefined;
-                Exception: Error | undefined;
-            }) => {
-                const eventName = telemetryEvent.EventName || EventName.LANGUAGE_SERVER_TELEMETRY;
-                const formattedProperties = {
-                    ...telemetryEvent.Properties,
-                    // Replace all slashes in the method name so it doesn't get scrubbed by @vscode/extension-telemetry.
-                    method: telemetryEvent.Properties.method?.replace(/\//g, '.'),
-                };
-                sendTelemetryEventBrowser(
-                    eventName,
-                    telemetryEvent.Measurements,
-                    formattedProperties,
-                    telemetryEvent.Exception,
-                );
-            },
-        );
-
         await client.start();
     } catch (e) {
         console.log(e);
     }
 }
 
+class FakeReporter {
+    public sendTelemetryEvent(_eventName: string, _properties?: {}, _measures?: {}) {}
+    public sendTelemetryErrorEvent(_eventName: string, _properties?: {}, _measures?: {}) {}
+    public sendTelemetryException(_error: Error, _properties?: {}, _measures?: {}) {}
+}
 // Duplicate code from telemetry/index.ts to avoid pulling in winston,
 // which doesn't support the browser.
-
-let telemetryReporter: TelemetryReporter | undefined;
 function getTelemetryReporter() {
-    if (telemetryReporter) {
-        return telemetryReporter;
-    }
-
-    // eslint-disable-next-line global-require
-    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(AppinsightsKey, [
-        {
-            lookup: /(errorName|errorMessage|errorStack)/g,
-        },
-    ]);
-
-    return telemetryReporter;
+    return new FakeReporter();
 }
 
 function sendTelemetryEventBrowser(

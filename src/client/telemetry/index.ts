@@ -2,12 +2,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from '@vscode/extension-telemetry';
-
-import * as path from 'path';
-import * as fs from 'fs-extra';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { isUnitTestExecution } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -30,15 +26,9 @@ import type { LinterTrigger, TestTool } from './types';
  * Within DA, there's a completely different way to send telemetry.
  * @returns {boolean}
  */
+//@ts-ignore
 function isTelemetrySupported(): boolean {
-    try {
-        const vsc = require('vscode');
-        const reporter = require('@vscode/extension-telemetry');
-
-        return vsc !== undefined && reporter !== undefined;
-    } catch {
-        return false;
-    }
+    return false;
 }
 
 /**
@@ -46,9 +36,7 @@ function isTelemetrySupported(): boolean {
  * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
-    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    const packageJson = fs.readJSONSync(packageJsonPath);
-    return !packageJson.enableTelemetry;
+    return true;
 }
 
 const sharedProperties: Record<string, unknown> = {};
@@ -76,92 +64,24 @@ export function _resetSharedProperties(): void {
         delete sharedProperties[key];
     }
 }
-
-let telemetryReporter: TelemetryReporter | undefined;
-export function getTelemetryReporter(): TelemetryReporter {
-    if (!isTestExecution() && telemetryReporter) {
-        return telemetryReporter;
-    }
-
-    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(AppinsightsKey, [
-        {
-            lookup: /(errorName|errorMessage|errorStack)/g,
-        },
-    ]);
-
-    return telemetryReporter;
+class FakeReporter {
+    public sendTelemetryEvent(_eventName: string, _properties?: {}, _measures?: {}) {}
+    public sendTelemetryErrorEvent(_eventName: string, _properties?: {}, _measures?: {}) {}
+    public sendTelemetryException(_error: Error, _properties?: {}, _measures?: {}) {}
+}
+export function getTelemetryReporter() {
+    return new FakeReporter();
 }
 
-export function clearTelemetryReporter(): void {
-    telemetryReporter = undefined;
-}
+export function clearTelemetryReporter(): void {}
 
 export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extends keyof P>(
-    eventName: E,
-    measuresOrDurationMs?: Record<string, number> | number,
-    properties?: P[E],
-    ex?: Error,
+    _eventName: E,
+    _measuresOrDurationMs?: Record<string, number> | number,
+    _properties?: P[E],
+    _ex?: Error,
 ): void {
-    if (isTestExecution() || !isTelemetrySupported() || isTelemetryDisabled()) {
-        return;
-    }
-    const reporter = getTelemetryReporter();
-    const measures =
-        typeof measuresOrDurationMs === 'number'
-            ? { duration: measuresOrDurationMs }
-            : measuresOrDurationMs || undefined;
-    const customProperties: Record<string, string> = {};
-    const eventNameSent = eventName as string;
-
-    if (properties) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = properties as any;
-        Object.getOwnPropertyNames(data).forEach((prop) => {
-            if (data[prop] === undefined || data[prop] === null) {
-                return;
-            }
-            try {
-                // If there are any errors in serializing one property, ignore that and move on.
-                // Else nothing will be sent.
-                switch (typeof data[prop]) {
-                    case 'string':
-                        customProperties[prop] = data[prop];
-                        break;
-                    case 'object':
-                        customProperties[prop] = 'object';
-                        break;
-                    default:
-                        customProperties[prop] = data[prop].toString();
-                        break;
-                }
-            } catch (exception) {
-                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception);
-            }
-        });
-    }
-
-    // Add shared properties to telemetry props (we may overwrite existing ones).
-    Object.assign(customProperties, sharedProperties);
-
-    if (ex) {
-        const errorProps = {
-            errorName: ex.name,
-            errorStack: ex.stack ?? '',
-        };
-        Object.assign(customProperties, errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
-    } else {
-        reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
-    }
-
-    if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
-        console.info(
-            `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
-                customProperties,
-            )} `,
-        );
-    }
+    return;
 }
 
 // Type-parameterized form of MethodDecorator in lib.es5.d.ts.

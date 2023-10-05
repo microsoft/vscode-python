@@ -20,7 +20,6 @@ import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
 import { ApiForPylance } from './pylanceApi';
-import { getTelemetryReporter } from './telemetry';
 
 export function buildApi(
     ready: Promise<void>,
@@ -127,7 +126,6 @@ export function buildApi(
             },
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
-            getTelemetryReporter: () => getTelemetryReporter(),
         },
         environments: buildEnvironmentApi(discoveryApi, serviceContainer),
     };

@@ -10,7 +10,7 @@ PACKAGE_JSON_PATH = EXT_ROOT / "package.json"
 
 def main(package_json: pathlib.Path) -> None:
     package = json.loads(package_json.read_text(encoding="utf-8"))
-    package["enableTelemetry"] = True
+    package["enableTelemetry"] = False
 
     # Overwrite package.json with new data add a new-line at the end of the file.
     package_json.write_text(
