@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import * as typemoq from 'typemoq';
-import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { IServiceManager } from '../../client/ioc/types';
 import { TerminalAutoActivation } from '../../client/terminals/activation';
 import { CodeExecutionManager } from '../../client/terminals/codeExecution/codeExecutionManager';
@@ -10,16 +9,12 @@ import { DjangoShellCodeExecutionProvider } from '../../client/terminals/codeExe
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ReplProvider } from '../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
-import { TerminalDeactivateLimitationPrompt } from '../../client/terminals/envCollectionActivation/deactivatePrompt';
-import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
-import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
 import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
     ITerminalAutoActivation,
-    ITerminalEnvVarCollectionService,
 } from '../../client/terminals/types';
 
 suite('Terminal - Service Registry', () => {
@@ -32,9 +27,6 @@ suite('Terminal - Service Registry', () => {
             [ICodeExecutionService, ReplProvider, 'repl'],
             [ITerminalAutoActivation, TerminalAutoActivation],
             [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],
-            [ITerminalEnvVarCollectionService, TerminalEnvVarCollectionService],
-            [IExtensionSingleActivationService, TerminalIndicatorPrompt],
-            [IExtensionSingleActivationService, TerminalDeactivateLimitationPrompt],
         ].forEach((args) => {
             if (args.length === 2) {
                 services
@@ -58,14 +50,6 @@ suite('Terminal - Service Registry', () => {
                     .verifiable(typemoq.Times.once());
             }
         });
-        services
-            .setup((s) =>
-                s.addBinding(
-                    typemoq.It.is((v) => ITerminalEnvVarCollectionService === v),
-                    typemoq.It.is((value) => IExtensionActivationService === value),
-                ),
-            )
-            .verifiable(typemoq.Times.once());
 
         registerTypes(services.object);
 

@@ -201,10 +201,6 @@ export namespace Interpreters {
     export const terminalEnvVarCollectionPrompt = l10n.t(
         'The Python extension automatically activates all terminals using the selected environment, even when the name of the environment{0} is not present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
     );
-    export const terminalDeactivatePrompt = l10n.t(
-        'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved with a few simple steps.',
-    );
-    export const deactivateDoneButton = l10n.t('Done, it works');
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
     );

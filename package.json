@@ -22,8 +22,7 @@
         "quickPickSortByLabel",
         "testObserver",
         "quickPickItemTooltip",
-        "saveEditor",
-        "terminalDataWriteEvent"
+        "saveEditor"
     ],
     "author": {
         "name": "Microsoft Corporation"

@@ -14,15 +14,15 @@ import {
 } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { ITerminalEnvVarCollectionService } from './types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService } from '../contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { ITerminalEnvVarCollectionService } from '../types';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
 @injectable()
-export class TerminalIndicatorPrompt implements IExtensionSingleActivationService {
+export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     constructor(

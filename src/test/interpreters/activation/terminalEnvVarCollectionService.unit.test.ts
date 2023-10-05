@@ -32,7 +32,7 @@ import {
 import { Interpreters } from '../../../client/common/utils/localize';
 import { OSType, getOSType } from '../../../client/common/utils/platform';
 import { defaultShells } from '../../../client/interpreter/activation/service';
-import { TerminalEnvVarCollectionService } from '../../../client/terminals/envCollectionActivation/service';
+import { TerminalEnvVarCollectionService } from '../../../client/interpreter/activation/terminalEnvVarCollectionService';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
