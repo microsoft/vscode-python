@@ -211,6 +211,8 @@ export class PythonTestServer implements ITestServer, Disposable {
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
                     runTestIdsPort: runTestIdPort,
+                    pytestUUID: uuid.toString(),
+                    pytestPort: this.getPort().toString(),
                 };
                 traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
 
