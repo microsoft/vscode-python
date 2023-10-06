@@ -16,7 +16,7 @@ import {
     Output,
 } from '../../../client/common/process/types';
 import { PythonTestServer } from '../../../client/testing/testController/common/server';
-import { ITestDebugLauncher } from '../../../client/testing/common/types';
+import { ITestDebugLauncher, LaunchOptions } from '../../../client/testing/common/types';
 import { Deferred, createDeferred } from '../../../client/common/utils/async';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import {
@@ -236,6 +236,64 @@ suite('Python Test Server, Send command etc', () => {
 
         const expectedArgs = ['myscript', '-foo', 'foo'];
         execService.verify((x) => x.execObservable(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
+        if (error) {
+            assert(false, errorMessage);
+        }
+    });
+    test('sendCommand should add right extra variables to command during debug', async () => {
+        const deferred2 = createDeferred();
+        const RUN_TEST_IDS_PORT_CONST = '5678';
+        const error = false;
+        const errorMessage = '';
+        const debugLauncherMock = typeMoq.Mock.ofType<ITestDebugLauncher>();
+        let actualLaunchOptions: LaunchOptions = {} as LaunchOptions;
+        const deferred4 = createDeferred();
+        debugLauncherMock
+            .setup((x) => x.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns((options, _) => {
+                actualLaunchOptions = options;
+                deferred4.resolve();
+                return Promise.resolve();
+            });
+        execService
+            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => typeMoq.Mock.ofType<ObservableExecutionResult<string>>().object);
+        const execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => {
+                deferred2.resolve();
+                return Promise.resolve(execService.object);
+            });
+        server = new PythonTestServer(execFactory.object, debugLauncherMock.object);
+        sinon.stub(server, 'getPort').returns(12345);
+        // const portServer = server.getPort();
+        await server.serverReady();
+        const options = {
+            command: { script: 'myscript', args: ['-foo', 'foo'] },
+            workspaceFolder: Uri.file('/foo/bar'),
+            cwd: '/foo/bar',
+            uuid: FAKE_UUID,
+            debugBool: true,
+        };
+        try {
+            server.sendCommand(options, {}, RUN_TEST_IDS_PORT_CONST);
+        } catch (e) {
+            assert(false, `Error sending command, ${e}`);
+        }
+        // add in await and trigger
+        await deferred2.promise;
+        await deferred4.promise;
+        mockProc.trigger('close');
+
+        assert.notDeepEqual(actualLaunchOptions, {}, 'launch options should be set');
+        assert.strictEqual(actualLaunchOptions.cwd, '/foo/bar');
+        assert.strictEqual(actualLaunchOptions.testProvider, 'unittest');
+        assert.strictEqual(actualLaunchOptions.pytestPort, '12345');
+        assert.strictEqual(actualLaunchOptions.pytestUUID, 'fake-uuid');
+        assert.strictEqual(actualLaunchOptions.runTestIdsPort, '5678');
+
+        debugLauncherMock.verify((x) => x.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()), typeMoq.Times.once());
         if (error) {
             assert(false, errorMessage);
         }
