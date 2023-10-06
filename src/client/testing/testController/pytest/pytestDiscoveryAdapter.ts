@@ -19,6 +19,7 @@ import {
     ITestServer,
 } from '../common/types';
 import { createDiscoveryErrorPayload, createEOTPayload, createTestingDeferred } from '../common/utils';
+import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -29,6 +30,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
+        private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
@@ -61,18 +63,21 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { pytestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
+        // get and edit env vars
+        const mutableEnv = {
+            ...(await this.envVarsService?.getEnvironmentVariables(uri)),
+        };
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
+        mutableEnv.PYTHONPATH = pythonPathCommand;
+        mutableEnv.TEST_UUID = uuid.toString();
+        mutableEnv.TEST_PORT = this.testServer.getPort().toString();
 
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,
-            extraVariables: {
-                PYTHONPATH: pythonPathCommand,
-                TEST_UUID: uuid.toString(),
-                TEST_PORT: this.testServer.getPort().toString(),
-            },
             outputChannel: this.outputChannel,
+            env: mutableEnv,
         };
 
         // Create the Python environment in which to execute the command.

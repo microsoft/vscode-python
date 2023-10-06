@@ -23,6 +23,7 @@ import {
     extractJsonPayload,
 } from './utils';
 import { createDeferred } from '../../../common/utils/async';
+import { EnvironmentVariables } from '../../../api/types';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -165,28 +166,29 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     async sendCommand(
         options: TestCommandOptions,
+        env: EnvironmentVariables,
         runTestIdPort?: string,
         runInstance?: TestRun,
         testIds?: string[],
         callback?: () => void,
     ): Promise<void> {
         const { uuid } = options;
-
+        // get and edit env vars
+        const mutableEnv = { ...env };
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [options.cwd, ...pythonPathParts].join(path.delimiter);
+        mutableEnv.PYTHONPATH = pythonPathCommand;
+        mutableEnv.TEST_UUID = uuid.toString();
+        mutableEnv.TEST_PORT = this.getPort().toString();
+        mutableEnv.RUN_TEST_IDS_PORT = runTestIdPort;
+
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
             outputChannel: options.outChannel,
-            extraVariables: {
-                PYTHONPATH: pythonPathCommand,
-                TEST_UUID: uuid.toString(),
-                TEST_PORT: this.getPort().toString(),
-            },
+            env: mutableEnv,
         };
-
-        if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;
         const isRun = runTestIdPort !== undefined;
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {

@@ -30,6 +30,7 @@ suite('pytest test execution adapter', () => {
     let adapter: PytestTestExecutionAdapter;
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let deferred: Deferred<void>;
+    let deferred4: Deferred<void>;
     let debugLauncher: typeMoq.IMock<ITestDebugLauncher>;
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
@@ -59,16 +60,20 @@ suite('pytest test execution adapter', () => {
         const output = new Observable<Output<string>>(() => {
             /* no op */
         });
+        deferred4 = createDeferred();
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         execService
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
+            .returns(() => {
+                deferred4.resolve();
+                return {
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
+            });
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
         utilsStartServerStub = sinon.stub(util, 'startTestIdServer');
         debugLauncher = typeMoq.Mock.ofType<ITestDebugLauncher>();
@@ -161,6 +166,7 @@ suite('pytest test execution adapter', () => {
 
         await deferred2.promise;
         await deferred3.promise;
+        await deferred4.promise;
         mockProc.trigger('close');
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
@@ -176,10 +182,10 @@ suite('pytest test execution adapter', () => {
                 x.execObservable(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
-                        assert.equal(options.extraVariables?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
-                        assert.equal(options.extraVariables?.TEST_UUID, expectedExtraVariables.TEST_UUID);
-                        assert.equal(options.extraVariables?.TEST_PORT, expectedExtraVariables.TEST_PORT);
-                        assert.equal(options.extraVariables?.RUN_TEST_IDS_PORT, '54321');
+                        assert.equal(options.env?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
+                        assert.equal(options.env?.TEST_UUID, expectedExtraVariables.TEST_UUID);
+                        assert.equal(options.env?.TEST_PORT, expectedExtraVariables.TEST_PORT);
+                        assert.equal(options.env?.RUN_TEST_IDS_PORT, '54321');
                         assert.equal(options.cwd, uri.fsPath);
                         assert.equal(options.throwOnStdErr, true);
                         return true;
@@ -227,6 +233,7 @@ suite('pytest test execution adapter', () => {
 
         await deferred2.promise;
         await deferred3.promise;
+        await deferred4.promise;
         mockProc.trigger('close');
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
@@ -243,10 +250,10 @@ suite('pytest test execution adapter', () => {
                 x.execObservable(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
-                        assert.equal(options.extraVariables?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
-                        assert.equal(options.extraVariables?.TEST_UUID, expectedExtraVariables.TEST_UUID);
-                        assert.equal(options.extraVariables?.TEST_PORT, expectedExtraVariables.TEST_PORT);
-                        assert.equal(options.extraVariables?.RUN_TEST_IDS_PORT, '54321');
+                        assert.equal(options.env?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
+                        assert.equal(options.env?.TEST_UUID, expectedExtraVariables.TEST_UUID);
+                        assert.equal(options.env?.TEST_PORT, expectedExtraVariables.TEST_PORT);
+                        assert.equal(options.env?.RUN_TEST_IDS_PORT, '54321');
                         assert.equal(options.cwd, newCwd);
                         assert.equal(options.throwOnStdErr, true);
                         return true;

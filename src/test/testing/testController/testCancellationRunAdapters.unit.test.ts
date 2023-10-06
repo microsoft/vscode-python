@@ -239,6 +239,7 @@ suite('Execution Flow Run Adapters', () => {
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
+                    typeMoq.It.isAny(),
                 ),
             )
             .returns(() => {
@@ -314,6 +315,7 @@ suite('Execution Flow Run Adapters', () => {
         stubTestServer
             .setup((t) =>
                 t.sendCommand(
+                    typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),

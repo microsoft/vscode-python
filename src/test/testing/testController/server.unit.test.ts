@@ -139,7 +139,7 @@ suite('Python Test Server, DataWithPayloadChunks', () => {
                 traceLog('Socket connection error:', error);
             });
 
-            server.sendCommand(options);
+            server.sendCommand(options, {});
             await deferred.promise;
             const expectedResult = dataWithPayloadChunks.data;
             assert.deepStrictEqual(eventData, expectedResult);
@@ -176,32 +176,35 @@ suite('Python Test Server, Send command etc', () => {
     test('sendCommand should add the port to the command being sent and add the correct extra spawn variables', async () => {
         const deferred2 = createDeferred();
         const RUN_TEST_IDS_PORT_CONST = '5678';
+        let error = false;
+        let errorMessage = '';
         execService
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns((_args, options2) => {
                 try {
                     assert.strictEqual(
-                        options2.extraVariables.PYTHONPATH,
+                        options2.env.PYTHONPATH,
                         '/foo/bar',
                         'Expect python path to exist as extra variable and be set correctly',
                     );
                     assert.strictEqual(
-                        options2.extraVariables.RUN_TEST_IDS_PORT,
+                        options2.env.RUN_TEST_IDS_PORT,
                         RUN_TEST_IDS_PORT_CONST,
                         'Expect test id port to be in extra variables and set correctly',
                     );
                     assert.strictEqual(
-                        options2.extraVariables.TEST_UUID,
+                        options2.env.TEST_UUID,
                         FAKE_UUID,
                         'Expect test uuid to be in extra variables and set correctly',
                     );
                     assert.strictEqual(
-                        options2.extraVariables.TEST_PORT,
-                        12345,
+                        options2.env.TEST_PORT,
+                        '12345',
                         'Expect server port to be set correctly as a env var',
                     );
                 } catch (e) {
-                    assert(false, 'Error parsing data, extra variables do not match');
+                    error = true;
+                    errorMessage = `error occurred, assertion was incorrect, ${e}`;
                 }
                 return typeMoq.Mock.ofType<ObservableExecutionResult<string>>().object;
             });
@@ -222,13 +225,20 @@ suite('Python Test Server, Send command etc', () => {
             cwd: '/foo/bar',
             uuid: FAKE_UUID,
         };
-        server.sendCommand(options, RUN_TEST_IDS_PORT_CONST);
+        try {
+            server.sendCommand(options, {}, RUN_TEST_IDS_PORT_CONST);
+        } catch (e) {
+            assert(false, `Error sending command, ${e}`);
+        }
         // add in await and trigger
         await deferred2.promise;
         mockProc.trigger('close');
 
         const expectedArgs = ['myscript', '-foo', 'foo'];
         execService.verify((x) => x.execObservable(expectedArgs, typeMoq.It.isAny()), typeMoq.Times.once());
+        if (error) {
+            assert(false, errorMessage);
+        }
     });
 
     test('sendCommand should write to an output channel if it is provided as an option', async () => {
@@ -260,13 +270,13 @@ suite('Python Test Server, Send command etc', () => {
         server = new PythonTestServer(execFactory.object, debugLauncher);
         await server.serverReady();
 
-        server.sendCommand(options);
+        server.sendCommand(options, {});
         // add in await and trigger
         await deferred.promise;
         mockProc.trigger('close');
 
         const expected = ['python', 'myscript', '-foo', 'foo'].join(' ');
-
+        assert.equal(output2.length, 1);
         assert.deepStrictEqual(output2, [expected]);
     });
 
@@ -303,7 +313,7 @@ suite('Python Test Server, Send command etc', () => {
             eventData = JSON.parse(data);
         });
 
-        server.sendCommand(options);
+        server.sendCommand(options, {});
         await deferred2.promise;
         await deferred3.promise;
         assert.notEqual(eventData, undefined);

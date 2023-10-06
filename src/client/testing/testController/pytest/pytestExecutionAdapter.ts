@@ -24,6 +24,7 @@ import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import * as utils from '../common/utils';
+import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -31,6 +32,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
+        private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
     async runTests(
@@ -46,6 +48,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const deferredTillEOT: Deferred<void> = utils.createTestingDeferred();
 
         const dataReceivedDisposable = this.testServer.onRunDataReceived((e: DataReceivedEvent) => {
+            runInstance?.token.isCancellationRequested;
             if (runInstance) {
                 const eParsed = JSON.parse(e.data);
                 this.resultResolver?.resolveExecution(eParsed, runInstance, deferredTillEOT);
@@ -105,20 +108,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
-
+        // get and edit env vars
+        const mutableEnv = { ...(await this.envVarsService?.getEnvironmentVariables(uri)) };
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
-        const spawnOptions: SpawnOptions = {
-            cwd,
-            throwOnStdErr: true,
-            extraVariables: {
-                PYTHONPATH: pythonPathCommand,
-                TEST_UUID: uuid.toString(),
-                TEST_PORT: this.testServer.getPort().toString(),
-            },
-            outputChannel: this.outputChannel,
-            stdinStr: testIds.toString(),
-        };
+        mutableEnv.PYTHONPATH = pythonPathCommand;
+        mutableEnv.TEST_UUID = uuid.toString();
+        mutableEnv.TEST_PORT = this.testServer.getPort().toString();
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
@@ -141,9 +137,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs.push('--capture', 'no');
             }
 
+            // add port with run test ids to env vars
             const pytestRunTestIdsPort = await utils.startTestIdServer(testIds);
-            if (spawnOptions.extraVariables)
-                spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
+            mutableEnv.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
+
+            const spawnOptions: SpawnOptions = {
+                cwd,
+                throwOnStdErr: true,
+                outputChannel: this.outputChannel,
+                stdinStr: testIds.toString(),
+                env: mutableEnv,
+            };
 
             if (debugBool) {
                 const pytestPort = this.testServer.getPort().toString();
