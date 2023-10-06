@@ -23,7 +23,7 @@ def discover(
     if _plugin is None:
         _plugin = TestCollector()
 
-    pytestargs = _adjust_pytest_args(pytestargs)
+    pytestargs = _adjust_pytest_args(pytestargs) + ["--noconftest"]
     # We use this helper rather than "-pno:terminal" due to possible
     # platform-dependent issues.
     with util.hide_stdio() if hidestdio else util.noop_cm() as stdio:
@@ -32,7 +32,7 @@ def discover(
     if ec == 5:
         # No tests were discovered.
         pass
-    elif ec == 1:
+    elif ec == 1 or ec == 2:
         # Some tests where collected but with errors.
         pass
     elif ec != 0:
