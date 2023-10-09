@@ -69,10 +69,6 @@
         "memory": true,
         "symbolsHierarchyDepthLimit": false
     },
-    "sortImports": {
-        "args": "placeholder",
-        "path": "placeholder"
-    },
     "formatting": {
         "autopep8Args": "placeholder",
         "autopep8Path": "placeholder",

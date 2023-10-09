@@ -32,7 +32,6 @@ import {
     IInterpreterSettings,
     ILintingSettings,
     IPythonSettings,
-    ISortImportSettings,
     ITensorBoardSettings,
     ITerminalSettings,
     Resource,
@@ -119,8 +118,6 @@ export class PythonSettings implements IPythonSettings {
     public testing!: ITestingSettings;
 
     public terminal!: ITerminalSettings;
-
-    public sortImports!: ISortImportSettings;
 
     public globalModuleInstallation = false;
 
@@ -319,14 +316,6 @@ export class PythonSettings implements IPythonSettings {
 
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
 
-        const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
-        if (this.sortImports) {
-            Object.assign<ISortImportSettings, ISortImportSettings>(this.sortImports, sortImportSettings);
-        } else {
-            this.sortImports = sortImportSettings;
-        }
-        // Support for travis.
-        this.sortImports = this.sortImports ? this.sortImports : { path: '', args: [] };
         // Support for travis.
         this.linting = this.linting
             ? this.linting

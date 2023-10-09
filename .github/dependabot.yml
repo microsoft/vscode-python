@@ -37,7 +37,6 @@ updates:
       - dependency-name: prospector # Due to Python 2.7 and #14477.
       - dependency-name: pytest # Due to Python 2.7 and #13776.
       - dependency-name: py # Due to Python 2.7.
-      - dependency-name: isort
       - dependency-name: jedi-language-server
     labels:
       - 'no-changelog'
