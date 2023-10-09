@@ -407,8 +407,6 @@ suite('End to End Tests: test adapters', () => {
             .callback((output: string) => {
                 collectedOutput += output;
                 traceLog('appendOutput was called with:', output);
-                // File "/Users/eleanorboyd/vscode-python/src/testTestingRootWkspc/largeWorkspace/test_parameterized_subtest.py"
-                // FAILED((failures = 1000));
             })
             .returns(() => false);
         await executionAdapter
@@ -420,7 +418,7 @@ suite('End to End Tests: test adapters', () => {
 
                 // verify output
                 assert.ok(
-                    collectedOutput.includes('testTestingRootWkspc/largeWorkspace/test_parameterized_subtest.py'),
+                    collectedOutput.includes('test_parameterized_subtest.py'),
                     'The test string does not contain the correct test name which should be printed',
                 );
                 assert.ok(

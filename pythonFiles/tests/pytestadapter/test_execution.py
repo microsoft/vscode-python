@@ -217,10 +217,6 @@ def test_bad_id_error_execution():
         ),
         (
             ["test_logging.py::test_logging2", "test_logging.py::test_logging"],
-            expected_execution_test_output.doctest_pytest_expected_execution_output,
-        ),
-        (
-            ["test_logging.py::test_logging2", "test_logging.py::test_logging"],
             expected_execution_test_output.logging_test_expected_execution_output,
         ),
     ],
