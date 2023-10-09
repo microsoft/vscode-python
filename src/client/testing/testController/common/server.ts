@@ -16,7 +16,13 @@ import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging'
 import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
-import { createEOTPayload, createExecutionErrorPayload, extractJsonPayload } from './utils';
+import {
+    createDiscoveryErrorPayload,
+    createEOTPayload,
+    createExecutionErrorPayload,
+    extractJsonPayload,
+    fixLogLines,
+} from './utils';
 import { createDeferred } from '../../../common/utils/async';
 import { EnvironmentVariables } from '../../../api/types';
 

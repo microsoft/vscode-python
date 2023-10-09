@@ -18,7 +18,7 @@ import {
     ITestResultResolver,
     ITestServer,
 } from '../common/types';
-import { createDiscoveryErrorPayload, createEOTPayload, createTestingDeferred } from '../common/utils';
+import { createDiscoveryErrorPayload, createEOTPayload, createTestingDeferred, fixLogLines } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
 /**
@@ -87,7 +87,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        const deferredExec = createDeferred<ExecutionResult<string>>();
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
         traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')}`);
 
@@ -98,7 +97,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
         // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
 
-        const collectedOutput = '';
+        let collectedOutput = '';
         result?.proc?.stdout?.on('data', (data) => {
             const out = fixLogLines(data.toString());
             collectedOutput += out;
