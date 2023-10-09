@@ -1161,23 +1161,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.sortImports.args": {
-                    "default": [],
-                    "description": "%python.sortImports.args.description%",
-                    "items": {
-                        "type": "string"
-                    },
-                    "scope": "resource",
-                    "type": "array",
-                    "deprecationMessage": "%python.sortImports.args.deprecationMessage%"
-                },
-                "python.sortImports.path": {
-                    "default": "",
-                    "description": "%python.sortImports.path.description%",
-                    "scope": "machine-overridable",
-                    "type": "string",
-                    "deprecationMessage": "%python.sortImports.path.deprecationMessage%"
-                },
                 "python.tensorBoard.logDirectory": {
                     "default": "",
                     "description": "%python.tensorBoard.logDirectory.description%",

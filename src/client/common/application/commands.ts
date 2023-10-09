@@ -93,7 +93,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
     [Commands.TriggerEnvironmentSelection]: [undefined | Uri];
-    [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
     [Commands.Debug_In_Terminal]: [Uri];

@@ -8,7 +8,6 @@ import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
 import { CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, DocumentSelector } from 'vscode';
 import { IDisposableRegistry } from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
 import { LaunchJsonCodeActionProvider } from '../../../client/providers/codeActionProvider/launchJsonCodeActionProvider';
 import { CodeActionProviderService } from '../../../client/providers/codeActionProvider/main';
 
@@ -38,10 +37,7 @@ suite('Code Action Provider service', async () => {
         };
         rewiremock.enable();
         rewiremock('vscode').with(vscodeMock);
-        const quickFixService = new CodeActionProviderService(
-            typemoq.Mock.ofType<IDisposableRegistry>().object,
-            typemoq.Mock.ofType<IServiceContainer>().object,
-        );
+        const quickFixService = new CodeActionProviderService(typemoq.Mock.ofType<IDisposableRegistry>().object);
 
         await quickFixService.activate();
 

@@ -17,7 +17,6 @@ export function getProductsForInstallerTests(): { name: string; value: Product }
                 'yapf',
                 'autopep8',
                 'mypy',
-                'isort',
                 'black',
                 'bandit',
             ].includes(p.name),
