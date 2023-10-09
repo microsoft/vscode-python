@@ -11,7 +11,7 @@ import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testI
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
-import { buildErrorNodeOptions, fixLogLines, populateTestTree, splitTestNameWithRegex } from './utils';
+import { buildErrorNodeOptions, populateTestTree, splitTestNameWithRegex } from './utils';
 import { Deferred } from '../../../common/utils/async';
 
 export class PythonResultResolver implements ITestResultResolver {
@@ -138,15 +138,16 @@ export class PythonResultResolver implements ITestResultResolver {
                     const tempArr: TestItem[] = getTestCaseNodes(i);
                     testCases.push(...tempArr);
                 });
+                const testItem = rawTestExecData.result[keyTemp];
 
-                if (rawTestExecData.result[keyTemp].outcome === 'error') {
-                    const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
+                if (testItem.outcome === 'error') {
+                    const rawTraceback = testItem.traceback ?? '';
                     const traceback = splitLines(rawTraceback, {
                         trim: false,
                         removeEmptyEntries: true,
                     }).join('\r\n');
-                    const text = `${rawTestExecData.result[keyTemp].test} failed with error: ${
-                        rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
+                    const text = `${testItem.test} failed with error: ${
+                        testItem.message ?? testItem.outcome
                     }\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
@@ -157,23 +158,17 @@ export class PythonResultResolver implements ITestResultResolver {
                             if (indiItem.uri && indiItem.range) {
                                 message.location = new Location(indiItem.uri, indiItem.range);
                                 runInstance.errored(indiItem, message);
-                                runInstance.appendOutput(fixLogLines(text));
                             }
                         }
                     });
-                } else if (
-                    rawTestExecData.result[keyTemp].outcome === 'failure' ||
-                    rawTestExecData.result[keyTemp].outcome === 'passed-unexpected'
-                ) {
-                    const rawTraceback = rawTestExecData.result[keyTemp].traceback ?? '';
+                } else if (testItem.outcome === 'failure' || testItem.outcome === 'passed-unexpected') {
+                    const rawTraceback = testItem.traceback ?? '';
                     const traceback = splitLines(rawTraceback, {
                         trim: false,
                         removeEmptyEntries: true,
                     }).join('\r\n');
 
-                    const text = `${rawTestExecData.result[keyTemp].test} failed: ${
-                        rawTestExecData.result[keyTemp].message ?? rawTestExecData.result[keyTemp].outcome
-                    }\r\n${traceback}\r\n`;
+                    const text = `${testItem.test} failed: ${testItem.message ?? testItem.outcome}\r\n${traceback}\r\n`;
                     const message = new TestMessage(text);
 
                     // note that keyTemp is a runId for unittest library...
@@ -184,14 +179,10 @@ export class PythonResultResolver implements ITestResultResolver {
                             if (indiItem.uri && indiItem.range) {
                                 message.location = new Location(indiItem.uri, indiItem.range);
                                 runInstance.failed(indiItem, message);
-                                runInstance.appendOutput(fixLogLines(text));
                             }
                         }
                     });
-                } else if (
-                    rawTestExecData.result[keyTemp].outcome === 'success' ||
-                    rawTestExecData.result[keyTemp].outcome === 'expected-failure'
-                ) {
+                } else if (testItem.outcome === 'success' || testItem.outcome === 'expected-failure') {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
@@ -203,7 +194,7 @@ export class PythonResultResolver implements ITestResultResolver {
                             }
                         });
                     }
-                } else if (rawTestExecData.result[keyTemp].outcome === 'skipped') {
+                } else if (testItem.outcome === 'skipped') {
                     const grabTestItem = this.runIdToTestItem.get(keyTemp);
                     const grabVSid = this.runIdToVSid.get(keyTemp);
                     if (grabTestItem !== undefined) {
@@ -215,11 +206,11 @@ export class PythonResultResolver implements ITestResultResolver {
                             }
                         });
                     }
-                } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-failure') {
+                } else if (testItem.outcome === 'subtest-failure') {
                     // split on [] or () based on how the subtest is setup.
                     const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
-                    const data = rawTestExecData.result[keyTemp];
+                    const data = testItem;
                     // find the subtest's parent test item
                     if (parentTestItem) {
                         const subtestStats = this.subTestStats.get(parentTestCaseId);
@@ -230,20 +221,19 @@ export class PythonResultResolver implements ITestResultResolver {
                                 failed: 1,
                                 passed: 0,
                             });
-                            runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
                         const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
-                        runInstance.appendOutput(fixLogLines(`${subtestId} Failed\r\n`));
                         // create a new test item for the subtest
                         if (subTestItem) {
                             const traceback = data.traceback ?? '';
-                            const text = `${data.subtest} Failed: ${data.message ?? data.outcome}\r\n${traceback}\r\n`;
-                            runInstance.appendOutput(fixLogLines(text));
+                            const text = `${data.subtest} failed: ${
+                                testItem.message ?? testItem.outcome
+                            }\r\n${traceback}\r\n`;
                             parentTestItem.children.add(subTestItem);
                             runInstance.started(subTestItem);
-                            const message = new TestMessage(rawTestExecData?.result[keyTemp].message ?? '');
+                            const message = new TestMessage(text);
                             if (parentTestItem.uri && parentTestItem.range) {
                                 message.location = new Location(parentTestItem.uri, parentTestItem.range);
                             }
@@ -254,7 +244,7 @@ export class PythonResultResolver implements ITestResultResolver {
                     } else {
                         throw new Error('Parent test item not found');
                     }
-                } else if (rawTestExecData.result[keyTemp].outcome === 'subtest-success') {
+                } else if (testItem.outcome === 'subtest-success') {
                     // split on [] or () based on how the subtest is setup.
                     const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
@@ -266,7 +256,6 @@ export class PythonResultResolver implements ITestResultResolver {
                             subtestStats.passed += 1;
                         } else {
                             this.subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
-                            runInstance.appendOutput(fixLogLines(`${parentTestCaseId} [subtests]:\r\n`));
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
@@ -276,7 +265,6 @@ export class PythonResultResolver implements ITestResultResolver {
                             parentTestItem.children.add(subTestItem);
                             runInstance.started(subTestItem);
                             runInstance.passed(subTestItem);
-                            runInstance.appendOutput(fixLogLines(`${subtestId} Passed\r\n`));
                         } else {
                             throw new Error('Unable to create new child node for subtest');
                         }

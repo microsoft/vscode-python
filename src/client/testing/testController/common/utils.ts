@@ -23,6 +23,11 @@ export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
     return `${lines.join('\r\n')}\r\n`;
 }
+
+export function fixLogLinesNoTrailing(content: string): string {
+    const lines = content.split(/\r?\n/g);
+    return `${lines.join('\r\n')}`;
+}
 export interface IJSONRPCData {
     extractedJSON: string;
     remainingRawData: string;

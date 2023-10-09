@@ -10,7 +10,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -18,7 +18,12 @@ import {
     ITestResultResolver,
     ITestServer,
 } from '../common/types';
-import { createDiscoveryErrorPayload, createEOTPayload, createTestingDeferred, fixLogLines } from '../common/utils';
+import {
+    createDiscoveryErrorPayload,
+    createEOTPayload,
+    createTestingDeferred,
+    fixLogLinesNoTrailing,
+} from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
 /**
@@ -97,21 +102,18 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
         // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
 
-        let collectedOutput = '';
         result?.proc?.stdout?.on('data', (data) => {
-            const out = fixLogLines(data.toString());
-            collectedOutput += out;
+            const out = fixLogLinesNoTrailing(data.toString());
+            traceInfo(out);
+            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.stderr?.on('data', (data) => {
-            const out = fixLogLines(data.toString());
-            collectedOutput += out;
+            const out = fixLogLinesNoTrailing(data.toString());
             traceError(out);
             spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.on('exit', (code, signal) => {
             // Collect all discovery output and log it at process finish to avoid dividing it between log lines.
-            traceLog(`\r\n${collectedOutput}`);
-            spawnOptions?.outputChannel?.append(`${collectedOutput}`);
             this.outputChannel?.append(
                 'Starting now, all test run output will be sent to the Test Result panel' +
                     ' and test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +

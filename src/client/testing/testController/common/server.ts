@@ -21,7 +21,7 @@ import {
     createEOTPayload,
     createExecutionErrorPayload,
     extractJsonPayload,
-    fixLogLines,
+    fixLogLinesNoTrailing,
 } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 import { EnvironmentVariables } from '../../../api/types';
@@ -247,24 +247,23 @@ export class PythonTestServer implements ITestServer, Disposable {
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
                 // TODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
-                let collectedOutput = '';
                 if (isDiscovery) {
                     result?.proc?.stdout?.on('data', (data) => {
-                        const out = fixLogLines(data.toString());
-                        collectedOutput += out;
+                        const out = fixLogLinesNoTrailing(data.toString());
+                        spawnOptions?.outputChannel?.append(`${out}`);
                     });
                     result?.proc?.stderr?.on('data', (data) => {
-                        const out = fixLogLines(data.toString());
-                        collectedOutput += out;
+                        const out = fixLogLinesNoTrailing(data.toString());
+                        spawnOptions?.outputChannel?.append(`${out}`);
                     });
                 } else {
                     result?.proc?.stdout?.on('data', (data) => {
-                        const out = fixLogLines(data.toString());
+                        const out = fixLogLinesNoTrailing(data.toString());
                         runInstance?.appendOutput(`${out}`);
                         spawnOptions?.outputChannel?.append(out);
                     });
                     result?.proc?.stderr?.on('data', (data) => {
-                        const out = fixLogLines(data.toString());
+                        const out = fixLogLinesNoTrailing(data.toString());
                         runInstance?.appendOutput(`${out}`);
                         spawnOptions?.outputChannel?.append(out);
                     });
@@ -278,10 +277,6 @@ export class PythonTestServer implements ITestServer, Disposable {
                             ' The "Python Test Log" channel will be deprecated within the next month. See ___ for details.',
                     );
                     if (isDiscovery) {
-                        // Collect all discovery output and log it at process finish to avoid dividing it between log lines.
-                        traceLog(`\r\n${collectedOutput}`);
-                        spawnOptions?.outputChannel?.append(`${collectedOutput}`);
-
                         if (code !== 0) {
                             // This occurs when we are running discovery
                             traceError(
