@@ -249,7 +249,6 @@ def test_pytest_execution(test_ids, expected_const):
     test_ids -- an array of test_ids to run.
     expected_const -- a dictionary of the expected output from running pytest discovery on the files.
     """
-    print("Test IDs: ", test_ids)
     args = test_ids
     actual = runner(args)
     assert actual

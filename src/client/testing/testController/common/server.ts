@@ -174,7 +174,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         callback?: () => void,
     ): Promise<void> {
         const { uuid } = options;
-        const isDiscovery = testIds === undefined;
+        const isDiscovery = (testIds === undefined || testIds.length === 0) && runTestIdPort === undefined;
         const mutableEnv = { ...env };
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [options.cwd, ...pythonPathParts].join(path.delimiter);
@@ -314,7 +314,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                             data: JSON.stringify(createEOTPayload(true)),
                         });
                     }
-                    deferredTillExecClose.resolve({ stdout: '', stderr: '' });
+                    deferredTillExecClose.resolve();
                 });
                 await deferredTillExecClose.promise;
             }
