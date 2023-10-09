@@ -297,7 +297,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                                 data: JSON.stringify(createEOTPayload(true)),
                             });
                         }
-                    } else if (code !== 0) {
+                    } else if (code !== 0 && testIds) {
                         // This occurs when we are running the test and there is an error which occurs.
 
                         traceError(
