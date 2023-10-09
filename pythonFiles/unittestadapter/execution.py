@@ -104,13 +104,18 @@ class UnittestTestResult(unittest.TextTestResult):
         subtest: Union[unittest.TestCase, None] = None,
     ):
         tb = None
-        if error and error[2] is not None:
-            # Format traceback
+
+        message = ""
+        # error is a tuple of the form returned by sys.exc_info(): (type, value, traceback).
+        if error is not None:
+            try:
+                message = f"{error[0]} {error[1]}"
+            except Exception:
+                message = "Errored occurred, unknown type or value"
             formatted = traceback.format_exception(*error)
+            tb = "".join(formatted)
             # Remove the 'Traceback (most recent call last)'
             formatted = formatted[1:]
-            tb = "".join(formatted)
-
         if subtest:
             test_id = subtest.id()
         else:
@@ -119,7 +124,7 @@ class UnittestTestResult(unittest.TextTestResult):
         result = {
             "test": test.id(),
             "outcome": outcome,
-            "message": str(error),
+            "message": message,
             "traceback": tb,
             "subtest": subtest.id() if subtest else None,
         }
