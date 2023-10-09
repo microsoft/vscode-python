@@ -1,14 +1,18 @@
 import * as vscode from 'vscode';
+import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import { IS_SMOKE_TEST, EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
+import { IExperimentService } from '../../client/common/types';
+import { EnableREPLSmartSend } from '../../client/common/experiments/groups';
 
 // const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
 suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
+    let experimentService: TypeMoq.IMock<IExperimentService>;
     // "keybindings": [
     //     {
     //         "command": "python.execSelectionInTerminal",
@@ -16,17 +20,26 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
     //         "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused"
     //     },
     suiteSetup(async function () {
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService
+            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
+            .returns(() => true);
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
         await initialize();
         return undefined;
     });
+
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
     test('Smart Send', async () => {
+        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
+        experimentService
+            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
+            .returns(() => true);
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

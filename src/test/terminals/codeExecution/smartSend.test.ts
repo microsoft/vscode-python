@@ -97,69 +97,6 @@ suite('REPL - Smart Send', () => {
         document = TypeMoq.Mock.ofType<TextDocument>();
     });
 
-    test('Test executeCommand with cursorMove is called', async () => {
-        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
-        const selection = TypeMoq.Mock.ofType<Selection>();
-        selection.setup((s) => s.isEmpty).returns(() => true);
-        activeEditor.setup((e) => e.selection).returns(() => selection.object);
-
-        experimentService
-            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-            .returns(() => true);
-
-        // Callback function here:
-        // When executeCommand iscalled, instead of calling actual executeCommand,
-        // Call this function and make sure arg2 is equal to the object we want.
-        // This is a better approach to verify complex argument.
-        commandManager
-            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
-            .callback((_, arg2) => {
-                assert.deepEqual(arg2, {
-                    to: 'down',
-                    by: 'line',
-                    value: 3,
-                });
-                return Promise.resolve();
-            })
-            .verifiable(TypeMoq.Times.once());
-        commandManager
-            .setup((c) => c.executeCommand('cursorEnd'))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
-
-        await codeExecutionHelper.moveToNextBlock(3, activeEditor.object);
-
-        commandManager.verifyAll();
-    });
-
-    test('Cursor is not moved when not in SmartSend experiment', async () => {
-        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
-        const selection = TypeMoq.Mock.ofType<Selection>();
-        selection.setup((s) => s.isEmpty).returns(() => true);
-        activeEditor.setup((e) => e.selection).returns(() => selection.object);
-
-        experimentService.setup((exp) => exp.inExperimentSync(TypeMoq.It.isAny())).returns(() => false);
-        commandManager
-            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
-            .callback((_, arg2) => {
-                assert.deepEqual(arg2, {
-                    to: 'down',
-                    by: 'line',
-                    value: 3,
-                });
-                return Promise.resolve();
-            })
-            .verifiable(TypeMoq.Times.never());
-
-        commandManager
-            .setup((c) => c.executeCommand('cursorEnd'))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.never());
-
-        await codeExecutionHelper.moveToNextBlock(3, activeEditor.object);
-        commandManager.verifyAll();
-    });
-
     test('Cursor is not moved when explicit selection is present', async () => {
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))

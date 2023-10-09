@@ -129,7 +129,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
      * bringing user's cursor to the next executable block of code when used with smart selection.
      */
     // eslint-disable-next-line class-methods-use-this
-    public async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
+    private async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
         if (pythonSmartSendEnabled(this.serviceContainer)) {
             if (activeEditor?.selection?.isEmpty) {
                 await this.commandManager.executeCommand('cursorMove', {

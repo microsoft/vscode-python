@@ -19,7 +19,6 @@ export interface ICodeExecutionHelper {
     getFileToExecute(): Promise<Uri | undefined>;
     saveFileIfDirty(file: Uri): Promise<Resource>;
     getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined>;
-    moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void>;
 }
 
 export const ICodeExecutionManager = Symbol('ICodeExecutionManager');
