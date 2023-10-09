@@ -4,53 +4,15 @@
 import os
 import pathlib
 import sys
-from typing import List
 
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from unittestadapter.execution import parse_execution_cli_args, run_tests
+from unittestadapter.execution import run_tests
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
-
-
-@pytest.mark.parametrize(
-    "args, expected",
-    [
-        (
-            [
-                "--port",
-                "111",
-                "--uuid",
-                "fake-uuid",
-            ],
-            (111, "fake-uuid"),
-        ),
-        (
-            ["--port", "111", "--uuid", "fake-uuid"],
-            (111, "fake-uuid"),
-        ),
-        (
-            [
-                "--port",
-                "111",
-                "--uuid",
-                "fake-uuid",
-                "-v",
-                "-s",
-            ],
-            (111, "fake-uuid"),
-        ),
-    ],
-)
-def test_parse_execution_cli_args(args: List[str], expected: List[str]) -> None:
-    """The parse_execution_cli_args function should return values for the port, uuid, and testids arguments
-    when passed as command-line options, and ignore unrecognized arguments.
-    """
-    actual = parse_execution_cli_args(args)
-    assert actual == expected
 
 
 def test_no_ids_run() -> None:

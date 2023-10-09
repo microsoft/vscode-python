@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (multi-threaded, remote), code formatting, refactoring, unit tests, and more.",
-    "version": "2023.17.0-dev",
+    "version": "2023.19.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -479,6 +479,19 @@
                     "enum": [
                         "show",
                         "hide"
+                    ],
+                    "tags": [
+                        "experimental"
+                    ]
+                },
+                "python.createEnvironment.trigger": {
+                    "default": "off",
+                    "markdownDescription": "%python.createEnvironment.trigger.description%",
+                    "scope": "machine-overridable",
+                    "type": "string",
+                    "enum": [
+                        "off",
+                        "prompt"
                     ],
                     "tags": [
                         "experimental"
@@ -2019,6 +2032,7 @@
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "prePublish": "gulp clean && gulp prePublishNonBundle",
         "compile": "tsc -watch -p ./",
+        "compileApi": "node ./node_modules/typescript/lib/tsc.js -b ./pythonExtensionApi/tsconfig.json",
         "compiled": "deemon npm run compile",
         "kill-compiled": "deemon --kill npm run compile",
         "checkDependencies": "gulp checkDependencies",
@@ -2103,7 +2117,7 @@
         "@types/md5": "^2.1.32",
         "@types/mocha": "^9.1.0",
         "@types/nock": "^10.0.3",
-        "@types/node": "^16.17.0",
+        "@types/node": "^18.17.1",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
         "@types/sinon": "^10.0.11",
@@ -2116,7 +2130,7 @@
         "@types/xml2js": "^0.4.2",
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",
-        "@vscode/test-electron": "^2.1.3",
+        "@vscode/test-electron": "^2.3.4",
         "@vscode/vsce": "^2.18.0",
         "bent": "^7.3.12",
         "chai": "^4.1.2",

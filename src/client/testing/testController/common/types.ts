@@ -15,6 +15,7 @@ import {
 import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { Deferred } from '../../../common/utils/async';
+import { EnvironmentVariables } from '../../../common/variables/types';
 
 export type TestRunInstanceOptions = TestRunOptions & {
     exclude?: readonly TestItem[];
@@ -177,6 +178,7 @@ export interface ITestServer {
     readonly onDiscoveryDataReceived: Event<DataReceivedEvent>;
     sendCommand(
         options: TestCommandOptions,
+        env: EnvironmentVariables,
         runTestIdsPort?: string,
         runInstance?: TestRun,
         testIds?: string[],

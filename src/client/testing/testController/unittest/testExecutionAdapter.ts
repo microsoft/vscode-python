@@ -17,6 +17,7 @@ import {
 } from '../common/types';
 import { traceError, traceInfo, traceLog } from '../../../logging';
 import { startTestIdServer } from '../common/utils';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -28,6 +29,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
+        private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
     public async runTests(
@@ -78,6 +80,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const command = buildExecutionCommand(unittestArgs);
+        let env: EnvironmentVariables | undefined = await this.envVarsService?.getEnvironmentVariables(uri);
+        if (env === undefined) {
+            env = {} as EnvironmentVariables;
+        }
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
@@ -92,7 +98,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
 
         const runTestIdsPort = await startTestIdServer(testIds);
 
-        await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, testIds, () => {
+        await this.testServer.sendCommand(options, env, runTestIdsPort.toString(), runInstance, testIds, () => {
             deferredTillEOT?.resolve();
         });
         // placeholder until after the rewrite is adopted

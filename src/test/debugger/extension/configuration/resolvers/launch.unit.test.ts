@@ -22,6 +22,7 @@ import * as platform from '../../../../../client/common/utils/platform';
 import * as windowApis from '../../../../../client/common/vscodeApis/windowApis';
 import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
 import { IEnvironmentActivationService } from '../../../../../client/interpreter/activation/types';
+import * as triggerApis from '../../../../../client/pythonEnvironments/creation/createEnvironmentTrigger';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
     if (osType === platform.OSType.Unknown) {
@@ -42,12 +43,18 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let getActiveTextEditorStub: sinon.SinonStub;
         let getOSTypeStub: sinon.SinonStub;
         let getWorkspaceFolderStub: sinon.SinonStub;
+        let triggerCreateEnvironmentCheckNonBlockingStub: sinon.SinonStub;
 
         setup(() => {
             getActiveTextEditorStub = sinon.stub(windowApis, 'getActiveTextEditor');
             getOSTypeStub = sinon.stub(platform, 'getOSType');
             getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
             getOSTypeStub.returns(osType);
+            triggerCreateEnvironmentCheckNonBlockingStub = sinon.stub(
+                triggerApis,
+                'triggerCreateEnvironmentCheckNonBlocking',
+            );
+            triggerCreateEnvironmentCheckNonBlockingStub.returns(undefined);
         });
 
         teardown(() => {

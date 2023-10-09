@@ -117,10 +117,16 @@ suite('Execution Flow Run Adapters', () => {
             deferredStartServer.resolve();
             return Promise.resolve(54321);
         });
-        // mock EOT token
+        // mock EOT token & ExecClose token
         const deferredEOT = createDeferred();
-        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
-        utilsCreateEOTStub.callsFake(() => deferredEOT);
+        const deferredExecClose = createDeferred();
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
+        utilsCreateEOTStub.callsFake(() => {
+            if (utilsCreateEOTStub.callCount === 1) {
+                return deferredEOT;
+            }
+            return deferredExecClose;
+        });
         // set up test server
         testServer
             .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -158,6 +164,11 @@ suite('Execution Flow Run Adapters', () => {
         const execServiceMock = typeMoq.Mock.ofType<IPythonExecutionService>();
         debugLauncher
             .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .callback((_options, callback) => {
+                if (callback) {
+                    callback();
+                }
+            })
             .returns(async () => {
                 cancellationToken.cancel();
                 return Promise.resolve();
@@ -174,10 +185,16 @@ suite('Execution Flow Run Adapters', () => {
             deferredStartServer.resolve();
             return Promise.resolve(54321);
         });
-        // mock EOT token
+        // mock EOT token & ExecClose token
         const deferredEOT = createDeferred();
-        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
-        utilsCreateEOTStub.callsFake(() => deferredEOT);
+        const deferredExecClose = createDeferred();
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
+        utilsCreateEOTStub.callsFake(() => {
+            if (utilsCreateEOTStub.callCount === 1) {
+                return deferredEOT;
+            }
+            return deferredExecClose;
+        });
         // set up test server
         testServer
             .setup((t) => t.onRunDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -217,6 +234,7 @@ suite('Execution Flow Run Adapters', () => {
         stubTestServer
             .setup((t) =>
                 t.sendCommand(
+                    typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
@@ -263,10 +281,16 @@ suite('Execution Flow Run Adapters', () => {
             deferredStartServer.resolve();
             return Promise.resolve(54321);
         });
-        // mock EOT token
+        // mock EOT token & ExecClose token
         const deferredEOT = createDeferred();
-        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
-        utilsCreateEOTStub.callsFake(() => deferredEOT);
+        const deferredExecClose = createDeferred();
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
+        utilsCreateEOTStub.callsFake(() => {
+            if (utilsCreateEOTStub.callCount === 1) {
+                return deferredEOT;
+            }
+            return deferredExecClose;
+        });
         // set up test server
         const unittestAdapter = new UnittestTestExecutionAdapter(
             stubTestServer.object,
@@ -291,6 +315,7 @@ suite('Execution Flow Run Adapters', () => {
         stubTestServer
             .setup((t) =>
                 t.sendCommand(
+                    typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
                     typeMoq.It.isAny(),
@@ -331,10 +356,16 @@ suite('Execution Flow Run Adapters', () => {
             deferredStartServer.resolve();
             return Promise.resolve(54321);
         });
-        // mock EOT token
+        // mock EOT token & ExecClose token
         const deferredEOT = createDeferred();
-        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createEOTDeferred');
-        utilsCreateEOTStub.callsFake(() => deferredEOT);
+        const deferredExecClose = createDeferred();
+        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
+        utilsCreateEOTStub.callsFake(() => {
+            if (utilsCreateEOTStub.callCount === 1) {
+                return deferredEOT;
+            }
+            return deferredExecClose;
+        });
         // set up test server
         const unittestAdapter = new UnittestTestExecutionAdapter(
             stubTestServer.object,

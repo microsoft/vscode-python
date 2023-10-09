@@ -1,44 +1,25 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import argparse
 import json
 import os
 import pathlib
 import sys
 import traceback
 import unittest
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import socket_manager
+from typing_extensions import Literal, NotRequired, TypedDict
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
 
-from typing_extensions import NotRequired, TypedDict, Literal
-
 DEFAULT_PORT = "45454"
-
-
-def parse_discovery_cli_args(args: List[str]) -> Tuple[int, Union[str, None]]:
-    """Parse command-line arguments that should be processed by the script.
-
-    So far this includes the port number that it needs to connect to, and the uuid passed by the TS side.
-    The port is passed to the discovery.py script when it is executed, and
-    defaults to DEFAULT_PORT if it can't be parsed.
-    The uuid should be passed to the discovery.py script when it is executed, and defaults to None if it can't be parsed.
-    If the arguments appear several times, the value returned by parse_cli_args will be the value of the last argument.
-    """
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--port", default=DEFAULT_PORT)
-    arg_parser.add_argument("--uuid")
-    parsed_args, _ = arg_parser.parse_known_args(args)
-
-    return int(parsed_args.port), parsed_args.uuid
 
 
 class PayloadDict(TypedDict):
@@ -141,15 +122,16 @@ if __name__ == "__main__":
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery.
-    port, uuid = parse_discovery_cli_args(argv[:index])
+    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
+    testUuid = os.environ.get("TEST_UUID")
     # Post this discovery payload.
-    if uuid is not None:
-        payload = discover_tests(start_dir, pattern, top_level_dir, uuid)
-        post_response(payload, port, uuid)
+    if testUuid is not None:
+        payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)
+        post_response(payload, testPort, testUuid)
         # Post EOT token.
         eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-        post_response(eot_payload, port, uuid)
+        post_response(eot_payload, testPort, testUuid)
     else:
         print("Error: no uuid provided or parsed.")
         eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-        post_response(eot_payload, port, "")
+        post_response(eot_payload, testPort, "")

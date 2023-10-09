@@ -23,6 +23,7 @@ import { traceError, traceVerbose } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
+import { sleep } from '../../../common/utils/async';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -238,7 +239,7 @@ export function getCondaInterpreterPath(condaEnvironmentPath: string): string {
 // Minimum version number of conda required to be able to use 'conda run' with '--no-capture-output' flag.
 export const CONDA_RUN_VERSION = '4.9.0';
 export const CONDA_ACTIVATION_TIMEOUT = 45000;
-const CONDA_GENERAL_TIMEOUT = 50000;
+const CONDA_GENERAL_TIMEOUT = 45000;
 
 /** Wraps the "conda" utility, and exposes its functionality.
  */
@@ -439,9 +440,19 @@ export class Conda {
         if (shellPath) {
             options.shell = shellPath;
         }
-        const result = await exec(command, ['info', '--json'], options);
-        traceVerbose(`${command} info --json: ${result.stdout}`);
-        return JSON.parse(result.stdout);
+        const resultPromise = exec(command, ['info', '--json'], options);
+        // It has been observed that specifying a timeout is still not reliable to terminate the Conda process, see #27915.
+        // Hence explicitly continue execution after timeout has been reached.
+        const success = await Promise.race([
+            resultPromise.then(() => true),
+            sleep(CONDA_GENERAL_TIMEOUT + 3000).then(() => false),
+        ]);
+        if (success) {
+            const result = await resultPromise;
+            traceVerbose(`${command} info --json: ${result.stdout}`);
+            return JSON.parse(result.stdout);
+        }
+        throw new Error(`Launching '${command} info --json' timed out`);
     }
 
     /**

@@ -16,6 +16,12 @@ import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 import { getProgram, IDebugEnvironmentVariablesService } from './helper';
+import {
+    CreateEnvironmentCheckKind,
+    triggerCreateEnvironmentCheckNonBlocking,
+} from '../../../../pythonEnvironments/creation/createEnvironmentTrigger';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { EventName } from '../../../../telemetry/constants';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
@@ -84,6 +90,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
                 (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos,
             );
         }
+        sendTelemetryEvent(EventName.ENVIRONMENT_CHECK_TRIGGER, undefined, { trigger: 'debug' });
+        triggerCreateEnvironmentCheckNonBlocking(CreateEnvironmentCheckKind.Workspace, workspaceFolder);
         return debugConfiguration;
     }
 

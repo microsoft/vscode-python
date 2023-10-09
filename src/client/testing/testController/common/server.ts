@@ -5,6 +5,7 @@ import * as net from 'net';
 import * as crypto from 'crypto';
 import { Disposable, Event, EventEmitter, TestRun } from 'vscode';
 import * as path from 'path';
+import { ChildProcess } from 'child_process';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionResult,
@@ -23,6 +24,7 @@ import {
     fixLogLines,
 } from './utils';
 import { createDeferred } from '../../../common/utils/async';
+import { EnvironmentVariables } from '../../../api/types';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -165,6 +167,7 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     async sendCommand(
         options: TestCommandOptions,
+        env: EnvironmentVariables,
         runTestIdPort?: string,
         runInstance?: TestRun,
         testIds?: string[],
@@ -172,18 +175,21 @@ export class PythonTestServer implements ITestServer, Disposable {
     ): Promise<void> {
         const { uuid } = options;
         const isDiscovery = testIds === undefined;
-
+        const mutableEnv = { ...env };
         const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [options.cwd, ...pythonPathParts].join(path.delimiter);
+        mutableEnv.PYTHONPATH = pythonPathCommand;
+        mutableEnv.TEST_UUID = uuid.toString();
+        mutableEnv.TEST_PORT = this.getPort().toString();
+        mutableEnv.RUN_TEST_IDS_PORT = runTestIdPort;
+
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
             outputChannel: options.outChannel,
-            extraVariables: { PYTHONPATH: pythonPathCommand },
+            env: mutableEnv,
         };
-
-        if (spawnOptions.extraVariables) spawnOptions.extraVariables.RUN_TEST_IDS_PORT = runTestIdPort;
         const isRun = runTestIdPort !== undefined;
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
@@ -191,12 +197,8 @@ export class PythonTestServer implements ITestServer, Disposable {
             resource: options.workspaceFolder,
         };
         const execService = await this.executionFactory.createActivatedEnvironment(creationOptions);
-        // Add the generated UUID to the data to be sent (expecting to receive it back).
-        // first check if we have testIds passed in (in case of execution) and
-        // insert appropriate flag and test id array
-        const args = [options.command.script, '--port', this.getPort().toString(), '--uuid', uuid].concat(
-            options.command.args,
-        );
+        const args = [options.command.script].concat(options.command.args);
+          
         if (options.outChannel) {
             options.outChannel.appendLine(`python ${args.join(' ')}`);
         }
@@ -209,6 +211,8 @@ export class PythonTestServer implements ITestServer, Disposable {
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
                     runTestIdsPort: runTestIdPort,
+                    pytestUUID: uuid.toString(),
+                    pytestPort: this.getPort().toString(),
                 };
                 traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
 
@@ -223,13 +227,24 @@ export class PythonTestServer implements ITestServer, Disposable {
                     // This means it is running discovery
                     traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
                 }
-                const deferred = createDeferred<ExecutionResult<string>>();
-                const result = execService.execObservable(args, spawnOptions);
+                const deferredTillExecClose = createDeferred<ExecutionResult<string>>();
+
+                let resultProc: ChildProcess | undefined;
+
                 runInstance?.token.onCancellationRequested(() => {
                     traceInfo('Test run cancelled, killing unittest subprocess.');
-                    result?.proc?.kill();
+                    // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
+                    if (resultProc) {
+                        resultProc?.kill();
+                    } else {
+                        deferredTillExecClose?.resolve();
+                    }
                 });
 
+                const result = execService?.execObservable(args, spawnOptions);
+                resultProc = result?.proc;
+
+                // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
                 // TODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
@@ -255,6 +270,12 @@ export class PythonTestServer implements ITestServer, Disposable {
                         spawnOptions?.outputChannel?.append(out);
                     });
                 }
+
+                result?.proc?.on('exit', (code, signal) => {
+                    if (code !== 0) {
+                        traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}`);
+                    }
+                });
 
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
@@ -300,9 +321,9 @@ export class PythonTestServer implements ITestServer, Disposable {
                             data: JSON.stringify(createEOTPayload(true)),
                         });
                     }
-                    deferred.resolve({ stdout: '', stderr: '' });
+                    deferredTillExecClose.resolve({ stdout: '', stderr: '' });
                 });
-                await deferred.promise;
+                await deferredTillExecClose.promise;
             }
         } catch (ex) {
             traceError(`Error while server attempting to run unittest command: ${ex}`);

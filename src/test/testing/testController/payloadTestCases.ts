@@ -50,6 +50,21 @@ const SINGLE_PYTEST_PAYLOAD_TWO = {
     },
 };
 
+function splitIntoRandomSubstrings(payload: string): string[] {
+    // split payload at random
+    const splitPayload = [];
+    const n = payload.length;
+    let remaining = n;
+    while (remaining > 0) {
+        // Randomly split what remains of the string
+        const randomSize = Math.floor(Math.random() * remaining) + 1;
+        splitPayload.push(payload.slice(n - remaining, n - remaining + randomSize));
+
+        remaining -= randomSize;
+    }
+    return splitPayload;
+}
+
 export function createPayload(uuid: string, data: unknown): string {
     return `Content-Length: ${JSON.stringify(data).length}
 Content-Type: application/json
@@ -82,16 +97,29 @@ export function PAYLOAD_MULTI_CHUNK(uuid: string): DataWithPayloadChunks {
     };
 }
 
+// more than one payload, split so the first one is only 'Content-Length' to confirm headers
+// with null values are ignored
+export function PAYLOAD_ONLY_HEADER_MULTI_CHUNK(uuid: string): DataWithPayloadChunks {
+    const payloadArray: string[] = [];
+    const result = JSON.stringify(SINGLE_UNITTEST_SUBTEST.result);
+
+    const val = createPayload(uuid, SINGLE_UNITTEST_SUBTEST);
+    const firstSpaceIndex = val.indexOf(' ');
+    const payload1 = val.substring(0, firstSpaceIndex);
+    const payload2 = val.substring(firstSpaceIndex);
+    payloadArray.push(payload1);
+    payloadArray.push(payload2);
+    payloadArray.push(EOT_PAYLOAD);
+    return {
+        payloadArray,
+        data: result,
+    };
+}
+
 // single payload divided by an arbitrary character and split across payloads
 export function PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY(uuid: string): DataWithPayloadChunks {
     const payload = createPayload(uuid, SINGLE_PYTEST_PAYLOAD);
-    // payload length is know to be >200
-    const splitPayload: Array<string> = [
-        payload.substring(0, 50),
-        payload.substring(50, 100),
-        payload.substring(100, 150),
-        payload.substring(150),
-    ];
+    const splitPayload = splitIntoRandomSubstrings(payload);
     const finalResult = JSON.stringify(SINGLE_PYTEST_PAYLOAD.result);
     splitPayload.push(EOT_PAYLOAD);
     return {
@@ -102,12 +130,8 @@ export function PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY(uuid: string): DataWithPayload
 
 // here a payload is split across the buffer chunks and there are multiple payloads in a single buffer chunk
 export function PAYLOAD_SPLIT_MULTI_CHUNK_ARRAY(uuid: string): DataWithPayloadChunks {
-    // payload1 length is know to be >200
-    const payload1 = createPayload(uuid, SINGLE_PYTEST_PAYLOAD);
-    const payload2 = createPayload(uuid, SINGLE_PYTEST_PAYLOAD_TWO);
-
-    // chunk 1 is 50 char of payload1, chunk 2 is 50-end of payload1 and all of payload2
-    const splitPayload: Array<string> = [payload1.substring(0, 100), payload1.substring(100).concat(payload2)];
+    const payload = createPayload(uuid, SINGLE_PYTEST_PAYLOAD).concat(createPayload(uuid, SINGLE_PYTEST_PAYLOAD_TWO));
+    const splitPayload = splitIntoRandomSubstrings(payload);
     const finalResult = JSON.stringify(SINGLE_PYTEST_PAYLOAD.result).concat(
         JSON.stringify(SINGLE_PYTEST_PAYLOAD_TWO.result),
     );

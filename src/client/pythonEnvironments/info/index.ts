@@ -98,7 +98,7 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
             return 'conda';
         }
         case EnvironmentType.Pipenv: {
-            return 'pipenv';
+            return 'Pipenv';
         }
         case EnvironmentType.Pyenv: {
             return 'pyenv';
@@ -110,16 +110,16 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
             return 'virtualenv';
         }
         case EnvironmentType.MicrosoftStore: {
-            return 'microsoft store';
+            return 'Microsoft Store';
         }
         case EnvironmentType.Poetry: {
-            return 'poetry';
+            return 'Poetry';
         }
         case EnvironmentType.VirtualEnvWrapper: {
             return 'virtualenvwrapper';
         }
         case EnvironmentType.ActiveState: {
-            return 'activestate';
+            return 'ActiveState';
         }
         default: {
             return '';

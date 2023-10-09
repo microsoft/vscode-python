@@ -6,37 +6,11 @@ import pathlib
 from typing import List
 
 import pytest
-from unittestadapter.discovery import (
-    DEFAULT_PORT,
-    discover_tests,
-    parse_discovery_cli_args,
-)
+from unittestadapter.discovery import discover_tests
 from unittestadapter.utils import TestNodeTypeEnum, parse_unittest_args
+
 from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, is_same_tree
-
-
-@pytest.mark.parametrize(
-    "args, expected",
-    [
-        (["--port", "6767", "--uuid", "some-uuid"], (6767, "some-uuid")),
-        (["--foo", "something", "--bar", "another"], (int(DEFAULT_PORT), None)),
-        (["--port", "4444", "--foo", "something", "--port", "9999"], (9999, None)),
-        (
-            ["--uuid", "first-uuid", "--bar", "other", "--uuid", "second-uuid"],
-            (int(DEFAULT_PORT), "second-uuid"),
-        ),
-    ],
-)
-def test_parse_cli_args(args: List[str], expected: List[str]) -> None:
-    """The parse_cli_args function should parse and return the port and uuid passed as command-line options.
-
-    If there were no --port or --uuid command-line option, it should return default values).
-    If there are multiple options, the last one wins.
-    """
-    actual = parse_discovery_cli_args(args)
-
-    assert expected == actual
 
 
 @pytest.mark.parametrize(

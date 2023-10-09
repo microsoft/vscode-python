@@ -14,6 +14,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import * as telemetry from '../../../client/telemetry';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import * as triggerApis from '../../../client/pythonEnvironments/creation/createEnvironmentTrigger';
 
 suite('Debugging - commands', () => {
     let commandManager: typemoq.IMock<ICommandManager>;
@@ -21,6 +22,7 @@ suite('Debugging - commands', () => {
     let disposables: typemoq.IMock<IDisposableRegistry>;
     let interpreterService: typemoq.IMock<IInterpreterService>;
     let debugCommands: IExtensionSingleActivationService;
+    let triggerCreateEnvironmentCheckNonBlockingStub: sinon.SinonStub;
 
     setup(() => {
         commandManager = typemoq.Mock.ofType<ICommandManager>();
@@ -36,6 +38,11 @@ suite('Debugging - commands', () => {
         sinon.stub(telemetry, 'sendTelemetryEvent').callsFake(() => {
             /** noop */
         });
+        triggerCreateEnvironmentCheckNonBlockingStub = sinon.stub(
+            triggerApis,
+            'triggerCreateEnvironmentCheckNonBlocking',
+        );
+        triggerCreateEnvironmentCheckNonBlockingStub.returns(undefined);
     });
     teardown(() => {
         sinon.restore();

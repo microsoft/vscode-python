@@ -20,6 +20,7 @@ import { UnittestTestExecutionAdapter } from '../../../client/testing/testContro
 import { PythonResultResolver } from '../../../client/testing/testController/common/resultResolver';
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: ITestResultResolver;
@@ -28,6 +29,7 @@ suite('End to End Tests: test adapters', () => {
     let debugLauncher: ITestDebugLauncher;
     let configService: IConfigurationService;
     let serviceContainer: IServiceContainer;
+    let envVarsService: IEnvironmentVariablesProvider;
     let workspaceUri: Uri;
     let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
     let testController: TestController;
@@ -67,6 +69,7 @@ suite('End to End Tests: test adapters', () => {
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
         testController = serviceContainer.get<TestController>(ITestController);
+        envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
 
         // create objects that were not injected
         pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
@@ -121,6 +124,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
@@ -167,6 +171,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
@@ -206,6 +211,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
 
         // set workspace to test workspace folder
@@ -248,6 +254,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
 
         // set workspace to test workspace folder
@@ -301,6 +308,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -375,6 +383,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -445,6 +454,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -541,6 +551,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -612,6 +623,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -667,6 +679,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
 
         // set workspace to test workspace folder
@@ -729,6 +742,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -789,6 +803,7 @@ suite('End to End Tests: test adapters', () => {
             configService,
             testOutputChannel.object,
             resultResolver,
+            envVarsService,
         );
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun

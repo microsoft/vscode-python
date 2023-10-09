@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import argparse
 import atexit
 import enum
 import json
@@ -18,40 +17,17 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
-
 from testing_tools import process_json_util, socket_manager
+from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
 
 DEFAULT_PORT = "45454"
 
-
-def parse_execution_cli_args(
-    args: List[str],
-) -> Tuple[int, Union[str, None]]:
-    """Parse command-line arguments that should be processed by the script.
-
-    So far this includes the port number that it needs to connect to, the uuid passed by the TS side,
-    and the list of test ids to report.
-    The port is passed to the execution.py script when it is executed, and
-    defaults to DEFAULT_PORT if it can't be parsed.
-    The list of test ids is passed to the execution.py script when it is executed, and defaults to an empty list if it can't be parsed.
-    The uuid should be passed to the execution.py script when it is executed, and defaults to None if it can't be parsed.
-    If the arguments appear several times, the value returned by parse_cli_args will be the value of the last argument.
-    """
-    arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--port", default=DEFAULT_PORT)
-    arg_parser.add_argument("--uuid")
-    parsed_args, _ = arg_parser.parse_known_args(args)
-
-    return (int(parsed_args.port), parsed_args.uuid)
-
-
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
 ]
-PORT = 0
-UUID = 0
+testPort = 0
+testUuid = 0
 START_DIR = ""
 
 
@@ -148,9 +124,9 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
         self.formatted[test_id] = result
-        if PORT == 0 or UUID == 0:
+        if testPort == 0 or testUuid == 0:
             print("Error sending response, port or uuid unknown to python server.")
-        send_run_data(result, PORT, UUID)
+        send_run_data(result, testPort, testUuid)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -320,11 +296,12 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
 
-    PORT, UUID = parse_execution_cli_args(argv[:index])
+    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
+    testUuid = os.environ.get("TEST_UUID")
     if test_ids_from_buffer:
         # Perform test execution.
         payload = run_tests(
-            start_dir, test_ids_from_buffer, pattern, top_level_dir, UUID
+            start_dir, test_ids_from_buffer, pattern, top_level_dir, testUuid
         )
     else:
         cwd = os.path.abspath(start_dir)
@@ -336,8 +313,8 @@ if __name__ == "__main__":
             "result": None,
         }
     eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    if UUID is None:
+    if testUuid is None:
         print("Error sending response, uuid unknown to python server.")
-        post_response(eot_payload, PORT, "unknown")
+        post_response(eot_payload, testPort, "unknown")
     else:
-        post_response(eot_payload, PORT, UUID)
+        post_response(eot_payload, testPort, testUuid)

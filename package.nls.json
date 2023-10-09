@@ -24,6 +24,7 @@
     "python.command.python.launchTensorBoard.title": "Launch TensorBoard",
     "python.command.python.refreshTensorBoard.title": "Refresh TensorBoard",
     "python.createEnvironment.contentButton.description": "Show or hide Create Environment button in the editor for `requirements.txt` or other dependency files.",
+    "python.createEnvironment.trigger.description": "Detect if environment creation is required for the current project",
     "python.menu.createNewFile.title": "Python File",
     "python.editor.context.submenu.runPython": "Run Python",
     "python.editor.context.submenu.runPythonInteractive": "Run in Interactive window",

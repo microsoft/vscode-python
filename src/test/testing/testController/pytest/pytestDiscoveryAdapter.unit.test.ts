@@ -33,6 +33,7 @@ suite('pytest test discovery adapter', () => {
     let uri: Uri;
     let expectedExtraVariables: Record<string, string>;
     let mockProc: MockChildProcess;
+    let deferred2: Deferred<void>;
 
     setup(() => {
         const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
@@ -73,20 +74,25 @@ suite('pytest test discovery adapter', () => {
         // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
+        execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+
         const output = new Observable<Output<string>>(() => {
             /* no op */
         });
+        deferred2 = createDeferred();
         execService
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                proc: mockProc,
-                out: output,
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
-        execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+            .returns(() => {
+                deferred2.resolve();
+                return {
+                    proc: mockProc,
+                    out: output,
+                    dispose: () => {
+                        /* no-body */
+                    },
+                };
+            });
     });
     test('Discovery should call exec with correct basic args', async () => {
         // set up exec mock
@@ -98,24 +104,28 @@ suite('pytest test discovery adapter', () => {
                 deferred.resolve();
                 return Promise.resolve(execService.object);
             });
-
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configService, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
         await deferred.promise;
+        await deferred2.promise;
         mockProc.trigger('close');
 
         // verification
-        const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.'];
         execService.verify(
             (x) =>
                 x.execObservable(
-                    expectedArgs,
+                    typeMoq.It.isAny(),
                     typeMoq.It.is<SpawnOptions>((options) => {
-                        assert.deepEqual(options.extraVariables, expectedExtraVariables);
-                        assert.equal(options.cwd, expectedPath);
-                        assert.equal(options.throwOnStdErr, true);
-                        return true;
+                        try {
+                            assert.deepEqual(options.env, expectedExtraVariables);
+                            assert.equal(options.cwd, expectedPath);
+                            assert.equal(options.throwOnStdErr, true);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
                     }),
                 ),
             typeMoq.Times.once(),
@@ -147,6 +157,7 @@ suite('pytest test discovery adapter', () => {
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
         await deferred.promise;
+        await deferred2.promise;
         mockProc.trigger('close');
 
         // verification
@@ -156,7 +167,7 @@ suite('pytest test discovery adapter', () => {
                 x.execObservable(
                     expectedArgs,
                     typeMoq.It.is<SpawnOptions>((options) => {
-                        assert.deepEqual(options.extraVariables, expectedExtraVariables);
+                        assert.deepEqual(options.env, expectedExtraVariables);
                         assert.equal(options.cwd, expectedPathNew);
                         assert.equal(options.throwOnStdErr, true);
                         return true;

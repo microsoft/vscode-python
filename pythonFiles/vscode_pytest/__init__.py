@@ -200,8 +200,9 @@ def pytest_report_teststatus(report, config):
         elif report.failed:
             report_value = "failure"
             message = report.longreprtext
-        node_path = map_id_to_path[report.nodeid]
-        if not node_path:
+        try:
+            node_path = map_id_to_path[report.nodeid]
+        except KeyError:
             node_path = cwd
         # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
@@ -683,7 +684,7 @@ def send_post_request(
     cls_encoder -- a custom encoder if needed.
     """
     testPort = os.getenv("TEST_PORT", 45454)
-    testuuid = os.getenv("TEST_UUID")
+    testUuid = os.getenv("TEST_UUID")
     addr = ("localhost", int(testPort))
     global __socket
 
@@ -698,7 +699,7 @@ def send_post_request(
     data = json.dumps(payload, cls=cls_encoder)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json
-Request-uuid: {testuuid}
+Request-uuid: {testUuid}
 
 {data}"""
 

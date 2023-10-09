@@ -35,7 +35,7 @@ export const OPEN_REQUIREMENTS_BUTTON = {
     tooltip: CreateEnv.Venv.openRequirementsFile,
 };
 const exclude = '**/{.venv*,.git,.nox,.tox,.conda,site-packages,__pypackages__}/**';
-async function getPipRequirementsFiles(
+export async function getPipRequirementsFiles(
     workspaceFolder: WorkspaceFolder,
     token?: CancellationToken,
 ): Promise<string[] | undefined> {

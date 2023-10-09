@@ -191,21 +191,28 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.replace('CONDA_PREFIX', 'prefix/to/conda', anything())).once();
     });
 
-    test('If activated variables contain PS1, prefix it using shell integration', async () => {
-        const envVars: NodeJS.ProcessEnv = { CONDA_PREFIX: 'prefix/to/conda', ...process.env, PS1: '(prompt)' };
+    // eslint-disable-next-line consistent-return
+    test('If activated variables contain PS1, prefix it using shell integration', async function () {
+        if (getOSType() === OSType.Windows) {
+            return this.skip();
+        }
+        const envVars: NodeJS.ProcessEnv = {
+            CONDA_PREFIX: 'prefix/to/conda',
+            ...process.env,
+            PS1: '(envName) extra prompt', // Should not use this
+        };
         when(
-            environmentActivationService.getActivatedEnvironmentVariables(
-                anything(),
-                undefined,
-                undefined,
-                customShell,
-            ),
+            environmentActivationService.getActivatedEnvironmentVariables(anything(), undefined, undefined, 'bash'),
         ).thenResolve(envVars);
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+            envName: 'envName',
+        } as unknown) as PythonEnvironment);
 
         when(collection.replace(anything(), anything(), anything())).thenResolve();
         when(collection.delete(anything())).thenResolve();
         let opts: EnvironmentVariableMutatorOptions | undefined;
-        when(collection.prepend('PS1', '(prompt)', anything())).thenCall((_, _v, o) => {
+        when(collection.prepend('PS1', '(envName) ', anything())).thenCall((_, _v, o) => {
             opts = o;
         });
 

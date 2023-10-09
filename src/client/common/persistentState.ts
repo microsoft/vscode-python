@@ -20,6 +20,46 @@ import {
 import { cache } from './utils/decorators';
 import { noop } from './utils/misc';
 
+let _workspaceState: Memento | undefined;
+const _workspaceKeys: string[] = [];
+export function initializePersistentStateForTriggers(context: IExtensionContext) {
+    _workspaceState = context.workspaceState;
+}
+
+export function getWorkspaceStateValue<T>(key: string, defaultValue?: T): T | undefined {
+    if (!_workspaceState) {
+        throw new Error('Workspace state not initialized');
+    }
+    if (defaultValue === undefined) {
+        return _workspaceState.get<T>(key);
+    }
+    return _workspaceState.get<T>(key, defaultValue);
+}
+
+export async function updateWorkspaceStateValue<T>(key: string, value: T): Promise<void> {
+    if (!_workspaceState) {
+        throw new Error('Workspace state not initialized');
+    }
+    try {
+        _workspaceKeys.push(key);
+        await _workspaceState.update(key, value);
+        const after = getWorkspaceStateValue(key);
+        if (JSON.stringify(after) !== JSON.stringify(value)) {
+            await _workspaceState.update(key, undefined);
+            await _workspaceState.update(key, value);
+            traceError('Error while updating workspace state for key:', key);
+        }
+    } catch (ex) {
+        traceError(`Error while updating workspace state for key [${key}]:`, ex);
+    }
+}
+
+async function clearWorkspaceState(): Promise<void> {
+    if (_workspaceState !== undefined) {
+        await Promise.all(_workspaceKeys.map((key) => updateWorkspaceStateValue(key, undefined)));
+    }
+}
+
 export class PersistentState<T> implements IPersistentState<T> {
     constructor(
         public readonly storage: Memento,
@@ -93,7 +133,10 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     ) {}
 
     public async activate(): Promise<void> {
-        this.cmdManager?.registerCommand(Commands.ClearStorage, this.cleanAllPersistentStates.bind(this));
+        this.cmdManager?.registerCommand(Commands.ClearStorage, async () => {
+            await clearWorkspaceState();
+            await this.cleanAllPersistentStates();
+        });
         const globalKeysStorageDeprecated = this.createGlobalPersistentState(GLOBAL_PERSISTENT_KEYS_DEPRECATED, []);
         const workspaceKeysStorageDeprecated = this.createWorkspacePersistentState(
             WORKSPACE_PERSISTENT_KEYS_DEPRECATED,
