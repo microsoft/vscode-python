@@ -19,6 +19,7 @@ import {
     ITestServer,
 } from '../common/types';
 import {
+    MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
     createEOTPayload,
     createTestingDeferred,
@@ -113,12 +114,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.on('exit', (code, signal) => {
-            // Collect all discovery output and log it at process finish to avoid dividing it between log lines.
-            this.outputChannel?.append(
-                'Starting now, all test run output will be sent to the Test Result panel' +
-                    ' and test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +
-                    ' The "Python Test Log" channel will be deprecated within the next month. See ___ for details.',
-            );
+            this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
             if (code !== 0) {
                 traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}.`);
             }

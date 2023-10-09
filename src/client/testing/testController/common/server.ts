@@ -17,6 +17,7 @@ import { DataReceivedEvent, ITestServer, TestCommandOptions } from './types';
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import {
+    MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
     createEOTPayload,
     createExecutionErrorPayload,
@@ -251,10 +252,12 @@ export class PythonTestServer implements ITestServer, Disposable {
                     result?.proc?.stdout?.on('data', (data) => {
                         const out = fixLogLinesNoTrailing(data.toString());
                         spawnOptions?.outputChannel?.append(`${out}`);
+                        traceInfo(out);
                     });
                     result?.proc?.stderr?.on('data', (data) => {
                         const out = fixLogLinesNoTrailing(data.toString());
                         spawnOptions?.outputChannel?.append(`${out}`);
+                        traceError(out);
                     });
                 } else {
                     result?.proc?.stdout?.on('data', (data) => {
@@ -271,11 +274,7 @@ export class PythonTestServer implements ITestServer, Disposable {
 
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
-                    spawnOptions?.outputChannel?.append(
-                        'Starting now, all test run output will be sent to the Test Result panel' +
-                            ' and test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +
-                            ' The "Python Test Log" channel will be deprecated within the next month. See ___ for details.',
-                    );
+                    spawnOptions?.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (isDiscovery) {
                         if (code !== 0) {
                             // This occurs when we are running discovery

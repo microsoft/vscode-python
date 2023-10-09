@@ -126,13 +126,6 @@ suite('End to End Tests: test adapters', () => {
             resultResolver,
             envVarsService,
         );
-        //     // run unittest discovery
-        //     const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-        //         pythonTestServer,
-        //         configService,
-        //         testOutputChannel.object,
-        //         resultResolver,
-        //     );
 
         await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
             // verification after discovery is complete
