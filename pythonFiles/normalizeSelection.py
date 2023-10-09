@@ -275,8 +275,7 @@ if __name__ == "__main__":
     # Send the normalized code back to the extension in a JSON object.
     data = None
     which_line_next = 0
-    # Depending on whether there was a explicit highlight, send smart selection or regular normalization.
-    # Experiment also has to be enable to use smart selection.
+
     if empty_Highlight and contents.get("smartSendExperimentEnabled"):
         result = traverse_file(
             contents["wholeFileContent"],

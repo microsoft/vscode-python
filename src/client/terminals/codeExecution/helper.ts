@@ -132,14 +132,6 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     public async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
         if (pythonSmartSendEnabled(this.serviceContainer)) {
             if (activeEditor?.selection?.isEmpty) {
-                // await commands.executeCommand('cursorMove', { to: 'down', by: 'line', value: Number(lineOffset) }); // dont import from vscode directly
-                // await commands.executeCommand('cursorEnd');
-                // const dictionarySecond = {
-                //     to: 'down',
-                //     by: 'line',
-                //     value: Number(lineOffset),
-                // };
-
                 await this.commandManager.executeCommand('cursorMove', {
                     to: 'down',
                     by: 'line',
