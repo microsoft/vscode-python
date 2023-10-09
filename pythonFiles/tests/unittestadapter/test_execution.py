@@ -202,6 +202,9 @@ def test_failed_tests():
         assert "outcome" in id_result
         assert id_result["outcome"] == "failure"
         assert "message" and "traceback" in id_result
+        assert "2 not greater than 3" in str(id_result["message"]) or "1 == 1" in str(
+            id_result["traceback"]
+        )
     assert True
 
 
