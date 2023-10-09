@@ -210,18 +210,12 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         # top_level_block_start_line = top_node.lineno
         # top_level_block_end_line = top_node.end_lineno
 
-        if (
-            start_line == top_node.lineno
-            and end_line == top_node.end_lineno
-        ):
+        if start_line == top_node.lineno and end_line == top_node.end_lineno:
             should_run_top_blocks.append(top_node)
 
             smart_code += f"{ast.get_source_segment(wholeFileContent, top_node)}\n"
             break  # If we found exact match, don't waste computation in parsing extra nodes.
-        elif (
-            start_line >= top_node.lineno
-            and end_line <= top_node.end_lineno
-        ):
+        elif start_line >= top_node.lineno and end_line <= top_node.end_lineno:
             # Case to apply smart selection for multiple line.
             # This is the case for when we have to add multiple lines that should be included in the smart send.
             # For example:
@@ -249,13 +243,13 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 # This will be used in calculating lineOffset to move cursor in VS Code.
 def get_next_block_lineno(which_line_next):
     last_ran_lineno = int(which_line_next[-1].end_lineno)
-    temp_next_lineno = int(which_line_next[-1].end_lineno)
+    next_lineno = int(which_line_next[-1].end_lineno)
 
     for reverse_node in top_level_nodes:
         if reverse_node.lineno > last_ran_lineno:
-            temp_next_lineno = reverse_node.lineno
+            next_lineno = reverse_node.lineno
             break
-    return temp_next_lineno
+    return next_lineno
 
 
 if __name__ == "__main__":
