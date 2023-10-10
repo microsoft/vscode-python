@@ -1,5 +1,4 @@
 {
-    "python.command.python.sortImports.title": "Sort Imports",
     "python.command.python.startREPL.title": "Start REPL",
     "python.command.python.createEnvironment.title": "Create Environment...",
     "python.command.python.createNewFile.title": "New Python File",
@@ -201,8 +200,6 @@
     "python.missingPackage.severity.description": "Set severity of missing packages in requirements.txt or pyproject.toml",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
-    "python.sortImports.args.description": "Arguments passed in. Each argument is a separate item in the array.",
-    "python.sortImports.path.description": "Path to isort script, default using inner version",
     "python.tensorBoard.logDirectory.description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
     "python.terminal.activateEnvInCurrentTerminal.description": "Activate Python Environment in the current Terminal on load of the Extension.",
     "python.terminal.activateEnvironment.description": "Activate Python Environment in all Terminals created.",
@@ -220,8 +217,6 @@
     "python.testing.unittestEnabled.description": "Enable testing using unittest.",
     "python.venvFolders.description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
     "python.venvPath.description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
-    "python.sortImports.args.deprecationMessage": "This setting will be removed soon. Use 'isort.args' instead.",
-    "python.sortImports.path.deprecationMessage": "This setting will be removed soon. Use 'isort.path' instead.",
     "walkthrough.pythonWelcome.title": "Get Started with Python Development",
     "walkthrough.pythonWelcome.description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
     "walkthrough.step.python.createPythonFile.title": "Create a Python file",

@@ -106,7 +106,6 @@ export enum Product {
     autopep8 = 10,
     mypy = 11,
     unittest = 12,
-    isort = 15,
     black = 16,
     bandit = 17,
     tensorboard = 24,
@@ -190,7 +189,6 @@ export interface IPythonSettings {
     readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
-    readonly sortImports: ISortImportSettings;
     readonly envFile: string;
     readonly globalModuleInstallation: boolean;
     readonly experiments: IExperiments;
@@ -203,10 +201,6 @@ export interface IPythonSettings {
 
 export interface ITensorBoardSettings {
     logDirectory: string | undefined;
-}
-export interface ISortImportSettings {
-    readonly path: string;
-    readonly args: string[];
 }
 
 export interface IPylintCategorySeverity {

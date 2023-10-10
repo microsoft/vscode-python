@@ -53,7 +53,6 @@ export type PythonSettingKeys =
     | 'testing.pytestArgs'
     | 'testing.unittestArgs'
     | 'formatting.provider'
-    | 'sortImports.args'
     | 'testing.pytestEnabled'
     | 'testing.unittestEnabled'
     | 'envFile'

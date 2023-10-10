@@ -58,7 +58,6 @@ export namespace Commands {
     export const ReportIssue = 'python.reportIssue';
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
-    export const Sort_Imports = 'python.sortImports';
     export const Start_REPL = 'python.startREPL';
     export const Tests_Configure = 'python.configureTests';
     export const TriggerEnvironmentSelection = 'python.triggerEnvSelection';

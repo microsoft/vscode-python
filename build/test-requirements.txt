@@ -17,7 +17,6 @@ flask
 fastapi
 uvicorn
 django
-isort
 
 # Integrated TensorBoard tests
 tensorboard
