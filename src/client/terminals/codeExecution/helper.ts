@@ -89,9 +89,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const startLineVal = activeEditor?.selection?.start.line ?? 0;
             const endLineVal = activeEditor?.selection?.end.line ?? 0;
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
-            const smartSendExperimentEnabledVal = pythonSmartSendEnabled(this.serviceContainer)
-                ? pythonSmartSendEnabled(this.serviceContainer)
-                : false;
+            const smartSendExperimentEnabledVal = pythonSmartSendEnabled(this.serviceContainer);
             const input = JSON.stringify({
                 code,
                 wholeFileContent,
