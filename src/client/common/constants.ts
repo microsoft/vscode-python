@@ -23,6 +23,7 @@ export const PYTHON_NOTEBOOKS = [
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 export const PYLANCE_EXTENSION_ID = 'ms-python.vscode-pylance';
 export const JUPYTER_EXTENSION_ID = 'ms-toolsai.jupyter';
+export const TENSORBOARD_EXTENSION_ID = 'ms-toolsai.tensorboard';
 export const AppinsightsKey = '0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255';
 
 export type Channel = 'stable' | 'insiders';

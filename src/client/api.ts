@@ -21,6 +21,7 @@ import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
 import { ApiForPylance } from './pylanceApi';
 import { getTelemetryReporter } from './telemetry';
+import { TensorboardExtensionIntegration } from './tensorBoard/tensorboardIntegration';
 
 export function buildApi(
     ready: Promise<void>,
@@ -31,7 +32,14 @@ export function buildApi(
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
+    serviceManager.addSingleton<TensorboardExtensionIntegration>(
+        TensorboardExtensionIntegration,
+        TensorboardExtensionIntegration,
+    );
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
+    const tensorboardIntegration = serviceContainer.get<TensorboardExtensionIntegration>(
+        TensorboardExtensionIntegration,
+    );
     const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
 
     const api: PythonExtension & {
@@ -39,6 +47,12 @@ export function buildApi(
          * Internal API just for Jupyter, hence don't include in the official types.
          */
         jupyter: {
+            registerHooks(): void;
+        };
+        /**
+         * Internal API just for Tensorboard, hence don't include in the official types.
+         */
+        tensorboard: {
             registerHooks(): void;
         };
     } & {
@@ -91,6 +105,9 @@ export function buildApi(
         }),
         jupyter: {
             registerHooks: () => jupyterIntegration.integrateWithJupyterExtension(),
+        },
+        tensorboard: {
+            registerHooks: () => tensorboardIntegration.integrateWithTensorboardExtension(),
         },
         debug: {
             async getRemoteLauncherCommand(

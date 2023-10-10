@@ -23,7 +23,7 @@ import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
 
-const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
+export const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
 @injectable()
 export class TensorBoardSessionProvider implements IExtensionSingleActivationService {

@@ -100,7 +100,10 @@ export class TensorBoardSession {
         private readonly globalMemento: IPersistentState<ViewColumn>,
         private readonly multiStepFactory: IMultiStepInputFactory,
         private readonly configurationService: IConfigurationService,
-    ) {}
+    ) {
+        this.disposables.push(this.onDidChangeViewStateEventEmitter)
+        this.disposables.push(this.onDidDisposeEventEmitter)
+    }
 
     public get onDidDispose(): Event<TensorBoardSession> {
         return this.onDidDisposeEventEmitter.event;
@@ -189,10 +192,10 @@ export class TensorBoardSession {
     // to start a TensorBoard session. If the user has a torch import in
     // any of their open documents, also try to install the torch-tb-plugin
     // package, but don't block if installing that fails.
-    private async ensurePrerequisitesAreInstalled() {
+    public async ensurePrerequisitesAreInstalled(resource?: Uri): Promise<boolean> {
         traceVerbose('Ensuring TensorBoard package is installed into active interpreter');
         const interpreter =
-            (await this.interpreterService.getActiveInterpreter()) ||
+            (await this.interpreterService.getActiveInterpreter(resource)) ||
             (await this.commandManager.executeCommand('python.setInterpreter'));
         if (!interpreter) {
             return false;
