@@ -22,7 +22,6 @@ import {
     IFormattingSettings,
     IInterpreterSettings,
     ILintingSettings,
-    ISortImportSettings,
     ITerminalSettings,
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
@@ -118,7 +117,6 @@ suite('Python Settings', async () => {
         // complex settings
         config.setup((c) => c.get<IInterpreterSettings>('interpreter')).returns(() => sourceSettings.interpreter);
         config.setup((c) => c.get<ILintingSettings>('linting')).returns(() => sourceSettings.linting);
-        config.setup((c) => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);
         config.setup((c) => c.get<IFormattingSettings>('formatting')).returns(() => sourceSettings.formatting);
         config.setup((c) => c.get<IAutoCompleteSettings>('autoComplete')).returns(() => sourceSettings.autoComplete);
         config.setup((c) => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
