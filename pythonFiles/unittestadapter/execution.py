@@ -111,7 +111,7 @@ class UnittestTestResult(unittest.TextTestResult):
             try:
                 message = f"{error[0]} {error[1]}"
             except Exception:
-                message = "Errored occurred, unknown type or value"
+                message = "Error occurred, unknown type or value"
             formatted = traceback.format_exception(*error)
             tb = "".join(formatted)
             # Remove the 'Traceback (most recent call last)'
