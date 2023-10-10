@@ -14,9 +14,6 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { ITensorboardDependencyChecker } from './types';
 
 type PythonApiForTensorboardExtension = {
-    /**
-     * IEnvironmentActivationService
-     */
     getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
@@ -48,7 +45,6 @@ export class TensorboardExtensionIntegration {
             this.workspaceService.onDidGrantWorkspaceTrust(() => this.registerApi(tensorboardExtensionApi));
             return undefined;
         }
-        // Forward python parts
         tensorboardExtensionApi.registerPythonApi({
             getActivatedEnvironmentVariables: async (
                 resource: Resource,

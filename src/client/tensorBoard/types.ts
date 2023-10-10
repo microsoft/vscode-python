@@ -8,6 +8,7 @@ export interface ITensorBoardImportTracker {
     onDidImportTensorBoard: Event<void>;
 }
 
+export const ITensorboardDependencyChecker = Symbol('ITensorboardDependencyChecker');
 export interface ITensorboardDependencyChecker {
     ensureDependenciesAreInstalled(resource?: Uri): Promise<boolean>;
 }
