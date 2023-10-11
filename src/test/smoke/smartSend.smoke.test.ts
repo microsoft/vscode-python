@@ -133,7 +133,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
-
+        console.log(experimentService.object.inExperimentSync(EnableREPLSmartSend.experiment));
         // Shift+enter two more times so we can track cursor movement with deletion of file
         await vscode.commands
             .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
