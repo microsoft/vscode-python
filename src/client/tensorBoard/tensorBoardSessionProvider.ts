@@ -22,6 +22,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
+import { useNewTensorboardExtension } from './tensorboarExperiment';
 
 export const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
@@ -58,6 +59,10 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
     }
 
     public async activate(): Promise<void> {
+        if (useNewTensorboardExtension()) {
+            return;
+        }
+
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.LaunchTensorBoard,

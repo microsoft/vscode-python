@@ -17,10 +17,9 @@ import { IInterpreterService } from '../interpreter/contracts';
 import { TensorBoardSession } from './tensorBoardSession';
 import { disposeAll } from '../common/utils/resourceLifecycle';
 import { PREFERRED_VIEWGROUP } from './tensorBoardSessionProvider';
-import { ITensorboardDependencyChecker } from './types';
 
 @injectable()
-export class TensorboardDependencyChecker implements ITensorboardDependencyChecker {
+export class TensorboardDependencyChecker {
     private preferredViewGroupMemento: IPersistentState<ViewColumn>;
 
     constructor(

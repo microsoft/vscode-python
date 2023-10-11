@@ -1836,7 +1836,7 @@
                     "category": "Python",
                     "command": "python.launchTensorBoard",
                     "title": "%python.command.python.launchTensorBoard.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
                 },
                 {
                     "category": "Python",
@@ -1844,7 +1844,7 @@
                     "enablement": "python.hasActiveTensorBoardSession",
                     "icon": "$(refresh)",
                     "title": "%python.command.python.refreshTensorBoard.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
+                    "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
                 },
                 {
                     "category": "Python",

@@ -12,6 +12,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { containsNotebookExtension } from './helpers';
+import { useNewTensorboardExtension } from './tensorboarExperiment';
 
 @injectable()
 export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleActivationService {
@@ -27,6 +28,9 @@ export class TensorBoardNbextensionCodeLensProvider implements IExtensionSingleA
     constructor(@inject(IDisposableRegistry) private disposables: IDisposableRegistry) {}
 
     public async activate(): Promise<void> {
+        if (useNewTensorboardExtension()) {
+            return;
+        }
         this.activateInternal().ignoreErrors();
     }
 

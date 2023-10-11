@@ -5,21 +5,27 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Extension, Uri } from 'vscode';
+import { Extension, Uri, commands } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { TENSORBOARD_EXTENSION_ID } from '../common/constants';
-import { IExtensions, Resource } from '../common/types';
+import { IDisposableRegistry, IExtensions, Resource } from '../common/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
-import { PythonEnvironment } from '../pythonEnvironments/info';
-import { ITensorboardDependencyChecker } from './types';
+import { TensorBoardPrompt } from './tensorBoardPrompt';
+import { TensorboardDependencyChecker } from './tensorboardDependencyChecker';
 
 type PythonApiForTensorboardExtension = {
-    getActivatedEnvironmentVariables(
-        resource: Resource,
-        interpreter?: PythonEnvironment,
-        allowExceptions?: boolean,
-    ): Promise<NodeJS.ProcessEnv | undefined>;
+    /**
+     * Gets activated env vars for the active Python Environment for the given resource.
+     */
+    getActivatedEnvironmentVariables(resource: Resource): Promise<NodeJS.ProcessEnv | undefined>;
+    /**
+     * Ensures that the dependencies required for TensorBoard are installed in Active Environment for the given resource.
+     */
     ensureDependenciesAreInstalled(resource?: Uri): Promise<boolean>;
+    /**
+     * Whether to allow displaying tensorboard prompt.
+     */
+    isPromptEnabled(): boolean;
 };
 
 type TensorboardExtensionApi = {
@@ -37,24 +43,37 @@ export class TensorboardExtensionIntegration {
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IEnvironmentActivationService) private readonly envActivation: IEnvironmentActivationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
-        @inject(ITensorboardDependencyChecker) private readonly dependencyChcker: ITensorboardDependencyChecker,
-    ) {}
+        @inject(TensorboardDependencyChecker) private readonly dependencyChcker: TensorboardDependencyChecker,
+        @inject(TensorBoardPrompt) private readonly tensorBoardPrompt: TensorBoardPrompt,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+    ) {
+        this.hideCommands();
+        extensions.onDidChange(this.hideCommands, this, disposables);
+    }
 
     public registerApi(tensorboardExtensionApi: TensorboardExtensionApi): TensorboardExtensionApi | undefined {
+        this.hideCommands();
         if (!this.workspaceService.isTrusted) {
             this.workspaceService.onDidGrantWorkspaceTrust(() => this.registerApi(tensorboardExtensionApi));
             return undefined;
         }
         tensorboardExtensionApi.registerPythonApi({
-            getActivatedEnvironmentVariables: async (
-                resource: Resource,
-                interpreter?: PythonEnvironment,
-                allowExceptions?: boolean,
-            ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
+            getActivatedEnvironmentVariables: async (resource: Resource) =>
+                this.envActivation.getActivatedEnvironmentVariables(resource, undefined, true),
             ensureDependenciesAreInstalled: async (resource?: Uri): Promise<boolean> =>
                 this.dependencyChcker.ensureDependenciesAreInstalled(resource),
+            isPromptEnabled: () => this.tensorBoardPrompt.isPromptEnabled(),
         });
         return undefined;
+    }
+
+    public hideCommands(): void {
+        if (this.extensions.getExtension(TENSORBOARD_EXTENSION_ID)) {
+            console.error('TensorBoard extension is installed');
+            void commands.executeCommand('setContext', 'python.tensorboardExtInstalled', true);
+        } else {
+            console.error('TensorBoard extension not installed');
+        }
     }
 
     public async integrateWithTensorboardExtension(): Promise<void> {

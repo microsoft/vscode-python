@@ -8,6 +8,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
+import { useNewTensorboardExtension } from './tensorboarExperiment';
 
 @injectable()
 export class TensorBoardFileWatcher implements IExtensionSingleActivationService {
@@ -24,6 +25,9 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
     ) {}
 
     public async activate(): Promise<void> {
+        if (useNewTensorboardExtension()) {
+            return;
+        }
         this.activateInternal().ignoreErrors();
     }
 

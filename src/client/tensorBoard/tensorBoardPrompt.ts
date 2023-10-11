@@ -84,7 +84,7 @@ export class TensorBoardPrompt {
         }
     }
 
-    private isPromptEnabled(): boolean {
+    public isPromptEnabled(): boolean {
         return this.state.value;
     }
 

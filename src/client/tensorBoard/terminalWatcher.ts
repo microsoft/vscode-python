@@ -4,6 +4,7 @@ import { IExtensionSingleActivationService } from '../activation/types';
 import { IDisposable, IDisposableRegistry } from '../common/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { useNewTensorboardExtension } from './tensorboarExperiment';
 
 // Every 5 min look, through active terminals to see if any are running `tensorboard`
 @injectable()
@@ -15,6 +16,9 @@ export class TerminalWatcher implements IExtensionSingleActivationService, IDisp
     constructor(@inject(IDisposableRegistry) private disposables: IDisposableRegistry) {}
 
     public async activate(): Promise<void> {
+        if (useNewTensorboardExtension()) {
+            return;
+        }
         const handle = setInterval(() => {
             // When user runs a command in VSCode terminal, the terminal's name
             // becomes the program that is currently running. Since tensorboard

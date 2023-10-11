@@ -12,6 +12,7 @@ import { getDocumentLines } from '../telemetry/importTracker';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
+import { useNewTensorboardExtension } from './tensorboarExperiment';
 
 const testExecution = isTestExecution();
 
@@ -28,6 +29,9 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
     ) {}
 
     public async activate(): Promise<void> {
+        if (useNewTensorboardExtension()) {
+            return;
+        }
         if (testExecution) {
             await this.activateInternal();
         } else {
