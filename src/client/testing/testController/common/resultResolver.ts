@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, TestController, TestItem, Uri, TestMessage, Location, TestRun } from 'vscode';
+import {
+    CancellationToken,
+    TestController,
+    TestItem,
+    Uri,
+    TestMessage,
+    Location,
+    TestRun,
+    MarkdownString,
+} from 'vscode';
 import * as util from 'util';
 import { DiscoveredTestPayload, EOTTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
@@ -78,7 +87,11 @@ export class PythonResultResolver implements ITestResultResolver {
                 errorNode = createErrorTestItem(this.testController, options);
                 this.testController.items.add(errorNode);
             }
-            errorNode.error = message;
+            const errorNodeLabel: MarkdownString = new MarkdownString(
+                `[Show output](command:python.viewOutput) to view error logs`,
+            );
+            errorNodeLabel.isTrusted = true;
+            errorNode.error = errorNodeLabel;
         } else {
             // remove error node only if no errors exist.
             this.testController.items.delete(`DiscoveryError:${workspacePath}`);
