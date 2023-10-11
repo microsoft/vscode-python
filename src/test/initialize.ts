@@ -36,7 +36,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
     await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
-        const configSettings = await import('../client/common/configSettings');
+        // const configSettings = await import('../client/common/configSettings');
         // Dispose any cached python settings (used only in test env).
         // configSettings.PythonSettings.dispose();
     }
