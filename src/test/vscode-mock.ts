@@ -3,21 +3,21 @@
 
 'use strict';
 
-import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import * as vscodeMocks from './mocks/vsc';
 import { vscMockTelemetryReporter } from './mocks/vsc/telemetryReporter';
+import { anything, instance, mock, when } from 'ts-mockito';
 const Module = require('module');
 
 type VSCode = typeof vscode;
 
 const mockedVSCode: Partial<VSCode> = {};
-export const mockedVSCodeNamespaces: { [P in keyof VSCode]?: TypeMoq.IMock<VSCode[P]> } = {};
+export const mockedVSCodeNamespaces: { [P in keyof VSCode]?: VSCode[P] } = {};
 const originalLoad = Module._load;
 
 function generateMock<K extends keyof VSCode>(name: K): void {
-    const mockedObj = TypeMoq.Mock.ofType<VSCode[K]>();
-    (mockedVSCode as any)[name] = mockedObj.object;
+    const mockedObj = mock<VSCode[K]>();
+    (mockedVSCode as any)[name] = instance(mockedObj);
     mockedVSCodeNamespaces[name] = mockedObj as any;
 }
 
@@ -35,15 +35,26 @@ export function initialize() {
     generateMock('window');
     generateMock('commands');
     generateMock('languages');
+    generateMock('extensions');
     generateMock('env');
     generateMock('debug');
     generateMock('scm');
-    generateNotebookMocks();
+    generateMock('notebooks');
 
     // Use mock clipboard fo testing purposes.
     const clipboard = new MockClipboard();
-    mockedVSCodeNamespaces.env?.setup((e) => e.clipboard).returns(() => clipboard);
-    mockedVSCodeNamespaces.env?.setup((e) => e.appName).returns(() => 'Insider');
+    when(mockedVSCodeNamespaces.env!.clipboard).thenReturn(clipboard);
+    when(mockedVSCodeNamespaces.env!.appName).thenReturn('Insider');
+
+    // This API is used in src/client/telemetry/telemetry.ts
+    const extension = mock<vscode.Extension<any>>();
+    const packageJson = mock<any>();
+    const contributes = mock<any>();
+    when(extension.packageJSON).thenReturn(instance(packageJson));
+    when(packageJson.contributes).thenReturn(instance(contributes));
+    when(contributes.debuggers).thenReturn([{ aiKey: '' }]);
+    when(mockedVSCodeNamespaces.extensions!.getExtension(anything())).thenReturn(instance(extension));
+    when(mockedVSCodeNamespaces.extensions!.all).thenReturn([]);
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
     Module._load = function (request: any, _parent: any) {
@@ -122,21 +133,3 @@ mockedVSCode.LogLevel = vscodeMocks.LogLevel;
 (mockedVSCode as any).ProtocolTypeHierarchyItem = vscodeMocks.vscMockExtHostedTypes.ProtocolTypeHierarchyItem;
 (mockedVSCode as any).CancellationError = vscodeMocks.vscMockExtHostedTypes.CancellationError;
 (mockedVSCode as any).LSPCancellationError = vscodeMocks.vscMockExtHostedTypes.LSPCancellationError;
-
-// This API is used in src/client/telemetry/telemetry.ts
-const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();
-extensions.setup((e) => e.all).returns(() => []);
-const extension = TypeMoq.Mock.ofType<vscode.Extension<any>>();
-const packageJson = TypeMoq.Mock.ofType<any>();
-const contributes = TypeMoq.Mock.ofType<any>();
-extension.setup((e) => e.packageJSON).returns(() => packageJson.object);
-packageJson.setup((p) => p.contributes).returns(() => contributes.object);
-contributes.setup((p) => p.debuggers).returns(() => [{ aiKey: '' }]);
-extensions.setup((e) => e.getExtension(TypeMoq.It.isAny())).returns(() => extension.object);
-mockedVSCode.extensions = extensions.object;
-
-function generateNotebookMocks() {
-    const mockedObj = TypeMoq.Mock.ofType<{}>();
-    (mockedVSCode as any).notebook = mockedObj.object;
-    (mockedVSCodeNamespaces as any).notebook = mockedObj as any;
-}

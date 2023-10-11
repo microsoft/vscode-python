@@ -101,8 +101,8 @@ export class TensorBoardSession {
         private readonly multiStepFactory: IMultiStepInputFactory,
         private readonly configurationService: IConfigurationService,
     ) {
-        this.disposables.push(this.onDidChangeViewStateEventEmitter)
-        this.disposables.push(this.onDidDisposeEventEmitter)
+        this.disposables.push(this.onDidChangeViewStateEventEmitter);
+        this.disposables.push(this.onDidDisposeEventEmitter);
     }
 
     public get onDidDispose(): Event<TensorBoardSession> {

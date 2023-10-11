@@ -1,9 +1,11 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
+import { anything, reset, when } from 'ts-mockito';
 import { TensorBoardUsageTracker } from '../../client/tensorBoard/tensorBoardUsageTracker';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 import { MockDocumentManager } from '../mocks/mockDocumentManager';
 import { createTensorBoardPromptWithMocks } from './helpers';
+import { mockedVSCodeNamespaces } from '../vscode-mock';
 
 suite('TensorBoard usage tracker', () => {
     let documentManager: MockDocumentManager;
@@ -11,6 +13,11 @@ suite('TensorBoard usage tracker', () => {
     let prompt: TensorBoardPrompt;
     let showNativeTensorBoardPrompt: sinon.SinonSpy;
 
+    suiteSetup(() => {
+        reset(mockedVSCodeNamespaces.extensions);
+        when(mockedVSCodeNamespaces.extensions?.getExtension(anything())).thenReturn(undefined);
+    });
+    suiteTeardown(() => reset(mockedVSCodeNamespaces.extensions));
     setup(() => {
         documentManager = new MockDocumentManager();
         prompt = createTensorBoardPromptWithMocks();
