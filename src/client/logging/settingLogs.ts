@@ -21,7 +21,7 @@ export function logAndNotifyOnFormatterSetting(): void {
         const formatter = config.get<string>('defaultFormatter', '');
         traceInfo(`Default formatter is set to ${formatter} for workspace ${workspace.uri.fsPath}`);
         if (formatter === PVSC_EXTENSION_ID) {
-            traceError('Formatting feature is moved to separate extensions depending on the formatter you prefer.');
+            traceError('Formatting features have been moved to separate formatter extensions.');
             traceError('Please install the formatter extension you prefer and set it as the default formatter.');
             traceError('For `autopep8` use: https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8');
             traceError(
@@ -30,7 +30,7 @@ export function logAndNotifyOnFormatterSetting(): void {
             traceError('For `yapf` use: https://marketplace.visualstudio.com/items?itemName=eeyore.yapf');
             const response = await showErrorMessage(
                 l10n.t(
-                    'Formatting feature is moved to separate extensions depending on the formatter you prefer. Please install the formatter extension you prefer and set it as the default formatter.',
+                    'Formatting features have been moved to separate formatter extensions. Please install the formatter extension you prefer and set it as the default formatter.',
                 ),
                 Common.showLogs,
             );
