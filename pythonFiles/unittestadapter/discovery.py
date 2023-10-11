@@ -19,8 +19,6 @@ from typing_extensions import Literal, NotRequired, TypedDict
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
 
-DEFAULT_PORT = "45454"
-
 
 class PayloadDict(TypedDict):
     cwd: str
@@ -122,8 +120,15 @@ if __name__ == "__main__":
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
     # Perform test discovery.
-    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
+    testPort = int(os.environ.get("TEST_PORT"))
     testUuid = os.environ.get("TEST_UUID")
+    if (testPort is None) or (testUuid is None):
+        print(
+            "Error[vscode-unittest]: TEST_PORT or TEST_UUID not set. TEST_PORT = ",
+            testPort,
+            " TEST_UUID = ",
+            testUuid,
+        )
     # Post this discovery payload.
     if testUuid is not None:
         payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)

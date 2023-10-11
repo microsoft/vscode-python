@@ -28,6 +28,8 @@ if __name__ == "__main__":
     run_test_ids_port_int = (
         int(run_test_ids_port) if run_test_ids_port is not None else 0
     )
+    if run_test_ids_port_int == 0:
+        print("Error[vscode-pytest]: RUN_TEST_IDS_PORT env var is not set.")
     test_ids_from_buffer = []
     try:
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

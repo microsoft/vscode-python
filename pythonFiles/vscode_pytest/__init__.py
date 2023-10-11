@@ -683,8 +683,15 @@ def send_post_request(
     payload -- the payload data to be sent.
     cls_encoder -- a custom encoder if needed.
     """
-    testPort = os.getenv("TEST_PORT", 45454)
+    testPort = os.getenv("TEST_PORT")
     testUuid = os.getenv("TEST_UUID")
+    if (testPort is None) or (testUuid is None):
+        print(
+            "Error[vscode-pytest]: TEST_PORT or TEST_UUID not set. TEST_PORT = ",
+            testPort,
+            " TEST_UUID = ",
+            testUuid,
+        )
     addr = ("localhost", int(testPort))
     global __socket
 

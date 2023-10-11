@@ -21,8 +21,6 @@ from testing_tools import process_json_util, socket_manager
 from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
 
-DEFAULT_PORT = "45454"
-
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
 ]
@@ -269,7 +267,8 @@ if __name__ == "__main__":
     run_test_ids_port_int = (
         int(run_test_ids_port) if run_test_ids_port is not None else 0
     )
-
+    if run_test_ids_port_int == 0:
+        print("Error[vscode-unittest]: RUN_TEST_IDS_PORT env var is not set.")
     # get data from socket
     test_ids_from_buffer = []
     try:
@@ -301,8 +300,15 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
 
-    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
+    testPort = int(os.environ.get("TEST_PORT"))
     testUuid = os.environ.get("TEST_UUID")
+    if (testPort is None) or (testUuid is None):
+        print(
+            "Error[vscode-unittest]: TEST_PORT or TEST_UUID not set. TEST_PORT = ",
+            testPort,
+            " TEST_UUID = ",
+            testUuid,
+        )
     if test_ids_from_buffer:
         # Perform test execution.
         payload = run_tests(
