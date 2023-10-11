@@ -60,7 +60,7 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 | `Python: Select Interpreter`          | Switch between Python interpreters, versions, and environments.                                                                                                |
 | `Python: Start REPL`                  | Start an interactive Python REPL using the selected interpreter in the VS Code terminal.                                                                       |
 | `Python: Run Python File in Terminal` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting `Run Python File in Terminal`. |
-| `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/editing#_formatting) in the `settings.json` file.                        |
+| `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/formatting) in the `settings.json` file.                                 |
 | `Python: Configure Tests`             | Select a test framework and configure it to display the Test Explorer.                                                                                         |
 
 To see all available Python commands, open the Command Palette and type `Python`. For Jupyter extension commands, just type `Jupyter`.
@@ -71,16 +71,11 @@ Learn more about the rich features of the Python extension:
 
 -   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
 -   [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
--   [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your code with black, autopep or yapf
-
+-   [Code formatting](https://code.visualstudio.com/docs/python/formatting): Format your code with black, autopep or yapf
 -   [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes
-
 -   [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest or pytest.
-
 -   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
-
 -   [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
-
 -   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction and method extraction. Additionally, there is componentized support to enable additional refactoring, such as import sorting, through extensions including [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) and [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff).
 
 

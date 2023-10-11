@@ -258,15 +258,6 @@ export interface ILintingSettings {
     banditArgs: string[];
     banditPath: string;
 }
-export interface IFormattingSettings {
-    readonly provider: string;
-    autopep8Path: string;
-    readonly autopep8Args: string[];
-    blackPath: string;
-    readonly blackArgs: string[];
-    yapfPath: string;
-    readonly yapfArgs: string[];
-}
 
 export interface ITerminalSettings {
     readonly executeInFileDir: boolean;

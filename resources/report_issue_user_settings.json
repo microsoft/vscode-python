@@ -69,15 +69,6 @@
         "memory": true,
         "symbolsHierarchyDepthLimit": false
     },
-    "formatting": {
-        "autopep8Args": "placeholder",
-        "autopep8Path": "placeholder",
-        "provider": true,
-        "blackArgs": "placeholder",
-        "blackPath": "placeholder",
-        "yapfArgs": "placeholder",
-        "yapfPath": "placeholder"
-    },
     "testing": {
         "cwd": "placeholder",
         "debugPort": true,

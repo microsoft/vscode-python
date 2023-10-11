@@ -37,7 +37,6 @@
         "python.linting.pylintEnabled": true,
         "python.linting.pycodestyleEnabled": false,
         "python.linting.prospectorEnabled": false,
-        "python.formatting.provider": "yapf",
         "python.linting.lintOnSave": false,
         "python.linting.enabled": true,
         "python.pythonPath": "python"

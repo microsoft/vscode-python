@@ -7,18 +7,8 @@ import { getNamesAndValues } from '../../client/common/utils/enum';
 export function getProductsForInstallerTests(): { name: string; value: Product }[] {
     return getNamesAndValues<Product>(Product).filter(
         (p) =>
-            ![
-                'pylint',
-                'flake8',
-                'pycodestyle',
-                'pylama',
-                'prospector',
-                'pydocstyle',
-                'yapf',
-                'autopep8',
-                'mypy',
-                'black',
-                'bandit',
-            ].includes(p.name),
+            !['pylint', 'flake8', 'pycodestyle', 'pylama', 'prospector', 'pydocstyle', 'mypy', 'bandit'].includes(
+                p.name,
+            ),
     );
 }

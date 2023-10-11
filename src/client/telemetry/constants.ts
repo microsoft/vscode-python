@@ -4,8 +4,6 @@
 'use strict';
 
 export enum EventName {
-    FORMAT_SORT_IMPORTS = 'FORMAT.SORT_IMPORTS',
-    FORMAT = 'FORMAT.FORMAT',
     FORMAT_ON_TYPE = 'FORMAT.FORMAT_ON_TYPE',
     EDITOR_LOAD = 'EDITOR.LOAD',
     LINTING = 'LINTING',

@@ -859,33 +859,7 @@ export interface IEventNamePropertyMapping {
          */
         scope: 'file' | 'selection';
     };
-    /**
-     * Telemetry event sent with details when formatting a document
-     */
-    /* __GDPR__
-       "format.format" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
-          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
-          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "formatselection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.FORMAT]: {
-        /**
-         * Tool being used to format
-         */
-        tool: 'autopep8' | 'black' | 'yapf';
-        /**
-         * If arguments for formatter is provided in resource settings
-         */
-        hasCustomArgs: boolean;
-        /**
-         * Carries `true` when formatting a selection of text, `false` otherwise
-         */
-        formatSelection: boolean;
-    };
+
     /**
      * Telemetry event sent with the value of setting 'Format on type'
      */
@@ -902,16 +876,6 @@ export interface IEventNamePropertyMapping {
          */
         enabled: boolean;
     };
-    /**
-     * Telemetry event sent when sorting imports using formatter
-     */
-    /* __GDPR__
-       "format.sort_imports" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
-           "originaleventname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
 
     /**
      * Telemetry event sent with details when tracking imports
@@ -921,7 +885,6 @@ export interface IEventNamePropertyMapping {
           "hashedname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
-
     [EventName.HASHED_PACKAGE_NAME]: {
         /**
          * Hash of the package name

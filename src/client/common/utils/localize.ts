@@ -516,24 +516,4 @@ export namespace ToolsExtensions {
     );
     export const installPylintExtension = l10n.t('Install Pylint extension');
     export const installFlake8Extension = l10n.t('Install Flake8 extension');
-
-    export const selectBlackFormatterPrompt = l10n.t(
-        'You have the Black formatter extension installed, would you like to use that as the default formatter?',
-    );
-
-    export const selectAutopep8FormatterPrompt = l10n.t(
-        'You have the Autopep8 formatter extension installed, would you like to use that as the default formatter?',
-    );
-
-    export const selectMultipleFormattersPrompt = l10n.t(
-        'You have multiple formatters installed, would you like to select one as the default formatter?',
-    );
-
-    export const installBlackFormatterPrompt = l10n.t(
-        'You triggered formatting with Black, would you like to install one of our new formatter extensions? This will also set it as the default formatter for Python.',
-    );
-
-    export const installAutopep8FormatterPrompt = l10n.t(
-        'You triggered formatting with Autopep8, would you like to install one of our new formatter extension? This will also set it as the default formatter for Python.',
-    );
 }

@@ -27,7 +27,6 @@ import {
     IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
-    IFormattingSettings,
     IInterpreterPathService,
     IInterpreterSettings,
     ILintingSettings,
@@ -108,8 +107,6 @@ export class PythonSettings implements IPythonSettings {
     public devOptions: string[] = [];
 
     public linting!: ILintingSettings;
-
-    public formatting!: IFormattingSettings;
 
     public autoComplete!: IAutoCompleteSettings;
 
@@ -394,34 +391,6 @@ export class PythonSettings implements IPythonSettings {
         if (this.linting.cwd) {
             this.linting.cwd = getAbsolutePath(systemVariables.resolveAny(this.linting.cwd), workspaceRoot);
         }
-
-        const formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;
-        if (this.formatting) {
-            Object.assign<IFormattingSettings, IFormattingSettings>(this.formatting, formattingSettings);
-        } else {
-            this.formatting = formattingSettings;
-        }
-        // Support for travis.
-        this.formatting = this.formatting
-            ? this.formatting
-            : {
-                  autopep8Args: [],
-                  autopep8Path: 'autopep8',
-                  provider: 'autopep8',
-                  blackArgs: [],
-                  blackPath: 'black',
-                  yapfArgs: [],
-                  yapfPath: 'yapf',
-              };
-        this.formatting.autopep8Path = getAbsolutePath(
-            systemVariables.resolveAny(this.formatting.autopep8Path),
-            workspaceRoot,
-        );
-        this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
-        this.formatting.blackPath = getAbsolutePath(
-            systemVariables.resolveAny(this.formatting.blackPath),
-            workspaceRoot,
-        );
 
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
         if (this.testing) {
