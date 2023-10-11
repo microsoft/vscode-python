@@ -49,10 +49,10 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { WorkspaceService } from './common/application/workspace';
 import { DynamicPythonDebugConfigurationService } from './debugger/extension/configuration/dynamicdebugConfigurationService';
 import { IInterpreterQuickPick } from './interpreter/configuration/types';
-import { registerInstallFormatterPrompt } from './providers/prompts/installFormatterPrompt';
 import { registerAllCreateEnvironmentFeatures } from './pythonEnvironments/creation/registrations';
 import { registerCreateEnvironmentTriggers } from './pythonEnvironments/creation/createEnvironmentTrigger';
 import { initializePersistentStateForTriggers } from './common/persistentState';
+import { logAndNotifyOnFormatterSetting } from './logging/settingLogs';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -185,7 +185,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
                 ),
             );
 
-            registerInstallFormatterPrompt(serviceContainer);
+            logAndNotifyOnFormatterSetting();
             registerCreateEnvironmentTriggers(disposables);
             initializePersistentStateForTriggers(ext.context);
         }
