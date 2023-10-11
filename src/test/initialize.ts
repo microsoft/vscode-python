@@ -38,7 +38,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
         // When running smoke tests, we won't have access to these.
         const configSettings = await import('../client/common/configSettings');
         // Dispose any cached python settings (used only in test env).
-        configSettings.PythonSettings.dispose();
+        // configSettings.PythonSettings.dispose();
     }
 
     return (api as any) as IExtensionTestApi;
