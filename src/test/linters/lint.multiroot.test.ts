@@ -3,11 +3,7 @@ import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, Uri, workspace } from 'vscode';
 import { LanguageServerType } from '../../client/activation/types';
 import { PythonSettings } from '../../client/common/configSettings';
-import {
-    FormatterProductPathService,
-    LinterProductPathService,
-    TestFrameworkProductPathService,
-} from '../../client/common/installer/productPath';
+import { LinterProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, Product, ProductType } from '../../client/common/types';
@@ -72,11 +68,6 @@ suite('Multiroot Linting', () => {
         );
         ioc.registerInterpreterStorageTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            FormatterProductPathService,
-            ProductType.Formatter,
-        );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             LinterProductPathService,

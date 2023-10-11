@@ -22,9 +22,6 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.pylint, ProductType.Linter);
         this.ProductTypes.set(Product.pytest, ProductType.TestFramework);
         this.ProductTypes.set(Product.unittest, ProductType.TestFramework);
-        this.ProductTypes.set(Product.autopep8, ProductType.Formatter);
-        this.ProductTypes.set(Product.black, ProductType.Formatter);
-        this.ProductTypes.set(Product.yapf, ProductType.Formatter);
         this.ProductTypes.set(Product.tensorboard, ProductType.DataScience);
         this.ProductTypes.set(Product.torchProfilerInstallName, ProductType.DataScience);
         this.ProductTypes.set(Product.torchProfilerImportName, ProductType.DataScience);

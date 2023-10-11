@@ -10,7 +10,7 @@ import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
-import { Commands, PYTHON, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
+import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import {
@@ -25,11 +25,9 @@ import { noop } from './common/utils/misc';
 import { DebuggerTypeName } from './debugger/constants';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugConfigurationService, IDynamicDebugConfigurationService } from './debugger/extension/types';
-import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { TerminalProvider } from './providers/terminalProvider';
@@ -110,7 +108,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
 // See https://github.com/microsoft/vscode-python/issues/10454.
 
 async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
-    const { context, legacyIOC } = ext;
+    const { legacyIOC } = ext;
     const { serviceManager, serviceContainer } = legacyIOC;
 
     // register "services"
@@ -125,7 +123,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     // Feature specific registrations.
     unitTestsRegisterTypes(serviceManager);
     lintersRegisterTypes(serviceManager);
-    formattersRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
@@ -134,7 +131,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     await setDefaultLanguageServer(extensions, serviceManager);
 
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     // Settings are dependent on Experiment service, so we need to initialize it after experiments are activated.
     serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings().register();
 
@@ -165,19 +161,8 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
             serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
-            const pythonSettings = configuration.getSettings();
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
-
-            if (
-                pythonSettings &&
-                pythonSettings.formatting &&
-                pythonSettings.formatting.provider !== 'internalConsole'
-            ) {
-                const formatProvider = new PythonFormattingEditProvider(context, serviceContainer);
-                disposables.push(languages.registerDocumentFormattingEditProvider(PYTHON, formatProvider));
-                disposables.push(languages.registerDocumentRangeFormattingEditProvider(PYTHON, formatProvider));
-            }
 
             disposables.push(new ReplProvider(serviceContainer));
 

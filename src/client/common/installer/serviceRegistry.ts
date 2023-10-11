@@ -11,7 +11,6 @@ import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
 import {
     DataScienceProductPathService,
-    FormatterProductPathService,
     LinterProductPathService,
     TestFrameworkProductPathService,
 } from './productPath';
@@ -25,11 +24,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller);
     serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
     serviceManager.addSingleton<IProductService>(IProductService, ProductService);
-    serviceManager.addSingleton<IProductPathService>(
-        IProductPathService,
-        FormatterProductPathService,
-        ProductType.Formatter,
-    );
     serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
     serviceManager.addSingleton<IProductPathService>(
         IProductPathService,

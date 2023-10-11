@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IFormatterHelper } from '../../formatters/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager } from '../../linters/types';
 import { ITestingService } from '../../testing/types';
@@ -34,19 +33,6 @@ export abstract class BaseProductPathsService implements IProductPathService {
         return (
             typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName
         );
-    }
-}
-
-@injectable()
-export class FormatterProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const settings = this.configService.getSettings(resource);
-        const formatHelper = this.serviceContainer.get<IFormatterHelper>(IFormatterHelper);
-        const settingsPropNames = formatHelper.getSettingsPropertyNames(product);
-        return settings.formatting[settingsPropNames.pathName] as string;
     }
 }
 

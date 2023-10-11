@@ -12,21 +12,12 @@ import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
 import {
     BaseProductPathsService,
-    FormatterProductPathService,
     LinterProductPathService,
     TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
-import {
-    IConfigurationService,
-    IFormattingSettings,
-    IInstaller,
-    IPythonSettings,
-    Product,
-    ProductType,
-} from '../../../client/common/types';
-import { IFormatterHelper } from '../../../client/formatters/types';
+import { IConfigurationService, IInstaller, IPythonSettings, Product, ProductType } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
 import { ITestsHelper } from '../../../client/testing/common/types';
@@ -44,7 +35,6 @@ suite('Product Path', () => {
                 }
             }
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-            let formattingSettings: TypeMoq.IMock<IFormattingSettings>;
             let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
             let configService: TypeMoq.IMock<IConfigurationService>;
             let productInstaller: ProductInstaller;
@@ -54,12 +44,10 @@ suite('Product Path', () => {
                 }
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 configService = TypeMoq.Mock.ofType<IConfigurationService>();
-                formattingSettings = TypeMoq.Mock.ofType<IFormattingSettings>();
                 unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>();
 
                 productInstaller = new ProductInstaller(serviceContainer.object);
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-                pythonSettings.setup((p) => p.formatting).returns(() => formattingSettings.object);
                 pythonSettings.setup((p) => p.testing).returns(() => unitTestSettings.object);
                 configService
                     .setup((s) => s.getSettings(TypeMoq.It.isValue(resource)))
@@ -99,37 +87,6 @@ suite('Product Path', () => {
             });
             const productType = new ProductService().getProductType(product.value);
             switch (productType) {
-                case ProductType.Formatter: {
-                    test(`Ensure path is returned for ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
-                        const productPathService = new FormatterProductPathService(serviceContainer.object);
-                        const formatterHelper = TypeMoq.Mock.ofType<IFormatterHelper>();
-                        const expectedPath = 'Some Path';
-                        serviceContainer
-                            .setup((s) => s.get(TypeMoq.It.isValue(IFormatterHelper), TypeMoq.It.isAny()))
-                            .returns(() => formatterHelper.object);
-                        formattingSettings
-                            .setup((f) => f.autopep8Path)
-                            .returns(() => expectedPath)
-                            .verifiable(TypeMoq.Times.atLeastOnce());
-                        formatterHelper
-                            .setup((f) => f.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
-                            .returns(() => {
-                                return {
-                                    pathName: 'autopep8Path',
-                                    argsName: 'autopep8Args',
-                                };
-                            })
-                            .verifiable(TypeMoq.Times.once());
-
-                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        expect(value).to.be.equal(expectedPath);
-                        formattingSettings.verifyAll();
-                        formatterHelper.verifyAll();
-                    });
-                    break;
-                }
                 case ProductType.Linter: {
                     test(`Ensure path is returned for ${product.name} (${
                         resource ? 'With a resource' : 'without a resource'

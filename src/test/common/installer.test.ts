@@ -28,11 +28,7 @@ import { EditorUtils } from '../../client/common/editor';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
-import {
-    FormatterProductPathService,
-    LinterProductPathService,
-    TestFrameworkProductPathService,
-} from '../../client/common/installer/productPath';
+import { LinterProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
@@ -131,7 +127,6 @@ suite('Installer', () => {
         ioc.registerFileSystemTypes();
         ioc.registerVariableTypes();
         ioc.registerLinterTypes();
-        ioc.registerFormatterTypes();
         ioc.registerInterpreterStorageTypes();
 
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
@@ -159,11 +154,6 @@ suite('Installer', () => {
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            FormatterProductPathService,
-            ProductType.Formatter,
-        );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             LinterProductPathService,

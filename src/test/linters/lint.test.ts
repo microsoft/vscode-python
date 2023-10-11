@@ -6,11 +6,7 @@
 import * as assert from 'assert';
 import { ConfigurationTarget } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
-import {
-    FormatterProductPathService,
-    LinterProductPathService,
-    TestFrameworkProductPathService,
-} from '../../client/common/installer/productPath';
+import { LinterProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, ILintingSettings, ProductType } from '../../client/common/types';
@@ -50,11 +46,6 @@ suite('Linting Settings', () => {
         configService = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         linterManager = new LinterManager(configService);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(
-            IProductPathService,
-            FormatterProductPathService,
-            ProductType.Formatter,
-        );
         ioc.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
             LinterProductPathService,

@@ -87,7 +87,6 @@ export enum ProductInstallStatus {
 
 export enum ProductType {
     Linter = 'Linter',
-    Formatter = 'Formatter',
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
     DataScience = 'DataScience',
@@ -102,11 +101,8 @@ export enum Product {
     pylama = 6,
     prospector = 7,
     pydocstyle = 8,
-    yapf = 9,
-    autopep8 = 10,
     mypy = 11,
     unittest = 12,
-    black = 16,
     bandit = 17,
     tensorboard = 24,
     torchProfilerInstallName = 25,
@@ -185,7 +181,6 @@ export interface IPythonSettings {
     readonly poetryPath: string;
     readonly devOptions: string[];
     readonly linting: ILintingSettings;
-    readonly formatting: IFormattingSettings;
     readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;

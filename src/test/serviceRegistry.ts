@@ -33,7 +33,6 @@ import {
     ITestOutputChannel,
 } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
-import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import {
@@ -145,10 +144,6 @@ export class IocContainer {
 
     public registerLinterTypes(): void {
         lintersRegisterTypes(this.serviceManager);
-    }
-
-    public registerFormatterTypes(): void {
-        formattersRegisterTypes(this.serviceManager);
     }
 
     public registerPlatformTypes(): void {

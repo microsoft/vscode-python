@@ -147,7 +147,6 @@ suite('Module Installer', () => {
             ioc.registerUnitTestTypes();
             ioc.registerVariableTypes();
             ioc.registerLinterTypes();
-            ioc.registerFormatterTypes();
             ioc.registerInterpreterStorageTypes();
 
             ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);

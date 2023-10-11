@@ -10,7 +10,6 @@ import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstalle
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
 import {
-    FormatterProductPathService,
     LinterProductPathService,
     TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
@@ -46,13 +45,6 @@ suite('Common installer Service Registry', () => {
             ),
         ).once();
         verify(serviceManager.addSingleton<IProductService>(IProductService, ProductService)).once();
-        verify(
-            serviceManager.addSingleton<IProductPathService>(
-                IProductPathService,
-                FormatterProductPathService,
-                ProductType.Formatter,
-            ),
-        ).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,

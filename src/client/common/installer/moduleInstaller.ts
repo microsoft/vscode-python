@@ -248,16 +248,10 @@ export function translateProductToModule(product: Product): string {
             return 'pylint';
         case Product.pytest:
             return 'pytest';
-        case Product.autopep8:
-            return 'autopep8';
-        case Product.black:
-            return 'black';
         case Product.pycodestyle:
             return 'pycodestyle';
         case Product.pydocstyle:
             return 'pydocstyle';
-        case Product.yapf:
-            return 'yapf';
         case Product.flake8:
             return 'flake8';
         case Product.unittest:

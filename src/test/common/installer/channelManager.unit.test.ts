@@ -57,7 +57,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
 
-        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        const channel = await installChannelManager.getInstallationChannel(Product.pytest, resource);
         expect(channel).to.equal(undefined, 'should be undefined');
         assert.ok(showNoInstallersMessage.calledOnceWith(resource));
     });
@@ -79,7 +79,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
 
-        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        const channel = await installChannelManager.getInstallationChannel(Product.pytest, resource);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
         expect(channel).to.equal(undefined, 'Channel should not be set');
@@ -107,7 +107,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
 
-        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        const channel = await installChannelManager.getInstallationChannel(Product.pytest, resource);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
         expect(channel).to.not.equal(undefined, 'Channel should be set');
