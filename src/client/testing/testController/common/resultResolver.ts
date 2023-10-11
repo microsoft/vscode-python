@@ -89,7 +89,6 @@ export class PythonResultResolver implements ITestResultResolver {
             }
             const errorNodeLabel: MarkdownString = new MarkdownString(
                 `[Show output](command:python.viewOutput) to view error logs`,
-                // `[Show output](command:python.viewOutput)`,
             );
             errorNodeLabel.isTrusted = true;
             errorNode.error = errorNodeLabel;
