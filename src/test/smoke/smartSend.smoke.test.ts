@@ -7,7 +7,7 @@ import { mock, when } from 'ts-mockito';
 import * as tasClient from 'vscode-tas-client';
 import * as sinon from 'sinon';
 import { IS_SMOKE_TEST, EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
-import { initialize } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
 import { IExperimentService } from '../../client/common/types';
 import { EnableREPLSmartSend } from '../../client/common/experiments/groups';
@@ -74,9 +74,9 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
         return undefined;
     });
 
-    // setup(initializeTest);
-    // suiteTeardown(closeActiveWindows);
-    // teardown(closeActiveWindows);
+    setup(initializeTest);
+    suiteTeardown(closeActiveWindows);
+    teardown(closeActiveWindows);
 
     test('Smart Send', async () => {
         const pythonConfig = vscode.workspace.getConfiguration('python');
@@ -151,15 +151,15 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
                 assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
             });
 
-        async function waitThirtySeconds() {
+        async function wait() {
             return new Promise<void>((resolve) => {
                 setTimeout(() => {
                     resolve();
-                }, 30000);
+                }, 10000);
             });
         }
 
-        await waitThirtySeconds();
+        await wait();
 
         const deletedFile = !(await fs.pathExists(outputFile));
         if (deletedFile) {
