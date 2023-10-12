@@ -694,7 +694,7 @@ def send_post_request(
             testUuid,
         )
         testPort = DEFAULT_PORT
-    if testUuid == None:
+    if testUuid is None:
         print(
             "Error[vscode-pytest]: TEST_UUID is not set.",
             " TEST_PORT = ",

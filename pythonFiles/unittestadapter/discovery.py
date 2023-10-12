@@ -121,15 +121,14 @@ if __name__ == "__main__":
 
     start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
 
-    testPort = int(os.environ.get("TEST_PORT"))
+    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
     testUuid = os.environ.get("TEST_UUID")
-    if testPort is None:
+    if testPort is DEFAULT_PORT:
         print(
             "Error[vscode-unittest]: TEST_PORT is not set.",
             " TEST_UUID = ",
             testUuid,
         )
-        testPort = DEFAULT_PORT
     if testUuid is not None:
         # Perform test discovery.
         payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)

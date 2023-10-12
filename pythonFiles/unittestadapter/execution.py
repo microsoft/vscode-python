@@ -301,16 +301,15 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
 
-    testPort = int(os.environ.get("TEST_PORT"))
+    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
     testUuid = os.environ.get("TEST_UUID")
-    if testPort is None:
+    if testPort is DEFAULT_PORT:
         print(
             "Error[vscode-unittest]: TEST_PORT is not set.",
             " TEST_UUID = ",
             testUuid,
         )
-        testPort = DEFAULT_PORT
-    if testUuid == None:
+    if testUuid is None:
         print(
             "Error[vscode-unittest]: TEST_UUID is not set.",
             " TEST_PORT = ",
