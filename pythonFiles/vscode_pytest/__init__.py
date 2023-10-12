@@ -20,6 +20,8 @@ from typing import Any, Dict, List, Optional, Union
 from testing_tools import socket_manager
 from typing_extensions import Literal, TypedDict
 
+DEFAULT_PORT = 45454
+
 
 class TestData(TypedDict):
     """A general class that all test objects inherit from."""
@@ -685,13 +687,20 @@ def send_post_request(
     """
     testPort = os.getenv("TEST_PORT")
     testUuid = os.getenv("TEST_UUID")
-    if (testPort is None) or (testUuid is None):
+    if testPort is None:
         print(
-            "Error[vscode-pytest]: TEST_PORT or TEST_UUID not set. TEST_PORT = ",
-            testPort,
+            "Error[vscode-pytest]: TEST_PORT is not set.",
             " TEST_UUID = ",
             testUuid,
         )
+        testPort = DEFAULT_PORT
+    if testUuid == None:
+        print(
+            "Error[vscode-pytest]: TEST_UUID is not set.",
+            " TEST_PORT = ",
+            testPort,
+        )
+        testUuid = "unknown"
     addr = ("localhost", int(testPort))
     global __socket
 

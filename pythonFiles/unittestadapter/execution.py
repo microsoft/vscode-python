@@ -27,6 +27,7 @@ ErrorType = Union[
 testPort = 0
 testUuid = 0
 START_DIR = ""
+DEFAULT_PORT = 45454
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -302,13 +303,20 @@ if __name__ == "__main__":
 
     testPort = int(os.environ.get("TEST_PORT"))
     testUuid = os.environ.get("TEST_UUID")
-    if (testPort is None) or (testUuid is None):
+    if testPort is None:
         print(
-            "Error[vscode-unittest]: TEST_PORT or TEST_UUID not set. TEST_PORT = ",
-            testPort,
+            "Error[vscode-unittest]: TEST_PORT is not set.",
             " TEST_UUID = ",
             testUuid,
         )
+        testPort = DEFAULT_PORT
+    if testUuid == None:
+        print(
+            "Error[vscode-unittest]: TEST_UUID is not set.",
+            " TEST_PORT = ",
+            testPort,
+        )
+        testUuid = "unknown"
     if test_ids_from_buffer:
         # Perform test execution.
         payload = run_tests(

@@ -78,7 +78,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_UUID = uuid.toString();
         mutableEnv.TEST_PORT = this.testServer.getPort().toString();
-
+        traceInfo(`All environment variables set for pytest discovery: ${JSON.stringify(mutableEnv)}`);
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,

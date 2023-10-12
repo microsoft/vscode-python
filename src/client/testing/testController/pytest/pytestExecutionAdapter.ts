@@ -140,6 +140,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             // add port with run test ids to env vars
             const pytestRunTestIdsPort = await utils.startTestIdServer(testIds);
             mutableEnv.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
+            traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
 
             const spawnOptions: SpawnOptions = {
                 cwd,
