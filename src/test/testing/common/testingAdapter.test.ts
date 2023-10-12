@@ -653,17 +653,21 @@ suite('End to End Tests: test adapters', () => {
                     if (data.error === undefined) {
                         // Dereference a NULL pointer
                         const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
-                        assert.notDeepEqual(indexOfTest, -1, 'Expected test to have a null pointer');
-                    } else {
-                        assert.ok(data.error, "Expected errors in 'error' field");
+                        if (indexOfTest === -1) {
+                            failureOccurred = true;
+                            failureMsg = 'Expected test to have a null pointer';
+                        }
+                    } else if (data.error.length === 0) {
+                        failureOccurred = true;
+                        failureMsg = "Expected errors in 'error' field";
                     }
                 } else {
                     const indexOfTest = JSON.stringify(data.tests).search('error');
-                    assert.notDeepEqual(
-                        indexOfTest,
-                        -1,
-                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
-                    );
+                    if (indexOfTest === -1) {
+                        failureOccurred = true;
+                        failureMsg =
+                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
+                    }
                 }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
@@ -705,22 +709,32 @@ suite('End to End Tests: test adapters', () => {
                     if (data.error === undefined) {
                         // Dereference a NULL pointer
                         const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
-                        assert.notDeepEqual(indexOfTest, -1, 'Expected test to have a null pointer');
-                    } else {
-                        assert.ok(data.error, "Expected errors in 'error' field");
+                        if (indexOfTest === -1) {
+                            failureOccurred = true;
+                            failureMsg = 'Expected test to have a null pointer';
+                        }
+                    } else if (data.error.length === 0) {
+                        failureOccurred = true;
+                        failureMsg = "Expected errors in 'error' field";
                     }
                 } else {
                     const indexOfTest = JSON.stringify(data.result).search('error');
-                    assert.notDeepEqual(
-                        indexOfTest,
-                        -1,
-                        'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.',
-                    );
+                    if (indexOfTest === -1) {
+                        failureOccurred = true;
+                        failureMsg =
+                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
+                    }
                 }
-                assert.ok(data.result, 'Expected results to be present');
+                if (data.result === undefined) {
+                    failureOccurred = true;
+                    failureMsg = 'Expected results to be present';
+                }
                 // make sure the testID is found in the results
                 const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
-                assert.notDeepEqual(indexOfTest, -1, 'Expected testId to be present');
+                if (indexOfTest === -1) {
+                    failureOccurred = true;
+                    failureMsg = 'Expected testId to be present';
+                }
             } catch (err) {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
