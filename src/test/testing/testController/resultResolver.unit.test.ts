@@ -251,7 +251,7 @@ suite('Result Resolver tests', () => {
             // builds an error item
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
 
-            if (deleteSpy.called) {
+            if (!deleteSpy.calledOnce) {
                 throw new Error("The delete method was called, but it shouldn't have been.");
             }
             if (replaceSpy.called) {
