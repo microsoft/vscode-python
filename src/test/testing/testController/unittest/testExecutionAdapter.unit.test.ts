@@ -31,12 +31,16 @@ suite('Unittest test execution adapter', () => {
 
     test('runTests should send the run command to the test server', async () => {
         let options: TestCommandOptions | undefined;
-
+        let errorBool = false;
+        let errorMessage = '';
         const stubTestServer = ({
             sendCommand(opt: TestCommandOptions, runTestIdPort?: string): Promise<void> {
                 delete opt.outChannel;
                 options = opt;
-                assert(runTestIdPort !== undefined);
+                if (runTestIdPort === undefined) {
+                    errorBool = true;
+                    errorMessage = 'runTestIdPort is undefined';
+                }
                 return Promise.resolve();
             },
             onRunDataReceived: () => {
@@ -60,6 +64,7 @@ suite('Unittest test execution adapter', () => {
                 testIds,
             };
             assert.deepStrictEqual(options, expectedOptions);
+            assert.equal(errorBool, false, errorMessage);
         });
     });
     test('runTests should respect settings.testing.cwd when present', async () => {
@@ -69,12 +74,16 @@ suite('Unittest test execution adapter', () => {
             }),
         } as unknown) as IConfigurationService;
         let options: TestCommandOptions | undefined;
-
+        let errorBool = false;
+        let errorMessage = '';
         const stubTestServer = ({
             sendCommand(opt: TestCommandOptions, runTestIdPort?: string): Promise<void> {
                 delete opt.outChannel;
                 options = opt;
-                assert(runTestIdPort !== undefined);
+                if (runTestIdPort === undefined) {
+                    errorBool = true;
+                    errorMessage = 'runTestIdPort is undefined';
+                }
                 return Promise.resolve();
             },
             onRunDataReceived: () => {
@@ -99,6 +108,7 @@ suite('Unittest test execution adapter', () => {
                 testIds,
             };
             assert.deepStrictEqual(options, expectedOptions);
+            assert.equal(errorBool, false, errorMessage);
         });
     });
 });
