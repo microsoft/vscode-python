@@ -3,7 +3,7 @@
 
 import { Disposable, EventEmitter, commands, extensions, l10n, window } from 'vscode';
 import { inject, injectable } from 'inversify';
-import { IDisposable, IDisposableRegistry, IExperimentService, IExtensions } from '../common/types';
+import { IDisposable, IDisposableRegistry, IExperimentService } from '../common/types';
 import { RecommendTensobardExtension } from '../common/experiments/groups';
 import { TENSORBOARD_EXTENSION_ID } from '../common/constants';
 
@@ -24,7 +24,6 @@ export class TensorboardExperiment {
     constructor(
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IExperimentService) experiments: IExperimentService,
-        @inject(IExtensions) extensions: IExtensions,
     ) {
         this.isExperimentEnabled = experiments.inExperimentSync(RecommendTensobardExtension.experiment);
         disposables.push(this._onDidChange);
