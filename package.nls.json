@@ -42,6 +42,7 @@
     "python.experiments.pythonTerminalEnvVarActivation.description": "Enables use of environment variables to activate terminals instead of sending activation commands.",
     "python.experiments.pythonTestAdapter.description": "Denotes the Python Test Adapter experiment.",
     "python.experiments.pythonREPLSmartSend.description": "Denotes the Python REPL Smart Send experiment.",
+    "python.experiments.pythonRecommendTensorboardExt.description": "Denotes the Tensorboard Extension recommendation experiment.",
     "python.globalModuleInstallation.description": "Whether to install Python modules globally when not using an environment.",
     "python.languageServer.description": "Defines type of the language server.",
     "python.languageServer.defaultDescription": "Automatically select a language server: Pylance if installed and available, otherwise fallback to Jedi.",

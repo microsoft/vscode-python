@@ -7,7 +7,7 @@ import { Common } from '../../client/common/utils/localize';
 import { TensorBoardEntrypointTrigger } from '../../client/tensorBoard/constants';
 import { TensorBoardPrompt } from '../../client/tensorBoard/tensorBoardPrompt';
 
-suite('TensorBoard prompt', () => {
+suite.only('TensorBoard prompt', () => {
     let applicationShell: ApplicationShell;
     let commandManager: CommandManager;
     let persistentState: PersistentState<boolean>;

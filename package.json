@@ -537,7 +537,8 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonTestAdapter",
-                            "pythonREPLSmartSend"
+                            "pythonREPLSmartSend",
+                            "pythonRecommendTensorboardExt"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -545,7 +546,8 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%"
+                            "%python.experiments.pythonREPLSmartSend.description%",
+                            "%python.experiments.pythonRecommendTensorboardExt.description%"
                         ]
                     },
                     "scope": "machine",
