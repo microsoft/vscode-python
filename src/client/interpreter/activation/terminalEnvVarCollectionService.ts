@@ -397,8 +397,8 @@ function shouldSkip(env: string) {
     return [
         '_',
         'SHLVL',
-        // Even though this maybe returned, setting it can result in output encoding errors
-        'PYTHONUTF8'
+        // Even though this maybe returned, setting it can result in output encoding errors in terminal.
+        'PYTHONUTF8',
     ].includes(env);
 }
 
