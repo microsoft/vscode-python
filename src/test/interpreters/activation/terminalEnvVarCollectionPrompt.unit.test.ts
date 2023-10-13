@@ -13,13 +13,13 @@ import {
     IPersistentStateFactory,
     IPythonSettings,
 } from '../../../client/common/types';
-import { TerminalEnvVarCollectionPrompt } from '../../../client/interpreter/activation/terminalEnvVarCollectionPrompt';
-import { ITerminalEnvVarCollectionService } from '../../../client/interpreter/activation/types';
+import { TerminalIndicatorPrompt } from '../../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { TerminalEnvVarActivation } from '../../../client/common/experiments/groups';
 import { sleep } from '../../core';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { ITerminalEnvVarCollectionService } from '../../../client/terminals/types';
 
 suite('Terminal Environment Variable Collection Prompt', () => {
     let shell: IApplicationShell;
@@ -28,7 +28,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
     let activeResourceService: IActiveResourceService;
     let terminalEnvVarCollectionService: ITerminalEnvVarCollectionService;
     let persistentStateFactory: IPersistentStateFactory;
-    let terminalEnvVarCollectionPrompt: TerminalEnvVarCollectionPrompt;
+    let terminalEnvVarCollectionPrompt: TerminalIndicatorPrompt;
     let terminalEventEmitter: EventEmitter<Terminal>;
     let notificationEnabled: IPersistentState<boolean>;
     let configurationService: IConfigurationService;
@@ -61,7 +61,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         );
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(true);
         when(terminalManager.onDidOpenTerminal).thenReturn(terminalEventEmitter.event);
-        terminalEnvVarCollectionPrompt = new TerminalEnvVarCollectionPrompt(
+        terminalEnvVarCollectionPrompt = new TerminalIndicatorPrompt(
             instance(shell),
             instance(persistentStateFactory),
             instance(terminalManager),

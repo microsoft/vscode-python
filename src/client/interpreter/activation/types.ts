@@ -21,11 +21,3 @@ export interface IEnvironmentActivationService {
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined>;
 }
-
-export const ITerminalEnvVarCollectionService = Symbol('ITerminalEnvVarCollectionService');
-export interface ITerminalEnvVarCollectionService {
-    /**
-     * Returns true if we know with high certainity the terminal prompt is set correctly for a particular resource.
-     */
-    isTerminalPromptSetCorrectly(resource?: Resource): boolean;
-}
