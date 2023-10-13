@@ -69,7 +69,7 @@ const config = {
     resolve: {
         extensions: ['.ts', '.js'],
         plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
-        conditionNames: ['require', 'node'],
+        conditionNames: ['import', 'require', 'node'],
     },
     output: {
         filename: '[name].js',
