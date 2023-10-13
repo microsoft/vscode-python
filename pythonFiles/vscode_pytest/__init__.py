@@ -302,12 +302,12 @@ def pytest_sessionfinish(session, exitstatus):
     session -- the pytest session object.
     exitstatus -- the status code of the session.
 
-    0: All tests passed successfully.
-    1: One or more tests failed.
-    2: Pytest was unable to start or run any tests due to issues with test discovery or test collection.
-    3: Pytest was interrupted by the user, for example by pressing Ctrl+C during test execution.
-    4: Pytest encountered an internal error or exception during test execution.
-    5: Pytest was unable to find any tests to run.
+    Exit code 0: All tests were collected and passed successfully
+    Exit code 1: Tests were collected and run but some of the tests failed
+    Exit code 2: Test execution was interrupted by the user
+    Exit code 3: Internal error happened while executing tests
+    Exit code 4: pytest command line usage error
+    Exit code 5: No tests were collected
     """
     cwd = pathlib.Path.cwd()
     if IS_DISCOVERY:

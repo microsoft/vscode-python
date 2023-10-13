@@ -120,12 +120,10 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             }
         });
         result?.proc?.on('close', (code, signal) => {
-            // pytest exits with code of 2 when "Pytest was unable to start or run any tests due
-            // to issues with test discovery or test collection."
-            // this means tests were found, but none were run which is fine for discovery.
-            if (code !== 0 && code !== 2) {
+            // pytest exits with code of 5 when 0 tests are found- this is not a failure for discovery.
+            if (code !== 0 && code !== 5) {
                 traceError(
-                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
+                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri}. Creating and sending error discovery payload`,
                 );
                 // if the child process exited with a non-zero exit code, then we need to send the error payload.
                 this.testServer.triggerDiscoveryDataReceivedEvent({
