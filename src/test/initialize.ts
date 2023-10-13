@@ -31,13 +31,11 @@ export async function initializePython() {
 
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
-    // before extension start activating
+
     const pythonConfig = vscode.workspace.getConfiguration('python');
     await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
     await pythonConfig.update('experiments.optOutFrom', [], vscode.ConfigurationTarget.Global);
     const api = await activateExtension();
-    // const pythonConfig = vscode.workspace.getConfiguration('python');
-    // await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
         // const configSettings = await import('../client/common/configSettings');
