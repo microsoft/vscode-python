@@ -10,6 +10,7 @@ import {
     WorkspaceFolder,
     GlobalEnvironmentVariableCollection,
     EnvironmentVariableScope,
+    EnvironmentVariableMutatorOptions,
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
@@ -172,6 +173,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
+        const prependOptions = this.getPrependOptions();
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
@@ -186,10 +188,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     if (key === 'PS1') {
                         // We cannot have the full PS1 without executing in terminal, which we do not. Hence prepend it.
                         traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                        envVarCollection.prepend(key, value, {
-                            applyAtShellIntegration: true,
-                            applyAtProcessCreation: false,
-                        });
+                        envVarCollection.prepend(key, value, prependOptions);
                         return;
                     }
                     if (key === 'PATH') {
@@ -199,19 +198,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             const prependedPart = env.PATH.slice(0, -processEnv.PATH.length);
                             value = prependedPart;
                             traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                            envVarCollection.prepend(key, value, {
-                                applyAtShellIntegration: true,
-                                applyAtProcessCreation: true,
-                            });
+                            envVarCollection.prepend(key, value, prependOptions);
                         } else {
                             if (!value.endsWith(this.separator)) {
                                 value = value.concat(this.separator);
                             }
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
-                            envVarCollection.prepend(key, value, {
-                                applyAtShellIntegration: true,
-                                applyAtProcessCreation: true,
-                            });
+                            envVarCollection.prepend(key, value, prependOptions);
                         }
                         return;
                     }
@@ -328,6 +321,22 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         } catch (ex) {
             traceWarn(`Microvenv failed as it is using proposed API which is constantly changing`, ex);
         }
+    }
+
+    private getPrependOptions(): EnvironmentVariableMutatorOptions {
+        const value = this.workspaceService
+            .getConfiguration('terminal')
+            .get<boolean>('integrated.shellIntegration.enabled');
+        // Make sure to prepend either at shell integration or process creation, not both.
+        return value
+            ? {
+                  applyAtShellIntegration: true,
+                  applyAtProcessCreation: false,
+              }
+            : {
+                  applyAtShellIntegration: false,
+                  applyAtProcessCreation: true,
+              };
     }
 
     private getEnvironmentVariableCollection(scope: EnvironmentVariableScope = {}) {
