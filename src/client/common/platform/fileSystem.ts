@@ -209,6 +209,9 @@ export class RawFileSystem implements IRawFileSystem {
     public async copyFile(src: string, dest: string): Promise<void> {
         const srcURI = vscode.Uri.file(src);
         const destURI = vscode.Uri.file(dest);
+        if (!(await this.pathExists(this.paths.dirname(dest)))) {
+            await this.mkdirp(this.paths.dirname(dest));
+        }
         // The VS Code API will automatically create the target parent
         // directory if it does not exist (even though the docs imply
         // otherwise).  So we have to manually stat, just to be sure.

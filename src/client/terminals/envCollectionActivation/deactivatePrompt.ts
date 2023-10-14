@@ -2,9 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../../common/application/types';
-import { IBrowserService, IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
+import { Position, TextDocument, Uri, window, workspace, WorkspaceEdit, Range, TextEditorRevealType } from 'vscode';
+import * as path from 'path';
+import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
+import {
+    IBrowserService,
+    IDisposableRegistry,
+    IExperimentService,
+    IPersistentState,
+    IPersistentStateFactory,
+} from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
@@ -12,14 +19,20 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
+import { IFileSystem } from '../../common/platform/types';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { shellExec } from '../../common/process/rawProcessApis';
+import { createDeferred } from '../../common/utils/async';
+import { getScriptsForShell } from './deactivateScripts';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
-
 @injectable()
 export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
+    private readonly codeCLI: string;
 
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -28,8 +41,12 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IBrowserService) private readonly browserService: IBrowserService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
-    ) {}
+    ) {
+        this.codeCLI = this.appEnvironment.channel === 'insiders' ? 'code-insiders' : 'code';
+    }
 
     public async activate(): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
@@ -54,19 +71,71 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                 if (interpreter?.type !== PythonEnvType.Virtual) {
                     return;
                 }
-                await this.notifyUsers();
+                await this.notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
             }),
         );
     }
 
-    private async notifyUsers(): Promise<void> {
+    private async notifyUsers(shellType: TerminalShellType): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
-            terminalDeactivationPromptKey,
+            `${terminalDeactivationPromptKey}-${shellType}`,
             true,
         );
         if (!notificationPromptEnabled.value) {
             return;
         }
+        const scriptInfo = getScriptsForShell(shellType);
+        if (!scriptInfo) {
+            await this.showGeneralNotification(notificationPromptEnabled);
+            return;
+        }
+        const { initScriptPath, source, destination, initContents } = scriptInfo;
+        const name = path.basename(initScriptPath);
+        const prompts = [`Edit ${name}`, Common.doNotShowAgain];
+        const selection = await this.appShell.showWarningMessage(
+            Interpreters.terminalDeactivateShellSpecificPrompt.format(name),
+            ...prompts,
+        );
+        if (!selection) {
+            return;
+        }
+        if (selection === prompts[0]) {
+            await this.fs.copyFile(source, destination);
+            await this.openScriptWithEdits(initScriptPath, initContents);
+            // await notificationPromptEnabled.updateValue(false);
+        }
+        if (selection === prompts[1]) {
+            await notificationPromptEnabled.updateValue(false);
+        }
+    }
+
+    private async openScriptWithEdits(scriptPath: string, content: string) {
+        const document = await this.openScript(scriptPath);
+        const editorEdit = new WorkspaceEdit();
+        content = `\n
+# >>> VSCode venv deactivate hook >>>
+${content}
+# <<< VSCode venv deactivate hook <<<`;
+        const editor = await window.showTextDocument(document);
+        editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
+        workspace.applyEdit(editorEdit); // Reveal the edits
+        const start = new Position(document.lineCount - 1, 0);
+        const end = new Position(document.lineCount + content.split('\n').length - 2, 0);
+        editor.revealRange(new Range(start, end), TextEditorRevealType.AtTop);
+    }
+
+    private async openScript(scriptPath: string) {
+        const deferred = createDeferred<TextDocument>();
+        this.documentManager.onDidChangeActiveTextEditor((e) => {
+            if (e) {
+                deferred.resolve(e.document);
+            }
+        });
+        await shellExec(`${this.codeCLI} ${scriptPath}`, { shell: this.appEnvironment.shell });
+        return deferred.promise;
+    }
+
+    private async showGeneralNotification(notificationPromptEnabled: IPersistentState<boolean>): Promise<void> {
         const prompts = [Common.seeInstructions, Interpreters.deactivateDoneButton, Common.doNotShowAgain];
         const telemetrySelections: ['See Instructions', 'Done, it works', "Don't show again"] = [
             'See Instructions',

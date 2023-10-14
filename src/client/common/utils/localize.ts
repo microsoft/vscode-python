@@ -201,6 +201,9 @@ export namespace Interpreters {
     export const terminalDeactivatePrompt = l10n.t(
         'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved with a few simple steps.',
     );
+    export const terminalDeactivateShellSpecificPrompt = l10n.t(
+        'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved by appending a line to "{0}" and restarting the shell. [Learn more](https://aka.ms/AAmx2ft).',
+    );
     export const deactivateDoneButton = l10n.t('Done, it works');
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
