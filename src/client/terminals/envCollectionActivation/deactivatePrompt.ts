@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Position, TextDocument, Uri, window, workspace, WorkspaceEdit, Range, TextEditorRevealType } from 'vscode';
-import * as path from 'path';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
 import {
     IBrowserService,
@@ -25,7 +24,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { shellExec } from '../../common/process/rawProcessApis';
 import { createDeferred } from '../../common/utils/async';
-import { getScriptsForShell } from './deactivateScripts';
+import { getDeactivateShellInfo } from './deactivateScripts';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -84,16 +83,15 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const scriptInfo = getScriptsForShell(shellType);
+        const scriptInfo = getDeactivateShellInfo(shellType);
         if (!scriptInfo) {
             await this.showGeneralNotification(notificationPromptEnabled);
             return;
         }
-        const { initScriptPath, source, destination, initContents } = scriptInfo;
-        const name = path.basename(initScriptPath);
-        const prompts = [`Edit ${name}`, Common.doNotShowAgain];
+        const { initScript, source, destination } = scriptInfo;
+        const prompts = [`Edit ${initScript.displayName}`, Common.doNotShowAgain];
         const selection = await this.appShell.showWarningMessage(
-            Interpreters.terminalDeactivateShellSpecificPrompt.format(name),
+            Interpreters.terminalDeactivateShellSpecificPrompt.format(initScript.displayName),
             ...prompts,
         );
         if (!selection) {
@@ -101,7 +99,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         }
         if (selection === prompts[0]) {
             await this.fs.copyFile(source, destination);
-            await this.openScriptWithEdits(initScriptPath, initContents);
+            await this.openScriptWithEdits(initScript.path, initScript.contents);
             // await notificationPromptEnabled.updateValue(false);
         }
         if (selection === prompts[1]) {
@@ -119,8 +117,8 @@ ${content}
         const editor = await window.showTextDocument(document);
         editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
         workspace.applyEdit(editorEdit); // Reveal the edits
-        const start = new Position(document.lineCount - 1, 0);
-        const end = new Position(document.lineCount + content.split('\n').length - 2, 0);
+        const start = new Position(document.lineCount - 3, 0);
+        const end = new Position(document.lineCount, 0);
         editor.revealRange(new Range(start, end), TextEditorRevealType.AtTop);
     }
 

@@ -1,11 +1,23 @@
+/* eslint-disable no-case-declarations */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
+import * as paths from 'path';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { TerminalShellType } from '../../common/terminal/types';
 
-type ShellScripts = {
+type InitScript = {
+    /**
+     * Display name of init script for the shell.
+     */
+    displayName: string;
+    /**
+     * Path to init script for the shell.
+     */
+    path: string;
+};
+
+type DeactivateShellInfo = {
     /**
      * Source deactivate script to copy.
      */
@@ -14,57 +26,77 @@ type ShellScripts = {
      * Destination to copy deactivate script to.
      */
     destination: string;
-    /**
-     * Path to init script for the shell.
-     */
-    initScriptPath: string;
-    /**
-     * Contents to add to init script.
-     */
-    initContents: string;
+    initScript: InitScript & {
+        /**
+         * Contents to add to init script.
+         */
+        contents: string;
+    };
 };
 
 // eslint-disable-next-line global-require
 const untildify: (value: string) => string = require('untildify');
 
-export function getScriptsForShell(shellType: TerminalShellType): ShellScripts | undefined {
+export function getDeactivateShellInfo(shellType: TerminalShellType): DeactivateShellInfo | undefined {
     switch (shellType) {
         case TerminalShellType.bash:
-            return {
-                source: path.join(_SCRIPTS_DIR, 'deactivate'),
-                destination: untildify('~/.vscode-python/deactivate'),
-                initScriptPath: untildify(`~/.bashrc`),
-                initContents: `source ~/.vscode-python/deactivate`,
-            };
+            return buildInfo(
+                'deactivate',
+                {
+                    displayName: '~/.bashrc',
+                    path: untildify('~/.bashrc'),
+                },
+                `source {0}`,
+            );
         case TerminalShellType.powershell:
-            return {
-                source: path.join(_SCRIPTS_DIR, 'deactivate.ps1'),
-                destination: untildify('~/.vscode-python/deactivate.ps1'),
-                initScriptPath: '$Profile',
-                initContents: `source ~/.vscode-python/deactivate.ps1`,
-            };
+            return buildInfo(
+                'deactivate.ps1',
+                {
+                    displayName: '$Profile',
+                    path: untildify('$Profile'),
+                },
+                `& "{0}"`,
+            );
         case TerminalShellType.zsh:
-            return {
-                source: path.join(_SCRIPTS_DIR, 'deactivate'),
-                destination: untildify('~/.vscode-python/deactivate'),
-                initScriptPath: untildify(`~/.zshrc`),
-                initContents: `source ~/.vscode-python/deactivate`,
-            };
+            return buildInfo(
+                'deactivate',
+                {
+                    displayName: '~/.zshrc',
+                    path: untildify('~/.zshrc'),
+                },
+                `source {0}`,
+            );
         case TerminalShellType.fish:
-            return {
-                source: path.join(_SCRIPTS_DIR, 'deactivate.fish'),
-                destination: untildify('~/.vscode-python/deactivate.fish'),
-                initScriptPath: '$__fish_config_dir/config.fish',
-                initContents: `source ~/.vscode-python/deactivate.fish`,
-            };
+            return buildInfo(
+                'deactivate.fish',
+                {
+                    displayName: 'config.fish',
+                    path: untildify('$__fish_config_dir/config.fish'),
+                },
+                `source {0}`,
+            );
         case TerminalShellType.cshell:
-            return {
-                source: path.join(_SCRIPTS_DIR, 'deactivate.csh'),
-                destination: untildify('~/.vscode-python/deactivate.csh'),
-                initScriptPath: untildify(`~/.cshrc`),
-                initContents: `source ~/.vscode-python/deactivate.csh`,
-            };
+            return buildInfo(
+                'deactivate.csh',
+                {
+                    displayName: '~/.cshrc',
+                    path: untildify('~/.cshrc'),
+                },
+                `source {0}`,
+            );
         default:
             return undefined;
     }
+}
+
+function buildInfo(scriptName: string, initScript: InitScript, scriptCommandFormat: string) {
+    const scriptPath = `~/.vscode-python/${scriptName}`;
+    return {
+        source: paths.join(_SCRIPTS_DIR, scriptName),
+        destination: untildify(scriptPath),
+        initScript: {
+            ...initScript,
+            contents: scriptCommandFormat.format(scriptPath),
+        },
+    };
 }
