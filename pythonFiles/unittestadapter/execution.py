@@ -20,6 +20,7 @@ sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 from testing_tools import process_json_util, socket_manager
 from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
+from django_runner import runner
 
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
@@ -103,7 +104,6 @@ class UnittestTestResult(unittest.TextTestResult):
         subtest: Union[unittest.TestCase, None] = None,
     ):
         tb = None
-
         message = ""
         # error is a tuple of the form returned by sys.exc_info(): (type, value, traceback).
         if error is not None:
@@ -128,9 +128,16 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
         self.formatted[test_id] = result
-        if testPort == 0 or testUuid == 0:
-            print("Error sending response, port or uuid unknown to python server.")
-        send_run_data(result, testPort, testUuid)
+        testPort2 = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
+        testUuid2 = os.environ.get("TEST_UUID")
+        if testPort2 == 0 or testUuid2 == 0:
+            print(
+                "Error sending response, port or uuid unknown to python server.",
+                testPort,
+                testUuid,
+            )
+
+        send_run_data(result, testPort2, testUuid2)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -318,9 +325,19 @@ if __name__ == "__main__":
         testUuid = "unknown"
     if test_ids_from_buffer:
         # Perform test execution.
-        payload = run_tests(
-            start_dir, test_ids_from_buffer, pattern, top_level_dir, testUuid
-        )
+
+        # get django test boolean
+        django_test_enabled = os.environ.get("DJANGO_TEST_ENABLED")
+        print("DJANGO_TEST_ENABLED = ", django_test_enabled)
+        if django_test_enabled:
+            # run django runner
+            print("running django runner")
+            runner()
+        else:
+            print("running unittest runner")
+            payload = run_tests(
+                start_dir, test_ids_from_buffer, pattern, top_level_dir, testUuid
+            )
     else:
         cwd = os.path.abspath(start_dir)
         status = TestExecutionStatus.error

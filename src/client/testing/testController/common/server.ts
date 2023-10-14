@@ -184,6 +184,16 @@ export class PythonTestServer implements ITestServer, Disposable {
         mutableEnv.TEST_PORT = this.getPort().toString();
         mutableEnv.RUN_TEST_IDS_PORT = runTestIdPort;
 
+        const isRun = runTestIdPort !== undefined;
+
+        // NEEDS TO BE UNCOMMENTED TO GET DJANGO WORKING
+        // if (isRun) {
+        //     mutableEnv.DJANGO_TEST_ENABLED = 'true';
+        //     mutableEnv.MANAGE_PY_PATH = [options.cwd, 'manage.py'].join('/');
+        //     console.log('DJANGO_TEST_ENABLED', mutableEnv.DJANGO_TEST_ENABLED);
+        //     console.log('MANAGE_PY_PATH', mutableEnv.MANAGE_PY_PATH);
+        // }
+
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
@@ -191,7 +201,7 @@ export class PythonTestServer implements ITestServer, Disposable {
             outputChannel: options.outChannel,
             env: mutableEnv,
         };
-        const isRun = runTestIdPort !== undefined;
+
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
