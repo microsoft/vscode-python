@@ -10,9 +10,9 @@ import { isTestExecution } from '../constants';
 import { traceInfo } from '../../logging';
 
 export function inTerminalEnvVarExperiment(experimentService: IExperimentService): boolean {
-    if (!isTestExecution() && workspace.workspaceFile && env.remoteName) {
+    if (!isTestExecution() && workspace.workspaceFolders && env.remoteName && workspace.workspaceFolders?.length > 1) {
         // TODO: Remove this if statement once https://github.com/microsoft/vscode/issues/180486 is fixed.
-        traceInfo('Not enabling terminal env var experiment in remote workspaces');
+        traceInfo('Not enabling terminal env var experiment in multiroot remote workspaces');
         return false;
     }
     if (!experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)) {
