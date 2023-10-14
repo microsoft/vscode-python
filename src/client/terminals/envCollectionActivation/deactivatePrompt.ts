@@ -23,8 +23,9 @@ import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { shellExec } from '../../common/process/rawProcessApis';
-import { createDeferred } from '../../common/utils/async';
+import { createDeferred, sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
+import { isTestExecution } from '../../common/constants';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -50,6 +51,10 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
     public async activate(): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             return;
+        }
+        if (!isTestExecution()) {
+            // Avoid showing prompt until startup completes.
+            await sleep(5000);
         }
         this.disposableRegistry.push(
             this.appShell.onDidWriteTerminalData(async (e) => {
@@ -109,14 +114,18 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
 
     private async openScriptWithEdits(scriptPath: string, content: string) {
         const document = await this.openScript(scriptPath);
-        const editorEdit = new WorkspaceEdit();
         content = `
 # >>> VSCode venv deactivate hook >>>
 ${content}
 # <<< VSCode venv deactivate hook <<<`;
-        const editor = await window.showTextDocument(document);
+        // If script already has the hook, don't add it again.
+        if (document.getText().includes('VSCode venv deactivate hook')) {
+            return;
+        }
+        const editor = await this.documentManager.showTextDocument(document);
+        const editorEdit = new WorkspaceEdit();
         editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
-        workspace.applyEdit(editorEdit); // Reveal the edits
+        await this.documentManager.applyEdit(editorEdit); // Reveal the edits
         const lastLine = new Position(document.lineCount, 0);
         editor.revealRange(new Range(lastLine, lastLine), TextEditorRevealType.AtTop);
     }

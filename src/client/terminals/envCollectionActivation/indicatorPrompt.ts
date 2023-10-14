@@ -18,6 +18,8 @@ import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ITerminalEnvVarCollectionService } from '../types';
+import { sleep } from '../../common/utils/async';
+import { isTestExecution } from '../../common/constants';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
@@ -41,6 +43,10 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
     public async activate(): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             return;
+        }
+        if (!isTestExecution()) {
+            // Avoid showing prompt until startup completes.
+            await sleep(5000);
         }
         this.disposableRegistry.push(
             this.terminalManager.onDidOpenTerminal(async (terminal) => {
