@@ -100,7 +100,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         if (selection === prompts[0]) {
             await this.fs.copyFile(source, destination);
             await this.openScriptWithEdits(initScript.path, initScript.contents);
-            // await notificationPromptEnabled.updateValue(false);
+            await notificationPromptEnabled.updateValue(false);
         }
         if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);

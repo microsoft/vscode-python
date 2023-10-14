@@ -40,6 +40,7 @@ import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { ITerminalEnvVarCollectionService } from '../types';
+import { ShellIntegrationShells } from './shellIntegration';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -266,9 +267,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = this.workspaceService
-                .getConfiguration('terminal')
-                .get<boolean>('integrated.shellIntegration.enabled');
+            const config = this.isShellIntegrationEnabled();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -324,11 +323,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private getPrependOptions(): EnvironmentVariableMutatorOptions {
-        const value = this.workspaceService
-            .getConfiguration('terminal')
-            .get<boolean>('integrated.shellIntegration.enabled');
+        const enabled = this.isShellIntegrationEnabled();
         // Make sure to prepend either at shell integration or process creation, not both.
-        return value
+        return enabled
             ? {
                   applyAtShellIntegration: true,
                   applyAtProcessCreation: false,
@@ -337,6 +334,21 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                   applyAtShellIntegration: false,
                   applyAtProcessCreation: true,
               };
+    }
+
+    private isShellIntegrationEnabled(): boolean {
+        const isEnabled = this.workspaceService
+            .getConfiguration('terminal')
+            .get<boolean>('integrated.shellIntegration.enabled')!;
+        if (
+            isEnabled &&
+            ShellIntegrationShells.includes(identifyShellFromShellPath(this.applicationEnvironment.shell))
+        ) {
+            // Unfortunately shell integration could still've failed in remote scenarios, we can't know for sure:
+            // https://code.visualstudio.com/docs/terminal/shell-integration#_automatic-script-injection
+            return true;
+        }
+        return false;
     }
 
     private getEnvironmentVariableCollection(scope: EnvironmentVariableScope = {}) {
