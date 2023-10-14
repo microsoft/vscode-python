@@ -9,6 +9,7 @@ import {
     GlobalEnvironmentVariableCollection,
     EnvironmentVariableScope,
     EnvironmentVariableMutatorOptions,
+    ProgressLocation,
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
@@ -81,7 +82,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
-        this.progressService = new ProgressService(this.shell, Interpreters.activatingTerminals);
+        this.progressService = new ProgressService(this.shell);
     }
 
     public async activate(resource: Resource): Promise<void> {
@@ -128,7 +129,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     public async _applyCollection(resource: Resource, shell?: string): Promise<void> {
-        this.progressService.showProgress();
+        this.progressService.showProgress({
+            location: ProgressLocation.Window,
+            title: Interpreters.terminalDeactivateProgress.format(Interpreters.activatingTerminals),
+        });
         await this._applyCollectionImpl(resource, shell);
         this.progressService.hideProgress();
     }

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Position, TextDocument, Uri, WorkspaceEdit, Range, TextEditorRevealType } from 'vscode';
+import { Position, TextDocument, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
 import {
     IBrowserService,
@@ -50,7 +50,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.codeCLI = this.appEnvironment.channel === 'insiders' ? 'code-insiders' : 'code';
-        this.progressService = new ProgressService(this.shell, Interpreters.terminalDeactivateProgress);
+        this.progressService = new ProgressService(this.shell);
     }
 
     public async activate(): Promise<void> {
@@ -109,7 +109,10 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             return;
         }
         if (selection === prompts[0]) {
-            this.progressService.showProgress();
+            this.progressService.showProgress({
+                location: ProgressLocation.Window,
+                title: Interpreters.terminalDeactivateProgress.format(initScript.displayName),
+            });
             await this.fs.copyFile(source, destination);
             await this.openScriptWithEdits(initScript.path, initScript.contents);
             await notificationPromptEnabled.updateValue(false);

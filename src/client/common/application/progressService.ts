@@ -1,18 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ProgressLocation, ProgressOptions } from 'vscode';
+import { ProgressOptions } from 'vscode';
 import { Deferred, createDeferred } from '../utils/async';
 import { IApplicationShell } from './types';
 
 export class ProgressService {
     private deferred: Deferred<void> | undefined;
 
-    constructor(private readonly shell: IApplicationShell, private readonly title: string) {}
+    constructor(private readonly shell: IApplicationShell) {}
 
-    public showProgress(): void {
+    public showProgress(options: ProgressOptions): void {
         if (!this.deferred) {
-            this.createProgress();
+            this.createProgress(options);
         }
     }
 
@@ -23,12 +23,8 @@ export class ProgressService {
         }
     }
 
-    private createProgress() {
-        const progressOptions: ProgressOptions = {
-            location: ProgressLocation.Window,
-            title: this.title,
-        };
-        this.shell.withProgress(progressOptions, () => {
+    private createProgress(options: ProgressOptions) {
+        this.shell.withProgress(options, () => {
             this.deferred = createDeferred();
             return this.deferred.promise;
         });

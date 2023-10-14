@@ -198,7 +198,7 @@ export namespace Interpreters {
     export const terminalEnvVarCollectionPrompt = l10n.t(
         'The Python extension automatically activates all terminals using the selected environment, even when the name of the environment{0} is not present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
     );
-    export const terminalDeactivateProgress = l10n.t('Modifying script...');
+    export const terminalDeactivateProgress = l10n.t('Editing {0}...');
     export const terminalDeactivatePrompt = l10n.t(
         'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved with a few simple steps.',
     );
