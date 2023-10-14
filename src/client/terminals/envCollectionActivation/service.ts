@@ -267,7 +267,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = this.isShellIntegrationEnabled();
+            const config = this.isShellIntegrationActive();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -323,9 +323,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private getPrependOptions(): EnvironmentVariableMutatorOptions {
-        const enabled = this.isShellIntegrationEnabled();
-        // Make sure to prepend either at shell integration or process creation, not both.
-        return enabled
+        const isActive = this.isShellIntegrationActive();
+        // Ideally we would want to prepend exactly once, either at shell integration or process creation.
+        // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
+        return isActive
             ? {
                   applyAtShellIntegration: true,
                   applyAtProcessCreation: false,
@@ -336,7 +337,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
               };
     }
 
-    private isShellIntegrationEnabled(): boolean {
+    private isShellIntegrationActive(): boolean {
         const isEnabled = this.workspaceService
             .getConfiguration('terminal')
             .get<boolean>('integrated.shellIntegration.enabled')!;
