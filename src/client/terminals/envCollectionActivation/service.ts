@@ -4,8 +4,6 @@
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import {
-    ProgressOptions,
-    ProgressLocation,
     MarkdownString,
     WorkspaceFolder,
     GlobalEnvironmentVariableCollection,
@@ -26,9 +24,8 @@ import {
     IConfigurationService,
     IPathUtils,
 } from '../../common/types';
-import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
-import { traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../../logging';
+import { traceError, traceVerbose, traceWarn } from '../../logging';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { defaultShells } from '../../interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -41,6 +38,7 @@ import { normCase } from '../../common/platform/fs-paths';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { ITerminalEnvVarCollectionService } from '../types';
 import { ShellIntegrationShells } from './shellIntegration';
+import { ProgressService } from '../../common/application/progressService';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -58,14 +56,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         TerminalShellType.fish,
     ];
 
-    private deferred: Deferred<void> | undefined;
-
     private registeredOnce = false;
 
     /**
      * Carries default environment variables for the currently selected shell.
      */
     private processEnvVars: EnvironmentVariables | undefined;
+
+    private readonly progressService: ProgressService;
 
     private separator: string;
 
@@ -83,6 +81,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
+        this.progressService = new ProgressService(this.shell, Interpreters.activatingTerminals);
     }
 
     public async activate(resource: Resource): Promise<void> {
@@ -129,9 +128,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     public async _applyCollection(resource: Resource, shell?: string): Promise<void> {
-        this.showProgress();
+        this.progressService.showProgress();
         await this._applyCollectionImpl(resource, shell);
-        this.hideProgress();
+        this.progressService.hideProgress();
     }
 
     private async _applyCollectionImpl(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
@@ -367,32 +366,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             [workspaceFolder] = this.workspaceService.workspaceFolders;
         }
         return workspaceFolder;
-    }
-
-    @traceDecoratorVerbose('Display activating terminals')
-    private showProgress(): void {
-        if (!this.deferred) {
-            this.createProgress();
-        }
-    }
-
-    @traceDecoratorVerbose('Hide activating terminals')
-    private hideProgress(): void {
-        if (this.deferred) {
-            this.deferred.resolve();
-            this.deferred = undefined;
-        }
-    }
-
-    private createProgress() {
-        const progressOptions: ProgressOptions = {
-            location: ProgressLocation.Window,
-            title: Interpreters.activatingTerminals,
-        };
-        this.shell.withProgress(progressOptions, () => {
-            this.deferred = createDeferred();
-            return this.deferred.promise;
-        });
     }
 }
 

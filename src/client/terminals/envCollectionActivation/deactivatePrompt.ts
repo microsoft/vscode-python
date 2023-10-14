@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Position, TextDocument, Uri, window, workspace, WorkspaceEdit, Range, TextEditorRevealType } from 'vscode';
+import { Position, TextDocument, Uri, WorkspaceEdit, Range, TextEditorRevealType } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
 import {
     IBrowserService,
@@ -26,6 +26,7 @@ import { shellExec } from '../../common/process/rawProcessApis';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
 import { isTestExecution } from '../../common/constants';
+import { ProgressService } from '../../common/application/progressService';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -33,6 +34,8 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     private readonly codeCLI: string;
+
+    private readonly progressService: ProgressService;
 
     constructor(
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -43,9 +46,11 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
+        @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.codeCLI = this.appEnvironment.channel === 'insiders' ? 'code-insiders' : 'code';
+        this.progressService = new ProgressService(this.shell, Interpreters.terminalDeactivateProgress);
     }
 
     public async activate(): Promise<void> {
@@ -76,6 +81,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                     return;
                 }
                 await this.notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
+                this.progressService.hideProgress(); // Hide the progress bar if it exists.
             }),
         );
     }
@@ -103,6 +109,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             return;
         }
         if (selection === prompts[0]) {
+            this.progressService.showProgress();
             await this.fs.copyFile(source, destination);
             await this.openScriptWithEdits(initScript.path, initScript.contents);
             await notificationPromptEnabled.updateValue(false);
