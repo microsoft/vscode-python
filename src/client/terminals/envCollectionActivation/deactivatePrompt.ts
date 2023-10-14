@@ -110,16 +110,15 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
     private async openScriptWithEdits(scriptPath: string, content: string) {
         const document = await this.openScript(scriptPath);
         const editorEdit = new WorkspaceEdit();
-        content = `\n
+        content = `
 # >>> VSCode venv deactivate hook >>>
 ${content}
 # <<< VSCode venv deactivate hook <<<`;
         const editor = await window.showTextDocument(document);
         editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
         workspace.applyEdit(editorEdit); // Reveal the edits
-        const start = new Position(document.lineCount - 3, 0);
-        const end = new Position(document.lineCount, 0);
-        editor.revealRange(new Range(start, end), TextEditorRevealType.AtTop);
+        const lastLine = new Position(document.lineCount, 0);
+        editor.revealRange(new Range(lastLine, lastLine), TextEditorRevealType.AtTop);
     }
 
     private async openScript(scriptPath: string) {

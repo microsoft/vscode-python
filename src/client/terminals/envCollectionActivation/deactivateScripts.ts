@@ -2,7 +2,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as paths from 'path';
+import * as path from 'path';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { TerminalShellType } from '../../common/terminal/types';
 
@@ -12,18 +12,18 @@ type InitScript = {
      */
     displayName: string;
     /**
-     * Path to init script for the shell.
+     * Shell specific variable or path which is equivalent to the full path to init script.
      */
     path: string;
 };
 
 type DeactivateShellInfo = {
     /**
-     * Source deactivate script to copy.
+     * Full path to source deactivate script to copy.
      */
     source: string;
     /**
-     * Destination to copy deactivate script to.
+     * Full path to destination to copy deactivate script to.
      */
     destination: string;
     initScript: InitScript & {
@@ -44,7 +44,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
                 'deactivate',
                 {
                     displayName: '~/.bashrc',
-                    path: untildify('~/.bashrc'),
+                    path: '~/.bashrc',
                 },
                 `source {0}`,
             );
@@ -52,8 +52,8 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
             return buildInfo(
                 'deactivate.ps1',
                 {
-                    displayName: '$Profile',
-                    path: untildify('$Profile'),
+                    displayName: 'Powershell Profile',
+                    path: '$Profile',
                 },
                 `& "{0}"`,
             );
@@ -62,7 +62,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
                 'deactivate',
                 {
                     displayName: '~/.zshrc',
-                    path: untildify('~/.zshrc'),
+                    path: '~/.zshrc',
                 },
                 `source {0}`,
             );
@@ -71,7 +71,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
                 'deactivate.fish',
                 {
                     displayName: 'config.fish',
-                    path: untildify('$__fish_config_dir/config.fish'),
+                    path: '$__fish_config_dir/config.fish',
                 },
                 `source {0}`,
             );
@@ -80,7 +80,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
                 'deactivate.csh',
                 {
                     displayName: '~/.cshrc',
-                    path: untildify('~/.cshrc'),
+                    path: '~/.cshrc',
                 },
                 `source {0}`,
             );
@@ -92,7 +92,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
 function buildInfo(deactivate: string, initScript: InitScript, scriptCommandFormat: string) {
     const scriptPath = `~/.vscode-python/${deactivate}`;
     return {
-        source: paths.join(_SCRIPTS_DIR, deactivate),
+        source: path.join(_SCRIPTS_DIR, deactivate),
         destination: untildify(scriptPath),
         initScript: {
             ...initScript,
