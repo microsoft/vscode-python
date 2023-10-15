@@ -131,7 +131,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async _applyCollection(resource: Resource, shell?: string): Promise<void> {
         this.progressService.showProgress({
             location: ProgressLocation.Window,
-            title: Interpreters.terminalDeactivateProgress.format(Interpreters.activatingTerminals),
+            title: Interpreters.activatingTerminals,
         });
         await this._applyCollectionImpl(resource, shell);
         this.progressService.hideProgress();
