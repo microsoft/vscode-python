@@ -81,7 +81,6 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                     return;
                 }
                 await this.notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
-                this.progressService.hideProgress(); // Hide the progress bar if it exists.
             }),
         );
     }
@@ -116,6 +115,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             await this.fs.copyFile(source, destination);
             await this.openScriptWithEdits(initScript.path, initScript.contents);
             await notificationPromptEnabled.updateValue(false);
+            this.progressService.hideProgress();
         }
         if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
