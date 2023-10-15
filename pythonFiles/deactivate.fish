@@ -10,12 +10,12 @@ function deactivate  -d "Exit virtual environment and return to normal shell env
         set -e _OLD_VIRTUAL_PYTHONHOME
     end
 
-    if test -n "$_OLD_FISH_PROMPT_OVERRIDE"
-        set -e _OLD_FISH_PROMPT_OVERRIDE
-        if functions -q _old_fish_prompt
+    if test -n "$vscode_python_old_fish_prompt_OVERRIDE"
+        set -e vscode_python_old_fish_prompt_OVERRIDE
+        if functions -q vscode_python_old_fish_prompt
             functions -e fish_prompt
-            functions -c _old_fish_prompt fish_prompt
-            functions -e _old_fish_prompt
+            functions -c vscode_python_old_fish_prompt fish_prompt
+            functions -e vscode_python_old_fish_prompt
         end
     end
 
@@ -29,7 +29,7 @@ end
 # Initialize the variables required by deactivate function
 set -gx _OLD_VIRTUAL_PATH $PATH
 if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
-    functions -c fish_prompt _old_fish_prompt
+    functions -c fish_prompt vscode_python_old_fish_prompt
 end
 if set -q PYTHONHOME
     set -gx _OLD_VIRTUAL_PYTHONHOME $PYTHONHOME
