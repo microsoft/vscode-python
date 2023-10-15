@@ -81,7 +81,6 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                     return;
                 }
                 await this.notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
-                this.progressService.hideProgress(); // Hide the progress bar if it exists.
             }),
         );
     }
@@ -116,6 +115,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             await this.fs.copyFile(source, destination);
             await this.openScriptWithEdits(initScript.path, initScript.contents);
             await notificationPromptEnabled.updateValue(false);
+            this.progressService.hideProgress();
         }
         if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
@@ -124,12 +124,13 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
 
     private async openScriptWithEdits(scriptPath: string, content: string) {
         const document = await this.openScript(scriptPath);
+        const hookMarker = 'VSCode venv deactivate hook';
         content = `
-# >>> VSCode venv deactivate hook >>>
+# >>> ${hookMarker} >>>
 ${content}
-# <<< VSCode venv deactivate hook <<<`;
+# <<< ${hookMarker} <<<`;
         // If script already has the hook, don't add it again.
-        if (document.getText().includes('VSCode venv deactivate hook')) {
+        if (document.getText().includes(hookMarker)) {
             return;
         }
         const editor = await this.documentManager.showTextDocument(document);
