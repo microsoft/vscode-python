@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
-import * as TypeMoq from 'typemoq';
+// import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import { IS_SMOKE_TEST, EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
-import { IExperimentService } from '../../client/common/types';
-import { EnableREPLSmartSend } from '../../client/common/experiments/groups';
-import { IServiceContainer } from '../../client/ioc/types';
+// import { IExperimentService } from '../../client/common/types';
+// import { EnableREPLSmartSend } from '../../client/common/experiments/groups';
+// import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
     // let experimentService: TypeMoq.IMock<IExperimentService>;
