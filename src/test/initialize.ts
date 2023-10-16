@@ -59,7 +59,7 @@ export async function initializeTest(): Promise<any> {
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
         const configSettings = await import('../client/common/configSettings');
-        // // Dispose any cached python settings (used only in test env).
+        // Dispose any cached python settings (used only in test env).
         configSettings.PythonSettings.dispose();
     }
 }
