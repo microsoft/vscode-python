@@ -1,26 +1,13 @@
 import * as vscode from 'vscode';
-// import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import { IS_SMOKE_TEST, EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
-// import { IExperimentService } from '../../client/common/types';
-// import { EnableREPLSmartSend } from '../../client/common/experiments/groups';
-// import { IServiceContainer } from '../../client/ioc/types';
 
 suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
-    // let experimentService: TypeMoq.IMock<IExperimentService>;
-    // let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-
     suiteSetup(async function () {
-        // serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        // serviceContainer
-        //     .setup((s) => s.get(TypeMoq.It.isValue(IExperimentService)))
-        //     .returns(() => experimentService.object);
-        // experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        // experimentService.setup((exp) => exp.inExperimentSync(TypeMoq.It.isAny())).returns(() => true);
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
@@ -34,25 +21,6 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
     teardown(closeActiveWindows);
 
     test('Smart Send', async () => {
-        // experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-        // experimentService
-        //     .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-        //     .returns(() => true);
-        // serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        // serviceContainer
-        //     .setup((s) => s.get(TypeMoq.It.isValue(IExperimentService)))
-        //     .returns(() => experimentService.object);
-
-        // serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        // serviceContainer
-        //     .setup((s) => s.get(TypeMoq.It.isValue(IExperimentService)))
-        //     .returns(() => experimentService.object);
-        // experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-
-        // experimentService
-        //     .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-        //     .returns(() => true);
-
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
@@ -84,7 +52,6 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
-        // console.log(experimentService.object.inExperimentSync(EnableREPLSmartSend.experiment));
 
         await vscode.commands
             .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
