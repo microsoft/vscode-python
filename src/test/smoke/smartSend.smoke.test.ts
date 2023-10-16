@@ -25,8 +25,8 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
             return this.skip();
         }
         await initialize();
-        const pythonConfig = vscode.workspace.getConfiguration('python');
-        await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
+        // const pythonConfig = vscode.workspace.getConfiguration('python');
+        // await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
         return undefined;
     });
 
@@ -35,8 +35,8 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
     teardown(closeActiveWindows);
 
     test('Smart Send', async () => {
-        const pythonConfig = vscode.workspace.getConfiguration('python');
-        await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
+        // const pythonConfig = vscode.workspace.getConfiguration('python');
+        // await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
 
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         experimentService
@@ -72,7 +72,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
             'smart_send_smoke.txt',
         );
 
-        await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
+        // await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
         await fs.remove(outputFile);
 
         const textDocument = await openFile(file);
