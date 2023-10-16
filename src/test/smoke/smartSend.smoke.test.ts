@@ -15,25 +15,11 @@ import { IServiceContainer } from '../../client/ioc/types';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 
-// const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
-
 suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
-    // const extensionVersion = '1.2.3';
     let workspaceService: IWorkspaceService;
     let experimentService: TypeMoq.IMock<IExperimentService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    // let appEnvironment: IApplicationEnvironment;
-    // "keybindings": [
-    //     {
-    //         "command": "python.execSelectionInTerminal",
-    //         "key": "shift+enter",
-    //         "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused"
-    //     },
-    // function configureApplicationEnvironment(channel: Channel, version: string, contributes?: Record<string, unknown>) {
-    //     when(appEnvironment.extensionChannel).thenReturn(channel);
-    //     when(appEnvironment.extensionName).thenReturn(PVSC_EXTENSION_ID_FOR_TESTS);
-    //     when(appEnvironment.packageJson).thenReturn({ version, contributes });
-    // }
+
     function configureSettings(enabled: boolean, optInto: string[], optOutFrom: string[]) {
         when(workspaceService.getConfiguration('python')).thenReturn({
             get: (key: string) => {
@@ -57,7 +43,6 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
     suiteSetup(async function () {
         workspaceService = mock(WorkspaceService);
         configureSettings(true, ['pythonREPLSmartSend', 'EnableREPLSmartSend'], []);
-        // configureApplicationEnvironment('stable', extensionVersion);
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
@@ -83,7 +68,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
         await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
         workspaceService = mock(WorkspaceService);
         configureSettings(true, ['pythonREPLSmartSend', 'EnableREPLSmartSend'], []);
-        // configureApplicationEnvironment('stable', extensionVersion);
+
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
@@ -120,7 +105,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
             'smokeTests',
             'smart_send_smoke.txt',
         );
-        // const pythonConfig = vscode.workspace.getConfiguration('python');
+
         await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
         await fs.remove(outputFile);
 
