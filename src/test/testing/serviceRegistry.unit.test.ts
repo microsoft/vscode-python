@@ -34,9 +34,6 @@ suite('Testing_Service_Registry', () => {
     setup(() => {
         serviceManager = mock(ServiceManager);
     });
-    test('other', async () => {
-        assert.deepStrictEqual(1, 0);
-    });
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
 
