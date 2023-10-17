@@ -4,7 +4,6 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { assert } from 'chai';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import { IExtensionActivationService } from '../../client/activation/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
