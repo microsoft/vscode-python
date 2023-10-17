@@ -269,13 +269,20 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.pytestEnabled) {
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                     traceInfo(`Running discovery for pytest using the new test adapter.`);
-                    const testAdapter =
-                        this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                    testAdapter.discoverTests(
-                        this.testController,
-                        this.refreshCancellation.token,
-                        this.pythonExecFactory,
-                    );
+                    if (workspace && workspace.uri) {
+                        const testAdapter = this.testAdapters.get(workspace.uri);
+                        if (testAdapter) {
+                            testAdapter.discoverTests(
+                                this.testController,
+                                this.refreshCancellation.token,
+                                this.pythonExecFactory,
+                            );
+                        } else {
+                            traceError('Unable to find test adapter for workspace.');
+                        }
+                    } else {
+                        traceError('Unable to find workspace for given file');
+                    }
                 } else {
                     // else use OLD test discovery mechanism
                     await this.pytest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
@@ -283,13 +290,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             } else if (settings.testing.unittestEnabled) {
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                     traceInfo(`Running discovery for unittest using the new test adapter.`);
-                    const testAdapter =
-                        this.testAdapters.get(uri) || (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                    testAdapter.discoverTests(
-                        this.testController,
-                        this.refreshCancellation.token,
-                        this.pythonExecFactory,
-                    );
+                    traceInfo(`Running discovery for pytest using the new test adapter.`);
+                    if (workspace && workspace.uri) {
+                        const testAdapter = this.testAdapters.get(workspace.uri);
+                        if (testAdapter) {
+                            testAdapter.discoverTests(
+                                this.testController,
+                                this.refreshCancellation.token,
+                                this.pythonExecFactory,
+                            );
+                        } else {
+                            traceError('Unable to find test adapter for workspace.');
+                        }
+                    } else {
+                        traceError('Unable to find workspace for given file');
+                    }
                 } else {
                     // else use OLD test discovery mechanism
                     await this.unittest.refreshTestData(this.testController, uri, this.refreshCancellation.token);
