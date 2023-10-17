@@ -4,7 +4,7 @@
 # 2) pip-compile --generate-hashes requirements.in
 
 # Unittest test adapter
-typing-extensions==4.7.1
+typing-extensions==4.8.0
 
 # Fallback env creator for debian
 microvenv
