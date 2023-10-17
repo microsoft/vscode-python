@@ -1405,14 +1405,14 @@ export interface IEventNamePropertyMapping {
     [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
         /**
          * List of valid experiments in the python.experiments.optInto setting
-         * @type {string[]}
+         * @type {string}
          */
-        optedInto: string[];
+        optedInto: string;
         /**
          * List of valid experiments in the python.experiments.optOutFrom setting
-         * @type {string[]}
+         * @type {string}
          */
-        optedOutFrom: string[];
+        optedOutFrom: string;
     };
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
