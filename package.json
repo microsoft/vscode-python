@@ -22,7 +22,8 @@
         "quickPickSortByLabel",
         "testObserver",
         "quickPickItemTooltip",
-        "saveEditor"
+        "saveEditor",
+        "portsAttributes"
     ],
     "author": {
         "name": "Microsoft Corporation"

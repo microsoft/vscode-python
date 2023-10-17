@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IDisposableRegistry } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
+import { registerTestPortAttributesProvider } from '../portAttributesProvider';
 import { TestDiscoveryHelper } from './common/discoveryHelper';
 import { ITestFrameworkController, ITestDiscoveryHelper, ITestsRunner, ITestController } from './common/types';
 import { PythonTestController } from './controller';
@@ -26,4 +28,6 @@ export function registerTestControllerTypes(serviceManager: IServiceManager): vo
     serviceManager.addSingleton<ITestsRunner>(ITestsRunner, UnittestRunner, UNITTEST_PROVIDER);
     serviceManager.addSingleton<ITestController>(ITestController, PythonTestController);
     serviceManager.addBinding(ITestController, IExtensionSingleActivationService);
+    const disposables = serviceManager.get<IDisposableRegistry>(IDisposableRegistry);
+    registerTestPortAttributesProvider(disposables);
 }
