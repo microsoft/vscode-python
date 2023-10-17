@@ -2,14 +2,16 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
 
 suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
-    suiteSetup(async () => {
+    suiteSetup(async function () {
+        if (!IS_SMOKE_TEST) {
+            return this.skip();
+        }
         await initialize();
-
         return undefined;
     });
 
