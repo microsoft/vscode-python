@@ -235,6 +235,7 @@ ERROR_MESSAGE_CONST = {
 }
 
 
+@pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_runtest_protocol(item, nextitem):
     map_id_to_path[item.nodeid] = get_node_path(item)
     skipped = check_skipped_wrapper(item)
@@ -257,6 +258,7 @@ def pytest_runtest_protocol(item, nextitem):
                 "success",
                 collected_test if collected_test else None,
             )
+    yield
 
 
 def check_skipped_wrapper(item):
