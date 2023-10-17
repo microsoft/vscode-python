@@ -165,13 +165,20 @@ suite('EOT tests', () => {
                 mockProc.emit('close', 0, null);
                 client.end();
             });
-
+            let errorBool = false;
+            let errorMessage = '';
             resultResolver = new PythonResultResolver(testController, PYTEST_PROVIDER, workspaceUri);
             resultResolver._resolveExecution = async (payload, _token?) => {
                 // the payloads that get to the _resolveExecution are all data and should be successful.
                 actualCollectedResult = actualCollectedResult + JSON.stringify(payload.result);
-                assert.strictEqual(payload.status, 'success', "Expected status to be 'success'");
-                assert.ok(payload.result, 'Expected results to be present');
+                if (payload.status !== 'success') {
+                    errorBool = true;
+                    errorMessage = "Expected status to be 'success'";
+                }
+                if (!payload.result) {
+                    errorBool = true;
+                    errorMessage = 'Expected results to be present';
+                }
 
                 return Promise.resolve();
             };
@@ -208,6 +215,7 @@ suite('EOT tests', () => {
                         actualCollectedResult,
                         "Expected collected result to match 'data'",
                     );
+                    assert.strictEqual(errorBool, false, errorMessage);
                 });
         });
     });

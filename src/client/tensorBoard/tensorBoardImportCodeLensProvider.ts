@@ -3,16 +3,16 @@
 
 import { inject, injectable } from 'inversify';
 import { once } from 'lodash';
-import { CancellationToken, CodeLens, Command, languages, Position, Range, TextDocument } from 'vscode';
+import { CancellationToken, CodeLens, Command, Disposable, languages, Position, Range, TextDocument } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { Commands, PYTHON } from '../common/constants';
-import { IDisposableRegistry } from '../common/types';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { TensorBoard } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
-import { useNewTensorboardExtension } from './tensorboarExperiment';
+import { TensorboardExperiment } from './tensorboarExperiment';
 
 @injectable()
 export class TensorBoardImportCodeLensProvider implements IExtensionSingleActivationService {
@@ -25,12 +25,24 @@ export class TensorBoardImportCodeLensProvider implements IExtensionSingleActiva
         }),
     );
 
-    constructor(@inject(IDisposableRegistry) private disposables: IDisposableRegistry) {}
+    private readonly disposables: IDisposable[] = [];
+
+    constructor(
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(TensorboardExperiment) private readonly experiment: TensorboardExperiment,
+    ) {
+        disposables.push(this);
+    }
+
+    public dispose(): void {
+        Disposable.from(...this.disposables).dispose();
+    }
 
     public async activate(): Promise<void> {
-        if (useNewTensorboardExtension()) {
+        if (TensorboardExperiment.isTensorboardExtensionInstalled) {
             return;
         }
+        this.experiment.disposeOnInstallingTensorboard(this);
         this.activateInternal().ignoreErrors();
     }
 

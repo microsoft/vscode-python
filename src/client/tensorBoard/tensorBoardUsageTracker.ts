@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextEditor } from 'vscode';
+import { Disposable, TextEditor } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
@@ -12,7 +12,7 @@ import { getDocumentLines } from '../telemetry/importTracker';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { containsTensorBoardImport } from './helpers';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
-import { useNewTensorboardExtension } from './tensorboarExperiment';
+import { TensorboardExperiment } from './tensorboarExperiment';
 
 const testExecution = isTestExecution();
 
@@ -26,12 +26,20 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(TensorBoardPrompt) private prompt: TensorBoardPrompt,
-    ) {}
+        @inject(TensorboardExperiment) private readonly experiment: TensorboardExperiment,
+    ) {
+        disposables.push(this);
+    }
+
+    public dispose(): void {
+        Disposable.from(...this.disposables).dispose();
+    }
 
     public async activate(): Promise<void> {
-        if (useNewTensorboardExtension()) {
+        if (TensorboardExperiment.isTensorboardExtensionInstalled) {
             return;
         }
+        this.experiment.disposeOnInstallingTensorboard(this);
         if (testExecution) {
             await this.activateInternal();
         } else {

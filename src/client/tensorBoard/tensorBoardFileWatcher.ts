@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Disposable, FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
-import { IDisposableRegistry } from '../common/types';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
-import { useNewTensorboardExtension } from './tensorboarExperiment';
+import { TensorboardExperiment } from './tensorboarExperiment';
 
 @injectable()
 export class TensorBoardFileWatcher implements IExtensionSingleActivationService {
@@ -18,16 +18,26 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
 
     private globPatterns = ['*tfevents*', '*/*tfevents*', '*/*/*tfevents*'];
 
+    private readonly disposables: IDisposable[] = [];
+
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(TensorBoardPrompt) private tensorBoardPrompt: TensorBoardPrompt,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-    ) {}
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(TensorboardExperiment) private readonly experiment: TensorboardExperiment,
+    ) {
+        disposables.push(this);
+    }
+
+    public dispose(): void {
+        Disposable.from(...this.disposables).dispose();
+    }
 
     public async activate(): Promise<void> {
-        if (useNewTensorboardExtension()) {
+        if (TensorboardExperiment.isTensorboardExtensionInstalled) {
             return;
         }
+        this.experiment.disposeOnInstallingTensorboard(this);
         this.activateInternal().ignoreErrors();
     }
 

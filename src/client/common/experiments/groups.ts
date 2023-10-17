@@ -22,3 +22,8 @@ export enum EnableTestAdapterRewrite {
 export enum EnableREPLSmartSend {
     experiment = 'pythonREPLSmartSend',
 }
+
+// Experiment to recommend installing the tensorboard extension.
+export enum RecommendTensobardExtension {
+    experiment = 'pythonRecommendTensorboardExt',
+}

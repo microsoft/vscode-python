@@ -117,13 +117,15 @@ suite('Python Test Server, DataWithPayloadChunks', () => {
             const dataWithPayloadChunks = testCaseDataObj;
 
             await server.serverReady();
-
+            let errorOccur = false;
+            let errorMessage = '';
             server.onRunDataReceived(({ data }) => {
                 try {
                     const resultData = JSON.parse(data).result;
                     eventData = eventData + JSON.stringify(resultData);
                 } catch (e) {
-                    assert(false, 'Error parsing data');
+                    errorOccur = true;
+                    errorMessage = 'Error parsing data';
                 }
                 deferred.resolve();
             });
@@ -143,6 +145,7 @@ suite('Python Test Server, DataWithPayloadChunks', () => {
             await deferred.promise;
             const expectedResult = dataWithPayloadChunks.data;
             assert.deepStrictEqual(eventData, expectedResult);
+            assert.deepStrictEqual(errorOccur, false, errorMessage);
         });
     });
 });
