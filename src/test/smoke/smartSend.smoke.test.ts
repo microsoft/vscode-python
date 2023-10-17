@@ -2,15 +2,12 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs-extra';
 import { assert } from 'chai';
-import { IS_SMOKE_TEST, EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
 
 suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
-    suiteSetup(async function () {
-        if (!IS_SMOKE_TEST) {
-            return this.skip();
-        }
+    suiteSetup(async () => {
         await initialize();
 
         return undefined;
@@ -51,13 +48,8 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
             });
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
+        await waitForCondition(checkIfFileHasBeenCreated, 10_000, `"${outputFile}" file not created`);
 
-        await vscode.commands
-            .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
-            .then(undefined, (err) => {
-                assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
-            });
         await vscode.commands
             .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
             .then(undefined, (err) => {
