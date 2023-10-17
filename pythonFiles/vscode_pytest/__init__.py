@@ -183,6 +183,7 @@ class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     tests: Dict[str, TestOutcome]
 
 
+@pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_report_teststatus(report, config):
     """
     A pytest hook that is called when a test is called. It is called 3 times per test,
@@ -223,6 +224,7 @@ def pytest_report_teststatus(report, config):
                 "success",
                 collected_test if collected_test else None,
             )
+    yield
 
 
 ERROR_MESSAGE_CONST = {
