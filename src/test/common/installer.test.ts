@@ -24,7 +24,6 @@ import {
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { EditorUtils } from '../../client/common/editor';
 import { ExperimentService } from '../../client/common/experiments/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
@@ -70,7 +69,6 @@ import {
     IBrowserService,
     IConfigurationService,
     ICurrentProcess,
-    IEditorUtils,
     IExperimentService,
     IExtensions,
     IInstaller,
@@ -186,7 +184,6 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IDebugService>(IDebugService, DebugService);
         ioc.serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
         ioc.serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
-        ioc.serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
         ioc.serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
         ioc.serviceManager.addSingleton<ITerminalActivationHandler>(
             ITerminalActivationHandler,

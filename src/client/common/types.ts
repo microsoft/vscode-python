@@ -17,7 +17,6 @@ import {
     Memento,
     LogOutputChannel,
     Uri,
-    WorkspaceEdit,
     OutputChannel,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
@@ -379,11 +378,6 @@ export interface IExtensions {
 export const IBrowserService = Symbol('IBrowserService');
 export interface IBrowserService {
     launch(url: string): void;
-}
-
-export const IEditorUtils = Symbol('IEditorUtils');
-export interface IEditorUtils {
-    getWorkspaceEditsFromPatch(originalContents: string, patch: string, uri: Uri): WorkspaceEdit;
 }
 
 /**

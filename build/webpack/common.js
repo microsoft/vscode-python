@@ -21,7 +21,6 @@ exports.nodeModulesToExternalize = [
     'unicode/category/Nd',
     'unicode/category/Pc',
     'source-map-support',
-    'diff-match-patch',
     'sudo-prompt',
     'node-stream-zip',
     'xml2js',

@@ -28,7 +28,6 @@ import {
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PipEnvExecutionPath } from '../../client/common/configuration/executionSettings/pipEnvExecution';
-import { EditorUtils } from '../../client/common/editor';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
@@ -63,7 +62,6 @@ import {
     IBrowserService,
     IConfigurationService,
     ICurrentProcess,
-    IEditorUtils,
     IExtensions,
     IInstaller,
     IInterpreterPathService,
@@ -103,7 +101,6 @@ suite('Common - Service Registry', () => {
             [IApplicationEnvironment, ApplicationEnvironment],
             [ILanguageService, LanguageService],
             [IBrowserService, BrowserService],
-            [IEditorUtils, EditorUtils],
             [ITerminalActivator, TerminalActivator],
             [ITerminalActivationHandler, PowershellTerminalActivationFailedHandler],
             [ITerminalHelper, TerminalHelper],
