@@ -55,6 +55,11 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
             .then(undefined, (err) => {
                 assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
             });
+        await vscode.commands
+            .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
+            .then(undefined, (err) => {
+                assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
+            });
 
         async function wait() {
             return new Promise<void>((resolve) => {
