@@ -4,14 +4,10 @@
 'use strict';
 
 import { mock, when, anything, instance, verify, reset } from 'ts-mockito';
-import { EventEmitter, Terminal, TerminalDataWriteEvent, Uri } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../../../client/common/application/types';
-import {
-    IBrowserService,
-    IExperimentService,
-    IPersistentState,
-    IPersistentStateFactory,
-} from '../../../client/common/types';
+import { EventEmitter, Terminal, TerminalDataWriteEvent, TextDocument, TextEditor, Uri } from 'vscode';
+import * as sinon from 'sinon';
+import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
+import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
 import { TerminalEnvVarActivation } from '../../../client/common/experiments/groups';
 import { sleep } from '../../core';
@@ -20,6 +16,8 @@ import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { TerminalDeactivateLimitationPrompt } from '../../../client/terminals/envCollectionActivation/deactivatePrompt';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { TerminalShellType } from '../../../client/common/terminal/types';
+import { IFileSystem } from '../../../client/common/platform/types';
+import * as processApi from '../../../client/common/process/rawProcessApis';
 
 suite('Terminal Deactivation Limitation Prompt', () => {
     let shell: IApplicationShell;
@@ -29,19 +27,37 @@ suite('Terminal Deactivation Limitation Prompt', () => {
     let deactivatePrompt: TerminalDeactivateLimitationPrompt;
     let terminalWriteEvent: EventEmitter<TerminalDataWriteEvent>;
     let notificationEnabled: IPersistentState<boolean>;
-    let browserService: IBrowserService;
     let interpreterService: IInterpreterService;
-    const prompts = [Common.seeInstructions, Interpreters.deactivateDoneButton, Common.doNotShowAgain];
-    const expectedMessage = Interpreters.terminalDeactivatePrompt;
+    let documentManager: IDocumentManager;
+    let fs: IFileSystem;
+    const prompts = [Common.editSomething.format('~/.bashrc'), Common.doNotShowAgain];
+    const expectedMessage = Interpreters.terminalDeactivatePrompt.format('~/.bashrc');
 
     setup(async () => {
+        const activeEditorEvent = new EventEmitter<TextEditor | undefined>();
+        const document = ({
+            uri: Uri.file(''),
+            getText: () => '',
+        } as unknown) as TextDocument;
+        sinon.stub(processApi, 'shellExec').callsFake(async (command: string) => {
+            if (command !== 'code ~/.bashrc') {
+                throw new Error(`Unexpected command: ${command}`);
+            }
+            sleep(1500).then(() => {
+                activeEditorEvent.fire(undefined);
+                activeEditorEvent.fire({ document } as TextEditor);
+            });
+            return { stdout: '' };
+        });
+        fs = mock<IFileSystem>();
+        documentManager = mock<IDocumentManager>();
+        when(documentManager.onDidChangeActiveTextEditor).thenReturn(activeEditorEvent.event);
         shell = mock<IApplicationShell>();
         interpreterService = mock<IInterpreterService>();
         experimentService = mock<IExperimentService>();
         persistentStateFactory = mock<IPersistentStateFactory>();
         appEnvironment = mock<IApplicationEnvironment>();
         when(appEnvironment.shell).thenReturn('bash');
-        browserService = mock<IBrowserService>();
         notificationEnabled = mock<IPersistentState<boolean>>();
         terminalWriteEvent = new EventEmitter<TerminalDataWriteEvent>();
         when(persistentStateFactory.createGlobalPersistentState(anything(), true)).thenReturn(
@@ -54,8 +70,9 @@ suite('Terminal Deactivation Limitation Prompt', () => {
             instance(persistentStateFactory),
             [],
             instance(interpreterService),
-            instance(browserService),
             instance(appEnvironment),
+            instance(fs),
+            instance(documentManager),
             instance(experimentService),
         );
     });
@@ -99,7 +116,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
         await sleep(1);
 
-        verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
+        verify(shell.showWarningMessage(expectedMessage, ...prompts)).never();
     });
 
     test('When not in experiment, do not show notification for the same', async () => {
@@ -184,47 +201,25 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         verify(notificationEnabled.updateValue(false)).once();
     });
 
-    test('Disable notification if `Done, it works` is clicked', async () => {
-        const resource = Uri.file('a');
-        const terminal = ({
-            creationOptions: {
-                cwd: resource,
-            },
-        } as unknown) as Terminal;
+    test('Edit script correctly if `Edit <script>` button is clicked', async () => {
         when(notificationEnabled.value).thenReturn(true);
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
-            type: PythonEnvType.Virtual,
-        } as unknown) as PythonEnvironment);
-        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(
-            Promise.resolve(Interpreters.deactivateDoneButton),
-        );
+        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(prompts[0]));
+        when(fs.copyFile(anything(), anything())).thenResolve();
+        when(shell.withProgress(anything(), anything())).thenResolve();
+        const editor = mock<TextEditor>();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when((editor as any).then).thenReturn(undefined);
+        when(documentManager.showTextDocument(anything())).thenReturn(Promise.resolve(editor));
+        when(editor.revealRange(anything(), anything())).thenReturn();
+        when(documentManager.applyEdit(anything())).thenReturn();
 
-        await deactivatePrompt.activate();
-        terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
-        await sleep(1);
+        await deactivatePrompt._notifyUsers(TerminalShellType.bash);
 
-        verify(notificationEnabled.updateValue(false)).once();
-    });
-
-    test('Open link to workaround if `See instructions` is clicked', async () => {
-        const resource = Uri.file('a');
-        const terminal = ({
-            creationOptions: {
-                cwd: resource,
-            },
-        } as unknown) as Terminal;
-        when(notificationEnabled.value).thenReturn(true);
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
-            type: PythonEnvType.Virtual,
-        } as unknown) as PythonEnvironment);
-        when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(Common.seeInstructions));
-
-        await deactivatePrompt.activate();
-        terminalWriteEvent.fire({ data: 'Please deactivate me', terminal });
-        await sleep(1);
-
+        verify(fs.copyFile(anything(), anything())).once();
+        verify(shell.withProgress(anything(), anything())).once();
         verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
-        verify(browserService.launch(anything())).once();
+        verify(notificationEnabled.updateValue(false)).once();
+        verify(documentManager.applyEdit(anything())).once();
     });
 
     test('Do not perform any action if prompt is closed', async () => {
@@ -246,6 +241,5 @@ suite('Terminal Deactivation Limitation Prompt', () => {
 
         verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
         verify(notificationEnabled.updateValue(false)).never();
-        verify(browserService.launch(anything())).never();
     });
 });

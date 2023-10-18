@@ -61,6 +61,7 @@ export namespace Common {
     export const noIWillDoItLater = l10n.t('No, I will do it later');
     export const notNow = l10n.t('Not now');
     export const doNotShowAgain = l10n.t("Don't show again");
+    export const editSomething = l10n.t('Edit {0}');
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
@@ -200,12 +201,8 @@ export namespace Interpreters {
     );
     export const terminalDeactivateProgress = l10n.t('Editing {0}...');
     export const terminalDeactivatePrompt = l10n.t(
-        'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved with a few simple steps.',
-    );
-    export const terminalDeactivateShellSpecificPrompt = l10n.t(
         'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved by appending a line to "{0}". Be sure to restart the shell afterward. [Learn more](https://aka.ms/AAmx2ft).',
     );
-    export const deactivateDoneButton = l10n.t('Done, it works');
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
     );

@@ -4,13 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Position, TextDocument, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
-import {
-    IBrowserService,
-    IDisposableRegistry,
-    IExperimentService,
-    IPersistentState,
-    IPersistentStateFactory,
-} from '../../common/types';
+import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
@@ -20,8 +14,6 @@ import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors
 import { TerminalShellType } from '../../common/terminal/types';
 import { IFileSystem } from '../../common/platform/types';
 import { traceError } from '../../logging';
-import { sendTelemetryEvent } from '../../telemetry';
-import { EventName } from '../../telemetry/constants';
 import { shellExec } from '../../common/process/rawProcessApis';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
@@ -42,15 +34,13 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IBrowserService) private readonly browserService: IBrowserService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.codeCLI = this.appEnvironment.channel === 'insiders' ? 'code-insiders' : 'code';
-        this.progressService = new ProgressService(this.shell);
+        this.progressService = new ProgressService(this.appShell);
     }
 
     public async activate(): Promise<void> {
@@ -80,12 +70,12 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                 if (interpreter?.type !== PythonEnvType.Virtual) {
                     return;
                 }
-                await this.notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
+                await this._notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
             }),
         );
     }
 
-    private async notifyUsers(shellType: TerminalShellType): Promise<void> {
+    public async _notifyUsers(shellType: TerminalShellType): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             `${terminalDeactivationPromptKey}-${shellType}`,
             true,
@@ -95,13 +85,13 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         }
         const scriptInfo = getDeactivateShellInfo(shellType);
         if (!scriptInfo) {
-            await this.showGeneralNotification(notificationPromptEnabled);
+            // Shell integration is not supported for these shells, in which case this workaround won't work.
             return;
         }
         const { initScript, source, destination } = scriptInfo;
-        const prompts = [`Edit ${initScript.displayName}`, Common.doNotShowAgain];
+        const prompts = [Common.editSomething.format(initScript.displayName), Common.doNotShowAgain];
         const selection = await this.appShell.showWarningMessage(
-            Interpreters.terminalDeactivateShellSpecificPrompt.format(initScript.displayName),
+            Interpreters.terminalDeactivatePrompt.format(initScript.displayName),
             ...prompts,
         );
         if (!selection) {
@@ -150,28 +140,5 @@ ${content}
         });
         await shellExec(`${this.codeCLI} ${scriptPath}`, { shell: this.appEnvironment.shell });
         return deferred.promise;
-    }
-
-    private async showGeneralNotification(notificationPromptEnabled: IPersistentState<boolean>): Promise<void> {
-        const prompts = [Common.seeInstructions, Interpreters.deactivateDoneButton, Common.doNotShowAgain];
-        const telemetrySelections: ['See Instructions', 'Done, it works', "Don't show again"] = [
-            'See Instructions',
-            'Done, it works',
-            "Don't show again",
-        ];
-        const selection = await this.appShell.showWarningMessage(Interpreters.terminalDeactivatePrompt, ...prompts);
-        if (!selection) {
-            return;
-        }
-        sendTelemetryEvent(EventName.TERMINAL_DEACTIVATE_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
-        });
-        if (selection === prompts[0]) {
-            const url = `https://aka.ms/AAmx2ft`;
-            this.browserService.launch(url);
-        }
-        if (selection === prompts[1] || selection === prompts[2]) {
-            await notificationPromptEnabled.updateValue(false);
-        }
     }
 }
