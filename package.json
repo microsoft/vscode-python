@@ -83,7 +83,7 @@
                 "id": "pythonWelcome",
                 "title": "%walkthrough.pythonWelcome.title%",
                 "description": "%walkthrough.pythonWelcome.description%",
-                "when": "workspacePlatform != webworker",
+                "when": "false",
                 "steps": [
                     {
                         "id": "python.createPythonFile",
@@ -170,7 +170,7 @@
                 "id": "pythonWelcome2",
                 "title": "%walkthrough.pythonWelcome.title%",
                 "description": "%walkthrough.pythonWelcome.description%",
-                "when": "false",
+                "when": "workspacePlatform != webworker",
                 "steps": [
                     {
                         "id": "python.createPythonFolder",
