@@ -69,10 +69,7 @@ export class TensorboardExtensionIntegration {
 
     public hideCommands(): void {
         if (this.extensions.getExtension(TENSORBOARD_EXTENSION_ID)) {
-            console.error('TensorBoard extension is installed');
             void commands.executeCommand('setContext', 'python.tensorboardExtInstalled', true);
-        } else {
-            console.error('TensorBoard extension not installed');
         }
     }
 

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { l10n, ViewColumn } from 'vscode';
+import { Disposable, l10n, ViewColumn } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
@@ -14,6 +14,7 @@ import {
     IPersistentState,
     IPersistentStateFactory,
     IConfigurationService,
+    IDisposable,
 } from '../common/types';
 import { IMultiStepInputFactory } from '../common/utils/multiStepInput';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -22,7 +23,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardSession } from './tensorBoardSession';
-import { useNewTensorboardExtension } from './tensorboarExperiment';
+import { TensorboardExperiment } from './tensorboarExperiment';
 
 export const PREFERRED_VIEWGROUP = 'PythonTensorBoardWebviewPreferredViewGroup';
 
@@ -36,18 +37,22 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
 
     private hasActiveTensorBoardSessionContext: ContextKey;
 
+    private readonly disposables: IDisposable[] = [];
+
     constructor(
         @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(TensorboardExperiment) private readonly experiment: TensorboardExperiment,
     ) {
+        disposables.push(this);
         this.preferredViewGroupMemento = this.stateFactory.createGlobalPersistentState<ViewColumn>(
             PREFERRED_VIEWGROUP,
             ViewColumn.Active,
@@ -58,10 +63,15 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
         );
     }
 
+    public dispose(): void {
+        Disposable.from(...this.disposables).dispose();
+    }
+
     public async activate(): Promise<void> {
-        if (useNewTensorboardExtension()) {
+        if (TensorboardExperiment.isTensorboardExtensionInstalled) {
             return;
         }
+        this.experiment.disposeOnInstallingTensorboard(this);
 
         this.disposables.push(
             this.commandManager.registerCommand(
@@ -69,16 +79,20 @@ export class TensorBoardSessionProvider implements IExtensionSingleActivationSer
                 (
                     entrypoint: TensorBoardEntrypoint = TensorBoardEntrypoint.palette,
                     trigger: TensorBoardEntrypointTrigger = TensorBoardEntrypointTrigger.palette,
-                ) => {
+                ): void => {
                     sendTelemetryEvent(EventName.TENSORBOARD_SESSION_LAUNCH, undefined, {
                         trigger,
                         entrypoint,
                     });
-                    return this.createNewSession();
+                    if (this.experiment.recommendAndUseNewExtension() === 'continueWithPythonExtension') {
+                        void this.createNewSession();
+                    }
                 },
             ),
             this.commandManager.registerCommand(Commands.RefreshTensorBoard, () =>
-                this.knownSessions.map((w) => w.refresh()),
+                this.experiment.recommendAndUseNewExtension() === 'continueWithPythonExtension'
+                    ? this.knownSessions.map((w) => w.refresh())
+                    : undefined,
             ),
         );
     }

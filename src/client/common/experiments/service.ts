@@ -257,8 +257,10 @@ function sendOptInOptOutTelemetry(optedIn: string[], optedOut: string[], package
     const sanitizedOptedIn = optedIn.filter((exp) => optedInEnumValues.includes(exp));
     const sanitizedOptedOut = optedOut.filter((exp) => optedOutEnumValues.includes(exp));
 
+    JSON.stringify(sanitizedOptedIn.sort());
+
     sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS, undefined, {
-        optedInto: sanitizedOptedIn,
-        optedOutFrom: sanitizedOptedOut,
+        optedInto: JSON.stringify(sanitizedOptedIn.sort()),
+        optedOutFrom: JSON.stringify(sanitizedOptedOut.sort()),
     });
 }

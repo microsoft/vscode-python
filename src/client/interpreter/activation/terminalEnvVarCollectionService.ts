@@ -394,7 +394,12 @@ function shouldPS1BeSet(type: PythonEnvType | undefined, env: EnvironmentVariabl
 }
 
 function shouldSkip(env: string) {
-    return ['_', 'SHLVL'].includes(env);
+    return [
+        '_',
+        'SHLVL',
+        // Even though this maybe returned, setting it can result in output encoding errors in terminal.
+        'PYTHONUTF8',
+    ].includes(env);
 }
 
 function getPromptForEnv(interpreter: PythonEnvironment | undefined) {

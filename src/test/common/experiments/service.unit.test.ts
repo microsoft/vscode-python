@@ -491,7 +491,10 @@ suite('Experimentation service', () => {
             await experimentService.activate();
 
             const { properties } = telemetryEvents[1];
-            assert.deepStrictEqual(properties, { optedInto: ['foo'], optedOutFrom: ['bar'] });
+            assert.deepStrictEqual(properties, {
+                optedInto: JSON.stringify(['foo']),
+                optedOutFrom: JSON.stringify(['bar']),
+            });
         });
 
         test('Set telemetry properties to empty arrays if no experiments have been opted into or out from', async () => {
@@ -523,7 +526,7 @@ suite('Experimentation service', () => {
             await experimentService.activate();
 
             const { properties } = telemetryEvents[1];
-            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+            assert.deepStrictEqual(properties, { optedInto: '[]', optedOutFrom: '[]' });
         });
 
         test('If the entered value for a setting contains "All", do not expand it to be a list of all experiments, and pass it as-is', async () => {
@@ -555,7 +558,10 @@ suite('Experimentation service', () => {
             await experimentService.activate();
 
             const { properties } = telemetryEvents[0];
-            assert.deepStrictEqual(properties, { optedInto: ['All'], optedOutFrom: ['All'] });
+            assert.deepStrictEqual(properties, {
+                optedInto: JSON.stringify(['All']),
+                optedOutFrom: JSON.stringify(['All']),
+            });
         });
 
         // This is an unlikely scenario.
@@ -577,7 +583,7 @@ suite('Experimentation service', () => {
             await experimentService.activate();
 
             const { properties } = telemetryEvents[1];
-            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+            assert.deepStrictEqual(properties, { optedInto: '[]', optedOutFrom: '[]' });
         });
 
         // This is also an unlikely scenario.
@@ -608,7 +614,7 @@ suite('Experimentation service', () => {
             await experimentService.activate();
 
             const { properties } = telemetryEvents[1];
-            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+            assert.deepStrictEqual(properties, { optedInto: '[]', optedOutFrom: '[]' });
         });
     });
 });

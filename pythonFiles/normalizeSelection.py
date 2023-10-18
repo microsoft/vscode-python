@@ -119,7 +119,7 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
-        if selection[-2] == "}":
+        if selection[-2] == "}" or selection[-2] == "]":
             source = source[:-1]
     except Exception:
         # If there's a problem when parsing statements,

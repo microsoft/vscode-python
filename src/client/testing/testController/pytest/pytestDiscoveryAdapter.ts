@@ -120,9 +120,10 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             }
         });
         result?.proc?.on('close', (code, signal) => {
-            if (code !== 0) {
+            // pytest exits with code of 5 when 0 tests are found- this is not a failure for discovery.
+            if (code !== 0 && code !== 5) {
                 traceError(
-                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
+                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}. Creating and sending error discovery payload`,
                 );
                 // if the child process exited with a non-zero exit code, then we need to send the error payload.
                 this.testServer.triggerDiscoveryDataReceivedEvent({

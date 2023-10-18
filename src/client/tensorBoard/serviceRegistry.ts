@@ -11,6 +11,7 @@ import { TensorBoardSessionProvider } from './tensorBoardSessionProvider';
 import { TensorBoardNbextensionCodeLensProvider } from './nbextensionCodeLensProvider';
 import { TerminalWatcher } from './terminalWatcher';
 import { TensorboardDependencyChecker } from './tensorboardDependencyChecker';
+import { TensorboardExperiment } from './tensorboarExperiment';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<TensorBoardSessionProvider>(TensorBoardSessionProvider, TensorBoardSessionProvider);
@@ -34,4 +35,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addBinding(TensorBoardNbextensionCodeLensProvider, IExtensionSingleActivationService);
     serviceManager.addSingleton(IExtensionSingleActivationService, TerminalWatcher);
     serviceManager.addSingleton(TensorboardDependencyChecker, TensorboardDependencyChecker);
+    serviceManager.addSingleton(TensorboardExperiment, TensorboardExperiment);
 }

@@ -103,14 +103,6 @@ export class PythonResultResolver implements ITestResultResolver {
             // If the test root for this folder exists: Workspace refresh, update its children.
             // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
             populateTestTree(this.testController, rawTestData.tests, undefined, this, token);
-        } else {
-            // Delete everything from the test controller.
-            const errorNode = this.testController.items.get(`DiscoveryError:${workspacePath}`);
-            this.testController.items.replace([]);
-            // Add back the error node if it exists.
-            if (errorNode !== undefined) {
-                this.testController.items.add(errorNode);
-            }
         }
 
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {

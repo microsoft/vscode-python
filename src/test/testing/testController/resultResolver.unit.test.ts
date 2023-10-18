@@ -195,6 +195,69 @@ suite('Result Resolver tests', () => {
                 cancelationToken, // token
             );
         });
+        test('resolveDiscovery should create error and not clear test items to allow for error tolerant discovery', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+            const errorMessage = 'error msg A';
+            const expectedErrorMessage = `${defaultErrorMessage}\r\n ${errorMessage}`;
+
+            // create test result node
+            const tests: DiscoveredTestNode = {
+                path: 'path',
+                name: 'name',
+                type_: 'folder',
+                id_: 'id',
+                children: [],
+            };
+            // stub out return values of functions called in resolveDiscovery
+            const errorPayload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'error',
+                error: [errorMessage],
+            };
+            const regPayload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'success',
+                error: [errorMessage],
+                tests,
+            };
+            const errorTestItemOptions: testItemUtilities.ErrorTestItemOptions = {
+                id: 'id',
+                label: 'label',
+                error: 'error',
+            };
+
+            // stub out functionality of buildErrorNodeOptions and createErrorTestItem which are called in resolveDiscovery
+            const buildErrorNodeOptionsStub = sinon.stub(util, 'buildErrorNodeOptions').returns(errorTestItemOptions);
+            const createErrorTestItemStub = sinon.stub(testItemUtilities, 'createErrorTestItem').returns(blankTestItem);
+
+            // stub out functionality of populateTestTreeStub which is called in resolveDiscovery
+            sinon.stub(util, 'populateTestTree').returns();
+            // add spies to insure these aren't called
+            const deleteSpy = sinon.spy(testController.items, 'delete');
+            const replaceSpy = sinon.spy(testController.items, 'replace');
+            // call resolve discovery
+            let deferredTillEOT: Deferred<void> = createDeferred<void>();
+            resultResolver.resolveDiscovery(regPayload, deferredTillEOT, cancelationToken);
+            deferredTillEOT = createDeferred<void>();
+            resultResolver.resolveDiscovery(errorPayload, deferredTillEOT, cancelationToken);
+
+            // assert the stub functions were called with the correct parameters
+
+            // builds an error node root
+            sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, workspaceUri, expectedErrorMessage, testProvider);
+            // builds an error item
+            sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
+
+            if (!deleteSpy.calledOnce) {
+                throw new Error("The delete method was called, but it shouldn't have been.");
+            }
+            if (replaceSpy.called) {
+                throw new Error("The replace method was called, but it shouldn't have been.");
+            }
+        });
     });
     suite('Test execution result resolver', () => {
         let resultResolver: ResultResolver.PythonResultResolver;
