@@ -77,6 +77,10 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         );
     });
 
+    teardown(() => {
+        sinon.restore();
+    });
+
     test('Show notification when "deactivate" command is run when a virtual env is selected', async () => {
         const resource = Uri.file('a');
         const terminal = ({
