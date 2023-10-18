@@ -152,7 +152,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             return undefined;
         }
         if (activeEditor.document.languageId !== PYTHON_LANGUAGE) {
-            this.applicationShell.showErrorMessage(l10n.t('The active file is not a Python source file)'));
+            this.applicationShell.showErrorMessage(l10n.t('The active file is not a Python source file'));
             return undefined;
         }
         if (activeEditor.document.isDirty) {
