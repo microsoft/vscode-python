@@ -90,7 +90,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
 }
 
 function buildInfo(deactivate: string, initScript: InitScript, scriptCommandFormat: string) {
-    const scriptPath = `~/.vscode-python/${deactivate}`;
+    const scriptPath = path.join('~', '.vscode-python', deactivate);
     return {
         source: path.join(_SCRIPTS_DIR, deactivate),
         destination: untildify(scriptPath),
