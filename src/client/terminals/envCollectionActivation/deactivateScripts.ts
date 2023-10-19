@@ -6,17 +6,6 @@ import * as path from 'path';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { TerminalShellType } from '../../common/terminal/types';
 
-type InitScript = {
-    /**
-     * Display name of init script for the shell.
-     */
-    displayName: string;
-    /**
-     * Shell specific variable or path which is equivalent to the full path to init script.
-     */
-    path: string;
-};
-
 type DeactivateShellInfo = {
     /**
      * Full path to source deactivate script to copy.
@@ -26,7 +15,15 @@ type DeactivateShellInfo = {
      * Full path to destination to copy deactivate script to.
      */
     destination: string;
-    initScript: InitScript & {
+    initScript: {
+        /**
+         * Display name of init script for the shell.
+         */
+        displayName: string;
+        /**
+         * Command to run in shell to output the full path to init script.
+         */
+        command: string;
         /**
          * Contents to add to init script.
          */
@@ -48,6 +45,7 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
                 },
                 `source {0}`,
             );
+        case TerminalShellType.powershellCore:
         case TerminalShellType.powershell:
             return buildInfo(
                 'deactivate.ps1',
@@ -89,13 +87,21 @@ export function getDeactivateShellInfo(shellType: TerminalShellType): Deactivate
     }
 }
 
-function buildInfo(deactivate: string, initScript: InitScript, scriptCommandFormat: string) {
+function buildInfo(
+    deactivate: string,
+    initScript: {
+        path: string;
+        displayName: string;
+    },
+    scriptCommandFormat: string,
+) {
     const scriptPath = path.join('~', '.vscode-python', deactivate);
     return {
         source: path.join(_SCRIPTS_DIR, deactivate),
         destination: untildify(scriptPath),
         initScript: {
-            ...initScript,
+            displayName: initScript.displayName,
+            command: `echo ${initScript.path}`,
             contents: scriptCommandFormat.format(scriptPath),
         },
     };

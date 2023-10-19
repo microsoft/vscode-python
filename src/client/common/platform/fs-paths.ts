@@ -182,3 +182,11 @@ export async function copyFile(src: string, dest: string): Promise<void> {
         overwrite: true,
     });
 }
+
+export function pathExists(absPath: string): Promise<boolean> {
+    return fs.pathExists(absPath);
+}
+
+export function createFile(filename: string): Promise<void> {
+    return fs.createFile(filename);
+}

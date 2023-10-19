@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Position, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
+import { createFile } from 'fs-extra';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
@@ -18,7 +19,7 @@ import { sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
 import { isTestExecution } from '../../common/constants';
 import { ProgressService } from '../../common/application/progressService';
-import { copyFile } from '../../common/platform/fs-paths';
+import { copyFile, pathExists } from '../../common/platform/fs-paths';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -99,7 +100,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                 title: Interpreters.terminalDeactivateProgress.format(initScript.displayName),
             });
             await copyFile(source, destination);
-            await this.openScriptWithEdits(initScript.path, initScript.contents);
+            await this.openScriptWithEdits(initScript.command, initScript.contents);
             await notificationPromptEnabled.updateValue(false);
             this.progressService.hideProgress();
         }
@@ -108,8 +109,8 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         }
     }
 
-    private async openScriptWithEdits(scriptPath: string, content: string) {
-        const document = await this.openScript(scriptPath);
+    private async openScriptWithEdits(command: string, content: string) {
+        const document = await this.openScript(command);
         const hookMarker = 'VSCode venv deactivate hook';
         content = `
 # >>> ${hookMarker} >>>
@@ -127,10 +128,17 @@ ${content}
         editor.revealRange(new Range(lastLine, lastLine), TextEditorRevealType.AtTop);
     }
 
-    private async openScript(scriptPath: string) {
-        const init = await shellExec(`echo ${scriptPath}`, { shell: this.appEnvironment.shell });
-        const initPath = init.stdout.trim();
-        const document = await this.documentManager.openTextDocument(initPath);
+    private async openScript(command: string) {
+        const initScriptPath = await this.getPathToScript(command);
+        if (await pathExists(initScriptPath)) {
+            await createFile(initScriptPath);
+        }
+        const document = await this.documentManager.openTextDocument(initScriptPath);
         return document;
+    }
+
+    private async getPathToScript(command: string) {
+        const init = await shellExec(command, { shell: this.appEnvironment.shell });
+        return init.stdout.trim();
     }
 }
