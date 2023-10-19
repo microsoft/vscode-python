@@ -137,7 +137,7 @@ ${content}
                 deferred.resolve(e.document);
             }
         });
-        await shellExec(`${this.codeCLI} ${scriptPath}`, { shell: this.appEnvironment.shell });
+        await shellExec(`${this.codeCLI} -r ${scriptPath}`, { shell: this.appEnvironment.shell });
         return deferred.promise;
     }
 }
