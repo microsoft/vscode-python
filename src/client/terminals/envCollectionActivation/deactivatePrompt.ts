@@ -20,6 +20,7 @@ import { getDeactivateShellInfo } from './deactivateScripts';
 import { isTestExecution } from '../../common/constants';
 import { ProgressService } from '../../common/application/progressService';
 import { copyFile, pathExists } from '../../common/platform/fs-paths';
+import { getOSType, OSType } from '../../common/utils/platform';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -53,9 +54,17 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                 if (!e.data.includes('deactivate')) {
                     return;
                 }
-                const shellType = identifyShellFromShellPath(this.appEnvironment.shell);
+                let shellType = identifyShellFromShellPath(this.appEnvironment.shell);
                 if (shellType === TerminalShellType.commandPrompt) {
                     return;
+                }
+                if (getOSType() === OSType.OSX && shellType === TerminalShellType.bash) {
+                    // On macOS, sometimes bash is overriden by OS to actually launch zsh, so we need to execute inside
+                    // the shell to get the correct shell type.
+                    const shell = await shellExec('echo $SHELL', { shell: this.appEnvironment.shell }).then((output) =>
+                        output.stdout.trim(),
+                    );
+                    shellType = identifyShellFromShellPath(shell);
                 }
                 const { terminal } = e;
                 const cwd =
