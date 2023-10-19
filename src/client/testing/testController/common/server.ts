@@ -37,6 +37,8 @@ export class PythonTestServer implements ITestServer, Disposable {
 
     private ready: Promise<void>;
 
+    private port: number | undefined;
+
     private _onRunDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
 
     private _onDiscoveryDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -66,7 +68,8 @@ export class PythonTestServer implements ITestServer, Disposable {
         });
         this.ready = new Promise((resolve, _reject) => {
             this.server.listen(undefined, 'localhost', () => {
-                setPortAttribute(this.getPort());
+                this.port = (this.server.address() as net.AddressInfo).port;
+                setPortAttribute(this.port);
                 resolve();
             });
         });
@@ -134,7 +137,11 @@ export class PythonTestServer implements ITestServer, Disposable {
     }
 
     public getPort(): number {
-        return (this.server.address() as net.AddressInfo).port;
+        if (this.port) {
+            return this.port;
+        }
+        traceError('Attempted to access port but it is undefined for the python testing server.');
+        return 45454;
     }
 
     public createUUID(): string {
