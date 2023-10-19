@@ -95,7 +95,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
             } else {
                 traceVerbose(
-                    `extract json payload incomplete, uuid= ${extractedJsonPayload.uuid}and cleanedJsonData= ${extractedJsonPayload.cleanedJsonData}`,
+                    `extract json payload incomplete, uuid= ${extractedJsonPayload.uuid} and cleanedJsonData= ${extractedJsonPayload.cleanedJsonData}`,
                 );
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
