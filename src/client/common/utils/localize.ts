@@ -506,14 +506,3 @@ export namespace CreateEnv {
         export const disableCheckWorkspace = l10n.t('Disable (Workspace)');
     }
 }
-
-export namespace ToolsExtensions {
-    export const flake8PromptMessage = l10n.t(
-        'Use the Flake8 extension to enable easier configuration and new features such as quick fixes.',
-    );
-    export const pylintPromptMessage = l10n.t(
-        'Use the Pylint extension to enable easier configuration and new features such as quick fixes.',
-    );
-    export const installPylintExtension = l10n.t('Install Pylint extension');
-    export const installFlake8Extension = l10n.t('Install Flake8 extension');
-}

@@ -3,7 +3,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
@@ -96,7 +96,7 @@ import { JupyterExtensionDependencyManager } from '../../client/jupyter/jupyterE
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ImportTracker } from '../../client/telemetry/importTracker';
 import { IImportTracker } from '../../client/telemetry/types';
-import { PYTHON_PATH, rootWorkspaceUri } from '../common';
+import { PYTHON_PATH } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
@@ -130,7 +130,6 @@ suite('Module Installer', () => {
             chaiShould();
             await initializeDI();
             await initializeTest();
-            await resetSettings();
         });
         suiteTeardown(async () => {
             await closeActiveWindows();
@@ -260,15 +259,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
                 DebugSessionTelemetry,
-            );
-        }
-        async function resetSettings(): Promise<void> {
-            const configService = ioc.serviceManager.get<IConfigurationService>(IConfigurationService);
-            await configService.updateSetting(
-                'linting.pylintEnabled',
-                true,
-                rootWorkspaceUri,
-                ConfigurationTarget.Workspace,
             );
         }
         test('Ensure pip is supported and conda is not', async () => {

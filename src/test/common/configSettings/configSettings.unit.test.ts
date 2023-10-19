@@ -20,7 +20,6 @@ import {
     IAutoCompleteSettings,
     IExperiments,
     IInterpreterSettings,
-    ILintingSettings,
     ITerminalSettings,
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
@@ -115,7 +114,6 @@ suite('Python Settings', async () => {
 
         // complex settings
         config.setup((c) => c.get<IInterpreterSettings>('interpreter')).returns(() => sourceSettings.interpreter);
-        config.setup((c) => c.get<ILintingSettings>('linting')).returns(() => sourceSettings.linting);
         config.setup((c) => c.get<IAutoCompleteSettings>('autoComplete')).returns(() => sourceSettings.autoComplete);
         config.setup((c) => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
         config.setup((c) => c.get<ITerminalSettings>('terminal')).returns(() => sourceSettings.terminal);

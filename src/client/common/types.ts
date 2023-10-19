@@ -8,7 +8,6 @@ import {
     CancellationToken,
     ConfigurationChangeEvent,
     ConfigurationTarget,
-    DiagnosticSeverity,
     Disposable,
     DocumentSymbolProvider,
     Event,
@@ -92,15 +91,7 @@ export enum ProductType {
 
 export enum Product {
     pytest = 1,
-    pylint = 3,
-    flake8 = 4,
-    pycodestyle = 5,
-    pylama = 6,
-    prospector = 7,
-    pydocstyle = 8,
-    mypy = 11,
     unittest = 12,
-    bandit = 17,
     tensorboard = 24,
     torchProfilerInstallName = 25,
     torchProfilerImportName = 26,
@@ -177,7 +168,6 @@ export interface IPythonSettings {
     readonly pipenvPath: string;
     readonly poetryPath: string;
     readonly devOptions: string[];
-    readonly linting: ILintingSettings;
     readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
     readonly terminal: ITerminalSettings;
@@ -195,65 +185,8 @@ export interface ITensorBoardSettings {
     logDirectory: string | undefined;
 }
 
-export interface IPylintCategorySeverity {
-    readonly convention: DiagnosticSeverity;
-    readonly refactor: DiagnosticSeverity;
-    readonly warning: DiagnosticSeverity;
-    readonly error: DiagnosticSeverity;
-    readonly fatal: DiagnosticSeverity;
-}
-export interface IPycodestyleCategorySeverity {
-    readonly W: DiagnosticSeverity;
-    readonly E: DiagnosticSeverity;
-}
-
-export interface Flake8CategorySeverity {
-    readonly F: DiagnosticSeverity;
-    readonly E: DiagnosticSeverity;
-    readonly W: DiagnosticSeverity;
-}
-export interface IMypyCategorySeverity {
-    readonly error: DiagnosticSeverity;
-    readonly note: DiagnosticSeverity;
-}
 export interface IInterpreterSettings {
     infoVisibility: 'never' | 'onPythonRelated' | 'always';
-}
-
-export interface ILintingSettings {
-    readonly enabled: boolean;
-    readonly ignorePatterns: string[];
-    readonly prospectorEnabled: boolean;
-    readonly prospectorArgs: string[];
-    readonly pylintEnabled: boolean;
-    readonly pylintArgs: string[];
-    readonly pycodestyleEnabled: boolean;
-    readonly pycodestyleArgs: string[];
-    readonly pylamaEnabled: boolean;
-    readonly pylamaArgs: string[];
-    readonly flake8Enabled: boolean;
-    readonly flake8Args: string[];
-    readonly pydocstyleEnabled: boolean;
-    readonly pydocstyleArgs: string[];
-    readonly lintOnSave: boolean;
-    readonly maxNumberOfProblems: number;
-    readonly pylintCategorySeverity: IPylintCategorySeverity;
-    readonly pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
-    readonly flake8CategorySeverity: Flake8CategorySeverity;
-    readonly mypyCategorySeverity: IMypyCategorySeverity;
-    cwd?: string;
-    prospectorPath: string;
-    pylintPath: string;
-    pycodestylePath: string;
-    pylamaPath: string;
-    flake8Path: string;
-    pydocstylePath: string;
-    mypyEnabled: boolean;
-    mypyArgs: string[];
-    mypyPath: string;
-    banditEnabled: boolean;
-    banditArgs: string[];
-    banditPath: string;
 }
 
 export interface ITerminalSettings {

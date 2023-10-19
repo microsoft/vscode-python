@@ -185,7 +185,7 @@ suite('Installation - channel messages', () => {
         if (methodType === 'showNoInstallersMessage') {
             await channels.showNoInstallersMessage();
         } else {
-            await channels.getInstallationChannel(Product.pylint);
+            await channels.getInstallationChannel(Product.pytest);
         }
         await verify(message, url);
     }

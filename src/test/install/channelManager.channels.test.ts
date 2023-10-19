@@ -89,7 +89,7 @@ suite('Installation - installation channels', () => {
         installer2.setup((x) => x.displayName).returns(() => 'Name 2');
 
         const cm = new InstallationChannelManager(serviceContainer);
-        await cm.getInstallationChannel(Product.pylint);
+        await cm.getInstallationChannel(Product.pytest);
 
         assert.notStrictEqual(items, undefined, 'showQuickPick not called');
         assert.strictEqual(items!.length, 2, 'Incorrect number of installer shown');

@@ -40,23 +40,12 @@ export enum OSType {
 export type PythonSettingKeys =
     | 'defaultInterpreterPath'
     | 'languageServer'
-    | 'linting.lintOnSave'
-    | 'linting.enabled'
-    | 'linting.pylintEnabled'
-    | 'linting.flake8Enabled'
-    | 'linting.pycodestyleEnabled'
-    | 'linting.pylamaEnabled'
-    | 'linting.prospectorEnabled'
-    | 'linting.pydocstyleEnabled'
-    | 'linting.mypyEnabled'
-    | 'linting.banditEnabled'
     | 'testing.pytestArgs'
     | 'testing.unittestArgs'
     | 'formatting.provider'
     | 'testing.pytestEnabled'
     | 'testing.unittestEnabled'
     | 'envFile'
-    | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {

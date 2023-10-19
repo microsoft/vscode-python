@@ -2050,53 +2050,6 @@ export interface IEventNamePropertyMapping {
     [EventName.ENVIRONMENT_CHECK_RESULT]: {
         result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
     };
-    /**
-     * Telemetry event sent when a linter or formatter extension is already installed.
-     */
-    /* __GDPR__
-       "tools_extensions.already_installed" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-        isEnabled: boolean;
-    };
-    /**
-     * Telemetry event sent when install linter or formatter extension prompt is shown.
-     */
-    /* __GDPR__
-       "tools_extensions.prompt_shown" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_PROMPT_SHOWN]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-    };
-    /**
-     * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
-     */
-    /* __GDPR__
-       "tools_extensions.install_selected" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_INSTALL_SELECTED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-    };
-    /**
-     * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
-     */
-    /* __GDPR__
-       "tools_extensions.prompt_dismissed" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
-          "dismissType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_PROMPT_DISMISSED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-        dismissType: 'close' | 'doNotShow';
-    };
     /* __GDPR__
             "query-expfeature" : {
                 "owner": "luabud",
