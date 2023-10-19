@@ -331,7 +331,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.clear()).once();
         verify(collection.prepend('PATH', prependedPart, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
-        assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
 
     test('Prepend full PATH with separator otherwise', async () => {
@@ -364,7 +364,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.clear()).once();
         verify(collection.prepend('PATH', `${finalPath}${separator}`, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
-        assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
 
     test('Verify envs are not applied if env activation is disabled', async () => {
