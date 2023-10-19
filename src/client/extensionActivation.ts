@@ -27,7 +27,6 @@ import { registerTypes as debugConfigurationRegisterTypes } from './debugger/ext
 import { IDebugConfigurationService, IDynamicDebugConfigurationService } from './debugger/extension/types';
 import { IInterpreterService } from './interpreter/contracts';
 import { getLanguageConfiguration } from './language/languageConfiguration';
-import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { TerminalProvider } from './providers/terminalProvider';
@@ -122,7 +121,6 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     serviceManager.addSingletonInstance<boolean>(UseProposedApi, enableProposedApi);
     // Feature specific registrations.
     unitTestsRegisterTypes(serviceManager);
-    lintersRegisterTypes(serviceManager);
     installerRegisterTypes(serviceManager);
     commonRegisterTerminalTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);

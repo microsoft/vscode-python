@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
-import { ILinterManager } from '../../linters/types';
 import { ITestingService } from '../../testing/types';
 import { IConfigurationService, IInstaller, Product } from '../types';
 import { IProductPathService } from './types';
@@ -33,17 +32,6 @@ export abstract class BaseProductPathsService implements IProductPathService {
         return (
             typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName
         );
-    }
-}
-
-@injectable()
-export class LinterProductPathService extends BaseProductPathsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer);
-    }
-    public getExecutableNameFromSettings(product: Product, resource?: Uri): string {
-        const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
-        return linterManager.getLinterInfo(product).pathName(resource);
     }
 }
 

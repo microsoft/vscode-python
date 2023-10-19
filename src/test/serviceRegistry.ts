@@ -45,7 +45,6 @@ import { registerInterpreterTypes } from '../client/interpreter/serviceRegistry'
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
 import { LegacyFileSystem } from './legacyFileSystem';
 import { MockOutputChannel } from './mockClasses';
@@ -140,10 +139,6 @@ export class IocContainer {
 
     public registerUnitTestTypes(): void {
         unittestsRegisterTypes(this.serviceManager);
-    }
-
-    public registerLinterTypes(): void {
-        lintersRegisterTypes(this.serviceManager);
     }
 
     public registerPlatformTypes(): void {

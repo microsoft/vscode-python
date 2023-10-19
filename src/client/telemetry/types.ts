@@ -8,10 +8,6 @@ import { EventName } from './constants';
 
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 
-export type LinterTrigger = 'auto' | 'save' | 'manual';
-
-export type LintingTelemetry = IEventNamePropertyMapping[EventName.LINTING];
-
 export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYTHON_INTERPRETER];
 export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type TestTool = 'pytest' | 'unittest';

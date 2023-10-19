@@ -85,9 +85,7 @@ export enum ProductInstallStatus {
 }
 
 export enum ProductType {
-    Linter = 'Linter',
     TestFramework = 'TestFramework',
-    RefactoringLibrary = 'RefactoringLibrary',
     DataScience = 'DataScience',
     Python = 'Python',
 }

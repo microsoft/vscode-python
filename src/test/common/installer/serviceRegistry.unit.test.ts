@@ -9,10 +9,7 @@ import { CondaInstaller } from '../../../client/common/installer/condaInstaller'
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
-import {
-    LinterProductPathService,
-    TestFrameworkProductPathService,
-} from '../../../client/common/installer/productPath';
+import { TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { registerTypes } from '../../../client/common/installer/serviceRegistry';
 import {
@@ -45,13 +42,6 @@ suite('Common installer Service Registry', () => {
             ),
         ).once();
         verify(serviceManager.addSingleton<IProductService>(IProductService, ProductService)).once();
-        verify(
-            serviceManager.addSingleton<IProductPathService>(
-                IProductPathService,
-                LinterProductPathService,
-                ProductType.Linter,
-            ),
-        ).once();
         verify(
             serviceManager.addSingleton<IProductPathService>(
                 IProductPathService,

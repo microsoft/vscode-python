@@ -10,16 +10,11 @@ import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
-import {
-    BaseProductPathsService,
-    LinterProductPathService,
-    TestFrameworkProductPathService,
-} from '../../../client/common/installer/productPath';
+import { BaseProductPathsService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
 import { IConfigurationService, IInstaller, IPythonSettings, Product, ProductType } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { ILinterInfo, ILinterManager } from '../../../client/linters/types';
 import { ITestsHelper } from '../../../client/testing/common/types';
 import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { getProductsForInstallerTests } from '../productsToTest';
@@ -87,33 +82,6 @@ suite('Product Path', () => {
             });
             const productType = new ProductService().getProductType(product.value);
             switch (productType) {
-                case ProductType.Linter: {
-                    test(`Ensure path is returned for ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
-                        const productPathService = new LinterProductPathService(serviceContainer.object);
-                        const linterManager = TypeMoq.Mock.ofType<ILinterManager>();
-                        const linterInfo = TypeMoq.Mock.ofType<ILinterInfo>();
-                        const expectedPath = 'Some Path';
-                        serviceContainer
-                            .setup((s) => s.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
-                            .returns(() => linterManager.object);
-                        linterInfo
-                            .setup((l) => l.pathName(TypeMoq.It.isValue(resource)))
-                            .returns(() => expectedPath)
-                            .verifiable(TypeMoq.Times.once());
-                        linterManager
-                            .setup((l) => l.getLinterInfo(TypeMoq.It.isValue(product.value)))
-                            .returns(() => linterInfo.object)
-                            .verifiable(TypeMoq.Times.once());
-
-                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        expect(value).to.be.equal(expectedPath);
-                        linterInfo.verifyAll();
-                        linterManager.verifyAll();
-                    });
-                    break;
-                }
                 case ProductType.TestFramework: {
                     test(`Ensure path is returned for ${product.name} (${
                         resource ? 'With a resource' : 'without a resource'
