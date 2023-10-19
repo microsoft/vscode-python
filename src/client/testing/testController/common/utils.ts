@@ -18,6 +18,7 @@ import {
     ITestResultResolver,
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
+import { resetPortAttribute, setPortAttribute } from '../../portAttributesProvider';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -166,6 +167,7 @@ export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContai
 }
 
 export async function startTestIdServer(testIds: string[]): Promise<number> {
+    let port: number | undefined;
     const startServer = (): Promise<number> =>
         new Promise((resolve, reject) => {
             const server = net.createServer((socket: net.Socket) => {
@@ -189,11 +191,19 @@ export async function startTestIdServer(testIds: string[]): Promise<number> {
                 socket.on('end', () => {
                     traceLog('Client disconnected');
                 });
+                socket.on('close', () => {
+                    if (port) {
+                        resetPortAttribute(port);
+                        traceLog('Server closed, port attribute reset.');
+                    }
+                    traceLog('Server closed, port attribute reset skipped.');
+                });
             });
 
             server.listen(0, () => {
-                const { port } = server.address() as net.AddressInfo;
+                port = (server.address() as net.AddressInfo).port;
                 traceLog(`Server listening on port ${port}`);
+                setPortAttribute(port);
                 resolve(port);
             });
 

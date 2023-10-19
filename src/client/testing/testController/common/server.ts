@@ -26,6 +26,7 @@ import {
 } from './utils';
 import { createDeferred } from '../../../common/utils/async';
 import { EnvironmentVariables } from '../../../api/types';
+import { resetPortAttribute, setPortAttribute } from '../../portAttributesProvider';
 
 export class PythonTestServer implements ITestServer, Disposable {
     private _onDataReceived: EventEmitter<DataReceivedEvent> = new EventEmitter<DataReceivedEvent>();
@@ -65,6 +66,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         });
         this.ready = new Promise((resolve, _reject) => {
             this.server.listen(undefined, 'localhost', () => {
+                setPortAttribute(this.getPort());
                 resolve();
             });
         });
@@ -72,7 +74,11 @@ export class PythonTestServer implements ITestServer, Disposable {
             traceLog(`Error starting test server: ${ex}`);
         });
         this.server.on('close', () => {
-            traceLog('Test server closed.');
+            if (this.getPort()) {
+                resetPortAttribute(this.getPort());
+                traceLog('Test server closed, port attributes reset');
+            }
+            traceLog('Test server closed port attributes reset skipped.');
         });
         this.server.on('listening', () => {
             traceLog('Test server listening.');

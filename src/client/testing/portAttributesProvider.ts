@@ -12,16 +12,39 @@ import {
     workspace,
 } from 'vscode';
 
-export class TestPortAttributesProvider implements PortAttributesProvider {
+class TestPortAttributesProvider implements PortAttributesProvider {
+    private knownPorts: number[] = [];
+
     public providePortAttributes(
-        _attributes: { port: number; pid?: number; commandLine?: string },
+        attributes: { port: number; pid?: number; commandLine?: string },
         _token: CancellationToken,
     ): ProviderResult<PortAttributes> {
-        return new PortAttributes(PortAutoForwardAction.Ignore);
+        if (this.knownPorts.includes(attributes.port)) {
+            return new PortAttributes(PortAutoForwardAction.Ignore);
+        }
+        return undefined;
+    }
+
+    public setPortAttribute(port: number): void {
+        this.knownPorts.push(port);
+    }
+
+    public resetPortAttribute(port: number): void {
+        this.knownPorts = this.knownPorts.filter((p) => p !== port);
     }
 }
 
+let provider: TestPortAttributesProvider | undefined;
+
 export function registerTestPortAttributesProvider(disposables: Disposable[]): void {
-    const provider = new TestPortAttributesProvider();
+    provider = new TestPortAttributesProvider();
     disposables.push(workspace.registerPortAttributesProvider({}, provider));
+}
+
+export function setPortAttribute(port: number): void {
+    provider?.setPortAttribute(port);
+}
+
+export function resetPortAttribute(port: number): void {
+    provider?.resetPortAttribute(port);
 }
