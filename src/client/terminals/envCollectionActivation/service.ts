@@ -335,7 +335,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                   applyAtProcessCreation: false,
               }
             : {
-                  applyAtShellIntegration: false,
+                  applyAtShellIntegration: true, // Takes care of false negatives in case manual integration is being used.
                   applyAtProcessCreation: true,
               };
     }
