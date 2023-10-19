@@ -177,7 +177,8 @@ export class PythonTestServer implements ITestServer, Disposable {
         const { uuid } = options;
         const isDiscovery = (testIds === undefined || testIds.length === 0) && runTestIdPort === undefined;
         const mutableEnv = { ...env };
-        const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+        // get python path from mutable env, it contains process.env as well
+        const pythonPathParts: string[] = mutableEnv.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [options.cwd, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_UUID = uuid.toString();

@@ -109,8 +109,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const { pytestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
         // get and edit env vars
-        const mutableEnv = { ...(await this.envVarsService?.getEnvironmentVariables(uri)) };
-        const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+        const mutableEnv = {
+            ...(await this.envVarsService?.getEnvironmentVariables(uri)),
+        };
+        // get python path from mutable env, it contains process.env as well
+        const pythonPathParts: string[] = mutableEnv.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_UUID = uuid.toString();

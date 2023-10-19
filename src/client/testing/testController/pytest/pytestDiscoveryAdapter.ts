@@ -73,7 +73,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const mutableEnv = {
             ...(await this.envVarsService?.getEnvironmentVariables(uri)),
         };
-        const pythonPathParts: string[] = process.env.PYTHONPATH?.split(path.delimiter) ?? [];
+        // get python path from mutable env, it contains process.env as well
+        const pythonPathParts: string[] = mutableEnv.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_UUID = uuid.toString();
