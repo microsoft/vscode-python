@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Position, TextDocument, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
+import { Position, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
@@ -14,7 +14,7 @@ import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors
 import { TerminalShellType } from '../../common/terminal/types';
 import { traceError } from '../../logging';
 import { shellExec } from '../../common/process/rawProcessApis';
-import { createDeferred, sleep } from '../../common/utils/async';
+import { sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
 import { isTestExecution } from '../../common/constants';
 import { ProgressService } from '../../common/application/progressService';
@@ -24,8 +24,6 @@ export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
 export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
-
-    private readonly codeCLI: string;
 
     private readonly progressService: ProgressService;
 
@@ -38,7 +36,6 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
-        this.codeCLI = this.appEnvironment.channel === 'insiders' ? 'code-insiders' : 'code';
         this.progressService = new ProgressService(this.appShell);
     }
 
@@ -119,10 +116,10 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
 ${content}
 # <<< ${hookMarker} <<<`;
         // If script already has the hook, don't add it again.
+        const editor = await this.documentManager.showTextDocument(document);
         if (document.getText().includes(hookMarker)) {
             return;
         }
-        const editor = await this.documentManager.showTextDocument(document);
         const editorEdit = new WorkspaceEdit();
         editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
         await this.documentManager.applyEdit(editorEdit); // Reveal the edits
@@ -131,13 +128,9 @@ ${content}
     }
 
     private async openScript(scriptPath: string) {
-        const deferred = createDeferred<TextDocument>();
-        this.documentManager.onDidChangeActiveTextEditor((e) => {
-            if (e) {
-                deferred.resolve(e.document);
-            }
-        });
-        await shellExec(`${this.codeCLI} -r ${scriptPath}`, { shell: this.appEnvironment.shell });
-        return deferred.promise;
+        const init = await shellExec(`echo ${scriptPath}`, { shell: this.appEnvironment.shell });
+        const initPath = init.stdout.trim();
+        const document = await this.documentManager.openTextDocument(initPath);
+        return document;
     }
 }
