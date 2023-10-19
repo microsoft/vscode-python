@@ -12,13 +12,13 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
-import { IFileSystem } from '../../common/platform/types';
 import { traceError } from '../../logging';
 import { shellExec } from '../../common/process/rawProcessApis';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
 import { isTestExecution } from '../../common/constants';
 import { ProgressService } from '../../common/application/progressService';
+import { copyFile } from '../../common/platform/fs-paths';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -35,7 +35,6 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
@@ -102,7 +101,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                 location: ProgressLocation.Window,
                 title: Interpreters.terminalDeactivateProgress.format(initScript.displayName),
             });
-            await this.fs.copyFile(source, destination);
+            await copyFile(source, destination);
             await this.openScriptWithEdits(initScript.path, initScript.contents);
             await notificationPromptEnabled.updateValue(false);
             this.progressService.hideProgress();

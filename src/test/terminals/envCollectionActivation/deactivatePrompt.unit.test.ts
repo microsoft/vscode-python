@@ -6,6 +6,7 @@
 import { mock, when, anything, instance, verify, reset } from 'ts-mockito';
 import { EventEmitter, Terminal, TerminalDataWriteEvent, TextDocument, TextEditor, Uri } from 'vscode';
 import * as sinon from 'sinon';
+import { expect } from 'chai';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
 import { IExperimentService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { Common, Interpreters } from '../../../client/common/utils/localize';
@@ -16,8 +17,8 @@ import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { TerminalDeactivateLimitationPrompt } from '../../../client/terminals/envCollectionActivation/deactivatePrompt';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { TerminalShellType } from '../../../client/common/terminal/types';
-import { IFileSystem } from '../../../client/common/platform/types';
 import * as processApi from '../../../client/common/process/rawProcessApis';
+import * as fsapi from '../../../client/common/platform/fs-paths';
 
 suite('Terminal Deactivation Limitation Prompt', () => {
     let shell: IApplicationShell;
@@ -29,7 +30,6 @@ suite('Terminal Deactivation Limitation Prompt', () => {
     let notificationEnabled: IPersistentState<boolean>;
     let interpreterService: IInterpreterService;
     let documentManager: IDocumentManager;
-    let fs: IFileSystem;
     const prompts = [Common.editSomething.format('~/.bashrc'), Common.doNotShowAgain];
     const expectedMessage = Interpreters.terminalDeactivatePrompt.format('~/.bashrc');
 
@@ -49,7 +49,6 @@ suite('Terminal Deactivation Limitation Prompt', () => {
             });
             return { stdout: '' };
         });
-        fs = mock<IFileSystem>();
         documentManager = mock<IDocumentManager>();
         when(documentManager.onDidChangeActiveTextEditor).thenReturn(activeEditorEvent.event);
         shell = mock<IApplicationShell>();
@@ -71,7 +70,6 @@ suite('Terminal Deactivation Limitation Prompt', () => {
             [],
             instance(interpreterService),
             instance(appEnvironment),
-            instance(fs),
             instance(documentManager),
             instance(experimentService),
         );
@@ -208,7 +206,11 @@ suite('Terminal Deactivation Limitation Prompt', () => {
     test('Edit script correctly if `Edit <script>` button is clicked', async () => {
         when(notificationEnabled.value).thenReturn(true);
         when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(prompts[0]));
-        when(fs.copyFile(anything(), anything())).thenResolve();
+        let fileCopied = false;
+        sinon.stub(fsapi, 'copyFile').callsFake(async (_src: string, _dest: string) => {
+            fileCopied = true;
+            Promise.resolve();
+        });
         when(shell.withProgress(anything(), anything())).thenResolve();
         const editor = mock<TextEditor>();
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -219,7 +221,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
 
         await deactivatePrompt._notifyUsers(TerminalShellType.bash);
 
-        verify(fs.copyFile(anything(), anything())).once();
+        expect(fileCopied).to.equal(true);
         verify(shell.withProgress(anything(), anything())).once();
         verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
         verify(notificationEnabled.updateValue(false)).once();
