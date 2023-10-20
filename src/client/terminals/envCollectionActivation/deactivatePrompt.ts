@@ -2,7 +2,16 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Position, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation, Terminal } from 'vscode';
+import {
+    Position,
+    Uri,
+    WorkspaceEdit,
+    Range,
+    TextEditorRevealType,
+    ProgressLocation,
+    Terminal,
+    Selection,
+} from 'vscode';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -141,12 +150,17 @@ ${content}
         // If script already has the hook, don't add it again.
         const editor = await this.documentManager.showTextDocument(document);
         if (document.getText().includes(hookMarker)) {
+            editor.revealRange(
+                new Range(new Position(document.lineCount - 3, 0), new Position(document.lineCount, 0)),
+                TextEditorRevealType.AtTop,
+            );
             return;
         }
         const editorEdit = new WorkspaceEdit();
         editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
         await this.documentManager.applyEdit(editorEdit);
         // Reveal the edits.
+        editor.selection = new Selection(new Position(document.lineCount - 3, 0), new Position(document.lineCount, 0));
         editor.revealRange(
             new Range(new Position(document.lineCount - 3, 0), new Position(document.lineCount, 0)),
             TextEditorRevealType.AtTop,
