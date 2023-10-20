@@ -329,7 +329,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                     if (result.stderr) {
                         if (returnedEnv) {
-                            traceWarn('Got env variables but with errors', result.stderr);
+                            traceWarn('Got env variables but with errors', result.stderr, returnedEnv);
+                            if (result.stderr.includes('running scripts is disabled')) {
+                                throw new Error(
+                                    `Skipping returned result when powershell execution is disabled, stderr ${result.stderr} for ${command}`,
+                                );
+                            }
                         } else {
                             throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                         }
