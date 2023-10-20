@@ -95,7 +95,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         );
         if (!notificationPromptEnabled.value) {
             const processId = await terminal.processId;
-            if (this.terminalProcessId === processId) {
+            if (processId && this.terminalProcessId === processId) {
                 // Existing terminal needs to be restarted for changes to take effect.
                 await this.forceRestartShell(terminal);
             }
