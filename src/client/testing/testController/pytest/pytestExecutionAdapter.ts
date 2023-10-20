@@ -115,6 +115,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             outputChannel: this.outputChannel,
             stdinStr: testIds.toString(),
         };
+        traceInfo(`Test Port Number: ${ this.testServer.getPort().toString()}`);
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
@@ -139,6 +140,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
 
             const pytestRunTestIdsPort = await utils.startTestIdServer(testIds);
+            traceInfo(`Test Ids Port Number: ${pytestRunTestIdsPort.toString()}`);
             if (spawnOptions.extraVariables)
                 spawnOptions.extraVariables.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
 

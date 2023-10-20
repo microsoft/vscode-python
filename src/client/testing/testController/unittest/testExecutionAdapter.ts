@@ -91,6 +91,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         const runTestIdsPort = await startTestIdServer(testIds);
+        traceInfo(`Test Ids Port Number: ${runTestIdsPort.toString()}`);
 
         await this.testServer.sendCommand(options, runTestIdsPort.toString(), runInstance, testIds, () => {
             deferredTillEOT?.resolve();
