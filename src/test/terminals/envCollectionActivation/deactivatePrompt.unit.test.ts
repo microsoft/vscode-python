@@ -32,6 +32,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
     let documentManager: IDocumentManager;
     const prompts = [Common.editSomething.format('~/.bashrc'), Common.doNotShowAgain];
     const expectedMessage = Interpreters.terminalDeactivatePrompt.format('~/.bashrc');
+    const initScriptPath = 'home/node/.bashrc';
 
     setup(async () => {
         const activeEditorEvent = new EventEmitter<TextEditor | undefined>();
@@ -40,16 +41,14 @@ suite('Terminal Deactivation Limitation Prompt', () => {
             getText: () => '',
         } as unknown) as TextDocument;
         sinon.stub(processApi, 'shellExec').callsFake(async (command: string) => {
-            if (command !== 'code ~/.bashrc') {
+            if (command !== 'echo ~/.bashrc') {
                 throw new Error(`Unexpected command: ${command}`);
             }
-            sleep(1500).then(() => {
-                activeEditorEvent.fire(undefined);
-                activeEditorEvent.fire({ document } as TextEditor);
-            });
-            return { stdout: '' };
+            await sleep(1500);
+            return { stdout: initScriptPath };
         });
         documentManager = mock<IDocumentManager>();
+        when(documentManager.openTextDocument(initScriptPath)).thenReturn(Promise.resolve(document));
         when(documentManager.onDidChangeActiveTextEditor).thenReturn(activeEditorEvent.event);
         shell = mock<IApplicationShell>();
         interpreterService = mock<IInterpreterService>();
