@@ -14,15 +14,17 @@ import {
 } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { ITerminalEnvVarCollectionService } from './types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
-import { IInterpreterService } from '../contracts';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { ITerminalEnvVarCollectionService } from '../types';
+import { sleep } from '../../common/utils/async';
+import { isTestExecution } from '../../common/constants';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
 @injectable()
-export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivationService {
+export class TerminalIndicatorPrompt implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
     constructor(
@@ -41,6 +43,10 @@ export class TerminalEnvVarCollectionPrompt implements IExtensionSingleActivatio
     public async activate(): Promise<void> {
         if (!inTerminalEnvVarExperiment(this.experimentService)) {
             return;
+        }
+        if (!isTestExecution()) {
+            // Avoid showing prompt until startup completes.
+            await sleep(5000);
         }
         this.disposableRegistry.push(
             this.terminalManager.onDidOpenTerminal(async (terminal) => {

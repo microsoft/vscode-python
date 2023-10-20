@@ -27,9 +27,7 @@ export class TensorBoardUsageTracker implements IExtensionSingleActivationServic
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(TensorBoardPrompt) private prompt: TensorBoardPrompt,
         @inject(TensorboardExperiment) private readonly experiment: TensorboardExperiment,
-    ) {
-        disposables.push(this);
-    }
+    ) {}
 
     public dispose(): void {
         Disposable.from(...this.disposables).dispose();

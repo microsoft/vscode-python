@@ -4,14 +4,6 @@
 import { Product } from '../types';
 
 export const ProductNames = new Map<Product, string>();
-ProductNames.set(Product.bandit, 'bandit');
-ProductNames.set(Product.flake8, 'flake8');
-ProductNames.set(Product.mypy, 'mypy');
-ProductNames.set(Product.pycodestyle, 'pycodestyle');
-ProductNames.set(Product.pylama, 'pylama');
-ProductNames.set(Product.prospector, 'prospector');
-ProductNames.set(Product.pydocstyle, 'pydocstyle');
-ProductNames.set(Product.pylint, 'pylint');
 ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.tensorboard, 'tensorboard');
 ProductNames.set(Product.torchProfilerInstallName, 'torch-tb-profiler');

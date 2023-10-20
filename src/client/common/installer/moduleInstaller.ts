@@ -238,26 +238,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
 export function translateProductToModule(product: Product): string {
     switch (product) {
-        case Product.mypy:
-            return 'mypy';
-        case Product.pylama:
-            return 'pylama';
-        case Product.prospector:
-            return 'prospector';
-        case Product.pylint:
-            return 'pylint';
         case Product.pytest:
             return 'pytest';
-        case Product.pycodestyle:
-            return 'pycodestyle';
-        case Product.pydocstyle:
-            return 'pydocstyle';
-        case Product.flake8:
-            return 'flake8';
         case Product.unittest:
             return 'unittest';
-        case Product.bandit:
-            return 'bandit';
         case Product.tensorboard:
             return 'tensorboard';
         case Product.torchProfilerInstallName:

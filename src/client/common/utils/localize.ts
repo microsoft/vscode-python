@@ -61,6 +61,7 @@ export namespace Common {
     export const noIWillDoItLater = l10n.t('No, I will do it later');
     export const notNow = l10n.t('Not now');
     export const doNotShowAgain = l10n.t("Don't show again");
+    export const editSomething = l10n.t('Edit {0}');
     export const reload = l10n.t('Reload');
     export const moreInfo = l10n.t('More Info');
     export const learnMore = l10n.t('Learn more');
@@ -197,6 +198,11 @@ export namespace Interpreters {
     export const activateTerminalDescription = l10n.t('Activated environment for');
     export const terminalEnvVarCollectionPrompt = l10n.t(
         'The Python extension automatically activates all terminals using the selected environment, even when the name of the environment{0} is not present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
+    );
+    export const terminalDeactivateProgress = l10n.t('Editing {0}...');
+    export const restartingTerminal = l10n.t('Restarting terminal and deactivating...');
+    export const terminalDeactivatePrompt = l10n.t(
+        'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved by appending a line to "{0}". Be sure to restart the shell afterward. [Learn more](https://aka.ms/AAmx2ft).',
     );
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',
@@ -505,15 +511,4 @@ export namespace CreateEnv {
         export const disableCheck = l10n.t('Disable');
         export const disableCheckWorkspace = l10n.t('Disable (Workspace)');
     }
-}
-
-export namespace ToolsExtensions {
-    export const flake8PromptMessage = l10n.t(
-        'Use the Flake8 extension to enable easier configuration and new features such as quick fixes.',
-    );
-    export const pylintPromptMessage = l10n.t(
-        'Use the Pylint extension to enable easier configuration and new features such as quick fixes.',
-    );
-    export const installPylintExtension = l10n.t('Install Pylint extension');
-    export const installFlake8Extension = l10n.t('Install Flake8 extension');
 }

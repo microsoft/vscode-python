@@ -91,7 +91,10 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
         }
         if (process.env.VSCODE_CLI !== '1') {
             // We only want to select the interpreter if VS Code was launched from the command line.
-            traceVerbose('VS Code was not launched from the command line, not selecting activated interpreter');
+            traceVerbose(
+                'VS Code was not launched from the command line, not selecting activated interpreter',
+                JSON.stringify(process.env, undefined, 4),
+            );
             return undefined;
         }
         const prefix = await this.getPrefixOfSelectedActivatedEnv();

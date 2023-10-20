@@ -63,7 +63,8 @@ suite('Activation of Environments in Terminal', () => {
         await terminalSettings.update('integrated.defaultProfile.linux', 'bash', vscode.ConfigurationTarget.Global);
     });
 
-    setup(async () => {
+    setup(async function () {
+        this.skip(); // https://github.com/microsoft/vscode-python/issues/22264
         await initializeTest();
         outputFile = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,

@@ -13,7 +13,6 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
-import { LinterId } from '../linters/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
     TensorBoardPromptSelection,
@@ -22,7 +21,7 @@ import {
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
 import { EventName } from './constants';
-import type { LinterTrigger, TestTool } from './types';
+import type { TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -895,33 +894,6 @@ export interface IEventNamePropertyMapping {
     };
 
     /**
-     * Telemetry event sent with details of selection in prompt
-     * `Prompt message` :- 'Linter ${productName} is not installed'
-     */
-    /* __GDPR__
-       "linter_not_installed_prompt" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "action": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
-        /**
-         * Name of the linter
-         *
-         * @type {LinterId}
-         */
-        tool?: LinterId;
-        /**
-         * `select` When 'Select linter' option is selected
-         * `disablePrompt` When "Don't show again" option is selected
-         * `install` When 'Install' option is selected
-         *
-         * @type {('select' | 'disablePrompt' | 'install')}
-         */
-        action: 'select' | 'disablePrompt' | 'install';
-    };
-
-    /**
      * Telemetry event sent when installing modules
      */
     /* __GDPR__
@@ -960,44 +932,6 @@ export interface IEventNamePropertyMapping {
          * Version of the Python environment into which the Python package is being installed.
          */
         version?: string;
-    };
-    /**
-     * Telemetry sent with details immediately after linting a document completes
-     */
-    /* __GDPR__
-       "linting" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "hascustomargs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "executablespecified" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.LINTING]: {
-        /**
-         * Name of the linter being used
-         *
-         * @type {LinterId}
-         */
-        tool: LinterId;
-        /**
-         * If custom arguments for linter is provided in settings.json
-         *
-         * @type {boolean}
-         */
-        hasCustomArgs: boolean;
-        /**
-         * Carries the source which triggered configuration of tests
-         *
-         * @type {LinterTrigger}
-         */
-        trigger: LinterTrigger;
-        /**
-         * Carries `true` if linter executable is specified, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        executableSpecified: boolean;
     };
     /**
      * Telemetry event sent when an environment without contain a python binary is selected.
@@ -1545,25 +1479,6 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.REPL]: never | undefined;
-    /**
-     * Telemetry event sent with details of linter selected in quickpick of linter list.
-     */
-    /* __GDPR__
-       "linting.select" : {
-          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.SELECT_LINTER]: {
-        /**
-         * The name of the linter
-         */
-        tool?: LinterId;
-        /**
-         * Carries `true` if linter is enabled, `false` otherwise
-         */
-        enabled: boolean;
-    };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
@@ -2134,53 +2049,6 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVIRONMENT_CHECK_RESULT]: {
         result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
-    };
-    /**
-     * Telemetry event sent when a linter or formatter extension is already installed.
-     */
-    /* __GDPR__
-       "tools_extensions.already_installed" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_ALREADY_INSTALLED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-        isEnabled: boolean;
-    };
-    /**
-     * Telemetry event sent when install linter or formatter extension prompt is shown.
-     */
-    /* __GDPR__
-       "tools_extensions.prompt_shown" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_PROMPT_SHOWN]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-    };
-    /**
-     * Telemetry event sent when clicking to install linter or formatter extension from the suggestion prompt.
-     */
-    /* __GDPR__
-       "tools_extensions.install_selected" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_INSTALL_SELECTED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-    };
-    /**
-     * Telemetry event sent when dismissing prompt suggesting to install the linter or formatter extension.
-     */
-    /* __GDPR__
-       "tools_extensions.prompt_dismissed" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
-          "dismissType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TOOLS_EXTENSIONS_PROMPT_DISMISSED]: {
-        extensionId: 'ms-python.pylint' | 'ms-python.flake8';
-        dismissType: 'close' | 'doNotShow';
     };
     /* __GDPR__
             "query-expfeature" : {

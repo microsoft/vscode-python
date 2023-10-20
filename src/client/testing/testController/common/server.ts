@@ -44,6 +44,7 @@ export class PythonTestServer implements ITestServer, Disposable {
         this.server = net.createServer((socket: net.Socket) => {
             let buffer: Buffer = Buffer.alloc(0); // Buffer to accumulate received data
             socket.on('data', (data: Buffer) => {
+                traceVerbose('data received from python server: ', data.toString());
                 buffer = Buffer.concat([buffer, data]); // get the new data and add it to the buffer
                 while (buffer.length > 0) {
                     try {
@@ -92,6 +93,10 @@ export class PythonTestServer implements ITestServer, Disposable {
                 // if a full json was found in the buffer, fire the data received event then keep cycling with the remaining raw data.
                 traceVerbose(`Firing data received event,  ${extractedJsonPayload.cleanedJsonData}`);
                 this._fireDataReceived(extractedJsonPayload.uuid, extractedJsonPayload.cleanedJsonData);
+            } else {
+                traceVerbose(
+                    `extract json payload incomplete, uuid= ${extractedJsonPayload.uuid} and cleanedJsonData= ${extractedJsonPayload.cleanedJsonData}`,
+                );
             }
             buffer = Buffer.from(extractedJsonPayload.remainingRawData);
             if (buffer.length === 0) {

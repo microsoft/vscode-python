@@ -4,12 +4,12 @@
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import {
-    ProgressOptions,
-    ProgressLocation,
     MarkdownString,
     WorkspaceFolder,
     GlobalEnvironmentVariableCollection,
     EnvironmentVariableScope,
+    EnvironmentVariableMutatorOptions,
+    ProgressLocation,
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
@@ -25,12 +25,11 @@ import {
     IConfigurationService,
     IPathUtils,
 } from '../../common/types';
-import { Deferred, createDeferred } from '../../common/utils/async';
 import { Interpreters } from '../../common/utils/localize';
-import { traceDecoratorVerbose, traceError, traceVerbose, traceWarn } from '../../logging';
-import { IInterpreterService } from '../contracts';
-import { defaultShells } from './service';
-import { IEnvironmentActivationService, ITerminalEnvVarCollectionService } from './types';
+import { traceError, traceVerbose, traceWarn } from '../../logging';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { defaultShells } from '../../interpreter/activation/service';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables } from '../../common/variables/types';
@@ -38,6 +37,9 @@ import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
+import { ITerminalEnvVarCollectionService } from '../types';
+import { ShellIntegrationShells } from './shellIntegration';
+import { ProgressService } from '../../common/application/progressService';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -55,14 +57,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         TerminalShellType.fish,
     ];
 
-    private deferred: Deferred<void> | undefined;
-
     private registeredOnce = false;
 
     /**
      * Carries default environment variables for the currently selected shell.
      */
     private processEnvVars: EnvironmentVariables | undefined;
+
+    private readonly progressService: ProgressService;
 
     private separator: string;
 
@@ -80,6 +82,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
+        this.progressService = new ProgressService(this.shell);
     }
 
     public async activate(resource: Resource): Promise<void> {
@@ -126,9 +129,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     public async _applyCollection(resource: Resource, shell?: string): Promise<void> {
-        this.showProgress();
+        this.progressService.showProgress({
+            location: ProgressLocation.Window,
+            title: Interpreters.activatingTerminals,
+        });
         await this._applyCollectionImpl(resource, shell);
-        this.hideProgress();
+        this.progressService.hideProgress();
     }
 
     private async _applyCollectionImpl(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
@@ -171,6 +177,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
+        const prependOptions = this.getPrependOptions();
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
@@ -185,10 +192,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     if (key === 'PS1') {
                         // We cannot have the full PS1 without executing in terminal, which we do not. Hence prepend it.
                         traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                        envVarCollection.prepend(key, value, {
-                            applyAtShellIntegration: true,
-                            applyAtProcessCreation: false,
-                        });
+                        envVarCollection.prepend(key, value, prependOptions);
                         return;
                     }
                     if (key === 'PATH') {
@@ -198,19 +202,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             const prependedPart = env.PATH.slice(0, -processEnv.PATH.length);
                             value = prependedPart;
                             traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                            envVarCollection.prepend(key, value, {
-                                applyAtShellIntegration: true,
-                                applyAtProcessCreation: true,
-                            });
+                            envVarCollection.prepend(key, value, prependOptions);
                         } else {
                             if (!value.endsWith(this.separator)) {
                                 value = value.concat(this.separator);
                             }
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
-                            envVarCollection.prepend(key, value, {
-                                applyAtShellIntegration: true,
-                                applyAtProcessCreation: true,
-                            });
+                            envVarCollection.prepend(key, value, prependOptions);
                         }
                         return;
                     }
@@ -272,9 +270,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = this.workspaceService
-                .getConfiguration('terminal')
-                .get<boolean>('integrated.shellIntegration.enabled');
+            const config = this.isShellIntegrationActive();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -329,6 +325,36 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
     }
 
+    private getPrependOptions(): EnvironmentVariableMutatorOptions {
+        const isActive = this.isShellIntegrationActive();
+        // Ideally we would want to prepend exactly once, either at shell integration or process creation.
+        // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
+        return isActive
+            ? {
+                  applyAtShellIntegration: true,
+                  applyAtProcessCreation: false,
+              }
+            : {
+                  applyAtShellIntegration: true, // Takes care of false negatives in case manual integration is being used.
+                  applyAtProcessCreation: true,
+              };
+    }
+
+    private isShellIntegrationActive(): boolean {
+        const isEnabled = this.workspaceService
+            .getConfiguration('terminal')
+            .get<boolean>('integrated.shellIntegration.enabled')!;
+        if (
+            isEnabled &&
+            ShellIntegrationShells.includes(identifyShellFromShellPath(this.applicationEnvironment.shell))
+        ) {
+            // Unfortunately shell integration could still've failed in remote scenarios, we can't know for sure:
+            // https://code.visualstudio.com/docs/terminal/shell-integration#_automatic-script-injection
+            return true;
+        }
+        return false;
+    }
+
     private getEnvironmentVariableCollection(scope: EnvironmentVariableScope = {}) {
         const envVarCollection = this.context.environmentVariableCollection as GlobalEnvironmentVariableCollection;
         return envVarCollection.getScoped(scope);
@@ -344,32 +370,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             [workspaceFolder] = this.workspaceService.workspaceFolders;
         }
         return workspaceFolder;
-    }
-
-    @traceDecoratorVerbose('Display activating terminals')
-    private showProgress(): void {
-        if (!this.deferred) {
-            this.createProgress();
-        }
-    }
-
-    @traceDecoratorVerbose('Hide activating terminals')
-    private hideProgress(): void {
-        if (this.deferred) {
-            this.deferred.resolve();
-            this.deferred = undefined;
-        }
-    }
-
-    private createProgress() {
-        const progressOptions: ProgressOptions = {
-            location: ProgressLocation.Window,
-            title: Interpreters.activatingTerminals,
-        };
-        this.shell.withProgress(progressOptions, () => {
-            this.deferred = createDeferred();
-            return this.deferred.promise;
-        });
     }
 }
 

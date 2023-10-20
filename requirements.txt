@@ -8,9 +8,9 @@ importlib-metadata==6.7.0 \
     --hash=sha256:1aaf550d4f73e5d6783e7acb77aec43d49da8017410afae93822cc9cca98c4d4 \
     --hash=sha256:cb52082e659e97afc5dac71e79de97d8681de3aa07ff18578330904a9d18e5b5
     # via -r requirements.in
-microvenv==2023.3.post1 \
-    --hash=sha256:67f0a48511cf16d6a2a45137175d0ddc36a657b91459b598cfbe976ef2afd596 \
-    --hash=sha256:6e8c80ccfe813b00b77ab9cc2e5af3fd44e2fe540df176509fda97123f8b8290
+microvenv==2023.5 \
+    --hash=sha256:128c0c8ab46e3bbd7b4c902c8a5d6333b694f9ebf871f123b473425cb6fbe19f \
+    --hash=sha256:270977691d207d70308c4239221d2ffbbfd595fa1819d09680c75e8808b21254
     # via -r requirements.in
 packaging==23.2 \
     --hash=sha256:048fb0e9405036518eaaf48a55953c750c11e1a1b68e0dd1a9d62ed0c092cfc5 \

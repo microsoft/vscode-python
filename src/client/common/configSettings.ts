@@ -6,7 +6,6 @@ import * as fs from 'fs';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
-    DiagnosticSeverity,
     Disposable,
     Event,
     EventEmitter,
@@ -29,7 +28,6 @@ import {
     IExperiments,
     IInterpreterPathService,
     IInterpreterSettings,
-    ILintingSettings,
     IPythonSettings,
     ITensorBoardSettings,
     ITerminalSettings,
@@ -105,8 +103,6 @@ export class PythonSettings implements IPythonSettings {
     public poetryPath = '';
 
     public devOptions: string[] = [];
-
-    public linting!: ILintingSettings;
 
     public autoComplete!: IAutoCompleteSettings;
 
@@ -304,93 +300,7 @@ export class PythonSettings implements IPythonSettings {
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
 
-        const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
-        if (this.linting) {
-            Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
-        } else {
-            this.linting = lintingSettings;
-        }
-
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
-
-        // Support for travis.
-        this.linting = this.linting
-            ? this.linting
-            : {
-                  enabled: false,
-                  cwd: undefined,
-                  ignorePatterns: [],
-                  flake8Args: [],
-                  flake8Enabled: false,
-                  flake8Path: 'flake8',
-                  lintOnSave: false,
-                  maxNumberOfProblems: 100,
-                  mypyArgs: [],
-                  mypyEnabled: false,
-                  mypyPath: 'mypy',
-                  banditArgs: [],
-                  banditEnabled: false,
-                  banditPath: 'bandit',
-                  pycodestyleArgs: [],
-                  pycodestyleEnabled: false,
-                  pycodestylePath: 'pycodestyle',
-                  pylamaArgs: [],
-                  pylamaEnabled: false,
-                  pylamaPath: 'pylama',
-                  prospectorArgs: [],
-                  prospectorEnabled: false,
-                  prospectorPath: 'prospector',
-                  pydocstyleArgs: [],
-                  pydocstyleEnabled: false,
-                  pydocstylePath: 'pydocstyle',
-                  pylintArgs: [],
-                  pylintEnabled: false,
-                  pylintPath: 'pylint',
-                  pylintCategorySeverity: {
-                      convention: DiagnosticSeverity.Hint,
-                      error: DiagnosticSeverity.Error,
-                      fatal: DiagnosticSeverity.Error,
-                      refactor: DiagnosticSeverity.Hint,
-                      warning: DiagnosticSeverity.Warning,
-                  },
-                  pycodestyleCategorySeverity: {
-                      E: DiagnosticSeverity.Error,
-                      W: DiagnosticSeverity.Warning,
-                  },
-                  flake8CategorySeverity: {
-                      E: DiagnosticSeverity.Error,
-                      W: DiagnosticSeverity.Warning,
-                      // Per http://flake8.pycqa.org/en/latest/glossary.html#term-error-code
-                      // 'F' does not mean 'fatal as in PyLint but rather 'pyflakes' such as
-                      // unused imports, variables, etc.
-                      F: DiagnosticSeverity.Warning,
-                  },
-                  mypyCategorySeverity: {
-                      error: DiagnosticSeverity.Error,
-                      note: DiagnosticSeverity.Hint,
-                  },
-              };
-        this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
-        this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);
-        this.linting.pycodestylePath = getAbsolutePath(
-            systemVariables.resolveAny(this.linting.pycodestylePath),
-            workspaceRoot,
-        );
-        this.linting.pylamaPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylamaPath), workspaceRoot);
-        this.linting.prospectorPath = getAbsolutePath(
-            systemVariables.resolveAny(this.linting.prospectorPath),
-            workspaceRoot,
-        );
-        this.linting.pydocstylePath = getAbsolutePath(
-            systemVariables.resolveAny(this.linting.pydocstylePath),
-            workspaceRoot,
-        );
-        this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
-        this.linting.banditPath = getAbsolutePath(systemVariables.resolveAny(this.linting.banditPath), workspaceRoot);
-
-        if (this.linting.cwd) {
-            this.linting.cwd = getAbsolutePath(systemVariables.resolveAny(this.linting.cwd), workspaceRoot);
-        }
 
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
         if (this.testing) {

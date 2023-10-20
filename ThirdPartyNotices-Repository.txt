@@ -6,18 +6,17 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 
 1.  Go for Visual Studio Code (https://github.com/Microsoft/vscode-go)
 2.  Files from the Python Project (https://www.python.org/)
-3.  Google Diff Match and Patch  (https://github.com/GerHobbelt/google-diff-match-patch)
-4.  omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
-5.  PTVS (https://github.com/Microsoft/PTVS)
-6.  Python documentation (https://docs.python.org/)
-7.  python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
-8.  pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
-9.  Sphinx (http://sphinx-doc.org/)
-10. nteract (https://github.com/nteract/nteract)
-11. less-plugin-inline-urls (https://github.com/less/less-plugin-inline-urls/)
-12. vscode-cpptools (https://github.com/microsoft/vscode-cpptools)
-13. mocha (https://github.com/mochajs/mocha)
-14. get-pip (https://github.com/pypa/get-pip)
+3.  omnisharp-vscode (https://github.com/OmniSharp/omnisharp-vscode)
+4.  PTVS (https://github.com/Microsoft/PTVS)
+5.  Python documentation (https://docs.python.org/)
+6.  python-functools32 (https://github.com/MiCHiLU/python-functools32/blob/master/functools32/functools32.py)
+7.  pythonVSCode (https://github.com/DonJayamanne/pythonVSCode)
+8.  Sphinx (http://sphinx-doc.org/)
+9.  nteract (https://github.com/nteract/nteract)
+10. less-plugin-inline-urls (https://github.com/less/less-plugin-inline-urls/)
+11. vscode-cpptools (https://github.com/microsoft/vscode-cpptools)
+12. mocha (https://github.com/mochajs/mocha)
+13. get-pip (https://github.com/pypa/get-pip)
 
 %%
 Go for Visual Studio Code NOTICES, INFORMATION, AND LICENSE BEGIN HERE
@@ -243,25 +242,6 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
 OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 =========================================
 END OF Files from the Python Project NOTICES, INFORMATION, AND LICENSE
-
-%% Google Diff Match and Patch  NOTICES, INFORMATION, AND LICENSE BEGIN HERE
-=========================================
- * Copyright 2006 Google Inc.
- * http://code.google.com/p/google-diff-match-patch/
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
-=========================================
-END OF Google Diff Match and Patch  NOTICES, INFORMATION, AND LICENSE
 
 %% omnisharp-vscode NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================

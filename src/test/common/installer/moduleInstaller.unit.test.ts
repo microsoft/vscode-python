@@ -322,110 +322,6 @@ suite('Module Installer', () => {
                                     terminalService.verifyAll();
                                 }
 
-                                if (product.value === Product.pylint) {
-                                    generatePythonInterpreterVersions().forEach((interpreterInfo) => {
-                                        const majorVersion = interpreterInfo.version
-                                            ? interpreterInfo.version.major
-                                            : 0;
-                                        if (majorVersion === 2) {
-                                            const testTitle = `Ensure install arg is \'pylint<2.0.0\' in ${
-                                                interpreterInfo.version ? interpreterInfo.version.raw : ''
-                                            }`;
-                                            if (InstallerClass === PipInstaller) {
-                                                test(testTitle, async () => {
-                                                    setActiveInterpreter(interpreterInfo);
-                                                    const proxyArgs =
-                                                        proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                                    const expectedArgs = [
-                                                        '-m',
-                                                        'pip',
-                                                        ...proxyArgs,
-                                                        'install',
-                                                        '-U',
-                                                        '"pylint<2.0.0"',
-                                                    ];
-                                                    await installModuleAndVerifyCommand(pythonPath, expectedArgs);
-                                                });
-                                            }
-                                            if (InstallerClass === PipEnvInstaller) {
-                                                test(testTitle, async () => {
-                                                    setActiveInterpreter(interpreterInfo);
-                                                    const expectedArgs = ['install', '"pylint<2.0.0"', '--dev'];
-                                                    await installModuleAndVerifyCommand(pipenvName, expectedArgs);
-                                                });
-                                            }
-                                            if (InstallerClass === CondaInstaller) {
-                                                test(testTitle, async () => {
-                                                    setActiveInterpreter(interpreterInfo);
-                                                    const expectedArgs = ['install'];
-                                                    if (condaEnvInfo && condaEnvInfo.name) {
-                                                        expectedArgs.push('--name');
-                                                        expectedArgs.push(
-                                                            condaEnvInfo.name.toCommandArgumentForPythonExt(),
-                                                        );
-                                                    } else if (condaEnvInfo && condaEnvInfo.path) {
-                                                        expectedArgs.push('--prefix');
-                                                        expectedArgs.push(
-                                                            condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
-                                                        );
-                                                    }
-                                                    expectedArgs.push('"pylint<2.0.0"');
-                                                    expectedArgs.push('-y');
-                                                    await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
-                                                });
-                                            }
-                                        } else {
-                                            const testTitle = `Ensure install arg is \'pylint\' in ${
-                                                interpreterInfo.version ? interpreterInfo.version.raw : ''
-                                            }`;
-                                            if (InstallerClass === PipInstaller) {
-                                                test(testTitle, async () => {
-                                                    setActiveInterpreter(interpreterInfo);
-                                                    const proxyArgs =
-                                                        proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                                    const expectedArgs = [
-                                                        '-m',
-                                                        'pip',
-                                                        ...proxyArgs,
-                                                        'install',
-                                                        '-U',
-                                                        'pylint',
-                                                    ];
-                                                    await installModuleAndVerifyCommand(pythonPath, expectedArgs);
-                                                });
-                                            }
-                                            if (InstallerClass === PipEnvInstaller) {
-                                                test(testTitle, async () => {
-                                                    setActiveInterpreter(interpreterInfo);
-                                                    const expectedArgs = ['install', 'pylint', '--dev'];
-                                                    await installModuleAndVerifyCommand(pipenvName, expectedArgs);
-                                                });
-                                            }
-                                            if (InstallerClass === CondaInstaller) {
-                                                test(testTitle, async () => {
-                                                    setActiveInterpreter(interpreterInfo);
-                                                    const expectedArgs = ['install'];
-                                                    if (condaEnvInfo && condaEnvInfo.name) {
-                                                        expectedArgs.push('--name');
-                                                        expectedArgs.push(
-                                                            condaEnvInfo.name.toCommandArgumentForPythonExt(),
-                                                        );
-                                                    } else if (condaEnvInfo && condaEnvInfo.path) {
-                                                        expectedArgs.push('--prefix');
-                                                        expectedArgs.push(
-                                                            condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
-                                                        );
-                                                    }
-                                                    expectedArgs.push('pylint');
-                                                    expectedArgs.push('-y');
-                                                    await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
-                                                });
-                                            }
-                                        }
-                                    });
-                                    return;
-                                }
-
                                 if (InstallerClass === TestModuleInstaller) {
                                     suite(`If interpreter type is Unknown (${product.name})`, async () => {
                                         test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is read only, do an elevated install`, async () => {
@@ -691,21 +587,6 @@ suite('Module Installer', () => {
         });
     });
 });
-
-function generatePythonInterpreterVersions() {
-    const versions: SemVer[] = ['2.7.0-final', '3.4.0-final', '3.5.0-final', '3.6.0-final', '3.7.0-final'].map(
-        (ver) => new SemVer(ver),
-    );
-    return versions.map((version) => {
-        const info = TypeMoq.Mock.ofType<PythonEnvironment>();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        info.setup((t: any) => t.then).returns(() => undefined);
-        info.setup((t) => t.envType).returns(() => EnvironmentType.VirtualEnv);
-        info.setup((t) => t.version).returns(() => version);
-        info.setup((t) => t.path).returns(() => pythonPath);
-        return info.object;
-    });
-}
 
 function getModuleNamesForTesting(): { name: string; value: Product; moduleName: string }[] {
     return getNamesAndValues<Product>(Product)
