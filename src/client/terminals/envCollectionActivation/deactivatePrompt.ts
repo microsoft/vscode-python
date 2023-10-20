@@ -2,8 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Position, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { Position, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation, Terminal } from 'vscode';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    IDocumentManager,
+    ITerminalManager,
+} from '../../common/application/types';
 import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -26,6 +31,8 @@ export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
 
+    private terminalProcessId: number | undefined;
+
     private readonly progressService: ProgressService;
 
     constructor(
@@ -35,6 +42,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
+        @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         this.progressService = new ProgressService(this.appShell);
@@ -75,17 +83,22 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
                 if (interpreter?.type !== PythonEnvType.Virtual) {
                     return;
                 }
-                await this._notifyUsers(shellType).catch((ex) => traceError('Deactivate prompt failed', ex));
+                await this._notifyUsers(shellType, terminal).catch((ex) => traceError('Deactivate prompt failed', ex));
             }),
         );
     }
 
-    public async _notifyUsers(shellType: TerminalShellType): Promise<void> {
+    public async _notifyUsers(shellType: TerminalShellType, terminal: Terminal): Promise<void> {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             `${terminalDeactivationPromptKey}-${shellType}`,
             true,
         );
         if (!notificationPromptEnabled.value) {
+            const processId = await terminal.processId;
+            if (this.terminalProcessId === processId) {
+                // Existing terminal needs to be restarted for changes to take effect.
+                await this.forceRestartShell(terminal);
+            }
             return;
         }
         const scriptInfo = getDeactivateShellInfo(shellType);
@@ -111,6 +124,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             await this.openScriptWithEdits(initScript.command, initScript.contents);
             await notificationPromptEnabled.updateValue(false);
             this.progressService.hideProgress();
+            this.terminalProcessId = await terminal.processId;
         }
         if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
@@ -150,5 +164,14 @@ ${content}
 
     private async getPathToScript(command: string) {
         return shellExec(command, { shell: this.appEnvironment.shell }).then((output) => output.stdout.trim());
+    }
+
+    public async forceRestartShell(terminal: Terminal): Promise<void> {
+        terminal.dispose();
+        terminal = this.terminalManager.createTerminal({
+            message: Interpreters.restartingTerminal,
+        });
+        terminal.show(true);
+        terminal.sendText('deactivate');
     }
 }
