@@ -131,9 +131,12 @@ ${content}
         }
         const editorEdit = new WorkspaceEdit();
         editorEdit.insert(document.uri, new Position(document.lineCount, 0), content);
-        await this.documentManager.applyEdit(editorEdit); // Reveal the edits
-        const lastLine = new Position(document.lineCount, 0);
-        editor.revealRange(new Range(lastLine, lastLine), TextEditorRevealType.AtTop);
+        await this.documentManager.applyEdit(editorEdit);
+        // Reveal the edits.
+        editor.revealRange(
+            new Range(new Position(document.lineCount - 3, 0), new Position(document.lineCount, 0)),
+            TextEditorRevealType.AtTop,
+        );
     }
 
     private async openScript(command: string) {
@@ -146,7 +149,6 @@ ${content}
     }
 
     private async getPathToScript(command: string) {
-        const init = await shellExec(command, { shell: this.appEnvironment.shell });
-        return init.stdout.trim();
+        return shellExec(command, { shell: this.appEnvironment.shell }).then((output) => output.stdout.trim());
     }
 }
