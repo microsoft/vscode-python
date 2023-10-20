@@ -3,7 +3,6 @@
 
 import { inject, injectable } from 'inversify';
 import { Position, Uri, WorkspaceEdit, Range, TextEditorRevealType, ProgressLocation } from 'vscode';
-import { createFile } from 'fs-extra';
 import { IApplicationEnvironment, IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { IDisposableRegistry, IExperimentService, IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
@@ -19,7 +18,7 @@ import { sleep } from '../../common/utils/async';
 import { getDeactivateShellInfo } from './deactivateScripts';
 import { isTestExecution } from '../../common/constants';
 import { ProgressService } from '../../common/application/progressService';
-import { copyFile, pathExists } from '../../common/platform/fs-paths';
+import { copyFile, createFile, pathExists } from '../../common/platform/fs-paths';
 import { getOSType, OSType } from '../../common/utils/platform';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
@@ -139,7 +138,7 @@ ${content}
 
     private async openScript(command: string) {
         const initScriptPath = await this.getPathToScript(command);
-        if (await pathExists(initScriptPath)) {
+        if (!(await pathExists(initScriptPath))) {
             await createFile(initScriptPath);
         }
         const document = await this.documentManager.openTextDocument(initScriptPath);

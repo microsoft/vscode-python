@@ -206,9 +206,20 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         when(notificationEnabled.value).thenReturn(true);
         when(shell.showWarningMessage(expectedMessage, ...prompts)).thenReturn(Promise.resolve(prompts[0]));
         let fileCopied = false;
+        let createdFile = false;
         sinon.stub(fsapi, 'copyFile').callsFake(async (_src: string, _dest: string) => {
             fileCopied = true;
             Promise.resolve();
+        });
+        sinon.stub(fsapi, 'pathExists').callsFake(async (p: string) => {
+            if (p === initScriptPath) {
+                return Promise.resolve(false);
+            }
+            return Promise.resolve(true);
+        });
+        sinon.stub(fsapi, 'createFile').callsFake(async (_: string) => {
+            createdFile = true;
+            return Promise.resolve();
         });
         when(shell.withProgress(anything(), anything())).thenResolve();
         const editor = mock<TextEditor>();
@@ -221,6 +232,7 @@ suite('Terminal Deactivation Limitation Prompt', () => {
         await deactivatePrompt._notifyUsers(TerminalShellType.bash);
 
         expect(fileCopied).to.equal(true);
+        expect(createdFile).to.equal(true, 'File not created');
         verify(shell.withProgress(anything(), anything())).once();
         verify(shell.showWarningMessage(expectedMessage, ...prompts)).once();
         verify(notificationEnabled.updateValue(false)).once();
