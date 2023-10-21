@@ -65,7 +65,7 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
         }
         if (!isTestExecution()) {
             // Avoid showing prompt until startup completes.
-            await sleep(5000);
+            await sleep(6000);
         }
         this.disposableRegistry.push(
             this.appShell.onDidWriteTerminalData(async (e) => {

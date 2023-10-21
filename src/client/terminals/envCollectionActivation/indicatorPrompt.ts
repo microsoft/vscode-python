@@ -46,10 +46,17 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
         }
         if (!isTestExecution()) {
             // Avoid showing prompt until startup completes.
-            await sleep(5000);
+            await sleep(6000);
         }
         this.disposableRegistry.push(
             this.terminalManager.onDidOpenTerminal(async (terminal) => {
+                const hideFromUser =
+                    'hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser;
+                const strictEnv = 'strictEnv' in terminal.creationOptions && terminal.creationOptions.strictEnv;
+                if (hideFromUser || strictEnv || terminal.creationOptions.name) {
+                    // Only show this notification for basic terminals created using the '+' button.
+                    return;
+                }
                 const cwd =
                     'cwd' in terminal.creationOptions && terminal.creationOptions.cwd
                         ? terminal.creationOptions.cwd
