@@ -102,10 +102,7 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
     }
 }
 
-function getPromptName(interpreter?: PythonEnvironment) {
-    if (!interpreter) {
-        return '';
-    }
+function getPromptName(interpreter: PythonEnvironment) {
     if (interpreter.envName) {
         return `, ${l10n.t('i.e')} "(${interpreter.envName})"`;
     }
