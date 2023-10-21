@@ -197,7 +197,7 @@ export namespace Interpreters {
     export const activatingTerminals = l10n.t('Reactivating terminals...');
     export const activateTerminalDescription = l10n.t('Activated environment for');
     export const terminalEnvVarCollectionPrompt = l10n.t(
-        'The Python extension automatically activates all terminals using the selected environment, even when the name of the environment{0} is not present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
+        'The selected Python environment indicator{0} may not be present in the terminal prompt. Rest assured, all terminals are still activated. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
     );
     export const terminalDeactivateProgress = l10n.t('Editing {0}...');
     export const restartingTerminal = l10n.t('Restarting terminal and deactivating...');
