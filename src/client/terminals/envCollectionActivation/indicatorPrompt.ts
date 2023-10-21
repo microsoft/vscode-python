@@ -85,6 +85,9 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
         }
         const prompts = [Common.doNotShowAgain];
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (!interpreter) {
+            return;
+        }
         const terminalPromptName = getPromptName(interpreter);
         const selection = await this.appShell.showInformationMessage(
             Interpreters.terminalEnvVarCollectionPrompt.format(terminalPromptName),
