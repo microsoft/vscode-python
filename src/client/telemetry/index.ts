@@ -1226,10 +1226,27 @@ export interface IEventNamePropertyMapping {
         selection: 'Allow' | 'Close' | undefined;
     };
     /**
-     * Telemetry event sent with details when user attempts to run in interactive window when Jupyter is not installed.
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
     /* __GDPR__
        "conda_inherit_env_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.TERMINAL_DEACTIVATE_PROMPT]: {
+        /**
+         * `Yes` When 'Allow' option is selected
+         * `Close` When 'Close' option is selected
+         */
+        selection: 'Edit script' | "Don't show again" | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user attempts to run in interactive window when Jupyter is not installed.
+     */
+    /* __GDPR__
+       "require_jupyter_prompt" : {
           "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
        }
      */

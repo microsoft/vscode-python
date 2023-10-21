@@ -34,6 +34,8 @@ import { isTestExecution } from '../../common/constants';
 import { ProgressService } from '../../common/application/progressService';
 import { copyFile, createFile, pathExists } from '../../common/platform/fs-paths';
 import { getOSType, OSType } from '../../common/utils/platform';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 export const terminalDeactivationPromptKey = 'TERMINAL_DEACTIVATION_PROMPT_KEY';
 @injectable()
@@ -115,12 +117,20 @@ export class TerminalDeactivateLimitationPrompt implements IExtensionSingleActiv
             // Shell integration is not supported for these shells, in which case this workaround won't work.
             return;
         }
+        const telemetrySelections: ['Edit script', "Don't show again"] = ['Edit script', "Don't show again"];
         const { initScript, source, destination } = scriptInfo;
         const prompts = [Common.editSomething.format(initScript.displayName), Common.doNotShowAgain];
         const selection = await this.appShell.showWarningMessage(
             Interpreters.terminalDeactivatePrompt.format(initScript.displayName),
             ...prompts,
         );
+        let index = selection ? prompts.indexOf(selection) : 0;
+        if (selection === prompts[0]) {
+            index = 0;
+        }
+        sendTelemetryEvent(EventName.TERMINAL_DEACTIVATE_PROMPT, undefined, {
+            selection: selection ? telemetrySelections[index] : undefined,
+        });
         if (!selection) {
             return;
         }
