@@ -10,7 +10,7 @@ import { TensorboardExperiment } from '../../client/tensorBoard/tensorboarExperi
 
 [true, false].forEach((tbExtensionInstalled) => {
     suite(`Tensorboard Extension is ${tbExtensionInstalled ? 'installed' : 'not installed'}`, () => {
-        suite.only('TensorBoard usage tracker', () => {
+        suite('TensorBoard usage tracker', () => {
             let experiment: TensorboardExperiment;
             let documentManager: MockDocumentManager;
             let tensorBoardImportTracker: TensorBoardUsageTracker;

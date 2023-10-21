@@ -11,7 +11,7 @@ import { TensorboardExperiment } from '../../client/tensorBoard/tensorboarExperi
 
 [true, false].forEach((tbExtensionInstalled) => {
     suite(`Tensorboard Extension is ${tbExtensionInstalled ? 'installed' : 'not installed'}`, () => {
-        suite.only('TensorBoard nbextension code lens provider', () => {
+        suite('TensorBoard nbextension code lens provider', () => {
             let experiment: TensorboardExperiment;
             let codeLensProvider: TensorBoardNbextensionCodeLensProvider;
             let cancelTokenSource: CancellationTokenSource;
