@@ -73,7 +73,11 @@ export function shellExec(
         const disposable: IDisposable = {
             dispose: () => {
                 if (!proc.killed) {
-                    proc.kill();
+                    if (proc.pid) {
+                        killPid(proc.pid);
+                    } else {
+                        proc.kill();
+                    }
                 }
             },
         };
@@ -101,7 +105,11 @@ export function plainExec(
     const disposable: IDisposable = {
         dispose: () => {
             if (!proc.killed) {
-                proc.kill();
+                if (proc.pid) {
+                    killPid(proc.pid);
+                } else {
+                    proc.kill();
+                }
             }
         },
     };
@@ -219,7 +227,11 @@ export function execObservable(
             internalDisposables.push(
                 options.token.onCancellationRequested(() => {
                     if (!procExited && !proc.killed) {
-                        proc.kill();
+                        if (proc.pid) {
+                            killPid(proc.pid);
+                        } else {
+                            proc.kill();
+                        }
                         procExited = true;
                     }
                 }),
@@ -279,6 +291,6 @@ export function killPid(pid: number): void {
             process.kill(pid);
         }
     } catch {
-        // Ignore.
+        traceVerbose('Unable to kill process with pid', pid);
     }
 }
