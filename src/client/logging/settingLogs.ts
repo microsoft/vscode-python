@@ -9,7 +9,8 @@ import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/work
 import { Common } from '../common/utils/localize';
 import { executeCommand } from '../common/vscodeApis/commandApis';
 
-export function logAndNotifyOnFormatterSetting(): void {
+function logOnLegacyFormatterSetting(): boolean {
+    let usesLegacyFormatter = false;
     getWorkspaceFolders()?.forEach(async (workspace) => {
         let config = getConfiguration('editor', { uri: workspace.uri, languageId: 'python' });
         if (!config) {
@@ -21,22 +22,93 @@ export function logAndNotifyOnFormatterSetting(): void {
         const formatter = config.get<string>('defaultFormatter', '');
         traceInfo(`Default formatter is set to ${formatter} for workspace ${workspace.uri.fsPath}`);
         if (formatter === PVSC_EXTENSION_ID) {
+            usesLegacyFormatter = true;
             traceError('Formatting features have been moved to separate formatter extensions.');
+            traceError('See here for more information: https://code.visualstudio.com/docs/python/formatting');
             traceError('Please install the formatter extension you prefer and set it as the default formatter.');
             traceError('For `autopep8` use: https://marketplace.visualstudio.com/items?itemName=ms-python.autopep8');
             traceError(
                 'For `black` use: https://marketplace.visualstudio.com/items?itemName=ms-python.black-formatter',
             );
             traceError('For `yapf` use: https://marketplace.visualstudio.com/items?itemName=eeyore.yapf');
-            const response = await showErrorMessage(
-                l10n.t(
-                    'Formatting features have been moved to separate formatter extensions. Please install the formatter extension you prefer and set it as the default formatter.',
-                ),
-                Common.showLogs,
-            );
-            if (response === Common.showLogs) {
-                executeCommand(Commands.ViewOutput);
-            }
         }
     });
+    return usesLegacyFormatter;
+}
+
+function logOnLegacyLinterSetting(): boolean {
+    let usesLegacyLinter = false;
+    getWorkspaceFolders()?.forEach(async (workspace) => {
+        let config = getConfiguration('python', { uri: workspace.uri, languageId: 'python' });
+        if (!config) {
+            config = getConfiguration('python', workspace.uri);
+            if (!config) {
+                traceError('Unable to get editor configuration');
+            }
+        }
+
+        const linters: string[] = [
+            'pylint',
+            'flake8',
+            'mypy',
+            'pydocstyle',
+            'pylama',
+            'pycodestyle',
+            'bandit',
+            'prospector',
+        ];
+
+        linters.forEach((linter) => {
+            const linterEnabled = config.get<boolean>(`linting.${linter}Enabled`, false);
+            if (linterEnabled) {
+                usesLegacyLinter = true;
+                traceError('Linting features have been moved to separate linter extensions.');
+                traceError('See here for more information: https://code.visualstudio.com/docs/python/linting');
+                if (linter === 'pylint' || linter === 'flake8') {
+                    traceError(
+                        `Please install "${linter}" extension: https://marketplace.visualstudio.com/items?itemName=ms-python.${linter}`,
+                    );
+                } else if (linter === 'mypy') {
+                    traceError(
+                        `Please install "${linter}" extension: https://marketplace.visualstudio.com/items?itemName=ms-python.mypy-type-checker`,
+                    );
+                } else if (['pydocstyle', 'pylama', 'pycodestyle', 'bandit'].includes(linter)) {
+                    traceError(
+                        `selected linter "${linter}" may be suported extensions like "ruff" which include several linter rules`,
+                    );
+                    traceError(
+                        `Please install extension: https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff`,
+                    );
+                }
+            }
+        });
+    });
+
+    return usesLegacyLinter;
+}
+
+let _isShown = false;
+async function notifyLegacySettings(): Promise<void> {
+    if (_isShown) {
+        return;
+    }
+    _isShown = true;
+    const response = await showErrorMessage(
+        l10n.t(
+            'Formatting and Linting features have been moved to separate extensions. Please see the logs for more information.',
+        ),
+        Common.showLogs,
+    );
+    if (response === Common.showLogs) {
+        executeCommand(Commands.ViewOutput);
+    }
+}
+
+export function logAndNotifyOnLegacySettings(): void {
+    const usesLegacyFormatter = logOnLegacyFormatterSetting();
+    const usesLegacyLinter = logOnLegacyLinterSetting();
+
+    if (usesLegacyFormatter || usesLegacyLinter) {
+        setImmediate(() => notifyLegacySettings().ignoreErrors());
+    }
 }
