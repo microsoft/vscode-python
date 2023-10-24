@@ -69,7 +69,7 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
                 }
                 if (this.terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)) {
                     // No need to show notification if terminal prompt already indicates when env is activated.
-                    // return;
+                    return;
                 }
                 await this.notifyUsers(resource);
             }),
