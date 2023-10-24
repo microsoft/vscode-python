@@ -16,10 +16,11 @@ import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { ITerminalEnvVarCollectionService } from '../types';
 import { sleep } from '../../common/utils/async';
 import { isTestExecution } from '../../common/constants';
+import { PythonEnvType } from '../../pythonEnvironments/base/info';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
@@ -85,12 +86,13 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
         }
         const prompts = [Common.doNotShowAgain];
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        if (!interpreter) {
+        if (!interpreter || !interpreter.type) {
             return;
         }
         const terminalPromptName = getPromptName(interpreter);
+        const environmentType = interpreter.type === PythonEnvType.Conda ? 'Selected conda' : 'Python virtual';
         const selection = await this.appShell.showInformationMessage(
-            Interpreters.terminalEnvVarCollectionPrompt.format(terminalPromptName),
+            Interpreters.terminalEnvVarCollectionPrompt.format(environmentType, terminalPromptName),
             ...prompts,
         );
         if (!selection) {
@@ -109,5 +111,5 @@ function getPromptName(interpreter: PythonEnvironment) {
     if (interpreter.envPath) {
         return `"(${path.basename(interpreter.envPath)})"`;
     }
-    return '';
+    return 'environment indicator';
 }

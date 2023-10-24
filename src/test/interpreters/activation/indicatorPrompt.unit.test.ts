@@ -20,8 +20,9 @@ import { sleep } from '../../core';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { ITerminalEnvVarCollectionService } from '../../../client/terminals/types';
+import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 
-suite('Terminal Environment Variable Collection Prompt', () => {
+suite('Terminal Activation Indicator Prompt', () => {
     let shell: IApplicationShell;
     let terminalManager: ITerminalManager;
     let experimentService: IExperimentService;
@@ -35,7 +36,8 @@ suite('Terminal Environment Variable Collection Prompt', () => {
     let interpreterService: IInterpreterService;
     const prompts = [Common.doNotShowAgain];
     const envName = 'env';
-    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format(`"(${envName})"`);
+    const type = PythonEnvType.Virtual;
+    const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format('Python virtual', `"(${envName})"`);
 
     setup(async () => {
         shell = mock<IApplicationShell>();
@@ -43,6 +45,7 @@ suite('Terminal Environment Variable Collection Prompt', () => {
         interpreterService = mock<IInterpreterService>();
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
             envName,
+            type,
         } as unknown) as PythonEnvironment);
         experimentService = mock<IExperimentService>();
         activeResourceService = mock<IActiveResourceService>();
