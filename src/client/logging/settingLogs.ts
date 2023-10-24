@@ -6,8 +6,6 @@ import { traceError, traceInfo } from '.';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { showErrorMessage } from '../common/vscodeApis/windowApis';
 import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
-import { Common } from '../common/utils/localize';
-import { executeCommand } from '../common/vscodeApis/commandApis';
 
 function logOnLegacyFormatterSetting(): boolean {
     let usesLegacyFormatter = false;
@@ -90,15 +88,11 @@ async function notifyLegacySettings(): Promise<void> {
         return;
     }
     _isShown = true;
-    const response = await showErrorMessage(
+    showErrorMessage(
         l10n.t(
-            'Formatting and linting features have been deprecated from the Python extension. Please install a linter or a formatter extension. Open logs for more information.'
+            `Formatting and linting features have been deprecated from the Python extension. Please install a linter or a formatter extension. [Open logs](command:${Commands.ViewOutput}) for more information.`,
         ),
-        Common.showLogs,
     );
-    if (response === Common.showLogs) {
-        executeCommand(Commands.ViewOutput);
-    }
 }
 
 export function logAndNotifyOnLegacySettings(): void {
