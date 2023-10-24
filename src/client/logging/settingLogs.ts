@@ -74,10 +74,7 @@ function logOnLegacyLinterSetting(): boolean {
                     );
                 } else if (['pydocstyle', 'pylama', 'pycodestyle', 'bandit'].includes(linter)) {
                     traceError(
-                        `selected linter "${linter}" may be suported extensions like "ruff" which include several linter rules`,
-                    );
-                    traceError(
-                        `Please install extension: https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff`,
+                        `selected linter "${linter}" may be supported by extensions like "Ruff", which include several linter rules: https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff`,
                     );
                 }
             }
@@ -95,7 +92,7 @@ async function notifyLegacySettings(): Promise<void> {
     _isShown = true;
     const response = await showErrorMessage(
         l10n.t(
-            'Formatting and Linting features have been moved to separate extensions. Please see the logs for more information.',
+            'Formatting and linting features have been deprecated from the Python extension. Please install a linter or a formatter extension. Open logs for more information.'
         ),
         Common.showLogs,
     );
