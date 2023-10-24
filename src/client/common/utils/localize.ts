@@ -197,12 +197,12 @@ export namespace Interpreters {
     export const activatingTerminals = l10n.t('Reactivating terminals...');
     export const activateTerminalDescription = l10n.t('Activated environment for');
     export const terminalEnvVarCollectionPrompt = l10n.t(
-        'The selected Python environment indicator{0} may not be present in the terminal prompt. Rest assured, all terminals are still activated. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
+        'Selected Python environment was successfully activated, even though {0} may not be present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
     );
     export const terminalDeactivateProgress = l10n.t('Editing {0}...');
     export const restartingTerminal = l10n.t('Restarting terminal and deactivating...');
     export const terminalDeactivatePrompt = l10n.t(
-        'Deactivating virtual environments may not work by default due to a technical limitation in our activation approach, but it can be resolved by appending a line to "{0}". Be sure to restart the shell afterward. [Learn more](https://aka.ms/AAmx2ft).',
+        'Deactivating virtual environments may not work by default. To make it work, edit your "{0}" and then restart your shell. [Learn more](https://aka.ms/AAmx2ft).',
     );
     export const activatedCondaEnvLaunch = l10n.t(
         'We noticed VS Code was launched from an activated conda environment, would you like to select it?',

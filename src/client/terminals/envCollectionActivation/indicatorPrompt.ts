@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri, l10n } from 'vscode';
+import { Uri } from 'vscode';
 import * as path from 'path';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../common/application/types';
 import {
@@ -104,10 +104,10 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
 
 function getPromptName(interpreter: PythonEnvironment) {
     if (interpreter.envName) {
-        return `, ${l10n.t('i.e')} "(${interpreter.envName})"`;
+        return `"(${interpreter.envName})"`;
     }
     if (interpreter.envPath) {
-        return `, ${l10n.t('i.e')} "(${path.basename(interpreter.envPath)})"`;
+        return `"(${path.basename(interpreter.envPath)})"`;
     }
     return '';
 }
