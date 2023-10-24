@@ -16,7 +16,7 @@ import { Common, Interpreters } from '../../common/utils/localize';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ITerminalEnvVarCollectionService } from '../types';
 import { sleep } from '../../common/utils/async';
 import { isTestExecution } from '../../common/constants';
@@ -69,7 +69,7 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
                 }
                 if (this.terminalEnvVarCollectionService.isTerminalPromptSetCorrectly(resource)) {
                     // No need to show notification if terminal prompt already indicates when env is activated.
-                    return;
+                    // return;
                 }
                 await this.notifyUsers(resource);
             }),
