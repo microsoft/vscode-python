@@ -54,7 +54,8 @@ export class ProcessService extends EventEmitter implements IProcessService {
     public shellExec(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
         this.emit('exec', command, undefined, options);
         const disposables = new Set<IDisposable>();
-        return shellExec(command, options, this.env, disposables).finally(() => {
+        const shellOptions = { ...options, doNotLog: true };
+        return shellExec(command, shellOptions, this.env, disposables).finally(() => {
             // Ensure the process we started is cleaned up.
             disposables.forEach((p) => {
                 try {
