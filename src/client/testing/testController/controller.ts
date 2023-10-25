@@ -290,7 +290,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             } else if (settings.testing.unittestEnabled) {
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                     traceInfo(`Running discovery for unittest using the new test adapter.`);
-                    traceInfo(`Running discovery for pytest using the new test adapter.`);
                     if (workspace && workspace.uri) {
                         const testAdapter = this.testAdapters.get(workspace.uri);
                         if (testAdapter) {
