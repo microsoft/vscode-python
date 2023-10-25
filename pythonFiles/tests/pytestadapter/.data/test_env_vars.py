@@ -5,9 +5,6 @@ import os
 
 
 def test_clear_env(monkeypatch):
-    # Store a copy of the current environment variables
-    original_env = dict(os.environ)
-
     # Clear all environment variables
     monkeypatch.setattr(os, "environ", {})
 
