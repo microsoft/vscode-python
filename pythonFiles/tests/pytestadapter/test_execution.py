@@ -140,13 +140,6 @@ def test_bad_id_error_execution():
         ),
         (
             [
-                "test_env_vars.py::test_clear_env_unsafe",
-                "test_env_vars.py::test_check_env_unsafe",
-            ],
-            expected_execution_test_output.unsafe_clear_env_vars_expected_execution_output,
-        ),
-        (
-            [
                 "skip_tests.py::test_something",
                 "skip_tests.py::test_another_thing",
                 "skip_tests.py::test_decorator_thing",

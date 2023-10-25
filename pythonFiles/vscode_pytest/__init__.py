@@ -722,6 +722,12 @@ def send_post_request(
         except Exception as error:
             error_msg = f"Error attempting to connect to extension communication socket[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
+            print(
+                "If you are on a Windows machine, this error may be occurring if any of your tests clear environment variables"
+                " as they are required to communicate with the extension. Please reference https://docs.pytest.org/en/stable/how-to/monkeypatch.html#monkeypatching-environment-variables"
+                "for the correct way to clear environment variables during testing.\n",
+                file=sys.stderr,
+            )
             __socket = None
             raise VSCodePytestError(error_msg)
 
