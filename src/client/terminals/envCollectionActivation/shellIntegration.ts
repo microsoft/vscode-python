@@ -5,6 +5,7 @@ import { TerminalShellType } from '../../common/terminal/types';
  * https://code.visualstudio.com/docs/terminal/shell-integration
  */
 export const ShellIntegrationShells = [
+    TerminalShellType.commandPrompt, // Shell integration is not supported, but is also not needed to activate the env.
     TerminalShellType.powershell,
     TerminalShellType.powershellCore,
     TerminalShellType.bash,

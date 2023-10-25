@@ -120,6 +120,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this,
                     this.disposables,
                 );
+                const isActive = this.isShellIntegrationActive();
+                if (!isActive) {
+                    traceWarn(`Shell integration is not active, environment activated maybe overriden by the shell.`);
+                }
                 this.registeredOnce = true;
             }
             this._applyCollection(resource).ignoreErrors();
@@ -153,13 +157,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             shell,
         );
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
+        traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
             if (defaultShell?.shellType !== shellType) {
                 // Commands to fetch env vars may fail in custom shells due to unknown reasons, in that case
                 // fallback to default shells as they are known to work better.
-                await this._applyCollection(resource, defaultShell?.shell);
+                await this._applyCollectionImpl(resource, defaultShell?.shell);
                 return;
             }
             await this.trackTerminalPrompt(shell, resource, env);
@@ -351,6 +356,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // Unfortunately shell integration could still've failed in remote scenarios, we can't know for sure:
             // https://code.visualstudio.com/docs/terminal/shell-integration#_automatic-script-injection
             return true;
+        }
+        if (isEnabled) {
+            traceVerbose('Shell integrated is disabled in user settings.');
         }
         return false;
     }
