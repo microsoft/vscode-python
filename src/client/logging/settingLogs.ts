@@ -4,7 +4,7 @@
 import { l10n } from 'vscode';
 import { traceError, traceInfo } from '.';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
-import { showErrorMessage } from '../common/vscodeApis/windowApis';
+import { showWarningMessage } from '../common/vscodeApis/windowApis';
 import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 import { Common } from '../common/utils/localize';
 import { executeCommand } from '../common/vscodeApis/commandApis';
@@ -97,9 +97,9 @@ async function notifyLegacySettings(): Promise<void> {
         return;
     }
     _isShown = true;
-    const response = await showErrorMessage(
+    const response = await showWarningMessage(
         l10n.t(
-            `You have deprecated linting or formatting settings for Python. Please see the [logs](command:${Commands.ViewOutput}) for more details`,
+            `You have deprecated linting or formatting settings for Python. Please see the [logs](command:${Commands.ViewOutput}) for more details.`,
         ),
         Common.learnMore,
     );
