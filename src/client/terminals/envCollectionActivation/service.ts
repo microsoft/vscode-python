@@ -357,7 +357,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // https://code.visualstudio.com/docs/terminal/shell-integration#_automatic-script-injection
             return true;
         }
-        if (isEnabled) {
+        if (!isEnabled) {
             traceVerbose('Shell integrated is disabled in user settings.');
         }
         return false;
