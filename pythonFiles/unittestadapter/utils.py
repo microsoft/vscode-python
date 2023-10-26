@@ -217,7 +217,9 @@ def build_test_tree(
     return root, error
 
 
-def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
+def parse_unittest_args(
+    args: List[str],
+) -> Tuple[str, str, Union[str, None], int, Union[bool, None], Union[bool, None]]:
     """Parse command-line arguments that should be forwarded to unittest to perform discovery.
 
     Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,
@@ -241,12 +243,11 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
 
     parsed_args, _ = arg_parser.parse_known_args(args)
 
+    verbosity: int = 1
     if parsed_args.quiet:
         verbosity = 0
     elif parsed_args.verbose:
         verbosity = 2
-    else:
-        verbosity = 1
 
     return (
         parsed_args.start_directory,

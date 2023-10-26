@@ -11,7 +11,7 @@ import sys
 import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -167,7 +167,7 @@ def run_tests(
     pattern: str,
     top_level_dir: Optional[str],
     uuid: Optional[str],
-    verbosity: Optional[int],
+    verbosity: int,
     failfast: Optional[bool],
     locals: Optional[bool] = None,
 ) -> PayloadDict:
@@ -193,15 +193,18 @@ def run_tests(
         }
         suite = loader.discover(start_dir, pattern, top_level_dir)  # noqa: F841
 
-        run_args = {"resultclass": UnittestTestResult}
-        if verbosity is not None:
-            run_args["verbosity"] = verbosity
-        if failfast is not None:
-            run_args["failfast"] = failfast
-        if locals is not None:
-            run_args["tb_locals"] = locals
-        # Run tests.
-        runner = unittest.TextTestRunner(**run_args)
+        if failfast is None:
+            failfast = False
+        if locals is None:
+            locals = False
+        if verbosity is None:
+            verbosity = 1
+        runner = unittest.TextTestRunner(
+            resultclass=UnittestTestResult,
+            tb_locals=locals,
+            failfast=failfast,
+            verbosity=verbosity,
+        )
         # lets try to tailer our own suite so we can figure out running only the ones we want
         loader = unittest.TestLoader()
         tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)

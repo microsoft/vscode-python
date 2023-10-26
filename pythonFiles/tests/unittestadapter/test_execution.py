@@ -22,7 +22,7 @@ def test_no_ids_run() -> None:
     start_dir: str = os.fspath(TEST_DATA_PATH)
     testids = []
     pattern = "discovery_simple*"
-    actual = run_tests(start_dir, testids, pattern, None, "fake-uuid", None, None)
+    actual = run_tests(start_dir, testids, pattern, None, "fake-uuid", 1, None)
     assert actual
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
@@ -46,7 +46,7 @@ def test_single_ids_run() -> None:
         "discovery_simple*",
         None,
         "fake-uuid",
-        None,
+        1,
         None,
     )
     assert actual
@@ -76,7 +76,7 @@ def test_subtest_run() -> None:
         "test_subtest.py",
         None,
         "fake-uuid",
-        None,
+        1,
         None,
     )
     subtests_ids = [
@@ -174,7 +174,7 @@ def test_multiple_ids_run(test_ids, pattern, cwd, expected_outcome) -> None:
 
     All tests should have the outcome of `success`.
     """
-    actual = run_tests(cwd, test_ids, pattern, None, "fake-uuid", None, None)
+    actual = run_tests(cwd, test_ids, pattern, None, "fake-uuid", 1, None)
     assert actual
     assert all(item in actual for item in ("cwd", "status"))
     assert actual["status"] == "success"
@@ -203,7 +203,7 @@ def test_failed_tests():
         "test_fail_simple*",
         None,
         "fake-uuid",
-        None,
+        1,
         None,
     )
     assert actual
@@ -237,7 +237,7 @@ def test_unknown_id():
         "test_fail_simple*",
         None,
         "fake-uuid",
-        None,
+        1,
         None,
     )
     assert actual
@@ -266,7 +266,7 @@ def test_incorrect_path():
         "test_fail_simple*",
         None,
         "fake-uuid",
-        None,
+        1,
         None,
     )
     assert actual
