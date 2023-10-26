@@ -3,10 +3,21 @@
 
 import ast
 import json
+import os
+import pathlib
 import re
 import sys
 import textwrap
 from typing import Iterable
+
+script_dir = pathlib.Path(
+    "User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python"
+)
+sys.path.append(os.fspath(script_dir))
+import debugpy
+
+debugpy.connect(5678)
+debugpy.breakpoint()
 
 
 def split_lines(source):
@@ -150,8 +161,16 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     or a multiline dictionary, or differently styled multi-line list comprehension, etc.
     Then call the normalize_lines function to normalize our smartly selected code block.
     """
+    parsed_file_content = None
 
-    parsed_file_content = ast.parse(wholeFileContent)
+    try:
+        parsed_file_content = ast.parse(wholeFileContent)
+    except Exception as old_python_code:
+        # Handle case where user is attempting to run code where file contains deprecated Python code.
+        # Somehow have to let typescript side know and show warning message. (TODO)
+        print(old_python_code)
+        return
+
     smart_code = ""
     should_run_top_blocks = []
 
