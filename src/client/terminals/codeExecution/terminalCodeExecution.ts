@@ -45,6 +45,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         if (!code || code.trim().length === 0) {
             return;
         }
+        await this.initializeRepl(resource);
         if (code == 'deprecated') {
             // If user is trying to smart send deprecated code show warning
             await showWarningMessage(
@@ -56,10 +57,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 Common.learnMore,
             );
         } else {
-            // await this.getTerminalService(resource).sendText(code);
+            await this.getTerminalService(resource).sendText(code);
         }
-        await this.getTerminalService(resource).sendText(code);
-        await this.initializeRepl(resource);
     }
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
