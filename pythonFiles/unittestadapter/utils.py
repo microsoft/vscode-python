@@ -234,11 +234,25 @@ def parse_unittest_args(args: List[str]) -> Tuple[str, str, Union[str, None]]:
     arg_parser.add_argument("--start-directory", "-s", default=".")
     arg_parser.add_argument("--pattern", "-p", default="test*.py")
     arg_parser.add_argument("--top-level-directory", "-t", default=None)
+    arg_parser.add_argument("--failfast", "-f", action="store_true", default=None)
+    arg_parser.add_argument("--verbose", "-v", action="store_true", default=None)
+    arg_parser.add_argument("-q", "--quiet", action="store_true", default=None)
+    arg_parser.add_argument("--locals", action="store_true", default=None)
 
     parsed_args, _ = arg_parser.parse_known_args(args)
+
+    if parsed_args.quiet:
+        verbosity = 0
+    elif parsed_args.verbose:
+        verbosity = 2
+    else:
+        verbosity = 1
 
     return (
         parsed_args.start_directory,
         parsed_args.pattern,
         parsed_args.top_level_directory,
+        verbosity,
+        parsed_args.failfast,
+        parsed_args.locals,
     )

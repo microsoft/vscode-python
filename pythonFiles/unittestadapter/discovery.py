@@ -37,7 +37,10 @@ class EOTPayloadDict(TypedDict):
 
 
 def discover_tests(
-    start_dir: str, pattern: str, top_level_dir: Optional[str], uuid: Optional[str]
+    start_dir: str,
+    pattern: str,
+    top_level_dir: Optional[str],
+    uuid: Optional[str],
 ) -> PayloadDict:
     """Returns a dictionary containing details of the discovered tests.
 
@@ -119,7 +122,14 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+    (
+        start_dir,
+        pattern,
+        top_level_dir,
+        _verbosity,
+        _failfast,
+        _locals,
+    ) = parse_unittest_args(argv[index + 1 :])
 
     testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
     testUuid = os.environ.get("TEST_UUID")

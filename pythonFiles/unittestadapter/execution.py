@@ -167,6 +167,9 @@ def run_tests(
     pattern: str,
     top_level_dir: Optional[str],
     uuid: Optional[str],
+    verbosity: Optional[int],
+    failfast: Optional[bool],
+    locals: Optional[bool] = None,
 ) -> PayloadDict:
     cwd = os.path.abspath(start_dir)
     status = TestExecutionStatus.error
@@ -190,8 +193,15 @@ def run_tests(
         }
         suite = loader.discover(start_dir, pattern, top_level_dir)  # noqa: F841
 
+        run_args = {"resultclass": UnittestTestResult}
+        if verbosity is not None:
+            run_args["verbosity"] = verbosity
+        if failfast is not None:
+            run_args["failfast"] = failfast
+        if locals is not None:
+            run_args["tb_locals"] = locals
         # Run tests.
-        runner = unittest.TextTestRunner(resultclass=UnittestTestResult)
+        runner = unittest.TextTestRunner(**run_args)
         # lets try to tailer our own suite so we can figure out running only the ones we want
         loader = unittest.TestLoader()
         tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)
@@ -262,7 +272,14 @@ if __name__ == "__main__":
     argv = sys.argv[1:]
     index = argv.index("--udiscovery")
 
-    start_dir, pattern, top_level_dir = parse_unittest_args(argv[index + 1 :])
+    (
+        start_dir,
+        pattern,
+        top_level_dir,
+        verbosity,
+        failfast,
+        locals,
+    ) = parse_unittest_args(argv[index + 1 :])
 
     run_test_ids_port = os.environ.get("RUN_TEST_IDS_PORT")
     run_test_ids_port_int = (
@@ -319,7 +336,14 @@ if __name__ == "__main__":
     if test_ids_from_buffer:
         # Perform test execution.
         payload = run_tests(
-            start_dir, test_ids_from_buffer, pattern, top_level_dir, testUuid
+            start_dir,
+            test_ids_from_buffer,
+            pattern,
+            top_level_dir,
+            testUuid,
+            verbosity,
+            failfast,
+            locals,
         )
     else:
         cwd = os.path.abspath(start_dir)

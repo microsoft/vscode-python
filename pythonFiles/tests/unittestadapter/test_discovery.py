@@ -18,7 +18,7 @@ from .helpers import TEST_DATA_PATH, is_same_tree
     [
         (
             ["-s", "something", "-p", "other*", "-t", "else"],
-            ("something", "other*", "else"),
+            ("something", "other*", "else", 1, None, None),
         ),
         (
             [
@@ -29,11 +29,35 @@ from .helpers import TEST_DATA_PATH, is_same_tree
                 "--top-level-directory",
                 "baz",
             ],
-            ("foo", "bar*", "baz"),
+            ("foo", "bar*", "baz", 1, None, None),
         ),
         (
             ["--foo", "something"],
-            (".", "test*.py", None),
+            (".", "test*.py", None, 1, None, None),
+        ),
+        (
+            ["--foo", "something", "-v"],
+            (".", "test*.py", None, 2, None, None),
+        ),
+        (
+            ["--foo", "something", "-f"],
+            (".", "test*.py", None, 1, True, None),
+        ),
+        (
+            ["--foo", "something", "--verbose", "-f"],
+            (".", "test*.py", None, 2, True, None),
+        ),
+        (
+            ["--foo", "something", "-q", "--failfast"],
+            (".", "test*.py", None, 0, True, None),
+        ),
+        (
+            ["--foo", "something", "--quiet"],
+            (".", "test*.py", None, 0, None, None),
+        ),
+        (
+            ["--foo", "something", "--quiet", "--locals"],
+            (".", "test*.py", None, 0, None, True),
         ),
     ],
 )
