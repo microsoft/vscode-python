@@ -123,7 +123,7 @@ async function createVenv(
     out.subscribe(
         (value) => {
             const output = value.out.split(/\r?\n/g).join(os.EOL);
-            traceLog(output);
+            traceLog(output.trimEnd());
             if (output.includes(VENV_CREATED_MARKER) || output.includes(VENV_EXISTING_MARKER)) {
                 venvPath = getVenvFromOutput(output);
             }
