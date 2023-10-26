@@ -120,6 +120,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this,
                     this.disposables,
                 );
+                const { shell } = this.applicationEnvironment;
+                const isActive = this.isShellIntegrationActive(shell);
+                const shellType = identifyShellFromShellPath(shell);
+                if (!isActive && shellType !== TerminalShellType.commandPrompt) {
+                    traceWarn(`Shell integration is not active, environment activated maybe overriden by the shell.`);
+                }
                 this.registeredOnce = true;
             }
             this._applyCollection(resource).ignoreErrors();
@@ -153,13 +159,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             shell,
         );
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
+        traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
             const shellType = identifyShellFromShellPath(shell);
             const defaultShell = defaultShells[this.platform.osType];
             if (defaultShell?.shellType !== shellType) {
                 // Commands to fetch env vars may fail in custom shells due to unknown reasons, in that case
                 // fallback to default shells as they are known to work better.
-                await this._applyCollection(resource, defaultShell?.shell);
+                await this._applyCollectionImpl(resource, defaultShell?.shell);
                 return;
             }
             await this.trackTerminalPrompt(shell, resource, env);
@@ -177,7 +184,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
-        const prependOptions = this.getPrependOptions();
+        const prependOptions = this.getPrependOptions(shell);
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
@@ -270,7 +277,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = this.isShellIntegrationActive();
+            const config = this.isShellIntegrationActive(shell);
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -325,8 +332,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         }
     }
 
-    private getPrependOptions(): EnvironmentVariableMutatorOptions {
-        const isActive = this.isShellIntegrationActive();
+    private getPrependOptions(shell: string): EnvironmentVariableMutatorOptions {
+        const isActive = this.isShellIntegrationActive(shell);
         // Ideally we would want to prepend exactly once, either at shell integration or process creation.
         // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
         return isActive
@@ -340,17 +347,17 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
               };
     }
 
-    private isShellIntegrationActive(): boolean {
+    private isShellIntegrationActive(shell: string): boolean {
         const isEnabled = this.workspaceService
             .getConfiguration('terminal')
             .get<boolean>('integrated.shellIntegration.enabled')!;
-        if (
-            isEnabled &&
-            ShellIntegrationShells.includes(identifyShellFromShellPath(this.applicationEnvironment.shell))
-        ) {
+        if (isEnabled && ShellIntegrationShells.includes(identifyShellFromShellPath(shell))) {
             // Unfortunately shell integration could still've failed in remote scenarios, we can't know for sure:
             // https://code.visualstudio.com/docs/terminal/shell-integration#_automatic-script-injection
             return true;
+        }
+        if (!isEnabled) {
+            traceVerbose('Shell integrated is disabled in user settings.');
         }
         return false;
     }

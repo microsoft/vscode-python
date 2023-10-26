@@ -4,8 +4,10 @@
 import { l10n } from 'vscode';
 import { traceError, traceInfo } from '.';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
-import { showErrorMessage } from '../common/vscodeApis/windowApis';
+import { showWarningMessage } from '../common/vscodeApis/windowApis';
 import { getConfiguration, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { Common } from '../common/utils/localize';
+import { executeCommand } from '../common/vscodeApis/commandApis';
 
 function logOnLegacyFormatterSetting(): boolean {
     let usesLegacyFormatter = false;
@@ -21,6 +23,9 @@ function logOnLegacyFormatterSetting(): boolean {
         traceInfo(`Default formatter is set to ${formatter} for workspace ${workspace.uri.fsPath}`);
         if (formatter === PVSC_EXTENSION_ID) {
             usesLegacyFormatter = true;
+            traceError(
+                'The setting "editor.defaultFormatter" for Python is set to "ms-python.python" which is deprecated.',
+            );
             traceError('Formatting features have been moved to separate formatter extensions.');
             traceError('See here for more information: https://code.visualstudio.com/docs/python/formatting');
             traceError('Please install the formatter extension you prefer and set it as the default formatter.');
@@ -60,6 +65,10 @@ function logOnLegacyLinterSetting(): boolean {
             const linterEnabled = config.get<boolean>(`linting.${linter}Enabled`, false);
             if (linterEnabled) {
                 usesLegacyLinter = true;
+                traceError(`Following setting is deprecated: "python.linting.${linter}Enabled"`);
+                traceError(
+                    `All settings starting with "python.linting." are deprecated and can be removed from settings.`,
+                );
                 traceError('Linting features have been moved to separate linter extensions.');
                 traceError('See here for more information: https://code.visualstudio.com/docs/python/linting');
                 if (linter === 'pylint' || linter === 'flake8') {
@@ -72,7 +81,7 @@ function logOnLegacyLinterSetting(): boolean {
                     );
                 } else if (['pydocstyle', 'pylama', 'pycodestyle', 'bandit'].includes(linter)) {
                     traceError(
-                        `selected linter "${linter}" may be supported by extensions like "Ruff", which include several linter rules: https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff`,
+                        `Selected linter "${linter}" may be supported by extensions like "Ruff", which include several linter rules: https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff`,
                     );
                 }
             }
@@ -88,11 +97,15 @@ async function notifyLegacySettings(): Promise<void> {
         return;
     }
     _isShown = true;
-    showErrorMessage(
+    const response = await showWarningMessage(
         l10n.t(
-            `Formatting and linting features have been deprecated from the Python extension. Please install a linter or a formatter extension. [Open logs](command:${Commands.ViewOutput}) for more information.`,
+            `You have deprecated linting or formatting settings for Python. Please see the [logs](command:${Commands.ViewOutput}) for more details.`,
         ),
+        Common.learnMore,
     );
+    if (response === Common.learnMore) {
+        executeCommand('vscode.open', 'https://aka.ms/AAlgvkb');
+    }
 }
 
 export function logAndNotifyOnLegacySettings(): void {
