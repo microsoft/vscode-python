@@ -5,12 +5,15 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, l10n, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
+import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { Common } from '../../common/utils/localize';
+import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
@@ -42,9 +45,20 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         if (!code || code.trim().length === 0) {
             return;
         }
-
+        if (code == 'deprecated') {
+            // If user is trying to smart send deprecated code show warning
+            await showWarningMessage(
+                l10n.t(
+                    `You are attempting to run Smart Send on Python file with deprecated code, please
+                    turn off smart send if you wish to always run line by line or explicitly select code
+                    to force run [logs](command:${Commands.ViewOutput}) for more details.`,
+                ),
+                Common.learnMore,
+            );
+        } else {
+            await this.getTerminalService(resource).sendText(code);
+        }
         await this.initializeRepl(resource);
-        await this.getTerminalService(resource).sendText(code);
     }
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);

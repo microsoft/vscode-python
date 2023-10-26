@@ -10,14 +10,14 @@ import sys
 import textwrap
 from typing import Iterable
 
-script_dir = pathlib.Path(
-    "User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python"
-)
-sys.path.append(os.fspath(script_dir))
-import debugpy
+# script_dir = pathlib.Path(
+#     "User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python"
+# )
+# sys.path.append(os.fspath(script_dir))
+# import debugpy
 
-debugpy.connect(5678)
-debugpy.breakpoint()
+# debugpy.connect(5678)
+# debugpy.breakpoint()
 
 
 def split_lines(source):
@@ -168,8 +168,11 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     except Exception as old_python_code:
         # Handle case where user is attempting to run code where file contains deprecated Python code.
         # Somehow have to let typescript side know and show warning message. (TODO)
-        print(old_python_code)
-        return
+        # print(old_python_code)
+        return {
+            "normalized_smart_result": "deprecated",
+            "which_line_next": 0,
+        }
 
     smart_code = ""
     should_run_top_blocks = []
