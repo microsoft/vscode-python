@@ -106,7 +106,7 @@ async function createCondaEnv(
     out.subscribe(
         (value) => {
             const output = splitLines(value.out).join('\r\n');
-            traceLog(output);
+            traceLog(output.trimEnd());
             if (output.includes(CONDA_ENV_CREATED_MARKER) || output.includes(CONDA_ENV_EXISTING_MARKER)) {
                 condaEnvPath = getCondaEnvFromOutput(output);
             }

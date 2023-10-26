@@ -624,3 +624,63 @@ logging_test_expected_execution_output = {
         "subtest": None,
     },
 }
+
+# This is the expected output for the test safe clear env vars file.
+# └── test_env_vars.py
+#    └── test_clear_env: success
+#    └── test_check_env: success
+
+test_safe_clear_env_vars_path = TEST_DATA_PATH / "test_env_vars.py"
+safe_clear_env_vars_expected_execution_output = {
+    get_absolute_test_id(
+        "test_env_vars.py::test_clear_env", test_safe_clear_env_vars_path
+    ): {
+        "test": get_absolute_test_id(
+            "test_env_vars.py::test_clear_env", test_safe_clear_env_vars_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "test_env_vars.py::test_check_env", test_safe_clear_env_vars_path
+    ): {
+        "test": get_absolute_test_id(
+            "test_env_vars.py::test_check_env", test_safe_clear_env_vars_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+# This is the expected output for the test unsafe clear env vars file.
+# └── test_env_vars.py
+#    └── test_clear_env_unsafe: success
+#    └── test_check_env_unsafe: success
+unsafe_clear_env_vars_expected_execution_output = {
+    get_absolute_test_id(
+        "test_env_vars.py::test_clear_env_unsafe", test_safe_clear_env_vars_path
+    ): {
+        "test": get_absolute_test_id(
+            "test_env_vars.py::test_clear_env_unsafe", test_safe_clear_env_vars_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "test_env_vars.py::test_check_env_unsafe", test_safe_clear_env_vars_path
+    ): {
+        "test": get_absolute_test_id(
+            "test_env_vars.py::test_check_env_unsafe", test_safe_clear_env_vars_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
