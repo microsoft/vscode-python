@@ -699,6 +699,12 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "python.REPL.EnableREPLSmartSend": {
+                    "default": true,
+                    "description": "%python.EnableREPLSmartSend.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
                     "description": "%python.testing.autoTestDiscoverOnSaveEnabled.description%",

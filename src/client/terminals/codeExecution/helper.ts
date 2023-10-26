@@ -6,6 +6,7 @@ import { inject, injectable } from 'inversify';
 import { l10n, Position, Range, TextEditor, Uri } from 'vscode';
 
 import {
+    IActiveResourceService,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
@@ -36,6 +37,8 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     private readonly commandManager: ICommandManager;
 
+    private activeResourceService: IActiveResourceService;
+
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error TS6133: 'configSettings' is declared but its value is never read.
     private readonly configSettings: IConfigurationService;
@@ -47,6 +50,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.configSettings = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.commandManager = serviceContainer.get<ICommandManager>(ICommandManager);
+        this.activeResourceService = this.serviceContainer.get<IActiveResourceService>(IActiveResourceService);
     }
 
     public async normalizeLines(code: string, wholeFileContent?: string, resource?: Uri): Promise<string> {
@@ -90,6 +94,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const endLineVal = activeEditor?.selection?.end.line ?? 0;
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
             const smartSendExperimentEnabledVal = pythonSmartSendEnabled(this.serviceContainer);
+            const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
+            const smartSendSettingsEnabledVal = pythonSettings.REPL.EnableREPLSmartSend;
             const input = JSON.stringify({
                 code,
                 wholeFileContent,
@@ -97,6 +104,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 endLine: endLineVal,
                 emptyHighlight: emptyHighlightVal,
                 smartSendExperimentEnabled: smartSendExperimentEnabledVal,
+                smartSendSettingsEnabled: smartSendSettingsEnabledVal,
             });
             observable.proc?.stdin?.write(input);
             observable.proc?.stdin?.end();

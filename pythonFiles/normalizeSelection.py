@@ -289,7 +289,11 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
 
-    if empty_Highlight and contents.get("smartSendExperimentEnabled"):
+    if (
+        empty_Highlight
+        and contents.get("smartSendExperimentEnabled")
+        and contents.get("smartSendSettingsEnabled")
+    ):
         result = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,

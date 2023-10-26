@@ -58,6 +58,7 @@
     "python.missingPackage.severity.description": "Set severity of missing packages in requirements.txt or pyproject.toml",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
+    "python.EnableREPLSmartSend.description": "Toggle smart send for the Python REPL.",
     "python.tensorBoard.logDirectory.description": "Set this setting to your preferred TensorBoard log directory to skip log directory prompt when starting TensorBoard.",
     "python.tensorBoard.logDirectory.markdownDeprecationMessage": "Tensorboard support has been moved to the extension [Tensorboard extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.tensorboard). Instead use the setting `tensorBoard.logDirectory`.",
     "python.tensorBoard.logDirectory.deprecationMessage": "Tensorboard support has been moved to the extension Tensorboard extension. Instead use the setting `tensorBoard.logDirectory`.",

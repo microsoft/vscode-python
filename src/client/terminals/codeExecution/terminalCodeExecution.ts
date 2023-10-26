@@ -56,8 +56,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 Common.learnMore,
             );
         } else {
-            await this.getTerminalService(resource).sendText(code);
+            // await this.getTerminalService(resource).sendText(code);
         }
+        await this.getTerminalService(resource).sendText(code);
         await this.initializeRepl(resource);
     }
     public async initializeRepl(resource: Resource) {
