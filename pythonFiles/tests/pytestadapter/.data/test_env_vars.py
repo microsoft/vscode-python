@@ -29,5 +29,4 @@ def test_clear_env_unsafe():
 def test_check_env_unsafe():
     # ("PATH" in os.environ) is False here if it runs after test_clear_env_unsafe.
     # Regardless, this test will pass and TEST_PORT and TEST_UUID will still be set correctly
-    print("PATH" in os.environ)
-    assert True
+    assert "PATH" not in os.environ
