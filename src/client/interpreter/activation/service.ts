@@ -330,7 +330,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     if (result.stderr) {
                         if (returnedEnv) {
                             traceWarn('Got env variables but with errors', result.stderr, returnedEnv);
-                            if (result.stderr.includes('running scripts is disabled')) {
+                            if (
+                                result.stderr.includes('running scripts is disabled') ||
+                                result.stderr.includes('FullyQualifiedErrorId : UnauthorizedAccess')
+                            ) {
                                 throw new Error(
                                     `Skipping returned result when powershell execution is disabled, stderr ${result.stderr} for ${command}`,
                                 );
