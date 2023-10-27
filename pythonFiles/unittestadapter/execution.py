@@ -20,6 +20,7 @@ sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 from testing_tools import process_json_util, socket_manager
 from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
 from unittestadapter.utils import parse_unittest_args
+from django_runner import django_execution_runner
 
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
@@ -28,6 +29,13 @@ testPort = 0
 testUuid = 0
 START_DIR = ""
 DEFAULT_PORT = 45454
+
+
+class VSCodeUnittestError(Exception):
+    """A custom exception class for pytest errors."""
+
+    def __init__(self, message):
+        super().__init__(message)
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -103,7 +111,6 @@ class UnittestTestResult(unittest.TextTestResult):
         subtest: Union[unittest.TestCase, None] = None,
     ):
         tb = None
-
         message = ""
         # error is a tuple of the form returned by sys.exc_info(): (type, value, traceback).
         if error is not None:
@@ -128,9 +135,16 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
         self.formatted[test_id] = result
-        if testPort == 0 or testUuid == 0:
-            print("Error sending response, port or uuid unknown to python server.")
-        send_run_data(result, testPort, testUuid)
+        testPort2 = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
+        testUuid2 = os.environ.get("TEST_UUID")
+        if testPort2 == 0 or testUuid2 == 0:
+            print(
+                "Error sending response, port or uuid unknown to python server.",
+                testPort,
+                testUuid,
+            )
+
+        send_run_data(result, testPort2, testUuid2)
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -303,36 +317,44 @@ if __name__ == "__main__":
 
     testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
     testUuid = os.environ.get("TEST_UUID")
-    if testPort is DEFAULT_PORT:
-        print(
-            "Error[vscode-unittest]: TEST_PORT is not set.",
-            " TEST_UUID = ",
-            testUuid,
-        )
-    if testUuid is None:
-        print(
-            "Error[vscode-unittest]: TEST_UUID is not set.",
-            " TEST_PORT = ",
-            testPort,
-        )
-        testUuid = "unknown"
-    if test_ids_from_buffer:
-        # Perform test execution.
-        payload = run_tests(
-            start_dir, test_ids_from_buffer, pattern, top_level_dir, testUuid
-        )
-    else:
-        cwd = os.path.abspath(start_dir)
-        status = TestExecutionStatus.error
+    try:
+        if testPort is DEFAULT_PORT:
+            raise VSCodeUnittestError(
+                "Error[vscode-unittest]: TEST_PORT is not set.",
+                " TEST_UUID = ",
+                testUuid,
+            )
+        if testUuid is None:
+            raise VSCodeUnittestError(
+                "Error[vscode-unittest]: TEST_UUID is not set.",
+                " TEST_PORT = ",
+                testPort,
+            )
+        if test_ids_from_buffer:
+            # Perform test execution.
+
+            # Check to see if we are running django tests.
+            django_test_enabled = os.environ.get("DJANGO_TEST_ENABLED")
+            print("DJANGO_TEST_ENABLED = ", django_test_enabled)
+            if django_test_enabled and django_test_enabled.lower() == "true":
+                # run django runner
+                print("running django runner")
+                django_execution_runner(start_dir)
+            else:
+                print("running unittest runner")
+                payload = run_tests(
+                    start_dir, test_ids_from_buffer, pattern, top_level_dir, testUuid
+                )
+        else:
+            raise VSCodeUnittestError("No test ids received from buffer")
+    except Exception as exception:
         payload: PayloadDict = {
-            "cwd": cwd,
-            "status": status,
-            "error": "No test ids received from buffer",
+            "cwd": os.path.abspath(start_dir) if start_dir else None,
+            "status": TestExecutionStatus.error,
+            "error": exception,
             "result": None,
         }
+        post_response(payload, testPort, "unknown")
+
     eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    if testUuid is None:
-        print("Error sending response, uuid unknown to python server.")
-        post_response(eot_payload, testPort, "unknown")
-    else:
-        post_response(eot_payload, testPort, testUuid)
+    post_response(eot_payload, testPort, testUuid)
