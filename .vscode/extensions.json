@@ -7,6 +7,8 @@
         "dbaeumer.vscode-eslint",
         "ms-python.python",
         "ms-python.black-formatter",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "ms-python.flake8"
     ]
 }
