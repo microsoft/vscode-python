@@ -9,7 +9,6 @@ def _check_binaries(dir_path):
         "win_amd64.pyd",
         "win32.pyd",
         "darwin.so",
-        "i386-linux-gnu.so",
         "x86_64-linux-gnu.so",
     )
 
@@ -18,10 +17,6 @@ def _check_binaries(dir_path):
     assert len(binaries) == len(expected_endswith)
 
 
-@pytest.mark.skipif(
-    sys.version_info[:2] != (3, 7),
-    reason="DEBUGPY wheels shipped for Python 3.7 only",
-)
 def test_install_debugpy(tmpdir):
     import install_debugpy
 
