@@ -33,10 +33,11 @@ export class CustomWorkspaceLocator extends FSWatchingLocator {
             traceVerbose('Searching for custom workspace envs');
             const filename = getPythonSetting<string>(DEFAULT_INTERPRETER_PATH, root);
             if (!filename || filename === 'python') {
+                // If the user has not set a custom interpreter, our job is done.
                 return;
             }
             yield { kind: PythonEnvKind.Unknown, executablePath: filename };
-            traceVerbose(`Finished searching for windows store envs`);
+            traceVerbose(`Finished searching for custom workspace envs`);
         };
         return iterator(this.root);
     }
