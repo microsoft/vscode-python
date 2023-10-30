@@ -143,7 +143,7 @@ export class WorkspaceTestAdapter {
                 cancel = token?.isCancellationRequested ? Testing.cancelPytestDiscovery : Testing.errorPytestDiscovery;
             }
 
-            traceError(`${cancel}\r\n`, ex);
+            traceError(`${cancel} for workspace: ${this.workspaceUri} \r\n`, ex);
 
             // Report also on the test view.
             const message = util.format(`${cancel} ${Testing.seePythonOutput}\r\n`, ex);

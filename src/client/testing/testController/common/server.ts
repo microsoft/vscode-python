@@ -221,7 +221,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                     pytestUUID: uuid.toString(),
                     pytestPort: this.getPort().toString(),
                 };
-                traceInfo(`Running DEBUG unittest with arguments: ${args}\r\n`);
+                traceInfo(`Running DEBUG unittest for workspace ${options.cwd} with arguments: ${args}\r\n`);
 
                 await this.debugLauncher!.launchDebugger(launchOptions, () => {
                     callback?.();
@@ -229,17 +229,17 @@ export class PythonTestServer implements ITestServer, Disposable {
             } else {
                 if (isRun) {
                     // This means it is running the test
-                    traceInfo(`Running unittests with arguments: ${args}\r\n`);
+                    traceInfo(`Running unittests for workspace ${options.cwd} with arguments: ${args}\r\n`);
                 } else {
                     // This means it is running discovery
-                    traceLog(`Discovering unittest tests with arguments: ${args}\r\n`);
+                    traceLog(`Discovering unittest tests for workspace ${options.cwd} with arguments: ${args}\r\n`);
                 }
                 const deferredTillExecClose = createDeferred<ExecutionResult<string>>();
 
                 let resultProc: ChildProcess | undefined;
 
                 runInstance?.token.onCancellationRequested(() => {
-                    traceInfo('Test run cancelled, killing unittest subprocess.');
+                    traceInfo(`Test run cancelled, killing unittest subprocess for workspace ${options.cwd}.`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
                         resultProc?.kill();
@@ -285,7 +285,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                         if (code !== 0) {
                             // This occurs when we are running discovery
                             traceError(
-                                `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error discovery payload`,
+                                `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${options.cwd}. Creating and sending error discovery payload \n`,
                             );
                             this._onDiscoveryDataReceived.fire({
                                 uuid,
@@ -301,7 +301,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                         // This occurs when we are running the test and there is an error which occurs.
 
                         traceError(
-                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} for workspace ${options.cwd}. Creating and sending error execution payload \n`,
                         );
                         // if the child process exited with a non-zero exit code, then we need to send the error payload.
                         this._onRunDataReceived.fire({
@@ -319,7 +319,7 @@ export class PythonTestServer implements ITestServer, Disposable {
                 await deferredTillExecClose.promise;
             }
         } catch (ex) {
-            traceError(`Error while server attempting to run unittest command: ${ex}`);
+            traceError(`Error while server attempting to run unittest command for workspace ${options.cwd}: ${ex}`);
             this.uuids = this.uuids.filter((u) => u !== uuid);
             this._onDataReceived.fire({
                 uuid,

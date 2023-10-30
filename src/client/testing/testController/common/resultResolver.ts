@@ -74,7 +74,7 @@ export class PythonResultResolver implements ITestResultResolver {
             const testingErrorConst =
                 this.testProvider === 'pytest' ? Testing.errorPytestDiscovery : Testing.errorUnittestDiscovery;
             const { error } = rawTestData;
-            traceError(testingErrorConst, '\r\n', error?.join('\r\n\r\n') ?? '');
+            traceError(testingErrorConst, 'for workspace: ', workspacePath, '\r\n', error?.join('\r\n\r\n') ?? '');
 
             let errorNode = this.testController.items.get(`DiscoveryError:${workspacePath}`);
             const message = util.format(
