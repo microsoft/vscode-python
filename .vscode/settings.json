@@ -71,5 +71,10 @@
     "git.branchProtection": ["main", "release/*"],
     "git.pullBeforeCheckout": true,
     // Open merge editor for resolving conflicts.
-    "git.mergeEditor": true
+    "git.mergeEditor": true,
+    "python.testing.pytestArgs": [
+        "pythonFiles/tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
