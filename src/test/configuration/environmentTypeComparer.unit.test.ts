@@ -176,6 +176,19 @@ suite('Environment sorting', () => {
             expected: 1,
         },
         {
+            title:
+                'Microsoft Store interpreter should not come first when there are global interpreters with higher version',
+            envA: {
+                envType: EnvironmentType.MicrosoftStore,
+                version: { major: 3, minor: 10, patch: 2, raw: '3.10.2' },
+            } as PythonEnvironment,
+            envB: {
+                envType: EnvironmentType.Global,
+                version: { major: 3, minor: 11, patch: 2, raw: '3.11.2' },
+            } as PythonEnvironment,
+            expected: 1,
+        },
+        {
             title: 'Unknown environment should not come first when there are global envs',
             envA: {
                 envType: EnvironmentType.Unknown,
