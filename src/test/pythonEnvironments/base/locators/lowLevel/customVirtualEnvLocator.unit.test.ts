@@ -213,7 +213,7 @@ suite('CustomVirtualEnvironment Locator', () => {
 
     test('onChanged fires if venvPath setting changes', async () => {
         const events: PythonEnvsChangedEvent[] = [];
-        const expected: PythonEnvsChangedEvent[] = [{}];
+        const expected: PythonEnvsChangedEvent[] = [{ providerId: locator.providerId }];
         locator.onChanged((e) => events.push(e));
 
         await getEnvs(locator.iterEnvs());
@@ -228,7 +228,7 @@ suite('CustomVirtualEnvironment Locator', () => {
 
     test('onChanged fires if venvFolders setting changes', async () => {
         const events: PythonEnvsChangedEvent[] = [];
-        const expected: PythonEnvsChangedEvent[] = [{}];
+        const expected: PythonEnvsChangedEvent[] = [{ providerId: locator.providerId }];
         locator.onChanged((e) => events.push(e));
 
         await getEnvs(locator.iterEnvs());
