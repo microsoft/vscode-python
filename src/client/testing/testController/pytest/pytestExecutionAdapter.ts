@@ -214,7 +214,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 result?.proc?.on('exit', (code, signal) => {
                     this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0 && testIds) {
-                        traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}.`);
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                        );
                     }
                 });
 

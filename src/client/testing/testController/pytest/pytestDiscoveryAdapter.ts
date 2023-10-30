@@ -121,7 +121,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         result?.proc?.on('exit', (code, signal) => {
             this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
             if (code !== 0) {
-                traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}.`);
+                traceError(
+                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}.`,
+                );
             }
         });
         result?.proc?.on('close', (code, signal) => {
