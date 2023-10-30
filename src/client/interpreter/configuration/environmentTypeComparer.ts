@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { isTestExecution } from '../../common/constants';
 import { Resource } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
 import { isActiveStateEnvironmentForWorkspace } from '../../pythonEnvironments/common/environmentManagers/activestate';
