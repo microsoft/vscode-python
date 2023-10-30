@@ -234,6 +234,10 @@ export function getEnvLocationHeuristic(environment: PythonEnvironment, workspac
  * Compare 2 environment types: return 0 if they are the same, -1 if a comes before b, 1 otherwise.
  */
 function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment): number {
+    if (!a.type && !b.type) {
+        // Return 0 if two global interpreters are being compared.
+        return 0;
+    }
     const envTypeByPriority = getPrioritizedEnvironmentType();
     return Math.sign(envTypeByPriority.indexOf(a.envType) - envTypeByPriority.indexOf(b.envType));
 }

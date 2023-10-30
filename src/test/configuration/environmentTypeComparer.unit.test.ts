@@ -11,6 +11,7 @@ import {
     getEnvLocationHeuristic,
 } from '../../client/interpreter/configuration/environmentTypeComparer';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
+import { PythonEnvType } from '../../client/pythonEnvironments/base/info';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Environment sorting', () => {
@@ -45,6 +46,7 @@ suite('Environment sorting', () => {
             title: 'Local virtual environment should come first',
             envA: {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -58,11 +60,13 @@ suite('Environment sorting', () => {
             title: "Non-local virtual environment should not come first when there's a local env",
             envA: {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join('path', 'to', 'other', 'workspace', '.venv'),
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -72,10 +76,12 @@ suite('Environment sorting', () => {
             title: "Conda environment should not come first when there's a local env",
             envA: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -85,11 +91,13 @@ suite('Environment sorting', () => {
             title: 'Conda base environment should come after any other conda env',
             envA: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envName: 'base',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envName: 'random-name',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -99,6 +107,7 @@ suite('Environment sorting', () => {
             title: 'Pipenv environment should come before any other conda env',
             envA: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envName: 'conda-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -118,19 +127,21 @@ suite('Environment sorting', () => {
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Poetry,
+                type: PythonEnvType.Virtual,
                 envName: 'poetry-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             expected: 1,
         },
         {
-            title: 'Pyenv environment should not come first when there are global envs',
+            title: 'Pyenv interpreter should not come first when there are global envs',
             envA: {
                 envType: EnvironmentType.Pyenv,
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Pipenv,
+                type: PythonEnvType.Virtual,
                 envName: 'pipenv-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -144,6 +155,7 @@ suite('Environment sorting', () => {
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Poetry,
+                type: PythonEnvType.Virtual,
                 envName: 'poetry-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -157,6 +169,7 @@ suite('Environment sorting', () => {
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.VirtualEnv,
+                type: PythonEnvType.Virtual,
                 envName: 'virtualenv-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -170,6 +183,7 @@ suite('Environment sorting', () => {
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Pipenv,
+                type: PythonEnvType.Virtual,
                 envName: 'pipenv-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -179,11 +193,13 @@ suite('Environment sorting', () => {
             title: 'If 2 environments are of the same type, the most recent Python version comes first',
             envA: {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join(workspacePath, '.old-venv'),
                 version: { major: 3, minor: 7, patch: 5, raw: '3.7.5' },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 2, raw: '3.10.2' },
             } as PythonEnvironment,
@@ -194,11 +210,13 @@ suite('Environment sorting', () => {
                 "If 2 global environments have the same Python version and there's a Conda one, the Conda env should not come first",
             envA: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envName: 'conda-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Pipenv,
+                type: PythonEnvType.Virtual,
                 envName: 'pipenv-env',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -209,11 +227,13 @@ suite('Environment sorting', () => {
                 'If 2 global environments are of the same type and have the same Python version, they should be sorted by name',
             envA: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envName: 'conda-foo',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
             envB: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envName: 'conda-bar',
                 version: { major: 3, minor: 10, patch: 2 },
             } as PythonEnvironment,
@@ -237,6 +257,7 @@ suite('Environment sorting', () => {
             title: 'Problematic environments should come last',
             envA: {
                 envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
                 envPath: path.join(workspacePath, '.venv'),
                 path: 'python',
             } as PythonEnvironment,
