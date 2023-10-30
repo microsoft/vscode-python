@@ -633,7 +633,13 @@ class EOTPayloadDict(TypedDict):
 
 def get_node_path(node: Any) -> pathlib.Path:
     """A function that returns the path of a node given the switch to pathlib.Path."""
-    return getattr(node, "path", pathlib.Path(node.fspath))
+    if not (path := getattr(node, "path", None)):
+        path = pathlib.Path(node.fspath)
+    if not path:
+        raise VSCodePytestError(
+            f"Unable to find path for node: {node}, node.path: {node.path}, node.fspath: {node.fspath}"
+        )
+    return path
 
 
 __socket = None
