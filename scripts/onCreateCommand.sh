@@ -26,7 +26,8 @@ pyenv exec python3.8 -m venv .venv
 source /workspaces/vscode-python/.venv/bin/activate
 
 # Install required Python libraries.
-npx gulp installPythonLibs
+/workspaces/vscode-python/.venv/bin/python -m pip install nox
+nox --session install_python_libs
 
 /workspaces/vscode-python/.venv/bin/python -m pip install -r build/test-requirements.txt
 /workspaces/vscode-python/.venv/bin/python -m pip install -r build/functional-test-requirements.txt

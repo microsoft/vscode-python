@@ -1646,7 +1646,6 @@
         "nyc": "^15.0.0",
         "prettier": "^2.0.2",
         "rewiremock": "^3.13.0",
-        "rimraf": "^3.0.2",
         "shortid": "^2.2.8",
         "sinon": "^13.0.1",
         "source-map-support": "^0.5.12",
