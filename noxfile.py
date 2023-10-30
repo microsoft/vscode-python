@@ -6,7 +6,7 @@ import nox
 import shutil
 
 
-@nox.session(python=["3.8"])
+@nox.session()
 def install_python_libs(session: nox.Session):
     requirements = [
         ("./pythonFiles/lib/python", "./requirements.txt"),
