@@ -7,8 +7,9 @@ import { FSWatchingLocator } from './fsWatchingLocator';
 import { getPythonSetting, onDidChangePythonSetting } from '../../../common/externalDependencies';
 import '../../../../common/extensions';
 import { traceVerbose } from '../../../../logging';
+import { DEFAULT_INTERPRETER_SETTING } from '../../../../common/constants';
 
-export const DEFAULT_INTERPRETER_PATH = 'defaultInterpreterPath';
+export const DEFAULT_INTERPRETER_PATH_SETTING_KEY = 'defaultInterpreterPath';
 
 /**
  * Finds and resolves custom virtual environments that users have provided.
@@ -24,15 +25,17 @@ export class CustomWorkspaceLocator extends FSWatchingLocator {
     }
 
     protected async initResources(): Promise<void> {
-        this.disposables.push(onDidChangePythonSetting(DEFAULT_INTERPRETER_PATH, () => this.fire(), this.root));
+        this.disposables.push(
+            onDidChangePythonSetting(DEFAULT_INTERPRETER_PATH_SETTING_KEY, () => this.fire(), this.root),
+        );
     }
 
     // eslint-disable-next-line class-methods-use-this
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (root: string) {
             traceVerbose('Searching for custom workspace envs');
-            const filename = getPythonSetting<string>(DEFAULT_INTERPRETER_PATH, root);
-            if (!filename || filename === 'python') {
+            const filename = getPythonSetting<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, root);
+            if (!filename || filename === DEFAULT_INTERPRETER_SETTING) {
                 // If the user has not set a custom interpreter, our job is done.
                 return;
             }
