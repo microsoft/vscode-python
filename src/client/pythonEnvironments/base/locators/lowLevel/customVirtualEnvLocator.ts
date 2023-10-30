@@ -92,8 +92,8 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
     }
 
     protected async initResources(): Promise<void> {
-        this.disposables.push(onDidChangePythonSetting(VENVPATH_SETTING_KEY, () => this.emitter.fire({})));
-        this.disposables.push(onDidChangePythonSetting(VENVFOLDERS_SETTING_KEY, () => this.emitter.fire({})));
+        this.disposables.push(onDidChangePythonSetting(VENVPATH_SETTING_KEY, () => this.fire()));
+        this.disposables.push(onDidChangePythonSetting(VENVFOLDERS_SETTING_KEY, () => this.fire()));
     }
 
     // eslint-disable-next-line class-methods-use-this

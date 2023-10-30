@@ -128,6 +128,10 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         watchableRoots.forEach((root) => this.startWatchers(root));
     }
 
+    protected fire(args = {}): void {
+        this.emitter.fire({ ...args, providerId: this.providerId });
+    }
+
     private startWatchers(root: string): void {
         const opts = this.creationOptions;
         if (isWatchingAFile(opts)) {
