@@ -23,6 +23,7 @@ import { EnvironmentTypeComparer } from '../../../client/interpreter/configurati
 import { IInterpreterHelper, IInterpreterService, WorkspacePythonPath } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
@@ -150,6 +151,7 @@ suite('Interpreters - Auto Selection', () => {
         test('If there is a local environment select it', async () => {
             const localEnv = {
                 envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
                 envPath: path.join(workspacePath, '.venv'),
                 version: { major: 3, minor: 10, patch: 0 },
             } as PythonEnvironment;
@@ -157,6 +159,7 @@ suite('Interpreters - Auto Selection', () => {
             when(interpreterService.getInterpreters(resource)).thenCall((_) => [
                 {
                     envType: EnvironmentType.Conda,
+                    type: PythonEnvType.Conda,
                     envPath: path.join('some', 'conda', 'env'),
                     version: { major: 3, minor: 7, patch: 2 },
                 } as PythonEnvironment,
