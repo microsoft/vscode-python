@@ -16,6 +16,7 @@ import { ITestResultResolver, ITestServer } from '../../../client/testing/testCo
 import * as testItemUtilities from '../../../client/testing/testController/common/testItemUtilities';
 import * as util from '../../../client/testing/testController/common/utils';
 import * as ResultResolver from '../../../client/testing/testController/common/resultResolver';
+import { IPythonExecutionFactory } from '../../../client/common/process/types';
 
 suite('Workspace test adapter', () => {
     suite('Test discovery', () => {
@@ -137,12 +138,12 @@ suite('Workspace test adapter', () => {
                 stubConfigSettings,
                 outputChannel.object,
             );
-
+            const uriFoo = Uri.parse('foo');
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 testDiscoveryAdapter,
                 testExecutionAdapter,
-                Uri.parse('foo'),
+                uriFoo,
                 stubResultResolver,
             );
 
@@ -164,10 +165,11 @@ suite('Workspace test adapter', () => {
             const buildErrorNodeOptionsStub = sinon.stub(util, 'buildErrorNodeOptions').returns(errorTestItemOptions);
             const testProvider = 'unittest';
 
-            await workspaceTestAdapter.discoverTests(testController);
+            const execFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
+            await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
 
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
-            sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, Uri.parse('foo'), sinon.match.any, testProvider);
+            sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, uriFoo, sinon.match.any, testProvider);
         });
 
         test("When discovering tests, the workspace test adapter should call the test discovery adapter's discoverTest method", async () => {
