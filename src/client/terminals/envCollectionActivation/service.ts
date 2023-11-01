@@ -13,7 +13,12 @@ import {
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
-import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    IApplicationEnvironment,
+    IWorkspaceService,
+    ITerminalManager,
+} from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
@@ -37,9 +42,10 @@ import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
-import { ITerminalEnvVarCollectionService } from '../types';
+import { ITerminalDeactivateService, ITerminalEnvVarCollectionService } from '../types';
 import { ShellIntegrationShells } from './shellIntegration';
 import { ProgressService } from '../../common/application/progressService';
+import { sleep } from '../../common/utils/async';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -79,13 +85,21 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
     }
 
     public async activate(resource: Resource): Promise<void> {
+        const terminal = this.terminalManager.createTerminal({
+            name: `Python Deactivate`,
+            shellPath: this.applicationEnvironment.shell,
+            hideFromUser: true,
+        });
+        sleep(3000).then(() => terminal.show());
         try {
             if (!inTerminalEnvVarExperiment(this.experimentService)) {
                 this.context.environmentVariableCollection.clear();
@@ -203,17 +217,19 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         return;
                     }
                     if (key === 'PATH') {
+                        const deactivate = this.terminalDeactivateService.getDeactivateScriptLocation(shell);
                         if (processEnv.PATH && env.PATH?.endsWith(processEnv.PATH)) {
                             // Prefer prepending to PATH instead of replacing it, as we do not want to replace any
                             // changes to PATH users might have made it in their init scripts (~/.bashrc etc.)
                             const prependedPart = env.PATH.slice(0, -processEnv.PATH.length);
-                            value = prependedPart;
+                            value = `${deactivate}${this.separator}${prependedPart}`;
                             traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
                             envVarCollection.prepend(key, value, prependOptions);
                         } else {
                             if (!value.endsWith(this.separator)) {
                                 value = value.concat(this.separator);
                             }
+                            value = `${deactivate}${this.separator}${value}`;
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
                             envVarCollection.prepend(key, value, prependOptions);
                         }
@@ -233,6 +249,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         envVarCollection.description = description;
 
         await this.trackTerminalPrompt(shell, resource, env);
+        await this.terminalDeactivateService.getTerminalProcessVariables(shell);
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();

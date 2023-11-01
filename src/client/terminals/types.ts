@@ -41,3 +41,9 @@ export interface ITerminalEnvVarCollectionService {
      */
     isTerminalPromptSetCorrectly(resource?: Resource): boolean;
 }
+
+export const ITerminalDeactivateService = Symbol('ITerminalDeactivateService');
+export interface ITerminalDeactivateService {
+    getTerminalProcessVariables(shell: string): Promise<void>;
+    getDeactivateScriptLocation(shell: string): string;
+}

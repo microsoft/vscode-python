@@ -1,8 +1,10 @@
 # Same as deactivate in "<venv>/bin/activate"
 deactivate () {
     if [ -n "${_OLD_VIRTUAL_PATH:-}" ] ; then
+        echo "here"
         PATH="${_OLD_VIRTUAL_PATH:-}"
         export PATH
+        echo $PATH
         unset _OLD_VIRTUAL_PATH
     fi
     if [ -n "${_OLD_VIRTUAL_PYTHONHOME:-}" ] ; then
@@ -24,10 +26,18 @@ deactivate () {
         unset -f deactivate
     fi
 }
+# Read the JSON file
+JSON_FILE="/workspaces/vscode-python/pythonFiles/envVars_bash.json"
 
+# Read the JSON file and set the variables
+TEMP_PS1=$(cat "$JSON_FILE" | jq -r '.PS1')
+TEMP_PATH=$(cat "$JSON_FILE" | jq -r '.PATH')
+TEMP_PYTHONHOME=$(cat "$JSON_FILE" | jq -r '.PYTHONHOME')
 # Initialize the variables required by deactivate function
-_OLD_VIRTUAL_PS1="${PS1:-}"
-_OLD_VIRTUAL_PATH="$PATH"
+_OLD_VIRTUAL_PS1="${TEMP_PS1:-}"
+_OLD_VIRTUAL_PATH="$TEMP_PATH"
 if [ -n "${PYTHONHOME:-}" ] ; then
-    _OLD_VIRTUAL_PYTHONHOME="${PYTHONHOME:-}"
+    _OLD_VIRTUAL_PYTHONHOME="${TEMP_PYTHONHOME:-}"
 fi
+deactivate
+bash
