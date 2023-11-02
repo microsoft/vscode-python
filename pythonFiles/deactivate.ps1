@@ -20,12 +20,18 @@ function global:deactivate ([switch]$NonDestructive) {
     }
 }
 
-# Initialize the variables required by deactivate function
-if (! $env:VIRTUAL_ENV_DISABLE_PROMPT) {
-    function global:_OLD_VIRTUAL_PROMPT {""}
-    copy-item function:prompt function:_OLD_VIRTUAL_PROMPT
-}
-if (Test-Path env:PYTHONHOME) {
+# Load JSON file
+$jsonConfig = Get-Content -Raw -Path "C:\Users\karraj\OneDrive - Microsoft\Desktop\vscode-python\pythonFiles\envVars_powershell.json" | ConvertFrom-Json
+
+# Check if PYTHONHOME exists in the JSON file and set it
+if ($jsonConfig.PYTHONHOME) {
     copy-item env:PYTHONHOME env:_OLD_VIRTUAL_PYTHONHOME
+    $env:PYTHONHOME = $jsonConfig.PYTHONHOME
 }
-copy-item env:PATH env:_OLD_VIRTUAL_PATH
+
+# Check if PATH exists in the JSON file and set it
+if ($jsonConfig.PATH) {
+    copy-item env:PATH env:_OLD_VIRTUAL_PATH
+    $env:PATH = $jsonConfig.PATH
+}
+

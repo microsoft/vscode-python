@@ -94,12 +94,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     public async activate(resource: Resource): Promise<void> {
-        const terminal = this.terminalManager.createTerminal({
-            name: `Python Deactivate`,
-            shellPath: this.applicationEnvironment.shell,
-            hideFromUser: true,
-        });
-        sleep(3000).then(() => terminal.show());
         try {
             if (!inTerminalEnvVarExperiment(this.experimentService)) {
                 this.context.environmentVariableCollection.clear();
