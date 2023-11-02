@@ -1,3 +1,5 @@
+#!/usr/bin/fish
+
 # Same as deactivate in "<venv>/bin/activate.fish"
 function deactivate  -d "Exit virtual environment and return to normal shell environment"
     # reset old environment variables
@@ -26,11 +28,4 @@ function deactivate  -d "Exit virtual environment and return to normal shell env
     end
 end
 
-# Initialize the variables required by deactivate function
-set -gx _OLD_VIRTUAL_PATH $PATH
-if test -z "$VIRTUAL_ENV_DISABLE_PROMPT"
-    functions -c fish_prompt vscode_python_old_fish_prompt
-end
-if set -q PYTHONHOME
-    set -gx _OLD_VIRTUAL_PYTHONHOME $PYTHONHOME
-end
+set TEMP_PATH 'zzz'

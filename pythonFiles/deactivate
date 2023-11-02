@@ -1,10 +1,8 @@
 # Same as deactivate in "<venv>/bin/activate"
 deactivate () {
     if [ -n "${_OLD_VIRTUAL_PATH:-}" ] ; then
-        echo "here"
         PATH="${_OLD_VIRTUAL_PATH:-}"
         export PATH
-        echo $PATH
         unset _OLD_VIRTUAL_PATH
     fi
     if [ -n "${_OLD_VIRTUAL_PYTHONHOME:-}" ] ; then
