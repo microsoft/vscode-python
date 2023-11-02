@@ -13,12 +13,7 @@ import {
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
-import {
-    IApplicationShell,
-    IApplicationEnvironment,
-    IWorkspaceService,
-    ITerminalManager,
-} from '../../common/application/types';
+import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
 import { IPlatformService } from '../../common/platform/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
@@ -45,7 +40,6 @@ import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { ITerminalDeactivateService, ITerminalEnvVarCollectionService } from '../types';
 import { ShellIntegrationShells } from './shellIntegration';
 import { ProgressService } from '../../common/application/progressService';
-import { sleep } from '../../common/utils/async';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -87,7 +81,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
