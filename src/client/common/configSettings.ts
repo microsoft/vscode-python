@@ -2,7 +2,6 @@
 
 // eslint-disable-next-line camelcase
 import * as path from 'path';
-import * as fs from 'fs';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -35,8 +34,6 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
-import { getOSType, OSType } from './utils/platform';
-import { isWindows } from './platform/platformService';
 
 const untildify = require('untildify');
 
