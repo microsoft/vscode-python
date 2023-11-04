@@ -981,7 +981,7 @@
                             },
                             "consoleTitle": {
                                 "default": "Python Debug Console",
-                                "description": "Name for debug console or terminal"
+                                "description": "Display name of the debug console or terminal"
                             },
                             "cwd": {
                                 "default": "${workspaceFolder}",
