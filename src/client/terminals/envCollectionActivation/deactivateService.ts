@@ -10,7 +10,6 @@ import { pathExists } from '../../common/platform/fs-paths';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { cache } from '../../common/utils/decorators';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { virtualEnvTypes } from '../../pythonEnvironments/info';
 import { ITerminalDeactivateService } from '../types';
@@ -47,9 +46,7 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
         const checkIfFileHasBeenCreated = () => pathExists(outputFile);
         terminal.sendText(`${interpreterPath} "${this.envVarScript}" "${outputFile}"`);
         terminal.sendText(`${interpreterPath} "${this.printenvVarScript}"`);
-        const s = new StopWatch();
         await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
-        console.log('great', s.elapsedTime);
     }
 
     public getDeactivateScriptLocation(_shell: string): string {
