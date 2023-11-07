@@ -24,8 +24,11 @@ deactivate () {
         unset -f deactivate
     fi
 }
-# Read the JSON file
-JSON_FILE="/workspaces/vscode-python/pythonFiles/envVars_bash.json"
+
+# Get the directory of the current script
+SCRIPT_DIR=$(dirname "$0")
+# Construct the path to envVars.json relative to the script directory
+JSON_FILE="$SCRIPT_DIR/envVars.json"
 
 # Read the JSON file and set the variables
 TEMP_PS1=$(cat "$JSON_FILE" | jq -r '.PS1')
@@ -38,4 +41,4 @@ if [ -n "${PYTHONHOME:-}" ] ; then
     _OLD_VIRTUAL_PYTHONHOME="${TEMP_PYTHONHOME:-}"
 fi
 deactivate
-bash
+zsh

@@ -18,7 +18,6 @@ import {
 } from './types';
 import { TerminalEnvVarCollectionService } from './envCollectionActivation/service';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
-import { TerminalDeactivateLimitationPrompt } from './envCollectionActivation/deactivatePrompt';
 import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
 import { TerminalDeactivateService } from './envCollectionActivation/deactivateService';
 
@@ -48,10 +47,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         TerminalIndicatorPrompt,
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        TerminalDeactivateLimitationPrompt,
     );
     serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
 }

@@ -10,7 +10,6 @@ import { DjangoShellCodeExecutionProvider } from '../../client/terminals/codeExe
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ReplProvider } from '../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
-import { TerminalDeactivateLimitationPrompt } from '../../client/terminals/envCollectionActivation/deactivatePrompt';
 import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
@@ -34,7 +33,6 @@ suite('Terminal - Service Registry', () => {
             [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],
             [ITerminalEnvVarCollectionService, TerminalEnvVarCollectionService],
             [IExtensionSingleActivationService, TerminalIndicatorPrompt],
-            [IExtensionSingleActivationService, TerminalDeactivateLimitationPrompt],
         ].forEach((args) => {
             if (args.length === 2) {
                 services
