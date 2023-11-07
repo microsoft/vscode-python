@@ -21,7 +21,7 @@ function global:deactivate ([switch]$NonDestructive) {
 }
 
 # Load JSON file
-$jsonConfig = Get-Content -Raw -Path "C:\Users\karraj\OneDrive - Microsoft\Desktop\vscode-python\pythonFiles\envVars_powershell.json" | ConvertFrom-Json
+$jsonConfig = Get-Content -Raw -Path "$PSScriptRoot\envVars.json" | ConvertFrom-Json
 
 # Check if PYTHONHOME exists in the JSON file and set it
 if ($jsonConfig.PYTHONHOME) {
