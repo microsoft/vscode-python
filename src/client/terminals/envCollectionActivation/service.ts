@@ -121,7 +121,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this.disposables,
                 );
                 const { shell } = this.applicationEnvironment;
-                const isActive = this.shellIntegrationService.isWorking(shell);
+                const isActive = await this.shellIntegrationService.isWorking(shell);
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
                     traceWarn(`Shell integration is not active, environment activated maybe overriden by the shell.`);
@@ -139,7 +139,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             location: ProgressLocation.Window,
             title: Interpreters.activatingTerminals,
         });
-        await this._applyCollectionImpl(resource, shell);
+        await this._applyCollectionImpl(resource, shell).catch((ex) => {
+            traceError(`Failed to apply terminal env vars`, shell, ex);
+            return Promise.reject(ex); // Ensures progress indicator does not disappear in case of errors, so we can catch issues faster.
+        });
         this.progressService.hideProgress();
     }
 

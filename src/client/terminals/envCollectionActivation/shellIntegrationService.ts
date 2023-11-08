@@ -7,7 +7,7 @@ import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors
 import { TerminalShellType } from '../../common/terminal/types';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
-import { traceVerbose } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { IShellIntegrationService } from '../types';
 
 /**
@@ -30,8 +30,15 @@ export class ShellIntegrationService implements IShellIntegrationService {
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
     ) {}
 
-    @cache(-1, true)
     public async isWorking(shell: string): Promise<boolean> {
+        return this._isWorking(shell).catch((ex) => {
+            traceError(`Failed to determine if shell supports shell integration`, shell, ex);
+            return false;
+        });
+    }
+
+    @cache(-1, true)
+    public async _isWorking(shell: string): Promise<boolean> {
         const isEnabled = this.workspaceService
             .getConfiguration('terminal')
             .get<boolean>('integrated.shellIntegration.enabled')!;
@@ -50,19 +57,25 @@ export class ShellIntegrationService implements IShellIntegrationService {
             // Proposed API is not available, assume shell integration is working at this point.
             return true;
         }
-        const disposable = onDidExecuteTerminalCommand((e) => {
-            if (e.terminal.name === name) {
-                deferred.resolve();
-            }
-        });
-        const terminal = this.terminalManager.createTerminal({
-            name,
-            shellPath: shell,
-            hideFromUser: true,
-        });
-        terminal.sendText(`echo ${shell}`);
-        const success = await Promise.race([sleep(3000).then(() => false), deferred.promise.then(() => true)]);
-        disposable.dispose();
-        return success;
+        try {
+            const disposable = onDidExecuteTerminalCommand((e) => {
+                if (e.terminal.name === name) {
+                    deferred.resolve();
+                }
+            });
+            const terminal = this.terminalManager.createTerminal({
+                name,
+                shellPath: shell,
+                hideFromUser: true,
+            });
+            terminal.sendText(`echo ${shell}`);
+            const success = await Promise.race([sleep(3000).then(() => false), deferred.promise.then(() => true)]);
+            disposable.dispose();
+            return success;
+        } catch (ex) {
+            traceVerbose(`Proposed API is not available, failed to subscribe to onDidExecuteTerminalCommand`, ex);
+            // Proposed API is not available, assume shell integration is working at this point.
+            return true;
+        }
     }
 }
