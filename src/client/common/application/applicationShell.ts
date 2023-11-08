@@ -39,7 +39,7 @@ import {
     WorkspaceFolderPickOptions,
 } from 'vscode';
 import { traceError } from '../../logging';
-import { IApplicationShell, TerminalDataWriteEvent, TerminalExecutedCommand } from './types';
+import { IApplicationShell, TerminalDataWriteEvent } from './types';
 
 @injectable()
 export class ApplicationShell implements IApplicationShell {
@@ -180,14 +180,6 @@ export class ApplicationShell implements IApplicationShell {
         } catch (ex) {
             traceError('Failed to get proposed API onDidWriteTerminalData', ex);
             return new EventEmitter<TerminalDataWriteEvent>().event;
-        }
-    }
-    public get onDidExecuteTerminalCommand(): Event<TerminalExecutedCommand> | undefined {
-        try {
-            return window.onDidExecuteTerminalCommand;
-        } catch (ex) {
-            traceError('Failed to get proposed API TerminalExecutedCommand', ex);
-            return undefined;
         }
     }
 }

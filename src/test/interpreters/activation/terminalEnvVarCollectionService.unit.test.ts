@@ -12,6 +12,7 @@ import {
     GlobalEnvironmentVariableCollection,
     ProgressLocation,
     Uri,
+    WorkspaceConfiguration,
     WorkspaceFolder,
 } from 'vscode';
 import {
@@ -37,7 +38,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IShellIntegrationService } from '../../../client/terminals/types';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -50,28 +50,29 @@ suite('Terminal Environment Variable Collection Service', () => {
     let applicationEnvironment: IApplicationEnvironment;
     let environmentActivationService: IEnvironmentActivationService;
     let workspaceService: IWorkspaceService;
+    let workspaceConfig: WorkspaceConfiguration;
     let terminalEnvVarCollectionService: TerminalEnvVarCollectionService;
     const progressOptions = {
         location: ProgressLocation.Window,
         title: Interpreters.activatingTerminals,
     };
     let configService: IConfigurationService;
-    let shellIntegrationService: IShellIntegrationService;
     const displayPath = 'display/path';
     const customShell = 'powershell';
     const defaultShell = defaultShells[getOSType()];
 
     setup(() => {
         workspaceService = mock<IWorkspaceService>();
+        workspaceConfig = mock<WorkspaceConfiguration>();
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         when(workspaceService.workspaceFolders).thenReturn(undefined);
+        when(workspaceService.getConfiguration('terminal')).thenReturn(instance(workspaceConfig));
+        when(workspaceConfig.get<boolean>('integrated.shellIntegration.enabled')).thenReturn(true);
         platform = mock<IPlatformService>();
         when(platform.osType).thenReturn(getOSType());
         interpreterService = mock<IInterpreterService>();
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
-        shellIntegrationService = mock<IShellIntegrationService>();
-        when(shellIntegrationService.isWorking(anything())).thenResolve(true);
         globalCollection = mock<GlobalEnvironmentVariableCollection>();
         collection = mock<EnvironmentVariableCollection>();
         when(context.environmentVariableCollection).thenReturn(instance(globalCollection));
@@ -107,7 +108,6 @@ suite('Terminal Environment Variable Collection Service', () => {
             instance(workspaceService),
             instance(configService),
             new PathUtils(getOSType() === OSType.Windows),
-            instance(shellIntegrationService),
         );
     });
 
@@ -445,8 +445,8 @@ suite('Terminal Environment Variable Collection Service', () => {
     });
 
     test('Correct track that prompt was set for PS1 if shell integration is disabled', async () => {
-        reset(shellIntegrationService);
-        when(shellIntegrationService.isWorking(anything())).thenResolve(false);
+        reset(workspaceConfig);
+        when(workspaceConfig.get<boolean>('integrated.shellIntegration.enabled')).thenReturn(false);
         when(platform.osType).thenReturn(OSType.Linux);
         const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', PS1: '(.venv)', ...process.env };
         const ps1Shell = 'bash';
