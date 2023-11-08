@@ -9,6 +9,7 @@ import { ITerminalManager } from '../../common/application/types';
 import { pathExists } from '../../common/platform/fs-paths';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
+import { TerminalShellType } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
 import { cache } from '../../common/utils/decorators';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -16,7 +17,18 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { traceVerbose } from '../../logging';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { ITerminalDeactivateService } from '../types';
-import { ShellIntegrationShells } from './shellIntegration';
+
+/**
+ * This is a list of shells which support shell integration:
+ * https://code.visualstudio.com/docs/terminal/shell-integration
+ */
+const ShellIntegrationShells = [
+    TerminalShellType.powershell,
+    TerminalShellType.powershellCore,
+    TerminalShellType.bash,
+    TerminalShellType.zsh,
+    TerminalShellType.fish,
+];
 
 @injectable()
 export class TerminalDeactivateService implements ITerminalDeactivateService {

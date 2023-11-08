@@ -37,7 +37,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IShellIntegrationService } from '../../../client/terminals/types';
+import { IShellIntegrationService, ITerminalDeactivateService } from '../../../client/terminals/types';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -51,6 +51,7 @@ suite('Terminal Environment Variable Collection Service', () => {
     let environmentActivationService: IEnvironmentActivationService;
     let workspaceService: IWorkspaceService;
     let terminalEnvVarCollectionService: TerminalEnvVarCollectionService;
+    let terminalDeactivateService: ITerminalDeactivateService;
     const progressOptions = {
         location: ProgressLocation.Window,
         title: Interpreters.activatingTerminals,
@@ -63,6 +64,9 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     setup(() => {
         workspaceService = mock<IWorkspaceService>();
+        terminalDeactivateService = mock<ITerminalDeactivateService>();
+        when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve(undefined);
+        when(terminalDeactivateService.initializeScriptParams(anything())).thenResolve();
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         when(workspaceService.workspaceFolders).thenReturn(undefined);
         platform = mock<IPlatformService>();
@@ -106,6 +110,7 @@ suite('Terminal Environment Variable Collection Service', () => {
             instance(environmentActivationService),
             instance(workspaceService),
             instance(configService),
+            instance(terminalDeactivateService),
             new PathUtils(getOSType() === OSType.Windows),
             instance(shellIntegrationService),
         );
