@@ -13,7 +13,6 @@ import { cache } from '../../common/utils/decorators';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceVerbose } from '../../logging';
-import { virtualEnvTypes } from '../../pythonEnvironments/info';
 import { ITerminalDeactivateService } from '../types';
 import { ShellIntegrationShells } from './shellIntegration';
 
