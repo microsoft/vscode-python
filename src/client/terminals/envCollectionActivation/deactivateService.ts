@@ -41,9 +41,7 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
             hideFromUser: true,
             cwd: location,
         });
-        const globalInterpreters = this.interpreterService
-            .getInterpreters()
-            .filter((i) => !virtualEnvTypes.includes(i.envType));
+        const globalInterpreters = this.interpreterService.getInterpreters().filter((i) => !i.type);
         const outputFile = path.join(location, `envVars.txt`);
         const interpreterPath =
             globalInterpreters.length > 0 && globalInterpreters[0] ? globalInterpreters[0].path : 'python';
