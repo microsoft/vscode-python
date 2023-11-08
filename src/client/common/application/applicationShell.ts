@@ -182,12 +182,12 @@ export class ApplicationShell implements IApplicationShell {
             return new EventEmitter<TerminalDataWriteEvent>().event;
         }
     }
-    public get onDidExecuteTerminalCommand(): Event<TerminalExecutedCommand> {
+    public get onDidExecuteTerminalCommand(): Event<TerminalExecutedCommand> | undefined {
         try {
             return window.onDidExecuteTerminalCommand;
         } catch (ex) {
             traceError('Failed to get proposed API TerminalExecutedCommand', ex);
-            return new EventEmitter<TerminalExecutedCommand>().event;
+            return undefined;
         }
     }
 }

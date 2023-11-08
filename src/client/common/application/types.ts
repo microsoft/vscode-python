@@ -113,7 +113,7 @@ export interface IApplicationShell {
      * Note that this event will not fire if the executed command exits the shell, listen to
      * {@link onDidCloseTerminal} to handle that case.
      */
-    readonly onDidExecuteTerminalCommand: Event<TerminalExecutedCommand>;
+    readonly onDidExecuteTerminalCommand: Event<TerminalExecutedCommand> | undefined;
     /**
      * An [event](#Event) which fires when the focus state of the current window
      * changes. The value of the event represents whether the window is focused.
