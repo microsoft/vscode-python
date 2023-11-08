@@ -197,7 +197,7 @@ export namespace Interpreters {
     export const activatingTerminals = l10n.t('Reactivating terminals...');
     export const activateTerminalDescription = l10n.t('Activated environment for');
     export const terminalEnvVarCollectionPrompt = l10n.t(
-        '{0} environment was successfully activated, even though {1} may not be present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
+        '{0} environment was successfully activated, even though {1} indicator may not be present in the terminal prompt. [Learn more](https://aka.ms/vscodePythonTerminalActivation).',
     );
     export const terminalDeactivateProgress = l10n.t('Editing {0}...');
     export const restartingTerminal = l10n.t('Restarting terminal and deactivating...');
