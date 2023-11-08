@@ -979,6 +979,10 @@
                                     "internalConsole"
                                 ]
                             },
+                            "consoleTitle": {
+                                "default": "Python Debug Console",
+                                "description": "Display name of the debug console or terminal"
+                            },
                             "cwd": {
                                 "default": "${workspaceFolder}",
                                 "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
