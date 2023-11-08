@@ -23,7 +23,8 @@
         "testObserver",
         "quickPickItemTooltip",
         "saveEditor",
-        "terminalDataWriteEvent"
+        "terminalDataWriteEvent",
+        "terminalExecuteCommandEvent"
     ],
     "author": {
         "name": "Microsoft Corporation"
