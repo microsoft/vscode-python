@@ -42,6 +42,11 @@ export interface ITerminalEnvVarCollectionService {
     isTerminalPromptSetCorrectly(resource?: Resource): boolean;
 }
 
+export const IShellIntegrationService = Symbol('IShellIntegrationService');
+export interface IShellIntegrationService {
+    isWorking(shell: string): Promise<boolean>;
+}
+
 export const ITerminalDeactivateService = Symbol('ITerminalDeactivateService');
 export interface ITerminalDeactivateService {
     initializeScriptParams(shell: string): Promise<void>;

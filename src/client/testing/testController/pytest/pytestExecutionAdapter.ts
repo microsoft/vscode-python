@@ -53,7 +53,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const eParsed = JSON.parse(e.data);
                 this.resultResolver?.resolveExecution(eParsed, runInstance, deferredTillEOT);
             } else {
-                traceError('No run instance found, cannot resolve execution.');
+                traceError(`No run instance found, cannot resolve execution, for workspace ${uri.fsPath}.`);
             }
         });
         const disposeDataReceiver = function (testServer: ITestServer) {
@@ -62,7 +62,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             dataReceivedDisposable.dispose();
         };
         runInstance?.token.onCancellationRequested(() => {
-            traceInfo("Test run cancelled, resolving 'till EOT' deferred.");
+            traceInfo(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
             deferredTillEOT.resolve();
         });
 
@@ -143,7 +143,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             // add port with run test ids to env vars
             const pytestRunTestIdsPort = await utils.startTestIdServer(testIds);
             mutableEnv.RUN_TEST_IDS_PORT = pytestRunTestIdsPort.toString();
-            traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
+            traceInfo(
+                `All environment variables set for pytest execution in ${uri.fsPath} workspace: \n ${JSON.stringify(
+                    mutableEnv,
+                )}`,
+            );
 
             const spawnOptions: SpawnOptions = {
                 cwd,
@@ -165,7 +169,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     pytestUUID,
                     runTestIdsPort: pytestRunTestIdsPort.toString(),
                 };
-                traceInfo(`Running DEBUG pytest with arguments: ${testArgs.join(' ')}\r\n`);
+                traceInfo(
+                    `Running DEBUG pytest with arguments: ${testArgs.join(' ')} for workspace ${uri.fsPath} \r\n`,
+                );
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     deferredTillEOT?.resolve();
                 });
@@ -175,12 +181,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 // combine path to run script with run args
                 const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
                 const runArgs = [scriptPath, ...testArgs];
-                traceInfo(`Running pytest with arguments: ${runArgs.join(' ')}\r\n`);
+                traceInfo(`Running pytest with arguments: ${runArgs.join(' ')} for workspace ${uri.fsPath} \r\n`);
 
                 let resultProc: ChildProcess | undefined;
 
                 runInstance?.token.onCancellationRequested(() => {
-                    traceInfo('Test run cancelled, killing pytest subprocess.');
+                    traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
                         resultProc?.kill();
@@ -208,7 +214,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 result?.proc?.on('exit', (code, signal) => {
                     this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0 && testIds) {
-                        traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}.`);
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                        );
                     }
                 });
 
@@ -218,7 +226,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
                     if (code !== 0 && testIds) {
                         traceError(
-                            `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal}. Creating and sending error execution payload`,
+                            `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal} for workspace ${uri.fsPath}. Creating and sending error execution payload \n`,
                         );
                         this.testServer.triggerRunDataReceivedEvent({
                             uuid,
@@ -237,7 +245,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 await deferredTillExecClose?.promise;
             }
         } catch (ex) {
-            traceError(`Error while running tests: ${testIds}\r\n${ex}\r\n\r\n`);
+            traceError(`Error while running tests for workspace ${uri}: ${testIds}\r\n${ex}\r\n\r\n`);
             return Promise.reject(ex);
         }
 

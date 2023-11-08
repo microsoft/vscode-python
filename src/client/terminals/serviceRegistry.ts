@@ -12,6 +12,7 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
+    IShellIntegrationService,
     ITerminalAutoActivation,
     ITerminalDeactivateService,
     ITerminalEnvVarCollectionService,
@@ -19,6 +20,7 @@ import {
 import { TerminalEnvVarCollectionService } from './envCollectionActivation/service';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
+import { ShellIntegrationService } from './envCollectionActivation/shellIntegrationService';
 import { TerminalDeactivateService } from './envCollectionActivation/deactivateService';
 
 export function registerTypes(serviceManager: IServiceManager): void {
@@ -48,5 +50,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IExtensionSingleActivationService,
         TerminalIndicatorPrompt,
     );
+    serviceManager.addSingleton<IShellIntegrationService>(IShellIntegrationService, ShellIntegrationService);
     serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
 }

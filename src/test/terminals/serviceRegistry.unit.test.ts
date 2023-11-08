@@ -12,11 +12,13 @@ import { ReplProvider } from '../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
 import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
+import { ShellIntegrationService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
 import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
+    IShellIntegrationService,
     ITerminalAutoActivation,
     ITerminalEnvVarCollectionService,
 } from '../../client/terminals/types';
@@ -33,6 +35,7 @@ suite('Terminal - Service Registry', () => {
             [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],
             [ITerminalEnvVarCollectionService, TerminalEnvVarCollectionService],
             [IExtensionSingleActivationService, TerminalIndicatorPrompt],
+            [IShellIntegrationService, ShellIntegrationService],
         ].forEach((args) => {
             if (args.length === 2) {
                 services

@@ -23,7 +23,8 @@
         "testObserver",
         "quickPickItemTooltip",
         "saveEditor",
-        "terminalDataWriteEvent"
+        "terminalDataWriteEvent",
+        "terminalExecuteCommandEvent"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -978,6 +979,10 @@
                                     "integratedTerminal",
                                     "internalConsole"
                                 ]
+                            },
+                            "consoleTitle": {
+                                "default": "Python Debug Console",
+                                "description": "Display name of the debug console or terminal"
                             },
                             "cwd": {
                                 "default": "${workspaceFolder}",

@@ -54,7 +54,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             await this.runPytestDiscovery(uri, uuid, executionFactory);
         } finally {
             await deferredTillEOT.promise;
-            traceVerbose('deferredTill EOT resolved');
+            traceVerbose(`deferredTill EOT resolved for ${uri.fsPath}`);
             disposeDataReceiver(this.testServer);
         }
         // this is only a placeholder to handle function overloading until rewrite is finished
@@ -79,7 +79,11 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_UUID = uuid.toString();
         mutableEnv.TEST_PORT = this.testServer.getPort().toString();
-        traceInfo(`All environment variables set for pytest discovery: ${JSON.stringify(mutableEnv)}`);
+        traceInfo(
+            `All environment variables set for pytest discovery for workspace ${uri.fsPath}: ${JSON.stringify(
+                mutableEnv,
+            )} \n`,
+        );
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,
@@ -95,7 +99,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
-        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')}`);
+        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
         const result = execService?.execObservable(execArgs, spawnOptions);
@@ -117,7 +121,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         result?.proc?.on('exit', (code, signal) => {
             this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
             if (code !== 0) {
-                traceError(`Subprocess exited unsuccessfully with exit code ${code} and signal ${signal}.`);
+                traceError(
+                    `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}.`,
+                );
             }
         });
         result?.proc?.on('close', (code, signal) => {

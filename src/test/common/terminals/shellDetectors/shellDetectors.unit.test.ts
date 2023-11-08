@@ -41,6 +41,7 @@ suite('Shell Detectors', () => {
     shellPathsAndIdentification.set('/usr/bin/ksh', TerminalShellType.ksh);
     shellPathsAndIdentification.set('c:\\windows\\system32\\powershell.exe', TerminalShellType.powershell);
     shellPathsAndIdentification.set('c:\\windows\\system32\\pwsh.exe', TerminalShellType.powershellCore);
+    shellPathsAndIdentification.set('C:\\Program Files\\nu\\bin\\nu.EXE', TerminalShellType.nushell);
     shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/powershell', TerminalShellType.powershell);
     shellPathsAndIdentification.set('/usr/microsoft/xxx/powershell/pwsh', TerminalShellType.powershellCore);
     shellPathsAndIdentification.set('/usr/bin/fish', TerminalShellType.fish);
