@@ -27,13 +27,13 @@ deactivate () {
 
 # Get the directory of the current script
 SCRIPT_DIR=$(dirname "$0")
-# Construct the path to envVars.json relative to the script directory
-JSON_FILE="$SCRIPT_DIR/envVars.json"
+# Construct the path to envVars.txt relative to the script directory
+ENV_FILE="$SCRIPT_DIR/envVars.txt"
 
 # Read the JSON file and set the variables
-TEMP_PS1=$(cat "$JSON_FILE" | jq -r '.PS1')
-TEMP_PATH=$(cat "$JSON_FILE" | jq -r '.PATH')
-TEMP_PYTHONHOME=$(cat "$JSON_FILE" | jq -r '.PYTHONHOME')
+TEMP_PS1=$(grep '^PS1=' $ENV_FILE | cut -d '=' -f 2)
+TEMP_PATH=$(grep '^PATH=' $ENV_FILE | cut -d '=' -f 2)
+TEMP_PYTHONHOME=$(grep '^PYTHONHOME=' $ENV_FILE | cut -d '=' -f 2)
 # Initialize the variables required by deactivate function
 _OLD_VIRTUAL_PS1="${TEMP_PS1:-}"
 _OLD_VIRTUAL_PATH="$TEMP_PATH"

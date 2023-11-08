@@ -39,12 +39,12 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
             name: `Python ${shellType} Deactivate`,
             shellPath: shell,
             hideFromUser: true,
-            cwd: _SCRIPTS_DIR,
+            cwd: location,
         });
         const globalInterpreters = this.interpreterService
             .getInterpreters()
             .filter((i) => !virtualEnvTypes.includes(i.envType));
-        const outputFile = path.join(location, `envVars.json`);
+        const outputFile = path.join(location, `envVars.txt`);
         const interpreterPath =
             globalInterpreters.length > 0 && globalInterpreters[0] ? globalInterpreters[0].path : 'python';
         const checkIfFileHasBeenCreated = () => pathExists(outputFile);

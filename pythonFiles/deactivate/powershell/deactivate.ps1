@@ -20,18 +20,14 @@ function global:deactivate ([switch]$NonDestructive) {
     }
 }
 
-# Load JSON file
-$jsonConfig = Get-Content -Raw -Path "$PSScriptRoot\envVars.json" | ConvertFrom-Json
-
-# Check if PYTHONHOME exists in the JSON file and set it
-if ($jsonConfig.PYTHONHOME) {
-    copy-item env:PYTHONHOME env:_OLD_VIRTUAL_PYTHONHOME
-    $env:PYTHONHOME = $jsonConfig.PYTHONHOME
+# Load dotenv-style file and set environment variables
+Get-Content -Path "$PSScriptRoot\envVars.txt" | ForEach-Object {
+    # Split each line into key and value at the first '='
+    $parts = $_ -split '=', 2
+    if ($parts.Count -eq 2) {
+        $key = $parts[0].Trim()
+        $value = $parts[1].Trim()
+        # Set the environment variable
+        Set-Item -Path "env:$key" -Value $value
+    }
 }
-
-# Check if PATH exists in the JSON file and set it
-if ($jsonConfig.PATH) {
-    copy-item env:PATH env:_OLD_VIRTUAL_PATH
-    $env:PATH = $jsonConfig.PATH
-}
-
