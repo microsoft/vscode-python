@@ -10,6 +10,7 @@ import { DjangoShellCodeExecutionProvider } from '../../client/terminals/codeExe
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ReplProvider } from '../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
+import { TerminalDeactivateService } from '../../client/terminals/envCollectionActivation/deactivateService';
 import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
 import { ShellIntegrationService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
@@ -20,6 +21,7 @@ import {
     ICodeExecutionService,
     IShellIntegrationService,
     ITerminalAutoActivation,
+    ITerminalDeactivateService,
     ITerminalEnvVarCollectionService,
 } from '../../client/terminals/types';
 
@@ -35,6 +37,7 @@ suite('Terminal - Service Registry', () => {
             [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],
             [ITerminalEnvVarCollectionService, TerminalEnvVarCollectionService],
             [IExtensionSingleActivationService, TerminalIndicatorPrompt],
+            [ITerminalDeactivateService, TerminalDeactivateService],
             [IShellIntegrationService, ShellIntegrationService],
         ].forEach((args) => {
             if (args.length === 2) {
