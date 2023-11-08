@@ -211,9 +211,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         if (processEnv.PATH && env.PATH?.endsWith(processEnv.PATH)) {
                             // Prefer prepending to PATH instead of replacing it, as we do not want to replace any
                             // changes to PATH users might have made it in their init scripts (~/.bashrc etc.)
-                            const prependedPart = env.PATH.slice(0, -processEnv.PATH.length);
+                            value = env.PATH.slice(0, -processEnv.PATH.length);
                             if (deactivate) {
-                                value = `${deactivate}${this.separator}${prependedPart}`;
+                                value = `${deactivate}${this.separator}${value}`;
                             }
                             traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
                             envVarCollection.prepend(key, value, prependOptions);
