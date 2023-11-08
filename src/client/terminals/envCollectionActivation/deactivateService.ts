@@ -18,8 +18,6 @@ import { ShellIntegrationShells } from './shellIntegration';
 
 @injectable()
 export class TerminalDeactivateService implements ITerminalDeactivateService {
-    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
-
     private readonly envVarScript = path.join(_SCRIPTS_DIR, 'printEnvVariablesToFile.py');
 
     constructor(
@@ -28,8 +26,8 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
     ) {}
 
     @cache(-1, true)
-    public async getTerminalProcessVariables(shell: string): Promise<void> {
-        const location = this.getDeactivateScriptLocation(shell);
+    public async initializeScript(shell: string): Promise<void> {
+        const location = this.getScriptLocation(shell);
         if (!location) {
             return;
         }
@@ -51,7 +49,7 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
         traceVerbose(`Time taken to get env vars using terminal is ${stopWatch.elapsedTime}ms`);
     }
 
-    public getDeactivateScriptLocation(shell: string): string | undefined {
+    public getScriptLocation(shell: string): string | undefined {
         const shellType = identifyShellFromShellPath(shell);
         if (!ShellIntegrationShells.includes(shellType)) {
             return undefined;
