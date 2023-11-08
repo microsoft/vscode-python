@@ -9,10 +9,12 @@ import { ITerminalManager } from '../../common/application/types';
 import { pathExists } from '../../common/platform/fs-paths';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
+import { Resource } from '../../common/types';
 import { cache } from '../../common/utils/decorators';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceVerbose } from '../../logging';
+import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { ITerminalDeactivateService } from '../types';
 import { ShellIntegrationShells } from './shellIntegration';
 
@@ -26,8 +28,8 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
     ) {}
 
     @cache(-1, true)
-    public async initializeScript(shell: string): Promise<void> {
-        const location = this.getScriptLocation(shell);
+    public async initializeScriptParams(shell: string): Promise<void> {
+        const location = this.getLocation(shell);
         if (!location) {
             return;
         }
@@ -49,7 +51,15 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
         traceVerbose(`Time taken to get env vars using terminal is ${stopWatch.elapsedTime}ms`);
     }
 
-    public getScriptLocation(shell: string): string | undefined {
+    public async getScriptLocation(shell: string, resource: Resource): Promise<string | undefined> {
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        if (interpreter?.type !== PythonEnvType.Virtual) {
+            return undefined;
+        }
+        return this.getLocation(shell);
+    }
+
+    private getLocation(shell: string) {
         const shellType = identifyShellFromShellPath(shell);
         if (!ShellIntegrationShells.includes(shellType)) {
             return undefined;

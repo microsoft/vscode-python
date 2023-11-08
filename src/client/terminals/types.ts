@@ -44,6 +44,6 @@ export interface ITerminalEnvVarCollectionService {
 
 export const ITerminalDeactivateService = Symbol('ITerminalDeactivateService');
 export interface ITerminalDeactivateService {
-    initializeScript(shell: string): Promise<void>;
-    getScriptLocation(shell: string): string | undefined;
+    initializeScriptParams(shell: string): Promise<void>;
+    getScriptLocation(shell: string, resource: Resource): Promise<string | undefined>;
 }

@@ -189,6 +189,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
+        const deactivate = await this.terminalDeactivateService.getScriptLocation(shell, resource);
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
@@ -204,7 +205,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         return;
                     }
                     if (key === 'PATH') {
-                        const deactivate = this.terminalDeactivateService.getScriptLocation(shell);
                         if (processEnv.PATH && env.PATH?.endsWith(processEnv.PATH)) {
                             // Prefer prepending to PATH instead of replacing it, as we do not want to replace any
                             // changes to PATH users might have made it in their init scripts (~/.bashrc etc.)
@@ -240,7 +240,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         envVarCollection.description = description;
 
         await this.trackTerminalPrompt(shell, resource, env);
-        await this.terminalDeactivateService.initializeScript(shell);
+        await this.terminalDeactivateService.initializeScriptParams(shell);
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();
