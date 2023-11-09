@@ -76,6 +76,22 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
         if (!ShellIntegrationShells.includes(shellType)) {
             return undefined;
         }
-        return path.join(_SCRIPTS_DIR, 'deactivate', shellType);
+        return path.join(_SCRIPTS_DIR, 'deactivate', this.getShellFolderName(shellType));
+    }
+
+    private getShellFolderName(shellType: TerminalShellType): string {
+        switch (shellType) {
+            case TerminalShellType.powershell:
+            case TerminalShellType.powershellCore:
+                return 'powershell';
+            case TerminalShellType.fish:
+                return 'fish';
+            case TerminalShellType.zsh:
+                return 'zsh';
+            case TerminalShellType.bash:
+                return 'bash';
+            default:
+                throw new Error(`Unsupported shell type ${shellType}`);
+        }
     }
 }
