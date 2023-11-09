@@ -82,6 +82,12 @@ suite('Activation Manager', () => {
         test('If running in a virtual workspace, do not activate services that do not support it', async () => {
             when(workspaceService.isVirtualWorkspace).thenReturn(true);
             const resource = Uri.parse('two');
+            const workspaceFolder = {
+                index: 0,
+                name: 'one',
+                uri: resource,
+            };
+            when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
 
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
@@ -112,6 +118,12 @@ suite('Activation Manager', () => {
         test('If running in a untrusted workspace, do not activate services that do not support it', async () => {
             when(workspaceService.isTrusted).thenReturn(false);
             const resource = Uri.parse('two');
+            const workspaceFolder = {
+                index: 0,
+                name: 'one',
+                uri: resource,
+            };
+            when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
 
             autoSelection
                 .setup((a) => a.autoSelectInterpreter(resource))
@@ -149,6 +161,13 @@ suite('Activation Manager', () => {
                 .setup((a) => a.performPreStartupHealthCheck(resource))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
+
+            const workspaceFolder = {
+                index: 0,
+                name: 'one',
+                uri: resource,
+            };
+            when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
 
             await managerTest.activateWorkspace(resource);
 
@@ -289,6 +308,12 @@ suite('Activation Manager', () => {
                 .setup((a) => a.performPreStartupHealthCheck(resource))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
+            const workspaceFolder = {
+                index: 0,
+                name: 'one',
+                uri: resource,
+            };
+            when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
 
             await managerTest.activateWorkspace(resource);
             await managerTest.activateWorkspace(resource);
