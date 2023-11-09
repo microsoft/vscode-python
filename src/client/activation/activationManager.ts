@@ -83,6 +83,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
     @traceDecoratorError('Failed to activate a workspace')
     public async activateWorkspace(resource: Resource): Promise<void> {
+        const folder = this.workspaceService.getWorkspaceFolder(resource);
+        resource = folder ? folder.uri : undefined;
         const key = this.getWorkspaceKey(resource);
         if (this.activatedWorkspaces.has(key)) {
             return;
@@ -117,8 +119,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         if (this.activatedWorkspaces.has(key)) {
             return;
         }
-        const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
-        this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
+        this.activateWorkspace(doc.uri).ignoreErrors();
     }
 
     protected addHandlers(): void {
