@@ -259,7 +259,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     shellInfo.shellType,
                     interpreter,
                 );
-                traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
+                traceVerbose(
+                    `Activation Commands received ${activationCommands} for shell ${shellInfo.shell}, resource ${resource?.fsPath} and interpreter ${interpreter?.path}`,
+                );
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                     if (interpreter && [EnvironmentType.Venv, EnvironmentType.Pyenv].includes(interpreter?.envType)) {
                         const key = getSearchPathEnvVarNames()[0];
