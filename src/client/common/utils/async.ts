@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable no-async-promise-executor */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -227,4 +229,36 @@ export async function flattenIterator<T>(iterator: IAsyncIterator<T>): Promise<T
         results.push(item);
     }
     return results;
+}
+
+/**
+ * Wait for a condition to be fulfilled within a timeout.
+ *
+ * @export
+ * @param {() => Promise<boolean>} condition
+ * @param {number} timeoutMs
+ * @param {string} errorMessage
+ * @returns {Promise<void>}
+ */
+export async function waitForCondition(
+    condition: () => Promise<boolean>,
+    timeoutMs: number,
+    errorMessage: string,
+): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+        const timeout = setTimeout(() => {
+            clearTimeout(timeout);
+
+            clearTimeout(timer);
+            reject(new Error(errorMessage));
+        }, timeoutMs);
+        const timer = setInterval(async () => {
+            if (!(await condition().catch(() => false))) {
+                return;
+            }
+            clearTimeout(timeout);
+            clearTimeout(timer);
+            resolve();
+        }, 10);
+    });
 }

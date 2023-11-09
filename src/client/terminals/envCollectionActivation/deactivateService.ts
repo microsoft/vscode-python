@@ -4,13 +4,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { waitForCondition } from '../../../test/common';
 import { ITerminalManager } from '../../common/application/types';
 import { pathExists } from '../../common/platform/fs-paths';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
+import { waitForCondition } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService } from '../../interpreter/contracts';
