@@ -339,6 +339,41 @@ suite('Terminal Environment Variable Collection Service', () => {
         assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
 
+    test('Also prepend deactivate script location if available', async () => {
+        reset(terminalDeactivateService);
+        when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve('scriptLocation');
+        const processEnv = { PATH: 'hello/1/2/3' };
+        reset(environmentActivationService);
+        when(environmentActivationService.getProcessEnvironmentVariables(anything(), anything())).thenResolve(
+            processEnv,
+        );
+        const prependedPart = 'path/to/activate/dir:';
+        const envVars: NodeJS.ProcessEnv = { PATH: `${prependedPart}${processEnv.PATH}` };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(
+                anything(),
+                undefined,
+                undefined,
+                customShell,
+            ),
+        ).thenResolve(envVars);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        let opts: EnvironmentVariableMutatorOptions | undefined;
+        when(collection.prepend('PATH', anything(), anything())).thenCall((_, _v, o) => {
+            opts = o;
+        });
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
+
+        verify(collection.clear()).once();
+        const separator = getOSType() === OSType.Windows ? ';' : ':';
+        verify(collection.prepend('PATH', `scriptLocation${separator}${prependedPart}`, anything())).once();
+        verify(collection.replace('PATH', anything(), anything())).never();
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+    });
+
     test('Prepend full PATH with separator otherwise', async () => {
         const processEnv = { PATH: 'hello/1/2/3' };
         reset(environmentActivationService);
@@ -368,6 +403,41 @@ suite('Terminal Environment Variable Collection Service', () => {
 
         verify(collection.clear()).once();
         verify(collection.prepend('PATH', `${finalPath}${separator}`, anything())).once();
+        verify(collection.replace('PATH', anything(), anything())).never();
+        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+    });
+
+    test('Prepend full PATH with separator otherwise', async () => {
+        reset(terminalDeactivateService);
+        when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve('scriptLocation');
+        const processEnv = { PATH: 'hello/1/2/3' };
+        reset(environmentActivationService);
+        when(environmentActivationService.getProcessEnvironmentVariables(anything(), anything())).thenResolve(
+            processEnv,
+        );
+        const separator = getOSType() === OSType.Windows ? ';' : ':';
+        const finalPath = 'hello/3/2/1';
+        const envVars: NodeJS.ProcessEnv = { PATH: finalPath };
+        when(
+            environmentActivationService.getActivatedEnvironmentVariables(
+                anything(),
+                undefined,
+                undefined,
+                customShell,
+            ),
+        ).thenResolve(envVars);
+
+        when(collection.replace(anything(), anything(), anything())).thenResolve();
+        when(collection.delete(anything())).thenResolve();
+        let opts: EnvironmentVariableMutatorOptions | undefined;
+        when(collection.prepend('PATH', anything(), anything())).thenCall((_, _v, o) => {
+            opts = o;
+        });
+
+        await terminalEnvVarCollectionService._applyCollection(undefined, customShell);
+
+        verify(collection.clear()).once();
+        verify(collection.prepend('PATH', `scriptLocation${separator}${finalPath}${separator}`, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
         assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
     });
