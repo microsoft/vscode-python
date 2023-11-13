@@ -15,6 +15,7 @@ import { ILanguageServerOutputChannel } from '../types';
 
 export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsWithEnv {
     private resource: Resource | undefined;
+
     private interpreter: PythonEnvironment | undefined;
 
     constructor(
