@@ -18,7 +18,7 @@ import { getPrefixCondaEnvPath, hasPrefixCondaEnv } from '../common/commonUtils'
 import { OSType, getEnvironmentVariable, getOSType } from '../../../common/utils/platform';
 import { deleteCondaEnvironment } from './condaDeleteUtils';
 
-const RECOMMENDED_CONDA_PYTHON = '3.10';
+const RECOMMENDED_CONDA_PYTHON = '3.11';
 
 export async function getCondaBaseEnv(): Promise<string | undefined> {
     const conda = await Conda.getConda();
@@ -47,7 +47,7 @@ export async function getCondaBaseEnv(): Promise<string | undefined> {
 }
 
 export async function pickPythonVersion(token?: CancellationToken): Promise<string | undefined> {
-    const items: QuickPickItem[] = ['3.10', '3.11', '3.9', '3.8'].map((v) => ({
+    const items: QuickPickItem[] = ['3.11', '3.12', '3.10', '3.9', '3.8'].map((v) => ({
         label: v === RECOMMENDED_CONDA_PYTHON ? `${Octicons.Star} Python` : 'Python',
         description: v,
     }));
