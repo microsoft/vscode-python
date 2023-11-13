@@ -5,7 +5,7 @@ import * as fs from 'fs-extra';
 import { SemVer } from 'semver';
 import { assert, expect } from 'chai';
 import {
-    IActiveResourceService,
+    // IActiveResourceService,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
@@ -40,7 +40,7 @@ suite('REPL - Smart Send', () => {
     let experimentService: TypeMoq.IMock<IExperimentService>;
 
     let processService: TypeMoq.IMock<IProcessService>;
-    let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
+    // let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
 
     let document: TypeMoq.IMock<TextDocument>;
     const workingPython: PythonEnvironment = {
@@ -70,7 +70,7 @@ suite('REPL - Smart Send', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
-        activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
+        // activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
