@@ -4,7 +4,7 @@ import { TextEditor, Selection, Position, TextDocument } from 'vscode';
 import * as fs from 'fs-extra';
 import { SemVer } from 'semver';
 import { assert, expect } from 'chai';
-import { when } from 'ts-mockito';
+// import { when } from 'ts-mockito';
 import {
     // IActiveResourceService,
     IApplicationShell,
@@ -16,8 +16,8 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import {
     IConfigurationService,
     IExperimentService,
-    IPythonSettings,
-    IREPLSettings,
+    // IPythonSettings,
+    // IREPLSettings,
 } from '../../../client/common/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -28,7 +28,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import { PYTHON_PATH } from '../../common';
 import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
-import { PythonSettings } from '../../../client/common/configSettings';
+// import { PythonSettings } from '../../../client/common/configSettings';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
