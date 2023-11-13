@@ -4,6 +4,7 @@ import { TextEditor, Selection, Position, TextDocument } from 'vscode';
 import * as fs from 'fs-extra';
 import { SemVer } from 'semver';
 import { assert, expect } from 'chai';
+import { when } from 'ts-mockito';
 import {
     // IActiveResourceService,
     IApplicationShell,
@@ -12,7 +13,12 @@ import {
 } from '../../../client/common/application/types';
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { IConfigurationService, IExperimentService } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IExperimentService,
+    IPythonSettings,
+    IREPLSettings,
+} from '../../../client/common/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -22,6 +28,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import { PYTHON_PATH } from '../../common';
 import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
+import { PythonSettings } from '../../../client/common/configSettings';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
@@ -155,7 +162,28 @@ suite('REPL - Smart Send', () => {
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
             .returns(() => true);
-
+        // const settings = TypeMoq.Mock.ofType<IREPLSettings>();
+        // configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.);
+        configurationService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns({
+                REPL: {
+                    EnableREPLSmartSend: true,
+                    REPLSmartSend: true,
+                },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
+        // when(configurationService.getSettings()).thenReturn({
+        //     experiments: {
+        //         enabled: false,
+        //         optInto: [],
+        //         optOutFrom: [],
+        //     },
+        //     initialize: true,
+        //     venvPath: 'path',
+        //     pipenvPath: 'pipenv',
+        //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // } as any);
         const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
         const firstIndexPosition = new Position(0, 0);
         const selection = TypeMoq.Mock.ofType<Selection>();
