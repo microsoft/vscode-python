@@ -1,12 +1,12 @@
 import * as TypeMoq from 'typemoq';
 import * as path from 'path';
-import { TextEditor, Selection, Position, TextDocument } from 'vscode';
+import { TextEditor, Selection, Position, TextDocument, Uri } from 'vscode';
 import * as fs from 'fs-extra';
 import { SemVer } from 'semver';
 import { assert, expect } from 'chai';
 // import { when } from 'ts-mockito';
 import {
-    // IActiveResourceService,
+    IActiveResourceService,
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
@@ -16,6 +16,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import {
     IConfigurationService,
     IExperimentService,
+    IPythonSettings,
     // IPythonSettings,
     // IREPLSettings,
 } from '../../../client/common/types';
@@ -47,9 +48,11 @@ suite('REPL - Smart Send', () => {
     let experimentService: TypeMoq.IMock<IExperimentService>;
 
     let processService: TypeMoq.IMock<IProcessService>;
-    // let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
+    let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
 
     let document: TypeMoq.IMock<TextDocument>;
+    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+
     const workingPython: PythonEnvironment = {
         path: PYTHON_PATH,
         version: new SemVer('3.6.6-final'),
@@ -77,8 +80,9 @@ suite('REPL - Smart Send', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
-        // activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
-
+        activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
+        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        const resource = Uri.parse('a');
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processService.setup((x: any) => x.then).returns(() => undefined);
         serviceContainer
@@ -106,6 +110,14 @@ suite('REPL - Smart Send', () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(workingPython));
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IActiveResourceService)))
+            .returns(() => activeResourceService.object);
+        activeResourceService.setup((a) => a.getActiveResource()).returns(() => resource);
+
+        pythonSettings.setup((s) => s.REPL).returns(() => ({ EnableREPLSmartSend: true, REPLSmartSend: true }));
+
+        configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         codeExecutionHelper = new CodeExecutionHelper(serviceContainer.object);
         document = TypeMoq.Mock.ofType<TextDocument>();
@@ -162,8 +174,8 @@ suite('REPL - Smart Send', () => {
         experimentService
             .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
             .returns(() => true);
-        // const settings = TypeMoq.Mock.ofType<IREPLSettings>();
-        // configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.);
+        // const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+        // configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         configurationService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns({
