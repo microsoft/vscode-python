@@ -156,7 +156,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         parsed_file_content = ast.parse(wholeFileContent)
     except Exception:
         # Handle case where user is attempting to run code where file contains deprecated Python code.
-        # Somehow have to let typescript side know and show warning message.
+        # Let typescript side know and show warning message.
         return {
             "normalized_smart_result": "deprecated",
             "which_line_next": 0,

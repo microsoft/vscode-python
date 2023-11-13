@@ -12,7 +12,6 @@ import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
-import { Common } from '../../common/utils/localize';
 import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
@@ -50,11 +49,10 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             // If user is trying to smart send deprecated code show warning
             await showWarningMessage(
                 l10n.t(
-                    `You are attempting to run Smart Send on Python file with deprecated code, please
-                    turn off smart send if you wish to always run line by line or explicitly select code
-                    to force run [logs](command:${Commands.ViewOutput}) for more details.`,
+                    `You are attempting to run Smart Send on Python file with deprecated Python code, please
+                    turn off Smart Send if you wish to always run line by line or explicitly select code
+                    to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
-                Common.learnMore,
             );
         } else {
             await this.getTerminalService(resource).sendText(code);

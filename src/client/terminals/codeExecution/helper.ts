@@ -95,14 +95,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
             const smartSendExperimentEnabledVal = pythonSmartSendEnabled(this.serviceContainer);
             let smartSendSettingsEnabledVal = false;
-
             const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             if (configuration) {
                 const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
                 smartSendSettingsEnabledVal = pythonSettings.REPL.EnableREPLSmartSend;
             }
-            // const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
-            // const smartSendSettingsEnabledVal = pythonSettings.REPL.EnableREPLSmartSend;
+
             const input = JSON.stringify({
                 code,
                 wholeFileContent,
