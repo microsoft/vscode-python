@@ -117,7 +117,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
 
-            if (activeEditor?.selection) {
+            if (
+                activeEditor?.selection &&
+                smartSendExperimentEnabledVal &&
+                smartSendSettingsEnabledVal &&
+                object.normalized !== 'deprecated'
+            ) {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line - 1;
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }

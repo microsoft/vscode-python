@@ -290,9 +290,12 @@ if __name__ == "__main__":
         )
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]
-        data = json.dumps(
-            {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
-        )
+        if normalized == "deprecated":
+            data = json.dumps({"normalized": normalized})
+        else:
+            data = json.dumps(
+                {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
+            )
     else:
         normalized = normalize_lines(contents["code"])
         data = json.dumps({"normalized": normalized})
