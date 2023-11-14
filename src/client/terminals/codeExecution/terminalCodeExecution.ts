@@ -49,13 +49,13 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             // If user is trying to smart send deprecated code show warning
             const selection = await showWarningMessage(
                 l10n.t(
-                    `Python AST cannot parse invalid code provided in the current file, please
+                    `Python is unable to parse the code provided. Please
                     turn off Smart Send if you wish to always run line by line or explicitly select code
                     to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
-                'Change Settings',
+                'Switch to line-by-line',
             );
-            if (selection === 'Change Settings') {
+            if (selection === 'Switch to line-by-line') {
                 vscode.commands.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
             }
         } else {
