@@ -16,7 +16,7 @@ import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
-
+import * as vscode from 'vscode';
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
@@ -47,13 +47,17 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.initializeRepl(resource);
         if (code == 'deprecated') {
             // If user is trying to smart send deprecated code show warning
-            await showWarningMessage(
+            const selection = await showWarningMessage(
                 l10n.t(
                     `You are attempting to run Smart Send on Python file with deprecated Python code, please
                     turn off Smart Send if you wish to always run line by line or explicitly select code
                     to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
+                'Change Settings',
             );
+            if (selection === 'Change Settings') {
+                vscode.commands.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
+            }
         } else {
             await this.getTerminalService(resource).sendText(code);
         }
