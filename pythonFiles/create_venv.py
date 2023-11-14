@@ -236,14 +236,14 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         download_pip_pyz(args.name)
         install_pip(args.name)
 
-    if args.toml:
-        print(f"VENV_INSTALLING_PYPROJECT: {args.toml}")
-        install_toml(venv_path, args.extras)
-
     requirements = get_requirements_from_args(args)
     if requirements:
         print(f"VENV_INSTALLING_REQUIREMENTS: {requirements}")
         install_requirements(venv_path, requirements)
+
+    if args.toml:
+        print(f"VENV_INSTALLING_PYPROJECT: {args.toml}")
+        install_toml(venv_path, args.extras)
 
 
 if __name__ == "__main__":
