@@ -49,7 +49,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             // If user is trying to smart send deprecated code show warning
             const selection = await showWarningMessage(
                 l10n.t(
-                    `You are attempting to run Smart Send on Python file with deprecated Python code, please
+                    `Python AST cannot parse invalid code provided in the current file, please
                     turn off Smart Send if you wish to always run line by line or explicitly select code
                     to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
