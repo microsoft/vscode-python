@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, l10n, Uri } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
@@ -16,7 +16,6 @@ import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
-import * as vscode from 'vscode';
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
@@ -29,6 +28,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
         @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
+        @inject(ICommandManager) protected readonly commandManager: ICommandManager,
     ) {}
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
@@ -56,7 +56,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 'Switch to line-by-line',
             );
             if (selection === 'Switch to line-by-line') {
-                vscode.commands.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
+                this.commandManager.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
             }
         } else {
             await this.getTerminalService(resource).sendText(code);
