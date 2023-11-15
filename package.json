@@ -538,6 +538,7 @@
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
+                            "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
                             "pythonREPLSmartSend",
                             "pythonRecommendTensorboardExt"
@@ -547,6 +548,7 @@
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
+                            "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
                             "%python.experiments.pythonRecommendTensorboardExt.description%"
@@ -565,6 +567,7 @@
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
+                            "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
                             "pythonREPLSmartSend"
                         ],
@@ -573,6 +576,7 @@
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
+                            "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%"
                         ]

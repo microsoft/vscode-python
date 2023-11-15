@@ -21,7 +21,7 @@ suite('Windows Registry Locator', async () => {
     test('Make sure worker thread to fetch environments is working', async () => {
         const items = await getEnvs(locator.iterEnvs(undefined, false));
         const workerItems = await getEnvs(locator.iterEnvs(undefined, true));
-        console.log('Number of items Windows registry locator returned', items.length);
+        console.log('Number of items Windows registry locator returned:', items.length);
         // Make sure items returned when using worker threads v/s not are the same.
         assertBasicEnvsEqual(items, workerItems);
     }).timeout(TEST_TIMEOUT * 2);

@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
-import { IDisposable, IConfigurationService } from '../../common/types';
+import { IDisposable, IConfigurationService, IExperimentService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
@@ -27,6 +27,11 @@ export async function shellExecute(command: string, options: ShellOptions = {}):
 export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     return service.exec(file, args, options);
+}
+
+export function inExperiment(experimentName: string): boolean {
+    const service = internalServiceContainer.get<IExperimentService>(IExperimentService);
+    return service.inExperimentSync(experimentName);
 }
 
 // Workspace
