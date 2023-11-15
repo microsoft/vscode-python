@@ -54,13 +54,14 @@ export interface IRegistryInterpreterData {
 async function getInterpreterDataFromKey(
     { arch, hive, key }: IRegistryKey,
     distroOrgName: string,
+    useWorkerThreads: boolean,
 ): Promise<IRegistryInterpreterData | undefined> {
     const result: IRegistryInterpreterData = {
         interpreterPath: '',
         distroOrgName,
     };
 
-    const values: IRegistryValue[] = await readRegistryValues({ arch, hive, key });
+    const values: IRegistryValue[] = await readRegistryValues({ arch, hive, key }, useWorkerThreads);
     for (const value of values) {
         switch (value.name) {
             case 'SysArchitecture':
@@ -80,10 +81,10 @@ async function getInterpreterDataFromKey(
         }
     }
 
-    const subKeys: IRegistryKey[] = await readRegistryKeys({ arch, hive, key });
+    const subKeys: IRegistryKey[] = await readRegistryKeys({ arch, hive, key }, useWorkerThreads);
     const subKey = subKeys.map((s) => s.key).find((s) => s.endsWith('InstallPath'));
     if (subKey) {
-        const subKeyValues: IRegistryValue[] = await readRegistryValues({ arch, hive, key: subKey });
+        const subKeyValues: IRegistryValue[] = await readRegistryValues({ arch, hive, key: subKey }, useWorkerThreads);
         const value = subKeyValues.find((v) => v.name === 'ExecutablePath');
         if (value) {
             result.interpreterPath = value.value;
@@ -103,10 +104,13 @@ export async function getInterpreterDataFromRegistry(
     arch: string,
     hive: string,
     key: string,
+    useWorkerThreads: boolean,
 ): Promise<IRegistryInterpreterData[]> {
-    const subKeys = await readRegistryKeys({ arch, hive, key });
+    const subKeys = await readRegistryKeys({ arch, hive, key }, useWorkerThreads);
     const distroOrgName = key.substr(key.lastIndexOf('\\') + 1);
-    const allData = await Promise.all(subKeys.map((subKey) => getInterpreterDataFromKey(subKey, distroOrgName)));
+    const allData = await Promise.all(
+        subKeys.map((subKey) => getInterpreterDataFromKey(subKey, distroOrgName, useWorkerThreads)),
+    );
     return (allData.filter((data) => data !== undefined) || []) as IRegistryInterpreterData[];
 }
 
@@ -122,15 +126,15 @@ export function getRegistryInterpretersSync(): IRegistryInterpreterData[] | unde
 
 let registryInterpretersPromise: Promise<IRegistryInterpreterData[]> | undefined;
 
-export async function getRegistryInterpreters(): Promise<IRegistryInterpreterData[]> {
+export async function getRegistryInterpreters(useWorkerThreads: boolean): Promise<IRegistryInterpreterData[]> {
     if (!isTestExecution() && registryInterpretersPromise !== undefined) {
         return registryInterpretersPromise;
     }
-    registryInterpretersPromise = getRegistryInterpretersImpl();
+    registryInterpretersPromise = getRegistryInterpretersImpl(useWorkerThreads);
     return registryInterpretersPromise;
 }
 
-async function getRegistryInterpretersImpl(): Promise<IRegistryInterpreterData[]> {
+async function getRegistryInterpretersImpl(useWorkerThreads: boolean): Promise<IRegistryInterpreterData[]> {
     let registryData: IRegistryInterpreterData[] = [];
 
     for (const arch of ['x64', 'x86']) {
@@ -138,13 +142,15 @@ async function getRegistryInterpretersImpl(): Promise<IRegistryInterpreterData[]
             const root = '\\SOFTWARE\\Python';
             let keys: string[] = [];
             try {
-                keys = (await readRegistryKeys({ arch, hive, key: root })).map((k) => k.key);
+                keys = (await readRegistryKeys({ arch, hive, key: root }, useWorkerThreads)).map((k) => k.key);
             } catch (ex) {
                 traceError(`Failed to access Registry: ${arch}\\${hive}\\${root}`, ex);
             }
 
             for (const key of keys) {
-                registryData = registryData.concat(await getInterpreterDataFromRegistry(arch, hive, key));
+                registryData = registryData.concat(
+                    await getInterpreterDataFromRegistry(arch, hive, key, useWorkerThreads),
+                );
             }
         }
     }

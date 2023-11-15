@@ -307,7 +307,7 @@ export class Conda {
         }
 
         async function* getCandidatesFromRegistry() {
-            const interps = await getRegistryInterpreters();
+            const interps = await getRegistryInterpreters(true);
             const candidates = interps
                 .filter((interp) => interp.interpreterPath && interp.distroOrgName === 'ContinuumAnalytics')
                 .map((interp) => path.join(path.win32.dirname(interp.interpreterPath), suffix));
