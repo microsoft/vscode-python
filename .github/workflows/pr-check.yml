@@ -293,7 +293,7 @@ jobs:
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{ env.special-working-directory }}
-        if: matrix.test-suite == 'venv' && matrix.os == 'ubuntu-latest'
+        if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
         env:
