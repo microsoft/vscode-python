@@ -36,6 +36,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
             disposableRegistry,
             platformService,
             interpreterService,
+            commandManager,
         );
         this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
