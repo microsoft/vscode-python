@@ -37,7 +37,7 @@ import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
-import { IShellIntegrationService, ITerminalEnvVarCollectionService } from '../types';
+import { IShellIntegrationService, ITerminalDeactivateService, ITerminalEnvVarCollectionService } from '../types';
 import { ProgressService } from '../../common/application/progressService';
 
 @injectable()
@@ -78,6 +78,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IShellIntegrationService) private readonly shellIntegrationService: IShellIntegrationService,
     ) {
@@ -191,6 +192,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
+        const deactivate = await this.terminalDeactivateService.getScriptLocation(shell, resource);
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
@@ -209,13 +211,18 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         if (processEnv.PATH && env.PATH?.endsWith(processEnv.PATH)) {
                             // Prefer prepending to PATH instead of replacing it, as we do not want to replace any
                             // changes to PATH users might have made it in their init scripts (~/.bashrc etc.)
-                            const prependedPart = env.PATH.slice(0, -processEnv.PATH.length);
-                            value = prependedPart;
+                            value = env.PATH.slice(0, -processEnv.PATH.length);
+                            if (deactivate) {
+                                value = `${deactivate}${this.separator}${value}`;
+                            }
                             traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
                             envVarCollection.prepend(key, value, prependOptions);
                         } else {
                             if (!value.endsWith(this.separator)) {
                                 value = value.concat(this.separator);
+                            }
+                            if (deactivate) {
+                                value = `${deactivate}${this.separator}${value}`;
                             }
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
                             envVarCollection.prepend(key, value, prependOptions);
@@ -236,6 +243,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         envVarCollection.description = description;
 
         await this.trackTerminalPrompt(shell, resource, env);
+        await this.terminalDeactivateService.initializeScriptParams(shell);
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();

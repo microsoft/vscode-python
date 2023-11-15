@@ -7,7 +7,7 @@ import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors
 import { TerminalShellType } from '../../common/terminal/types';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
-import { traceError, traceVerbose } from '../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../logging';
 import { IShellIntegrationService } from '../types';
 
 /**
@@ -45,7 +45,8 @@ export class ShellIntegrationService implements IShellIntegrationService {
         if (!isEnabled) {
             traceVerbose('Shell integrated is disabled in user settings.');
         }
-        const isSupposedToWork = isEnabled && ShellIntegrationShells.includes(identifyShellFromShellPath(shell));
+        const shellType = identifyShellFromShellPath(shell);
+        const isSupposedToWork = isEnabled && ShellIntegrationShells.includes(shellType);
         if (!isSupposedToWork) {
             return false;
         }
@@ -71,6 +72,9 @@ export class ShellIntegrationService implements IShellIntegrationService {
             terminal.sendText(`echo ${shell}`);
             const success = await Promise.race([sleep(3000).then(() => false), deferred.promise.then(() => true)]);
             disposable.dispose();
+            if (!success) {
+                traceInfo(`Shell integration is not working for ${shellType}`);
+            }
             return success;
         } catch (ex) {
             traceVerbose(`Proposed API is not available, failed to subscribe to onDidExecuteTerminalCommand`, ex);

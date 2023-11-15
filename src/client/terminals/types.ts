@@ -46,3 +46,9 @@ export const IShellIntegrationService = Symbol('IShellIntegrationService');
 export interface IShellIntegrationService {
     isWorking(shell: string): Promise<boolean>;
 }
+
+export const ITerminalDeactivateService = Symbol('ITerminalDeactivateService');
+export interface ITerminalDeactivateService {
+    initializeScriptParams(shell: string): Promise<void>;
+    getScriptLocation(shell: string, resource: Resource): Promise<string | undefined>;
+}

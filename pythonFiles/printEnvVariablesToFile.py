@@ -2,12 +2,11 @@
 # Licensed under the MIT License.
 
 import os
-import json
 import sys
 
+# Last argument is the target file into which we'll write the env variables line by line.
+output_file = sys.argv[-1]
 
-# Last argument is the target file into which we'll write the env variables as json.
-json_file = sys.argv[-1]
-
-with open(json_file, "w") as outfile:
-    json.dump(dict(os.environ), outfile)
+with open(output_file, "w") as outfile:
+    for key, val in os.environ.items():
+        outfile.write(f"{key}={val}\n")

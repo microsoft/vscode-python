@@ -111,7 +111,7 @@ def test_create_env(env_exists, git_ignore, install):
     )
 
 
-@pytest.mark.parametrize("install_type", ["requirements", "pyproject"])
+@pytest.mark.parametrize("install_type", ["requirements", "pyproject", "both"])
 def test_install_packages(install_type):
     importlib.reload(create_venv)
     create_venv.is_installed = lambda _x: True
@@ -120,16 +120,20 @@ def test_install_packages(install_type):
     pip_upgraded = False
     installing = None
 
+    order = []
+
     def run_process(args, error_message):
-        nonlocal pip_upgraded, installing
+        nonlocal pip_upgraded, installing, order
         if args[1:] == ["-m", "pip", "install", "--upgrade", "pip"]:
             pip_upgraded = True
             assert error_message == "CREATE_VENV.UPGRADE_PIP_FAILED"
         elif args[1:-1] == ["-m", "pip", "install", "-r"]:
             installing = "requirements"
+            order += ["requirements"]
             assert error_message == "CREATE_VENV.PIP_FAILED_INSTALL_REQUIREMENTS"
         elif args[1:] == ["-m", "pip", "install", "-e", ".[test]"]:
             installing = "pyproject"
+            order += ["pyproject"]
             assert error_message == "CREATE_VENV.PIP_FAILED_INSTALL_PYPROJECT"
 
     create_venv.run_process = run_process
@@ -138,9 +142,23 @@ def test_install_packages(install_type):
         create_venv.main(["--requirements", "requirements-for-test.txt"])
     elif install_type == "pyproject":
         create_venv.main(["--toml", "pyproject.toml", "--extras", "test"])
+    elif install_type == "both":
+        create_venv.main(
+            [
+                "--requirements",
+                "requirements-for-test.txt",
+                "--toml",
+                "pyproject.toml",
+                "--extras",
+                "test",
+            ]
+        )
 
     assert pip_upgraded
-    assert installing == install_type
+    if install_type == "both":
+        assert order == ["requirements", "pyproject"]
+    else:
+        assert installing == install_type
 
 
 @pytest.mark.parametrize(

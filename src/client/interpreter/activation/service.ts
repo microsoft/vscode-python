@@ -259,7 +259,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     shellInfo.shellType,
                     interpreter,
                 );
-                traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
+                traceVerbose(
+                    `Activation Commands received ${activationCommands} for shell ${shellInfo.shell}, resource ${resource?.fsPath} and interpreter ${interpreter?.path}`,
+                );
                 if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                     if (interpreter && [EnvironmentType.Venv, EnvironmentType.Pyenv].includes(interpreter?.envType)) {
                         const key = getSearchPathEnvVarNames()[0];
@@ -273,15 +275,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                     return undefined;
                 }
-                // Run the activate command collect the environment from it.
-                const activationCommand = fixActivationCommands(activationCommands).join(' && ');
-                // In order to make sure we know where the environment output is,
-                // put in a dummy echo we can look for
                 const commandSeparator = [TerminalShellType.powershell, TerminalShellType.powershellCore].includes(
                     shellInfo.shellType,
                 )
                     ? ';'
                     : '&&';
+                // Run the activate command collect the environment from it.
+                const activationCommand = fixActivationCommands(activationCommands).join(` ${commandSeparator} `);
+                // In order to make sure we know where the environment output is,
+                // put in a dummy echo we can look for
                 command = `${activationCommand} ${commandSeparator} echo '${ENVIRONMENT_PREFIX}' ${commandSeparator} python ${args.join(
                     ' ',
                 )}`;
