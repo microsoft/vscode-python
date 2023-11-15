@@ -366,8 +366,8 @@ export class PythonSettings implements IPythonSettings {
                   activateEnvInCurrentTerminal: false,
               };
 
-        this.REPL = systemVariables.resolveAny(pythonSettings.get<IREPLSettings>('REPL'))!;
-        const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;
+        this.REPL = pythonSettings.get<IREPLSettings>('REPL')!;
+        const experiments = pythonSettings.get<IExperiments>('experiments')!;
         if (this.experiments) {
             Object.assign<IExperiments, IExperiments>(this.experiments, experiments);
         } else {
