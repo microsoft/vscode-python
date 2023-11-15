@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -5,6 +6,7 @@ import { HKCU, HKLM, Options, REG_SZ, Registry, RegistryItem } from 'winreg';
 import * as path from 'path';
 import { Worker } from 'worker_threads';
 import { createDeferred } from '../../common/utils/async';
+import { traceError } from '../../logging';
 
 export { HKCU, HKLM, REG_SZ, Options };
 
@@ -38,30 +40,7 @@ export async function readRegistryValues(options: Options, useWorkerThreads: boo
         });
         return deferred.promise;
     }
-    return new Promise((resolve, reject) => {
-        // Create a worker thread
-        const worker = new Worker(path.join(__dirname, 'registryValuesWorker.js'), { workerData: options });
-
-        // Listen for messages from the worker
-        worker.on('message', (res: { err: Error; res: IRegistryValue[] }) => {
-            if (res.err) {
-                reject(res.err);
-            }
-            resolve(res.res);
-        });
-
-        // Listen for any errors that occur
-        worker.on('error', (ex: Error) => {
-            reject(ex);
-        });
-
-        // Listen for exit if the worker thread exits prematurely
-        worker.on('exit', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code ${code}`));
-            }
-        });
-    });
+    return executeWorkerFile('registryValuesWorker.js', options);
 }
 
 export async function readRegistryKeys(options: Options, useWorkerThreads: boolean): Promise<IRegistryKey[]> {
@@ -78,27 +57,25 @@ export async function readRegistryKeys(options: Options, useWorkerThreads: boole
         });
         return deferred.promise;
     }
-    return new Promise((resolve, reject) => {
-        // Create a worker thread
-        const worker = new Worker(path.join(__dirname, 'registryKeysWorker.js'), { workerData: options });
+    return executeWorkerFile('registryKeysWorker.js', options);
+}
 
-        // Listen for messages from the worker
-        worker.on('message', (res: { err: Error; res: Registry[] }) => {
+async function executeWorkerFile(workerFileName: string, workerData: any): Promise<any> {
+    return new Promise((resolve, reject) => {
+        const worker = new Worker(path.join(__dirname, workerFileName), { workerData });
+        worker.on('message', (res: { err: Error; res: unknown }) => {
             if (res.err) {
                 reject(res.err);
             }
             resolve(res.res);
         });
-
-        // Listen for any errors that occur
         worker.on('error', (ex: Error) => {
+            traceError(`Error in worker ${workerFileName}`, ex);
             reject(ex);
         });
-
-        // Listen for exit if the worker thread exits prematurely
         worker.on('exit', (code) => {
             if (code !== 0) {
-                reject(new Error(`Worker stopped with exit code ${code}`));
+                reject(new Error(`Worker ${workerFileName} stopped with exit code ${code}`));
             }
         });
     });
