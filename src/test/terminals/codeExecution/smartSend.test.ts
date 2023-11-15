@@ -17,11 +17,12 @@ import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/hel
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { EnableREPLSmartSend } from '../../../client/common/experiments/groups';
-import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
+import { Commands, EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../../common';
 import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
+import { l10n } from '../../mocks/vsc';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
 
@@ -253,5 +254,59 @@ suite('REPL - Smart Send', () => {
         const actualNonSmartResult = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
         const expectedNonSmartResult = 'my_dict = {\n\n'; // Standard for previous normalization logic
         expect(actualNonSmartResult).to.be.equal(expectedNonSmartResult);
+    });
+
+    test('Smart Send should provide warning when code is not valid', async () => {
+        experimentService
+            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
+            .returns(() => true);
+
+        configurationService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns({
+                REPL: {
+                    EnableREPLSmartSend: true,
+                    REPLSmartSend: true,
+                },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
+
+        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const firstIndexPosition = new Position(0, 0);
+        const selection = TypeMoq.Mock.ofType<Selection>();
+        const wholeFileContent = await fs.readFile(
+            path.join(TEST_FILES_PATH, `sample_invalid_smart_selection.py`),
+            'utf8',
+        );
+
+        selection.setup((s) => s.anchor).returns(() => firstIndexPosition);
+        selection.setup((s) => s.active).returns(() => firstIndexPosition);
+        selection.setup((s) => s.isEmpty).returns(() => true);
+        activeEditor.setup((e) => e.selection).returns(() => selection.object);
+
+        documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
+        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => wholeFileContent);
+        const actualProcessService = new ProcessService();
+
+        const { execObservable } = actualProcessService;
+
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
+
+        await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+
+        applicationShell
+            .setup((a) =>
+                a.showWarningMessage(
+                    l10n.t(
+                        `Python is unable to parse the code provided. Please
+                turn off Smart Send if you wish to always run line by line or explicitly select code
+                to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
+                    ),
+                    'Switch to line-by-line',
+                ),
+            )
+            .verifiable(TypeMoq.Times.once());
     });
 });
