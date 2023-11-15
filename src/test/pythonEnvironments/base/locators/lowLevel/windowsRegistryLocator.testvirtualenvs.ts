@@ -5,17 +5,23 @@ import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUt
 import { WindowsRegistryLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { TEST_TIMEOUT } from '../../../../constants';
+import { getOSType, OSType } from '../../../../../client/common/utils/platform';
 
 suite('Windows Registry Locator', async () => {
     let locator: WindowsRegistryLocator;
 
-    setup(() => {
+    setup(function () {
+        if (getOSType() !== OSType.Windows) {
+            return this.skip();
+        }
         locator = new WindowsRegistryLocator();
+        return undefined;
     });
 
     test('Make sure worker thread to fetch environments is working', async () => {
         const items = await getEnvs(locator.iterEnvs(undefined, false));
         const workerItems = await getEnvs(locator.iterEnvs(undefined, true));
+        // Make sure items returned when using worker threads v/s not are the same.
         assertBasicEnvsEqual(items, workerItems);
     }).timeout(TEST_TIMEOUT * 2);
 });
