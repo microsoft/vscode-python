@@ -265,7 +265,12 @@ export class Conda {
      * @param command - Command used to spawn conda. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      */
-    constructor(readonly command: string, shellCommand?: string, private readonly shellPath?: string) {
+    constructor(
+        readonly command: string,
+        shellCommand?: string,
+        private readonly shellPath?: string,
+        private readonly useWorkerThreads = true,
+    ) {
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
             Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
@@ -390,7 +395,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath, undefined, shellPath);
+            let conda = new Conda(condaPath, undefined, shellPath, useWorkerThreads);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
@@ -400,7 +405,7 @@ export class Conda {
                     try {
                         if (condaBatFile) {
                             const condaBat = new Conda(condaBatFile, undefined, shellPath);
-                            await condaBat.getInfo(useWorkerThreads);
+                            await condaBat.getInfo();
                             conda = new Conda(condaPath, condaBatFile, shellPath);
                         }
                     } catch (ex) {
@@ -426,10 +431,10 @@ export class Conda {
      * Retrieves global information about this conda.
      * Corresponds to "conda info --json".
      */
-    public async getInfo(useCache?: boolean, useWorkerThreads?: boolean): Promise<CondaInfo> {
+    public async getInfo(useCache?: boolean): Promise<CondaInfo> {
         let condaInfoCached = this.condaInfoCached.get(this.shellPath);
         if (!useCache || !condaInfoCached) {
-            condaInfoCached = this.getInfoImpl(this.command, this.shellPath, useWorkerThreads);
+            condaInfoCached = this.getInfoImpl(this.command, this.shellPath);
             this.condaInfoCached.set(this.shellPath, condaInfoCached);
         }
         return condaInfoCached;
@@ -440,16 +445,12 @@ export class Conda {
      */
     @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
-    private async getInfoImpl(
-        command: string,
-        shellPath: string | undefined,
-        useWorkerThreads?: boolean,
-    ): Promise<CondaInfo> {
+    private async getInfoImpl(command: string, shellPath: string | undefined): Promise<CondaInfo> {
         const options: SpawnOptions = { timeout: CONDA_GENERAL_TIMEOUT };
         if (shellPath) {
             options.shell = shellPath;
         }
-        const resultPromise = exec(command, ['info', '--json'], options, useWorkerThreads);
+        const resultPromise = exec(command, ['info', '--json'], options, this.useWorkerThreads);
         // It has been observed that specifying a timeout is still not reliable to terminate the Conda process, see #27915.
         // Hence explicitly continue execution after timeout has been reached.
         const success = await Promise.race([
