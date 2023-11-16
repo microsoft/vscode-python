@@ -5,7 +5,13 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
+import {
+    ExecutionResult,
+    IProcessLogger,
+    IProcessServiceFactory,
+    ShellOptions,
+    SpawnOptions,
+} from '../../common/process/types';
 import { IDisposable, IConfigurationService, IExperimentService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
@@ -27,10 +33,11 @@ export async function shellExecute(command: string, options: ShellOptions = {}):
         const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         return service.shellExec(command, options);
     }
+    const logger = internalServiceContainer.get<IProcessLogger>(IProcessLogger);
     const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     const envs = await envVarsService.getEnvironmentVariables();
     options.env = { ...options.env, ...envs };
-    return workerShellExec(command, options);
+    return workerShellExec(command, options, logger);
 }
 
 export async function exec(
@@ -43,10 +50,11 @@ export async function exec(
         const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         return service.exec(file, args, options);
     }
+    const logger = internalServiceContainer.get<IProcessLogger>(IProcessLogger);
     const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     const envs = await envVarsService.getEnvironmentVariables();
     options.env = { ...options.env, ...envs };
-    return workerPlainExec(file, args, options);
+    return workerPlainExec(file, args, options, logger);
 }
 
 export function inExperiment(experimentName: string): boolean {
