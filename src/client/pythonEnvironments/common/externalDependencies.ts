@@ -33,8 +33,13 @@ export async function shellExecute(command: string, options: ShellOptions = {}):
     return workerShellExec(command, options);
 }
 
-export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-    if (!inExperiment(DiscoveryUsingWorkers.experiment)) {
+export async function exec(
+    file: string,
+    args: string[],
+    options: SpawnOptions = {},
+    useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
+): Promise<ExecutionResult<string>> {
+    if (!useWorkerThreads) {
         const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         return service.exec(file, args, options);
     }

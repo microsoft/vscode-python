@@ -178,7 +178,7 @@ export interface ILocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> extends
      * @param query - if provided, the locator will limit results to match
      * @returns - the fast async iterator of Python envs, which may have incomplete info
      */
-    iterEnvs(query?: QueryForEvent<E>, useWorkerThreads?: boolean): IPythonEnvsIterator<I>;
+    iterEnvs(query?: QueryForEvent<E>): IPythonEnvsIterator<I>;
 }
 
 export type ICompositeLocator<I = PythonEnvInfo, E = PythonEnvsChangedEvent> = Omit<ILocator<I, E>, 'providerId'>;

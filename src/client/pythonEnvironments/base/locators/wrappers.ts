@@ -3,13 +3,10 @@
 
 // eslint-disable-next-line max-classes-per-file
 import { Uri } from 'vscode';
-import { DiscoveryUsingWorkers } from '../../../common/experiments/groups';
 import { IDisposable } from '../../../common/types';
 import { iterEmpty } from '../../../common/utils/async';
 import { getURIFilter } from '../../../common/utils/misc';
 import { Disposables } from '../../../common/utils/resourceLifecycle';
-import { traceLog } from '../../../logging';
-import { inExperiment } from '../../common/externalDependencies';
 import { PythonEnvInfo } from '../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
 import { combineIterators, Locators } from '../locators';
@@ -20,8 +17,6 @@ import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
  */
 
 export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
-    private readonly useWorkerThreads: boolean;
-
     constructor(
         // These are expected to be low-level locators (e.g. system).
         private readonly nonWorkspace: ILocator<I>[],
@@ -30,10 +25,6 @@ export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
         private readonly workspace: ILocator<I>,
     ) {
         super([...nonWorkspace, workspace]);
-        this.useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
-        if (this.useWorkerThreads) {
-            traceLog('Using worker threads for discovery...');
-        }
     }
 
     public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
@@ -42,7 +33,7 @@ export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
             const nonWorkspace = query?.providerId
                 ? this.nonWorkspace.filter((locator) => query.providerId === locator.providerId)
                 : this.nonWorkspace;
-            iterators.push(...nonWorkspace.map((loc) => loc.iterEnvs(query, this.useWorkerThreads)));
+            iterators.push(...nonWorkspace.map((loc) => loc.iterEnvs(query)));
         }
         return combineIterators(iterators);
     }

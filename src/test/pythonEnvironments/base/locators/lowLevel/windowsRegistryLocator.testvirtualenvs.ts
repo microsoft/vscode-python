@@ -18,7 +18,7 @@ suite('Windows Registry Locator', async () => {
         return undefined;
     });
 
-    test('Make sure worker thread to fetch environments is working', async () => {
+    test('Worker thread to fetch registry interpreters is working', async () => {
         const items = await getEnvs(locator.iterEnvs(undefined, false));
         const workerItems = await getEnvs(locator.iterEnvs(undefined, true));
         console.log('Number of items Windows registry locator returned:', items.length);
