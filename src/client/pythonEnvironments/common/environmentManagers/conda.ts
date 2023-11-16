@@ -285,10 +285,15 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string, useWorkerThreads?: boolean): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string, useWorkerThreads = true): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
-        const customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
+        let customCondaPath: string | undefined = 'conda';
+        try {
+            customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
+        } catch (ex) {
+            traceError(`Failed to get conda path setting, ${ex}`);
+        }
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
         // Produce a list of candidate binaries to be probed by exec'ing them.
@@ -307,7 +312,7 @@ export class Conda {
         }
 
         async function* getCandidatesFromRegistry() {
-            const interps = await getRegistryInterpreters(true);
+            const interps = await getRegistryInterpreters(useWorkerThreads);
             const candidates = interps
                 .filter((interp) => interp.interpreterPath && interp.distroOrgName === 'ContinuumAnalytics')
                 .map((interp) => path.join(path.win32.dirname(interp.interpreterPath), suffix));
