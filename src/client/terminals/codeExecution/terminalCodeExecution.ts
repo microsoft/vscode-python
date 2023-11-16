@@ -56,7 +56,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 'Switch to line-by-line',
             );
             if (selection === 'Switch to line-by-line') {
-                this.commandManager.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
+                // this.commandManager.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
+                this.configurationService.updateSetting('REPL.EnableREPLSmartSend', false, resource);
             }
         } else {
             await this.getTerminalService(resource).sendText(code);
