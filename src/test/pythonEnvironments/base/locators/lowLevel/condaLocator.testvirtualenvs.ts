@@ -121,5 +121,6 @@ suite('Conda Env Locator', async () => {
         console.log('Number of items Conda locator returned:', items.length);
         // Make sure items returned when using worker threads v/s not are the same.
         assertBasicEnvsEqual(items, workerItems);
+        assert(workerItems.length > 0, 'No environments found');
     }).timeout(TEST_TIMEOUT * 2);
 });
