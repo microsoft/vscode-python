@@ -1,7 +1,13 @@
 import { parentPort, workerData } from 'worker_threads';
-import { workerPlainExec } from './workerRawProcessApis';
+import { _workerPlainExecImpl } from './workerRawProcessApis';
 
-workerPlainExec(workerData.file, workerData.args, workerData.options, workerData.defaultEnv, workerData.disposables)
+_workerPlainExecImpl(
+    workerData.file,
+    workerData.args,
+    workerData.options,
+    workerData.defaultEnv,
+    workerData.disposables,
+)
     .then((res) => {
         if (!parentPort) {
             throw new Error('Not in a worker thread');

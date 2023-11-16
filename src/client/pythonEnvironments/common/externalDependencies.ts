@@ -12,7 +12,7 @@ import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError, traceVerbose } from '../../logging';
 import { DiscoveryUsingWorkers } from '../../common/experiments/groups';
-import { plainExec, shellExec } from '../../common/process/worker/rawProcessApiWrapper';
+import { workerPlainExec, workerShellExec } from '../../common/process/worker/rawProcessApiWrapper';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 
 let internalServiceContainer: IServiceContainer;
@@ -23,25 +23,25 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 // processes
 
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    if (inExperiment(DiscoveryUsingWorkers.experiment)) {
+    if (!inExperiment(DiscoveryUsingWorkers.experiment)) {
         const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         return service.shellExec(command, options);
     }
     const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     const envs = await envVarsService.getEnvironmentVariables();
     options.env = { ...options.env, ...envs };
-    return shellExec(command, options);
+    return workerShellExec(command, options);
 }
 
 export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-    if (inExperiment(DiscoveryUsingWorkers.experiment)) {
+    if (!inExperiment(DiscoveryUsingWorkers.experiment)) {
         const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
         return service.exec(file, args, options);
     }
     const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     const envs = await envVarsService.getEnvironmentVariables();
     options.env = { ...options.env, ...envs };
-    return plainExec(file, args, options);
+    return workerPlainExec(file, args, options);
 }
 
 export function inExperiment(experimentName: string): boolean {

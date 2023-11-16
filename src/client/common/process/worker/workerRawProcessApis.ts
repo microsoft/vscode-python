@@ -52,7 +52,7 @@ function getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T, de
     return defaultOptions;
 }
 
-export function workerShellExec(
+export function _workerShellExecImpl(
     command: string,
     options: ShellOptions,
     defaultEnv?: EnvironmentVariables,
@@ -102,7 +102,7 @@ export function workerShellExec(
     });
 }
 
-export function workerPlainExec(
+export function _workerPlainExecImpl(
     file: string,
     args: string[],
     options: SpawnOptions & { doNotLog?: boolean } = {},
