@@ -17,6 +17,7 @@ suite('Conda Python Version Parser Tests', () => {
 
     setup(() => {
         readFileStub = sinon.stub(externalDeps, 'readFile');
+        sinon.stub(externalDeps, 'inExperiment').returns(false);
 
         pathExistsStub = sinon.stub(externalDeps, 'pathExists');
         pathExistsStub.resolves(true);
