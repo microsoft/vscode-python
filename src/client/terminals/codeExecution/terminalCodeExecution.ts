@@ -14,6 +14,7 @@ import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { traceInfo } from '../../logging';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
 @injectable()
@@ -55,6 +56,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 ),
                 'Switch to line-by-line',
             );
+            traceInfo(`Selected file contains invalid Python or Deprecated Python 2 code`);
             if (selection === 'Switch to line-by-line') {
                 // this.commandManager.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
                 this.configurationService.updateSetting('REPL.EnableREPLSmartSend', false, resource);
