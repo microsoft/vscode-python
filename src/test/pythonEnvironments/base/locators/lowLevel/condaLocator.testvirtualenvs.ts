@@ -52,7 +52,7 @@ class CondaEnvs {
     }
 }
 
-suite('Conda Env Watcher', async () => {
+suite('Conda Env Locator', async () => {
     let locator: CondaEnvironmentLocator;
     let condaEnvsTxt: CondaEnvs;
 
