@@ -13,8 +13,6 @@ export function workerShellExec(
     options: ShellOptions,
     defaultEnv?: EnvironmentVariables,
 ): Promise<ExecutionResult<string>> {
-    const processLogger = new ProcessLogger(new WorkspaceService());
-    processLogger.logProcess(command, undefined, options);
     return executeWorkerFile(path.join(__dirname, 'shellExecWorker.js'), {
         command,
         options,
@@ -28,8 +26,6 @@ export function workerPlainExec(
     options: SpawnOptions & { doNotLog?: boolean } = {},
     defaultEnv?: EnvironmentVariables,
 ): Promise<ExecutionResult<string>> {
-    const processLogger = new ProcessLogger(new WorkspaceService());
-    processLogger.logProcess(file, args, options);
     return executeWorkerFile(path.join(__dirname, 'plainExecWorker.js'), {
         file,
         args,
