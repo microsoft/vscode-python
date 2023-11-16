@@ -50,7 +50,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             const selection = await showWarningMessage(
                 l10n.t(
                     `Python is unable to parse the code provided. Please
-                    turn off Smart Send if you wish to always run line by line or explicitly select code
+                    turn off Smart Send if you wish to run code line by line or explicitly select code
                     to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
                 'Switch to line-by-line',
