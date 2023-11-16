@@ -3,7 +3,6 @@
 
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
-import { Worker } from 'worker_threads';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
@@ -12,6 +11,9 @@ import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError, traceVerbose } from '../../logging';
+import { DiscoveryUsingWorkers } from '../../common/experiments/groups';
+import { plainExec, shellExec } from '../../common/process/worker/rawProcessApiWrapper';
+import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -21,13 +23,25 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 // processes
 
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-    return service.shellExec(command, options);
+    if (inExperiment(DiscoveryUsingWorkers.experiment)) {
+        const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+        return service.shellExec(command, options);
+    }
+    const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+    const envs = await envVarsService.getEnvironmentVariables();
+    options.env = { ...options.env, ...envs };
+    return shellExec(command, options);
 }
 
 export async function exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
-    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-    return service.exec(file, args, options);
+    if (inExperiment(DiscoveryUsingWorkers.experiment)) {
+        const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+        return service.exec(file, args, options);
+    }
+    const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+    const envs = await envVarsService.getEnvironmentVariables();
+    options.env = { ...options.env, ...envs };
+    return plainExec(file, args, options);
 }
 
 export function inExperiment(experimentName: string): boolean {
@@ -199,27 +213,5 @@ export function onDidChangePythonSetting(name: string, callback: () => void, roo
         if (event.affectsConfiguration(`python.${name}`, scope)) {
             callback();
         }
-    });
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export async function executeWorkerFile(workerFileName: string, workerData: any): Promise<any> {
-    return new Promise((resolve, reject) => {
-        const worker = new Worker(workerFileName, { workerData });
-        worker.on('message', (res: { err: Error; res: unknown }) => {
-            if (res.err) {
-                reject(res.err);
-            }
-            resolve(res.res);
-        });
-        worker.on('error', (ex: Error) => {
-            traceError(`Error in worker ${workerFileName}`, ex);
-            reject(ex);
-        });
-        worker.on('exit', (code) => {
-            if (code !== 0) {
-                reject(new Error(`Worker ${workerFileName} stopped with exit code ${code}`));
-            }
-        });
     });
 }
