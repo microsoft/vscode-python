@@ -3,8 +3,6 @@
 
 import { SpawnOptions } from 'child_process';
 import * as path from 'path';
-import { WorkspaceService } from '../../application/workspace';
-import { ProcessLogger } from '../logger';
 import { executeWorkerFile } from './main';
 import { EnvironmentVariables, ExecutionResult, ShellOptions } from './types';
 
