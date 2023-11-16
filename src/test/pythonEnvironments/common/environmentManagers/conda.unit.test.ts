@@ -156,7 +156,6 @@ suite('Conda and its environments are located correctly', () => {
                         const isFile = typeof dir[name] === 'string';
                         return {
                             name,
-                            path: dir.name?.toString() ?? '',
                             isFile: () => isFile,
                             isDirectory: () => !isFile,
                             isBlockDevice: () => false,
