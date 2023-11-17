@@ -57,7 +57,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 'Disable Smart Send',
             );
             traceInfo(`Selected file contains invalid Python or Deprecated Python 2 code`);
-            if (selection === 'Switch to line-by-line') {
+            if (selection === 'Disable Smart Send') {
                 // this.commandManager.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
                 this.configurationService.updateSetting('REPL.EnableREPLSmartSend', false, resource);
             }
