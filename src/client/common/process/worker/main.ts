@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { Worker } from 'worker_threads';
-import { traceError, traceVerbose } from '../../../logging';
+import { traceVerbose, traceError } from '../../../logging/index';
 
 /**
  * Executes a worker file.
