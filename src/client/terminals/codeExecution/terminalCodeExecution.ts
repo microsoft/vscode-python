@@ -52,7 +52,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 l10n.t(
                     `Python is unable to parse the code provided. Please
                     turn off Smart Send if you wish to run code line by line or explicitly select code
-                    to force run. [Logs](command:${Commands.ViewOutput}) for more details.`,
+                    to force run. See [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
                 'Disable Smart Send',
             );
