@@ -593,6 +593,11 @@ suite('Conda and its environments are located correctly', () => {
                     },
                 },
             };
+            sinon.stub(externalDependencies, 'inExperiment').returns(false);
+        });
+
+        teardown(() => {
+            sinon.restore();
         });
 
         test('Must compute conda environment name from prefix', async () => {

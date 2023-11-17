@@ -24,8 +24,7 @@ suite('Conda Python Version Parser Tests', () => {
     });
 
     teardown(() => {
-        readFileStub.restore();
-        pathExistsStub.restore();
+        sinon.restore();
     });
 
     interface ICondaPythonVersionTestData {
