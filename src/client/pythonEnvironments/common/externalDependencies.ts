@@ -5,21 +5,13 @@ import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
-import {
-    ExecutionResult,
-    IProcessLogger,
-    IProcessServiceFactory,
-    ShellOptions,
-    SpawnOptions,
-} from '../../common/process/types';
+import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService, IExperimentService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError, traceVerbose } from '../../logging';
 import { DiscoveryUsingWorkers } from '../../common/experiments/groups';
-import { workerPlainExec, workerShellExec } from '../../common/process/worker/rawProcessApiWrapper';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -29,32 +21,21 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 // processes
 
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    if (!inExperiment(DiscoveryUsingWorkers.experiment)) {
-        const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-        return service.shellExec(command, options);
-    }
-    const logger = internalServiceContainer.get<IProcessLogger>(IProcessLogger);
-    const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-    const envs = await envVarsService.getEnvironmentVariables();
-    options.env = { ...options.env, ...envs };
-    return workerShellExec(command, options, logger);
+    const useWorker = inExperiment(DiscoveryUsingWorkers.experiment);
+    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    options = { ...options, useWorker };
+    return service.shellExec(command, options);
 }
 
 export async function exec(
     file: string,
     args: string[],
     options: SpawnOptions = {},
-    useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
+    useWorker = inExperiment(DiscoveryUsingWorkers.experiment),
 ): Promise<ExecutionResult<string>> {
-    if (!useWorkerThreads) {
-        const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-        return service.exec(file, args, options);
-    }
-    const logger = internalServiceContainer.get<IProcessLogger>(IProcessLogger);
-    const envVarsService = internalServiceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-    const envs = await envVarsService.getEnvironmentVariables();
-    options.env = { ...options.env, ...envs };
-    return workerPlainExec(file, args, options, logger);
+    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    options = { ...options, useWorker };
+    return service.exec(file, args, options);
 }
 
 export function inExperiment(experimentName: string): boolean {

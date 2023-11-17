@@ -3,16 +3,10 @@
 
 import { SpawnOptions } from 'child_process';
 import * as path from 'path';
-import { IProcessLogger } from '../types';
 import { executeWorkerFile } from './main';
 import { ExecutionResult, ShellOptions } from './types';
 
-export function workerShellExec(
-    command: string,
-    options: ShellOptions,
-    processLogger: IProcessLogger,
-): Promise<ExecutionResult<string>> {
-    processLogger.logProcess(command, undefined, options);
+export function workerShellExec(command: string, options: ShellOptions): Promise<ExecutionResult<string>> {
     return executeWorkerFile(path.join(__dirname, 'shellExecWorker.js'), {
         command,
         options,
@@ -23,9 +17,7 @@ export function workerPlainExec(
     file: string,
     args: string[],
     options: SpawnOptions = {},
-    processLogger: IProcessLogger,
 ): Promise<ExecutionResult<string>> {
-    processLogger.logProcess(file, args, options);
     return executeWorkerFile(path.join(__dirname, 'plainExecWorker.js'), {
         file,
         args,
