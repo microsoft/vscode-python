@@ -19,6 +19,7 @@ const config = {
     target: 'node',
     entry: {
         extension: './src/client/extension.ts',
+        shellExecWorker: './src/client/common/process/worker/shellExec.worker.ts',
     },
     devtool: 'source-map',
     node: {
