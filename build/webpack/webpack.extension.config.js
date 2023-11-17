@@ -51,6 +51,10 @@ const config = {
                     },
                 ],
             },
+            {
+                test: /\.worker\.js$/,
+                use: { loader: 'worker-loader' },
+            },
         ],
     },
     externals: [

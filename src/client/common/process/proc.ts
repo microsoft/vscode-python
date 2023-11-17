@@ -7,8 +7,7 @@ import { IDisposable } from '../types';
 import { EnvironmentVariables } from '../variables/types';
 import { execObservable, killPid, plainExec, shellExec } from './rawProcessApis';
 import { ExecutionResult, IProcessService, ObservableExecutionResult, ShellOptions, SpawnOptions } from './types';
-import { workerPlainExec } from './worker/workerPlainExec';
-import { workerShellExec } from './worker/workerShellExec';
+import { workerPlainExec, workerShellExec } from './worker/rawProcessApiWrapper';
 
 export class ProcessService extends EventEmitter implements IProcessService {
     private processesToKill = new Set<IDisposable>();
