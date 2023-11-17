@@ -84,8 +84,6 @@ suite('Conda Env Locator', async () => {
         condaEnvsTxt = new CondaEnvs();
         await condaEnvsTxt.cleanUp();
         if (isCI) {
-            console.log('I am in CI');
-            console.log(JSON.stringify(envPaths));
             sinon.stub(externalDependencies, 'getPythonSetting').returns(envPaths.condaExecPath);
         }
     });
