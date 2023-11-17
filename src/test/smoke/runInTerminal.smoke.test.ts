@@ -24,6 +24,17 @@ suite('Smoke Test: Run Python File In Terminal', () => {
     teardown(closeActiveWindows);
 
     test('Exec', async () => {
+        const directoryPath =
+            '/home/runner/work/vscode-python/vscode-python/tmp/ext/smokeTestExtensionsFolder/out/client';
+        console.log('Check contents of directory:', directoryPath);
+        fs.readdir(directoryPath, (err, files) => {
+            if (err) {
+                return console.error(`Unable to scan directory: ${err}`);
+            }
+            files.forEach((file) => {
+                console.log(file);
+            });
+        });
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
