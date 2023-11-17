@@ -3,6 +3,7 @@
 out
 log.log
 **/node_modules
+envVars.txt
 *.pyc
 *.vsix
 **/.vscode/.ropeproject/**
