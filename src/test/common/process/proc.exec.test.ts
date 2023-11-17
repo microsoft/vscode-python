@@ -34,6 +34,16 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
+    test('When using worker threads, exec should output print statements', async () => {
+        const procService = new ProcessService();
+        const printOutput = '1234';
+        const result = await procService.exec(pythonPath, ['-c', `print("${printOutput}")`], { useWorker: true });
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+    });
+
     test('exec should output print unicode characters', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2546. (unicode under Py2.7 is tough!)
@@ -235,6 +245,18 @@ suite('ProcessService Observable', () => {
         const printOutput = '1234';
         const result = await procService.shellExec(
             `"${pythonPath}" -c "print('>>>PYTHON-EXEC-OUTPUT');print('${printOutput}');print('<<<PYTHON-EXEC-OUTPUT')"`,
+        );
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stderr).to.equal(undefined, 'stderr not empty');
+        expect(result.stdout.trim()).to.be.equal(printOutput, 'Invalid output');
+    });
+    test('When using worker threads, shellExec should be able to run python and filter output using conda related markers', async () => {
+        const procService = new ProcessService();
+        const printOutput = '1234';
+        const result = await procService.shellExec(
+            `"${pythonPath}" -c "print('>>>PYTHON-EXEC-OUTPUT');print('${printOutput}');print('<<<PYTHON-EXEC-OUTPUT')"`,
+            { useWorker: true },
         );
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
