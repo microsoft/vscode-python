@@ -8,11 +8,11 @@ import { traceError } from '../../../logging';
 export async function executeWorkerFile(workerFileName: string, workerData: any): Promise<any> {
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerFileName, { workerData });
-        worker.on('message', (res: { err: Error; res: unknown }) => {
-            if (res.err) {
-                reject(res.err);
+        worker.on('message', (msg: { err: Error; res: unknown }) => {
+            if (msg.err) {
+                reject(msg.err);
             }
-            resolve(res.res);
+            resolve(msg.res);
         });
         worker.on('error', (ex: Error) => {
             traceError(`Error in worker ${workerFileName}`, ex);
