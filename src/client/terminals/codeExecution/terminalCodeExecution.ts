@@ -54,7 +54,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                     turn off Smart Send if you wish to run code line by line or explicitly select code
                     to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
                 ),
-                'Switch to line-by-line',
+                'Disable Smart Send',
             );
             traceInfo(`Selected file contains invalid Python or Deprecated Python 2 code`);
             if (selection === 'Switch to line-by-line') {
