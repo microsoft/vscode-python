@@ -17,10 +17,11 @@ const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const config = {
     mode: 'production',
     target: 'node',
-    entry: {
-        extension: './src/client/extension.ts',
-        shellExecWorker: './src/client/common/process/worker/shellExec.worker.ts',
-    },
+    entry: [
+        './src/client/extension.ts',
+        './src/client/common/process/worker/shellExec.worker.ts',
+        './src/client/common/process/worker/plainExec.worker.ts',
+    ],
     devtool: 'source-map',
     node: {
         __dirname: false,
