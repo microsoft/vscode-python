@@ -4,6 +4,7 @@
 'use strict';
 
 import { l10n } from 'vscode';
+import { Commands } from '../constants';
 
 /* eslint-disable @typescript-eslint/no-namespace, no-shadow */
 
@@ -42,6 +43,9 @@ export namespace Diagnostics {
     export const pylanceDefaultMessage = l10n.t(
         "The Python extension now includes Pylance to improve completions, code navigation, overall performance and much more! You can learn more about the update and learn how to change your language server [here](https://aka.ms/new-python-bundle).\n\nRead Pylance's license [here](https://marketplace.visualstudio.com/items/ms-python.vscode-pylance/license).",
     );
+    export const invalidSmartSendMessage = l10n.t(`Python is unable to parse the code provided. Please
+    turn off Smart Send if you wish to always run line by line or explicitly select code
+    to force run. See [logs](command:${Commands.ViewOutput}) for more details`);
 }
 
 export namespace Common {
@@ -92,6 +96,9 @@ export namespace AttachProcess {
     export const refreshList = l10n.t('Refresh process list');
 }
 
+export namespace Repl {
+    export const disableSmartSend = l10n.t('Disable Smart Send');
+}
 export namespace Pylance {
     export const remindMeLater = l10n.t('Remind me later');
 

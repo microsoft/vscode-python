@@ -5,13 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, l10n, Uri } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
-import { Commands } from '../../common/constants';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { Diagnostics, Repl } from '../../common/utils/localize';
 import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceInfo } from '../../logging';
@@ -48,17 +48,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.initializeRepl(resource);
         if (code == 'deprecated') {
             // If user is trying to smart send deprecated code show warning
-            const selection = await showWarningMessage(
-                l10n.t(
-                    `Python is unable to parse the code provided. Please
-                    turn off Smart Send if you wish to run code line by line or explicitly select code
-                    to force run. See [logs](command:${Commands.ViewOutput}) for more details.`,
-                ),
-                'Disable Smart Send',
-            );
+            const selection = await showWarningMessage(Diagnostics.invalidSmartSendMessage, Repl.disableSmartSend);
             traceInfo(`Selected file contains invalid Python or Deprecated Python 2 code`);
-            if (selection === 'Disable Smart Send') {
-                // this.commandManager.executeCommand('workbench.action.openSettings', 'python.REPL.EnableREPLSmartSend');
+            if (selection === Repl.disableSmartSend) {
                 this.configurationService.updateSetting('REPL.EnableREPLSmartSend', false, resource);
             }
         } else {
