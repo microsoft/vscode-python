@@ -25,7 +25,8 @@
     "[python]": {
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports.isort": true
+            "source.fixAll.eslint": "explicit",
+            "source.organizeImports.isort": "explicit"
         },
         "editor.defaultFormatter": "ms-python.black-formatter",
     },
@@ -51,7 +52,7 @@
     "prettier.printWidth": 120,
     "prettier.singleQuote": true,
     "editor.codeActionsOnSave": {
-        "source.fixAll.eslint": true
+        "source.fixAll.eslint": "explicit"
     },
     "python.languageServer": "Default",
     "typescript.preferences.importModuleSpecifier": "relative",
