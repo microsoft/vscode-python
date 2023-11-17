@@ -255,7 +255,7 @@ jobs:
         shell: pwsh
         if: matrix.test-suite == 'venv'
         run: |
-          # 1. For `terminalActivation.testvirtualenvs.test.ts`
+          # 1. For `*.testvirtualenvs.test.ts`
           if ('${{ matrix.os }}' -match 'windows-latest') {
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
@@ -451,7 +451,7 @@ jobs:
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         shell: pwsh
         run: |
-          # 1. For `terminalActivation.testvirtualenvs.test.ts`
+          # 1. For `*.testvirtualenvs.test.ts`
           if ('${{ matrix.os }}' -match 'windows-latest') {
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
