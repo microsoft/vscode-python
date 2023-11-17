@@ -265,16 +265,21 @@ export class Conda {
      * @param command - Command used to spawn conda. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      */
-    constructor(readonly command: string, shellCommand?: string, private readonly shellPath?: string) {
+    constructor(
+        readonly command: string,
+        shellCommand?: string,
+        private readonly shellPath?: string,
+        private readonly useWorkerThreads = true,
+    ) {
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
             Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
         });
     }
 
-    public static async getConda(shellPath?: string): Promise<Conda | undefined> {
+    public static async getConda(shellPath?: string, useWorkerThreads?: boolean): Promise<Conda | undefined> {
         if (Conda.condaPromise.get(shellPath) === undefined || isTestExecution()) {
-            Conda.condaPromise.set(shellPath, Conda.locate(shellPath));
+            Conda.condaPromise.set(shellPath, Conda.locate(shellPath, useWorkerThreads));
         }
         return Conda.condaPromise.get(shellPath);
     }
@@ -285,10 +290,15 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string, useWorkerThreads = true): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
-        const customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
+        let customCondaPath: string | undefined = 'conda';
+        try {
+            customCondaPath = getPythonSetting<string>(CONDAPATH_SETTING_KEY);
+        } catch (ex) {
+            traceError(`Failed to get conda path setting, ${ex}`);
+        }
         const suffix = getOSType() === OSType.Windows ? 'Scripts\\conda.exe' : 'bin/conda';
 
         // Produce a list of candidate binaries to be probed by exec'ing them.
@@ -307,7 +317,7 @@ export class Conda {
         }
 
         async function* getCandidatesFromRegistry() {
-            const interps = await getRegistryInterpreters(true);
+            const interps = await getRegistryInterpreters(useWorkerThreads);
             const candidates = interps
                 .filter((interp) => interp.interpreterPath && interp.distroOrgName === 'ContinuumAnalytics')
                 .map((interp) => path.join(path.win32.dirname(interp.interpreterPath), suffix));
@@ -385,7 +395,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath, undefined, shellPath);
+            let conda = new Conda(condaPath, undefined, shellPath, useWorkerThreads);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
@@ -440,7 +450,7 @@ export class Conda {
         if (shellPath) {
             options.shell = shellPath;
         }
-        const resultPromise = exec(command, ['info', '--json'], options);
+        const resultPromise = exec(command, ['info', '--json'], options, this.useWorkerThreads);
         // It has been observed that specifying a timeout is still not reliable to terminate the Conda process, see #27915.
         // Hence explicitly continue execution after timeout has been reached.
         const success = await Promise.race([

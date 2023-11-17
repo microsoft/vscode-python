@@ -5,7 +5,7 @@
 import { HKCU, HKLM, Options, REG_SZ, Registry, RegistryItem } from 'winreg';
 import * as path from 'path';
 import { createDeferred } from '../../common/utils/async';
-import { executeWorkerFile } from './externalDependencies';
+import { executeWorkerFile } from '../../common/process/worker/main';
 
 export { HKCU, HKLM, REG_SZ, Options };
 
