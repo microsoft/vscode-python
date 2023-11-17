@@ -4,8 +4,17 @@
 import { Worker } from 'worker_threads';
 import { traceError, traceVerbose } from '../../../logging';
 
+/**
+ * Executes a worker file.
+ * @param workerFileName Filename of the worker file to execute, it has to end with ".worker.js" for webpack to bundle it.
+ * @param workerData Arguments to the worker file.
+ * @returns
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export async function executeWorkerFile(workerFileName: string, workerData: any): Promise<any> {
+    if (!workerFileName.endsWith('.worker.js')) {
+        throw new Error('Worker file must end with ".worker.js" for webpack to bundle webworkers');
+    }
     return new Promise((resolve, reject) => {
         traceVerbose(`Starting worker ${workerFileName} with data ${JSON.stringify(workerData)}`);
         const worker = new Worker(workerFileName, { workerData });

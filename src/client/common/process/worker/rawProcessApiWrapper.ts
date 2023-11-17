@@ -7,7 +7,7 @@ import { executeWorkerFile } from './main';
 import { ExecutionResult, ShellOptions } from './types';
 
 export function workerShellExec(command: string, options: ShellOptions): Promise<ExecutionResult<string>> {
-    return executeWorkerFile(path.join(__dirname, 'shellExecWorker.js'), {
+    return executeWorkerFile(path.join(__dirname, 'shellExec.worker.js'), {
         command,
         options,
     });
@@ -18,7 +18,7 @@ export function workerPlainExec(
     args: string[],
     options: SpawnOptions = {},
 ): Promise<ExecutionResult<string>> {
-    return executeWorkerFile(path.join(__dirname, 'plainExecWorker.js'), {
+    return executeWorkerFile(path.join(__dirname, 'plainExec.worker.js'), {
         file,
         args,
         options,
