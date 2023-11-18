@@ -63,7 +63,6 @@ export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDispos
         // Note that we do no filtering here, including to check if files
         // are valid executables.  That is left to callers (e.g. composite
         // locators).
-        const it = this.locators.iterEnvs(query);
         async function* iterator(it: IPythonEnvsIterator<BasicEnvInfo>) {
             traceVerbose(`Searching windows known paths locator`);
             for await (const env of it) {
@@ -71,7 +70,7 @@ export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDispos
             }
             traceVerbose(`Finished searching windows known paths locator`);
         }
-        return iterator(it);
+        return iterator(this.locators.iterEnvs(query));
     }
 }
 
