@@ -199,10 +199,19 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
         // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
         const queriedState = this.getAutoSelectionInterpretersQueryState(resource);
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         if (queriedState.value !== true && resource) {
             await this.interpreterService.triggerRefresh({
                 searchLocations: { roots: [resource], doNotIncludeNonRooted: true },
             });
+            const interpreters = this.interpreterService.getInterpreters(resource);
+            const workspaceRecommendedInterpreter = this.envTypeComparer.getRecommended(
+                interpreters,
+                workspaceUri?.folderUri,
+            );
+            if (!workspaceRecommendedInterpreter) {
+                return;
+            }
         }
 
         const globalQueriedState = this.getAutoSelectionQueriedOnceState();
@@ -212,7 +221,6 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             await this.interpreterService.refreshPromise;
         }
         const interpreters = this.interpreterService.getInterpreters(resource);
-        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
 
         const recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
         if (!recommendedInterpreter) {
