@@ -19,7 +19,9 @@ export async function executeWorkerFile(workerFileName: string, workerData: any)
     return new Promise((resolve, reject) => {
         const worker = new Worker(workerFileName, { workerData });
         const id = worker.threadId;
-        traceVerbose(`Worker id ${id} for file ${path.basename(workerFileName)} with data ${JSON.stringify(workerData)}`);
+        traceVerbose(
+            `Worker id ${id} for file ${path.basename(workerFileName)} with data ${JSON.stringify(workerData)}`,
+        );
         worker.on('message', (msg: { err: Error; res: unknown }) => {
             if (msg.err) {
                 reject(msg.err);

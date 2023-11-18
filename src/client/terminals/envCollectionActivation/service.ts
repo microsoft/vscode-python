@@ -403,7 +403,7 @@ function shouldSkip(env: string) {
         // Even though this maybe returned, setting it can result in output encoding errors in terminal.
         'PYTHONUTF8',
         // We have deactivate service which takes care of setting it.
-        '_OLD_VIRTUAL_PATH'
+        '_OLD_VIRTUAL_PATH',
     ].includes(env);
 }
 

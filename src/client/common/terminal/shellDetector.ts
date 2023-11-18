@@ -63,9 +63,7 @@ export class ShellDetector {
         // This impacts executing code in terminals and activation of environments in terminal.
         // So, the better this works, the better it is for the user.
         sendTelemetryEvent(EventName.TERMINAL_SHELL_IDENTIFICATION, undefined, telemetryProperties);
-        traceVerbose(
-            `Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`,
-        );
+        traceVerbose(`Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`);
 
         // If we could not identify the shell, use the defaults.
         if (shell === undefined || shell === TerminalShellType.other) {
