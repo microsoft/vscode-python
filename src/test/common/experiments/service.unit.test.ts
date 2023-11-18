@@ -8,6 +8,7 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Disposable } from 'vscode-jsonrpc';
+// sinon can not create a stub if we just point to the exported module
 import * as tasClient from 'vscode-tas-client/vscode-tas-client/VSCodeTasClient';
 import * as expService from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
