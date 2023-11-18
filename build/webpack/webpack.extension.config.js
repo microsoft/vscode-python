@@ -19,8 +19,8 @@ const config = {
     target: 'node',
     entry: {
         extension: './src/client/extension.ts',
-        shellExecWorker: './src/client/common/process/worker/shellExecWorker.ts',
-        plainExecWorker: './src/client/common/process/worker/plainExecWorker.ts',
+        'shellExec.worker': './src/client/common/process/worker/shellExec.worker.ts',
+        'plainExec.worker': './src/client/common/process/worker/plainExec.worker.ts',
     },
     devtool: 'source-map',
     node: {
@@ -54,7 +54,7 @@ const config = {
                 ],
             },
             {
-                test: /\Worker\.js$/,
+                test: /\.worker\.js$/,
                 use: { loader: 'worker-loader' },
             },
         ],
