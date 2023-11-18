@@ -56,7 +56,6 @@ export function shellExec(
     disposables?: Set<IDisposable>,
 ): Promise<ExecutionResult<string>> {
     const shellOptions = getDefaultOptions(options, defaultEnv);
-    traceVerbose(`Shell Exec: ${command} with options: ${JSON.stringify(shellOptions, null, 4)}`);
     if (!options.doNotLog) {
         const processLogger = new ProcessLogger(new WorkspaceService());
         processLogger.logProcess(command, undefined, shellOptions);

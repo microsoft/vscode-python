@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import { getEnvironmentVariable } from '../../../common/utils/platform';
-import { traceError } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { arePathsSame, normCasePath, pathExists, readFile } from '../externalDependencies';
 
 function getSearchHeight() {
@@ -85,7 +85,7 @@ async function getProjectDir(envFolder: string): Promise<string | undefined> {
     }
     const projectDir = (await readFile(dotProjectFile)).trim();
     if (!(await pathExists(projectDir))) {
-        traceError(
+        traceVerbose(
             `The .project file inside environment folder: ${envFolder} doesn't contain a valid path to the project`,
         );
         return undefined;

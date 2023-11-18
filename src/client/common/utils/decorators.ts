@@ -1,5 +1,5 @@
 import '../../common/extensions';
-import { traceError, traceVerbose } from '../../logging';
+import { traceError } from '../../logging';
 import { isTestExecution } from '../constants';
 import { createDeferred, Deferred } from './async';
 import { getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
@@ -161,7 +161,6 @@ export function cache(expiryDurationMs: number, cachePromise = false, expiryDura
             }
             const cachedItem = cacheStoreForMethods.get(key);
             if (cachedItem && (cachedItem.expiry > Date.now() || expiryDurationMs === -1)) {
-                traceVerbose(`Cached data exists ${key}`);
                 return Promise.resolve(cachedItem.data);
             }
             const expiryMs =

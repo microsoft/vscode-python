@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { Worker } from 'worker_threads';
+import * as path from 'path';
 import { traceVerbose, traceError } from '../../../logging/index';
 
 /**
@@ -16,11 +17,10 @@ export async function executeWorkerFile(workerFileName: string, workerData: any)
         throw new Error('Worker file must end with ".worker.js" for webpack to bundle webworkers');
     }
     return new Promise((resolve, reject) => {
-        traceVerbose(`Starting worker ${workerFileName} with data ${JSON.stringify(workerData)}`);
         const worker = new Worker(workerFileName, { workerData });
-        traceVerbose(`Started worker ${workerFileName}`);
+        const id = worker.threadId;
+        traceVerbose(`Worker id ${id} for file ${path.basename(workerFileName)} with data ${JSON.stringify(workerData)}`);
         worker.on('message', (msg: { err: Error; res: unknown }) => {
-            traceVerbose(`Worker ${workerFileName} sent message ${JSON.stringify(msg)}`);
             if (msg.err) {
                 reject(msg.err);
             }
@@ -31,7 +31,7 @@ export async function executeWorkerFile(workerFileName: string, workerData: any)
             reject(ex);
         });
         worker.on('exit', (code) => {
-            traceVerbose(`Worker ${workerFileName} exited with code ${code}`);
+            traceVerbose(`Worker id ${id} exited with code ${code}`);
             if (code !== 0) {
                 reject(new Error(`Worker ${workerFileName} stopped with exit code ${code}`));
             }

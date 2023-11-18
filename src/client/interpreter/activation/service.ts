@@ -294,7 +294,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const oldWarnings = env[PYTHON_WARNINGS];
             env[PYTHON_WARNINGS] = 'ignore';
 
-            traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
             // Do some wrapping of the call. For two reasons:
