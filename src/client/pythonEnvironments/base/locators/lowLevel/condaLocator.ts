@@ -25,13 +25,14 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
         _: unknown,
         useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
     ): IPythonEnvsIterator<BasicEnvInfo> {
+        console.time('Time taken for conda');
         const conda = await Conda.getConda(undefined, useWorkerThreads);
         if (conda === undefined) {
             traceVerbose(`Couldn't locate the conda binary.`);
             return;
         }
+        console.timeLog('Time taken for conda');
         traceVerbose(`Searching for conda environments using ${conda.command}`);
-        console.time('Time taken for conda');
 
         const envs = await conda.getEnvList();
         for (const env of envs) {
@@ -45,6 +46,6 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
             }
         }
         traceVerbose(`Finished searching for conda environments`);
-        console.timeEnd('Time takne for conda');
+        console.timeEnd('Time taken for conda');
     }
 }

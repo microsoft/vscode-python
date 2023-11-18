@@ -25,6 +25,9 @@ export class OutputChannelLogger implements ILogging {
     }
 
     public traceVerbose(...data: Arguments): void {
+        if(util.format(...data).startsWith('Searching for')) {
+            console.debug(util.format(...data));
+        }
         this.channel.debug(util.format(...data));
     }
 }
