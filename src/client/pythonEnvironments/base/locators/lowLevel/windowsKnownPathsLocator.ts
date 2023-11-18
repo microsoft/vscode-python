@@ -92,9 +92,7 @@ function getDirFilesLocator(
     // rather than in each low-level locator.  In the meantime we
     // take a naive approach.
     async function* iterEnvs(query: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
-        yield* await getEnvs(locator.iterEnvs(query)).then((res) => {
-            return res;
-        });
+        yield* await getEnvs(locator.iterEnvs(query)).then((res) => res);
     }
     return {
         providerId: locator.providerId,
