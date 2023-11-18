@@ -98,7 +98,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             if (configuration) {
                 const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
-                smartSendSettingsEnabledVal = pythonSettings.REPL.EnableREPLSmartSend;
+                smartSendSettingsEnabledVal = pythonSettings.REPL.enableREPLSmartSend;
             }
 
             const input = JSON.stringify({

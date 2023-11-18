@@ -199,7 +199,7 @@ export interface ITerminalSettings {
 }
 
 export interface IREPLSettings {
-    readonly EnableREPLSmartSend: boolean;
+    readonly enableREPLSmartSend: boolean;
 }
 
 export interface IExperiments {
