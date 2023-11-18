@@ -51,6 +51,7 @@ async function* iterEnvsIterator(
 
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
+            let notifyIfFinished = true;
             state.pending += 1;
             if (isProgressEvent(event)) {
                 if (event.stage === ProgressReportStage.discoveryFinished) {
@@ -63,16 +64,18 @@ async function* iterEnvsIterator(
                 throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
                 );
-            } else if (seen[event.index] !== undefined) {
+            } else if (event.index && seen[event.index] !== undefined) {
                 const oldEnv = seen[event.index];
                 seen[event.index] = event.update;
                 didUpdate.fire({ index: event.index, old: oldEnv, update: event.update });
             } else {
-                // This implies a problem in a downstream locator
-                traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
+                didUpdate.fire({ update: event.update });
+                notifyIfFinished = false;
             }
             state.pending -= 1;
-            checkIfFinishedAndNotify(state, didUpdate);
+            if (notifyIfFinished) {
+                checkIfFinishedAndNotify(state, didUpdate);
+            }
         });
     } else {
         didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });

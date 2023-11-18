@@ -82,6 +82,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
+                let notifyIfFinished = true;
                 state.pending += 1;
                 if (isProgressEvent(event)) {
                     if (event.stage === ProgressReportStage.discoveryFinished) {
@@ -95,18 +96,20 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     throw new Error(
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
-                } else if (seen[event.index] !== undefined) {
+                } else if (event.index && seen[event.index] !== undefined) {
                     const old = seen[event.index];
                     await setKind(event.update, environmentKinds);
                     seen[event.index] = await resolveBasicEnv(event.update);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
-                } else {
-                    // This implies a problem in a downstream locator
-                    traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
+                } else if (event.update) {
+                    didUpdate.fire({ update: await this.resolveEnv(event.update.executablePath) });
+                    notifyIfFinished = false;
                 }
                 state.pending -= 1;
-                checkIfFinishedAndNotify(state, didUpdate);
+                if (notifyIfFinished) {
+                    checkIfFinishedAndNotify(state, didUpdate);
+                }
             });
         } else {
             didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });

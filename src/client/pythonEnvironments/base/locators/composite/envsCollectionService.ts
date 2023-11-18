@@ -157,13 +157,16 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         default:
                             this.progress.fire(event);
                     }
-                } else {
+                } else if (event.index) {
                     state.pending += 1;
                     this.cache.updateEnv(seen[event.index], event.update);
                     if (event.update) {
                         seen[event.index] = event.update;
                     }
                     state.pending -= 1;
+                } else if (event.update) {
+                    // New env, add it to cache.
+                    this.cache.addEnv(event.update);
                 }
                 if (state.done && state.pending === 0) {
                     updatesDone.resolve();
