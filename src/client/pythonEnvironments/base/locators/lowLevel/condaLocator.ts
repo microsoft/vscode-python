@@ -31,6 +31,7 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
             return;
         }
         traceVerbose(`Searching for conda environments using ${conda.command}`);
+        console.time('Time taken for conda');
 
         const envs = await conda.getEnvList();
         for (const env of envs) {
@@ -44,5 +45,6 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
             }
         }
         traceVerbose(`Finished searching for conda environments`);
+        console.timeEnd('Time takne for conda');
     }
 }

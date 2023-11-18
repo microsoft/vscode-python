@@ -68,6 +68,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
+            console.time('Searching for workspace virtual envs');
             const envRootDirs = await getWorkspaceVirtualEnvDirs(root);
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
@@ -98,6 +99,7 @@ export class WorkspaceVirtualEnvironmentLocator extends FSWatchingLocator {
 
             yield* iterable(chain(envGenerators));
             traceVerbose(`Finished searching for workspace virtual envs`);
+            console.timeEnd('Searching for workspace virtual envs');
         }
 
         return iterator(this.root);

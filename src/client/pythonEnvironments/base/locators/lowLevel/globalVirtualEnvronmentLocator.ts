@@ -105,6 +105,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
         async function* iterator() {
+            console.time(`Searching for global virtual envs`);
             const envRootDirs = await getGlobalVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
@@ -139,6 +140,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
 
             yield* iterable(chain(envGenerators));
             traceVerbose(`Finished searching for global virtual envs`);
+            console.timeEnd(`Searching for global virtual envs`);
         }
 
         return iterator();

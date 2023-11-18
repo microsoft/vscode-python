@@ -20,6 +20,7 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     ): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* () {
             traceVerbose('Searching for windows registry interpreters');
+            console.time('Time taken for windows registry');
             const interpreters = await getRegistryInterpreters(useWorkerThreads);
             for (const interpreter of interpreters) {
                 try {
@@ -40,6 +41,7 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
                 }
             }
             traceVerbose('Finished searching for windows registry interpreters');
+            console.timeEnd('Time taken for windows registry');
         };
         return iterator();
     }

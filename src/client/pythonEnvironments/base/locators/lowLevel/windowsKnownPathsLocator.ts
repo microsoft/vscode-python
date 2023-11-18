@@ -16,6 +16,7 @@ import { Locators } from '../../locators';
 import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { DirFilesLocator } from './filesLocator';
+import { traceVerbose } from '../../../../logging';
 
 /**
  * A locator for Windows locators found under the $PATH env var.
@@ -62,7 +63,16 @@ export class WindowsPathEnvVarLocator implements ILocator<BasicEnvInfo>, IDispos
         // Note that we do no filtering here, including to check if files
         // are valid executables.  That is left to callers (e.g. composite
         // locators).
-        return this.locators.iterEnvs(query);
+        async function* iterator(it: IPythonEnvsIterator<BasicEnvInfo>) {
+            console.time(`Searching windows known paths locator`);
+            traceVerbose(`Searching windows known paths locator`);
+            for await (const env of it) {
+                yield env;
+            }
+            traceVerbose(`Finished searching windows known paths locator`);
+            console.timeEnd(`Searching windows known paths locator`);
+        }
+        return iterator(this.locators.iterEnvs(query));
     }
 }
 

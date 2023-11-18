@@ -48,6 +48,7 @@ export class PoetryLocator extends LazyResourceBasedLocator {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator(root: string) {
+            console.time('Time taken for poetry');
             const envDirs = await getVirtualEnvDirs(root);
             const envGenerators = envDirs.map((envDir) => {
                 async function* generator() {
@@ -71,6 +72,7 @@ export class PoetryLocator extends LazyResourceBasedLocator {
 
             yield* iterable(chain(envGenerators));
             traceVerbose(`Finished searching for poetry envs`);
+            console.timeEnd('Time taken for poetry');
         }
 
         return iterator(this.root);

@@ -17,6 +17,7 @@ import { traceError, traceVerbose } from '../../../../logging';
  */
 async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
     traceVerbose('Searching for pyenv environments');
+    console.time('Time taken for pyenv');
     const pyenvVersionDir = getPyenvVersionsDir();
 
     const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
@@ -35,6 +36,7 @@ async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
         }
     }
     traceVerbose('Finished searching for pyenv environments');
+    console.timeEnd('Time taken for pyenv');
 }
 
 export class PyenvLocator extends FSWatchingLocator {
