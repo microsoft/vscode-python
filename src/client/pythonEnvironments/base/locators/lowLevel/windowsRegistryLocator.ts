@@ -1,3 +1,4 @@
+/* eslint-disable require-yield */
 /* eslint-disable no-continue */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -9,7 +10,6 @@ import {
     IPythonEnvsIterator,
     Locator,
     ProgressNotificationEvent,
-    ProgressReportStage,
     PythonEnvUpdatedEvent,
 } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
@@ -37,8 +37,14 @@ async function* iterEnvsIterator(
     useWorkerThreads: boolean,
     didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
 ): IPythonEnvsIterator<BasicEnvInfo> {
+    updateLazily(useWorkerThreads, didUpdate).ignoreErrors();
+}
+
+async function updateLazily(
+    useWorkerThreads: boolean,
+    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
+) {
     // Windows registry is slow and often not necessary, so notify completion while still updating lazily as we find stuff.
-    didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
     traceVerbose('Searching for windows registry interpreters');
     console.time('Time taken for windows registry');
     const interpreters = await getRegistryInterpreters(useWorkerThreads);
@@ -56,7 +62,6 @@ async function* iterEnvsIterator(
                 source: [PythonEnvSource.WindowsRegistry],
             };
             didUpdate.fire({ update: env });
-            yield env;
         } catch (ex) {
             traceError(`Failed to process environment: ${interpreter}`, ex);
         }

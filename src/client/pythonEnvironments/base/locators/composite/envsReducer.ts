@@ -49,6 +49,7 @@ async function* iterEnvsIterator(
     };
     const seen: BasicEnvInfo[] = [];
 
+    didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
             let notifyIfFinished = true;
@@ -77,8 +78,6 @@ async function* iterEnvsIterator(
                 checkIfFinishedAndNotify(state, didUpdate);
             }
         });
-    } else {
-        didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
     }
 
     let result = await iterator.next();
@@ -94,10 +93,8 @@ async function* iterEnvsIterator(
         }
         result = await iterator.next();
     }
-    if (iterator.onUpdated === undefined) {
-        state.done = true;
-        checkIfFinishedAndNotify(state, didUpdate);
-    }
+    state.done = true;
+    checkIfFinishedAndNotify(state, didUpdate);
 }
 
 async function resolveDifferencesInBackground(

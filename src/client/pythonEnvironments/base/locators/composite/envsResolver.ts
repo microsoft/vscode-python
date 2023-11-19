@@ -140,16 +140,16 @@ export class PythonEnvsResolver implements IResolvingLocator {
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
-        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
-        const old = seen[envIndex];
-        if (info) {
-            const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
-            seen[envIndex] = resolvedEnv;
-            didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
-        } else {
-            // Send update that the environment is not valid.
-            didUpdate.fire({ old, index: envIndex, update: undefined });
-        }
+        // const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
+        // const old = seen[envIndex];
+        // if (info) {
+        //     const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
+        //     seen[envIndex] = resolvedEnv;
+        //     didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
+        // } else {
+        //     // Send update that the environment is not valid.
+        //     didUpdate.fire({ old, index: envIndex, update: undefined });
+        // }
         state.pending -= 1;
         checkIfFinishedAndNotify(state, didUpdate);
     }
