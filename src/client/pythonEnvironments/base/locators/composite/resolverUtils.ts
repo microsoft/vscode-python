@@ -109,7 +109,7 @@ async function updateEnvUsingRegistry(env: PythonEnvInfo): Promise<void> {
     let interpreters = getRegistryInterpretersSync();
     if (!interpreters) {
         traceError('Expected registry interpreter cache to be initialized already');
-        interpreters = await getRegistryInterpreters();
+        interpreters = await getRegistryInterpreters(true);
     }
     const data = interpreters.find((i) => arePathsSame(i.interpreterPath, env.executable.filename));
     if (data) {

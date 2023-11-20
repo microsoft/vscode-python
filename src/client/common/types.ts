@@ -178,6 +178,7 @@ export interface IPythonSettings {
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
     readonly tensorBoard: ITensorBoardSettings | undefined;
+    readonly REPL: IREPLSettings;
     register(): void;
 }
 
@@ -195,6 +196,10 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
     readonly activateEnvInCurrentTerminal: boolean;
+}
+
+export interface IREPLSettings {
+    readonly enableREPLSmartSend: boolean;
 }
 
 export interface IExperiments {

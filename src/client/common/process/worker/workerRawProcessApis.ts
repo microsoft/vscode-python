@@ -1,19 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// !!!! IMPORTANT: DO NOT IMPORT FROM VSCODE MODULE AS IT IS NOT AVAILABLE INSIDE WORKER THREADS !!!!
+
 import { exec, execSync, spawn } from 'child_process';
 import { Readable } from 'stream';
-import { Observable } from 'rxjs/Observable';
-import { IDisposable } from '../types';
-import { createDeferred } from '../utils/async';
-import { EnvironmentVariables } from '../variables/types';
-import { DEFAULT_ENCODING } from './constants';
-import { ExecutionResult, ObservableExecutionResult, Output, ShellOptions, SpawnOptions, StdErrError } from './types';
-import { noop } from '../utils/misc';
-import { decodeBuffer } from './decoder';
-import { traceVerbose } from '../../logging';
-import { WorkspaceService } from '../application/workspace';
-import { ProcessLogger } from './logger';
+import { createDeferred } from '../../utils/async';
+import { DEFAULT_ENCODING } from '../constants';
+import { decodeBuffer } from '../decoder';
+import {
+    ShellOptions,
+    SpawnOptions,
+    EnvironmentVariables,
+    IDisposable,
+    noop,
+    StdErrError,
+    ExecutionResult,
+} from './types';
 
 const PS_ERROR_SCREEN_BOGUS = /your [0-9]+x[0-9]+ screen size is bogus\. expect trouble/;
 
@@ -49,17 +52,13 @@ function getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T, de
     return defaultOptions;
 }
 
-export function shellExec(
+export function _workerShellExecImpl(
     command: string,
-    options: ShellOptions & { doNotLog?: boolean } = {},
+    options: ShellOptions,
     defaultEnv?: EnvironmentVariables,
     disposables?: Set<IDisposable>,
 ): Promise<ExecutionResult<string>> {
     const shellOptions = getDefaultOptions(options, defaultEnv);
-    if (!options.doNotLog) {
-        const processLogger = new ProcessLogger(new WorkspaceService());
-        processLogger.logProcess(command, undefined, shellOptions);
-    }
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const callback = (e: any, stdout: any, stderr: any) => {
@@ -103,7 +102,7 @@ export function shellExec(
     });
 }
 
-export function plainExec(
+export function _workerPlainExecImpl(
     file: string,
     args: string[],
     options: SpawnOptions & { doNotLog?: boolean } = {},
@@ -112,10 +111,6 @@ export function plainExec(
 ): Promise<ExecutionResult<string>> {
     const spawnOptions = getDefaultOptions(options, defaultEnv);
     const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
-    if (!options.doNotLog) {
-        const processLogger = new ProcessLogger(new WorkspaceService());
-        processLogger.logProcess(file, args, options);
-    }
     const proc = spawn(file, args, spawnOptions);
     // Listen to these errors (unhandled errors in streams tears down the process).
     // Errors will be bubbled up to the `error` event in `proc`, hence no need to log.
@@ -145,14 +140,14 @@ export function plainExec(
         internalDisposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
     };
 
-    if (options.token) {
-        internalDisposables.push(options.token.onCancellationRequested(disposable.dispose));
-    }
+    // Tokens not supported yet as they come from vscode module which is not available.
+    // if (options.token) {
+    //     internalDisposables.push(options.token.onCancellationRequested(disposable.dispose));
+    // }
 
     const stdoutBuffers: Buffer[] = [];
     on(proc.stdout, 'data', (data: Buffer) => {
         stdoutBuffers.push(data);
-        options.outputChannel?.append(data.toString());
     });
     const stderrBuffers: Buffer[] = [];
     on(proc.stderr, 'data', (data: Buffer) => {
@@ -162,7 +157,6 @@ export function plainExec(
         } else {
             stderrBuffers.push(data);
         }
-        options.outputChannel?.append(data.toString());
     });
 
     proc.once('close', () => {
@@ -205,109 +199,7 @@ function filterOutputUsingCondaRunMarkers(stdout: string) {
     return filteredOut !== undefined ? filteredOut : stdout;
 }
 
-function removeCondaRunMarkers(out: string) {
-    out = out.replace('>>>PYTHON-EXEC-OUTPUT\r\n', '').replace('>>>PYTHON-EXEC-OUTPUT\n', '');
-    return out.replace('<<<PYTHON-EXEC-OUTPUT\r\n', '').replace('<<<PYTHON-EXEC-OUTPUT\n', '');
-}
-
-export function execObservable(
-    file: string,
-    args: string[],
-    options: SpawnOptions & { doNotLog?: boolean } = {},
-    defaultEnv?: EnvironmentVariables,
-    disposables?: Set<IDisposable>,
-): ObservableExecutionResult<string> {
-    const spawnOptions = getDefaultOptions(options, defaultEnv);
-    const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
-    if (!options.doNotLog) {
-        const processLogger = new ProcessLogger(new WorkspaceService());
-        processLogger.logProcess(file, args, options);
-    }
-    const proc = spawn(file, args, spawnOptions);
-    let procExited = false;
-    const disposable: IDisposable = {
-        dispose() {
-            if (proc && proc.pid && !proc.killed && !procExited) {
-                killPid(proc.pid);
-            }
-            if (proc) {
-                proc.unref();
-            }
-        },
-    };
-    disposables?.add(disposable);
-
-    const output = new Observable<Output<string>>((subscriber) => {
-        const internalDisposables: IDisposable[] = [];
-
-        // eslint-disable-next-line @typescript-eslint/ban-types
-        const on = (ee: Readable | null, name: string, fn: Function) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ee?.on(name, fn as any);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            internalDisposables.push({ dispose: () => ee?.removeListener(name, fn as any) as any });
-        };
-
-        if (options.token) {
-            internalDisposables.push(
-                options.token.onCancellationRequested(() => {
-                    if (!procExited && !proc.killed) {
-                        if (proc.pid) {
-                            killPid(proc.pid);
-                        } else {
-                            proc.kill();
-                        }
-                        procExited = true;
-                    }
-                }),
-            );
-        }
-
-        const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
-            let out = decodeBuffer([data], encoding);
-            if (source === 'stderr' && options.throwOnStdErr) {
-                subscriber.error(new StdErrError(out));
-            } else {
-                // Because all of output is not retrieved at once, filtering out the
-                // actual output using markers is not possible. Hence simply remove
-                // the markers and return original output.
-                out = removeCondaRunMarkers(out);
-                subscriber.next({ source, out });
-            }
-        };
-
-        on(proc.stdout, 'data', (data: Buffer) => sendOutput('stdout', data));
-        on(proc.stderr, 'data', (data: Buffer) => sendOutput('stderr', data));
-
-        proc.once('close', () => {
-            procExited = true;
-            subscriber.complete();
-            internalDisposables.forEach((d) => d.dispose());
-        });
-        proc.once('exit', () => {
-            procExited = true;
-            subscriber.complete();
-            internalDisposables.forEach((d) => d.dispose());
-        });
-        proc.once('error', (ex) => {
-            procExited = true;
-            subscriber.error(ex);
-            internalDisposables.forEach((d) => d.dispose());
-        });
-        if (options.stdinStr !== undefined) {
-            proc.stdin?.write(options.stdinStr);
-            proc.stdin?.end();
-        }
-    });
-
-    return {
-        proc,
-        out: output,
-        dispose: disposable.dispose,
-    };
-}
-
-export function killPid(pid: number): void {
+function killPid(pid: number): void {
     try {
         if (process.platform === 'win32') {
             // Windows doesn't support SIGTERM, so execute taskkill to kill the process
@@ -316,6 +208,6 @@ export function killPid(pid: number): void {
             process.kill(pid);
         }
     } catch {
-        traceVerbose('Unable to kill process with pid', pid);
+        console.warn('Unable to kill process with pid', pid);
     }
 }

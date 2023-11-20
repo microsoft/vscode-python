@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -21,6 +21,7 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(ICommandManager) commandManager: ICommandManager,
     ) {
         super(
             terminalServiceFactory,
@@ -29,6 +30,7 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
             disposableRegistry,
             platformService,
             interpreterService,
+            commandManager,
         );
         this.terminalTitle = 'REPL';
     }

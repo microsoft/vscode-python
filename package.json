@@ -538,6 +538,7 @@
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
+                            "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
                             "pythonREPLSmartSend",
                             "pythonRecommendTensorboardExt"
@@ -547,6 +548,7 @@
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
+                            "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
                             "%python.experiments.pythonRecommendTensorboardExt.description%"
@@ -565,6 +567,7 @@
                             "pythonSurveyNotification",
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
+                            "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
                             "pythonREPLSmartSend"
                         ],
@@ -573,6 +576,7 @@
                             "%python.experiments.pythonSurveyNotification.description%",
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
+                            "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%"
                         ]
@@ -699,6 +703,12 @@
                     "description": "%python.terminal.launchArgs.description%",
                     "scope": "resource",
                     "type": "array"
+                },
+                "python.REPL.enableREPLSmartSend": {
+                    "default": true,
+                    "description": "%python.EnableREPLSmartSend.description%",
+                    "scope": "resource",
+                    "type": "boolean"
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
@@ -1584,7 +1594,7 @@
         "vscode-jsonrpc": "^8.2.0",
         "vscode-languageclient": "^9.0.1",
         "vscode-languageserver-protocol": "^3.17.5",
-        "vscode-tas-client": "^0.1.63",
+        "vscode-tas-client": "^0.1.75",
         "which": "^2.0.2",
         "winreg": "^1.2.4",
         "xml2js": "^0.5.0"
@@ -1655,6 +1665,7 @@
         "typescript": "4.5.5",
         "uuid": "^8.3.2",
         "webpack": "^5.76.0",
+        "worker-loader": "^3.0.8",
         "webpack-bundle-analyzer": "^4.5.0",
         "webpack-cli": "^4.9.2",
         "webpack-fix-default-import-plugin": "^1.0.3",

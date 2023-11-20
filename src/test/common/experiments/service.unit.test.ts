@@ -8,7 +8,9 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Disposable } from 'vscode-jsonrpc';
-import * as tasClient from 'vscode-tas-client';
+// sinon can not create a stub if we just point to the exported module
+import * as tasClient from 'vscode-tas-client/vscode-tas-client/VSCodeTasClient';
+import * as expService from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -180,7 +182,7 @@ suite('Experimentation service', () => {
             getTreatmentVariable = sinon.stub().returns(true);
             sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable,
-            } as unknown) as tasClient.IExperimentationService);
+            } as unknown) as expService.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
@@ -218,7 +220,7 @@ suite('Experimentation service', () => {
             getTreatmentVariable = sinon.stub().returns(false);
             sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable,
-            } as unknown) as tasClient.IExperimentationService);
+            } as unknown) as expService.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
 
@@ -364,7 +366,7 @@ suite('Experimentation service', () => {
             getTreatmentVariableStub = sinon.stub().returns(Promise.resolve('value'));
             sinon.stub(tasClient, 'getExperimentationService').returns(({
                 getTreatmentVariable: getTreatmentVariableStub,
-            } as unknown) as tasClient.IExperimentationService);
+            } as unknown) as expService.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });

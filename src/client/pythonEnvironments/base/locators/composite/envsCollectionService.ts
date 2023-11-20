@@ -88,14 +88,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         // only use cache if it has complete info on an environment.
         const cachedEnv = await this.cache.getLatestInfo(path);
         if (cachedEnv) {
-            traceVerbose(`Resolved ${path} from cache: ${JSON.stringify(cachedEnv)}`);
             return cachedEnv;
         }
         const resolved = await this.locator.resolveEnv(path).catch((ex) => {
             traceError(`Failed to resolve ${path}`, ex);
             return undefined;
         });
-        traceVerbose(`Resolved ${path} to ${JSON.stringify(resolved)}`);
+        traceVerbose(`Resolved ${path} using downstream locator`);
         if (resolved) {
             this.cache.addEnv(resolved, true);
         }

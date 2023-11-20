@@ -28,6 +28,7 @@ import {
     IInterpreterPathService,
     IInterpreterSettings,
     IPythonSettings,
+    IREPLSettings,
     ITensorBoardSettings,
     ITerminalSettings,
     Resource,
@@ -110,6 +111,8 @@ export class PythonSettings implements IPythonSettings {
     public terminal!: ITerminalSettings;
 
     public globalModuleInstallation = false;
+
+    public REPL!: IREPLSettings;
 
     public experiments!: IExperiments;
 
@@ -360,7 +363,8 @@ export class PythonSettings implements IPythonSettings {
                   activateEnvInCurrentTerminal: false,
               };
 
-        const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;
+        this.REPL = pythonSettings.get<IREPLSettings>('REPL')!;
+        const experiments = pythonSettings.get<IExperiments>('experiments')!;
         if (this.experiments) {
             Object.assign<IExperiments, IExperiments>(this.experiments, experiments);
         } else {

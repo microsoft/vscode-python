@@ -6,15 +6,17 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
-import { IWorkspaceService } from '../../common/application/types';
+import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { Diagnostics, Repl } from '../../common/utils/localize';
+import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { traceInfo } from '../../logging';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
-
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
@@ -27,6 +29,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
         @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
+        @inject(ICommandManager) protected readonly commandManager: ICommandManager,
     ) {}
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
@@ -42,9 +45,17 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         if (!code || code.trim().length === 0) {
             return;
         }
-
         await this.initializeRepl(resource);
-        await this.getTerminalService(resource).sendText(code);
+        if (code == 'deprecated') {
+            // If user is trying to smart send deprecated code show warning
+            const selection = await showWarningMessage(Diagnostics.invalidSmartSendMessage, Repl.disableSmartSend);
+            traceInfo(`Selected file contains invalid Python or Deprecated Python 2 code`);
+            if (selection === Repl.disableSmartSend) {
+                this.configurationService.updateSetting('REPL.enableREPLSmartSend', false, resource);
+            }
+        } else {
+            await this.getTerminalService(resource).sendText(code);
+        }
     }
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
