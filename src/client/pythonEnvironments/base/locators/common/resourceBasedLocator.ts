@@ -1,3 +1,5 @@
+/* eslint-disable class-methods-use-this */
+/* eslint-disable require-yield */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -46,6 +48,15 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
     public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         await this.activate();
         const iterator = this.doIterEnvs(query);
+        const it = this._iterEnvs(iterator, query);
+        it.onUpdated = iterator.onUpdated;
+        yield* it;
+    }
+
+    private async *_iterEnvs(
+        iterator: IPythonEnvsIterator<BasicEnvInfo>,
+        query?: PythonLocatorQuery,
+    ): IPythonEnvsIterator<BasicEnvInfo> {
         if (query?.envPath) {
             let result = await iterator.next();
             while (!result.done) {
