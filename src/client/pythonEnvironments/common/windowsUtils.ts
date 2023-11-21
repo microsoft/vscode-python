@@ -152,6 +152,7 @@ async function getRegistryInterpretersImpl(useWorkerThreads: boolean): Promise<I
                     await getInterpreterDataFromRegistry(arch, hive, key, useWorkerThreads),
                 );
             }
+            console.timeLog('Time taken for windows registry');
         }
     }
     registryInterpretersCache = uniqBy(registryData, (r: IRegistryInterpreterData) => r.interpreterPath);

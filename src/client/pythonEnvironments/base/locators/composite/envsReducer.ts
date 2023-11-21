@@ -57,7 +57,7 @@ async function* iterEnvsIterator(
             if (isProgressEvent(event)) {
                 if (event.stage === ProgressReportStage.discoveryFinished) {
                     state.done = true;
-                    listener.dispose();
+                    // listener.dispose();
                 } else {
                     didUpdate.fire(event);
                 }
@@ -128,7 +128,7 @@ function checkIfFinishedAndNotify(
 ) {
     if (state.done && state.pending === 0) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
-        didUpdate.dispose();
+        // didUpdate.dispose();
         traceVerbose(`Finished with environment reducer`);
     }
 }

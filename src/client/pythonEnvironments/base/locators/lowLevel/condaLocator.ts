@@ -23,7 +23,7 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async *doIterEnvs(
+    public doIterEnvs(
         _: unknown,
         useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
     ): IPythonEnvsIterator<BasicEnvInfo> {

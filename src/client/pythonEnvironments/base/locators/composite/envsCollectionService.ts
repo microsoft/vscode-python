@@ -146,7 +146,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     switch (event.stage) {
                         case ProgressReportStage.discoveryFinished:
                             state.done = true;
-                            listener.dispose();
                             break;
                         case ProgressReportStage.allPathsDiscovered:
                             if (!query) {
