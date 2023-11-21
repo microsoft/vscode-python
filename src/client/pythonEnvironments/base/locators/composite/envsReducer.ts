@@ -126,7 +126,7 @@ function checkIfFinishedAndNotify(
     state: { done: boolean; pending: number },
     didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
 ) {
-    if (state.done && state.pending === 0) {
+    if (state.done) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
         // didUpdate.dispose();
         traceVerbose(`Finished with environment reducer`);

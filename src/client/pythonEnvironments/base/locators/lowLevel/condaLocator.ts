@@ -8,8 +8,8 @@ import { BasicEnvInfo, IPythonEnvsIterator, ProgressNotificationEvent, PythonEnv
 import { Conda, getCondaEnvironmentsTxt } from '../../../common/environmentManagers/conda';
 import { traceError, traceVerbose } from '../../../../logging';
 import { FSWatchingLocator } from './fsWatchingLocator';
-import { DiscoveryUsingWorkers, DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
-import { inExperiment, inExperiment } from '../../../common/externalDependencies';
+import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
+import { inExperiment } from '../../../common/externalDependencies';
 
 export class CondaEnvironmentLocator extends FSWatchingLocator {
     public readonly providerId: string = 'conda-envs';

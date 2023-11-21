@@ -15,8 +15,8 @@ import {
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { traceError, traceVerbose } from '../../../../logging';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
-import { inExperiment, inExperiment } from '../../../common/externalDependencies';
-import { DiscoveryUsingWorkers, DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
+import { inExperiment } from '../../../common/externalDependencies';
+import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     public readonly providerId: string = 'windows-registry';
