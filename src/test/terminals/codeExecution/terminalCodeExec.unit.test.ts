@@ -84,6 +84,7 @@ suite('Terminal - Code Execution', () => {
                         disposables,
                         platform.object,
                         interpreterService.object,
+                        commandManager.object,
                     );
                     break;
                 }
@@ -95,6 +96,7 @@ suite('Terminal - Code Execution', () => {
                         disposables,
                         platform.object,
                         interpreterService.object,
+                        commandManager.object,
                     );
                     expectedTerminalTitle = 'REPL';
                     break;
