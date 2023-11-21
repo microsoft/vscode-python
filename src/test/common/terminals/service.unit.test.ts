@@ -11,7 +11,6 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
-
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
