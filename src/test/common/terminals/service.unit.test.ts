@@ -6,11 +6,12 @@ import path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
+
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
