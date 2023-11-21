@@ -4,8 +4,6 @@ original_ps1 = ">>>"
 # global_exit = None
 # failure_flag = False
 
-#  pytest monkeypatch temp set global variable on a module
-
 
 class repl_hooks:
     def __init__(self):
