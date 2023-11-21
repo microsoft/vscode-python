@@ -1,8 +1,6 @@
 import sys
 
 original_ps1 = ">>>"
-# global_exit = None
-# failure_flag = False
 
 
 class repl_hooks:
@@ -28,28 +26,12 @@ class repl_hooks:
         self.original_excepthook(type, value, traceback)
 
 
-# def my_displayhook(value):
-#     # print(value)
-#     global failure_flag  # Tell Python we are using global failure_flag
-#     if value is None:
-#         # did not fail
-#         failure_flag = False
-
-
-# def my_excepthook(type, value, traceback):
-#     global global_exit
-#     global_exit = value
-#     global failure_flag
-#     failure_flag = True
-
-
 class PS1:
     hooks = repl_hooks()
     sys.excepthook = hooks.my_excepthook
     sys.displayhook = hooks.my_displayhook
 
     def __str__(self):
-        # This mechanism might fall over on caught errors?
         exit_code = 0
         if self.hooks.failure_flag:
             exit_code = 1
