@@ -14,7 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PersistentState, PersistentStateFactory } from '../../../client/common/persistentState';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../client/common/types';
+import { IExperimentService, IPersistentStateFactory, Resource } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection';
 import { InterpreterAutoSelectionProxyService } from '../../../client/interpreter/autoSelection/proxy';
@@ -41,6 +41,7 @@ suite('Interpreters - Auto Selection', () => {
     let helper: IInterpreterHelper;
     let proxy: IInterpreterAutoSelectionProxyService;
     let interpreterService: IInterpreterService;
+    let experimentService: IExperimentService;
     let sendTelemetryEventStub: sinon.SinonStub;
     let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
     class InterpreterAutoSelectionServiceTest extends InterpreterAutoSelectionService {
@@ -64,6 +65,8 @@ suite('Interpreters - Auto Selection', () => {
         helper = mock(InterpreterHelper);
         proxy = mock(InterpreterAutoSelectionProxyService);
         interpreterService = mock(InterpreterService);
+        experimentService = mock(IExperimentService);
+        when(experimentService.inExperimentSync(anything())).thenReturn(false);
 
         const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
 
@@ -75,6 +78,7 @@ suite('Interpreters - Auto Selection', () => {
             interpreterComparer,
             instance(proxy),
             instance(helper),
+            instance(experimentService),
         );
 
         when(interpreterService.refreshPromise).thenReturn(undefined);
@@ -236,6 +240,7 @@ suite('Interpreters - Auto Selection', () => {
                 interpreterComparer,
                 instance(proxy),
                 instance(helper),
+                instance(experimentService),
             );
 
             autoSelectionService.initializeStore = () => Promise.resolve();
@@ -275,6 +280,7 @@ suite('Interpreters - Auto Selection', () => {
                 interpreterComparer,
                 instance(proxy),
                 instance(helper),
+                instance(experimentService),
             );
 
             autoSelectionService.initializeStore = () => Promise.resolve();
@@ -309,6 +315,7 @@ suite('Interpreters - Auto Selection', () => {
                 interpreterComparer,
                 instance(proxy),
                 instance(helper),
+                instance(experimentService),
             );
 
             autoSelectionService.initializeStore = () => Promise.resolve();
@@ -352,6 +359,7 @@ suite('Interpreters - Auto Selection', () => {
                 interpreterComparer,
                 instance(proxy),
                 instance(helper),
+                instance(experimentService),
             );
 
             autoSelectionService.initializeStore = () => Promise.resolve();
