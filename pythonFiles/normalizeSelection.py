@@ -3,22 +3,10 @@
 
 import ast
 import json
-
-# import os
-# import pathlib
 import re
 import sys
 import textwrap
 from typing import Iterable
-
-# script_dir = pathlib.Path(
-#     "User/anthonykim/Desktop/vscode-python/pythonFiles/lib/python"
-# )
-# sys.path.append(os.fspath(script_dir))
-# import debugpy
-
-# debugpy.connect(5678)
-# debugpy.breakpoint()
 
 
 def split_lines(source):

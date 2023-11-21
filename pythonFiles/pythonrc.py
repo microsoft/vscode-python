@@ -26,7 +26,7 @@ class repl_hooks:
         self.original_excepthook(type, value, traceback)
 
 
-class PS1:
+class ps1:
     hooks = repl_hooks()
     sys.excepthook = hooks.my_excepthook
     sys.displayhook = hooks.my_displayhook
@@ -38,7 +38,6 @@ class PS1:
         else:
             exit_code = 0
 
-        # Pythonic way :)
         result = f"{chr(27)}]633;D;{exit_code}0{chr(7)}{chr(27)}]633;A{chr(7)}{original_ps1}{chr(27)}]633;B{chr(7)}{chr(27)}]633;C{chr(7)}"
 
         # result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
@@ -46,10 +45,9 @@ class PS1:
         #     prompt_started="\x1b]633;A\x07",
         #     prompt=original_ps1,
         #     command_start="\x1b]633;B\x07",
-        #     # There's no preexec hook?
         #     command_executed="\x1b]633;C\x07",
         # )
         return result
 
 
-sys.ps1 = PS1()
+sys.ps1 = ps1()
