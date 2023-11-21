@@ -53,7 +53,6 @@ async function* iterEnvsIterator(
     if (iterator.onUpdated !== undefined) {
         const listener = iterator.onUpdated((event) => {
             let notifyIfFinished = true;
-            state.pending += 1;
             if (isProgressEvent(event)) {
                 if (event.stage === ProgressReportStage.discoveryFinished) {
                     state.done = true;
@@ -73,7 +72,6 @@ async function* iterEnvsIterator(
                 didUpdate.fire({ update: event.update });
                 notifyIfFinished = false;
             }
-            state.pending -= 1;
             if (notifyIfFinished) {
                 checkIfFinishedAndNotify(state, didUpdate);
             }
@@ -126,7 +124,7 @@ function checkIfFinishedAndNotify(
     state: { done: boolean; pending: number },
     didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
 ) {
-    if (state.done) {
+    if (state.done && state.pending === 0) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
         // didUpdate.dispose();
         traceVerbose(`Finished with environment reducer`);
