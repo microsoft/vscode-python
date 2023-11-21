@@ -6,7 +6,7 @@ import pythonrc
 
 def test_decoration_success():
     importlib.reload(pythonrc)
-    ps1 = pythonrc.PS1()
+    ps1 = pythonrc.ps1()
 
     ps1.hooks.failure_flag = False
     result = str(ps1)
@@ -15,7 +15,7 @@ def test_decoration_success():
 
 def test_decoration_failure():
     importlib.reload(pythonrc)
-    ps1 = pythonrc.PS1()
+    ps1 = pythonrc.ps1()
 
     ps1.hooks.failure_flag = True
     result = str(ps1)
@@ -25,7 +25,7 @@ def test_decoration_failure():
 
 def test_displayhook_call():
     importlib.reload(pythonrc)
-    pythonrc.PS1()
+    pythonrc.ps1()
     mock_displayhook = Mock()
 
     hooks = pythonrc.repl_hooks()
@@ -38,7 +38,7 @@ def test_displayhook_call():
 
 def test_excepthook_call():
     importlib.reload(pythonrc)
-    pythonrc.PS1()
+    pythonrc.ps1()
     mock_excepthook = Mock()
 
     hooks = pythonrc.repl_hooks()
