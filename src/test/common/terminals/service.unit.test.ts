@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import path from 'path';
+import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
