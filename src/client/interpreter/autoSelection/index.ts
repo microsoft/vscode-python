@@ -186,7 +186,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
     private getAutoSelectionQueriedOnceState(): IPersistentState<boolean | undefined> {
         const key = `autoSelectionInterpretersQueriedOnce`;
-        return this.stateFactory.createWorkspacePersistentState(key, undefined);
+        return this.stateFactory.createGlobalPersistentState(key, undefined);
     }
 
     /**

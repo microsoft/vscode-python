@@ -65,7 +65,7 @@ suite('Interpreters - Auto Selection', () => {
         helper = mock(InterpreterHelper);
         proxy = mock(InterpreterAutoSelectionProxyService);
         interpreterService = mock(InterpreterService);
-        experimentService = mock(IExperimentService);
+        experimentService = mock<IExperimentService>();
         when(experimentService.inExperimentSync(anything())).thenReturn(false);
 
         const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
@@ -144,6 +144,12 @@ suite('Interpreters - Auto Selection', () => {
                     undefined,
                 ),
             ).thenReturn(instance(state));
+            when(
+                stateFactory.createGlobalPersistentState<PythonEnvironment | undefined>(
+                    'autoSelectionInterpretersQueriedOnce',
+                    undefined,
+                ),
+            ).thenReturn(instance(state));
             when(workspaceService.getWorkspaceFolderIdentifier(anything(), '')).thenReturn('workspaceIdentifier');
 
             autoSelectionService.onDidChangeAutoSelectedInterpreter(() => {
@@ -212,6 +218,13 @@ suite('Interpreters - Auto Selection', () => {
 
         test('getInterpreters is called with ignoreCache at true if there is no value set in the workspace persistent state', async () => {
             const interpreterComparer = new EnvironmentTypeComparer(instance(helper));
+
+            const globalQueriedState = mock(PersistentState) as PersistentState<boolean | undefined>;
+            when(globalQueriedState.value).thenReturn(true);
+            when(stateFactory.createGlobalPersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+                instance(globalQueriedState),
+            );
+
             const queryState = mock(PersistentState) as PersistentState<boolean | undefined>;
 
             when(queryState.value).thenReturn(undefined);
@@ -391,6 +404,10 @@ suite('Interpreters - Auto Selection', () => {
 
         when(queryState.value).thenReturn(undefined);
         when(stateFactory.createWorkspacePersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
+            instance(queryState),
+        );
+        when(queryState.value).thenReturn(undefined);
+        when(stateFactory.createGlobalPersistentState<boolean | undefined>(anyString(), undefined)).thenReturn(
             instance(queryState),
         );
 
