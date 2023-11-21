@@ -27,27 +27,25 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
         useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
     ): IPythonEnvsIterator<BasicEnvInfo> {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
-        const iterator = iterEnvsIterator(useWorkerThreads, didUpdate);
+        const iterator = useWorkerThreads ? iterEnvsIterator(didUpdate) : oldIterEnvsIterator();
         iterator.onUpdated = didUpdate.event;
         return iterator;
     }
 }
 
+/**
+ * Windows registry is slow and often not necessary, so notify completion immediately, while still updating lazily as we find stuff.
+ * To accomplish this, use an empty iterator while lazily firing environments using updates.
+ */
 async function* iterEnvsIterator(
-    useWorkerThreads: boolean,
     didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
 ): IPythonEnvsIterator<BasicEnvInfo> {
-    updateLazily(useWorkerThreads, didUpdate).ignoreErrors();
+    updateLazily(didUpdate).ignoreErrors();
 }
 
-async function updateLazily(
-    useWorkerThreads: boolean,
-    didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>,
-) {
-    // Windows registry is slow and often not necessary, so notify completion while still updating lazily as we find stuff.
+async function updateLazily(didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>) {
     traceVerbose('Searching for windows registry interpreters');
-    console.time('Time taken for windows registry');
-    const interpreters = await getRegistryInterpreters(useWorkerThreads);
+    const interpreters = await getRegistryInterpreters(true);
     for (const interpreter of interpreters) {
         try {
             // Filter out Microsoft Store app directories. We have a store app locator that handles this.
@@ -67,5 +65,27 @@ async function updateLazily(
         }
     }
     traceVerbose('Finished searching for windows registry interpreters');
-    console.timeEnd('Time taken for windows registry');
+}
+
+async function* oldIterEnvsIterator(): IPythonEnvsIterator<BasicEnvInfo> {
+    const interpreters = await getRegistryInterpreters(false);
+    for (const interpreter of interpreters) {
+        try {
+            // Filter out Microsoft Store app directories. We have a store app locator that handles this.
+            // The python.exe available in these directories might not be python. It can be a store install
+            // shortcut that takes you to microsoft store.
+            if (isMicrosoftStoreDir(interpreter.interpreterPath)) {
+                continue;
+            }
+            const env: BasicEnvInfo = {
+                kind: PythonEnvKind.OtherGlobal,
+                executablePath: interpreter.interpreterPath,
+                source: [PythonEnvSource.WindowsRegistry],
+            };
+            yield env;
+        } catch (ex) {
+            traceError(`Failed to process environment: ${interpreter}`, ex);
+        }
+    }
+    traceVerbose('Finished searching for windows registry interpreters');
 }
