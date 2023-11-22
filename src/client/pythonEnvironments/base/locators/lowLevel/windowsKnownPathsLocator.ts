@@ -4,10 +4,10 @@
 /* eslint-disable max-classes-per-file */
 
 import { Event } from 'vscode';
+import * as path from 'path';
 import { IDisposable } from '../../../../common/types';
 import { getSearchPathEntries } from '../../../../common/utils/exec';
 import { Disposables } from '../../../../common/utils/resourceLifecycle';
-import * as path from 'path';
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
 import { PythonEnvKind, PythonEnvSource } from '../../info';

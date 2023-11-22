@@ -1326,6 +1326,15 @@ export interface IEventNamePropertyMapping {
         lsVersion?: string;
     };
     /**
+     * Track how long it takes to trigger language server activation code, after Python extension starts activating.
+     */
+    /* __GDPR__
+       "language_server_trigger_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.LANGUAGE_SERVER_TRIGGER_DURATION]: unknown;
+    /**
      * Telemetry event sent when starting Node.js server
      */
     /* __GDPR__
