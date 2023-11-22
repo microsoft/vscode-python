@@ -177,7 +177,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         if (languageServerExtensionManager.canStartLanguageServer(interpreter)) {
             // Start the language server.
             if (startupStopWatch) {
-                console.log('Time taken to trigger LS', startupStopWatch.elapsedTime);
                 // It means that startup is triggering this code, track time it takes since startup to activate this code.
                 sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRIGGER_DURATION, startupStopWatch.elapsedTime);
             }
