@@ -17,8 +17,7 @@ import { getEnvs } from '../../locatorUtils';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { DirFilesLocator } from './filesLocator';
 import { traceVerbose } from '../../../../logging';
-import { pathExists } from 'fs-extra';
-import { inExperiment } from '../../../common/externalDependencies';
+import { inExperiment, pathExists } from '../../../common/externalDependencies';
 import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
 import { iterPythonExecutablesInDir, looksLikeBasicGlobalPython } from '../../../common/commonUtils';
 
