@@ -132,6 +132,8 @@ export class SystemVariables extends AbstractSystemVariables {
                 const basename = Path.basename(folder.uri.fsPath);
                 ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] =
                     folder.uri.fsPath;
+                ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${folder.name}`] =
+                    folder.uri.fsPath;
             });
         } catch {
             // This try...catch block is here to support pre-existing tests, ignore error.

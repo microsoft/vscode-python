@@ -5,7 +5,6 @@
 
 import { injectable, unmanaged } from 'inversify';
 import { Terminal } from 'vscode';
-import { traceVerbose } from '../../../logging';
 import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from '../types';
 
 /*
@@ -75,7 +74,5 @@ export function identifyShellFromShellPath(shellPath: string): TerminalShellType
         return matchedShell;
     }, TerminalShellType.other);
 
-    traceVerbose(`Shell path '${shellPath}', base path '${basePath}'`);
-    traceVerbose(`Shell path identified as shell '${shell}'`);
     return shell;
 }

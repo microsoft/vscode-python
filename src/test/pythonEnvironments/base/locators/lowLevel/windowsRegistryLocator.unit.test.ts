@@ -11,6 +11,7 @@ import { WindowsRegistryLocator } from '../../../../../client/pythonEnvironments
 import { createBasicEnv } from '../../common';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
+import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 
 suite('Windows Registry', () => {
     let stubReadRegistryValues: sinon.SinonStub;
@@ -200,6 +201,7 @@ suite('Windows Registry', () => {
     }
 
     setup(async () => {
+        sinon.stub(externalDependencies, 'inExperiment').returns(false);
         stubReadRegistryValues = sinon.stub(winreg, 'readRegistryValues');
         stubReadRegistryKeys = sinon.stub(winreg, 'readRegistryKeys');
         stubReadRegistryValues.callsFake(fakeRegistryValues);

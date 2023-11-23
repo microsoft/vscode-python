@@ -7,15 +7,20 @@ import { BasicEnvInfo, IPythonEnvsIterator, Locator } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { traceError, traceVerbose } from '../../../../logging';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
+import { inExperiment } from '../../../common/externalDependencies';
+import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     public readonly providerId: string = 'windows-registry';
 
     // eslint-disable-next-line class-methods-use-this
-    public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+    public iterEnvs(
+        _?: unknown,
+        useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
+    ): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* () {
             traceVerbose('Searching for windows registry interpreters');
-            const interpreters = await getRegistryInterpreters();
+            const interpreters = await getRegistryInterpreters(useWorkerThreads);
             for (const interpreter of interpreters) {
                 try {
                     // Filter out Microsoft Store app directories. We have a store app locator that handles this.

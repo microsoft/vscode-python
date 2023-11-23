@@ -150,8 +150,18 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     or a multiline dictionary, or differently styled multi-line list comprehension, etc.
     Then call the normalize_lines function to normalize our smartly selected code block.
     """
+    parsed_file_content = None
 
-    parsed_file_content = ast.parse(wholeFileContent)
+    try:
+        parsed_file_content = ast.parse(wholeFileContent)
+    except Exception:
+        # Handle case where user is attempting to run code where file contains deprecated Python code.
+        # Let typescript side know and show warning message.
+        return {
+            "normalized_smart_result": "deprecated",
+            "which_line_next": 0,
+        }
+
     smart_code = ""
     should_run_top_blocks = []
 
@@ -267,7 +277,11 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
 
-    if empty_Highlight and contents.get("smartSendExperimentEnabled"):
+    if (
+        empty_Highlight
+        and contents.get("smartSendExperimentEnabled")
+        and contents.get("smartSendSettingsEnabled")
+    ):
         result = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
@@ -276,9 +290,12 @@ if __name__ == "__main__":
         )
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]
-        data = json.dumps(
-            {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
-        )
+        if normalized == "deprecated":
+            data = json.dumps({"normalized": normalized})
+        else:
+            data = json.dumps(
+                {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
+            )
     else:
         normalized = normalize_lines(contents["code"])
         data = json.dumps({"normalized": normalized})
