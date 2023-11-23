@@ -81,10 +81,10 @@ suite('Jedi LSP - analysis Options', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         when(configurationService.getSettings(anything())).thenReturn({} as any);
         const pythonEnvironment: PythonEnvironment = {
-            envPath: 'interpreterPath',
+            envPath: '.../.venv',
             id: 'base_env',
             envType: EnvironmentType.Conda,
-            path: 'interpreterPath',
+            path: '.../.venv/bin/python',
             architecture: Architecture.x86,
             sysPrefix: 'prefix/path',
         };
@@ -92,7 +92,7 @@ suite('Jedi LSP - analysis Options', () => {
 
         const result = await analysisOptions.getAnalysisOptions();
 
-        expect(result.initializationOptions.workspace.environmentPath).to.deep.equal('interpreterPath');
+        expect(result.initializationOptions.workspace.environmentPath).to.deep.equal('.../.venv');
     });
 
     test('Without extraPaths provided and no workspace', async () => {
