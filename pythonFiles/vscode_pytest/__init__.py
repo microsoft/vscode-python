@@ -64,12 +64,6 @@ def pytest_load_initial_conftests(early_config, parser, args):
     global TEST_UUID
     TEST_PORT = os.getenv("TEST_PORT")
     TEST_UUID = os.getenv("TEST_UUID")
-    error_string = (
-        "PYTEST ERROR: TEST_UUID and/or TEST_PORT are not set at the time of pytest starting. Please confirm these environment variables are not being"
-        " changed or removed as they are required for successful test discovery and execution."
-        f" \nTEST_UUID = {TEST_UUID}\nTEST_PORT = {TEST_PORT}\n"
-    )
-    print(error_string, file=sys.stderr)
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
