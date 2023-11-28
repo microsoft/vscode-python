@@ -1,6 +1,6 @@
 import sys
 
-original_ps1 = ">>>"
+original_ps1 = ">>> "
 
 
 class repl_hooks:
