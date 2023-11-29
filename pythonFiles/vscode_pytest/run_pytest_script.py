@@ -19,6 +19,7 @@ from testing_tools import process_json_util
 
 if __name__ == "__main__":
     # Add the root directory to the path so that we can import the plugin.
+    print("HERE, in the run_pytest_script.py")
     directory_path = pathlib.Path(__file__).parent.parent
     sys.path.append(os.fspath(directory_path))
     sys.path.insert(0, os.getcwd())
@@ -53,7 +54,7 @@ if __name__ == "__main__":
                 )
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
-                print("Received JSON data in run script")
+                print("Received JSON data in run script, 2")
                 break
             except json.JSONDecodeError:
                 # JSON decoding error, the complete JSON object is not yet received
@@ -64,6 +65,14 @@ if __name__ == "__main__":
     try:
         if test_ids_from_buffer:
             arg_array = ["-p", "vscode_pytest"] + args + test_ids_from_buffer
+            print("Running pytest with args: " + str(arg_array))
+            pytest.main(arg_array)
+        else:
+            print(
+                "Error: No test ids received from stdin, could be an error or a run request without ids provided.",
+            )
+            print("Running pytest with no test ids as args. Args being used: ", args)
+            arg_array = ["-p", "vscode_pytest"] + args
             pytest.main(arg_array)
     except json.JSONDecodeError:
         print("Error: Could not parse test ids from stdin")
