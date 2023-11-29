@@ -341,6 +341,7 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('Also prepend deactivate script location if available', async () => {
         reset(terminalDeactivateService);
+        when(terminalDeactivateService.initializeScriptParams(anything())).thenResolve();
         when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve('scriptLocation');
         const processEnv = { PATH: 'hello/1/2/3' };
         reset(environmentActivationService);
@@ -409,6 +410,7 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('Prepend full PATH with separator otherwise', async () => {
         reset(terminalDeactivateService);
+        when(terminalDeactivateService.initializeScriptParams(anything())).thenResolve();
         when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve('scriptLocation');
         const processEnv = { PATH: 'hello/1/2/3' };
         reset(environmentActivationService);
