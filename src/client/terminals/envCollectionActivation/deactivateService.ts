@@ -8,7 +8,7 @@ import { ITerminalManager } from '../../common/application/types';
 import { pathExists } from '../../common/platform/fs-paths';
 import { _SCRIPTS_DIR } from '../../common/process/internal/scripts/constants';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
-import { TerminalShellType } from '../../common/terminal/types';
+import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { Resource } from '../../common/types';
 import { waitForCondition } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
@@ -37,6 +37,7 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
     constructor(
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(ITerminalHelper) private readonly terminalHelper: ITerminalHelper,
     ) {}
 
     @cache(-1, true)
@@ -58,7 +59,11 @@ export class TerminalDeactivateService implements ITerminalDeactivateService {
             globalInterpreters.length > 0 && globalInterpreters[0] ? globalInterpreters[0].path : 'python';
         const checkIfFileHasBeenCreated = () => pathExists(outputFile);
         const stopWatch = new StopWatch();
-        terminal.sendText(`${interpreterPath} "${this.envVarScript}" "${outputFile}"`);
+        const command = this.terminalHelper.buildCommandForTerminal(shellType, interpreterPath, [
+            this.envVarScript,
+            outputFile,
+        ]);
+        terminal.sendText(command);
         await waitForCondition(checkIfFileHasBeenCreated, 30_000, `"${outputFile}" file not created`);
         traceVerbose(`Time taken to get env vars using terminal is ${stopWatch.elapsedTime}ms`);
     }

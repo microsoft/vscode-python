@@ -341,7 +341,7 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('Also prepend deactivate script location if available', async () => {
         reset(terminalDeactivateService);
-        when(terminalDeactivateService.initializeScriptParams(anything())).thenResolve();
+        when(terminalDeactivateService.initializeScriptParams(anything())).thenReject(); // Verify we swallow errors from here
         when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve('scriptLocation');
         const processEnv = { PATH: 'hello/1/2/3' };
         reset(environmentActivationService);

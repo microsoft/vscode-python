@@ -53,7 +53,7 @@ export class ShellIntegrationService implements IShellIntegrationService {
         const deferred = createDeferred<void>();
         const timestamp = new Date().getTime();
         const name = `Python ${timestamp}`;
-        const onDidExecuteTerminalCommand = this.appShell.onDidExecuteTerminalCommand?.bind(this.appShell);
+        const { onDidExecuteTerminalCommand } = this.appShell;
         if (!onDidExecuteTerminalCommand) {
             // Proposed API is not available, assume shell integration is working at this point.
             return true;
