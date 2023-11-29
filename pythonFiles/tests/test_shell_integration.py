@@ -10,7 +10,7 @@ def test_decoration_success():
 
     ps1.hooks.failure_flag = False
     result = str(ps1)
-    assert result == "\x1b]633;D;00\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
+    assert result == "\x1b]633;D;0\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
 
 
 def test_decoration_failure():
@@ -20,7 +20,7 @@ def test_decoration_failure():
     ps1.hooks.failure_flag = True
     result = str(ps1)
 
-    assert result == "\x1b]633;D;10\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
+    assert result == "\x1b]633;D;1\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
 
 
 def test_displayhook_call():
