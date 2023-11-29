@@ -19,7 +19,6 @@ from testing_tools import process_json_util
 
 if __name__ == "__main__":
     # Add the root directory to the path so that we can import the plugin.
-    print("HERE, in the run_pytest_script.py")
     directory_path = pathlib.Path(__file__).parent.parent
     sys.path.append(os.fspath(directory_path))
     sys.path.insert(0, os.getcwd())
@@ -54,7 +53,7 @@ if __name__ == "__main__":
                 )
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
-                print("Received JSON data in run script, 2")
+                print("Received JSON data in run script")
                 break
             except json.JSONDecodeError:
                 # JSON decoding error, the complete JSON object is not yet received
