@@ -243,7 +243,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         envVarCollection.description = description;
 
         await this.trackTerminalPrompt(shell, resource, env);
-        await this.terminalDeactivateService.initializeScriptParams(shell);
+        await this.terminalDeactivateService.initializeScriptParams(shell).catch((ex) => {
+            traceError(`Failed to initialize deactivate script`, shell, ex);
+        });
     }
 
     private isPromptSet = new Map<number | undefined, boolean>();
