@@ -39,14 +39,15 @@ class ps1:
             exit_code = 0
 
         # Guide following official VS Code doc for shell integration sequence:
-        # result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
-        #     command_finished="\x1b]633;D;" + str(exit_code) + "0\x07",
-        #     prompt_started="\x1b]633;A\x07",
-        #     prompt=original_ps1,
-        #     command_start="\x1b]633;B\x07",
-        #     command_executed="\x1b]633;C\x07",
-        # )
-        result = f"{chr(27)}]633;D;{exit_code}{chr(7)}{chr(27)}]633;A{chr(7)}{original_ps1}{chr(27)}]633;B{chr(7)}{chr(27)}]633;C{chr(7)}"
+        result = "{command_explicit}{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
+            command_explicit="\x1b]633;E;\x07",
+            command_finished="\x1b]633;D;" + str(exit_code) + "\x07",
+            prompt_started="\x1b]633;A\x07",
+            prompt=original_ps1,
+            command_start="\x1b]633;B\x07",
+            command_executed="\x1b]633;C\x07",
+        )
+        # result = f"{chr(27)}]633;D;{exit_code}{chr(7)}{chr(27)}]633;A{chr(7)}{original_ps1}{chr(27)}]633;B{chr(7)}{chr(27)}]633;C{chr(7)}"
 
         return result
 
