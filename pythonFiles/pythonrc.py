@@ -39,8 +39,7 @@ class ps1:
             exit_code = 0
 
         # Guide following official VS Code doc for shell integration sequence:
-        result = "{command_explicit}{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
-            command_explicit="\x1b]633;E;\x07",
+        result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
             command_finished="\x1b]633;D;" + str(exit_code) + "\x07",
             prompt_started="\x1b]633;A\x07",
             prompt=original_ps1,
@@ -52,4 +51,5 @@ class ps1:
         return result
 
 
-sys.ps1 = ps1()
+if sys.platform != "win32":
+    sys.ps1 = ps1()
