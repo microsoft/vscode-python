@@ -94,12 +94,13 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
 def get_child_node(
     name: str, path: str, type_: TestNodeTypeEnum, root: TestNode
 ) -> TestNode:
-    """Find a child node in a test tree given its name and type. If the node doesn't exist, create it."""
+    """Find a child node in a test tree given its name, type and path. If the node doesn't exist, create it.
+    Path is required to distinguish between nodes with the same name and type."""
     try:
         result = next(
             node
             for node in root["children"]
-            if node["name"] == name and node["type_"] == type_
+            if node["name"] == name and node["type_"] == type_ and node["path"] == path
         )
     except StopIteration:
         result = build_test_node(path, name, type_)
@@ -109,7 +110,7 @@ def get_child_node(
 
 
 def build_test_tree(
-    suite: unittest.TestSuite, test_directory: str
+    suite: unittest.TestSuite, top_level_directory: str
 ) -> Tuple[Union[TestNode, None], List[str]]:
     """Build a test tree from a unittest test suite.
 
@@ -152,8 +153,10 @@ def build_test_tree(
     }
     """
     error = []
-    directory_path = pathlib.PurePath(test_directory)
-    root = build_test_node(test_directory, directory_path.name, TestNodeTypeEnum.folder)
+    directory_path = pathlib.PurePath(top_level_directory)
+    root = build_test_node(
+        top_level_directory, directory_path.name, TestNodeTypeEnum.folder
+    )
 
     for test_case in get_test_case(suite):
         test_id = test_case.id()
@@ -185,7 +188,7 @@ def build_test_tree(
                 )
 
             # Find/build file node.
-            path_components = [test_directory] + folders + [py_filename]
+            path_components = [top_level_directory] + folders + [py_filename]
             file_path = os.fsdecode(pathlib.PurePath("/".join(path_components)))
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node

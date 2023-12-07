@@ -86,7 +86,13 @@ def discover_tests(
         loader = unittest.TestLoader()
         suite = loader.discover(start_dir, pattern, top_level_dir)
 
-        tests, error = build_test_tree(suite, cwd)  # test tree built succesfully here.
+        # If the top level directory is not provided, then use the start directory.
+        if top_level_dir is None:
+            top_level_dir = start_dir
+
+        tests, error = build_test_tree(
+            suite, top_level_dir
+        )  # test tree built successfully here.
 
     except Exception:
         error.append(traceback.format_exc())
@@ -146,6 +152,10 @@ if __name__ == "__main__":
         )
     if testUuid is not None:
         # Perform test discovery.
+        print("payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)")
+        print(
+            "EJFB star", start_dir, "pat", pattern, "tl", top_level_dir, "tu", testUuid
+        )
         payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)
         # Post this discovery payload.
         post_response(payload, testPort, testUuid)
