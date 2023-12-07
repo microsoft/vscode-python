@@ -152,10 +152,6 @@ if __name__ == "__main__":
         )
     if testUuid is not None:
         # Perform test discovery.
-        print("payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)")
-        print(
-            "EJFB star", start_dir, "pat", pattern, "tl", top_level_dir, "tu", testUuid
-        )
         payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)
         # Post this discovery payload.
         post_response(payload, testPort, testUuid)
