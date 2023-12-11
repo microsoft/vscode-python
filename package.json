@@ -482,9 +482,6 @@
                         "show",
                         "hide"
                     ],
-                    "tags": [
-                        "experimental"
-                    ]
                 },
                 "python.createEnvironment.trigger": {
                     "default": "off",
