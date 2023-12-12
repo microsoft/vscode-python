@@ -2,6 +2,7 @@
 
 // eslint-disable-next-line camelcase
 import * as path from 'path';
+import * as fs from 'fs';
 import {
     ConfigurationChangeEvent,
     ConfigurationTarget,
@@ -35,6 +36,8 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
+import { getOSType, OSType } from './utils/platform';
+import { isWindows } from './platform/platformService';
 
 const untildify = require('untildify');
 
@@ -391,7 +394,7 @@ export class PythonSettings implements IPythonSettings {
 
     // eslint-disable-next-line class-methods-use-this
     protected getPythonExecutable(pythonPath: string): string {
-        return untildify(pythonPath);
+        return getPythonExecutable(pythonPath);
     }
 
     protected onWorkspaceFoldersChanged(): void {
@@ -489,4 +492,64 @@ function getAbsolutePath(pathToCheck: string, rootDir: string | undefined): stri
         return pathToCheck;
     }
     return path.isAbsolute(pathToCheck) ? pathToCheck : path.resolve(rootDir, pathToCheck);
+}
+
+function getPythonExecutable(pythonPath: string): string {
+    pythonPath = untildify(pythonPath) as string;
+
+    // If only 'python'.
+    if (
+        pythonPath === 'python' ||
+        pythonPath.indexOf(path.sep) === -1 ||
+        path.basename(pythonPath) === path.dirname(pythonPath)
+    ) {
+        return pythonPath;
+    }
+
+    if (isValidPythonPath(pythonPath)) {
+        return pythonPath;
+    }
+    // Keep python right on top, for backwards compatibility.
+
+    const KnownPythonExecutables = [
+        'python',
+        'python4',
+        'python3.6',
+        'python3.5',
+        'python3',
+        'python2.7',
+        'python2',
+        'python3.7',
+        'python3.8',
+        'python3.9',
+    ];
+
+    for (let executableName of KnownPythonExecutables) {
+        // Suffix with 'python' for linux and 'osx', and 'python.exe' for 'windows'.
+        if (isWindows()) {
+            executableName = `${executableName}.exe`;
+            if (isValidPythonPath(path.join(pythonPath, executableName))) {
+                return path.join(pythonPath, executableName);
+            }
+            if (isValidPythonPath(path.join(pythonPath, 'Scripts', executableName))) {
+                return path.join(pythonPath, 'Scripts', executableName);
+            }
+        } else {
+            if (isValidPythonPath(path.join(pythonPath, executableName))) {
+                return path.join(pythonPath, executableName);
+            }
+            if (isValidPythonPath(path.join(pythonPath, 'bin', executableName))) {
+                return path.join(pythonPath, 'bin', executableName);
+            }
+        }
+    }
+
+    return pythonPath;
+}
+
+function isValidPythonPath(pythonPath: string): boolean {
+    return (
+        fs.existsSync(pythonPath) &&
+        path.basename(getOSType() === OSType.Windows ? pythonPath.toLowerCase() : pythonPath).startsWith('python')
+    );
 }
