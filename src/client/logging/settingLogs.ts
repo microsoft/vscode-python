@@ -99,7 +99,8 @@ async function notifyLegacySettings(): Promise<void> {
     _isShown = true;
     const response = await showWarningMessage(
         l10n.t(
-            `You have deprecated linting or formatting settings for Python. Please see the [logs](command:${Commands.ViewOutput}) for more details.`,
+            'You have deprecated linting or formatting settings for Python. Please see the [logs](command:{0}) for more details.',
+            Commands.ViewOutput,
         ),
         Common.learnMore,
     );
