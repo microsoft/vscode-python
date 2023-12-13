@@ -104,6 +104,14 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
     -   [ ] 🧍🧍 Get approval on the release on the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) and publish the release to the marketplace.  🎉
     -   [ ] Take the Github release out of draft.
 
+## Steps for contributing to a point release
+-   [ ] Work with team to decide if point release is necessary
+-   [ ] Work with team or users to verify the fix is correct and solves the problem without creating any new ones
+-   [ ] Create PR/PRs and merge then each into main as usual
+-   [ ] Make sure to still mark if the change is "bug" or "no-changelog"
+-   [ ] Cherry-pick all PRs to the release branch and check that the changes are in before the package is bumped
+-   [ ] Notify the release champ that your changes are in so they can trigger a point-release
+
 
 ## Prep for the _next_ release
 
