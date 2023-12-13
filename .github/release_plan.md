@@ -103,8 +103,6 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
     -   [ ] for `branch/tag` select the release branch which is **`release/YYYY.minor`**.
     -   [ ] 🧍🧍 Get approval on the release on the [CD](https://dev.azure.com/monacotools/Monaco/_build?definitionId=299) and publish the release to the marketplace.  🎉
     -   [ ] Take the Github release out of draft.
--   [ ] Cleanup
-    -   [ ] Do a **rebase** merge to merge the `release/YYYY.minor` branch into the `main` branch
 
 
 ## Prep for the _next_ release
