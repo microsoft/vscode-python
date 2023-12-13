@@ -302,7 +302,8 @@ suite('REPL - Smart Send', () => {
                     l10n.t(
                         `Python is unable to parse the code provided. Please
                 turn off Smart Send if you wish to always run line by line or explicitly select code
-                to force run. [logs](command:${Commands.ViewOutput}) for more details.`,
+                to force run. [logs](command:{0}) for more details.`,
+                        Commands.ViewOutput,
                     ),
                     'Switch to line-by-line',
                 ),

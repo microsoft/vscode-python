@@ -27,7 +27,7 @@ function parseDiagnostics(data: string): Diagnostic[] {
         diagnostics = raw.map((item) => {
             const d = new Diagnostic(
                 new Range(item.line, item.character, item.endLine, item.endCharacter),
-                l10n.t(`Package \`${item.package}\` is not installed in the selected environment.`),
+                l10n.t('Package `{0}` is not installed in the selected environment.', item.package),
                 item.severity,
             );
             d.code = { value: item.code, target: Uri.parse(`https://pypi.org/p/${item.package}`) };
