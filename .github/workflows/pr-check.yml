@@ -155,6 +155,9 @@ jobs:
       - name: Compile
         run: npx gulp prePublishNonBundle
 
+      - name: Localization
+        run: npx @vscode/l10n-dev@latest export ./src
+
       - name: Use Python ${{ matrix.python }}
         uses: actions/setup-python@v4
         with:
@@ -366,6 +369,9 @@ jobs:
 
       - name: Compile
         run: npx gulp prePublishNonBundle
+
+      - name: Localization
+        run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
