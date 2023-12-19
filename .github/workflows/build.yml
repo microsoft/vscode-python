@@ -180,6 +180,9 @@ jobs:
       - name: Compile
         run: npx gulp prePublishNonBundle
 
+      - name: Localization
+        run: npx @vscode/l10n-dev@latest export ./src
+
       - name: Install Python ${{ matrix.python }}
         uses: actions/setup-python@v4
         with:

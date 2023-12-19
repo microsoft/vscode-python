@@ -481,9 +481,6 @@
                     "enum": [
                         "show",
                         "hide"
-                    ],
-                    "tags": [
-                        "experimental"
                     ]
                 },
                 "python.createEnvironment.trigger": {
@@ -1647,7 +1644,6 @@
         "mocha": "^9.2.2",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
-
         "node-has-native-dependencies": "^1.0.2",
         "node-loader": "^1.0.2",
         "node-polyfill-webpack-plugin": "^1.1.4",
