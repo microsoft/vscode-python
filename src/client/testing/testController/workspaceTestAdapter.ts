@@ -47,6 +47,7 @@ export class WorkspaceTestAdapter {
         debugLauncher?: ITestDebugLauncher,
     ): Promise<void> {
         if (this.executing) {
+            traceError('Test execution already in progress, not starting a new one.');
             return this.executing.promise;
         }
 
@@ -119,6 +120,7 @@ export class WorkspaceTestAdapter {
 
         // Discovery is expensive. If it is already running, use the existing promise.
         if (this.discovering) {
+            traceError('Test discovery already in progress, not starting a new one.');
             return this.discovering.promise;
         }
 
