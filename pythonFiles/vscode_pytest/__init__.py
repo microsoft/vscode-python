@@ -393,6 +393,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
         if isinstance(test_case.parent, pytest.Class):
             case_iter = test_case.parent
             node_child_iter = test_node
+            test_class_node: Union[TestNode, None] = None
             while isinstance(case_iter, pytest.Class):
                 # While the given node is a class, create a class and nest the previous node as a child.
                 try:
@@ -417,7 +418,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 test_file_node = create_file_node(parent_module)
                 file_nodes_dict[parent_module] = test_file_node
             # Check if the class is already a child of the file node.
-            if test_class_node not in test_file_node["children"]:
+            if (
+                test_class_node is not None
+                and test_class_node not in test_file_node["children"]
+            ):
                 test_file_node["children"].append(test_class_node)
         elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
             function_name: str = ""
