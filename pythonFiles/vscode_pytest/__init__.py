@@ -391,18 +391,26 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     for test_case in session.items:
         test_node = create_test_node(test_case)
         if isinstance(test_case.parent, pytest.Class):
-            try:
-                test_class_node = class_nodes_dict[test_case.parent.nodeid]
-            except KeyError:
-                test_class_node = create_class_node(test_case.parent)
-                class_nodes_dict[test_case.parent.nodeid] = test_class_node
-            test_class_node["children"].append(test_node)
-            if test_case.parent.parent:
-                parent_module = test_case.parent.parent
+            case_iter = test_case.parent
+            node_child_iter = test_node
+            while isinstance(case_iter, pytest.Class):
+                # create class node while the parent is a class node
+                try:
+                    test_class_node = class_nodes_dict[case_iter.nodeid]
+                except KeyError:
+                    test_class_node = create_class_node(case_iter)
+                    class_nodes_dict[case_iter.nodeid] = test_class_node
+                test_class_node["children"].append(node_child_iter)
+                # iterate up
+                node_child_iter = test_class_node
+                case_iter = case_iter.parent
+            # Now the parent node is not a class node, it is a file node.
+            if case_iter:
+                parent_module = case_iter
             else:
-                ERRORS.append(f"Test class {test_case.parent} has no parent")
+                ERRORS.append(f"Test class {case_iter} has no parent")
                 break
-            # Create a file node that has the class as a child.
+            # Create a file node that has the last class as a child.
             try:
                 test_file_node: TestNode = file_nodes_dict[parent_module]
             except KeyError:

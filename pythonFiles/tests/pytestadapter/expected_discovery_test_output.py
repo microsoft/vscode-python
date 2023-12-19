@@ -886,3 +886,111 @@ root_with_config_expected_output = {
     ],
     "id_": os.fspath(tests_path),
 }
+TEST_MULTI_CLASS_NEST_PATH = TEST_DATA_PATH / "test_multi_class_nest.py"
+
+nested_classes_expected_test_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_multi_class_nest.py",
+            "path": str(TEST_MULTI_CLASS_NEST_PATH),
+            "type_": "file",
+            "id_": str(TEST_MULTI_CLASS_NEST_PATH),
+            "children": [
+                {
+                    "name": "TestFirstClass",
+                    "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                    "type_": "class",
+                    "id_": "test_multi_class_nest.py::TestFirstClass",
+                    "children": [
+                        {
+                            "name": "TestSecondClass",
+                            "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                            "type_": "class",
+                            "id_": "test_multi_class_nest.py::TestFirstClass::TestSecondClass",
+                            "children": [
+                                {
+                                    "name": "test_second",
+                                    "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                                    "lineno": find_test_line_number(
+                                        "test_second",
+                                        str(TEST_MULTI_CLASS_NEST_PATH),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_multi_class_nest.py::TestFirstClass::TestSecondClass::test_second",
+                                        TEST_MULTI_CLASS_NEST_PATH,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_multi_class_nest.py::TestFirstClass::TestSecondClass::test_second",
+                                        TEST_MULTI_CLASS_NEST_PATH,
+                                    ),
+                                }
+                            ],
+                        },
+                        {
+                            "name": "test_first",
+                            "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                            "lineno": find_test_line_number(
+                                "test_first", str(TEST_MULTI_CLASS_NEST_PATH)
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "test_multi_class_nest.py::TestFirstClass::test_first",
+                                TEST_MULTI_CLASS_NEST_PATH,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "test_multi_class_nest.py::TestFirstClass::test_first",
+                                TEST_MULTI_CLASS_NEST_PATH,
+                            ),
+                        },
+                        {
+                            "name": "TestSecondClass2",
+                            "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                            "type_": "class",
+                            "id_": "test_multi_class_nest.py::TestFirstClass::TestSecondClass2",
+                            "children": [
+                                {
+                                    "name": "test_second2",
+                                    "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                                    "lineno": find_test_line_number(
+                                        "test_second2",
+                                        str(TEST_MULTI_CLASS_NEST_PATH),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_multi_class_nest.py::TestFirstClass::TestSecondClass2::test_second2",
+                                        TEST_MULTI_CLASS_NEST_PATH,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_multi_class_nest.py::TestFirstClass::TestSecondClass2::test_second2",
+                                        TEST_MULTI_CLASS_NEST_PATH,
+                                    ),
+                                }
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "name": "test_independent",
+                    "path": str(TEST_MULTI_CLASS_NEST_PATH),
+                    "lineno": find_test_line_number(
+                        "test_independent", str(TEST_MULTI_CLASS_NEST_PATH)
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "test_multi_class_nest.py::test_independent",
+                        TEST_MULTI_CLASS_NEST_PATH,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "test_multi_class_nest.py::test_independent",
+                        TEST_MULTI_CLASS_NEST_PATH,
+                    ),
+                },
+            ],
+        }
+    ],
+    "id_": str(TEST_DATA_PATH),
+}
