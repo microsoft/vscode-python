@@ -916,6 +916,7 @@ yaml_expected_output = {
     ],
     "id_": str(TEST_DATA_PATH),
 }
+
 TEST_MULTI_CLASS_NEST_PATH = TEST_DATA_PATH / "test_multi_class_nest.py"
 
 nested_classes_expected_test_output = {
