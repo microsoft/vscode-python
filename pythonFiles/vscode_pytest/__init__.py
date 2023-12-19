@@ -394,14 +394,14 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             case_iter = test_case.parent
             node_child_iter = test_node
             while isinstance(case_iter, pytest.Class):
-                # create class node while the parent is a class node
+                # While the given node is a class, create a class and nest the previous node as a child.
                 try:
                     test_class_node = class_nodes_dict[case_iter.nodeid]
                 except KeyError:
                     test_class_node = create_class_node(case_iter)
                     class_nodes_dict[case_iter.nodeid] = test_class_node
                 test_class_node["children"].append(node_child_iter)
-                # iterate up
+                # Iterate up.
                 node_child_iter = test_class_node
                 case_iter = case_iter.parent
             # Now the parent node is not a class node, it is a file node.
