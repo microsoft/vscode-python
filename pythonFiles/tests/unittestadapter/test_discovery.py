@@ -231,3 +231,25 @@ def test_unit_skip() -> None:
         expected_discovery_test_output.skip_unittest_folder_discovery_output,
     )
     assert "error" not in actual
+
+
+def test_complex_tree() -> None:
+    """This test specifically tests when different start_dir and top_level_dir are provided."""
+    start_dir = os.fsdecode(
+        pathlib.PurePath(
+            TEST_DATA_PATH,
+            "utils_complex_tree",
+            "test_outer_folder",
+            "test_inner_folder",
+        )
+    )
+    pattern = "test_*.py"
+    top_level_dir = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "utils_complex_tree"))
+    uuid = "some-uuid"
+    actual = discover_tests(start_dir, pattern, top_level_dir, uuid)
+    assert actual["status"] == "success"
+    assert "error" not in actual
+    assert is_same_tree(
+        actual.get("tests"),
+        expected_discovery_test_output.complex_tree_expected_output,
+    )
