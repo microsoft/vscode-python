@@ -521,6 +521,10 @@ def create_test_node(
     test_case_loc: str = (
         str(test_case.location[1] + 1) if (test_case.location[1] is not None) else ""
     )
+    # This check is for yaml tests, which do not have a location but do have a starting_lineno.
+    if test_case_loc == "" and test_case.starting_lineno is not None:
+        test_case_loc = str(test_case.starting_lineno + 1)
+
     absolute_test_id = get_absolute_test_id(test_case.nodeid, get_node_path(test_case))
     return {
         "name": test_case.name,

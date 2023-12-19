@@ -886,6 +886,36 @@ root_with_config_expected_output = {
     ],
     "id_": os.fspath(tests_path),
 }
+
+TEST_YAML_PATH = TEST_DATA_PATH / "test_yaml.yaml"
+yaml_expected_output = {
+    "name": ".data",
+    "path": str(TEST_DATA_PATH),
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_yaml.yaml",
+            "path": str(TEST_YAML_PATH),
+            "type_": "file",
+            "id_": str(TEST_YAML_PATH),
+            "children": [
+                {
+                    "name": "test_integer_type",
+                    "path": str(TEST_YAML_PATH),
+                    "lineno": "6",
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "test_yaml.yaml::test_integer_type", TEST_YAML_PATH
+                    ),
+                    "runID": get_absolute_test_id(
+                        "test_yaml.yaml::test_integer_type", TEST_YAML_PATH
+                    ),
+                }
+            ],
+        }
+    ],
+    "id_": str(TEST_DATA_PATH),
+}
 TEST_MULTI_CLASS_NEST_PATH = TEST_DATA_PATH / "test_multi_class_nest.py"
 
 nested_classes_expected_test_output = {

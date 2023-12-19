@@ -255,6 +255,11 @@ export function populateTestTree(
                 const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
 
+                // Check for a undefined value (here will be 0) and if found set lineno to 1 as a default.
+                if (Number(child.lineno) === 0) {
+                    traceError(`Test item ${child.name} does not have a line number.`);
+                    child.lineno = 1;
+                }
                 const range = new Range(
                     new Position(Number(child.lineno) - 1, 0),
                     new Position(Number(child.lineno), 0),

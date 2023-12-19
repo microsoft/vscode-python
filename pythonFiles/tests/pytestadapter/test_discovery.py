@@ -123,6 +123,7 @@ def test_parameterized_error_collect():
 @pytest.mark.parametrize(
     "file, expected_const",
     [
+        ("test_yaml.yaml", expected_discovery_test_output.yaml_expected_output),
         (
             "test_multi_class_nest.py",
             expected_discovery_test_output.nested_classes_expected_test_output,
