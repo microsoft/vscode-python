@@ -92,7 +92,7 @@ suite('Jedi LSP - analysis Options', () => {
 
         const result = await analysisOptions.getAnalysisOptions();
 
-        expect(result.initializationOptions.workspace.environmentPath).to.deep.equal('.../.venv');
+        expect(result.initializationOptions.workspace.environmentPath).to.deep.equal('.../.venv/bin/python');
     });
 
     test('Without extraPaths provided and no workspace', async () => {

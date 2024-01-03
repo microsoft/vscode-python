@@ -79,7 +79,7 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             },
             workspace: {
                 extraPaths: distinctExtraPaths,
-                environmentPath: this.interpreter?.envPath,
+                environmentPath: this.interpreter?.path,
                 symbols: {
                     // 0 means remove limit on number of workspace symbols returned
                     maxSymbols: 0,
