@@ -2,7 +2,9 @@ import sys
 
 import os
 
-sys.path.insert(0, os.getcwd())
+# sys.path.insert(0, os.getcwd())
+EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 import readline
 
 original_ps1 = ">>> "
