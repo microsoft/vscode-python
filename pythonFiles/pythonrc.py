@@ -1,4 +1,8 @@
 import sys
+
+import os
+
+sys.path.insert(0, os.getcwd())
 import readline
 
 original_ps1 = ">>> "
