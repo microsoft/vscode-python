@@ -3,9 +3,13 @@ import sys
 import os
 
 # sys.path.insert(0, os.getcwd())
-EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
-import readline
+# EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
+# import readline
+
+from pyreadline3 import Readline
+
+readline = Readline()
 
 original_ps1 = ">>> "
 
