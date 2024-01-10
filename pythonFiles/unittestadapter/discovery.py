@@ -20,10 +20,6 @@ from typing_extensions import Literal, NotRequired, TypedDict
 from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
 
 DEFAULT_PORT = 45454
-import debugpy
-
-debugpy.connect(5678)
-debugpy.breakpoint()
 
 
 class PayloadDict(TypedDict):

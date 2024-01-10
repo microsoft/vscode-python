@@ -133,6 +133,70 @@ def test_simple_discovery() -> None:
     assert "error" not in actual
 
 
+def test_simple_discovery_with_top_dir_calculated() -> None:
+    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and a test tree
+    if unittest discovery was performed successfully.
+    """
+    start_dir = "."
+    pattern = "discovery_simple*"
+    file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH / "discovery_simple.py"))
+
+    expected = {
+        "path": os.fsdecode(pathlib.PurePath(TEST_DATA_PATH)),
+        "type_": TestNodeTypeEnum.folder,
+        "name": ".data",
+        "children": [
+            {
+                "name": "discovery_simple.py",
+                "type_": TestNodeTypeEnum.file,
+                "path": file_path,
+                "children": [
+                    {
+                        "name": "DiscoverySimple",
+                        "path": file_path,
+                        "type_": TestNodeTypeEnum.class_,
+                        "children": [
+                            {
+                                "name": "test_one",
+                                "path": file_path,
+                                "type_": TestNodeTypeEnum.test,
+                                "lineno": "14",
+                                "id_": file_path
+                                + "\\"
+                                + "DiscoverySimple"
+                                + "\\"
+                                + "test_one",
+                            },
+                            {
+                                "name": "test_two",
+                                "path": file_path,
+                                "type_": TestNodeTypeEnum.test,
+                                "lineno": "17",
+                                "id_": file_path
+                                + "\\"
+                                + "DiscoverySimple"
+                                + "\\"
+                                + "test_two",
+                            },
+                        ],
+                        "id_": file_path + "\\" + "DiscoverySimple",
+                    }
+                ],
+                "id_": file_path,
+            }
+        ],
+        "id_": os.fsdecode(pathlib.PurePath(TEST_DATA_PATH)),
+    }
+
+    uuid = "some-uuid"
+    os.chdir("/Users/eleanorboyd/vscode-python/pythonFiles/tests/unittestadapter/.data")
+    actual = discover_tests(start_dir, pattern, None, uuid)
+
+    assert actual["status"] == "success"
+    assert is_same_tree(actual.get("tests"), expected)
+    assert "error" not in actual
+
+
 def test_empty_discovery() -> None:
     """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
