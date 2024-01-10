@@ -51,5 +51,4 @@ class ps1:
         return result
 
 
-if sys.platform != "win32":
-    sys.ps1 = ps1()
+sys.ps1 = ps1()
