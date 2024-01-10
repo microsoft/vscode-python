@@ -189,7 +189,8 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
     }
 
     uuid = "some-uuid"
-    os.chdir("/Users/eleanorboyd/vscode-python/pythonFiles/tests/unittestadapter/.data")
+    # Define the CWD to be the root of the test data folder.
+    os.chdir(os.fsdecode(pathlib.PurePath(TEST_DATA_PATH)))
     actual = discover_tests(start_dir, pattern, None, uuid)
 
     assert actual["status"] == "success"
