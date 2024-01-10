@@ -70,10 +70,23 @@ def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
     major, minor, micro, suffix = parse_version(package["version"])
 
     current_year = datetime.datetime.now().year
-    if int(major) != current_year:
+    current_month = datetime.datetime.now().month
+    int_major = int(major)
+    valid_major = (
+        int_major
+        == current_year  # Between JAN-DEC major version should be current year
+        or (
+            int_major == current_year - 1 and current_month == 1
+        )  # After new years the check is relaxed for JAN to allow releases of previous year DEC
+        or (
+            int_major == current_year + 1 and current_month == 12
+        )  # Before new years the check is relaxed for DEC to allow pre-releases of next year JAN
+    )
+    if not valid_major:
         raise ValueError(
             f"Major version [{major}] must be the current year [{current_year}].",
             f"If changing major version after new year's, change to {current_year}.1.0",
+            f"Minor version must be updated based on release or pre-release channel.",
         )
 
     if args.release and not is_even(minor):
