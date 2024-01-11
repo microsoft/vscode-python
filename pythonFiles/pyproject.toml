@@ -77,7 +77,7 @@ select = [
   "RUF",  # Ruff-specific rules
 ]
 
-ignore = ["N818", "PT009", "PTH123", "PGH001"]
+ignore = ["N818", "PT027", "PTH123", "PGH001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
