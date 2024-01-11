@@ -9,3 +9,45 @@ exclude = '''
   )/
 )
 '''
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# Compatible w/ ruff formatter. https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+select = [
+  "F",  # Pyflakes
+  "E4", "E7", "E9",  # pycodestyle
+  "I",  # isort
+  "N",  # pep8-naming
+  "D2", "D400", "D403", "D419",  # pydocstyle
+  "UP",  # pyupgrade
+  "YTT",  # flake8-2020
+  "ASYNC",  # flake8-async
+  "B",  # flake8-bugbear
+  "A",  # flake8-builtins
+  "C",  # flake8-comprehensions
+  "DTZ",  # flake8-dasetimez
+  "T",  # flake8-debugger
+  "INP",  # flake8-no-pep420
+  "PIE",  # flake8-pie
+  "PYI",  # flake8-pyi
+  # flake8-pytest-style
+  "PT006", "PT007", "PT009", "PT012", "PT014", "PT015", "PT016", "PT017", "PT018", "PT019",
+  "PT020", "PT021", "PT022", "PT024", "PT025", "PT026", "PT027",
+  "RSE",  # flake8-raise
+  "RET502", "RET503", "RET504",  # flake8-return
+  "SLF",  # flake8-self
+  "SIM",  # flake8-simplify
+  "TCH",  # flake8-type-checking
+  "ARG",  # flake8-unused-argument
+  "PTH",  # flake8-pathlib
+  "ERA",  # eradicate
+  "PD",  # pandas-vet
+  "PGH",  # pygrep-hooks
+  "NPY",  # NymPy-specific rules
+  "PERF",  # Perflint
+  "RUF",  # Ruff-specific rules
+]
+
+ignore = ["N818", "PTH123", "PGH001"]
