@@ -86,8 +86,9 @@ jobs:
 
       - name: Run Black on Python code
         run: |
-          python -m pip install -U black
+          python -m pip install -U black ruff
           python -m black . --check
+          python -m ruff check
         working-directory: pythonFiles
 
   ### Non-smoke tests
