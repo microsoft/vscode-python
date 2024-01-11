@@ -13,6 +13,8 @@ exclude = '''
 [tool.ruff]
 line-length = 100
 
+exclude = ["lib", ".vscode", ".data"]
+
 [tool.ruff.lint]
 # Compatible w/ ruff formatter. https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
 select = [
@@ -50,4 +52,7 @@ select = [
   "RUF",  # Ruff-specific rules
 ]
 
-ignore = ["N818", "PTH123", "PGH001"]
+ignore = ["N818", "PT009", "PTH123", "PGH001"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
