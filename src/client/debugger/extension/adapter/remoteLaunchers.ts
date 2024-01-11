@@ -18,7 +18,12 @@ type RemoteDebugOptions = {
 
 export function getDebugpyLauncherArgs(options: RemoteDebugOptions, debuggerPath: string = pathToDebugger) {
     const waitArgs = options.waitUntilDebuggerAttaches ? ['--wait-for-client'] : [];
-    return [debuggerPath.fileToCommandArgument(), '--listen', `${options.host}:${options.port}`, ...waitArgs];
+    return [
+        debuggerPath.fileToCommandArgumentForPythonExt(),
+        '--listen',
+        `${options.host}:${options.port}`,
+        ...waitArgs,
+    ];
 }
 
 export function getDebugpyPackagePath(): string {

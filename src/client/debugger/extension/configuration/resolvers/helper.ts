@@ -4,34 +4,54 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ICurrentProcess, IPathUtils } from '../../../../common/types';
+import { ICurrentProcess } from '../../../../common/types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from '../../../../common/variables/types';
 import { LaunchRequestArguments } from '../../../types';
+import { PYTHON_LANGUAGE } from '../../../../common/constants';
+import { getActiveTextEditor } from '../../../../common/vscodeApis/windowApis';
+import { getSearchPathEnvVarNames } from '../../../../common/utils/exec';
 
 export const IDebugEnvironmentVariablesService = Symbol('IDebugEnvironmentVariablesService');
 export interface IDebugEnvironmentVariablesService {
-    getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables>;
+    getEnvironmentVariables(
+        args: LaunchRequestArguments,
+        baseVars?: EnvironmentVariables,
+    ): Promise<EnvironmentVariables>;
 }
 
 @injectable()
 export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariablesService {
     constructor(
         @inject(IEnvironmentVariablesService) private envParser: IEnvironmentVariablesService,
-        @inject(IPathUtils) private pathUtils: IPathUtils,
         @inject(ICurrentProcess) private process: ICurrentProcess,
     ) {}
-    public async getEnvironmentVariables(args: LaunchRequestArguments): Promise<EnvironmentVariables> {
-        const pathVariableName = this.pathUtils.getPathVariableName();
+
+    public async getEnvironmentVariables(
+        args: LaunchRequestArguments,
+        baseVars?: EnvironmentVariables,
+    ): Promise<EnvironmentVariables> {
+        const pathVariableName = getSearchPathEnvVarNames()[0];
 
         // Merge variables from both .env file and env json variables.
         const debugLaunchEnvVars: Record<string, string> =
-            args.env && Object.keys(args.env).length > 0 ? ({ ...args.env } as any) : ({} as any);
+            args.env && Object.keys(args.env).length > 0
+                ? ({ ...args.env } as Record<string, string>)
+                : ({} as Record<string, string>);
         const envFileVars = await this.envParser.parseFile(args.envFile, debugLaunchEnvVars);
         const env = envFileVars ? { ...envFileVars } : {};
-        this.envParser.mergeVariables(debugLaunchEnvVars, env);
+
+        // "overwrite: true" to ensure that debug-configuration env variable values
+        // take precedence over env file.
+        this.envParser.mergeVariables(debugLaunchEnvVars, env, { overwrite: true });
+        if (baseVars) {
+            this.envParser.mergeVariables(baseVars, env, { mergeAll: true });
+        }
 
         // Append the PYTHONPATH and PATH variables.
-        this.envParser.appendPath(env, debugLaunchEnvVars[pathVariableName]);
+        this.envParser.appendPath(
+            env,
+            debugLaunchEnvVars[pathVariableName] ?? debugLaunchEnvVars[pathVariableName.toUpperCase()],
+        );
         this.envParser.appendPythonPath(env, debugLaunchEnvVars.PYTHONPATH);
 
         if (typeof env[pathVariableName] === 'string' && env[pathVariableName]!.length > 0) {
@@ -73,4 +93,12 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
 
         return env;
     }
+}
+
+export function getProgram(): string | undefined {
+    const activeTextEditor = getActiveTextEditor();
+    if (activeTextEditor && activeTextEditor.document.languageId === PYTHON_LANGUAGE) {
+        return activeTextEditor.document.fileName;
+    }
+    return undefined;
 }

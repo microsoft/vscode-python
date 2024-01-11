@@ -8,6 +8,7 @@ try:
     from io import StringIO
 except ImportError:
     from StringIO import StringIO  # 2.7
+
 import os
 import os.path
 import sys
@@ -63,6 +64,7 @@ DIRNAME = _os_path.dirname
 BASENAME = _os_path.basename
 IS_ABS_PATH = _os_path.isabs
 PATH_JOIN = _os_path.join
+ABS_PATH = _os_path.abspath
 
 
 def fix_path(

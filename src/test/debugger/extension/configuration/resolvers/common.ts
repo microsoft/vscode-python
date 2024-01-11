@@ -4,10 +4,8 @@
 'use strict';
 
 import * as path from 'path';
-import * as TypeMoq from 'typemoq';
-import { IPlatformService } from '../../../../../client/common/platform/types';
 import { getNamesAndValues } from '../../../../../client/common/utils/enum';
-import { getOSType, OSType } from '../../../../../client/common/utils/platform';
+import { OSType, getOSType } from '../../../../../client/common/utils/platform';
 
 const OS_TYPE = getOSType();
 
@@ -43,12 +41,4 @@ function getPathModuleForOS(osType: OSType): IPathModule {
     // We are testing a different OS from the native one.
     // So use a "path" module matching the target OS.
     return osType === OSType.Windows ? path.win32 : path.posix;
-}
-
-// Generate the function to use for populating the
-// relevant mocks relative to the target OS.
-export function setUpOSMocks(osType: OSType, platformService: TypeMoq.IMock<IPlatformService>) {
-    platformService.setup((p) => p.isWindows).returns(() => osType === OSType.Windows);
-    platformService.setup((p) => p.isMac).returns(() => osType === OSType.OSX);
-    platformService.setup((p) => p.isLinux).returns(() => osType === OSType.Linux);
 }

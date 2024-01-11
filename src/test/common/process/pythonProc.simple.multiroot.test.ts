@@ -7,16 +7,16 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execFile } from 'child_process';
 import * as fs from 'fs-extra';
-import { EOL } from 'os';
 import * as path from 'path';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
-import { OSType } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonVersion } from '../../common';
-import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
+import { initializeExternalDependencies } from '../../../client/pythonEnvironments/common/externalDependencies';
+import { clearPythonPathInWorkspaceFolder } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../../initialize';
 
 use(chaiAsPromised);
 
@@ -37,6 +37,7 @@ suite('PythonExecutableService', () => {
         serviceContainer = (await initialize()).serviceContainer;
     });
     setup(async () => {
+        initializeExternalDependencies(serviceContainer);
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
 
@@ -68,24 +69,18 @@ suite('PythonExecutableService', () => {
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
-        // This test has not been working for many months in Python 2.7 under
-        // Windows. Tracked by #2547.
-        if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
-            return this.skip();
-        }
-
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async () => {
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
-        const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
+        const result = await pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
             throwOnStdErr: true,
         });
 
-        await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
-    });
+        expect(result.stdout.startsWith('Hello')).to.be.equals(true);
+    }).timeout(TEST_TIMEOUT * 3);
 
     test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
@@ -93,7 +88,7 @@ suite('PythonExecutableService', () => {
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
         await expect(osModuleIsInstalled).to.eventually.equal(true, 'os module is not installed');
         await expect(sysModuleIsInstalled).to.eventually.equal(true, 'sys module is not installed');
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test("Unknown modules such as 'xyzabc123' be deemed 'not installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
@@ -103,10 +98,10 @@ suite('PythonExecutableService', () => {
             false,
             `Random module '${randomModuleName}' is installed`,
         );
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 
     test('Ensure correct path to executable is returned', async () => {
-        const pythonPath = getExtensionSettings(workspace4Path).pythonPath;
+        const { pythonPath } = getExtensionSettings(workspace4Path);
         let expectedExecutablePath: string;
         if (await fs.pathExists(pythonPath)) {
             expectedExecutablePath = pythonPath;
@@ -120,5 +115,5 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const executablePath = await pythonExecService.getExecutablePath();
         expect(executablePath).to.equal(expectedExecutablePath, 'Executable paths are not the same');
-    });
+    }).timeout(TEST_TIMEOUT * 3);
 });

@@ -3,10 +3,10 @@
 
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
-import { traceError } from '../../../common/logger';
 import * as basic from '../../../common/utils/version';
 
 import { PythonReleaseLevel, PythonVersion, PythonVersionRelease, UNKNOWN_PYTHON_VERSION } from '.';
+import { traceError } from '../../../logging';
 
 // XXX getPythonVersionFromPath() should go away in favor of parseVersionFromExecutable().
 

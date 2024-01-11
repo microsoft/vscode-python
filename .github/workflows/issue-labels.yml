@@ -4,22 +4,30 @@ on:
   issues:
     types: [opened, reopened]
 
+env:
+  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd","anthonykim1"]'
+
 permissions:
   issues: write
 
 jobs:
   # From https://github.com/marketplace/actions/github-script#apply-a-label-to-an-issue.
   add-classify-label:
-    name: "Add 'classify'"
+    name: "Add 'triage-needed' and remove assignees"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v4.0.2
+      - name: Checkout Actions
+        uses: actions/checkout@v4
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.addLabels({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              labels: ['classify']
-            })
+          repository: 'microsoft/vscode-github-triage-actions'
+          ref: stable
+          path: ./actions
+
+      - name: Install Actions
+        run: npm install --production --prefix ./actions
+
+      - name: "Add 'triage-needed' and remove assignees"
+        uses: ./actions/python-issue-labels
+        with:
+          triagers: ${{ env.TRIAGERS }}
+          token: ${{secrets.GITHUB_TOKEN}}

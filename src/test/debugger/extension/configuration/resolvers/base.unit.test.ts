@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -5,20 +6,18 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import * as typemoq from 'typemoq';
-import { DebugConfiguration, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { DocumentManager } from '../../../../../client/common/application/documentManager';
-import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
-import { WorkspaceService } from '../../../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../../../client/common/configuration/service';
-import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { PlatformService } from '../../../../../client/common/platform/platformService';
-import { IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService } from '../../../../../client/common/types';
 import { BaseConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/base';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
+import { IInterpreterService } from '../../../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../../../client/pythonEnvironments/info';
+import * as workspaceApis from '../../../../../client/common/vscodeApis/workspaceApis';
+import * as helper from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
@@ -39,99 +38,51 @@ suite('Debugging - Config Resolver', () => {
         }
 
         public getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
-            return super.getWorkspaceFolder(folder);
-        }
-
-        public getProgram(): string | undefined {
-            return super.getProgram();
+            return BaseConfigurationResolver.getWorkspaceFolder(folder);
         }
 
         public resolveAndUpdatePythonPath(
-            workspaceFolder: Uri | undefined,
+            workspaceFolderUri: Uri | undefined,
             debugConfiguration: LaunchRequestArguments,
-        ): void {
-            return super.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
+        ) {
+            return super.resolveAndUpdatePythonPath(workspaceFolderUri, debugConfiguration);
         }
 
         public debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
-            return super.debugOption(debugOptions, debugOption);
+            return BaseConfigurationResolver.debugOption(debugOptions, debugOption);
         }
 
         public isLocalHost(hostName?: string) {
-            return super.isLocalHost(hostName);
+            return BaseConfigurationResolver.isLocalHost(hostName);
         }
 
         public isDebuggingFastAPI(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-            return super.isDebuggingFastAPI(debugConfiguration);
+            return BaseConfigurationResolver.isDebuggingFastAPI(debugConfiguration);
         }
 
         public isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-            return super.isDebuggingFlask(debugConfiguration);
+            return BaseConfigurationResolver.isDebuggingFlask(debugConfiguration);
         }
     }
     let resolver: BaseResolver;
-    let workspaceService: IWorkspaceService;
-    let platformService: IPlatformService;
-    let documentManager: IDocumentManager;
     let configurationService: IConfigurationService;
+    let interpreterService: IInterpreterService;
+    let getWorkspaceFoldersStub: sinon.SinonStub;
+    let getWorkspaceFolderStub: sinon.SinonStub;
+    let getProgramStub: sinon.SinonStub;
+
     setup(() => {
-        workspaceService = mock(WorkspaceService);
-        documentManager = mock(DocumentManager);
-        platformService = mock(PlatformService);
         configurationService = mock(ConfigurationService);
-        resolver = new BaseResolver(
-            instance(workspaceService),
-            instance(documentManager),
-            instance(platformService),
-            instance(configurationService),
-        );
+        interpreterService = mock<IInterpreterService>();
+        resolver = new BaseResolver(instance(configurationService), instance(interpreterService));
+        getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
+        getWorkspaceFolderStub = sinon.stub(workspaceApis, 'getWorkspaceFolder');
+        getProgramStub = sinon.stub(helper, 'getProgram');
+    });
+    teardown(() => {
+        sinon.restore();
     });
 
-    test('Program should return filepath of active editor if file is python', () => {
-        const expectedFileName = 'my.py';
-        const editor = typemoq.Mock.ofType<TextEditor>();
-        const doc = typemoq.Mock.ofType<TextDocument>();
-
-        editor
-            .setup((e) => e.document)
-            .returns(() => doc.object)
-            .verifiable(typemoq.Times.once());
-        doc.setup((d) => d.languageId)
-            .returns(() => PYTHON_LANGUAGE)
-            .verifiable(typemoq.Times.once());
-        doc.setup((d) => d.fileName)
-            .returns(() => expectedFileName)
-            .verifiable(typemoq.Times.once());
-        when(documentManager.activeTextEditor).thenReturn(editor.object);
-
-        const program = resolver.getProgram();
-
-        expect(program).to.be.equal(expectedFileName);
-    });
-    test('Program should return undefined if active file is not python', () => {
-        const editor = typemoq.Mock.ofType<TextEditor>();
-        const doc = typemoq.Mock.ofType<TextDocument>();
-
-        editor
-            .setup((e) => e.document)
-            .returns(() => doc.object)
-            .verifiable(typemoq.Times.once());
-        doc.setup((d) => d.languageId)
-            .returns(() => 'C#')
-            .verifiable(typemoq.Times.once());
-        when(documentManager.activeTextEditor).thenReturn(editor.object);
-
-        const program = resolver.getProgram();
-
-        expect(program).to.be.equal(undefined, 'Not undefined');
-    });
-    test('Program should return undefined if there is no active editor', () => {
-        when(documentManager.activeTextEditor).thenReturn(undefined);
-
-        const program = resolver.getProgram();
-
-        expect(program).to.be.equal(undefined, 'Not undefined');
-    });
     test('Should get workspace folder when workspace folder is provided', () => {
         const expectedUri = Uri.parse('mock');
         const folder: WorkspaceFolder = { index: 0, uri: expectedUri, name: 'mock' };
@@ -150,8 +101,8 @@ suite('Debugging - Config Resolver', () => {
         test(item.title, () => {
             const programPath = path.join('one', 'two', 'three.xyz');
 
-            resolver.getProgram = () => programPath;
-            when(workspaceService.workspaceFolders).thenReturn(item.workspaceFolders);
+            getProgramStub.returns(programPath);
+            getWorkspaceFoldersStub.returns(item.workspaceFolders);
 
             const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -163,8 +114,11 @@ suite('Debugging - Config Resolver', () => {
         const folder: WorkspaceFolder = { index: 0, uri: expectedUri, name: 'mock' };
         const folders: WorkspaceFolder[] = [folder];
 
-        resolver.getProgram = () => undefined;
-        when(workspaceService.workspaceFolders).thenReturn(folders);
+        getProgramStub.returns(undefined);
+
+        getWorkspaceFolderStub.returns(folder);
+
+        getWorkspaceFoldersStub.returns(folders);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -176,9 +130,11 @@ suite('Debugging - Config Resolver', () => {
         const folder2: WorkspaceFolder = { index: 1, uri: Uri.parse('134'), name: 'mock2' };
         const folders: WorkspaceFolder[] = [folder1, folder2];
 
-        resolver.getProgram = () => programPath;
-        when(workspaceService.workspaceFolders).thenReturn(folders);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(folder2);
+        getProgramStub.returns(programPath);
+
+        getWorkspaceFoldersStub.returns(folders);
+
+        getWorkspaceFolderStub.returns(folder2);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
@@ -190,39 +146,149 @@ suite('Debugging - Config Resolver', () => {
         const folder2: WorkspaceFolder = { index: 1, uri: Uri.parse('134'), name: 'mock2' };
         const folders: WorkspaceFolder[] = [folder1, folder2];
 
-        resolver.getProgram = () => programPath;
-        when(workspaceService.workspaceFolders).thenReturn(folders);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        getProgramStub.returns(programPath);
+        getWorkspaceFoldersStub.returns(folders);
+
+        getWorkspaceFolderStub.returns(undefined);
 
         const uri = resolver.getWorkspaceFolder(undefined);
 
         expect(uri).to.be.deep.equal(undefined, 'not undefined');
     });
-    test('Do nothing if debug configuration is undefined', () => {
-        resolver.resolveAndUpdatePythonPath(undefined, undefined as any);
+    test('Do nothing if debug configuration is undefined', async () => {
+        await resolver.resolveAndUpdatePythonPath(undefined, (undefined as unknown) as LaunchRequestArguments);
     });
-    test('pythonPath in debug config must point to pythonPath in settings if pythonPath in config is not set', () => {
+    test('python in debug config must point to pythonPath in settings if pythonPath in config is not set', async () => {
         const config = {};
         const pythonPath = path.join('1', '2', '3');
 
-        when(configurationService.getSettings(anything())).thenReturn({ pythonPath } as any);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
 
-        resolver.resolveAndUpdatePythonPath(undefined, config as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
 
-        expect(config).to.have.property('pythonPath', pythonPath);
+        expect(config).to.have.property('python', pythonPath);
     });
-    test('pythonPath in debug config must point to pythonPath in settings  if pythonPath in config is ${command:python.interpreterPath}', () => {
+    test('python in debug config must point to pythonPath in settings if pythonPath in config is ${command:python.interpreterPath}', async () => {
         const config = {
-            pythonPath: '${command:python.interpreterPath}',
+            python: '${command:python.interpreterPath}',
         };
         const pythonPath = path.join('1', '2', '3');
 
-        when(configurationService.getSettings(anything())).thenReturn({ pythonPath } as any);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
 
-        resolver.resolveAndUpdatePythonPath(undefined, config as any);
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
 
-        expect(config.pythonPath).to.equal(pythonPath);
+        expect(config.python).to.equal(pythonPath);
     });
+
+    test('config should only contain python and not pythonPath after resolving', async () => {
+        const config = { pythonPath: '${command:python.interpreterPath}', python: '${command:python.interpreterPath}' };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+    });
+
+    test('config should convert pythonPath to python, only if python is not set', async () => {
+        const config = { pythonPath: '${command:python.interpreterPath}', python: undefined };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+    });
+
+    test('config should not change python if python is different than pythonPath', async () => {
+        const expected = path.join('1', '2', '4');
+        const config = { pythonPath: '${command:python.interpreterPath}', python: expected };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', expected);
+    });
+
+    test('config should get python from interpreter service is nothing is set', async () => {
+        const config = {};
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+    });
+
+    test('config should contain debugAdapterPython and debugLauncherPython', async () => {
+        const config = {};
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.have.property('debugAdapterPython', pythonPath);
+        expect(config).to.have.property('debugLauncherPython', pythonPath);
+    });
+
+    test('config should not change debugAdapterPython and debugLauncherPython if already set', async () => {
+        const debugAdapterPythonPath = path.join('1', '2', '4');
+        const debugLauncherPythonPath = path.join('1', '2', '5');
+
+        const config = { debugAdapterPython: debugAdapterPythonPath, debugLauncherPython: debugLauncherPythonPath };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.have.property('debugAdapterPython', debugAdapterPythonPath);
+        expect(config).to.have.property('debugLauncherPython', debugLauncherPythonPath);
+    });
+
+    test('config should not resolve debugAdapterPython and debugLauncherPython', async () => {
+        const config = {
+            debugAdapterPython: '${command:python.interpreterPath}',
+            debugLauncherPython: '${command:python.interpreterPath}',
+        };
+        const pythonPath = path.join('1', '2', '3');
+
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
+            path: pythonPath,
+        } as PythonEnvironment);
+
+        await resolver.resolveAndUpdatePythonPath(undefined, config as LaunchRequestArguments);
+        expect(config).to.not.have.property('pythonPath');
+        expect(config).to.have.property('python', pythonPath);
+        expect(config).to.have.property('debugAdapterPython', pythonPath);
+        expect(config).to.have.property('debugLauncherPython', pythonPath);
+    });
+
     const localHostTestMatrix: Record<string, boolean> = {
         localhost: true,
         '127.0.0.1': true,
@@ -240,32 +306,32 @@ suite('Debugging - Config Resolver', () => {
     });
     test('Is debugging fastapi=true', () => {
         const config = { module: 'fastapi' };
-        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        const isFastAPI = resolver.isDebuggingFastAPI(config as LaunchRequestArguments);
         expect(isFastAPI).to.equal(true, 'not fastapi');
     });
     test('Is debugging fastapi=false', () => {
         const config = { module: 'fastapi2' };
-        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        const isFastAPI = resolver.isDebuggingFastAPI(config as LaunchRequestArguments);
         expect(isFastAPI).to.equal(false, 'fastapi');
     });
     test('Is debugging fastapi=false when not defined', () => {
         const config = {};
-        const isFastAPI = resolver.isDebuggingFastAPI(config as any);
+        const isFastAPI = resolver.isDebuggingFastAPI(config as LaunchRequestArguments);
         expect(isFastAPI).to.equal(false, 'fastapi');
     });
     test('Is debugging flask=true', () => {
         const config = { module: 'flask' };
-        const isFlask = resolver.isDebuggingFlask(config as any);
+        const isFlask = resolver.isDebuggingFlask(config as LaunchRequestArguments);
         expect(isFlask).to.equal(true, 'not flask');
     });
     test('Is debugging flask=false', () => {
         const config = { module: 'flask2' };
-        const isFlask = resolver.isDebuggingFlask(config as any);
+        const isFlask = resolver.isDebuggingFlask(config as LaunchRequestArguments);
         expect(isFlask).to.equal(false, 'flask');
     });
     test('Is debugging flask=false when not defined', () => {
         const config = {};
-        const isFlask = resolver.isDebuggingFlask(config as any);
+        const isFlask = resolver.isDebuggingFlask(config as LaunchRequestArguments);
         expect(isFlask).to.equal(false, 'flask');
     });
 });

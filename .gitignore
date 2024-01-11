@@ -5,6 +5,7 @@ log.log
 **/node_modules
 *.pyc
 *.vsix
+envVars.txt
 **/.vscode/.ropeproject/**
 **/testFiles/**/.cache/**
 *.noseids
@@ -23,6 +24,7 @@ cucumber-report.json
 port.txt
 precommit.hook
 pythonFiles/lib/**
+pythonFiles/get-pip.py
 debug_coverage*/**
 languageServer/**
 languageServer.*/**
@@ -41,3 +43,8 @@ debugpy*.log
 pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
+dist/**
+# translation files
+*.xlf
+package.nls.*.json
+l10n/

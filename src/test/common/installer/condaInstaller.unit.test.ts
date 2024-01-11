@@ -8,28 +8,21 @@ import { instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InterpreterUri } from '../../../client/common/installer/types';
-import {
-    ExecutionInfo,
-    IConfigurationService,
-    IExperimentService,
-    IPythonSettings,
-} from '../../../client/common/types';
-import { ICondaService, ICondaLocatorService } from '../../../client/interpreter/contracts';
+import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { ICondaService, IComponentAdapter } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/discovery/locators/services/conda';
-import { CondaService } from '../../../client/pythonEnvironments/discovery/locators/services/condaService';
+import { CondaEnvironmentInfo } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
+import { CondaService } from '../../../client/pythonEnvironments/common/environmentManagers/condaService';
 
 suite('Common - Conda Installer', () => {
     let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
-    let condaLocatorService: ICondaLocatorService;
+    let condaLocatorService: IComponentAdapter;
     let configService: IConfigurationService;
-    let experimentService: IExperimentService;
     class CondaInstallerTest extends CondaInstaller {
         public async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
             return super.getExecutionInfo(moduleName, resource);
@@ -38,22 +31,17 @@ suite('Common - Conda Installer', () => {
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         condaService = mock(CondaService);
-        experimentService = mock<IExperimentService>();
-        condaLocatorService = mock<ICondaLocatorService>();
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(false);
+        condaLocatorService = mock<IComponentAdapter>();
         configService = mock(ConfigurationService);
         when(serviceContainer.get<ICondaService>(ICondaService)).thenReturn(instance(condaService));
-        when(serviceContainer.get<ICondaLocatorService>(ICondaLocatorService)).thenReturn(
-            instance(condaLocatorService),
-        );
+        when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(condaLocatorService));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         installer = new CondaInstallerTest(instance(serviceContainer));
     });
     test('Name and priority', async () => {
-        assert.equal(installer.displayName, 'Conda');
-        assert.equal(installer.name, 'Conda');
-        assert.equal(installer.priority, 0);
+        assert.strictEqual(installer.displayName, 'Conda');
+        assert.strictEqual(installer.name, 'Conda');
+        assert.strictEqual(installer.priority, 10);
     });
     test('Installer is not supported when conda is available variable is set to false', async () => {
         const uri = Uri.file(__filename);
@@ -61,7 +49,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Installer is not supported when conda is not available', async () => {
         const uri = Uri.file(__filename);
@@ -69,7 +57,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Installer is not supported when current env is not a conda env', async () => {
         const uri = Uri.file(__filename);
@@ -83,7 +71,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Installer is supported when current env is a conda env', async () => {
         const uri = Uri.file(__filename);
@@ -97,7 +85,7 @@ suite('Common - Conda Installer', () => {
 
         const supported = await installer.isSupported(uri);
 
-        assert.equal(supported, true);
+        assert.strictEqual(supported, true);
     });
     test('Include name of environment', async () => {
         const uri = Uri.file(__filename);
@@ -111,12 +99,16 @@ suite('Common - Conda Installer', () => {
 
         when(configService.getSettings(uri)).thenReturn(instance(settings));
         when(settings.pythonPath).thenReturn(pythonPath);
-        when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaFile(true)).thenResolve(condaPath);
         when(condaLocatorService.getCondaEnvironment(pythonPath)).thenResolve(condaEnv);
 
         const execInfo = await installer.getExecutionInfo('abc', uri);
 
-        assert.deepEqual(execInfo, { args: ['install', '--name', condaEnv.name, 'abc', '-y'], execPath: condaPath });
+        assert.deepEqual(execInfo, {
+            args: ['install', '--name', condaEnv.name, 'abc', '-y'],
+            execPath: condaPath,
+            useShell: true,
+        });
     });
     test('Include path of environment', async () => {
         const uri = Uri.file(__filename);
@@ -130,14 +122,15 @@ suite('Common - Conda Installer', () => {
 
         when(configService.getSettings(uri)).thenReturn(instance(settings));
         when(settings.pythonPath).thenReturn(pythonPath);
-        when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaFile(true)).thenResolve(condaPath);
         when(condaLocatorService.getCondaEnvironment(pythonPath)).thenResolve(condaEnv);
 
         const execInfo = await installer.getExecutionInfo('abc', uri);
 
         assert.deepEqual(execInfo, {
-            args: ['install', '--prefix', condaEnv.path.fileToCommandArgument(), 'abc', '-y'],
+            args: ['install', '--prefix', condaEnv.path.fileToCommandArgumentForPythonExt(), 'abc', '-y'],
             execPath: condaPath,
+            useShell: true,
         });
     });
 });

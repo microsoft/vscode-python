@@ -283,7 +283,6 @@ export async function ensureFSTree(
                     throw Error(`unsupported file kind ${kind}`);
                 }
             } catch (err) {
-                // tslint:disable-next-line:no-console
                 console.log('FAILED:', err);
                 throw err;
             }
@@ -306,12 +305,14 @@ async function ensureSymlink(target: string, filename: string): Promise<void> {
     try {
         await fsapi.ensureSymlink(target, filename);
     } catch (err) {
-        if (err.code === 'ENOENT') {
+        const error = err as NodeJS.ErrnoException;
+        if (error.code === 'ENOENT') {
             // The target doesn't exist.  Make the symlink anyway.
             try {
                 await fsapi.symlink(target, filename);
             } catch (err) {
-                if (err.code !== 'EEXIST') {
+                const symlinkError = err as NodeJS.ErrnoException;
+                if (symlinkError.code !== 'EEXIST') {
                     throw err; // re-throw
                 }
             }

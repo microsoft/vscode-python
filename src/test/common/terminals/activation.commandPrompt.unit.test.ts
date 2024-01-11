@@ -8,11 +8,13 @@ import { Uri } from 'vscode';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { TerminalShellType } from '../../../client/common/terminal/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Environment Activation (cmd/powershell)', () => {
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
     [
         'c:/programfiles/python/python',
         'c:/program files/python/python',
@@ -34,16 +36,13 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
                             serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
-
-                            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+                            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                            interpreterService
+                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                                .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
                             serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
-                                .returns(() => configService.object);
-                            const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
-                            configService
-                                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-                                .returns(() => settings.object);
+                                .setup((c) => c.get(IInterpreterService))
+                                .returns(() => interpreterService.object);
                         });
 
                         getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((shellType) => {
@@ -87,16 +86,13 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
                     platform = TypeMoq.Mock.ofType<IPlatformService>();
+                    interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                    interpreterService
+                        .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
                     serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
                     serviceContainer.setup((c) => c.get(IPlatformService)).returns(() => platform.object);
-
-                    const configService = TypeMoq.Mock.ofType<IConfigurationService>();
-                    serviceContainer
-                        .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
-                        .returns(() => configService.object);
-                    const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                    settings.setup((s) => s.pythonPath).returns(() => pythonPath);
-                    configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                 });
 
                 test('Ensure batch files are supported by command prompt', async () => {
@@ -113,7 +109,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     // Ensure the path is quoted if it contains any spaces.
                     // Ensure it contains the name of the environment as an argument to the script file.
 
-                    expect(commands).to.be.deep.equal([pathToScriptFile.fileToCommandArgument()], 'Invalid command');
+                    expect(commands).to.be.deep.equal(
+                        [pathToScriptFile.fileToCommandArgumentForPythonExt()],
+                        'Invalid command',
+                    );
                 });
 
                 test('Ensure batch files are not supported by powershell (on windows)', async () => {
@@ -179,14 +178,11 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     platform = TypeMoq.Mock.ofType<IPlatformService>();
                     serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
                     serviceContainer.setup((c) => c.get(IPlatformService)).returns(() => platform.object);
-
-                    const configService = TypeMoq.Mock.ofType<IConfigurationService>();
-                    serviceContainer
-                        .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
-                        .returns(() => configService.object);
-                    const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                    settings.setup((s) => s.pythonPath).returns(() => pythonPath);
-                    configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+                    interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                    interpreterService
+                        .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
                 });
 
                 test('Ensure powershell files are not supported by command prompt', async () => {
@@ -216,7 +212,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
 
                     expect(command).to.be.deep.equal(
-                        [`& ${pathToScriptFile.fileToCommandArgument()}`.trim()],
+                        [`& ${pathToScriptFile.fileToCommandArgumentForPythonExt()}`.trim()],
                         'Invalid command',
                     );
                 });
@@ -232,7 +228,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
                     expect(command).to.be.deep.equal(
-                        [`& ${pathToScriptFile.fileToCommandArgument()}`.trim()],
+                        [`& ${pathToScriptFile.fileToCommandArgumentForPythonExt()}`.trim()],
                         'Invalid command',
                     );
                 });

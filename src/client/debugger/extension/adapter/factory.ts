@@ -10,22 +10,34 @@ import {
     DebugAdapterExecutable,
     DebugAdapterServer,
     DebugSession,
+    l10n,
     WorkspaceFolder,
 } from 'vscode';
-import { IApplicationShell } from '../../../common/application/types';
-import { traceVerbose } from '../../../common/logger';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { traceLog, traceVerbose } from '../../../logging';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
+import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
+import { Common, Interpreters } from '../../../common/utils/localize';
+import { IPersistentStateFactory } from '../../../common/types';
+import { Commands } from '../../../common/constants';
+import { ICommandManager } from '../../../common/application/types';
+
+// persistent state names, exported to make use of in testing
+export enum debugStateKeys {
+    doNotShowAgain = 'doNotShowPython36DebugDeprecatedAgain',
+}
 
 @injectable()
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
     constructor(
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
     ) {}
 
     public async createDebugAdapterDescriptor(
@@ -47,26 +59,36 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
         if (configuration.request === 'attach') {
             if (configuration.connect !== undefined) {
+                traceLog(
+                    `Connecting to DAP Server at:  ${configuration.connect.host ?? '127.0.0.1'}:${
+                        configuration.connect.port
+                    }`,
+                );
                 return new DebugAdapterServer(configuration.connect.port, configuration.connect.host ?? '127.0.0.1');
             } else if (configuration.port !== undefined) {
+                traceLog(`Connecting to DAP Server at:  ${configuration.host ?? '127.0.0.1'}:${configuration.port}`);
                 return new DebugAdapterServer(configuration.port, configuration.host ?? '127.0.0.1');
             } else if (configuration.listen === undefined && configuration.processId === undefined) {
                 throw new Error('"request":"attach" requires either "connect", "listen", or "processId"');
             }
         }
 
-        const pythonPath = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
-        if (pythonPath.length !== 0) {
+        const command = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
+        if (command.length !== 0) {
             if (configuration.request === 'attach' && configuration.processId !== undefined) {
                 sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
             }
+
+            const executable = command.shift() ?? 'python';
 
             // "logToFile" is not handled directly by the adapter - instead, we need to pass
             // the corresponding CLI switch when spawning it.
             const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
 
             if (configuration.debugAdapterPath !== undefined) {
-                return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
+                const args = command.concat([configuration.debugAdapterPath, ...logArgs]);
+                traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
+                return new DebugAdapterExecutable(executable, args);
             }
 
             const debuggerAdapterPathToUse = path.join(
@@ -78,8 +100,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 'adapter',
             );
 
+            const args = command.concat([debuggerAdapterPathToUse, ...logArgs]);
+            traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
             sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-            return new DebugAdapterExecutable(pythonPath, [debuggerAdapterPathToUse, ...logArgs]);
+            return new DebugAdapterExecutable(executable, args);
         }
 
         // Unlikely scenario.
@@ -100,28 +124,74 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     private async getDebugAdapterPython(
         configuration: LaunchRequestArguments | AttachRequestArguments,
         workspaceFolder?: WorkspaceFolder,
-    ): Promise<string> {
+    ): Promise<string[]> {
         if (configuration.debugAdapterPython !== undefined) {
-            return configuration.debugAdapterPython;
+            return this.getExecutableCommand(
+                await this.interpreterService.getInterpreterDetails(configuration.debugAdapterPython),
+            );
         } else if (configuration.pythonPath) {
-            return configuration.pythonPath;
+            return this.getExecutableCommand(
+                await this.interpreterService.getInterpreterDetails(configuration.pythonPath),
+            );
         }
 
         const resourceUri = workspaceFolder ? workspaceFolder.uri : undefined;
         const interpreter = await this.interpreterService.getActiveInterpreter(resourceUri);
         if (interpreter) {
             traceVerbose(`Selecting active interpreter as Python Executable for DA '${interpreter.path}'`);
-            return interpreter.path;
+            return this.getExecutableCommand(interpreter);
         }
 
-        const interpreters = await this.interpreterService.getInterpreters(resourceUri);
+        await this.interpreterService.hasInterpreters(); // Wait until we know whether we have an interpreter
+        const interpreters = this.interpreterService.getInterpreters(resourceUri);
         if (interpreters.length === 0) {
             this.notifySelectInterpreter().ignoreErrors();
-            return '';
+            return [];
         }
 
         traceVerbose(`Picking first available interpreter to launch the DA '${interpreters[0].path}'`);
-        return interpreters[0].path;
+        return this.getExecutableCommand(interpreters[0]);
+    }
+
+    private async showDeprecatedPythonMessage() {
+        const notificationPromptEnabled = this.persistentState.createGlobalPersistentState(
+            debugStateKeys.doNotShowAgain,
+            false,
+        );
+        if (notificationPromptEnabled.value) {
+            return;
+        }
+        const prompts = [Interpreters.changePythonInterpreter, Common.doNotShowAgain];
+        const selection = await showErrorMessage(
+            l10n.t('The debugger in the python extension no longer supports python versions minor than 3.7.'),
+            { modal: true },
+            ...prompts,
+        );
+        if (!selection) {
+            return;
+        }
+        if (selection == Interpreters.changePythonInterpreter) {
+            await this.commandManager.executeCommand(Commands.Set_Interpreter);
+        }
+        if (selection == Common.doNotShowAgain) {
+            // Never show the message again
+            await this.persistentState
+                .createGlobalPersistentState(debugStateKeys.doNotShowAgain, false)
+                .updateValue(true);
+        }
+    }
+
+    private async getExecutableCommand(interpreter: PythonEnvironment | undefined): Promise<string[]> {
+        if (interpreter) {
+            if (
+                (interpreter.version?.major ?? 0) < 3 ||
+                ((interpreter.version?.major ?? 0) <= 3 && (interpreter.version?.minor ?? 0) <= 6)
+            ) {
+                this.showDeprecatedPythonMessage();
+            }
+            return interpreter.path.length > 0 ? [interpreter.path] : [];
+        }
+        return [];
     }
 
     /**
@@ -133,8 +203,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @memberof DebugAdapterDescriptorFactory
      */
     private async notifySelectInterpreter() {
-        await this.appShell.showErrorMessage(
-            'Please install Python or select a Python Interpreter to use the debugger.',
-        );
+        await showErrorMessage(l10n.t('Install Python or select a Python Interpreter to use the debugger.'));
     }
 }

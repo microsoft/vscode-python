@@ -1,20 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line max-classes-per-file
 import * as assert from 'assert';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { DeprecatePythonPath } from '../../../client/common/experiments/groups';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IExperimentsManager } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
-import { IInterpreterSecurityService } from '../../../client/interpreter/autoSelection/types';
+import { EnvironmentTypeComparer } from '../../../client/interpreter/configuration/environmentTypeComparer';
 import { InterpreterSelector } from '../../../client/interpreter/configuration/interpreterSelector/interpreterSelector';
 import { IInterpreterComparer, IInterpreterQuickPickItem } from '../../../client/interpreter/configuration/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterService, WorkspacePythonPath } from '../../../client/interpreter/contracts';
+import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { getOSType, OSType } from '../../common';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -30,30 +32,28 @@ const info: PythonEnvironment = {
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public path: string;
+
     public label: string;
+
     public description!: string;
+
     public detail?: string;
 
-    public interpreter = {} as any;
-    constructor(l: string, p: string) {
+    public interpreter = ({} as unknown) as PythonEnvironment;
+
+    constructor(l: string, p: string, d?: string) {
         this.path = p;
         this.label = l;
+        this.description = d ?? p;
     }
 }
 
 suite('Interpreters - selector', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let comparer: TypeMoq.IMock<IInterpreterComparer>;
-    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
-    let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
-    const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
-    const ignoreCache = false;
+    let newComparer: TypeMoq.IMock<IInterpreterComparer>;
     class TestInterpreterSelector extends InterpreterSelector {
-        public async suggestionToQuickPickItem(
-            suggestion: PythonEnvironment,
-            workspaceUri?: Uri,
-        ): Promise<IInterpreterQuickPickItem> {
+        public suggestionToQuickPickItem(suggestion: PythonEnvironment, workspaceUri?: Uri): IInterpreterQuickPickItem {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
         }
     }
@@ -61,36 +61,22 @@ suite('Interpreters - selector', () => {
     let selector: TestInterpreterSelector;
 
     setup(() => {
-        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
-        interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
-        comparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
+        newComparer = TypeMoq.Mock.ofType<IInterpreterComparer>();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
             .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a: string, b: string) => a === b);
 
-        comparer.setup((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
-        selector = new TestInterpreterSelector(
-            interpreterService.object,
-            comparer.object,
-            experimentsManager.object,
-            interpreterSecurityService.object,
-            new PathUtils(false),
-        );
+        newComparer.setup((c) => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
+        selector = new TestInterpreterSelector(interpreterService.object, newComparer.object, new PathUtils(false));
     });
 
     [true, false].forEach((isWindows) => {
         test(`Suggestions (${isWindows ? 'Windows' : 'Non-Windows'})`, async () => {
             selector = new TestInterpreterSelector(
                 interpreterService.object,
-                comparer.object,
-                experimentsManager.object,
-                interpreterSecurityService.object,
+                newComparer.object,
                 new PathUtils(isWindows),
             );
 
@@ -101,14 +87,18 @@ suite('Interpreters - selector', () => {
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', envType: EnvironmentType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', envType: EnvironmentType.Unknown },
                 { displayName: '4', path: 'c:/path4/path4', envType: EnvironmentType.Conda },
-            ].map((item) => {
-                return { ...info, ...item };
-            });
+                {
+                    displayName: '5',
+                    path: 'c:/path5/path',
+                    envPath: 'c:/path5/path/to/env',
+                    envType: EnvironmentType.Conda,
+                },
+            ].map((item) => ({ ...info, ...item }));
             interpreterService
-                .setup((x) => x.getInterpreters(TypeMoq.It.isAny(), { onSuggestion: true, ignoreCache }))
+                .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny()))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions(undefined, ignoreCache);
+            const actual = await selector.getAllSuggestions(undefined);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),
@@ -117,43 +107,106 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('4', 'c:/path4/path4'),
+                new InterpreterQuickPickItem('5', 'c:/path5/path/to/env', 'c:/path5/path/to/env'),
             ];
 
-            assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
+            assert.strictEqual(actual.length, expected.length, 'Suggestion lengths are different.');
             for (let i = 0; i < expected.length; i += 1) {
-                assert.equal(
+                assert.strictEqual(
                     actual[i].label,
                     expected[i].label,
-                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`,
+                    `Suggestion label is different at ${i}: expected '${expected[i].label}', found '${actual[i].label}'.`,
                 );
-                assert.equal(
+                assert.strictEqual(
                     actual[i].path,
                     expected[i].path,
-                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`,
+                    `Suggestion path is different at ${i}: expected '${expected[i].path}', found '${actual[i].path}'.`,
+                );
+                assert.strictEqual(
+                    actual[i].description,
+                    expected[i].description,
+                    `Suggestion description is different at ${i}: expected '${expected[i].description}', found '${actual[i].description}'.`,
                 );
             }
         });
     });
 
-    test('When in Deprecate PythonPath experiment, remove unsafe interpreters from the suggested interpreters list', async () => {
-        const interpreterList = ['interpreter1', 'interpreter2', 'interpreter3'] as any;
+    test('Should sort environments with local ones first', async () => {
+        const workspacePath = path.join('path', 'to', 'workspace');
+
+        const environments: PythonEnvironment[] = [
+            {
+                displayName: 'one',
+                envPath: path.join('path', 'to', 'another', 'workspace', '.venv'),
+                path: path.join('path', 'to', 'another', 'workspace', '.venv', 'bin', 'python'),
+                envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
+            },
+            {
+                displayName: 'two',
+                envPath: path.join(workspacePath, '.venv'),
+                path: path.join(workspacePath, '.venv', 'bin', 'python'),
+                envType: EnvironmentType.Venv,
+                type: PythonEnvType.Virtual,
+            },
+            {
+                displayName: 'three',
+                path: path.join('a', 'global', 'env', 'python'),
+                envPath: path.join('a', 'global', 'env'),
+                envType: EnvironmentType.Global,
+            },
+            {
+                displayName: 'four',
+                envPath: path.join('a', 'conda', 'environment'),
+                path: path.join('a', 'conda', 'environment'),
+                envName: 'conda-env',
+                envType: EnvironmentType.Conda,
+                type: PythonEnvType.Conda,
+            },
+        ].map((item) => ({ ...info, ...item }));
+
         interpreterService
-            .setup((i) => i.getInterpreters(folder1.uri, { onSuggestion: true, ignoreCache }))
-            .returns(() => interpreterList);
+            .setup((x) => x.getAllInterpreters(TypeMoq.It.isAny()))
+            .returns(() => new Promise((resolve) => resolve(environments)));
 
-        interpreterSecurityService.setup((i) => i.isSafe('interpreter1' as any)).returns(() => true);
+        const interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
+        interpreterHelper
+            .setup((i) => i.getActiveWorkspaceUri(TypeMoq.It.isAny()))
+            .returns(() => ({ folderUri: { fsPath: workspacePath } } as WorkspacePythonPath));
 
-        interpreterSecurityService.setup((i) => i.isSafe('interpreter2' as any)).returns(() => false);
+        const environmentTypeComparer = new EnvironmentTypeComparer(interpreterHelper.object);
 
-        interpreterSecurityService.setup((i) => i.isSafe('interpreter3' as any)).returns(() => undefined);
-        experimentsManager.reset();
-        experimentsManager.setup((e) => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-        experimentsManager
-            .setup((e) => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control))
-            .returns(() => undefined);
+        selector = new TestInterpreterSelector(
+            interpreterService.object,
+            environmentTypeComparer,
+            new PathUtils(getOSType() === OSType.Windows),
+        );
 
-        selector.suggestionToQuickPickItem = (item, _) => Promise.resolve(item as any);
-        const suggestion = await selector.getSuggestions(folder1.uri, ignoreCache);
-        assert.deepEqual(suggestion, ['interpreter1', 'interpreter3']);
+        const result = await selector.getAllSuggestions(undefined);
+
+        const expected: InterpreterQuickPickItem[] = [
+            new InterpreterQuickPickItem('two', path.join(workspacePath, '.venv', 'bin', 'python')),
+            new InterpreterQuickPickItem(
+                'one',
+                path.join('path', 'to', 'another', 'workspace', '.venv', 'bin', 'python'),
+            ),
+            new InterpreterQuickPickItem('four', path.join('a', 'conda', 'environment')),
+            new InterpreterQuickPickItem('three', path.join('a', 'global', 'env', 'python')),
+        ];
+
+        assert.strictEqual(result.length, expected.length, 'Suggestion lengths are different.');
+
+        for (let i = 0; i < expected.length; i += 1) {
+            assert.strictEqual(
+                result[i].label,
+                expected[i].label,
+                `Suggestion label is different at ${i}: expected '${expected[i].label}', found '${result[i].label}'.`,
+            );
+            assert.strictEqual(
+                result[i].path,
+                expected[i].path,
+                `Suggestion path is different at ${i}: expected '${expected[i].path}', found '${result[i].path}'.`,
+            );
+        }
     });
 });

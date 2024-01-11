@@ -5,13 +5,12 @@ from __future__ import absolute_import, print_function
 
 import unittest
 
+from testing_tools.adapter.discovery import DiscoveredTests, fix_nodeid
+from testing_tools.adapter.info import ParentInfo, SingleTestInfo, SingleTestPath
 from testing_tools.adapter.util import fix_path, fix_relpath
-from testing_tools.adapter.info import SingleTestInfo, SingleTestPath, ParentInfo
-from testing_tools.adapter.discovery import fix_nodeid, DiscoveredTests
 
 
 def _fix_nodeid(nodeid):
-
     nodeid = nodeid.replace("\\", "/")
     if not nodeid.startswith("./"):
         nodeid = "./" + nodeid

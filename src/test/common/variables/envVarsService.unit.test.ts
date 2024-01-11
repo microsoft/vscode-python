@@ -10,17 +10,16 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
+import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 
 use(chaiAsPromised);
 
 type PathVar = 'Path' | 'PATH';
-const PATHS = [
-    'Path', // Windows
-    'PATH', // non-Windows
-];
+const PATHS = getSearchPathEnvVarNames();
 
 suite('Environment Variables Service', () => {
     const filename = 'x/y/z/.env';
+    const processEnvPath = getSearchPathEnvVarNames()[0];
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let fs: TypeMoq.IMock<IFileSystem>;
     let variablesService: EnvironmentVariablesService;
@@ -194,7 +193,7 @@ PYTHON=${BINDIR}/python3\n\
                 verifyAll();
             });
 
-            test('Ensure path variables variables in target are left untouched', async () => {
+            test('Ensure path variables in target are left untouched', async () => {
                 const vars1 = { ONE: '1', TWO: 'TWO' };
                 const vars2 = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
 
@@ -208,7 +207,25 @@ PYTHON=${BINDIR}/python3\n\
                 expect(vars2).to.have.property('TWO', 'TWO', 'Incorrect value');
                 expect(vars2).to.have.property('THREE', '3', 'Variable not merged');
                 expect(vars2).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
-                expect(vars2).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars2).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
+                verifyAll();
+            });
+
+            test('Ensure path variables in target are overwritten', async () => {
+                const source = { ONE: '1', TWO: 'TWO' };
+                const target = { ONE: 'ONE', THREE: '3', PYTHONPATH: 'PYTHONPATH' };
+
+                (target as any)[pathVariable] = 'PATH';
+
+                variablesService.mergeVariables(source, target, { overwrite: true });
+
+                expect(Object.keys(source)).lengthOf(2, 'Source variables modified');
+                expect(Object.keys(target)).lengthOf(5, 'Variables not merged');
+                expect(target).to.have.property('ONE', '1', 'Expected to be overwritten');
+                expect(target).to.have.property('TWO', 'TWO', 'Incorrect value');
+                expect(target).to.have.property('THREE', '3', 'Variable not merged');
+                expect(target).to.have.property('PYTHONPATH', 'PYTHONPATH', 'Incorrect value');
+                expect(target).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
                 verifyAll();
             });
         });
@@ -248,17 +265,17 @@ PYTHON=${BINDIR}/python3\n\
                 variablesService.appendPath(vars);
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
 
                 variablesService.appendPath(vars, '');
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
 
                 variablesService.appendPath(vars, ' ', '');
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, 'PATH', 'Incorrect value');
+                expect(vars).to.have.property(processEnvPath, 'PATH', 'Incorrect value');
 
                 verifyAll();
             });
@@ -273,7 +290,11 @@ PYTHON=${BINDIR}/python3\n\
 
                 expect(Object.keys(vars)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('ONE', '1', 'Incorrect value');
-                expect(vars).to.have.property(pathVariable, `PATH${path.delimiter}${pathToAppend}`, 'Incorrect value');
+                expect(vars).to.have.property(
+                    processEnvPath,
+                    `PATH${path.delimiter}${pathToAppend}`,
+                    'Incorrect value',
+                );
                 verifyAll();
             });
         });
@@ -377,7 +398,6 @@ Path=/usr/x:/usr/y
 SPAM=1234
 ham=5678
 Eggs=9012
-_bogus1=...
 1bogus2=...
 bogus 3=...
 bogus.4=...
@@ -385,15 +405,17 @@ bogus-5=...
 bogus~6=...
 VAR1=3456
 VAR_2=7890
+_VAR_3=1234
             `);
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-            expect(Object.keys(vars!)).lengthOf(5, 'Incorrect number of variables');
+            expect(Object.keys(vars!)).lengthOf(6, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
             expect(vars).to.have.property('ham', '5678', 'value is invalid');
             expect(vars).to.have.property('Eggs', '9012', 'value is invalid');
             expect(vars).to.have.property('VAR1', '3456', 'value is invalid');
             expect(vars).to.have.property('VAR_2', '7890', 'value is invalid');
+            expect(vars).to.have.property('_VAR_3', '1234', 'value is invalid');
         });
 
         test('Empty values become empty string', () => {
@@ -406,30 +428,30 @@ SPAM=
             expect(vars).to.have.property('SPAM', '', 'value is invalid');
         });
 
-        test('Outer quotation marks are removed', () => {
+        test('Outer quotation marks are removed and cause newline substitution', () => {
             const vars = parseEnvFile(`
-SPAM=1234
-HAM='5678'
-EGGS="9012"
-FOO='"3456"'
-BAR="'7890'"
-BAZ="\"ABCD"
-VAR1="EFGH
-VAR2=IJKL"
+SPAM=12\\n34
+HAM='56\\n78'
+EGGS="90\\n12"
+FOO='"34\\n56"'
+BAR="'78\\n90'"
+BAZ="\"AB\\nCD"
+VAR1="EF\\nGH
+VAR2=IJ\\nKL"
 VAR3='MN'OP'
 VAR4="QR"ST"
             `);
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');
             expect(Object.keys(vars!)).lengthOf(10, 'Incorrect number of variables');
-            expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
-            expect(vars).to.have.property('HAM', '5678', 'value is invalid');
-            expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
-            expect(vars).to.have.property('FOO', '"3456"', 'value is invalid');
-            expect(vars).to.have.property('BAR', "'7890'", 'value is invalid');
-            expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
-            expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
-            expect(vars).to.have.property('VAR2', 'IJKL"', 'value is invalid');
+            expect(vars).to.have.property('SPAM', '12\\n34', 'value is invalid');
+            expect(vars).to.have.property('HAM', '56\n78', 'value is invalid');
+            expect(vars).to.have.property('EGGS', '90\n12', 'value is invalid');
+            expect(vars).to.have.property('FOO', '"34\n56"', 'value is invalid');
+            expect(vars).to.have.property('BAR', "'78\n90'", 'value is invalid');
+            expect(vars).to.have.property('BAZ', '"AB\nCD', 'value is invalid');
+            expect(vars).to.have.property('VAR1', '"EF\\nGH', 'value is invalid');
+            expect(vars).to.have.property('VAR2', 'IJ\\nKL"', 'value is invalid');
 
             // TODO: Should the outer marks be left?
             expect(vars).to.have.property('VAR3', "MN'OP", 'value is invalid');
@@ -515,6 +537,22 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 );
             });
 
+            test('Example from docs', () => {
+                const vars = parseEnvFile(
+                    '\
+VAR1=abc \n\
+VAR2_A="${VAR1}\\ndef" \n\
+VAR2_B="${VAR1}\\n"def \n\
+                ',
+                );
+
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
+                expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
+                expect(vars).to.have.property('VAR1', 'abc', 'value is invalid');
+                expect(vars).to.have.property('VAR2_A', 'abc\ndef', 'value is invalid');
+                expect(vars).to.have.property('VAR2_B', '"abc\\n"def', 'value is invalid');
+            });
+
             test('Curly braces are required for substitution', () => {
                 const vars = parseEnvFile('\
 SPAM=1234 \n\
@@ -592,20 +630,22 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
                 );
             });
 
-            test('Substitution may be escaped', () => {
+            test('"$" may be escaped', () => {
                 const vars = parseEnvFile(
                     '\
 SPAM=1234 \n\
 EGGS=\\${SPAM}/foo:\\${SPAM}/bar \n\
 HAM=$ ... $$ \n\
+FOO=foo\\$bar \n\
                 ',
                 );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
-                expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
+                expect(Object.keys(vars!)).lengthOf(4, 'Incorrect number of variables');
                 expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
                 expect(vars).to.have.property('EGGS', '${SPAM}/foo:${SPAM}/bar', 'value is invalid');
                 expect(vars).to.have.property('HAM', '$ ... $$', 'value is invalid');
+                expect(vars).to.have.property('FOO', 'foo$bar', 'value is invalid');
             });
 
             test('base substitution variables', () => {

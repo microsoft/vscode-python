@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-use-before-define */
+/* eslint-disable no-async-promise-executor */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -27,7 +29,7 @@ export interface Deferred<T> {
     readonly rejected: boolean;
     readonly completed: boolean;
     resolve(value?: T | PromiseLike<T>): void;
-    reject(reason?: string | Error | Record<string, unknown>): void;
+    reject(reason?: string | Error | Record<string, unknown> | unknown): void;
 }
 
 class DeferredImpl<T> implements Deferred<T> {
@@ -50,11 +52,17 @@ class DeferredImpl<T> implements Deferred<T> {
     }
 
     public resolve(_value: T | PromiseLike<T>) {
+        if (this.completed) {
+            return;
+        }
         this._resolve.apply(this.scope ? this.scope : this, [_value]);
         this._resolved = true;
     }
 
     public reject(_reason?: string | Error | Record<string, unknown>) {
+        if (this.completed) {
+            return;
+        }
         this._reject.apply(this.scope ? this.scope : this, [_reason]);
         this._rejected = true;
     }
@@ -77,7 +85,7 @@ class DeferredImpl<T> implements Deferred<T> {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
-export function createDeferred<T>(scope: any = null): Deferred<T> {
+export function createDeferred<T = void>(scope: any = null): Deferred<T> {
     return new DeferredImpl<T>(scope);
 }
 
@@ -99,7 +107,7 @@ export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
 
 // iterators
 
-interface IAsyncIterator<T> extends AsyncIterator<T, void>, Partial<AsyncIterable<T>> {}
+interface IAsyncIterator<T> extends AsyncIterator<T, void> {}
 
 export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncIterable<T> {}
 
@@ -122,7 +130,7 @@ async function getNext<T>(it: AsyncIterator<T, T | void>, indexMaybe?: number): 
         const result = await it.next();
         return { index, result, err: null };
     } catch (err) {
-        return { index, err, result: null };
+        return { index, err: err as Error, result: null };
     }
 }
 
@@ -221,4 +229,36 @@ export async function flattenIterator<T>(iterator: IAsyncIterator<T>): Promise<T
         results.push(item);
     }
     return results;
+}
+
+/**
+ * Wait for a condition to be fulfilled within a timeout.
+ *
+ * @export
+ * @param {() => Promise<boolean>} condition
+ * @param {number} timeoutMs
+ * @param {string} errorMessage
+ * @returns {Promise<void>}
+ */
+export async function waitForCondition(
+    condition: () => Promise<boolean>,
+    timeoutMs: number,
+    errorMessage: string,
+): Promise<void> {
+    return new Promise<void>(async (resolve, reject) => {
+        const timeout = setTimeout(() => {
+            clearTimeout(timeout);
+
+            clearTimeout(timer);
+            reject(new Error(errorMessage));
+        }, timeoutMs);
+        const timer = setInterval(async () => {
+            if (!(await condition().catch(() => false))) {
+                return;
+            }
+            clearTimeout(timeout);
+            clearTimeout(timer);
+            resolve();
+        }, 10);
+    });
 }

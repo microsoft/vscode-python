@@ -7,8 +7,7 @@ import argparse
 import sys
 
 from . import pytest, report
-from .errors import UnsupportedToolError, UnsupportedCommandError
-
+from .errors import UnsupportedCommandError, UnsupportedToolError
 
 TOOLS = {
     "pytest": {

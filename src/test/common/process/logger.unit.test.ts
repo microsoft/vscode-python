@@ -3,118 +3,186 @@
 
 'use strict';
 
-import { expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 
 import untildify = require('untildify');
-
-import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { WorkspaceFolder } from 'vscode';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { ProcessLogger } from '../../../client/common/process/logger';
-import { IOutputChannel } from '../../../client/common/types';
-import { Logging } from '../../../client/common/utils/localize';
-import { getOSType, OSType } from '../../common';
+import { getOSType, OSType } from '../../../client/common/utils/platform';
+import * as logging from '../../../client/logging';
 
 suite('ProcessLogger suite', () => {
-    let outputChannel: TypeMoq.IMock<IOutputChannel>;
-    let pathUtils: PathUtils;
-    let outputResult: string;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let logger: ProcessLogger;
+    let traceLogStub: sinon.SinonStub;
 
     suiteSetup(() => {
-        outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
-        pathUtils = new PathUtils(getOSType() === OSType.Windows);
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspaceService
+            .setup((w) => w.workspaceFolders)
+            .returns(() => [({ uri: { fsPath: path.join('path', 'to', 'workspace') } } as unknown) as WorkspaceFolder]);
+        logger = new ProcessLogger(workspaceService.object);
     });
 
     setup(() => {
-        outputResult = '';
-        outputChannel
-            .setup((o) => o.appendLine(TypeMoq.It.isAnyString()))
-            .returns((s: string) => (outputResult += `${s}\n`));
+        traceLogStub = sinon.stub(logging, 'traceLog');
     });
 
     teardown(() => {
-        outputChannel.reset();
+        sinon.restore();
     });
 
     test('Logger displays the process command, arguments and current working directory in the output channel', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect - String built incorrectly');
-
-        outputChannel.verify((o) => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.exactly(2));
+        sinon.assert.calledWithExactly(traceLogStub, `> test --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 
     test('Logger adds quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess('test', ['--foo', '--bar', 'import test'], options);
 
-        const expectedResult = `> test --foo --bar "import test"\n${Logging.currentWorkingDirectory()} ${path.join(
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        sinon.assert.calledWithExactly(traceLogStub, `> test --foo --bar "import test"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${path.join('debug', 'path')}`);
     });
 
     test('Logger preserves quotes around arguments if they contain spaces', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
+        logger.logProcess('test', ['--foo', '--bar', '"import test"'], options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> test --foo --bar "import test"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${path.join('debug', 'path')}`);
+    });
+
+    test('Logger converts single quotes around arguments to double quotes if they contain spaces', async () => {
+        const options = { cwd: path.join('debug', 'path') };
         logger.logProcess('test', ['--foo', '--bar', "'import test'"], options);
 
-        const expectedResult = `> test --foo --bar \'import test\'\n${Logging.currentWorkingDirectory()} ${path.join(
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        sinon.assert.calledWithExactly(traceLogStub, `> test --foo --bar "import test"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${path.join('debug', 'path')}`);
+    });
+
+    test('Logger removes single quotes around arguments if they do not contain spaces', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess('test', ['--foo', '--bar', "'importtest'"], options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> test --foo --bar importtest`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${path.join('debug', 'path')}`);
     });
 
     test('Logger replaces the path/to/home with ~ in the current working directory', async () => {
         const options = { cwd: path.join(untildify('~'), 'debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess('test', ['--foo', '--bar'], options);
 
-        const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${path.join(
-            '~',
-            'debug',
-            'path',
-        )}\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        sinon.assert.calledWithExactly(traceLogStub, `> test --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${path.join('~', 'debug', 'path')}`);
     });
 
-    test('Logger replaces the path/to/home with ~ in the command path', async () => {
+    test('Logger replaces the path/to/home with ~ in the command path where the home path IS at the beginning of the path', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n${Logging.currentWorkingDirectory()} ${
-            options.cwd
-        }\n`;
-        expect(outputResult).to.equal(expectedResult, 'Output string is incorrect: Home directory is not tildified');
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path/to/home with ~ in the command path where the home path IS at the beginning of the path but another arg contains other ref to home folder', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', path.join(untildify('~'), 'boo')], options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo ${path.join('~', 'boo')}`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path/to/home with ~ in the command path where the home path IS at the beginning of the path between doble quotes', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess(`"${path.join(untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('~', 'test')}" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path/to/home with ~ in the command path where the home path IS NOT at the beginning of the path', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess(path.join('net', untildify('~'), 'test'), ['--foo', '--bar'], options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('net', '~', 'test')} --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path/to/home with ~ in the command path where the home path IS NOT at the beginning of the path but another arg contains other ref to home folder', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess(
+            path.join('net', untildify('~'), 'test'),
+            ['--foo', path.join(untildify('~'), 'boo')],
+            options,
+        );
+
+        sinon.assert.calledWithExactly(
+            traceLogStub,
+            `> ${path.join('net', '~', 'test')} --foo ${path.join('~', 'boo')}`,
+        );
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path/to/home with ~ in the command path where the home path IS NOT at the beginning of the path between doble quotes', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess(`"${path.join('net', untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('net', '~', 'test')}" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path/to/home with ~ if shell command is provided', async () => {
+        const options = { cwd: path.join('debug', 'path') };
+        logger.logProcess(`"${path.join(untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('~', 'test')}" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
+    });
+
+    test('Logger replaces the path to workspace with . if exactly one workspace folder is opened', async () => {
+        const options = { cwd: path.join('path', 'to', 'workspace', 'debug', 'path') };
+        logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: .${path.sep + path.join('debug', 'path')}`);
+    });
+
+    test('On Windows, logger replaces both backwards and forward slash version of path to workspace with . if exactly one workspace folder is opened', async function () {
+        if (getOSType() !== OSType.Windows) {
+            return this.skip();
+        }
+        let options = { cwd: path.join('path/to/workspace', 'debug', 'path') };
+
+        logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: .${path.sep + path.join('debug', 'path')}`);
+        traceLogStub.resetHistory();
+
+        options = { cwd: path.join('path\\to\\workspace', 'debug', 'path') };
+        logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
+
+        sinon.assert.calledWithExactly(traceLogStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `cwd: .${path.sep + path.join('debug', 'path')}`);
     });
 
     test("Logger doesn't display the working directory line if there is no options parameter", async () => {
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar']);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
-        expect(outputResult).to.equal(
-            expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed',
-        );
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo --bar`);
     });
 
     test("Logger doesn't display the working directory line if there is no cwd key in the options parameter", async () => {
         const options = {};
-        const logger = new ProcessLogger(outputChannel.object, pathUtils);
         logger.logProcess(path.join(untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        const expectedResult = `> ${path.join('~', 'test')} --foo --bar\n`;
-        expect(outputResult).to.equal(
-            expectedResult,
-            'Output string is incorrect: Working directory line should not be displayed',
-        );
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('~', 'test')} --foo --bar`);
     });
 });

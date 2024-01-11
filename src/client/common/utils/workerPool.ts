@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { traceError } from '../logger';
+import { traceError } from '../../logging';
 import { createDeferred, Deferred } from './async';
 
 interface IWorker {
@@ -61,7 +61,7 @@ class Worker<T, R> implements IWorker {
                     const result = await this.workFunc(workItem);
                     this.postResult(workItem, result);
                 } catch (ex) {
-                    this.postResult(workItem, undefined, ex);
+                    this.postResult(workItem, undefined, ex as Error);
                 }
             } catch (ex) {
                 // Next got rejected. Likely worker pool is shutting down.
@@ -222,7 +222,7 @@ class WorkerPool<T, R> implements IWorkerPool<T, R> {
         // new items are added to the queue.
         return new Promise<IWorkItem<T>>((resolve, reject) => {
             this.waitingWorkersUnblockQueue.push({
-                unblock: (workItem?: IWorkItem<T>) => {
+                unblock: (workItem: IWorkItem<T>) => {
                     // This will be called to unblock any worker waiting for items.
                     if (this.stopProcessing) {
                         // We should reject here since the processing should be stopped.

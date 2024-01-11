@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable, optional } from 'inversify';
+import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { traceError, traceVerbose } from '../../logging';
 import { sendFileCreationTelemetry } from '../../telemetry/envFileTelemetry';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
-import { traceVerbose } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IDisposableRegistry } from '../types';
 import { InMemoryCache } from '../utils/cacheUtils';
@@ -54,29 +55,56 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
 
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        const cacheKey = this.getWorkspaceFolderUri(resource)?.fsPath ?? '';
-        let cache = this.envVarCaches.get(cacheKey);
-
-        if (cache) {
-            const cachedData = cache.data;
-            if (cachedData) {
-                traceVerbose(
-                    `Cached data exists getEnvironmentVariables, ${resource ? resource.fsPath : '<No Resource>'}`,
-                );
-                return { ...cachedData };
-            }
-        } else {
-            cache = new InMemoryCache(this.cacheDuration);
-            this.envVarCaches.set(cacheKey, cache);
+        const cached = this.getCachedEnvironmentVariables(resource);
+        if (cached) {
+            return cached;
         }
-
         const vars = await this._getEnvironmentVariables(resource);
-        cache.data = { ...vars };
+        this.setCachedEnvironmentVariables(resource, vars);
+        traceVerbose('Dump environment variables', JSON.stringify(vars, null, 4));
         return vars;
     }
 
+    public getEnvironmentVariablesSync(resource?: Uri): EnvironmentVariables {
+        const cached = this.getCachedEnvironmentVariables(resource);
+        if (cached) {
+            return cached;
+        }
+        const vars = this._getEnvironmentVariablesSync(resource);
+        this.setCachedEnvironmentVariables(resource, vars);
+        return vars;
+    }
+
+    private getCachedEnvironmentVariables(resource?: Uri): EnvironmentVariables | undefined {
+        const cacheKey = this.getWorkspaceFolderUri(resource)?.fsPath ?? '';
+        const cache = this.envVarCaches.get(cacheKey);
+        if (cache) {
+            const cachedData = cache.data;
+            if (cachedData) {
+                return { ...cachedData };
+            }
+        }
+        return undefined;
+    }
+
+    private setCachedEnvironmentVariables(resource: Uri | undefined, vars: EnvironmentVariables): void {
+        const cacheKey = this.getWorkspaceFolderUri(resource)?.fsPath ?? '';
+        const cache = new InMemoryCache<EnvironmentVariables>(this.cacheDuration);
+        this.envVarCaches.set(cacheKey, cache);
+        cache.data = { ...vars };
+    }
+
     public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        let mergedVars = await this.getCustomEnvironmentVariables(resource);
+        const customVars = await this.getCustomEnvironmentVariables(resource);
+        return this.getMergedEnvironmentVariables(customVars);
+    }
+
+    public _getEnvironmentVariablesSync(resource?: Uri): EnvironmentVariables {
+        const customVars = this.getCustomEnvironmentVariablesSync(resource);
+        return this.getMergedEnvironmentVariables(customVars);
+    }
+
+    private getMergedEnvironmentVariables(mergedVars?: EnvironmentVariables): EnvironmentVariables {
         if (!mergedVars) {
             mergedVars = {};
         }
@@ -93,17 +121,29 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
 
     public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
+        return this.envVarsService.parseFile(this.getEnvFile(resource), this.process.env);
+    }
+
+    private getCustomEnvironmentVariablesSync(resource?: Uri): EnvironmentVariables | undefined {
+        return this.envVarsService.parseFileSync(this.getEnvFile(resource), this.process.env);
+    }
+
+    private getEnvFile(resource?: Uri): string {
         const systemVariables: SystemVariables = new SystemVariables(
             undefined,
             PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri?.fsPath,
             this.workspaceService,
         );
-        const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
-        const envFile = systemVariables.resolveAny(envFileSetting)!;
         const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
+        const envFileSetting = this.workspaceService.getConfiguration('python', resource).get<string>('envFile');
+        const envFile = systemVariables.resolveAny(envFileSetting);
+        if (envFile === undefined) {
+            traceError('Unable to read `python.envFile` setting for resource', JSON.stringify(resource));
+            return workspaceFolderUri?.fsPath ? path.join(workspaceFolderUri?.fsPath, '.env') : '';
+        }
         this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
         this.createFileWatcher(envFile, workspaceFolderUri);
-        return this.envVarsService.parseFile(envFile, this.process.env);
+        return envFile;
     }
 
     public configurationChanged(e: ConfigurationChangeEvent): void {

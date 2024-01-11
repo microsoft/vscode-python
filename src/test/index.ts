@@ -64,7 +64,6 @@ function configure(): SetupOptions {
 
     const options: SetupOptions & { retries: number; invert: boolean } = {
         ui: 'tdd',
-        useColors: true,
         invert,
         timeout: TEST_TIMEOUT,
         retries: TEST_RETRYCOUNT,

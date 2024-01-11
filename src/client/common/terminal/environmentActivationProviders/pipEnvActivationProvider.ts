@@ -7,12 +7,10 @@ import { inject, injectable, named } from 'inversify';
 import { Uri } from 'vscode';
 import '../../extensions';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { isPipenvEnvironmentRelatedToFolder } from '../../../pythonEnvironments/discovery/locators/services/pipEnvHelper';
+import { isPipenvEnvironmentRelatedToFolder } from '../../../pythonEnvironments/common/environmentManagers/pipenv';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { IWorkspaceService } from '../../application/types';
-import { inDiscoveryExperiment } from '../../experiments/helpers';
-import { IFileSystem } from '../../platform/types';
-import { IExperimentService, IToolExecutionPath, ToolExecutionPath } from '../../types';
+import { IToolExecutionPath, ToolExecutionPath } from '../../types';
 import { ITerminalActivationCommandProvider } from '../types';
 
 @injectable()
@@ -23,8 +21,6 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         @named(ToolExecutionPath.pipenv)
         private readonly pipEnvExecution: IToolExecutionPath,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     // eslint-disable-next-line class-methods-use-this
@@ -40,19 +36,12 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         // Activate using `pipenv shell` only if the current folder relates pipenv environment.
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         if (workspaceFolder) {
-            if (await inDiscoveryExperiment(this.experimentService)) {
-                if (!(await isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder?.uri.fsPath))) {
-                    return undefined;
-                }
-            } else if (
-                interpreter.pipEnvWorkspaceFolder &&
-                !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)
-            ) {
+            if (!(await isPipenvEnvironmentRelatedToFolder(interpreter.path, workspaceFolder?.uri.fsPath))) {
                 return undefined;
             }
         }
         const execName = this.pipEnvExecution.executable;
-        return [`${execName.fileToCommandArgument()} shell`];
+        return [`${execName.fileToCommandArgumentForPythonExt()} shell`];
     }
 
     public async getActivationCommandsForInterpreter(pythonPath: string): Promise<string[] | undefined> {
@@ -62,6 +51,6 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
 
         const execName = this.pipEnvExecution.executable;
-        return [`${execName.fileToCommandArgument()} shell`];
+        return [`${execName.fileToCommandArgumentForPythonExt()} shell`];
     }
 }

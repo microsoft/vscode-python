@@ -4,10 +4,10 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { CancellationTokenSource } from 'vscode';
 
-import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred } from '../../../client/common/utils/async';
-import { getExtensionSettings, isOs, OSType } from '../../common';
+import { isOs, OSType } from '../../common';
+import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
 use(chaiAsPromised);
@@ -23,7 +23,7 @@ suite('ProcessService', () => {
 
     test('execObservable should stream output with new lines', function (done) {
         this.timeout(10000);
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const pythonCode = [
             'import sys',
             'import time',
@@ -67,7 +67,7 @@ suite('ProcessService', () => {
         this.skip();
 
         this.timeout(10000);
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const pythonCode = [
             'import sys',
             'import time',
@@ -106,7 +106,7 @@ suite('ProcessService', () => {
 
     test('execObservable should end when cancellationToken is cancelled', function (done) {
         this.timeout(15000);
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const pythonCode = [
             'import sys',
             'import time',
@@ -152,7 +152,7 @@ suite('ProcessService', () => {
 
     test('execObservable should end when process is killed', function (done) {
         this.timeout(15000);
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const pythonCode = [
             'import sys',
             'import time',
@@ -194,10 +194,11 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should stream stdout and stderr separately', function (done) {
+    test('execObservable should stream stdout and stderr separately and removes markers related to conda run', function (done) {
         this.timeout(20000);
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const pythonCode = [
+            'print(">>>PYTHON-EXEC-OUTPUT")',
             'import sys',
             'import time',
             'print("1")',
@@ -218,6 +219,7 @@ suite('ProcessService', () => {
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
             'time.sleep(2)',
+            'print("<<<PYTHON-EXEC-OUTPUT")',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
@@ -246,7 +248,6 @@ suite('ProcessService', () => {
             done,
         );
     });
-
     test('execObservable should send stdout and stderr streams separately', async function () {
         // This test is failing on Windows. Tracked by GH #4755.
         if (isOs(OSType.Windows)) {
@@ -255,7 +256,7 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should throw an error with stderr output', (done) => {
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const pythonCode = ['import sys', 'sys.stderr.write("a")', 'sys.stderr.flush()'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { throwOnStdErr: true });
 
@@ -275,7 +276,7 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should throw an error when spawn file not found', (done) => {
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const result = procService.execObservable(Date.now().toString(), []);
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
@@ -294,7 +295,7 @@ suite('ProcessService', () => {
     });
 
     test('execObservable should exit without no output', (done) => {
-        const procService = new ProcessService(new BufferDecoder());
+        const procService = new ProcessService();
         const result = procService.execObservable(pythonPath, ['-c', 'import sys', 'sys.exit()']);
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');

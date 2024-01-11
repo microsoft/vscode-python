@@ -1,6 +1,6 @@
 import { injectable } from 'inversify';
 import { Options } from 'winreg';
-import { traceError } from '../logger';
+import { traceError } from '../../logging';
 import { Architecture } from '../utils/platform';
 import { IRegistry, RegistryHive } from './types';
 

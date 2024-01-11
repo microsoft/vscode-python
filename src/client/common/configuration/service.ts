@@ -2,20 +2,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
-import { IInterpreterAutoSelectionService, IInterpreterSecurityService } from '../../interpreter/autoSelection/types';
+import { ConfigurationTarget, Event, Uri, WorkspaceConfiguration, ConfigurationChangeEvent } from 'vscode';
+import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
 import { isUnitTestExecution } from '../constants';
-import { DeprecatePythonPath } from '../experiments/groups';
-import {
-    IConfigurationService,
-    IDefaultLanguageServer,
-    IExperimentsManager,
-    IInterpreterPathService,
-    IPythonSettings,
-} from '../types';
+import { IConfigurationService, IDefaultLanguageServer, IInterpreterPathService, IPythonSettings } from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
@@ -25,23 +18,22 @@ export class ConfigurationService implements IConfigurationService {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    public get onDidChange(): Event<ConfigurationChangeEvent | undefined> {
+        return PythonSettings.onConfigChange();
+    }
+
     public getSettings(resource?: Uri): IPythonSettings {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        const interpreterSecurityService = this.serviceContainer.get<IInterpreterSecurityService>(
-            IInterpreterSecurityService,
-        );
         const defaultLS = this.serviceContainer.tryGet<IDefaultLanguageServer>(IDefaultLanguageServer);
         return PythonSettings.getInstance(
             resource,
             InterpreterAutoSelectionService,
             this.workspaceService,
-            experiments,
             interpreterPathService,
-            interpreterSecurityService,
             defaultLS,
         );
     }
@@ -53,10 +45,6 @@ export class ConfigurationService implements IConfigurationService {
         resource?: Uri,
         configTarget?: ConfigurationTarget,
     ): Promise<void> {
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const inExperiment = experiments.inExperiment(DeprecatePythonPath.experiment);
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         const defaultSetting = {
             uri: resource,
             target: configTarget || ConfigurationTarget.WorkspaceFolder,
@@ -68,10 +56,7 @@ export class ConfigurationService implements IConfigurationService {
         configTarget = configTarget || settingsInfo.target;
 
         const configSection = this.workspaceService.getConfiguration(section, settingsInfo.uri);
-        const currentValue =
-            inExperiment && section === 'python' && setting === 'pythonPath'
-                ? interpreterPathService.inspect(settingsInfo.uri)
-                : configSection.inspect(setting);
+        const currentValue = configSection.inspect(setting);
 
         if (
             currentValue !== undefined &&
@@ -81,15 +66,8 @@ export class ConfigurationService implements IConfigurationService {
         ) {
             return;
         }
-        if (section === 'python' && setting === 'pythonPath') {
-            if (inExperiment) {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                await interpreterPathService.update(settingsInfo.uri, configTarget, value as any);
-            }
-        } else {
-            await configSection.update(setting, value, configTarget);
-            await this.verifySetting(configSection, configTarget, setting, value);
-        }
+        await configSection.update(setting, value, configTarget);
+        await this.verifySetting(configSection, configTarget, setting, value);
     }
 
     public async updateSetting(

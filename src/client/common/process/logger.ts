@@ -3,43 +3,86 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
-import { isCI, isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { traceInfo } from '../logger';
-import { IOutputChannel, IPathUtils } from '../types';
-import { Logging } from '../utils/localize';
+import { inject, injectable } from 'inversify';
+import { traceLog } from '../../logging';
+import { IWorkspaceService } from '../application/types';
+import { isCI, isTestExecution } from '../constants';
+import { getOSType, getUserHomeDir, OSType } from '../utils/platform';
 import { IProcessLogger, SpawnOptions } from './types';
+import { escapeRegExp } from 'lodash';
+import { replaceAll } from '../stringUtils';
+import { identifyShellFromShellPath } from '../terminal/shellDetectors/baseShellDetector';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {
-    constructor(
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-    ) {}
+    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
 
-    public logProcess(file: string, args: string[], options?: SpawnOptions) {
+    public logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions) {
         if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
             // Added to disable logging of process execution commands during UI Tests.
             // Used only during UI Tests (hence this setting need not be exposed as a valid setting).
             return;
         }
-        const argsList = args.reduce((accumulator, current, index) => {
-            let formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
-            if (current[0] === "'" || current[0] === '"') {
-                formattedArg = `${current[0]}${this.pathUtils.getDisplayName(current.substr(1))}`;
-            }
-
-            return index === 0 ? formattedArg : `${accumulator} ${formattedArg}`;
-        }, '');
-
-        const info = [`> ${this.pathUtils.getDisplayName(file)} ${argsList}`];
-        if (options && options.cwd) {
-            info.push(`${Logging.currentWorkingDirectory()} ${this.pathUtils.getDisplayName(options.cwd)}`);
+        let command = args
+            ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
+            : fileOrCommand;
+        const info = [`> ${this.getDisplayCommands(command)}`];
+        if (options?.cwd) {
+            const cwd: string = typeof options?.cwd === 'string' ? options?.cwd : options?.cwd?.toString();
+            info.push(`cwd: ${this.getDisplayCommands(cwd)}`);
+        }
+        if (typeof options?.shell === 'string') {
+            info.push(`shell: ${identifyShellFromShellPath(options?.shell)}`);
         }
 
         info.forEach((line) => {
-            traceInfo(line);
-            this.outputChannel.appendLine(line);
+            traceLog(line);
         });
     }
+
+    private getDisplayCommands(command: string): string {
+        if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
+            command = replaceMatchesWithCharacter(command, this.workspaceService.workspaceFolders[0].uri.fsPath, '.');
+        }
+        const home = getUserHomeDir();
+        if (home) {
+            command = replaceMatchesWithCharacter(command, home, '~');
+        }
+        return command;
+    }
+}
+
+/**
+ * Finds case insensitive matches in the original string and replaces it with character provided.
+ */
+function replaceMatchesWithCharacter(original: string, match: string, character: string): string {
+    // Backslashes, plus signs, brackets and other characters have special meaning in regexes,
+    // we need to escape using an extra backlash so it's not considered special.
+    function getRegex(match: string) {
+        let pattern = escapeRegExp(match);
+        if (getOSType() === OSType.Windows) {
+            // Match both forward and backward slash versions of 'match' for Windows.
+            pattern = replaceAll(pattern, '\\\\', '(\\\\|/)');
+        }
+        let regex = new RegExp(pattern, 'ig');
+        return regex;
+    }
+
+    function isPrevioustoMatchRegexALetter(chunk: string, index: number) {
+        return chunk[index].match(/[a-z]/);
+    }
+
+    let chunked = original.split(' ');
+
+    for (let i = 0; i < chunked.length; i++) {
+        let regex = getRegex(match);
+        const regexResult = regex.exec(chunked[i]);
+        if (regexResult) {
+            const regexIndex = regexResult.index;
+            if (regexIndex > 0 && isPrevioustoMatchRegexALetter(chunked[i], regexIndex - 1))
+                regex = getRegex(match.substring(1));
+            chunked[i] = chunked[i].replace(regex, character);
+        }
+    }
+    return chunked.join(' ');
 }

@@ -3,51 +3,6 @@
 
 import { PythonEnvKind } from '.';
 
-const kindsByName: Record<string, PythonEnvKind> = {
-    // Note that PythonEnvKind.Unknown does not have an entry here.
-    system: PythonEnvKind.System,
-    macDefault: PythonEnvKind.MacDefault,
-    winStore: PythonEnvKind.WindowsStore,
-    pyenv: PythonEnvKind.Pyenv,
-    condaBase: PythonEnvKind.CondaBase,
-    poetry: PythonEnvKind.Poetry,
-    customGlobal: PythonEnvKind.Custom,
-    otherGlobal: PythonEnvKind.OtherGlobal,
-    venv: PythonEnvKind.Venv,
-    virtualenv: PythonEnvKind.VirtualEnv,
-    virtualenvWrapper: PythonEnvKind.VirtualEnvWrapper,
-    pipenv: PythonEnvKind.Pipenv,
-    conda: PythonEnvKind.Conda,
-    otherVirtual: PythonEnvKind.OtherVirtual,
-};
-
-/**
- * Return the given (Python environment) kind's name.
- *
- * If the kind (e.g. Unknown) does not have a name
- * then we return an empty string.
- */
-export function getKindName(kind: PythonEnvKind): string {
-    if (kind === PythonEnvKind.Unknown) {
-        return '';
-    }
-    for (const name of Object.keys(kindsByName)) {
-        if (kind === kindsByName[name]) {
-            return name;
-        }
-    }
-    return '';
-}
-
-/**
- * Return the (Python environment) kind corresponding to the given name.
- *
- * If there is no match then return undefined.
- */
-export function getKind(name: string): PythonEnvKind {
-    return kindsByName[name] || PythonEnvKind.Unknown;
-}
-
 /**
  * Get the given kind's user-facing representation.
  *
@@ -57,18 +12,17 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
     for (const [candidate, value] of [
         // Note that Unknown is excluded here.
         [PythonEnvKind.System, 'system'],
-        [PythonEnvKind.MacDefault, 'mac default'],
-        [PythonEnvKind.WindowsStore, 'windows store'],
+        [PythonEnvKind.MicrosoftStore, 'Microsoft Store'],
         [PythonEnvKind.Pyenv, 'pyenv'],
-        [PythonEnvKind.CondaBase, 'conda'],
-        [PythonEnvKind.Poetry, 'poetry'],
+        [PythonEnvKind.Poetry, 'Poetry'],
         [PythonEnvKind.Custom, 'custom'],
         // For now we treat OtherGlobal like Unknown.
         [PythonEnvKind.Venv, 'venv'],
         [PythonEnvKind.VirtualEnv, 'virtualenv'],
         [PythonEnvKind.VirtualEnvWrapper, 'virtualenv'],
-        [PythonEnvKind.Pipenv, 'pipenv'],
+        [PythonEnvKind.Pipenv, 'Pipenv'],
         [PythonEnvKind.Conda, 'conda'],
+        [PythonEnvKind.ActiveState, 'ActiveState'],
         // For now we treat OtherVirtual like Unknown.
     ] as [PythonEnvKind, string][]) {
         if (kind === candidate) {
@@ -87,7 +41,7 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
  * Top level we have the following environment types, since they leave a unique signature
  * in the environment or * use a unique path for the environments they create.
  *  1. Conda
- *  2. Windows Store
+ *  2. Microsoft Store
  *  3. PipEnv
  *  4. Pyenv
  *  5. Poetry
@@ -103,17 +57,16 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
 export function getPrioritizedEnvKinds(): PythonEnvKind[] {
     return [
         PythonEnvKind.Pyenv,
-        PythonEnvKind.CondaBase,
         PythonEnvKind.Conda,
-        PythonEnvKind.WindowsStore,
+        PythonEnvKind.MicrosoftStore,
         PythonEnvKind.Pipenv,
         PythonEnvKind.Poetry,
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnvWrapper,
         PythonEnvKind.VirtualEnv,
+        PythonEnvKind.ActiveState,
         PythonEnvKind.OtherVirtual,
         PythonEnvKind.OtherGlobal,
-        PythonEnvKind.MacDefault,
         PythonEnvKind.System,
         PythonEnvKind.Custom,
         PythonEnvKind.Unknown,

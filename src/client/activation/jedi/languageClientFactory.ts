@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 
@@ -11,11 +10,10 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageClientFactory } from '../types';
 
-const languageClientName = 'Python Tools';
+const languageClientName = 'Python Jedi';
 
-@injectable()
 export class JediLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(IInterpreterService) private interpreterService: IInterpreterService) {}
+    constructor(private interpreterService: IInterpreterService) {}
 
     public async createLanguageClient(
         resource: Resource,
@@ -30,13 +28,6 @@ export class JediLanguageClientFactory implements ILanguageClientFactory {
             args: [lsScriptPath],
         };
 
-        // eslint-disable-next-line global-require
-        const vscodeLanguageClient = require('vscode-languageclient/node') as typeof import('vscode-languageclient/node'); // NOSONAR
-        return new vscodeLanguageClient.LanguageClient(
-            PYTHON_LANGUAGE,
-            languageClientName,
-            serverOptions,
-            clientOptions,
-        );
+        return new LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
     }
 }

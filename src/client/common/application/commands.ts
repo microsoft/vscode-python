@@ -3,12 +3,10 @@
 
 'use strict';
 
-import { CancellationToken, Disposable, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
-import { TestDataItem, TestFunction, TestsToRun, TestWorkspaceFolder } from '../../testing/common/types';
-import { Commands } from '../constants';
-import { Channel, CommandSource, ICommandManager } from './types';
+import { Channel, Commands, CommandSource } from '../constants';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -18,39 +16,37 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
-    [Commands.SwitchToInsidersDaily]: [];
-    [Commands.SwitchToInsidersWeekly]: [];
+    [Commands.InstallPythonOnMac]: [];
+    [Commands.InstallJupyter]: [];
+    [Commands.InstallPythonOnLinux]: [];
+    [Commands.InstallPython]: [];
     [Commands.ClearWorkspaceInterpreter]: [];
-    [Commands.ResetInterpreterSecurityStorage]: [];
-    [Commands.SwitchOffInsidersChannel]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
-    [Commands.Run_Linter]: [];
-    [Commands.Enable_Linter]: [];
     ['workbench.action.showCommands']: [];
     ['workbench.action.debug.continue']: [];
     ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
     ['workbench.action.closeActiveEditor']: [];
+    ['workbench.action.terminal.focus']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
-    [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];
     [Commands.Enable_SourceMap_Support]: [];
     [Commands.Exec_Selection_In_Terminal]: [];
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
-    [Commands.Tests_View_UI]: [];
-    [Commands.Tests_Ask_To_Stop_Discovery]: [];
-    [Commands.Tests_Ask_To_Stop_Test]: [];
-    [Commands.Tests_Discovering]: [];
     [Commands.PickLocalProcess]: [];
-    [Commands.OpenStartPage]: [];
-    [LSCommands.ClearAnalyisCache]: [];
+    [Commands.ClearStorage]: [];
+    [Commands.CreateNewFile]: [];
+    [Commands.ReportIssue]: [];
+    [Commands.RefreshTensorBoard]: [];
     [LSCommands.RestartLS]: [];
 }
+
+export type AllCommands = keyof ICommandNameArgumentTypeMapping;
 
 /**
  * Mapping between commands and list of arguments.
@@ -62,13 +58,25 @@ interface ICommandNameWithoutArgumentTypeMapping {
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
-    ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
+    ['workbench.action.openWalkthrough']: [string | { category: string; step: string }, boolean | undefined];
+    ['workbench.extensions.installExtension']: [
+        Uri | string,
+        (
+            | {
+                  installOnlyNewlyAddedFromExtensionPackVSIX?: boolean;
+                  installPreReleaseVersion?: boolean;
+                  donotSync?: boolean;
+              }
+            | undefined
+        ),
+    ];
     ['workbench.action.files.openFolder']: [];
     ['workbench.action.openWorkspace']: [];
+    ['workbench.action.openSettings']: [string];
     ['setContext']: [string, boolean] | ['python.vscode.channel', Channel];
     ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
-    ['python._loadLanguageServerExtension']: {}[];
+    ['python._loadLanguageServerExtension']: [];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['notebook.execute']: [];
@@ -83,61 +91,21 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['jupyter.opennotebook']: [undefined | Uri, undefined | CommandSource];
     ['jupyter.runallcells']: [Uri];
     ['extension.open']: [string];
+    ['workbench.action.openIssueReporter']: [{ extensionId: string; issueBody: string }];
     [Commands.GetSelectedInterpreterPath]: [{ workspaceFolder: string } | string[]];
-    [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
-    [Commands.Sort_Imports]: [undefined, Uri];
+    [Commands.TriggerEnvironmentSelection]: [undefined | Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
     [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
-    [Commands.Tests_ViewOutput]: [undefined, CommandSource];
-    [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
-    [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
-    [Commands.Tests_Stop]: [undefined, Uri];
-    [Commands.Test_Reveal_Test_Item]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Run]: [
-        undefined | TestWorkspaceFolder,
-        undefined | CommandSource,
-        undefined | Uri,
-        undefined | TestsToRun,
-    ];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Debug]: [
-        undefined | TestWorkspaceFolder,
-        undefined | CommandSource,
-        undefined | Uri,
-        undefined | TestsToRun,
-    ];
-    [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Debug_Method]: [undefined, CommandSource, Uri];
-    [Commands.Tests_Select_And_Run_Method]: [undefined, CommandSource, Uri];
+    [Commands.Debug_In_Terminal]: [Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
-    [Commands.Tests_Picker_UI]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    [Commands.Tests_Picker_UI_Debug]: [undefined, undefined | CommandSource, Uri, TestFunction[]];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.runTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.debugTestNode]: [TestDataItem];
-    // When command is invoked from a tree node, first argument is the node data.
-    [Commands.openTestNodeInEditor]: [TestDataItem];
-    [Commands.navigateToTestFile]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestFunction]: [Uri, TestDataItem, boolean];
-    [Commands.navigateToTestSuite]: [Uri, TestDataItem, boolean];
     [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
-}
-
-//export const IPythonCommandManager = Symbol('IPythonCommandManager');
-export interface IPythonCommandManager extends ICommandManager {
-    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        callback: (...args: U) => any,
-        thisArg?: any,
-    ): Disposable;
-
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        ...rest: U
-    ): Thenable<T | undefined>;
+    ['workbench.view.testing.focus']: [];
+    ['cursorMove']: [
+        {
+            to: string;
+            by: string;
+            value: number;
+        },
+    ];
+    ['cursorEnd']: [];
 }

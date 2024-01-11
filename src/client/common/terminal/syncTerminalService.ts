@@ -6,9 +6,9 @@
 import { inject } from 'inversify';
 import { CancellationToken, Disposable, Event } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { traceVerbose } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { Cancellation } from '../cancellation';
-import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
 import * as internalScripts from '../process/internal/scripts';
 import { createDeferred, Deferred } from '../utils/async';

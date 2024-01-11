@@ -4,14 +4,14 @@
 import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExecutionResult, ShellOptions, SpawnOptions } from '../../common/process/types';
-import { IExperimentService, IDisposable } from '../../common/types';
+import { IWorkspaceService } from '../../common/application/types';
+import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
+import { IDisposable, IConfigurationService, IExperimentService } from '../../common/types';
 import { chain, iterable } from '../../common/utils/async';
-import { normalizeFilename } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
-import { plainExec, shellExec } from '../../common/process/rawProcessApis';
-import { BufferDecoder } from '../../common/process/decoder';
+import { traceError, traceVerbose } from '../../logging';
+import { DiscoveryUsingWorkers } from '../../common/experiments/groups';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -20,39 +20,34 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 
 // processes
 
-/**
- * Specialized version of the more generic shellExecute function to use only in
- * cases where we don't need to pass custom environment variables read from env
- * files or execution options.
- *
- * Also ensures to kill the processes created after execution.
- */
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    const disposables = new Set<IDisposable>();
-    return shellExec(command, options, undefined, disposables).finally(() => {
-        // Ensure the process we started is cleaned up.
-        disposables.forEach((p) => {
-            try {
-                p.dispose();
-            } catch {
-                // ignore.
-            }
-        });
-    });
+    const useWorker = inExperiment(DiscoveryUsingWorkers.experiment);
+    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    options = { ...options, useWorker };
+    return service.shellExec(command, options);
 }
 
-/**
- * Specialized version of the more generic exec function to use only in
- * cases where we don't need to pass custom environment variables read from
- * env files.
- */
 export async function exec(
     file: string,
     args: string[],
     options: SpawnOptions = {},
-    disposables?: Set<IDisposable>,
+    useWorker = inExperiment(DiscoveryUsingWorkers.experiment),
 ): Promise<ExecutionResult<string>> {
-    return plainExec(file, args, options, new BufferDecoder(), undefined, disposables);
+    const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+    options = { ...options, useWorker };
+    return service.exec(file, args, options);
+}
+
+export function inExperiment(experimentName: string): boolean {
+    const service = internalServiceContainer.get<IExperimentService>(IExperimentService);
+    return service.inExperimentSync(experimentName);
+}
+
+// Workspace
+
+export function isVirtualWorkspace(): boolean {
+    const service = internalServiceContainer.get<IWorkspaceService>(IWorkspaceService);
+    return service.isVirtualWorkspace;
 }
 
 // filesystem
@@ -82,6 +77,12 @@ export const untildify: (value: string) => string = require('untildify');
  * @param parentPath The potential parent path to check for
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
+    if (!parentPath.endsWith(path.sep)) {
+        parentPath += path.sep;
+    }
+    if (!filePath.endsWith(path.sep)) {
+        filePath += path.sep;
+    }
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
 }
 
@@ -91,7 +92,7 @@ export async function isDirectory(filename: string): Promise<boolean> {
 }
 
 export function normalizePath(filename: string): string {
-    return normalizeFilename(filename);
+    return path.normalize(filename);
 }
 
 export function resolvePath(filename: string): string {
@@ -106,6 +107,25 @@ export function arePathsSame(path1: string, path2: string): boolean {
     return normCasePath(path1) === normCasePath(path2);
 }
 
+export async function resolveSymbolicLink(absPath: string, stats?: fsapi.Stats, count?: number): Promise<string> {
+    stats = stats ?? (await fsapi.lstat(absPath));
+    if (stats.isSymbolicLink()) {
+        if (count && count > 5) {
+            traceError(`Detected a potential symbolic link loop at ${absPath}, terminating resolution.`);
+            return absPath;
+        }
+        const link = await fsapi.readlink(absPath);
+        // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
+        // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
+        //
+        // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
+        const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
+        count = count ? count + 1 : 1;
+        return resolveSymbolicLink(absLinkPath, undefined, count);
+    }
+    return absPath;
+}
+
 export async function getFileInfo(filePath: string): Promise<{ ctime: number; mtime: number }> {
     try {
         const data = await fsapi.lstat(filePath);
@@ -116,22 +136,19 @@ export async function getFileInfo(filePath: string): Promise<{ ctime: number; mt
     } catch (ex) {
         // This can fail on some cases, such as, `reparse points` on windows. So, return the
         // time as -1. Which we treat as not set in the extension.
+        traceVerbose(`Failed to get file info for ${filePath}`, ex);
         return { ctime: -1, mtime: -1 };
     }
 }
 
-export async function resolveSymbolicLink(absPath: string): Promise<string> {
-    const stats = await fsapi.lstat(absPath);
+export async function isFile(filePath: string): Promise<boolean> {
+    const stats = await fsapi.lstat(filePath);
     if (stats.isSymbolicLink()) {
-        const link = await fsapi.readlink(absPath);
-        // Result from readlink is not guaranteed to be an absolute path. For eg. on Mac it resolves
-        // /usr/local/bin/python3.9 -> ../../../Library/Frameworks/Python.framework/Versions/3.9/bin/python3.9
-        //
-        // The resultant path is reported relative to the symlink directory we resolve. Convert that to absolute path.
-        const absLinkPath = path.isAbsolute(link) ? link : path.resolve(path.dirname(absPath), link);
-        return resolveSymbolicLink(absLinkPath);
+        const resolvedPath = await resolveSymbolicLink(filePath, stats);
+        const resolvedStats = await fsapi.lstat(resolvedPath);
+        return resolvedStats.isFile();
     }
-    return absPath;
+    return stats.isFile();
 }
 
 /**
@@ -172,8 +189,11 @@ export async function* getSubDirs(
  * Returns the value for setting `python.<name>`.
  * @param name The name of the setting.
  */
-export function getPythonSetting<T>(name: string): T | undefined {
-    return vscode.workspace.getConfiguration('python').get(name);
+export function getPythonSetting<T>(name: string, root?: string): T | undefined {
+    const resource = root ? vscode.Uri.file(root) : undefined;
+    const settings = internalServiceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (settings as any)[name];
 }
 
 /**
@@ -181,15 +201,11 @@ export function getPythonSetting<T>(name: string): T | undefined {
  * @param name The name of the setting.
  * @param callback The listener function to be called when the setting changes.
  */
-export function onDidChangePythonSetting(name: string, callback: () => void): IDisposable {
+export function onDidChangePythonSetting(name: string, callback: () => void, root?: string): IDisposable {
     return vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration(`python.${name}`)) {
+        const scope = root ? vscode.Uri.file(root) : undefined;
+        if (event.affectsConfiguration(`python.${name}`, scope)) {
             callback();
         }
     });
-}
-
-export function inExperiment(experiment: string): Promise<boolean> {
-    const experimentService = internalServiceContainer.get<IExperimentService>(IExperimentService);
-    return experimentService.inExperiment(experiment);
 }

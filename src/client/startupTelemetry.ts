@@ -1,27 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as vscode from 'vscode';
 import { IWorkspaceService } from './common/application/types';
 import { isTestExecution } from './common/constants';
-import { DeprecatePythonPath } from './common/experiments/groups';
-import { traceError } from './common/logger';
 import { ITerminalHelper } from './common/terminal/types';
-import {
-    IConfigurationService,
-    IExperimentsManager,
-    IInterpreterPathService,
-    InspectInterpreterSettingType,
-    Resource,
-} from './common/types';
+import { IInterpreterPathService, Resource } from './common/types';
 import { IStopWatch } from './common/utils/stopWatch';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
-} from './interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
-import { PythonEnvironment } from './pythonEnvironments/info';
+import { traceError } from './logging';
+import { EnvironmentType, PythonEnvironment } from './pythonEnvironments/info';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
@@ -77,30 +67,13 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
 }
 
 export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
-    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-    let settings: InspectInterpreterSettingType;
-    if (abExperiments.inExperiment(DeprecatePythonPath.experiment)) {
-        settings = interpreterPathService.inspect(resource);
-    } else {
-        settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
-    }
-    abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+    let settings = interpreterPathService.inspect(resource);
     return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
         (settings.globalValue && settings.globalValue !== 'python')
         ? true
         : false;
-}
-
-function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs,
-    );
-    const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
-    return interpreter ? interpreter.path : undefined;
 }
 
 async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
@@ -109,35 +82,45 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // TODO: If any one of these parts fails we send no info.  We should
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
+    const appName = vscode.env.appName;
+    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    const workspaceFolderCount = workspaceService.workspaceFolders?.length || 0;
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     const terminalShellType = terminalHelper.identifyTerminalShell();
-    const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
+    if (!workspaceService.isTrusted) {
+        return { workspaceFolderCount, terminal: terminalShellType };
+    }
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
-        ? workspaceService.workspaceFolders![0].uri
+    const mainWorkspaceUri = workspaceService.workspaceFolders?.length
+        ? workspaceService.workspaceFolders[0].uri
         : undefined;
-    const settings = configurationService.getSettings(mainWorkspaceUri);
-    const [condaVersion, interpreter, interpreters] = await Promise.all([
-        condaLocator
-            .getCondaVersion()
-            .then((ver) => (ver ? ver.raw : ''))
-            .catch<string>(() => ''),
-        interpreterService.getActiveInterpreter().catch<PythonEnvironment | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonEnvironment[]>(() => []),
-    ]);
-    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
+    const hasPythonThree = await interpreterService.hasInterpreters(async (item) => item.version?.major === 3);
+    // If an unknown type environment can be found from windows registry or path env var,
+    // consider them as global type instead of unknown. Such types can only be known after
+    // windows registry is queried. So wait for the refresh of windows registry locator to
+    // finish. API getActiveInterpreter() does not block on windows registry by default as
+    // it is slow.
+    await interpreterService.refreshPromise;
+    const interpreter = await interpreterService
+        .getActiveInterpreter()
+        .catch<PythonEnvironment | undefined>(() => undefined);
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
+    if (interpreterType === EnvironmentType.Unknown) {
+        traceError('Active interpreter type is detected as Unknown', JSON.stringify(interpreter));
+    }
+    let condaVersion = undefined;
+    if (interpreterType === EnvironmentType.Conda) {
+        const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
+        condaVersion = await condaLocator
+            .getCondaVersion()
+            .then((ver) => (ver ? ver.raw : ''))
+            .catch<string>(() => '');
+    }
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-    const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
-    const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
-    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter
-        ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
+    const usingGlobalInterpreter = interpreter
+        ? isUsingGlobalInterpreterInWorkspace(interpreter.path, serviceContainer)
         : false;
-    const hasPython3 =
-        interpreters!.filter((item) => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,
@@ -145,9 +128,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         pythonVersion,
         interpreterType,
         workspaceFolderCount,
-        hasPython3,
+        hasPythonThree,
         usingUserDefinedInterpreter,
-        usingAutoSelectedWorkspaceInterpreter,
         usingGlobalInterpreter,
+        appName,
     };
 }

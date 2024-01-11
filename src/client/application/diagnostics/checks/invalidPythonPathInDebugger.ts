@@ -7,13 +7,13 @@ import * as path from 'path';
 import { DiagnosticSeverity, Uri, workspace as workspc, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
-import { Diagnostics } from '../../../common/utils/localize';
+import { Common, Diagnostics } from '../../../common/utils/localize';
 import { SystemVariables } from '../../../common/variables/systemVariables';
 import { PythonPathSource } from '../../../debugger/extension/types';
 import { IInterpreterHelper } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
+import { traceError } from '../../../logging';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
@@ -27,8 +27,8 @@ import {
 } from '../types';
 
 const messages = {
-    [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]: Diagnostics.invalidPythonPathInDebuggerSettings(),
-    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch(),
+    [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]: Diagnostics.invalidPythonPathInDebuggerSettings,
+    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch,
 };
 
 class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
@@ -38,7 +38,15 @@ class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
             | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
         resource: Resource,
     ) {
-        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, 'always');
+        super(
+            code,
+            messages[code],
+            DiagnosticSeverity.Error,
+            DiagnosticScope.WorkspaceFolder,
+            resource,
+            undefined,
+            'always',
+        );
     }
 }
 
@@ -132,7 +140,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             case DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic: {
                 return [
                     {
-                        prompt: 'Select Python Interpreter',
+                        prompt: Common.selectPythonInterpreter,
                         command: this.commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
                             options: 'python.setInterpreter',
@@ -143,7 +151,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
             case DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic: {
                 return [
                     {
-                        prompt: 'Open launch.json',
+                        prompt: Common.openLaunch,
                         command: {
                             diagnostic,
                             invoke: async (): Promise<void> => {

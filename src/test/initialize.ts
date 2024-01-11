@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import type { IExtensionApi } from '../client/api';
+import type { PythonExtension } from '../client/api/types';
 import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
@@ -31,6 +31,10 @@ export async function initializePython() {
 
 export async function initialize(): Promise<IExtensionTestApi> {
     await initializePython();
+
+    const pythonConfig = vscode.workspace.getConfiguration('python');
+    await pythonConfig.update('experiments.optInto', ['All'], vscode.ConfigurationTarget.Global);
+    await pythonConfig.update('experiments.optOutFrom', [], vscode.ConfigurationTarget.Global);
     const api = await activateExtension();
     if (!IS_SMOKE_TEST) {
         // When running smoke tests, we won't have access to these.
@@ -42,7 +46,7 @@ export async function initialize(): Promise<IExtensionTestApi> {
     return (api as any) as IExtensionTestApi;
 }
 export async function activateExtension() {
-    const extension = vscode.extensions.getExtension<IExtensionApi>(PVSC_EXTENSION_ID_FOR_TESTS)!;
+    const extension = vscode.extensions.getExtension<PythonExtension>(PVSC_EXTENSION_ID_FOR_TESTS)!;
     const api = await extension.activate();
     // Wait until its ready to use.
     await api.ready;
@@ -69,7 +73,7 @@ export async function closeActiveNotebooks(): Promise<void> {
     }
     // We could have untitled notebooks, close them by reverting changes.
 
-    while ((vscode as any).notebook.activeNotebookEditor || vscode.window.activeTextEditor) {
+    while ((vscode as any).window.activeNotebookEditor || vscode.window.activeTextEditor) {
         await vscode.commands.executeCommand('workbench.action.revertAndCloseActiveEditor');
     }
     // Work around VS Code issues (sometimes notebooks do not get closed).
@@ -101,11 +105,9 @@ async function closeWindowsInteral() {
 }
 
 function isANotebookOpen() {
-    if (
-        Array.isArray((vscode as any).notebook.visibleNotebookEditors) &&
-        (vscode as any).notebook.visibleNotebookEditors.length
-    ) {
-        return true;
+    if (!vscode.window.activeTextEditor?.document) {
+        return false;
     }
-    return !!(vscode as any).notebook.activeNotebookEditor;
+
+    return !!(vscode.window.activeTextEditor.document as any).notebook;
 }

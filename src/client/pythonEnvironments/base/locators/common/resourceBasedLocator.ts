@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { IDisposable } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
-import { Disposables, IDisposable } from '../../../../common/utils/resourceLifecycle';
-import { PythonEnvInfo } from '../../info';
-import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
+import { Disposables } from '../../../../common/utils/resourceLifecycle';
+import { traceError } from '../../../../logging';
+import { arePathsSame, isVirtualWorkspace } from '../../../common/externalDependencies';
+import { getEnvPath } from '../../info/env';
+import { BasicEnvInfo, IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
 
 /**
  * A base locator class that manages the lifecycle of resources.
@@ -18,7 +21,7 @@ import { IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator'
  *
  * Otherwise it will leak (and we have no leak detection).
  */
-export abstract class LazyResourceBasedLocator extends Locator implements IDisposable {
+export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> implements IDisposable {
     protected readonly disposables = new Disposables();
 
     // This will be set only once we have to create necessary resources
@@ -27,31 +30,42 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
 
     private watchersReady?: Deferred<void>;
 
-    public async dispose(): Promise<void> {
-        await this.disposables.dispose();
-    }
-
-    public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    /**
+     * This can be used to initialize resources when subclasses are created.
+     */
+    protected async activate(): Promise<void> {
         await this.ensureResourcesReady();
-        yield* this.doIterEnvs(query);
         // There is not need to wait for the watchers to get started.
         this.ensureWatchersReady().ignoreErrors();
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        await this.ensureResourcesReady();
-        return this.doResolveEnv(env);
+    public async dispose(): Promise<void> {
+        await this.disposables.dispose();
+    }
+
+    public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
+        await this.activate();
+        const iterator = this.doIterEnvs(query);
+        if (query?.envPath) {
+            let result = await iterator.next();
+            while (!result.done) {
+                const currEnv = result.value;
+                const { path } = getEnvPath(currEnv.executablePath, currEnv.envPath);
+                if (arePathsSame(path, query.envPath)) {
+                    yield currEnv;
+                    break;
+                }
+                result = await iterator.next();
+            }
+        } else {
+            yield* iterator;
+        }
     }
 
     /**
      * The subclass implementation of iterEnvs().
      */
-    protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator;
-
-    /**
-     * The subclass implementation of resolveEnv().
-     */
-    protected abstract doResolveEnv(_env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined>;
+    protected abstract doIterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo>;
 
     /**
      * This is where subclasses get their resources ready.
@@ -90,13 +104,16 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
         // No watchers!
     }
 
-    private async ensureResourcesReady(): Promise<void> {
+    protected async ensureResourcesReady(): Promise<void> {
         if (this.resourcesReady !== undefined) {
             await this.resourcesReady.promise;
             return;
         }
         this.resourcesReady = createDeferred<void>();
-        await this.initResources();
+        await this.initResources().catch((ex) => {
+            traceError(ex);
+            this.resourcesReady?.reject(ex);
+        });
         this.resourcesReady.resolve();
     }
 
@@ -106,7 +123,14 @@ export abstract class LazyResourceBasedLocator extends Locator implements IDispo
             return;
         }
         this.watchersReady = createDeferred<void>();
-        await this.initWatchers();
+
+        // Don't create any file watchers in a virtual workspace.
+        if (!isVirtualWorkspace()) {
+            await this.initWatchers().catch((ex) => {
+                traceError(ex);
+                this.watchersReady?.reject(ex);
+            });
+        }
         this.watchersReady.resolve();
     }
 }

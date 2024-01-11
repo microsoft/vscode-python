@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -10,6 +11,8 @@ import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalAutoActivation } from '../../terminals/types';
 import { ITerminalManager } from '../application/types';
+import { EXTENSION_ROOT_DIR } from '../constants';
+import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
     ITerminalActivator,
@@ -28,6 +31,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
+    private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pythonrc.py');
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -69,14 +73,14 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(preserveFocus);
         }
     }
-    private async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
+    public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
             return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({
             name: this.options?.title || 'Python',
-            env: this.options?.env,
+            env: { PYTHONSTARTUP: this.envVarScript },
             hideFromUser: this.options?.hideFromUser,
         });
         this.terminalAutoActivator.disableAutoActivation(this.terminal);

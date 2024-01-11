@@ -1,17 +1,22 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.6), including features such as IntelliSense (Pylance), linting, debugging, code navigation, code formatting, refactoring, variable explorer, test explorer, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.7), including features such as IntelliSense (Pylance), linting, debugging (Python Debugger), code navigation, code formatting, refactoring, variable explorer, test explorer, and more!
+
+## Support for [vscode.dev](https://vscode.dev/)
+
+The Python extension does offer [some support](https://github.com/microsoft/vscode-python/wiki/Partial-mode) when running on [vscode.dev](https://vscode.dev/) (which includes [github.dev](http://github.dev/)). This includes partial IntelliSense for open files in the editor.
+
 
 ## Installed extensions
 
-The Python extension will automatically install the [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) and [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) extensions to give you the best experience when working with Python files and Jupyter notebooks. However, Pylance is an optional dependency, meaning the Python extension will remain fully functional if it fails to be installed. You can also [uninstall](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) it at the expense of some features if you’re using a different language server.
+The Python extension will automatically install the [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) extension to give you the best experience when working with Python files. However, Pylance is an optional dependency, meaning the Python extension will remain fully functional if it fails to be installed. You can also [uninstall](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) it at the expense of some features if you’re using a different language server.
 
 Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf).
 
 ## Quick start
 
 -   **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported).
--   **Step 2.** Install the Python extension for Visual Studio Code.
+-   **Step 2.** [Install the Python extension for Visual Studio Code](https://code.visualstudio.com/docs/editor/extension-gallery).
 -   **Step 3.** Open or create a Python file and start coding!
 
 ## Set up your environment
@@ -32,7 +37,9 @@ Extensions installed through the marketplace are subject to the [Marketplace Ter
 
 ## Jupyter Notebook quick start
 
-The Python extension and the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) work together to give you a great Notebook experience in VS Code.
+The Python extension offers support for Jupyter notebooks via the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) to provide you a great Python notebook experience in VS Code.
+
+- Install the [Jupyter extension](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter).
 
 -   Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
 
@@ -53,8 +60,7 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 | `Python: Select Interpreter`          | Switch between Python interpreters, versions, and environments.                                                                                                |
 | `Python: Start REPL`                  | Start an interactive Python REPL using the selected interpreter in the VS Code terminal.                                                                       |
 | `Python: Run Python File in Terminal` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting `Run Python File in Terminal`. |
-| `Python: Select Linter`               | Switch from Pylint to Flake8 or other supported linters.                                                                                                       |
-| `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/editing#_formatting) in the `settings.json` file.                        |
+| `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/formatting) in the `settings.json` file.                                 |
 | `Python: Configure Tests`             | Select a test framework and configure it to display the Test Explorer.                                                                                         |
 
 To see all available Python commands, open the Command Palette and type `Python`. For Jupyter extension commands, just type `Jupyter`.
@@ -65,17 +71,14 @@ Learn more about the rich features of the Python extension:
 
 -   [IntelliSense](https://code.visualstudio.com/docs/python/editing#_autocomplete-and-intellisense): Edit your code with auto-completion, code navigation, syntax checking and more
 -   [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
--   [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your code with black, autopep or yapf
-
+-   [Code formatting](https://code.visualstudio.com/docs/python/formatting): Format your code with black, autopep or yapf
 -   [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes
-
--   [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest, pytest or nose
-
+-   [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest or pytest.
 -   [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
-
 -   [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
+-   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction and method extraction. Additionally, there is componentized support to enable additional refactoring, such as import sorting, through extensions including [isort](https://marketplace.visualstudio.com/items?itemName=ms-python.isort) and [Ruff](https://marketplace.visualstudio.com/items?itemName=charliermarsh.ruff).
 
--   [Refactoring](https://code.visualstudio.com/docs/python/editing#_refactoring): Restructure your Python code with variable extraction, method extraction and import sorting
+
 
 ## Supported locales
 

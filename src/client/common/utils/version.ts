@@ -70,11 +70,6 @@ export const EMPTY_VERSION: RawBasicVersionInfo = {
     major: -1,
     minor: -1,
     micro: -1,
-    unnormalized: {
-        major: undefined,
-        minor: undefined,
-        micro: undefined,
-    },
 };
 Object.freeze(EMPTY_VERSION);
 
@@ -391,14 +386,12 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
         return false;
     }
 
-    // tslint:disable:no-any
     if (result < 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return ((right as unknown) as any)[prop] === -1;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return ((left as unknown) as any)[prop] === -1;
-    // tslint:enable:no-any
 }
 
 // semver

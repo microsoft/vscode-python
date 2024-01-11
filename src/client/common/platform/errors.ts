@@ -97,21 +97,23 @@ function isSystemError(err: Error, expectedCode: string): boolean | undefined {
 }
 
 // Return true if the given error is ENOENT.
-export function isFileNotFoundError(err: Error): boolean | undefined {
-    const matched = vscErrors.isFileNotFound(err);
+export function isFileNotFoundError(err: unknown | Error): boolean | undefined {
+    const error = err as Error;
+    const matched = vscErrors.isFileNotFound(error);
     if (matched !== undefined) {
         return matched;
     }
-    return isSystemError(err, 'ENOENT');
+    return isSystemError(error, 'ENOENT');
 }
 
 // Return true if the given error is EEXIST.
-export function isFileExistsError(err: Error): boolean | undefined {
-    const matched = vscErrors.isFileExists(err);
+export function isFileExistsError(err: unknown | Error): boolean | undefined {
+    const error = err as Error;
+    const matched = vscErrors.isFileExists(error);
     if (matched !== undefined) {
         return matched;
     }
-    return isSystemError(err, 'EEXIST');
+    return isSystemError(error, 'EEXIST');
 }
 
 // Return true if the given error is EISDIR.
@@ -133,10 +135,11 @@ export function isNotDirError(err: Error): boolean | undefined {
 }
 
 // Return true if the given error is EACCES.
-export function isNoPermissionsError(err: Error): boolean | undefined {
-    const matched = vscErrors.isNoPermissions(err);
+export function isNoPermissionsError(err: unknown | Error): boolean | undefined {
+    const error = err as Error;
+    const matched = vscErrors.isNoPermissions(error);
     if (matched !== undefined) {
         return matched;
     }
-    return isSystemError(err, 'EACCES');
+    return isSystemError(error, 'EACCES');
 }

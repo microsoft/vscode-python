@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
@@ -156,6 +158,37 @@ suite('Terminal Service', () => {
         await service.show(false);
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(false)), TypeMoq.Times.exactly(2));
+    });
+
+    test('Ensure PYTHONSTARTUP is injected', async () => {
+        service = new TerminalService(mockServiceContainer.object);
+        terminalActivator
+            .setup((h) => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
+        terminalManager
+            .setup((t) => t.createTerminal(TypeMoq.It.isAny()))
+            .returns(() => terminal.object)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        const envVarScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pythonrc.py');
+        terminalManager
+            .setup((t) =>
+                t.createTerminal({
+                    name: TypeMoq.It.isAny(),
+                    env: TypeMoq.It.isObjectWith({ PYTHONSTARTUP: envVarScript }),
+                    hideFromUser: TypeMoq.It.isAny(),
+                }),
+            )
+            .returns(() => terminal.object)
+            .verifiable(TypeMoq.Times.atLeastOnce());
+        await service.show();
+        await service.show();
+        await service.show();
+        await service.show();
+
+        terminalHelper.verifyAll();
+        terminalActivator.verifyAll();
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
     });
 
     test('Ensure terminal is activated once after creation', async () => {

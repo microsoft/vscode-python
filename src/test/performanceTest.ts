@@ -19,7 +19,7 @@ import { spawn } from 'child_process';
 import * as download from 'download';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as request from 'request';
+import * as bent from 'bent';
 import { LanguageServerType } from '../client/activation/types';
 import { EXTENSION_ROOT_DIR, PVSC_EXTENSION_ID } from '../client/common/constants';
 import { unzip } from './common';
@@ -50,7 +50,7 @@ class TestRunner {
         const languageServerLogFiles: string[] = [];
 
         for (let i = 0; i < timesToLoadEachVersion; i += 1) {
-            await this.enableLanguageServer(false);
+            await this.enableLanguageServer();
 
             const devLogFile = path.join(logFilesPath, `dev_loadtimes${i}.txt`);
             console.log(`Start Performance Tests: Counter ${i}, for Dev version with Jedi`);
@@ -61,22 +61,13 @@ class TestRunner {
             console.log(`Start Performance Tests: Counter ${i}, for Release version with Jedi`);
             await this.capturePerfTimes(Version.Release, releaseLogFile);
             releaseLogFiles.push(releaseLogFile);
-
-            // Language server.
-            await this.enableLanguageServer(true);
-            const languageServerLogFile = path.join(logFilesPath, `languageServer_loadtimes${i}.txt`);
-            console.log(`Start Performance Tests: Counter ${i}, for Release version with language server`);
-            await this.capturePerfTimes(Version.Release, languageServerLogFile);
-            languageServerLogFiles.push(languageServerLogFile);
         }
 
         console.log('Compare Performance Results');
         await this.runPerfTest(devLogFiles, releaseLogFiles, languageServerLogFiles);
     }
-    private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.languageServer": "${
-            enable ? LanguageServerType.Microsoft : LanguageServerType.Jedi
-        }" }`;
+    private async enableLanguageServer() {
+        const settings = `{ "python.languageServer": "${LanguageServerType.Jedi}" }`;
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
     }
 
@@ -103,7 +94,7 @@ class TestRunner {
     }
 
     private async launchTest(customEnvVars: Record<string, {}>) {
-        await new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'perf.test',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance'),
@@ -132,17 +123,9 @@ class TestRunner {
 
     private async getReleaseVersion(): Promise<string> {
         const url = `https://marketplace.visualstudio.com/items?itemName=${PVSC_EXTENSION_ID}`;
-        const content = await new Promise<string>((resolve, reject) => {
-            request(url, (error, response, body) => {
-                if (error) {
-                    return reject(error);
-                }
-                if (response.statusCode === 200) {
-                    return resolve(body);
-                }
-                reject(`Status code of ${response.statusCode} received.`);
-            });
-        });
+        const request = bent('string', 'GET', 200);
+
+        const content: string = await request(url);
         const re = NamedRegexp('"version"S?:S?"(:<version>\\d{4}\\.\\d{1,2}\\.\\d{1,2})"', 'g');
         const matches = re.exec(content);
         return matches.groups().version;

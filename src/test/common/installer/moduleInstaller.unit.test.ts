@@ -6,22 +6,13 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
-
 import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import {
-    CancellationTokenSource,
-    Disposable,
-    OutputChannel,
-    ProgressLocation,
-    Uri,
-    WorkspaceConfiguration,
-} from 'vscode';
+import { CancellationTokenSource, Disposable, ProgressLocation, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { ModuleInstaller } from '../../../client/common/installer/moduleInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
@@ -33,31 +24,26 @@ import {
     ModuleInstallFlags,
 } from '../../../client/common/installer/types';
 import { IFileSystem } from '../../../client/common/platform/types';
+import { _SCRIPTS_DIR } from '../../../client/common/process/internal/scripts/constants';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
     ExecutionInfo,
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
-    IOutputChannel,
+    IInstaller,
+    ILogOutputChannel,
     IPythonSettings,
-    ModuleNamePurpose,
     Product,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
-import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
-import {
-    IComponentAdapter,
-    ICondaLocatorService,
-    ICondaService,
-    IInterpreterService,
-} from '../../../client/interpreter/contracts';
+import { Architecture } from '../../../client/common/utils/platform';
+import { IComponentAdapter, ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
-import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
+import * as logging from '../../../client/logging';
+import { EnvironmentType, ModuleInstallerType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
-const isolated = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'pyvsc-run-isolated.py');
+const pythonPath = path.join(__dirname, 'python');
 
 /* Complex test to ensure we cover all combinations:
 We could have written separate tests for each installer, but we'd be replicate code.
@@ -86,6 +72,10 @@ suite('Module Installer', () => {
             return '';
         }
 
+        public get type(): ModuleInstallerType {
+            return ModuleInstallerType.Unknown;
+        }
+
         public isSupported(): Promise<boolean> {
             return Promise.resolve(false);
         }
@@ -98,21 +88,24 @@ suite('Module Installer', () => {
             return super.elevatedInstall(execPath, args);
         }
     }
-    let outputChannel: TypeMoq.IMock<IOutputChannel>;
+    let outputChannel: TypeMoq.IMock<ILogOutputChannel>;
+
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    const pythonPath = path.join(__dirname, 'python');
 
     suite('Method _elevatedInstall()', async () => {
+        let traceLogStub: sinon.SinonStub;
         let installer: TestModuleInstaller;
         const execPath = 'execPath';
         const args = ['1', '2'];
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
         setup(() => {
+            traceLogStub = sinon.stub(logging, 'traceLog');
+
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
+            outputChannel = TypeMoq.Mock.ofType<ILogOutputChannel>();
             serviceContainer
-                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
+                .setup((c) => c.get(TypeMoq.It.isValue(ILogOutputChannel)))
                 .returns(() => outputChannel.object);
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
@@ -120,6 +113,7 @@ suite('Module Installer', () => {
         });
         teardown(() => {
             rewiremock.disable();
+            sinon.restore();
         });
 
         test('Show error message if sudo exec fails with error', async () => {
@@ -135,14 +129,9 @@ suite('Module Installer', () => {
                 .setup((a) => a.showErrorMessage(error))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             appShell.verifyAll();
-            outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
         });
 
         test('Show stdout if sudo exec succeeds', async () => {
@@ -158,17 +147,9 @@ suite('Module Installer', () => {
                 .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            outputChannel
-                .setup((o) => o.append(stdout))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
             outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
         });
 
         test('Show stderr if sudo exec gives a warning with stderr', async () => {
@@ -181,21 +162,12 @@ suite('Module Installer', () => {
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
             outputChannel
-
-                .setup((o) => o.appendLine(`[Elevated] ${command}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
-            outputChannel
                 .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
-            outputChannel
-
-                .setup((o) => o.append(`Warning: ${stderr}`))
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
-            outputChannel.verifyAll();
+            traceLogStub.calledOnceWithExactly(`[Elevated] ${command}`);
+            traceLogStub.calledOnceWithExactly(`Warning: ${stderr}`);
         });
     });
 
@@ -230,7 +202,6 @@ suite('Module Installer', () => {
                         let configService: TypeMoq.IMock<IConfigurationService>;
                         let fs: TypeMoq.IMock<IFileSystem>;
                         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
-                        let experimentService: TypeMoq.IMock<IExperimentService>;
                         let interpreterService: TypeMoq.IMock<IInterpreterService>;
                         let installer: IModuleInstaller;
                         const condaExecutable = 'my.exe';
@@ -247,17 +218,6 @@ suite('Module Installer', () => {
                                 .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem)))
                                 .returns(() => fs.object);
 
-                            experimentService = TypeMoq.Mock.ofType<IExperimentService>();
-                            experimentService
-                                .setup((e) => e.inExperiment(DiscoveryVariants.discoverWithFileWatching))
-                                .returns(() => Promise.resolve(false));
-                            experimentService
-                                .setup((e) => e.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching))
-                                .returns(() => Promise.resolve(false));
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(IExperimentService)))
-                                .returns(() => experimentService.object);
-
                             disposables = [];
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
@@ -272,11 +232,11 @@ suite('Module Installer', () => {
 
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
                             condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
+                            condaService
+                                .setup((c) => c.getCondaFile(true))
+                                .returns(() => Promise.resolve(condaExecutable));
 
-                            const condaLocatorService = TypeMoq.Mock.ofType<ICondaLocatorService>();
-                            serviceContainer
-                                .setup((c) => c.get(TypeMoq.It.isValue(ICondaLocatorService)))
-                                .returns(() => condaLocatorService.object);
+                            const condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
                             serviceContainer
                                 .setup((c) => c.get(TypeMoq.It.isValue(IComponentAdapter)))
                                 .returns(() => condaLocatorService.object);
@@ -322,7 +282,6 @@ suite('Module Installer', () => {
                             workspaceService
                                 .setup((w) => w.getConfiguration(TypeMoq.It.isValue('http')))
                                 .returns(() => http.object);
-
                             installer = new InstallerClass(serviceContainer.object);
                         });
                         teardown(() => {
@@ -335,313 +294,293 @@ suite('Module Installer', () => {
                         });
                         function setActiveInterpreter(activeInterpreter?: PythonEnvironment) {
                             interpreterService
-                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
+                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
                                 .returns(() => Promise.resolve(activeInterpreter))
                                 .verifiable(TypeMoq.Times.atLeastOnce());
                         }
-                        getModuleNamesForTesting().forEach((product) => {
-                            const { moduleName } = product;
-                            async function installModuleAndVerifyCommand(
-                                command: string,
-                                expectedArgs: string[],
-                                flags?: ModuleInstallFlags,
-                            ) {
-                                terminalService
-                                    .setup((t) =>
-                                        t.sendCommand(
-                                            TypeMoq.It.isValue(command),
-                                            TypeMoq.It.isValue(expectedArgs),
-                                            TypeMoq.It.isValue(undefined),
-                                        ),
-                                    )
-                                    .returns(() => Promise.resolve())
-                                    .verifiable(TypeMoq.Times.once());
+                        getModuleNamesForTesting()
+                            .filter((item) => item.value !== Product.ensurepip)
+                            .forEach((product) => {
+                                const { moduleName } = product;
+                                async function installModuleAndVerifyCommand(
+                                    command: string,
+                                    expectedArgs: string[],
+                                    flags?: ModuleInstallFlags,
+                                ) {
+                                    terminalService
+                                        .setup((t) =>
+                                            t.sendCommand(
+                                                TypeMoq.It.isValue(command),
+                                                TypeMoq.It.isValue(expectedArgs),
+                                                TypeMoq.It.isValue(undefined),
+                                            ),
+                                        )
+                                        .returns(() => Promise.resolve())
+                                        .verifiable(TypeMoq.Times.once());
 
-                                await installer.installModule(product.value, resource, undefined, flags);
-                                terminalService.verifyAll();
-                            }
+                                    await installer.installModule(product.value, resource, undefined, flags);
+                                    terminalService.verifyAll();
+                                }
 
-                            if (product.value === Product.pylint) {
-                                generatePythonInterpreterVersions().forEach((interpreterInfo) => {
-                                    const majorVersion = interpreterInfo.version ? interpreterInfo.version.major : 0;
-                                    if (majorVersion === 2) {
-                                        const testTitle = `Ensure install arg is \'pylint<2.0.0\' in ${
-                                            interpreterInfo.version ? interpreterInfo.version.raw : ''
-                                        }`;
-                                        if (InstallerClass === PipInstaller) {
-                                            test(testTitle, async () => {
-                                                setActiveInterpreter(interpreterInfo);
-                                                const proxyArgs =
-                                                    proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                                const expectedArgs = [
-                                                    isolated,
-                                                    'pip',
-                                                    ...proxyArgs,
-                                                    'install',
-                                                    '-U',
-                                                    '"pylint<2.0.0"',
-                                                ];
-                                                await installModuleAndVerifyCommand(pythonPath, expectedArgs);
-                                            });
-                                        }
-                                        if (InstallerClass === PipEnvInstaller) {
-                                            test(testTitle, async () => {
-                                                setActiveInterpreter(interpreterInfo);
-                                                const expectedArgs = ['install', '"pylint<2.0.0"', '--dev'];
-                                                await installModuleAndVerifyCommand(pipenvName, expectedArgs);
-                                            });
-                                        }
-                                        if (InstallerClass === CondaInstaller) {
-                                            test(testTitle, async () => {
-                                                setActiveInterpreter(interpreterInfo);
-                                                const expectedArgs = ['install'];
-                                                if (condaEnvInfo && condaEnvInfo.name) {
-                                                    expectedArgs.push('--name');
-                                                    expectedArgs.push(condaEnvInfo.name.toCommandArgument());
-                                                } else if (condaEnvInfo && condaEnvInfo.path) {
-                                                    expectedArgs.push('--prefix');
-                                                    expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
-                                                }
-                                                expectedArgs.push('"pylint<2.0.0"');
-                                                expectedArgs.push('-y');
-                                                await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
-                                            });
-                                        }
-                                    } else {
-                                        const testTitle = `Ensure install arg is \'pylint\' in ${
-                                            interpreterInfo.version ? interpreterInfo.version.raw : ''
-                                        }`;
-                                        if (InstallerClass === PipInstaller) {
-                                            test(testTitle, async () => {
-                                                setActiveInterpreter(interpreterInfo);
-                                                const proxyArgs =
-                                                    proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                                const expectedArgs = [
-                                                    isolated,
-                                                    'pip',
-                                                    ...proxyArgs,
-                                                    'install',
-                                                    '-U',
-                                                    'pylint',
-                                                ];
-                                                await installModuleAndVerifyCommand(pythonPath, expectedArgs);
-                                            });
-                                        }
-                                        if (InstallerClass === PipEnvInstaller) {
-                                            test(testTitle, async () => {
-                                                setActiveInterpreter(interpreterInfo);
-                                                const expectedArgs = ['install', 'pylint', '--dev'];
-                                                await installModuleAndVerifyCommand(pipenvName, expectedArgs);
-                                            });
-                                        }
-                                        if (InstallerClass === CondaInstaller) {
-                                            test(testTitle, async () => {
-                                                setActiveInterpreter(interpreterInfo);
-                                                const expectedArgs = ['install'];
-                                                if (condaEnvInfo && condaEnvInfo.name) {
-                                                    expectedArgs.push('--name');
-                                                    expectedArgs.push(condaEnvInfo.name.toCommandArgument());
-                                                } else if (condaEnvInfo && condaEnvInfo.path) {
-                                                    expectedArgs.push('--prefix');
-                                                    expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
-                                                }
-                                                expectedArgs.push('pylint');
-                                                expectedArgs.push('-y');
-                                                await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
-                                            });
-                                        }
-                                    }
-                                });
-                                return;
-                            }
-
-                            if (InstallerClass === TestModuleInstaller) {
-                                suite(`If interpreter type is Unknown (${product.name})`, async () => {
-                                    test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is read only, do an elevated install`, async () => {
-                                        const info = TypeMoq.Mock.ofType<PythonEnvironment>();
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
-                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
-                                        setActiveInterpreter(info.object);
-                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
-                                        const elevatedInstall = sinon.stub(
-                                            TestModuleInstaller.prototype,
-                                            'elevatedInstall',
-                                        );
-                                        elevatedInstall.returns();
-                                        fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
-                                            Promise.resolve(true),
-                                        );
-                                        try {
-                                            await installer.installModule(product.value, resource);
-                                        } catch (ex) {
-                                            noop();
-                                        }
-                                        const args = [isolated, 'executionInfo'];
-                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
-                                        interpreterService.verifyAll();
-                                    });
-                                    test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is not read only, send command to terminal`, async () => {
-                                        const info = TypeMoq.Mock.ofType<PythonEnvironment>();
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
-                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
-                                        setActiveInterpreter(info.object);
-                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
-                                        fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
-                                            Promise.resolve(false),
-                                        );
-                                        const args = [isolated, 'executionInfo'];
-                                        terminalService
-                                            .setup((t) => t.sendCommand(pythonPath, args, undefined))
-                                            .returns(() => Promise.resolve())
-                                            .verifiable(TypeMoq.Times.once());
-                                        try {
-                                            await installer.installModule(product.value, resource);
-                                        } catch (ex) {
-                                            noop();
-                                        }
-                                        interpreterService.verifyAll();
-                                        terminalService.verifyAll();
-                                    });
-                                    test(`If 'python.globalModuleInstallation' is not set to true, concatenate arguments with '--user' flag and send command to terminal`, async () => {
-                                        const info = TypeMoq.Mock.ofType<PythonEnvironment>();
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
-                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
-                                        setActiveInterpreter(info.object);
-                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => false);
-                                        const args = [isolated, 'executionInfo', '--user'];
-                                        terminalService
-                                            .setup((t) => t.sendCommand(pythonPath, args, undefined))
-                                            .returns(() => Promise.resolve())
-                                            .verifiable(TypeMoq.Times.once());
-                                        try {
-                                            await installer.installModule(product.value, resource);
-                                        } catch (ex) {
-                                            noop();
-                                        }
-                                        interpreterService.verifyAll();
-                                        terminalService.verifyAll();
-                                    });
-                                    test(`ignores failures in IFileSystem.isDirReadonly()`, async () => {
-                                        const info = TypeMoq.Mock.ofType<PythonEnvironment>();
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
-                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
-                                        setActiveInterpreter(info.object);
-                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
-                                        const elevatedInstall = sinon.stub(
-                                            TestModuleInstaller.prototype,
-                                            'elevatedInstall',
-                                        );
-                                        elevatedInstall.returns();
-                                        const err = new Error('oops!');
-                                        fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
-                                            Promise.reject(err),
-                                        );
-
-                                        try {
-                                            await installer.installModule(product.value, resource);
-                                        } catch (ex) {
-                                            noop();
-                                        }
-                                        const args = [isolated, 'executionInfo'];
-                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
-                                        interpreterService.verifyAll();
-                                    });
-                                    test('If cancellation token is provided, install while showing progress', async () => {
-                                        const options = {
-                                            location: ProgressLocation.Notification,
-                                            cancellable: true,
-                                            title: Products.installingModule().format(product.name),
-                                        };
-                                        appShell
-                                            .setup((a) => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                                            .callback((expected) => assert.deepEqual(expected, options))
-                                            .returns(() => Promise.resolve())
-                                            .verifiable(TypeMoq.Times.once());
-                                        try {
-                                            await installer.installModule(
-                                                product.value,
-                                                resource,
-                                                new CancellationTokenSource().token,
+                                if (InstallerClass === TestModuleInstaller) {
+                                    suite(`If interpreter type is Unknown (${product.name})`, async () => {
+                                        test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is read only, do an elevated install`, async () => {
+                                            const info = TypeMoq.Mock.ofType<PythonEnvironment>();
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            info.setup((t: any) => t.then).returns(() => undefined);
+                                            info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
+                                            info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
+                                            setActiveInterpreter(info.object);
+                                            pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
+                                            const elevatedInstall = sinon.stub(
+                                                TestModuleInstaller.prototype,
+                                                'elevatedInstall',
                                             );
-                                        } catch (ex) {
+                                            elevatedInstall.returns();
+                                            fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
+                                                Promise.resolve(true),
+                                            );
+                                            try {
+                                                await installer.installModule(product.value, resource);
+                                            } catch (ex) {
+                                                noop();
+                                            }
+                                            const args = ['-m', 'executionInfo'];
+                                            assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
+                                            interpreterService.verifyAll();
+                                        });
+                                        test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is not read only, send command to terminal`, async () => {
+                                            const info = TypeMoq.Mock.ofType<PythonEnvironment>();
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            info.setup((t: any) => t.then).returns(() => undefined);
+                                            info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
+                                            info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
+                                            setActiveInterpreter(info.object);
+                                            pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
+                                            fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
+                                                Promise.resolve(false),
+                                            );
+                                            const args = ['-m', 'executionInfo'];
+                                            terminalService
+                                                .setup((t) => t.sendCommand(pythonPath, args, undefined))
+                                                .returns(() => Promise.resolve())
+                                                .verifiable(TypeMoq.Times.once());
+                                            try {
+                                                await installer.installModule(product.value, resource);
+                                            } catch (ex) {
+                                                noop();
+                                            }
+                                            interpreterService.verifyAll();
+                                            terminalService.verifyAll();
+                                        });
+                                        test(`If 'python.globalModuleInstallation' is not set to true, concatenate arguments with '--user' flag and send command to terminal`, async () => {
+                                            const info = TypeMoq.Mock.ofType<PythonEnvironment>();
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            info.setup((t: any) => t.then).returns(() => undefined);
+                                            info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
+                                            info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
+                                            setActiveInterpreter(info.object);
+                                            pythonSettings
+                                                .setup((p) => p.globalModuleInstallation)
+                                                .returns(() => false);
+                                            const args =
+                                                product.value === Product.pip
+                                                    ? ['-m', 'executionInfo'] // Pipe is always installed into the environment.
+                                                    : ['-m', 'executionInfo', '--user'];
+                                            terminalService
+                                                .setup((t) => t.sendCommand(pythonPath, args, undefined))
+                                                .returns(() => Promise.resolve())
+                                                .verifiable(TypeMoq.Times.once());
+                                            try {
+                                                await installer.installModule(product.value, resource);
+                                            } catch (ex) {
+                                                noop();
+                                            }
+                                            interpreterService.verifyAll();
+                                            terminalService.verifyAll();
+                                        });
+                                        test(`ignores failures in IFileSystem.isDirReadonly()`, async () => {
+                                            const info = TypeMoq.Mock.ofType<PythonEnvironment>();
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            info.setup((t: any) => t.then).returns(() => undefined);
+                                            info.setup((t) => t.envType).returns(() => EnvironmentType.Unknown);
+                                            info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
+                                            info.setup((t) => t.path).returns(() => pythonPath);
+                                            setActiveInterpreter(info.object);
+                                            pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
+                                            const elevatedInstall = sinon.stub(
+                                                TestModuleInstaller.prototype,
+                                                'elevatedInstall',
+                                            );
+                                            elevatedInstall.returns();
+                                            const err = new Error('oops!');
+                                            fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
+                                                Promise.reject(err),
+                                            );
+
+                                            try {
+                                                await installer.installModule(product.value, resource);
+                                            } catch (ex) {
+                                                noop();
+                                            }
+                                            const args = ['-m', 'executionInfo'];
+                                            assert.ok(elevatedInstall.calledOnceWith(pythonPath, args));
+                                            interpreterService.verifyAll();
+                                        });
+                                        test('If cancellation token is provided, install while showing progress', async () => {
+                                            const options = {
+                                                location: ProgressLocation.Notification,
+                                                cancellable: true,
+                                                title: `Installing ${product.name}`,
+                                            };
+                                            appShell
+                                                .setup((a) => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                                .callback((expected) => assert.deepEqual(expected, options))
+                                                .returns(() => Promise.resolve())
+                                                .verifiable(TypeMoq.Times.once());
+                                            try {
+                                                await installer.installModule(
+                                                    product.value,
+                                                    resource,
+                                                    new CancellationTokenSource().token,
+                                                );
+                                            } catch (ex) {
+                                                noop();
+                                            }
+                                            interpreterService.verifyAll();
+                                            appShell.verifyAll();
+                                        });
+                                    });
+                                }
+
+                                if (InstallerClass === PipInstaller) {
+                                    test(`Ensure getActiveInterpreter is used in PipInstaller (${product.name})`, async () => {
+                                        if (product.value === Product.pip) {
+                                            const mockInstaller = mock<IInstaller>();
+                                            serviceContainer
+                                                .setup((svc) => svc.get<IInstaller>(TypeMoq.It.isValue(IInstaller)))
+                                                .returns(() => instance(mockInstaller));
+                                            when(mockInstaller.isInstalled(Product.ensurepip, anything())).thenResolve(
+                                                true,
+                                            );
+                                        }
+                                        setActiveInterpreter();
+                                        try {
+                                            await installer.installModule(product.value, resource);
+                                        } catch {
                                             noop();
                                         }
                                         interpreterService.verifyAll();
-                                        appShell.verifyAll();
                                     });
-                                });
-                            }
+                                    test(`Test Args (${product.name})`, async () => {
+                                        if (product.value === Product.pip) {
+                                            const mockInstaller = mock<IInstaller>();
+                                            serviceContainer
+                                                .setup((svc) => svc.get<IInstaller>(TypeMoq.It.isValue(IInstaller)))
+                                                .returns(() => instance(mockInstaller));
+                                            when(mockInstaller.isInstalled(Product.pip, anything())).thenResolve(true);
+                                            when(mockInstaller.isInstalled(Product.ensurepip, anything())).thenResolve(
+                                                true,
+                                            );
+                                        }
+                                        setActiveInterpreter();
+                                        const proxyArgs = proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
+                                        const expectedArgs =
+                                            product.value === Product.pip
+                                                ? ['-m', 'ensurepip']
+                                                : ['-m', 'pip', ...proxyArgs, 'install', '-U', moduleName];
+                                        console.log(`Expected: ${expectedArgs.join(' ')}`);
+                                        await installModuleAndVerifyCommand(pythonPath, expectedArgs);
+                                        interpreterService.verifyAll();
+                                    });
+                                    if (product.value === Product.pip) {
+                                        test(`Test Args (${product.name}) if ensurepip is not available`, async () => {
+                                            if (product.value === Product.pip) {
+                                                const mockInstaller = mock<IInstaller>();
+                                                serviceContainer
+                                                    .setup((svc) => svc.get<IInstaller>(TypeMoq.It.isValue(IInstaller)))
+                                                    .returns(() => instance(mockInstaller));
+                                                when(mockInstaller.isInstalled(Product.pip, anything())).thenResolve(
+                                                    false,
+                                                );
+                                                when(
+                                                    mockInstaller.isInstalled(Product.ensurepip, anything()),
+                                                ).thenResolve(false);
+                                            }
+                                            const interpreterInfo = {
+                                                architecture: Architecture.Unknown,
+                                                envType: EnvironmentType.Unknown,
+                                                path: pythonPath,
+                                                sysPrefix: '',
+                                            };
+                                            setActiveInterpreter(interpreterInfo);
+                                            interpreterService
+                                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                                                .returns(() => Promise.resolve(interpreterInfo));
+                                            const expectedArgs = [path.join(_SCRIPTS_DIR, 'get-pip.py')];
 
-                            if (InstallerClass === PipInstaller) {
-                                test(`Ensure getActiveInterpreter is used in PipInstaller (${product.name})`, async () => {
-                                    setActiveInterpreter();
-                                    try {
-                                        await installer.installModule(product.value, resource);
-                                    } catch {
-                                        noop();
+                                            await installModuleAndVerifyCommand(pythonPath, expectedArgs);
+                                            interpreterService.verifyAll();
+                                        });
                                     }
-                                    interpreterService.verifyAll();
-                                });
-                            }
-                            if (InstallerClass === PipInstaller) {
-                                test(`Test Args (${product.name})`, async () => {
-                                    setActiveInterpreter();
-                                    const proxyArgs = proxyServer.length === 0 ? [] : ['--proxy', proxyServer];
-                                    const expectedArgs = [isolated, 'pip', ...proxyArgs, 'install', '-U', moduleName];
-                                    await installModuleAndVerifyCommand(pythonPath, expectedArgs);
-                                    interpreterService.verifyAll();
-                                });
-                            }
-                            if (InstallerClass === PipEnvInstaller) {
-                                [false, true].forEach((isUpgrade) => {
-                                    test(`Test args (${product.name})`, async () => {
-                                        setActiveInterpreter();
-                                        const expectedArgs = [isUpgrade ? 'update' : 'install', moduleName, '--dev'];
-                                        if (moduleName === 'black') {
-                                            expectedArgs.push('--pre');
-                                        }
-                                        await installModuleAndVerifyCommand(
-                                            pipenvName,
-                                            expectedArgs,
-                                            isUpgrade ? ModuleInstallFlags.upgrade : undefined,
-                                        );
+                                }
+                                if (InstallerClass === PipEnvInstaller) {
+                                    [false, true].forEach((isUpgrade) => {
+                                        test(`Test args (${product.name})`, async () => {
+                                            setActiveInterpreter();
+                                            const expectedArgs = [
+                                                isUpgrade ? 'update' : 'install',
+                                                moduleName,
+                                                '--dev',
+                                            ];
+                                            await installModuleAndVerifyCommand(
+                                                pipenvName,
+                                                expectedArgs,
+                                                isUpgrade ? ModuleInstallFlags.upgrade : undefined,
+                                            );
+                                        });
                                     });
-                                });
-                            }
-                            if (InstallerClass === CondaInstaller) {
-                                [false, true].forEach((isUpgrade) => {
-                                    test(`Test args (${product.name})`, async () => {
-                                        setActiveInterpreter();
-                                        const expectedArgs = [isUpgrade ? 'update' : 'install'];
-                                        if (product.name === 'tensorboard') {
-                                            expectedArgs.push('-c', 'conda-forge');
-                                        }
-                                        if (condaEnvInfo && condaEnvInfo.name) {
-                                            expectedArgs.push('--name');
-                                            expectedArgs.push(condaEnvInfo.name.toCommandArgument());
-                                        } else if (condaEnvInfo && condaEnvInfo.path) {
-                                            expectedArgs.push('--prefix');
-                                            expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
-                                        }
-                                        expectedArgs.push(moduleName);
-                                        expectedArgs.push('-y');
-                                        await installModuleAndVerifyCommand(
-                                            condaExecutable,
-                                            expectedArgs,
-                                            isUpgrade ? ModuleInstallFlags.upgrade : undefined,
-                                        );
+                                }
+                                if (InstallerClass === CondaInstaller) {
+                                    [false, true].forEach((isUpgrade) => {
+                                        test(`Test args (${product.name})`, async () => {
+                                            setActiveInterpreter();
+                                            const expectedArgs = [isUpgrade ? 'update' : 'install'];
+                                            if (
+                                                [
+                                                    'pandas',
+                                                    'tensorboard',
+                                                    'ipykernel',
+                                                    'jupyter',
+                                                    'notebook',
+                                                    'nbconvert',
+                                                ].includes(product.name)
+                                            ) {
+                                                expectedArgs.push('-c', 'conda-forge');
+                                            }
+                                            if (condaEnvInfo && condaEnvInfo.name) {
+                                                expectedArgs.push('--name');
+                                                expectedArgs.push(condaEnvInfo.name.toCommandArgumentForPythonExt());
+                                            } else if (condaEnvInfo && condaEnvInfo.path) {
+                                                expectedArgs.push('--prefix');
+                                                expectedArgs.push(
+                                                    condaEnvInfo.path.fileToCommandArgumentForPythonExt(),
+                                                );
+                                            }
+                                            expectedArgs.push(moduleName);
+                                            expectedArgs.push('-y');
+                                            await installModuleAndVerifyCommand(
+                                                condaExecutable,
+                                                expectedArgs,
+                                                isUpgrade ? ModuleInstallFlags.upgrade : undefined,
+                                            );
+                                        });
                                     });
-                                });
-                            }
-                        });
+                                }
+                            });
                     });
                 });
             });
@@ -649,29 +588,14 @@ suite('Module Installer', () => {
     });
 });
 
-function generatePythonInterpreterVersions() {
-    const versions: SemVer[] = ['2.7.0-final', '3.4.0-final', '3.5.0-final', '3.6.0-final', '3.7.0-final'].map(
-        (ver) => new SemVer(ver),
-    );
-    return versions.map((version) => {
-        const info = TypeMoq.Mock.ofType<PythonEnvironment>();
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        info.setup((t: any) => t.then).returns(() => undefined);
-        info.setup((t) => t.envType).returns(() => EnvironmentType.VirtualEnv);
-        info.setup((t) => t.version).returns(() => version);
-        return info.object;
-    });
-}
-
 function getModuleNamesForTesting(): { name: string; value: Product; moduleName: string }[] {
     return getNamesAndValues<Product>(Product)
         .map((product) => {
             let moduleName = '';
             const mockSvc = TypeMoq.Mock.ofType<IServiceContainer>().object;
-            const mockOutChnl = TypeMoq.Mock.ofType<OutputChannel>().object;
             try {
-                const prodInstaller = new ProductInstaller(mockSvc, mockOutChnl);
-                moduleName = prodInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                const prodInstaller = new ProductInstaller(mockSvc);
+                moduleName = prodInstaller.translateProductToModuleName(product.value);
                 return { name: product.name, value: product.value, moduleName };
             } catch {
                 return undefined;

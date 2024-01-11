@@ -6,7 +6,7 @@ import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 
 // Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
 export const MAX_EXTENSION_ACTIVATION_TIME = 180_000;
-export const TEST_TIMEOUT = 25000;
+export const TEST_TIMEOUT = 60_000;
 export const TEST_RETRYCOUNT = 3;
 export const IS_SMOKE_TEST = process.env.VSC_PYTHON_SMOKE_TEST === '1';
 export const IS_PERF_TEST = process.env.VSC_PYTHON_PERF_TEST === '1';

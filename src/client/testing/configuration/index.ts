@@ -3,13 +3,13 @@
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceError } from '../../common/logger';
 import { IConfigurationService, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { TestConfiguringTelemetry } from '../../telemetry/types';
-import { BufferedTestConfigSettingsService } from '../common/services/configSettingService';
+import { BufferedTestConfigSettingsService } from '../common/bufferedTestConfigSettingService';
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
@@ -38,18 +38,17 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
     public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
         const settings = this.configurationService.getSettings(wkspace);
         let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
-        enabledCount += settings.testing.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
             return this._promptToEnableAndConfigureTestFramework(
                 wkspace,
-                'Enable only one of the test frameworks (unittest, pytest or nosetest).',
+                'Enable only one of the test frameworks (unittest or pytest).',
                 true,
             );
         }
         const option = 'Enable and configure a Test Framework';
         const item = await this.appShell.showInformationMessage(
-            'No test framework configured (unittest, pytest or nosetest)',
+            'No test framework configured (unittest, or pytest)',
             option,
         );
         if (item !== option) {
@@ -72,12 +71,6 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 description: 'pytest framework',
 
                 detail: 'http://docs.pytest.org/',
-            },
-            {
-                label: 'nose',
-                product: Product.nosetest,
-                description: 'nose framework',
-                detail: 'https://nose.readthedocs.io/',
             },
         ];
         const options = {
@@ -107,12 +100,8 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             return configMgr.enable();
         }
         return pythonConfig.update('testing.promptToConfigure', undefined).then(
-            () => {
-                return configMgr.enable();
-            },
-            (reason) => {
-                return configMgr.enable().then(() => Promise.reject(reason));
-            },
+            () => configMgr.enable(),
+            (reason) => configMgr.enable().then(() => Promise.reject(reason)),
         );
     }
 
@@ -147,9 +136,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 await configMgr
                     .configure(wkspace)
                     .then(() => this._enableTest(wkspace, configMgr))
-                    .catch((reason) => {
-                        return this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason));
-                    });
+                    .catch((reason) => this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason)));
             }
             const cfg = this.serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
             try {

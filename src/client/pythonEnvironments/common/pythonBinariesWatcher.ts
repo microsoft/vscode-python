@@ -6,8 +6,9 @@
 import * as minimatch from 'minimatch';
 import * as path from 'path';
 import { FileChangeType, watchLocationForPattern } from '../../common/platform/fileSystemWatcher';
+import { IDisposable } from '../../common/types';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
+import { traceVerbose } from '../../logging';
 
 const [executable, binName] = getOSType() === OSType.Windows ? ['python.exe', 'Scripts'] : ['python', 'bin'];
 
@@ -26,6 +27,7 @@ export function watchLocationForPythonBinaries(
     const resolvedGlob = path.posix.normalize(executableGlob);
     const [baseGlob] = resolvedGlob.split('/').slice(-1);
     function callbackClosure(type: FileChangeType, e: string) {
+        traceVerbose('Received event', type, JSON.stringify(e), 'for baseglob', baseGlob);
         const isMatch = minimatch(path.basename(e), baseGlob, { nocase: getOSType() === OSType.Windows });
         if (!isMatch) {
             // When deleting the file for some reason path to all directories leading up to python are reported

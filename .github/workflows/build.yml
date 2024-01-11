@@ -9,7 +9,8 @@ on:
       - 'release-*'
 
 env:
-  NODE_VERSION: 12.15.0
+  NODE_VERSION: 18.17.1
+  PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
   special-working-directory: './path with spaces'
@@ -42,39 +43,20 @@ jobs:
           print(f"::set-output name=vsix_artifact_name::ms-python-{vsix_type}-vsix")
 
   build-vsix:
-    name: Build VSIX
+    name: Create VSIX
     if: github.repository == 'microsoft/vscode-python'
     needs: setup
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Install Node
-        uses: actions/setup-node@v2.1.5
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      # Jedi LS depends on dataclasses which was a pypi install in 3.6
-      - name: Use Python 3.6 for JediLSP
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.6
+        uses: actions/checkout@v4
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
-        id: build-vsix
-
-      - name: Rename VSIX
-        if: steps.build-vsix.outputs.path != needs.setup.outputs.vsix_name
-        run: mv ${{ steps.build-vsix.outputs.path }} ${{ needs.setup.outputs.vsix_name }}
-
-      - uses: actions/upload-artifact@v2
         with:
-          name: ${{ needs.setup.outputs.vsix_artifact_name }}
-          path: ${{ needs.setup.outputs.vsix_name }}
-          if-no-files-found: error
-          retention-days: 14
+          node_version: ${{ env.NODE_VERSION }}
+          vsix_name: ${{ needs.setup.outputs.vsix_name }}
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
 
   lint:
     name: Lint
@@ -82,47 +64,94 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v4
 
-      - name: Install Node
-        uses: actions/setup-node@v2.1.5
+      - name: Lint
+        uses: ./.github/actions/lint
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node_version: ${{ env.NODE_VERSION }}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: Run gulp prePublishNonBundle
-        run: npx gulp prePublishNonBundle
-
-      - name: Check dependencies
-        run: npm run checkDependencies
-
-      - name: Run linting on TypeScript code
-        run: npm run lint
-
-      - name: Run formatting on TypeScript code
-        run: npm run format-check
-
-      - name: Use Python 3.x
-        uses: actions/setup-python@v2
+  check-types:
+    name: Check Python types
+    if: github.repository == 'microsoft/vscode-python'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Run Black on Python code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install core Python requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py'
+
+      - name: Install Jedi requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
+          options: '-t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py'
+
+      - name: Install other Python requirements
         run: |
-          python -m pip install -U black
-          python -m black . --check
-        working-directory: pythonFiles
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip install --upgrade -r build/test-requirements.txt
 
-  ### Non-smoke tests
+      - name: Run Pyright
+        uses: jakebailey/pyright-action@v1
+        with:
+          version: 1.1.308
+          working-directory: 'pythonFiles'
+
+  python-tests:
+    name: Python Tests
+    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ${{ env.special-working-directory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
+        os: [ubuntu-latest, windows-latest]
+        # Run the tests on the oldest and most recent versions of Python.
+        python: ['3.8', '3.x', '3.12-dev']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.special-working-directory-relative }}
+
+      - name: Use Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install base Python requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/python" --no-cache-dir --implementation py'
+
+      - name: Install test requirements
+        run: python -m pip install --upgrade -r build/test-requirements.txt
+
+      - name: Run Python unit tests
+        run: python pythonFiles/tests/run_all.py
+
   tests:
     name: Tests
     if: github.repository == 'microsoft/vscode-python'
     runs-on: ${{ matrix.os }}
     defaults:
       run:
-        working-directory: ${{env.special-working-directory}}
+        working-directory: ${{ env.special-working-directory }}
     strategy:
       fail-fast: false
       matrix:
@@ -130,18 +159,20 @@ jobs:
         # entry to lower the number of runners used, macOS runners are expensive,
         # and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        python: ['2.7', '3.x']
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        python: ['3.x']
+        test-suite: [ts-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v4
         with:
-          path: ${{env.special-working-directory-relative}}
+          path: ${{ env.special-working-directory-relative }}
 
       - name: Install Node
-        uses: actions/setup-node@v2.1.5
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{env.NODE_VERSION}}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.special-working-directory-relative }}/package-lock.json
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -149,38 +180,50 @@ jobs:
       - name: Compile
         run: npx gulp prePublishNonBundle
 
-      - name: Install Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
+      - name: Localization
+        run: npx @vscode/l10n-dev@latest export ./src
 
-      - name: Install Node
-        uses: actions/setup-node@v2.1.5
+      - name: Install Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
         with:
-          node-version: ${{env.NODE_VERSION}}
+          python-version: ${{ matrix.python }}
 
-      - name: Install Python requirements
+      - name: Download get-pip.py
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip install wheel
+          python -m pip install -r build/build-install-requirements.txt
+          python ./pythonFiles/download_get_pip.py
+        shell: bash
+
+      - name: Install debugpy
+        run: |
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+
+      - name: Install core Python requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/python" --no-cache-dir --implementation py'
+        if: startsWith(matrix.python, 3.)
+
+      - name: Install Jedi requirements
+        uses: brettcannon/pip-secure-install@v1
+        with:
+          requirements-file: '"${{ env.special-working-directory-relative }}/pythonFiles/jedilsp_requirements/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/jedilsp" --no-cache-dir --implementation py'
+        if: startsWith(matrix.python, 3.)
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
-      - name: Install debugpy wheels
+      - name: Install debugpy wheels (Python ${{ matrix.python }})
         run: |
           python -m pip install wheel
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python -m pip install -r build/build-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
         shell: bash
-        if: matrix.test-suite == 'debugger' && matrix.python != 2.7
-
-      - name: Install debugpy wheel (Python 2.7)
-        run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        shell: bash
-        if: matrix.test-suite == 'debugger' && matrix.python == 2.7
+        if: matrix.test-suite == 'debugger'
 
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt
@@ -194,7 +237,7 @@ jobs:
         if: matrix.test-suite == 'venv'
         run: |
           python -m pip install pipenv
-          python -m pipenv run python ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
+          python -m pipenv run python ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} pipenvPath
 
       - name: Prepare poetry for venv tests
         env:
@@ -215,10 +258,10 @@ jobs:
         run: |
           python -m pip install virtualenv
           python -m virtualenv .virtualenv/
-          if ('${{matrix.os}}' -match 'windows-latest') {
-            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+          if ('${{ matrix.os }}' -match 'windows-latest') {
+            & ".virtualenv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           } else {
-            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+            & ".virtualenv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} virtualEnvPath
           }
 
       - name: Prepare venv for venv tests
@@ -229,10 +272,10 @@ jobs:
         if: matrix.test-suite == 'venv' && startsWith(matrix.python, 3.)
         run: |
           python -m venv .venv
-          if ('${{matrix.os}}' -match 'windows-latest') {
-            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          if ('${{ matrix.os }}' -match 'windows-latest') {
+            & ".venv/Scripts/python.exe" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           } else {
-            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+            & ".venv/bin/python" ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} venvPath
           }
 
       - name: Prepare conda for venv tests
@@ -242,22 +285,17 @@ jobs:
         shell: pwsh
         if: matrix.test-suite == 'venv'
         run: |
-          # 1. For `terminalActivation.testvirtualenvs.test.ts`
-          if ('${{matrix.os}}' -match 'windows-latest') {
+          # 1. For `*.testvirtualenvs.test.ts`
+          if ('${{ matrix.os }}' -match 'windows-latest') {
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python.exe
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath Scripts | Join-Path -ChildPath conda
           } else{
             $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath python
             $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath bin | Join-Path -ChildPath conda
           }
-          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
-          & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
-
-          # 2. For `interpreterLocatorService.testvirtualenvs.ts`
-
-          & $condaExecPath create -n "test_env1" -y python
-          & $condaExecPath create -p "./test_env2" -y python
-          & $condaExecPath create -p "~/test_env3" -y python
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaExecPath $condaExecPath
+          & $condaPythonPath ./build/ci/addEnvPath.py ${{ env.PYTHON_VIRTUAL_ENVS_LOCATION }} condaPath
+          & $condaExecPath init --all
 
       - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
         run: |
@@ -271,10 +309,6 @@ jobs:
         run: npm run test:unittests
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, '3.')
 
-      - name: Run Python unit tests
-        run: python pythonFiles/tests/run_all.py
-        if: matrix.test-suite == 'python-unit'
-
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
       # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`,
       # which is set in the "Prepare environment for venv tests" step.
@@ -284,38 +318,38 @@ jobs:
       - name: Run venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
-          CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.5
+          CI_PYTHON_VERSION: ${{ matrix.python }}
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testSingleWorkspace
-          working-directory: ${{env.special-working-directory}}
-        if: matrix.test-suite == 'venv'
+          working-directory: ${{ env.special-working-directory }}
+        if: matrix.test-suite == 'venv' && matrix.os == 'ubuntu-latest'
 
       - name: Run single-workspace tests
         env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.5
+          CI_PYTHON_VERSION: ${{ matrix.python }}
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testSingleWorkspace
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
         env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.5
+          CI_PYTHON_VERSION: ${{ matrix.python }}
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testMultiWorkspace
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
         env:
-          CI_PYTHON_VERSION: ${{matrix.python}}
-        uses: GabrielBB/xvfb-action@v1.5
+          CI_PYTHON_VERSION: ${{ matrix.python }}
+        uses: GabrielBB/xvfb-action@v1.6
         with:
           run: npm run testDebugger
-          working-directory: ${{env.special-working-directory}}
+          working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'debugger'
 
       # Run TypeScript functional tests
@@ -334,141 +368,12 @@ jobs:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest, windows-latest]
-        python: ['3.x']
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
+        uses: actions/checkout@v4
 
-      - name: Install Node
-        uses: actions/setup-node@v2.1.5
+      - name: Smoke tests
+        uses: ./.github/actions/smoke-tests
         with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: pip install system test requirements
-        run: |
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        shell: bash
-
-      - name: pip install smoke test requirements
-        run: |
-          python -m pip install --upgrade -r build/smoke-test-requirements.txt
-        shell: bash
-
-      # Save time by reusing bits from the VSIX.
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.setup.outputs.vsix_artifact_name }}
-
-      - name: Prepare for smoke tests
-        run: npx tsc -p ./
-        shell: bash
-
-      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
-        run: |
-          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
-          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Run smoke tests
-        env:
-          DISPLAY: 10
-          INSTALL_JUPYTER_EXTENSION: true
-        uses: GabrielBB/xvfb-action@v1.5
-        with:
-          run: node --no-force-async-hooks-checks ./out/test/smokeTest.js
-
-  insider-tests:
-    name: Insider tests
-    if: github.repository == 'microsoft/vscode-python'
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
-        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
-        python: [3.8] # For Jupyter.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.4
-
-      - name: Install Node
-        uses: actions/setup-node@v2.1.5
-        with:
-          node-version: ${{env.NODE_VERSION}}
-
-      - name: Use Python ${{matrix.python}}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{matrix.python}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: pip install system test requirements
-        run: |
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
-        shell: bash
-
-      - name: pip install smoke test requirements
-        run: |
-          python -m pip install --upgrade -r build/smoke-test-requirements.txt
-        shell: bash
-
-      # Compile the test files.
-      - name: Prepare for insiders tests
-        run: npm run prePublish
-        shell: bash
-
-      - name: Set CI_PYTHON_PATH and CI_DISABLE_AUTO_SELECTION
-        run: |
-          echo "CI_PYTHON_PATH=python" >> $GITHUB_ENV
-          echo "CI_DISABLE_AUTO_SELECTION=1" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Run insider tests
-        env:
-          DISPLAY: 10
-          INSTALL_JUPYTER_EXTENSION: true
-          INSTALL_PYLANCE_EXTENSION: true
-          VSC_PYTHON_CI_TEST_VSC_CHANNEL: insiders
-          TEST_FILES_SUFFIX: insiders.test
-          CODE_TESTS_WORKSPACE: ./src/testMultiRootWkspc/smokeTests
-        uses: GabrielBB/xvfb-action@v1.5
-        with:
-          run: node --no-force-async-hooks-checks ./out/test/standardTest.js
-
-  upload:
-    name: Upload VSIX to Azure Blob Storage
-    if: github.repository == 'microsoft/vscode-python' && github.ref == 'refs/heads/main'
-    needs: [setup, tests, smoke-tests, build-vsix]
-    runs-on: ubuntu-latest
-    env:
-      BLOB_CONTAINER_NAME: extension-builds
-      BLOB_NAME: ms-python-insiders.vsix
-    steps:
-      - name: Download VSIX
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ needs.setup.outputs.vsix_artifact_name }}
-      - name: Azure Login
-        uses: azure/login@v1.3.0
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Upload to Blob Storage
-        run: az storage blob upload --file ${{ needs.setup.outputs.vsix_name }} --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
-      - name: Get URL to uploaded VSIX
-        run: az storage blob url --account-name pvsc --container-name ${{ env.BLOB_CONTAINER_NAME }} --name ${{ env.BLOB_NAME }} --auth-mode login
+          node_version: ${{ env.NODE_VERSION }}
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}

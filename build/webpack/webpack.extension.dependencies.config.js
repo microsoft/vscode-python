@@ -28,7 +28,7 @@ const config = {
         // vsls requires our package.json to be next to node_modules. It's how they
         // 'find' the calling extension.
         // eslint-disable-next-line new-cap
-        new copyWebpackPlugin([{ from: './package.json', to: '.' }]),
+        new copyWebpackPlugin({ patterns: [{ from: './package.json', to: '.' }] }),
     ],
     resolve: {
         extensions: ['.js'],

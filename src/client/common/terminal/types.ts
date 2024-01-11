@@ -11,6 +11,7 @@ import { IDisposable, Resource } from '../types';
 export enum TerminalActivationProviders {
     bashCShellFish = 'bashCShellFish',
     commandPromptAndPowerShell = 'commandPromptAndPowerShell',
+    nushell = 'nushell',
     pyenv = 'pyenv',
     conda = 'conda',
     pipenv = 'pipenv',
@@ -26,6 +27,7 @@ export enum TerminalShellType {
     fish = 'fish',
     cshell = 'cshell',
     tcshell = 'tshell',
+    nushell = 'nushell',
     wsl = 'wsl',
     xonsh = 'xonsh',
     other = 'other',
@@ -95,7 +97,7 @@ export interface ITerminalServiceFactory {
      * @returns {ITerminalService}
      * @memberof ITerminalServiceFactory
      */
-    getTerminalService(options: TerminalCreationOptions): ITerminalService;
+    getTerminalService(options: TerminalCreationOptions & { newTerminalPerFile?: boolean }): ITerminalService;
     createTerminalService(resource?: Uri, title?: string): ITerminalService;
 }
 

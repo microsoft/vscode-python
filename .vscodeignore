@@ -1,6 +1,5 @@
 **/*.map
 **/*.analyzer.html
-!out/startPage-ui/viewers/
 *.vsix
 .editorconfig
 .env
@@ -46,7 +45,7 @@ debug_coverage*/**
 images/**/*.gif
 images/**/*.png
 ipywidgets/**
-news/**
+i18n/**
 node_modules/**
 obj/**
 out/**/*.stats.json
@@ -58,9 +57,9 @@ out/test/**
 out/testMultiRootWkspc/**
 precommit.hook
 pythonFiles/**/*.pyc
-pythonFiles/lib/**/*.dist-info/**
 pythonFiles/lib/**/*.egg-info/**
 pythonFiles/lib/python/bin/**
+pythonFiles/jedilsp_requirements/**
 pythonFiles/tests/**
 scripts/**
 src/**

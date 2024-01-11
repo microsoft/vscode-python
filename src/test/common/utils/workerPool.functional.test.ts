@@ -49,7 +49,7 @@ suite('Process Queue', () => {
             try {
                 results.push(await v);
             } catch (reason) {
-                reasons.push(reason);
+                reasons.push(reason as Error);
             }
         }
         assert.deepEqual(results, [4, 9]);
@@ -67,7 +67,7 @@ suite('Process Queue', () => {
         try {
             await workerPool.addToQueue(2);
         } catch (reason) {
-            reasons.push(reason);
+            reasons.push(reason as Error);
         }
         assert.deepEqual(reasons, [Error('Queue is stopped')]);
     });
@@ -87,7 +87,7 @@ suite('Process Queue', () => {
             try {
                 results.push(await v);
             } catch (reason) {
-                reasons.push(reason);
+                reasons.push(reason as string);
             }
         }
         assert.deepEqual(reasons, [Error('Bad input')]);

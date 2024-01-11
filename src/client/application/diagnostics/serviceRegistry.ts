@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { LanguageServerType } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
@@ -12,14 +12,13 @@ import {
     EnvironmentPathVariableDiagnosticsServiceId,
 } from './checks/envPathVariable';
 import {
-    InvalidLaunchJsonDebuggerService,
-    InvalidLaunchJsonDebuggerServiceId,
-} from './checks/invalidLaunchJsonDebugger';
-import {
     InvalidPythonPathInDebuggerService,
     InvalidPythonPathInDebuggerServiceId,
 } from './checks/invalidPythonPathInDebugger';
-import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
+import {
+    JediPython27NotSupportedDiagnosticService,
+    JediPython27NotSupportedDiagnosticServiceId,
+} from './checks/jediPython27NotSupported';
 import {
     InvalidMacPythonInterpreterService,
     InvalidMacPythonInterpreterServiceId,
@@ -31,10 +30,9 @@ import {
 import { PylanceDefaultDiagnosticService, PylanceDefaultDiagnosticServiceId } from './checks/pylanceDefault';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import {
-    PythonPathDeprecatedDiagnosticService,
-    PythonPathDeprecatedDiagnosticServiceId,
-} from './checks/pythonPathDeprecated';
-import { UpgradeCodeRunnerDiagnosticService, UpgradeCodeRunnerDiagnosticServiceId } from './checks/upgradeCodeRunner';
+    SwitchToDefaultLanguageServerDiagnosticService,
+    SwitchToDefaultLanguageServerDiagnosticServiceId,
+} from './checks/switchToDefaultLS';
 import { DiagnosticsCommandFactory } from './commands/factory';
 import { IDiagnosticsCommandFactory } from './commands/types';
 import { DiagnosticFilterService } from './filter';
@@ -45,7 +43,7 @@ import {
 } from './promptHandler';
 import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from './types';
 
-export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType): void {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
     serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
         IDiagnosticHandlerService,
@@ -59,13 +57,12 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
-        InvalidLaunchJsonDebuggerService,
-        InvalidLaunchJsonDebuggerServiceId,
-    );
-    serviceManager.addSingleton<IDiagnosticsService>(
-        IDiagnosticsService,
         InvalidPythonInterpreterService,
         InvalidPythonInterpreterServiceId,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InvalidPythonInterpreterService,
     );
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
@@ -82,17 +79,6 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         InvalidMacPythonInterpreterService,
         InvalidMacPythonInterpreterServiceId,
     );
-    serviceManager.addSingleton<IDiagnosticsService>(
-        IDiagnosticsService,
-        PythonPathDeprecatedDiagnosticService,
-        PythonPathDeprecatedDiagnosticServiceId,
-    );
-
-    serviceManager.addSingleton<IDiagnosticsService>(
-        IDiagnosticsService,
-        UpgradeCodeRunnerDiagnosticService,
-        UpgradeCodeRunnerDiagnosticServiceId,
-    );
 
     serviceManager.addSingleton<IDiagnosticsService>(
         IDiagnosticsService,
@@ -100,14 +86,18 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         PylanceDefaultDiagnosticServiceId,
     );
 
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        JediPython27NotSupportedDiagnosticService,
+        JediPython27NotSupportedDiagnosticServiceId,
+    );
+
+    serviceManager.addSingleton<IDiagnosticsService>(
+        IDiagnosticsService,
+        SwitchToDefaultLanguageServerDiagnosticService,
+        SwitchToDefaultLanguageServerDiagnosticServiceId,
+    );
+
     serviceManager.addSingleton<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory, DiagnosticsCommandFactory);
     serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics);
-
-    if (languageServerType === LanguageServerType.Microsoft) {
-        serviceManager.addSingleton<IDiagnosticsService>(
-            IDiagnosticsService,
-            LSNotSupportedDiagnosticService,
-            LSNotSupportedDiagnosticServiceId,
-        );
-    }
 }

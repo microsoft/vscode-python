@@ -1,25 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { interfaces } from 'inversify';
-import { ClassType } from '../ioc/types';
+import { IServiceManager } from '../ioc/types';
 import { TerminalAutoActivation } from './activation';
 import { CodeExecutionManager } from './codeExecution/codeExecutionManager';
 import { DjangoShellCodeExecutionProvider } from './codeExecution/djangoShellCodeExecution';
 import { CodeExecutionHelper } from './codeExecution/helper';
 import { ReplProvider } from './codeExecution/repl';
 import { TerminalCodeExecutionProvider } from './codeExecution/terminalCodeExecution';
-import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService, ITerminalAutoActivation } from './types';
+import {
+    ICodeExecutionHelper,
+    ICodeExecutionManager,
+    ICodeExecutionService,
+    IShellIntegrationService,
+    ITerminalAutoActivation,
+    ITerminalDeactivateService,
+    ITerminalEnvVarCollectionService,
+} from './types';
+import { TerminalEnvVarCollectionService } from './envCollectionActivation/service';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
+import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
+import { ShellIntegrationService } from './envCollectionActivation/shellIntegrationService';
+import { TerminalDeactivateService } from './envCollectionActivation/deactivateService';
 
-interface IServiceRegistry {
-    addSingleton<T>(
-        serviceIdentifier: interfaces.ServiceIdentifier<T>,
-        constructor: ClassType<T>,
-        name?: string | number | symbol,
-    ): void;
-}
-
-export function registerTypes(serviceManager: IServiceRegistry): void {
+export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
 
     serviceManager.addSingleton<ICodeExecutionManager>(ICodeExecutionManager, CodeExecutionManager);
@@ -37,4 +41,15 @@ export function registerTypes(serviceManager: IServiceRegistry): void {
     serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, ReplProvider, 'repl');
 
     serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation);
+    serviceManager.addSingleton<ITerminalEnvVarCollectionService>(
+        ITerminalEnvVarCollectionService,
+        TerminalEnvVarCollectionService,
+    );
+    serviceManager.addSingleton<ITerminalDeactivateService>(ITerminalDeactivateService, TerminalDeactivateService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        TerminalIndicatorPrompt,
+    );
+    serviceManager.addSingleton<IShellIntegrationService>(IShellIntegrationService, ShellIntegrationService);
+    serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
 }

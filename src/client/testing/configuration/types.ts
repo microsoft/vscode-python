@@ -4,9 +4,6 @@
 export interface ITestingSettings {
     readonly promptToConfigure: boolean;
     readonly debugPort: number;
-    readonly nosetestsEnabled: boolean;
-    nosetestPath: string;
-    nosetestArgs: string[];
     readonly pytestEnabled: boolean;
     pytestPath: string;
     pytestArgs: string[];

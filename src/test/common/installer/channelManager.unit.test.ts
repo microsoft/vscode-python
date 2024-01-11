@@ -57,7 +57,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
 
-        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        const channel = await installChannelManager.getInstallationChannel(Product.pytest, resource);
         expect(channel).to.equal(undefined, 'should be undefined');
         assert.ok(showNoInstallersMessage.calledOnceWith(resource));
     });
@@ -79,7 +79,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
 
-        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        const channel = await installChannelManager.getInstallationChannel(Product.pytest, resource);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
         expect(channel).to.equal(undefined, 'Channel should not be set');
@@ -107,7 +107,7 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         showNoInstallersMessage.resolves();
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
 
-        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        const channel = await installChannelManager.getInstallationChannel(Product.pytest, resource);
         assert.ok(showNoInstallersMessage.notCalled);
         appShell.verifyAll();
         expect(channel).to.not.equal(undefined, 'Channel should be set');
@@ -207,7 +207,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
 
             .returns(() => Promise.resolve(activeInterpreter as any));
         appShell
-            .setup((a) => a.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp()))
+            .setup((a) => a.showErrorMessage(Installer.noCondaOrPipInstaller, Installer.searchForHelp))
             .verifiable(TypeMoq.Times.once());
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
         await installChannelManager.showNoInstallersMessage(resource);
@@ -232,7 +232,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
 
             .returns(() => Promise.resolve(activeInterpreter as any));
         appShell
-            .setup((a) => a.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp()))
+            .setup((a) => a.showErrorMessage(Installer.noPipInstaller, Installer.searchForHelp))
             .verifiable(TypeMoq.Times.once());
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
         await installChannelManager.showNoInstallersMessage(resource);
@@ -289,8 +289,8 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 platformService.setup((p) => p.isWindows).returns(() => testParams.isWindows);
                 platformService.setup((p) => p.isMac).returns(() => testParams.isMac);
                 appShell
-                    .setup((a) => a.showErrorMessage(TypeMoq.It.isAny(), Installer.searchForHelp()))
-                    .returns(() => Promise.resolve(Installer.searchForHelp()))
+                    .setup((a) => a.showErrorMessage(TypeMoq.It.isAny(), Installer.searchForHelp))
+                    .returns(() => Promise.resolve(Installer.searchForHelp))
                     .verifiable(TypeMoq.Times.once());
                 appShell
                     .setup((a) => a.openUrl(expectedURL))
@@ -326,7 +326,7 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .returns(() => Promise.resolve(activeInterpreter as any));
         platformService.setup((p) => p.isWindows).returns(() => true);
         appShell
-            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), Installer.searchForHelp()))
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString(), Installer.searchForHelp))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         appShell

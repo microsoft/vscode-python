@@ -2,20 +2,24 @@
 // Licensed under the MIT License.
 import { Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
 import { DocumentFilter, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient/node';
+import { IWorkspaceService } from '../../common/application/types';
 
 import { PYTHON, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators } from '../../common/logger';
-import { IOutputChannel, Resource } from '../../common/types';
+import { ILogOutputChannel, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { traceDecoratorError } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { ILanguageServerAnalysisOptions, ILanguageServerOutputChannel } from '../types';
 
 export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServerAnalysisOptions {
     protected readonly didChange = new EventEmitter<void>();
-    private readonly output: IOutputChannel;
+    private readonly output: ILogOutputChannel;
 
-    protected constructor(lsOutputChannel: ILanguageServerOutputChannel) {
+    protected constructor(
+        lsOutputChannel: ILanguageServerOutputChannel,
+        protected readonly workspace: IWorkspaceService,
+    ) {
         this.output = lsOutputChannel.channel;
     }
 
@@ -29,7 +33,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
         this.didChange.dispose();
     }
 
-    @traceDecorators.error('Failed to get analysis options')
+    @traceDecoratorError('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const workspaceFolder = this.getWorkspaceFolder();
         const documentSelector = this.getDocumentFilters(workspaceFolder);
@@ -38,7 +42,7 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
             documentSelector,
             workspaceFolder,
             synchronize: {
-                configurationSection: PYTHON_LANGUAGE,
+                configurationSection: this.getConfigSectionsToSynchronize(),
             },
             outputChannel: this.output,
             revealOutputChannelOn: RevealOutputChannelOn.Never,
@@ -51,7 +55,11 @@ export abstract class LanguageServerAnalysisOptionsBase implements ILanguageServ
     }
 
     protected getDocumentFilters(_workspaceFolder?: WorkspaceFolder): DocumentFilter[] {
-        return PYTHON;
+        return this.workspace.isVirtualWorkspace ? [{ language: PYTHON_LANGUAGE }] : PYTHON;
+    }
+
+    protected getConfigSectionsToSynchronize(): string[] {
+        return [PYTHON_LANGUAGE];
     }
 
     protected async getInitializationOptions(): Promise<any> {
@@ -66,8 +74,9 @@ export abstract class LanguageServerAnalysisOptionsWithEnv extends LanguageServe
     protected constructor(
         private readonly envVarsProvider: IEnvironmentVariablesProvider,
         lsOutputChannel: ILanguageServerOutputChannel,
+        workspace: IWorkspaceService,
     ) {
-        super(lsOutputChannel);
+        super(lsOutputChannel, workspace);
     }
 
     public async initialize(_resource: Resource, _interpreter: PythonEnvironment | undefined) {

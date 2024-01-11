@@ -1,9 +1,8 @@
 import '../../common/extensions';
+import { traceError } from '../../logging';
 import { isTestExecution } from '../constants';
-import { traceError, traceVerbose } from '../logger';
 import { createDeferred, Deferred } from './async';
 import { getCacheKeyFromFunctionArgs, getGlobalCacheStore } from './cacheUtils';
-import { TraceInfo, tracing } from './misc';
 import { StopWatch } from './stopWatch';
 
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -153,10 +152,15 @@ export function cache(expiryDurationMs: number, cachePromise = false, expiryDura
             if (isTestExecution()) {
                 return originalMethod.apply(this, args) as Promise<any>;
             }
-            const key = getCacheKeyFromFunctionArgs(keyPrefix, args);
+            let key: string;
+            try {
+                key = getCacheKeyFromFunctionArgs(keyPrefix, args);
+            } catch (ex) {
+                traceError('Error while creating key for keyPrefix:', keyPrefix, ex);
+                return originalMethod.apply(this, args) as Promise<any>;
+            }
             const cachedItem = cacheStoreForMethods.get(key);
             if (cachedItem && (cachedItem.expiry > Date.now() || expiryDurationMs === -1)) {
-                traceVerbose(`Cached data exists ${key}`);
                 return Promise.resolve(cachedItem.data);
             }
             const expiryMs =
@@ -208,38 +212,5 @@ export function swallowExceptions(scopeName?: string) {
                 traceError(errorMessage, error);
             }
         };
-    };
-}
-
-// Information about a function/method call.
-export type CallInfo = {
-    kind: string; // "Class", etc.
-    name: string;
-
-    args: any[];
-};
-
-// Return a decorator that traces the decorated function.
-export function trace(log: (c: CallInfo, t: TraceInfo) => void) {
-    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
-        const originalMethod = descriptor.value;
-
-        descriptor.value = function (...args: any[]) {
-            const call = {
-                kind: 'Class',
-                name: _ && _.constructor ? _.constructor.name : '',
-                args,
-            };
-
-            const scope = this;
-            return tracing(
-                // "log()"
-                (t) => log(call, t),
-                // "run()"
-                () => originalMethod.apply(scope, args),
-            );
-        };
-
-        return descriptor;
     };
 }

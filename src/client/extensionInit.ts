@@ -4,17 +4,19 @@
 'use strict';
 
 import { Container } from 'inversify';
-import { Disposable, Memento, OutputChannel, window } from 'vscode';
-import { STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { Disposable, Memento, window } from 'vscode';
+import { instance, mock } from 'ts-mockito';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
+import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
     IExtensionContext,
     IMemento,
-    IOutputChannel,
+    ILogOutputChannel,
+    ITestOutputChannel,
     WORKSPACE_MEMENTO,
 } from './common/types';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -23,10 +25,11 @@ import { ExtensionState } from './components';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { addOutputChannelLogging } from './logging';
 import * as pythonEnvironments from './pythonEnvironments';
-import { PythonEnvironments } from './pythonEnvironments/api';
-import { TEST_OUTPUT_CHANNEL } from './testing/constants';
+import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { registerLogger } from './logging';
+import { OutputChannelLogger } from './logging/outputChannelLogger';
+import { WorkspaceService } from './common/application/workspace';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -37,10 +40,10 @@ export function initializeGlobals(
     // This is stored in ExtensionState.
     context: IExtensionContext,
 ): ExtensionState {
+    const disposables: IDisposableRegistry = context.subscriptions;
     const cont = new Container({ skipBaseClassChecks: true });
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
-    const disposables: IDisposableRegistry = context.subscriptions;
 
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
     serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
@@ -50,11 +53,20 @@ export function initializeGlobals(
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
-    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
-    addOutputChannelLogging(standardOutputChannel);
-    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
-    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python, { log: true });
+    disposables.push(standardOutputChannel);
+    disposables.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
+
+    const workspaceService = new WorkspaceService();
+    const unitTestOutChannel =
+        workspaceService.isVirtualWorkspace || !workspaceService.isTrusted
+            ? // Do not create any test related output UI when using virtual workspaces.
+              instance(mock<ITestOutputChannel>())
+            : window.createOutputChannel(OutputChannelNames.pythonTest);
+    disposables.push(unitTestOutChannel);
+
+    serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, standardOutputChannel);
+    serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, unitTestOutChannel);
 
     return {
         context,
@@ -73,6 +85,7 @@ export function initializeStandard(ext: ExtensionState): void {
     variableRegisterTypes(serviceManager);
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
+    interpretersRegisterTypes(serviceManager);
 
     // We will be pulling other code over from activateLegacy().
 }
@@ -81,7 +94,7 @@ export function initializeStandard(ext: ExtensionState): void {
  * The set of public APIs from initialized components.
  */
 export type Components = {
-    pythonEnvs: PythonEnvironments;
+    pythonEnvs: IDiscoveryAPI;
 };
 
 /**

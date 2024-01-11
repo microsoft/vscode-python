@@ -9,6 +9,7 @@ import {
     Event,
     FileSystemWatcher,
     GlobPattern,
+    TextDocument,
     Uri,
     workspace,
     WorkspaceConfiguration,
@@ -35,14 +36,19 @@ export class WorkspaceService implements IWorkspaceService {
     public get onDidChangeWorkspaceFolders(): Event<WorkspaceFoldersChangeEvent> {
         return workspace.onDidChangeWorkspaceFolders;
     }
-    public get hasWorkspaceFolders() {
-        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0;
-    }
     public get workspaceFile() {
         return workspace.workspaceFile;
     }
-    public getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration {
-        return workspace.getConfiguration(section, resource || null);
+    public getConfiguration(
+        section?: string,
+        resource?: Uri,
+        languageSpecific: boolean = false,
+    ): WorkspaceConfiguration {
+        if (languageSpecific) {
+            return workspace.getConfiguration(section, { uri: resource, languageId: 'python' });
+        } else {
+            return workspace.getConfiguration(section, resource);
+        }
     }
     public getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
         return uri ? workspace.getWorkspaceFolder(uri) : undefined;
@@ -83,9 +89,37 @@ export class WorkspaceService implements IWorkspaceService {
             : defaultValue;
     }
 
+    public get isVirtualWorkspace(): boolean {
+        const isVirtualWorkspace =
+            workspace.workspaceFolders && workspace.workspaceFolders.every((f) => f.uri.scheme !== 'file');
+        return !!isVirtualWorkspace;
+    }
+
+    public get isTrusted(): boolean {
+        return workspace.isTrusted;
+    }
+
+    public get onDidGrantWorkspaceTrust(): Event<void> {
+        return workspace.onDidGrantWorkspaceTrust;
+    }
+
+    public openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument> {
+        return workspace.openTextDocument(options);
+    }
+
     private get searchExcludes() {
         const searchExcludes = this.getConfiguration('search.exclude');
         const enabledSearchExcludes = Object.keys(searchExcludes).filter((key) => searchExcludes.get(key) === true);
         return `{${enabledSearchExcludes.join(',')}}`;
+    }
+
+    public async save(uri: Uri): Promise<Uri | undefined> {
+        try {
+            // This is a proposed API hence putting it inside try...catch.
+            const result = await workspace.save(uri);
+            return result;
+        } catch (ex) {
+            return undefined;
+        }
     }
 }

@@ -1,8 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
 
-export type Arguments = any[];
+import { Uri } from 'vscode';
+
+export type Arguments = unknown[];
 
 function valueToLogString(value: unknown, kind: string): string {
     if (value === undefined) {
@@ -12,8 +15,8 @@ function valueToLogString(value: unknown, kind: string): string {
         return 'null';
     }
     try {
-        if (value && (value as any).fsPath) {
-            return `<Uri:${(value as any).fsPath}>`;
+        if (value && (value as Uri).fsPath) {
+            return `<Uri:${(value as Uri).fsPath}>`;
         }
         return JSON.stringify(value);
     } catch {
@@ -43,4 +46,9 @@ export function argsToLogString(args: Arguments): string {
 export function returnValueToLogString(returnValue: unknown): string {
     const valueString = valueToLogString(returnValue, 'Return value');
     return `Return Value: ${valueString}`;
+}
+
+export function getTimeForLogging(): string {
+    const date = new Date();
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}.${date.getMilliseconds()}`;
 }

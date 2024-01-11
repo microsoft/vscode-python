@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable } from 'inversify';
+
 import * as path from 'path';
 import { WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
@@ -13,22 +13,24 @@ import { ILanguageServerOutputChannel } from '../types';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types, class-methods-use-this */
 
-@injectable()
 export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOptionsWithEnv {
     private resource: Resource | undefined;
 
+    private interpreter: PythonEnvironment | undefined;
+
     constructor(
-        @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(ILanguageServerOutputChannel) lsOutputChannel: ILanguageServerOutputChannel,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        envVarsProvider: IEnvironmentVariablesProvider,
+        lsOutputChannel: ILanguageServerOutputChannel,
+        private readonly configurationService: IConfigurationService,
+        workspace: IWorkspaceService,
     ) {
-        super(envVarsProvider, lsOutputChannel);
+        super(envVarsProvider, lsOutputChannel, workspace);
         this.resource = undefined;
     }
 
     public async initialize(resource: Resource, interpreter: PythonEnvironment | undefined) {
         this.resource = resource;
+        this.interpreter = interpreter;
         return super.initialize(resource, interpreter);
     }
 
@@ -60,7 +62,7 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
             markupKindPreferred: 'markdown',
             completion: {
                 resolveEagerly: false,
-                disableSnippets: false,
+                disableSnippets: true,
             },
             diagnostics: {
                 enable: true,
@@ -68,8 +70,16 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                 didSave: true,
                 didChange: true,
             },
+            hover: {
+                disable: {
+                    keyword: {
+                        all: true,
+                    },
+                },
+            },
             workspace: {
                 extraPaths: distinctExtraPaths,
+                environmentPath: this.interpreter?.path,
                 symbols: {
                     // 0 means remove limit on number of workspace symbols returned
                     maxSymbols: 0,

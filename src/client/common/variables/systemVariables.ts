@@ -7,10 +7,9 @@ import * as Path from 'path';
 import { Range, Uri } from 'vscode';
 
 import { IDocumentManager, IWorkspaceService } from '../application/types';
+import { WorkspaceService } from '../application/workspace';
 import * as Types from '../utils/sysTypes';
 import { IStringDictionary, ISystemVariables } from './types';
-
-/* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
 abstract class AbstractSystemVariables implements ISystemVariables {
     public resolve(value: string): string;
@@ -127,6 +126,18 @@ export class SystemVariables extends AbstractSystemVariables {
                 string | undefined
             >)[`env.${key}`] = process.env[key];
         });
+        workspace = workspace ?? new WorkspaceService();
+        try {
+            workspace.workspaceFolders?.forEach((folder) => {
+                const basename = Path.basename(folder.uri.fsPath);
+                ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] =
+                    folder.uri.fsPath;
+                ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${folder.name}`] =
+                    folder.uri.fsPath;
+            });
+        } catch {
+            // This try...catch block is here to support pre-existing tests, ignore error.
+        }
     }
 
     public get cwd(): string {

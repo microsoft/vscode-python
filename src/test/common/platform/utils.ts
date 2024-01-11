@@ -140,7 +140,7 @@ export class FSFixture extends CleanupFixture {
     public async createSocket(relname: string): Promise<string> {
         const srv = this.ensureSocketServer();
         const filename = await this.resolve(relname);
-        await new Promise((resolve) => srv!.listen(filename, 0, resolve));
+        await new Promise<void>((resolve) => srv!.listen(filename, 0, resolve));
         return filename;
     }
 

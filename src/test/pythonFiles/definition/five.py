@@ -1,2 +1,0 @@
-import four
-four.showMessage()

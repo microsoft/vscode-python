@@ -1,2 +1,0 @@
-from os import *
-fsta

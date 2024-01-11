@@ -46,6 +46,6 @@ suite('Attach to process - attach process provider factory', () => {
         factory.registerCommands();
 
         verify(commandManager.registerCommand(Commands.PickLocalProcess, anything(), anything())).once();
-        assert.equal((disposableRegistry as Disposable[]).length, 1);
+        assert.strictEqual((disposableRegistry as Disposable[]).length, 1);
     });
 });

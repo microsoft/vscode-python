@@ -40,7 +40,7 @@ suite('Env file telemetry', () => {
 
         when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
 
-        const mockSendTelemetryEvent = (
+        const mockSendTelemetryEvent = ((
             eventName: EventName,
             _: number | undefined,
             { hasCustomEnvPath }: { hasCustomEnvPath: boolean },
@@ -49,7 +49,7 @@ suite('Env file telemetry', () => {
                 eventName,
                 hasCustomEnvPath,
             };
-        };
+        }) as typeof Telemetry.sendTelemetryEvent;
 
         sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
     });

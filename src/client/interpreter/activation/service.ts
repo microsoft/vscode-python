@@ -1,13 +1,16 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import '../../common/extensions';
 
+import * as path from 'path';
 import { inject, injectable } from 'inversify';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
-import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
@@ -16,19 +19,34 @@ import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
+import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService } from '../contracts';
 import { IEnvironmentActivationService } from './types';
+import { TraceOptions } from '../../logging/types';
+import {
+    traceDecoratorError,
+    traceDecoratorVerbose,
+    traceError,
+    traceInfo,
+    traceVerbose,
+    traceWarn,
+} from '../../logging';
+import { Conda } from '../../pythonEnvironments/common/environmentManagers/conda';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
+import { getSearchPathEnvVarNames } from '../../common/utils/exec';
+import { cache } from '../../common/utils/decorators';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
 const ENVIRONMENT_TIMEOUT = 30000;
+const CONDA_ENVIRONMENT_TIMEOUT = 60_000;
 
 // The shell under which we'll execute activation scripts.
-const defaultShells = {
+export const defaultShells = {
     [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
     [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
     [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
@@ -48,15 +66,19 @@ const condaRetryMessages = [
  */
 export class EnvironmentActivationServiceCache {
     private static useStatic = false;
+
     private static staticMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+
     private normalMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
 
-    public static forceUseStatic() {
+    public static forceUseStatic(): void {
         EnvironmentActivationServiceCache.useStatic = true;
     }
-    public static forceUseNormal() {
+
+    public static forceUseNormal(): void {
         EnvironmentActivationServiceCache.useStatic = false;
     }
+
     public get(key: string): InMemoryCache<NodeJS.ProcessEnv | undefined> | undefined {
         if (EnvironmentActivationServiceCache.useStatic) {
             return EnvironmentActivationServiceCache.staticMap.get(key);
@@ -64,7 +86,7 @@ export class EnvironmentActivationServiceCache {
         return this.normalMap.get(key);
     }
 
-    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>) {
+    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>): void {
         if (EnvironmentActivationServiceCache.useStatic) {
             EnvironmentActivationServiceCache.staticMap.set(key, value);
         } else {
@@ -72,7 +94,7 @@ export class EnvironmentActivationServiceCache {
         }
     }
 
-    public delete(key: string) {
+    public delete(key: string): void {
         if (EnvironmentActivationServiceCache.useStatic) {
             EnvironmentActivationServiceCache.staticMap.delete(key);
         } else {
@@ -80,7 +102,7 @@ export class EnvironmentActivationServiceCache {
         }
     }
 
-    public clear() {
+    public clear(): void {
         // Don't clear during a test as the environment isn't going to change
         if (!EnvironmentActivationServiceCache.useStatic) {
             this.normalMap.clear();
@@ -91,7 +113,9 @@ export class EnvironmentActivationServiceCache {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
+
     private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
+
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -106,84 +130,170 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             this,
             this.disposables,
         );
-
-        this.interpreterService.onDidChangeInterpreter(
-            () => this.activatedEnvVariablesCache.clear(),
-            this,
-            this.disposables,
-        );
     }
 
     public dispose(): void {
         this.disposables.forEach((d) => d.dispose());
     }
-    @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
+
+    @traceDecoratorVerbose('getActivatedEnvironmentVariables', TraceOptions.Arguments)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
+        shell?: string,
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        const stopWatch = new StopWatch();
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
+        interpreter = interpreter ?? (await this.interpreterService.getActiveInterpreter(resource));
         const interpreterPath = this.platform.isWindows ? interpreter?.path.toLowerCase() : interpreter?.path;
-        const cacheKey = `${workspaceKey}_${interpreterPath}`;
+        const cacheKey = `${workspaceKey}_${interpreterPath}_${shell}`;
 
         if (this.activatedEnvVariablesCache.get(cacheKey)?.hasData) {
             return this.activatedEnvVariablesCache.get(cacheKey)!.data;
         }
 
         // Cache only if successful, else keep trying & failing if necessary.
-        const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
-        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then((vars) => {
-            cache.data = vars;
-            this.activatedEnvVariablesCache.set(cacheKey, cache);
-            return vars;
-        });
+        const memCache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(CACHE_DURATION);
+        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions, shell)
+            .then((vars) => {
+                memCache.data = vars;
+                this.activatedEnvVariablesCache.set(cacheKey, memCache);
+                sendTelemetryEvent(
+                    EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
+                    stopWatch.elapsedTime,
+                    { failed: false },
+                );
+                return vars;
+            })
+            .catch((ex) => {
+                sendTelemetryEvent(
+                    EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
+                    stopWatch.elapsedTime,
+                    { failed: true },
+                );
+                throw ex;
+            });
+    }
+
+    @cache(-1, true)
+    public async getProcessEnvironmentVariables(resource: Resource, shell?: string): Promise<EnvironmentVariables> {
+        // Try to get the process environment variables using Python by printing variables, that can be little different
+        // from `process.env` and is preferred when calculating diff.
+        const globalInterpreters = this.interpreterService
+            .getInterpreters()
+            .filter((i) => !virtualEnvTypes.includes(i.envType));
+        const interpreterPath =
+            globalInterpreters.length > 0 && globalInterpreters[0] ? globalInterpreters[0].path : 'python';
+        try {
+            const [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgumentForPythonExt();
+            });
+            const command = `${interpreterPath} ${args.join(' ')}`;
+            const processService = await this.processServiceFactory.create(resource, { doNotUseCustomEnvs: true });
+            const result = await processService.shellExec(command, {
+                shell,
+                timeout: ENVIRONMENT_TIMEOUT,
+                maxBuffer: 1000 * 1000,
+                throwOnStdErr: false,
+            });
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout, parse);
+            return returnedEnv ?? process.env;
+        } catch (ex) {
+            return process.env;
+        }
+    }
+
+    public async getEnvironmentActivationShellCommands(
+        resource: Resource,
+        interpreter?: PythonEnvironment,
+    ): Promise<string[] | undefined> {
+        const shellInfo = defaultShells[this.platform.osType];
+        if (!shellInfo) {
+            return [];
+        }
+        return this.helper.getEnvironmentActivationShellCommands(resource, shellInfo.shellType, interpreter);
     }
 
     public async getActivatedEnvironmentVariablesImpl(
         resource: Resource,
         interpreter?: PythonEnvironment,
         allowExceptions?: boolean,
+        shell?: string,
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const shellInfo = defaultShells[this.platform.osType];
+        let shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
-            return;
+            return undefined;
         }
-        let isPossiblyCondaEnv = false;
+        if (shell) {
+            const customShellType = identifyShellFromShellPath(shell);
+            shellInfo = { shellType: customShellType, shell };
+        }
         try {
-            const activationCommands = await this.helper.getEnvironmentActivationShellCommands(
-                resource,
-                shellInfo.shellType,
-                interpreter,
-            );
-            traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
-            if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
-                return;
-            }
-            isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
-            // Run the activate command collect the environment from it.
-            const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
             const processService = await this.processServiceFactory.create(resource);
-            const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
+            const customEnvVars = (await this.envVarsService.getEnvironmentVariables(resource)) ?? {};
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
             const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
+
+            let command: string | undefined;
+            const [args, parse] = internalScripts.printEnvVariables();
+            args.forEach((arg, i) => {
+                args[i] = arg.toCommandArgumentForPythonExt();
+            });
+            if (interpreter?.envType === EnvironmentType.Conda) {
+                const conda = await Conda.getConda(shell);
+                const pythonArgv = await conda?.getRunPythonArgs({
+                    name: interpreter.envName,
+                    prefix: interpreter.envPath ?? '',
+                });
+                if (pythonArgv) {
+                    // Using environment prefix isn't needed as the marker script already takes care of it.
+                    command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
+                }
+            }
+            if (!command) {
+                const activationCommands = await this.helper.getEnvironmentActivationShellCommands(
+                    resource,
+                    shellInfo.shellType,
+                    interpreter,
+                );
+                traceVerbose(
+                    `Activation Commands received ${activationCommands} for shell ${shellInfo.shell}, resource ${resource?.fsPath} and interpreter ${interpreter?.path}`,
+                );
+                if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
+                    if (interpreter && [EnvironmentType.Venv, EnvironmentType.Pyenv].includes(interpreter?.envType)) {
+                        const key = getSearchPathEnvVarNames()[0];
+                        if (env[key]) {
+                            env[key] = `${path.dirname(interpreter.path)}${path.delimiter}${env[key]}`;
+                        } else {
+                            env[key] = `${path.dirname(interpreter.path)}`;
+                        }
+
+                        return env;
+                    }
+                    return undefined;
+                }
+                const commandSeparator = [TerminalShellType.powershell, TerminalShellType.powershellCore].includes(
+                    shellInfo.shellType,
+                )
+                    ? ';'
+                    : '&&';
+                // Run the activate command collect the environment from it.
+                const activationCommand = fixActivationCommands(activationCommands).join(` ${commandSeparator} `);
+                // In order to make sure we know where the environment output is,
+                // put in a dummy echo we can look for
+                command = `${activationCommand} ${commandSeparator} echo '${ENVIRONMENT_PREFIX}' ${commandSeparator} python ${args.join(
+                    ' ',
+                )}`;
+            }
 
             // Make sure python warnings don't interfere with getting the environment. However
             // respect the warning in the returned values
             const oldWarnings = env[PYTHON_WARNINGS];
             env[PYTHON_WARNINGS] = 'ignore';
 
-            traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
-
-            // In order to make sure we know where the environment output is,
-            // put in a dummy echo we can look for
-            const [args, parse] = internalScripts.printEnvVariables();
-            args.forEach((arg, i) => {
-                args[i] = arg.toCommandArgument();
-            });
-            const command = `${activationCommand} && echo '${ENVIRONMENT_PREFIX}' && python ${args.join(' ')}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
             // Do some wrapping of the call. For two reasons:
@@ -201,7 +311,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     result = await processService.shellExec(command, {
                         env,
                         shell: shellInfo.shell,
-                        timeout: ENVIRONMENT_TIMEOUT,
+                        timeout:
+                            interpreter?.envType === EnvironmentType.Conda
+                                ? CONDA_ENVIRONMENT_TIMEOUT
+                                : ENVIRONMENT_TIMEOUT,
                         maxBuffer: 1000 * 1000,
                         throwOnStdErr: false,
                     });
@@ -217,7 +330,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                     if (result.stderr) {
                         if (returnedEnv) {
-                            traceWarning('Got env variables but with errors', result.stderr);
+                            traceWarn('Got env variables but with errors', result.stderr, returnedEnv);
+                            if (
+                                result.stderr.includes('running scripts is disabled') ||
+                                result.stderr.includes('FullyQualifiedErrorId : UnauthorizedAccess')
+                            ) {
+                                throw new Error(
+                                    `Skipping returned result when powershell execution is disabled, stderr ${result.stderr} for ${command}`,
+                                );
+                            }
                         } else {
                             throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                         }
@@ -225,7 +346,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
-                    const excString = exc.toString();
+                    const excString = (exc as Error).toString();
                     if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
                         traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
@@ -247,7 +368,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, {
-                isPossiblyCondaEnv,
+                isPossiblyCondaEnv: interpreter?.envType === EnvironmentType.Conda,
                 terminal: shellInfo.shellType,
             });
 
@@ -256,17 +377,23 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 throw e;
             }
         }
+        return undefined;
     }
 
-    protected fixActivationCommands(commands: string[]): string[] {
-        // Replace 'source ' with '. ' as that works in shell exec
-        return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
-    }
-    @traceDecorators.error('Failed to parse Environment variables')
-    @traceDecorators.verbose('parseEnvironmentOutput', LogOptions.None)
-    protected parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
+    @traceDecoratorError('Failed to parse Environment variables')
+    @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
+    // eslint-disable-next-line class-methods-use-this
+    private parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
+        if (output.indexOf(ENVIRONMENT_PREFIX) === -1) {
+            return parse(output);
+        }
         output = output.substring(output.indexOf(ENVIRONMENT_PREFIX) + ENVIRONMENT_PREFIX.length);
         const js = output.substring(output.indexOf('{')).trim();
         return parse(js);
     }
+}
+
+function fixActivationCommands(commands: string[]): string[] {
+    // Replace 'source ' with '. ' as that works in shell exec
+    return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
 }

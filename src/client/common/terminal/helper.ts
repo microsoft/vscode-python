@@ -3,17 +3,16 @@
 
 import { inject, injectable, multiInject, named } from 'inversify';
 import { Terminal, Uri } from 'vscode';
-import { IComponentAdapter, ICondaLocatorService, IInterpreterService } from '../../interpreter/contracts';
+import { IComponentAdapter, IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { traceDecoratorError, traceError } from '../../logging';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
-import { inDiscoveryExperiment } from '../experiments/helpers';
 import '../extensions';
-import { traceDecorators, traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
-import { IConfigurationService, IExperimentService, Resource } from '../types';
+import { IConfigurationService, Resource } from '../types';
 import { OSType } from '../utils/platform';
 import { ShellDetector } from './shellDetector';
 import {
@@ -43,6 +42,9 @@ export class TerminalHelper implements ITerminalHelper {
         @named(TerminalActivationProviders.commandPromptAndPowerShell)
         private readonly commandPromptAndPowerShell: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider)
+        @named(TerminalActivationProviders.nushell)
+        private readonly nushell: ITerminalActivationCommandProvider,
+        @inject(ITerminalActivationCommandProvider)
         @named(TerminalActivationProviders.pyenv)
         private readonly pyenv: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider)
@@ -64,16 +66,16 @@ export class TerminalHelper implements ITerminalHelper {
             terminalShellType === TerminalShellType.powershell ||
             terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';
-        const formattedArgs = args.map((a) => a.toCommandArgument());
+        const formattedArgs = args.map((a) => a.toCommandArgumentForPythonExt());
 
-        return `${commandPrefix}${command.fileToCommandArgument()} ${formattedArgs.join(' ')}`.trim();
+        return `${commandPrefix}${command.fileToCommandArgumentForPythonExt()} ${formattedArgs.join(' ')}`.trim();
     }
     public async getEnvironmentActivationCommands(
         terminalShellType: TerminalShellType,
         resource?: Uri,
         interpreter?: PythonEnvironment,
     ): Promise<string[] | undefined> {
-        const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
+        const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell, this.nushell];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
             terminalShellType,
@@ -91,7 +93,7 @@ export class TerminalHelper implements ITerminalHelper {
         if (this.platform.osType === OSType.Unknown) {
             return;
         }
-        const providers = [this.bashCShellFish, this.commandPromptAndPowerShell];
+        const providers = [this.bashCShellFish, this.commandPromptAndPowerShell, this.nushell];
         const promise = this.getActivationCommands(resource, interpreter, shell, providers);
         this.sendTelemetry(
             shell,
@@ -101,7 +103,7 @@ export class TerminalHelper implements ITerminalHelper {
         ).ignoreErrors();
         return promise;
     }
-    @traceDecorators.error('Failed to capture telemetry')
+    @traceDecoratorError('Failed to capture telemetry')
     protected async sendTelemetry(
         terminalShellType: TerminalShellType,
         eventName: EventName,
@@ -131,10 +133,7 @@ export class TerminalHelper implements ITerminalHelper {
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
 
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         // If we have a conda environment, then use that.
         const isCondaEnvironment = interpreter
             ? interpreter.envType === EnvironmentType.Conda

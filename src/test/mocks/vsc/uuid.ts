@@ -1,7 +1,9 @@
+/* eslint-disable max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 'use strict';
+
 /**
  * Represents a UUID as defined by rfc4122.
  */

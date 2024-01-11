@@ -24,7 +24,7 @@ async function connectToServer() {
     }
     const port = parseInt(await fs.readFile(portFile, 'utf-8'), 10);
     console.log(`Need to connect to port ${port}`);
-    return new Promise((resolve) => {
+    return new Promise<void>((resolve) => {
         try {
             client = new net.Socket();
             client.connect({ port }, () => {

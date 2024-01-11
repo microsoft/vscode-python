@@ -7,6 +7,8 @@ import {
     interpreterInfo as getInterpreterInfoCommand,
     InterpreterInfoJson,
 } from '../../common/process/internal/scripts';
+import { ShellExecFunc } from '../../common/process/types';
+import { replaceAll } from '../../common/stringUtils';
 import { Architecture } from '../../common/utils/platform';
 import { copyPythonExecInfo, PythonExecInfo } from '../exec';
 
@@ -45,14 +47,8 @@ function extractInterpreterInfo(python: string, raw: InterpreterInfoJson): Inter
     };
 }
 
-type ShellExecResult = {
-    stdout: string;
-    stderr?: string;
-};
-type ShellExecFunc = (command: string, timeout: number) => Promise<ShellExecResult>;
-
 type Logger = {
-    info(msg: string): void;
+    verbose(msg: string): void;
     error(msg: string): void;
 };
 
@@ -73,7 +69,7 @@ export async function getInterpreterInfo(
     const argv = [info.command, ...info.args];
 
     // Concat these together to make a set of quoted strings
-    const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
+    const quoted = argv.reduce((p, c) => (p ? `${p} "${c}"` : `"${replaceAll(c, '\\', '\\\\')}"`), '');
 
     // Try shell execing the command, followed by the arguments. This will make node kill the process if it
     // takes too long.
@@ -81,16 +77,18 @@ export async function getInterpreterInfo(
     // See these two bugs:
     // https://github.com/microsoft/vscode-python/issues/7569
     // https://github.com/microsoft/vscode-python/issues/7760
-    const result = await shellExec(quoted, 15000);
+    const result = await shellExec(quoted, { timeout: 15000 });
     if (result.stderr) {
         if (logger) {
             logger.error(`Failed to parse interpreter information for ${argv} stderr: ${result.stderr}`);
         }
-        return undefined;
     }
     const json = parse(result.stdout);
     if (logger) {
-        logger.info(`Found interpreter for ${argv}`);
+        logger.verbose(`Found interpreter for ${argv}`);
+    }
+    if (!json) {
+        return undefined;
     }
     return extractInterpreterInfo(python.pythonExecutable, json);
 }

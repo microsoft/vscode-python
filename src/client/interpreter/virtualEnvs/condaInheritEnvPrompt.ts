@@ -4,11 +4,11 @@
 import { inject, injectable, optional } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { traceDecorators, traceError } from '../../common/logger';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
-import { IBrowserService, IPersistentStateFactory } from '../../common/types';
+import { IPersistentStateFactory } from '../../common/types';
 import { Common, Interpreters } from '../../common/utils/localize';
+import { traceDecoratorError, traceError } from '../../logging';
 import { EnvironmentType } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -18,13 +18,14 @@ export const condaInheritEnvPromptKey = 'CONDA_INHERIT_ENV_PROMPT_KEY';
 
 @injectable()
 export class CondaInheritEnvPrompt implements IExtensionActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IBrowserService) private browserService: IBrowserService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @optional() public hasPromptBeenShownInCurrentSession: boolean = false,
     ) {}
 
@@ -32,7 +33,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         this.initializeInBackground(resource).ignoreErrors();
     }
 
-    @traceDecorators.error('Failed to intialize conda inherit env prompt')
+    @traceDecoratorError('Failed to intialize conda inherit env prompt')
     public async initializeInBackground(resource: Uri): Promise<void> {
         const show = await this.shouldShowPrompt(resource);
         if (!show) {
@@ -41,7 +42,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         await this.promptAndUpdate();
     }
 
-    @traceDecorators.error('Failed to display conda inherit env prompt')
+    @traceDecoratorError('Failed to display conda inherit env prompt')
     public async promptAndUpdate() {
         const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
             condaInheritEnvPromptKey,
@@ -50,9 +51,9 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = [Common.bannerLabelYes(), Common.bannerLabelNo(), Common.moreInfo()];
-        const telemetrySelections: ['Yes', 'No', 'More Info'] = ['Yes', 'No', 'More Info'];
-        const selection = await this.appShell.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts);
+        const prompts = [Common.allow, Common.close];
+        const telemetrySelections: ['Allow', 'Close'] = ['Allow', 'Close'];
+        const selection = await this.appShell.showInformationMessage(Interpreters.condaInheritEnvMessage, ...prompts);
         sendTelemetryEvent(EventName.CONDA_INHERIT_ENV_PROMPT, undefined, {
             selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
@@ -65,14 +66,17 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
                 .update('integrated.inheritEnv', false, ConfigurationTarget.Global);
         } else if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
-        } else if (selection === prompts[2]) {
-            this.browserService.launch('https://aka.ms/AA66i8f');
         }
     }
 
-    @traceDecorators.error('Failed to check whether to display prompt for conda inherit env setting')
+    @traceDecoratorError('Failed to check whether to display prompt for conda inherit env setting')
     public async shouldShowPrompt(resource: Uri): Promise<boolean> {
         if (this.hasPromptBeenShownInCurrentSession) {
+            return false;
+        }
+        if (this.appEnvironment.remoteName) {
+            // `terminal.integrated.inheritEnv` is only applicable user scope, so won't apply
+            // in remote scenarios: https://github.com/microsoft/vscode/issues/147421
             return false;
         }
         if (this.platformService.isWindows) {

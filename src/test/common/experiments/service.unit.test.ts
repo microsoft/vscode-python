@@ -7,12 +7,19 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, when } from 'ts-mockito';
-import * as tasClient from 'vscode-tas-client';
+import { Disposable } from 'vscode-jsonrpc';
+// sinon can not create a stub if we just point to the exported module
+import * as tasClient from 'vscode-tas-client/vscode-tas-client/VSCodeTasClient';
+import * as expService from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
-import { Channel, IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { ExperimentService } from '../../../client/common/experiments/service';
-import { Experiments } from '../../../client/common/utils/localize';
+import { Channel } from '../../../client/common/constants';
+import { ExperimentService, TargetPopulation } from '../../../client/common/experiments/service';
+import { PersistentState } from '../../../client/common/persistentState';
+import { IPersistentStateFactory } from '../../../client/common/types';
+import { registerLogger } from '../../../client/logging';
+import { OutputChannelLogger } from '../../../client/logging/outputChannelLogger';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
 import { PVSC_EXTENSION_ID_FOR_TESTS } from '../../constants';
@@ -21,22 +28,31 @@ import { MockMemento } from '../../mocks/mementos';
 
 suite('Experimentation service', () => {
     const extensionVersion = '1.2.3';
+    const dummyExperimentKey = 'experimentsKey';
 
     let workspaceService: IWorkspaceService;
     let appEnvironment: IApplicationEnvironment;
+    let stateFactory: IPersistentStateFactory;
     let globalMemento: MockMemento;
     let outputChannel: MockOutputChannel;
+    let disposeLogger: Disposable;
 
     setup(() => {
         appEnvironment = mock(ApplicationEnvironment);
         workspaceService = mock(WorkspaceService);
+        stateFactory = mock<IPersistentStateFactory>();
         globalMemento = new MockMemento();
+        when(stateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
+            new PersistentState(globalMemento, dummyExperimentKey, { features: [] }),
+        );
         outputChannel = new MockOutputChannel('');
+        disposeLogger = registerLogger(new OutputChannelLogger(outputChannel));
     });
 
     teardown(() => {
         sinon.restore();
         Telemetry._resetSharedProperties();
+        disposeLogger.dispose();
     });
 
     function configureSettings(enabled: boolean, optInto: string[], optOutFrom: string[]) {
@@ -66,18 +82,18 @@ suite('Experimentation service', () => {
     suite('Initialization', () => {
         test('Users with a release version of the extension should be in the Public target population', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
-
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
 
             // eslint-disable-next-line no-new
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento, outputChannel);
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(stateFactory));
 
+            // @ts-ignore I dont know how else to ignore this issue.
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
                 PVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
-                tasClient.TargetPopulation.Public,
+                sinon.match(TargetPopulation.Public),
                 sinon.match.any,
                 globalMemento,
             );
@@ -90,13 +106,13 @@ suite('Experimentation service', () => {
             configureApplicationEnvironment('insiders', extensionVersion);
 
             // eslint-disable-next-line no-new
-            new ExperimentService(instance(workspaceService), instance(appEnvironment), globalMemento, outputChannel);
+            new ExperimentService(instance(workspaceService), instance(appEnvironment), instance(stateFactory));
 
             sinon.assert.calledWithExactly(
                 getExperimentationServiceStub,
                 PVSC_EXTENSION_ID_FOR_TESTS,
                 extensionVersion,
-                tasClient.TargetPopulation.Insiders,
+                sinon.match(TargetPopulation.Insiders),
                 sinon.match.any,
                 globalMemento,
             );
@@ -111,8 +127,7 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             assert.deepEqual(experimentService._optInto, ['Foo - experiment']);
@@ -126,58 +141,55 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             assert.deepEqual(experimentService._optOutFrom, ['Foo - experiment']);
         });
 
-        test('Experiment data in Memento storage should be logged if it starts with "python"', () => {
+        test('Experiment data in Memento storage should be logged if it starts with "python"', async () => {
             const experiments = ['ExperimentOne', 'pythonExperiment'];
-            globalMemento = mock(MockMemento);
+            globalMemento.update(dummyExperimentKey, { features: experiments });
             configureSettings(true, [], []);
-            configureApplicationEnvironment('stable', extensionVersion);
+            configureApplicationEnvironment('stable', extensionVersion, { configuration: { properties: {} } });
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            when(globalMemento.get(anything(), anything())).thenReturn({ features: experiments } as any);
-
-            new ExperimentService(
+            const exp = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                instance(globalMemento),
-                outputChannel,
+                instance(stateFactory),
             );
-            const output = `${Experiments.inGroup().format('pythonExperiment')}\n`;
+            await exp.activate();
+            const output = "Experiment 'pythonExperiment' is active\n";
 
             assert.strictEqual(outputChannel.output, output);
         });
     });
 
-    suite('In-experiment check', () => {
+    suite('In-experiment-sync check', () => {
         const experiment = 'Test Experiment - experiment';
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
-        let isCachedFlightEnabledStub: sinon.SinonStub;
+        let telemetryEvents: { eventName: string; properties: unknown }[] = [];
+        let getTreatmentVariable: sinon.SinonStub;
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                .callsFake((eventName: string, _, properties: unknown) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
 
-            isCachedFlightEnabledStub = sinon.stub().returns(Promise.resolve(true));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
-                isCachedFlightEnabled: isCachedFlightEnabledStub,
-            } as never);
+            getTreatmentVariable = sinon.stub().returns(true);
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
+                getTreatmentVariable,
+            } as unknown) as expService.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
 
         teardown(() => {
             telemetryEvents = [];
+            sinon.restore();
         });
 
         test('If the opt-in and opt-out arrays are empty, return the value from the experimentation framework for a given experiment', async () => {
@@ -186,14 +198,44 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isTrue(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
+        });
+
+        test('If in control group, return false', async () => {
+            sinon.restore();
+            sendTelemetryEventStub = sinon
+                .stub(Telemetry, 'sendTelemetryEvent')
+                .callsFake((eventName: string, _, properties: unknown) => {
+                    const telemetry = { eventName, properties };
+                    telemetryEvents.push(telemetry);
+                });
+
+            // Control group returns false.
+            getTreatmentVariable = sinon.stub().returns(false);
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
+                getTreatmentVariable,
+            } as unknown) as expService.IExperimentationService);
+
+            configureApplicationEnvironment('stable', extensionVersion);
+
+            configureSettings(true, [], []);
+
+            const experimentService = new ExperimentService(
+                instance(workspaceService),
+                instance(appEnvironment),
+                instance(stateFactory),
+            );
+            const result = experimentService.inExperimentSync(experiment);
+
+            assert.isFalse(result);
+            sinon.assert.notCalled(sendTelemetryEventStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
         });
 
         test('If the experiment setting is disabled, inExperiment should return false', async () => {
@@ -202,14 +244,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the opt-in setting contains "All", inExperiment should return true', async () => {
@@ -218,10 +259,9 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isTrue(result);
             assert.strictEqual(telemetryEvents.length, 0);
@@ -233,14 +273,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isTrue(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
         });
 
         test('If the opt-in setting contains `All` and the experiment setting is disabled, inExperiment should return false', async () => {
@@ -249,14 +288,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the opt-in setting contains the experiment name, inExperiment should return true', async () => {
@@ -265,14 +303,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isTrue(result);
             assert.strictEqual(telemetryEvents.length, 0);
-            sinon.assert.calledOnce(isCachedFlightEnabledStub);
+            sinon.assert.calledOnce(getTreatmentVariable);
         });
 
         test('If the opt-out setting contains "All", inExperiment should return false', async () => {
@@ -281,14 +318,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the opt-out setting contains "All" and the experiment setting is enabled, inExperiment should return false', async () => {
@@ -297,14 +333,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isFalse(result);
             sinon.assert.notCalled(sendTelemetryEventStub);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
 
         test('If the opt-out setting contains the experiment name, inExperiment should return false', async () => {
@@ -313,26 +348,25 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
-            const result = await experimentService.inExperiment(experiment);
+            const result = experimentService.inExperimentSync(experiment);
 
             assert.isFalse(result);
             assert.strictEqual(telemetryEvents.length, 0);
-            sinon.assert.notCalled(isCachedFlightEnabledStub);
+            sinon.assert.notCalled(getTreatmentVariable);
         });
     });
 
     suite('Experiment value retrieval', () => {
         const experiment = 'Test Experiment - experiment';
-        let getTreatmentVariableAsyncStub: sinon.SinonStub;
+        let getTreatmentVariableStub: sinon.SinonStub;
 
         setup(() => {
-            getTreatmentVariableAsyncStub = sinon.stub().returns(Promise.resolve('value'));
-            sinon.stub(tasClient, 'getExperimentationService').returns({
-                getTreatmentVariableAsync: getTreatmentVariableAsyncStub,
-            } as never);
+            getTreatmentVariableStub = sinon.stub().returns(Promise.resolve('value'));
+            sinon.stub(tasClient, 'getExperimentationService').returns(({
+                getTreatmentVariable: getTreatmentVariableStub,
+            } as unknown) as expService.IExperimentationService);
 
             configureApplicationEnvironment('stable', extensionVersion);
         });
@@ -343,13 +377,12 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.strictEqual(result, 'value');
-            sinon.assert.calledOnce(getTreatmentVariableAsyncStub);
+            sinon.assert.calledOnce(getTreatmentVariableStub);
         });
 
         test('If the experiment setting is disabled, getExperimentValue should return undefined', async () => {
@@ -358,13 +391,12 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
 
         test('If the opt-out setting contains "All", getExperimentValue should return undefined', async () => {
@@ -373,39 +405,37 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
 
-        test('If the opt-out setting contains the experiment name, igetExperimentValue should return undefined', async () => {
+        test('If the opt-out setting contains the experiment name, getExperimentValue should return undefined', async () => {
             configureSettings(true, [], [experiment]);
 
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
             const result = await experimentService.getExperimentValue(experiment);
 
             assert.isUndefined(result);
-            sinon.assert.notCalled(getTreatmentVariableAsyncStub);
+            sinon.assert.notCalled(getTreatmentVariableStub);
         });
     });
 
     suite('Opt-in/out telemetry', () => {
-        let telemetryEvents: { eventName: string; properties: Record<string, unknown> }[] = [];
+        let telemetryEvents: { eventName: string; properties: unknown }[] = [];
         let sendTelemetryEventStub: sinon.SinonStub;
 
         setup(() => {
             sendTelemetryEventStub = sinon
                 .stub(Telemetry, 'sendTelemetryEvent')
-                .callsFake((eventName: string, _, properties: Record<string, unknown>) => {
+                .callsFake((eventName: string, _, properties: unknown) => {
                     const telemetry = { eventName, properties };
                     telemetryEvents.push(telemetry);
                 });
@@ -424,15 +454,14 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
 
-            assert.strictEqual(telemetryEvents.length, 1);
-            assert.strictEqual(telemetryEvents[0].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
-            sinon.assert.calledOnce(sendTelemetryEventStub);
+            assert.strictEqual(telemetryEvents.length, 2);
+            assert.strictEqual(telemetryEvents[1].eventName, EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS);
+            sinon.assert.calledTwice(sendTelemetryEventStub);
         });
 
         test('The telemetry event properties should only be populated with valid experiment values', async () => {
@@ -458,14 +487,16 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
-            assert.deepStrictEqual(properties, { optedInto: ['foo'], optedOutFrom: ['bar'] });
+            const { properties } = telemetryEvents[1];
+            assert.deepStrictEqual(properties, {
+                optedInto: JSON.stringify(['foo']),
+                optedOutFrom: JSON.stringify(['bar']),
+            });
         });
 
         test('Set telemetry properties to empty arrays if no experiments have been opted into or out from', async () => {
@@ -491,14 +522,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
-            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+            const { properties } = telemetryEvents[1];
+            assert.deepStrictEqual(properties, { optedInto: '[]', optedOutFrom: '[]' });
         });
 
         test('If the entered value for a setting contains "All", do not expand it to be a list of all experiments, and pass it as-is', async () => {
@@ -524,14 +554,16 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
 
             const { properties } = telemetryEvents[0];
-            assert.deepStrictEqual(properties, { optedInto: ['All'], optedOutFrom: ['All'] });
+            assert.deepStrictEqual(properties, {
+                optedInto: JSON.stringify(['All']),
+                optedOutFrom: JSON.stringify(['All']),
+            });
         });
 
         // This is an unlikely scenario.
@@ -547,14 +579,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
-            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+            const { properties } = telemetryEvents[1];
+            assert.deepStrictEqual(properties, { optedInto: '[]', optedOutFrom: '[]' });
         });
 
         // This is also an unlikely scenario.
@@ -579,14 +610,13 @@ suite('Experimentation service', () => {
             const experimentService = new ExperimentService(
                 instance(workspaceService),
                 instance(appEnvironment),
-                globalMemento,
-                outputChannel,
+                instance(stateFactory),
             );
 
             await experimentService.activate();
 
-            const { properties } = telemetryEvents[0];
-            assert.deepStrictEqual(properties, { optedInto: [], optedOutFrom: [] });
+            const { properties } = telemetryEvents[1];
+            assert.deepStrictEqual(properties, { optedInto: '[]', optedOutFrom: '[]' });
         });
     });
 });

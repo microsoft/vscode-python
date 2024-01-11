@@ -3,13 +3,20 @@
 
 'use strict';
 
+import { env, workspace } from 'vscode';
 import { IExperimentService } from '../types';
-import { DiscoveryVariants } from './groups';
+import { TerminalEnvVarActivation } from './groups';
+import { isTestExecution } from '../constants';
+import { traceInfo } from '../../logging';
 
-export async function inDiscoveryExperiment(experimentService: IExperimentService): Promise<boolean> {
-    const results = await Promise.all([
-        experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching),
-        experimentService.inExperiment(DiscoveryVariants.discoveryWithoutFileWatching),
-    ]);
-    return results.includes(true);
+export function inTerminalEnvVarExperiment(experimentService: IExperimentService): boolean {
+    if (!isTestExecution() && env.remoteName && workspace.workspaceFolders && workspace.workspaceFolders.length > 1) {
+        // TODO: Remove this if statement once https://github.com/microsoft/vscode/issues/180486 is fixed.
+        traceInfo('Not enabling terminal env var experiment in multiroot remote workspaces');
+        return false;
+    }
+    if (!experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)) {
+        return false;
+    }
+    return true;
 }

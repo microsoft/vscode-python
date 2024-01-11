@@ -4,9 +4,9 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { l10n } from 'vscode';
 import { IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { AttachProcess as AttachProcessLocalization } from '../../../common/utils/localize';
 import { PsProcessParser } from './psProcessParser';
 import { IAttachItem, IAttachProcessProvider, ProcessListCommand } from './types';
 import { WmicProcessParser } from './wmicProcessParser';
@@ -69,7 +69,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
         } else if (this.platformService.isWindows) {
             processCmd = WmicProcessParser.wmicCommand;
         } else {
-            throw new Error(AttachProcessLocalization.unsupportedOS().format(this.platformService.osType));
+            throw new Error(l10n.t("Operating system '{0}' not supported.", this.platformService.osType));
         }
 
         const processService = await this.processServiceFactory.create();

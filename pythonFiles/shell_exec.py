@@ -1,9 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import os
-import sys
 import subprocess
+import sys
 
 # This is a simple solution to waiting for completion of commands sent to terminal.
 # 1. Intercept commands send to a terminal

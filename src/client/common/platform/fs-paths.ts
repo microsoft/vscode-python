@@ -3,6 +3,7 @@
 
 import * as nodepath from 'path';
 import { getSearchPathEnvVarNames } from '../utils/exec';
+import * as fs from 'fs-extra';
 import { getOSType, OSType } from '../utils/platform';
 import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
 
@@ -134,9 +135,9 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
     }
 
     public getDisplayName(filename: string, cwd?: string): string {
-        if (cwd && filename.startsWith(cwd)) {
+        if (cwd && isParentPath(filename, cwd)) {
             return `.${this.paths.sep}${this.raw.relative(cwd, filename)}`;
-        } else if (filename.startsWith(this.home)) {
+        } else if (isParentPath(filename, this.home)) {
             return `~${this.paths.sep}${this.raw.relative(this.home, filename)}`;
         } else {
             return filename;
@@ -145,7 +146,11 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
 }
 
 export function normCasePath(filePath: string): string {
-    return getOSType() === OSType.Windows ? nodepath.normalize(filePath).toUpperCase() : nodepath.normalize(filePath);
+    return normCase(nodepath.normalize(filePath));
+}
+
+export function normCase(s: string): string {
+    return getOSType() === OSType.Windows ? s.toUpperCase() : s;
 }
 
 /**
@@ -154,5 +159,34 @@ export function normCasePath(filePath: string): string {
  * @param parentPath The potential parent path to check for
  */
 export function isParentPath(filePath: string, parentPath: string): boolean {
+    if (!parentPath.endsWith(nodepath.sep)) {
+        parentPath += nodepath.sep;
+    }
+    if (!filePath.endsWith(nodepath.sep)) {
+        filePath += nodepath.sep;
+    }
     return normCasePath(filePath).startsWith(normCasePath(parentPath));
+}
+
+export function arePathsSame(path1: string, path2: string): boolean {
+    return normCasePath(path1) === normCasePath(path2);
+}
+
+export async function copyFile(src: string, dest: string): Promise<void> {
+    const destDir = nodepath.dirname(dest);
+    if (!(await fs.pathExists(destDir))) {
+        await fs.mkdirp(destDir);
+    }
+
+    await fs.copy(src, dest, {
+        overwrite: true,
+    });
+}
+
+export function pathExists(absPath: string): Promise<boolean> {
+    return fs.pathExists(absPath);
+}
+
+export function createFile(filename: string): Promise<void> {
+    return fs.createFile(filename);
 }

@@ -4,6 +4,7 @@
 'use strict';
 
 import { Terminal } from 'vscode';
+import { traceVerbose } from '../../../logging';
 import { createDeferred, sleep } from '../../utils/async';
 import { ITerminalActivator, ITerminalHelper, TerminalActivationOptions, TerminalShellType } from '../types';
 
@@ -30,6 +31,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         if (activationCommands) {
             for (const command of activationCommands) {
                 terminal.show(options?.preserveFocus);
+                traceVerbose(`Command sent to terminal: ${command}`);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);
                 activated = true;

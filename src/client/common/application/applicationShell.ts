@@ -7,14 +7,18 @@ import {
     CancellationToken,
     CancellationTokenSource,
     Disposable,
+    DocumentSelector,
     env,
     Event,
+    EventEmitter,
     InputBox,
     InputBoxOptions,
+    languages,
+    LanguageStatusItem,
+    LogOutputChannel,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
-    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -23,15 +27,19 @@ import {
     SaveDialogOptions,
     StatusBarAlignment,
     StatusBarItem,
+    TextDocument,
+    TextEditor,
     TreeView,
     TreeViewOptions,
     Uri,
+    ViewColumn,
     window,
     WindowState,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
 } from 'vscode';
-import { IApplicationShell } from './types';
+import { traceError } from '../../logging';
+import { IApplicationShell, TerminalDataWriteEvent, TerminalExecutedCommand } from './types';
 
 @injectable()
 export class ApplicationShell implements IApplicationShell {
@@ -97,6 +105,14 @@ export class ApplicationShell implements IApplicationShell {
     public showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined> {
         return window.showInputBox(options, token);
     }
+    public showTextDocument(
+        document: TextDocument,
+        column?: ViewColumn,
+        preserveFocus?: boolean,
+    ): Thenable<TextEditor> {
+        return window.showTextDocument(document, column, preserveFocus);
+    }
+
     public openUrl(url: string): void {
         env.openExternal(Uri.parse(url));
     }
@@ -108,8 +124,14 @@ export class ApplicationShell implements IApplicationShell {
         return window.setStatusBarMessage(text, arg);
     }
 
-    public createStatusBarItem(alignment?: StatusBarAlignment, priority?: number): StatusBarItem {
-        return window.createStatusBarItem(alignment, priority);
+    public createStatusBarItem(
+        alignment?: StatusBarAlignment,
+        priority?: number,
+        id?: string | undefined,
+    ): StatusBarItem {
+        return id
+            ? window.createStatusBarItem(id, alignment, priority)
+            : window.createStatusBarItem(alignment, priority);
     }
     public showWorkspaceFolderPick(options?: WorkspaceFolderPickOptions): Thenable<WorkspaceFolder | undefined> {
         return window.showWorkspaceFolderPick(options);
@@ -146,7 +168,26 @@ export class ApplicationShell implements IApplicationShell {
     public createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T> {
         return window.createTreeView<T>(viewId, options);
     }
-    public createOutputChannel(name: string): OutputChannel {
-        return window.createOutputChannel(name);
+    public createOutputChannel(name: string): LogOutputChannel {
+        return window.createOutputChannel(name, { log: true });
+    }
+    public createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem {
+        return languages.createLanguageStatusItem(id, selector);
+    }
+    public get onDidWriteTerminalData(): Event<TerminalDataWriteEvent> {
+        try {
+            return window.onDidWriteTerminalData;
+        } catch (ex) {
+            traceError('Failed to get proposed API onDidWriteTerminalData', ex);
+            return new EventEmitter<TerminalDataWriteEvent>().event;
+        }
+    }
+    public get onDidExecuteTerminalCommand(): Event<TerminalExecutedCommand> | undefined {
+        try {
+            return window.onDidExecuteTerminalCommand;
+        } catch (ex) {
+            traceError('Failed to get proposed API TerminalExecutedCommand', ex);
+            return undefined;
+        }
     }
 }

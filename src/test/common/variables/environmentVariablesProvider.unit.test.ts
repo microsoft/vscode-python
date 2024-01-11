@@ -40,9 +40,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
         when(workspace.getConfiguration('python', anything())).thenReturn({
-            get: (settingName: string) => {
-                return settingName === 'envFile' ? envFile : '';
-            },
+            get: (settingName: string) => (settingName === 'envFile' ? envFile : ''),
         } as any);
         provider = new EnvironmentVariablesProvider(
             instance(envVarsService),
@@ -78,7 +76,7 @@ suite('Multiroot Environment Variables Provider', () => {
         provider.configurationChanged(changedEvent);
 
         assert.ok(affectedWorkspace);
-        assert.equal(affectedWorkspace!.fsPath, workspaceFolder1Uri.fsPath);
+        assert.strictEqual(affectedWorkspace!.fsPath, workspaceFolder1Uri.fsPath);
     });
     test('Event is not fired when there are not changes to settings', () => {
         let affectedWorkspace: Uri | undefined;
@@ -96,7 +94,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
         provider.configurationChanged(changedEvent);
 
-        assert.equal(affectedWorkspace, undefined);
+        assert.strictEqual(affectedWorkspace, undefined);
     });
     test('Event is not fired when workspace is not tracked', () => {
         let affectedWorkspace: Uri | undefined;
@@ -111,7 +109,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
         provider.configurationChanged(changedEvent);
 
-        assert.equal(affectedWorkspace, undefined);
+        assert.strictEqual(affectedWorkspace, undefined);
     });
     [undefined, Uri.file('workspace')].forEach((workspaceUri) => {
         const workspaceTitle = workspaceUri ? '(with a workspace)' : '(without a workspace)';
@@ -141,7 +139,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
             onChangeHandler!();
 
-            assert.equal(affectedWorkspace, workspaceUri);
+            assert.strictEqual(affectedWorkspace, workspaceUri);
         });
         test(`Event is fired when the environment file is deleted ${workspaceTitle}`, () => {
             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
@@ -169,7 +167,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
             onDeleted!();
 
-            assert.equal(affectedWorkspace, workspaceUri);
+            assert.strictEqual(affectedWorkspace, workspaceUri);
         });
         test(`Event is fired when the environment file is created ${workspaceTitle}`, () => {
             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
@@ -197,7 +195,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
             onCreated!();
 
-            assert.equal(affectedWorkspace, workspaceUri);
+            assert.strictEqual(affectedWorkspace, workspaceUri);
         });
         test(`File system watcher event handlers are added once ${workspaceTitle}`, () => {
             envFile = path.join('a', 'b', 'env.file');

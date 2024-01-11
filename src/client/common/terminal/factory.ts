@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import * as path from 'path';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -23,13 +24,17 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
     ) {
         this.terminalServices = new Map<string, TerminalService>();
     }
-    public getTerminalService(options: TerminalCreationOptions): ITerminalService {
+    public getTerminalService(options: TerminalCreationOptions & { newTerminalPerFile?: boolean }): ITerminalService {
         const resource = options?.resource;
         const title = options?.title;
-        const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
+        let terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         const interpreter = options?.interpreter;
-        const id = this.getTerminalId(terminalTitle, resource, interpreter);
+        const id = this.getTerminalId(terminalTitle, resource, interpreter, options.newTerminalPerFile);
         if (!this.terminalServices.has(id)) {
+            if (resource && options.newTerminalPerFile) {
+                terminalTitle = `${terminalTitle}: ${path.basename(resource.fsPath).replace('.py', '')}`;
+            }
+            options.title = terminalTitle;
             const terminalService = new TerminalService(this.serviceContainer, options);
             this.terminalServices.set(id, terminalService);
         }
@@ -46,13 +51,19 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         title = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         return new TerminalService(this.serviceContainer, { resource, title });
     }
-    private getTerminalId(title: string, resource?: Uri, interpreter?: PythonEnvironment): string {
+    private getTerminalId(
+        title: string,
+        resource?: Uri,
+        interpreter?: PythonEnvironment,
+        newTerminalPerFile?: boolean,
+    ): string {
         if (!resource && !interpreter) {
             return title;
         }
         const workspaceFolder = this.serviceContainer
             .get<IWorkspaceService>(IWorkspaceService)
             .getWorkspaceFolder(resource || undefined);
-        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}`;
+        const fileId = resource && newTerminalPerFile ? resource.fsPath : '';
+        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}:${fileId}`;
     }
 }

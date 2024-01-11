@@ -15,6 +15,7 @@ import { ConsoleType, LaunchRequestArguments } from '../../client/debugger/types
 import { isOs, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { normCase } from '../../client/common/platform/fs-paths';
 
 use(chaiAsPromised);
 
@@ -37,7 +38,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         const envParser = ioc.serviceContainer.get<IEnvironmentVariablesService>(IEnvironmentVariablesService);
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
         mockProcess = ioc.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
-        debugEnvParser = new DebugEnvironmentVariablesHelper(envParser, pathUtils, mockProcess);
+        debugEnvParser = new DebugEnvironmentVariablesHelper(envParser, mockProcess);
         pathVariableName = pathUtils.getPathVariableName();
     });
     suiteTeardown(closeActiveWindows);
@@ -76,6 +77,27 @@ suite('Resolving Environment Variables when Debugging', () => {
     test('Confirm basic environment variables exist when launched in intergrated terminal', () =>
         testBasicProperties('integratedTerminal', 2));
 
+    test('Confirm base environment variables are merged without overwriting when provided', async () => {
+        const env: Record<string, string> = { DO_NOT_OVERWRITE: '1' };
+        const args = ({
+            program: '',
+            pythonPath: '',
+            args: [],
+            envFile: '',
+            console,
+            env,
+        } as any) as LaunchRequestArguments;
+
+        const baseEnvVars = { CONDA_PREFIX: 'path/to/conda/env', DO_NOT_OVERWRITE: '0' };
+        const envVars = await debugEnvParser.getEnvironmentVariables(args, baseEnvVars);
+        expect(envVars).not.be.undefined;
+        expect(Object.keys(envVars)).lengthOf(4, 'Incorrect number of variables');
+        expect(envVars).to.have.property('PYTHONUNBUFFERED', '1', 'Property not found');
+        expect(envVars).to.have.property('PYTHONIOENCODING', 'UTF-8', 'Property not found');
+        expect(envVars).to.have.property('CONDA_PREFIX', 'path/to/conda/env', 'Property not found');
+        expect(envVars).to.have.property('DO_NOT_OVERWRITE', '1', 'Property not found');
+    });
+
     test('Confirm basic environment variables exist when launched in debug console', async () => {
         let expectedNumberOfVariables = Object.keys(mockProcess.env).length;
         if (mockProcess.env['PYTHONUNBUFFERED'] === undefined) {
@@ -88,9 +110,9 @@ suite('Resolving Environment Variables when Debugging', () => {
     });
 
     async function testJsonEnvVariables(console: ConsoleType, expectedNumberOfVariables: number) {
-        const prop1 = shortid.generate();
-        const prop2 = shortid.generate();
-        const prop3 = shortid.generate();
+        const prop1 = normCase(shortid.generate());
+        const prop2 = normCase(shortid.generate());
+        const prop3 = normCase(shortid.generate());
         const env: Record<string, string> = {};
         env[prop1] = prop1;
         env[prop2] = prop2;

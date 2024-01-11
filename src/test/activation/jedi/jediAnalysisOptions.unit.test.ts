@@ -12,6 +12,8 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { Architecture } from '../../../client/common/utils/platform';
 
 suite('Jedi LSP - analysis Options', () => {
     const workspacePath = path.join('this', 'is', 'fake', 'workspace', 'path');
@@ -64,13 +66,33 @@ suite('Jedi LSP - analysis Options', () => {
 
         expect(result.initializationOptions.markupKindPreferred).to.deep.equal('markdown');
         expect(result.initializationOptions.completion.resolveEagerly).to.deep.equal(false);
-        expect(result.initializationOptions.completion.disableSnippets).to.deep.equal(false);
+        expect(result.initializationOptions.completion.disableSnippets).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.enable).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didOpen).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didSave).to.deep.equal(true);
         expect(result.initializationOptions.diagnostics.didChange).to.deep.equal(true);
+        expect(result.initializationOptions.hover.disable.keyword.all).to.deep.equal(true);
         expect(result.initializationOptions.workspace.extraPaths).to.deep.equal([]);
         expect(result.initializationOptions.workspace.symbols.maxSymbols).to.deep.equal(0);
+    });
+
+    test('With interpreter path', async () => {
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        when(configurationService.getSettings(anything())).thenReturn({} as any);
+        const pythonEnvironment: PythonEnvironment = {
+            envPath: '.../.venv',
+            id: 'base_env',
+            envType: EnvironmentType.Conda,
+            path: '.../.venv/bin/python',
+            architecture: Architecture.x86,
+            sysPrefix: 'prefix/path',
+        };
+        analysisOptions.initialize(undefined, pythonEnvironment);
+
+        const result = await analysisOptions.getAnalysisOptions();
+
+        expect(result.initializationOptions.workspace.environmentPath).to.deep.equal('.../.venv/bin/python');
     });
 
     test('Without extraPaths provided and no workspace', async () => {

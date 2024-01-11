@@ -3,15 +3,10 @@
 
 import { ChildProcess, ExecOptions, SpawnOptions as ChildProcessSpawnOptions } from 'child_process';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import { PythonExecInfo } from '../../pythonEnvironments/exec';
 import { InterpreterInformation, PythonEnvironment } from '../../pythonEnvironments/info';
 import { ExecutionInfo, IDisposable } from '../types';
-
-export const IBufferDecoder = Symbol('IBufferDecoder');
-export interface IBufferDecoder {
-    decode(buffers: Buffer[], encoding: string): string;
-}
 
 export type Output<T extends string | Buffer> = {
     source: 'stdout' | 'stderr';
@@ -29,9 +24,12 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     mergeStdOutErr?: boolean;
     throwOnStdErr?: boolean;
     extraVariables?: NodeJS.ProcessEnv;
+    outputChannel?: OutputChannel;
+    stdinStr?: string;
+    useWorker?: boolean;
 };
 
-export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean };
+export type ShellOptions = ExecOptions & { throwOnStdErr?: boolean; useWorker?: boolean };
 
 export type ExecutionResult<T extends string | Buffer> = {
     stdout: T;
@@ -40,7 +38,12 @@ export type ExecutionResult<T extends string | Buffer> = {
 
 export const IProcessLogger = Symbol('IProcessLogger');
 export interface IProcessLogger {
-    logProcess(file: string, ars: string[], options?: SpawnOptions): void;
+    /**
+     * Pass `args` as `undefined` if first argument is supposed to be a shell command.
+     * Note it is assumed that command args are always quoted and respect
+     * `String.prototype.toCommandArgument()` prototype.
+     */
+    logProcess(fileOrCommand: string, args?: string[], options?: SpawnOptions): void;
 }
 
 export interface IProcessService extends IDisposable {
@@ -53,7 +56,7 @@ export interface IProcessService extends IDisposable {
 export const IProcessServiceFactory = Symbol('IProcessServiceFactory');
 
 export interface IProcessServiceFactory {
-    create(resource?: Uri): Promise<IProcessService>;
+    create(resource?: Uri, options?: { doNotUseCustomEnvs: boolean }): Promise<IProcessService>;
 }
 
 export const IPythonExecutionFactory = Symbol('IPythonExecutionFactory');
@@ -71,22 +74,20 @@ export type ExecutionFactoryCreateWithEnvironmentOptions = {
      *
      * @type {boolean}
      */
-    bypassCondaExecution?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
     createCondaExecutionService(
         pythonPath: string,
-        processService?: IProcessService,
-        resource?: Uri,
+        processService: IProcessService,
     ): Promise<IPythonExecutionService | undefined>;
 }
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
-    getExecutablePath(): Promise<string>;
+    getExecutablePath(): Promise<string | undefined>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
     getModuleVersion(moduleName: string): Promise<string | undefined>;
     getExecutionInfo(pythonArgs?: string[]): PythonExecInfo;
@@ -96,7 +97,19 @@ export interface IPythonExecutionService {
 
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+    execForLinter(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
+
+export interface IPythonEnvironment {
+    getInterpreterInformation(): Promise<InterpreterInformation | undefined>;
+    getExecutionObservableInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
+    getExecutablePath(): Promise<string | undefined>;
+    isModuleInstalled(moduleName: string): Promise<boolean>;
+    getModuleVersion(moduleName: string): Promise<string | undefined>;
+    getExecutionInfo(pythonArgs?: string[], pythonExecutable?: string): PythonExecInfo;
+}
+
+export type ShellExecFunc = (command: string, options?: ShellOptions | undefined) => Promise<ExecutionResult<string>>;
 
 export class StdErrError extends Error {
     constructor(message: string) {
@@ -113,4 +126,5 @@ export interface IPythonToolExecutionService {
         resource: Uri,
     ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
+    execForLinter(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

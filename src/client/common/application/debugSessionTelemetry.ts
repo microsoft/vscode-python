@@ -22,7 +22,7 @@ class TelemetryTracker implements DebugAdapterTracker {
     private readonly console: ConsoleType | undefined;
 
     constructor(session: DebugSession) {
-        this.trigger = session.configuration.type as TriggerType;
+        this.trigger = session.configuration.request as TriggerType;
         const debugConfiguration = session.configuration as Partial<LaunchRequestArguments & AttachRequestArguments>;
         this.console = debugConfiguration.console;
     }
@@ -62,6 +62,7 @@ class TelemetryTracker implements DebugAdapterTracker {
 
 @injectable()
 export class DebugSessionTelemetry implements DebugAdapterTrackerFactory, IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IDebugService) debugService: IDebugService,

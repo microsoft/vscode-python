@@ -17,9 +17,9 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
 const messages = {
-    [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]: Diagnostics.invalidDebuggerTypeDiagnostic(),
-    [DiagnosticCodes.JustMyCodeDiagnostic]: Diagnostics.justMyCodeDiagnostic(),
-    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic(),
+    [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]: Diagnostics.invalidDebuggerTypeDiagnostic,
+    [DiagnosticCodes.JustMyCodeDiagnostic]: Diagnostics.justMyCodeDiagnostic,
+    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic,
     [DiagnosticCodes.ConfigPythonPathDiagnostic]: '',
 };
 
@@ -39,7 +39,6 @@ export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
             DiagnosticSeverity.Error,
             DiagnosticScope.WorkspaceFolder,
             resource,
-            'always',
             shouldShowPrompt,
         );
     }
@@ -72,7 +71,8 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        if (!hasWorkspaceFolders) {
             return [];
         }
         const workspaceFolder = resource
@@ -86,12 +86,13 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     protected async fixLaunchJson(code: DiagnosticCodes): Promise<void> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
+        if (!hasWorkspaceFolders) {
             return;
         }
 
         await Promise.all(
-            this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
+            (this.workspaceService.workspaceFolders ?? []).map((workspaceFolder) =>
                 this.fixLaunchJsonInWorkspace(code, workspaceFolder),
             ),
         );
@@ -129,16 +130,13 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
     }
 
     private async handleDiagnostic(diagnostic: IDiagnostic): Promise<void> {
-        if (!this.canHandle(diagnostic)) {
-            return;
-        }
         if (!diagnostic.shouldShowPrompt) {
             await this.fixLaunchJson(diagnostic.code);
             return;
         }
         const commandPrompts = [
             {
-                prompt: Diagnostics.yesUpdateLaunch(),
+                prompt: Diagnostics.yesUpdateLaunch,
                 command: {
                     diagnostic,
                     invoke: async (): Promise<void> => {
@@ -147,7 +145,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
                 },
             },
             {
-                prompt: Common.noIWillDoItLater(),
+                prompt: Common.noIWillDoItLater,
             },
         ];
 

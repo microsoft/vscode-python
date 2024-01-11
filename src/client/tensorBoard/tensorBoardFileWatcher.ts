@@ -2,45 +2,50 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Disposable, FileSystemWatcher, RelativePattern, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IWorkspaceService } from '../common/application/types';
-import { NativeTensorBoard } from '../common/experiments/groups';
-import { traceError } from '../common/logger';
-import { IDisposableRegistry, IExperimentService } from '../common/types';
+import { IDisposable, IDisposableRegistry } from '../common/types';
 import { TensorBoardEntrypointTrigger } from './constants';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
+import { TensorboardExperiment } from './tensorboarExperiment';
 
 @injectable()
 export class TensorBoardFileWatcher implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
+
     private fileSystemWatchers = new Map<WorkspaceFolder, FileSystemWatcher[]>();
 
     private globPatterns = ['*tfevents*', '*/*tfevents*', '*/*/*tfevents*'];
 
+    private readonly disposables: IDisposable[] = [];
+
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(TensorBoardPrompt) private tensorBoardPrompt: TensorBoardPrompt,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentService) private experimentService: IExperimentService,
-    ) {}
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
+        @inject(TensorboardExperiment) private readonly experiment: TensorboardExperiment,
+    ) {
+        disposables.push(this);
+    }
+
+    public dispose(): void {
+        Disposable.from(...this.disposables).dispose();
+    }
 
     public async activate(): Promise<void> {
+        if (TensorboardExperiment.isTensorboardExtensionInstalled) {
+            return;
+        }
+        this.experiment.disposeOnInstallingTensorboard(this);
         this.activateInternal().ignoreErrors();
     }
 
     private async activateInternal() {
-        if (!(await this.experimentService.inExperiment(NativeTensorBoard.experiment))) {
-            return;
-        }
-
         const folders = this.workspaceService.workspaceFolders;
         if (!folders) {
             return;
         }
-
-        // Look for pre-existing tfevent files, as the file watchers will only pick up files
-        // created or changed after they have been registered and hooked up. Just one will do.
-        await this.promptIfWorkspaceHasPreexistingFiles();
 
         // If the user creates or changes tfevent files, listen for those too
         for (const folder of folders) {
@@ -51,22 +56,6 @@ export class TensorBoardFileWatcher implements IExtensionSingleActivationService
         this.disposables.push(
             this.workspaceService.onDidChangeWorkspaceFolders((e) => this.updateFileSystemWatchers(e)),
         );
-    }
-
-    private async promptIfWorkspaceHasPreexistingFiles() {
-        try {
-            for (const pattern of this.globPatterns) {
-                const matches = await this.workspaceService.findFiles(pattern, undefined, 1);
-                if (matches.length > 0) {
-                    await this.tensorBoardPrompt.showNativeTensorBoardPrompt(TensorBoardEntrypointTrigger.tfeventfiles);
-                    return;
-                }
-            }
-        } catch (e) {
-            traceError(
-                `Failed to prompt to launch TensorBoard session based on preexisting tfevent files in workspace: ${e}`,
-            );
-        }
     }
 
     private async updateFileSystemWatchers(event: WorkspaceFoldersChangeEvent) {

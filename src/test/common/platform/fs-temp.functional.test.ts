@@ -5,7 +5,7 @@ import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 import { TemporaryFile } from '../../../client/common/platform/types';
-import { assertDoesNotExist, assertExists, FSFixture, WINDOWS } from './utils';
+import { assertDoesNotExist, assertExists, FSFixture } from './utils';
 
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
@@ -54,21 +54,6 @@ suite('FileSystem - TemporaryFileSystem', () => {
             const filename2 = tempFile2.filePath;
 
             expect(filename1).to.not.equal(filename2);
-        });
-
-        test('Ensure writing to a temp file is supported via file stream', async function () {
-            if (WINDOWS) {
-                this.skip();
-            }
-            const tempfile = await createFile('.tmp');
-            const stream = fs.createWriteStream(tempfile.filePath);
-            fix.addCleanup(() => stream.destroy());
-            const data = '...';
-
-            stream.write(data, 'utf8');
-
-            const actual = await fs.readFile(tempfile.filePath, 'utf8');
-            expect(actual).to.equal(data);
         });
 
         test('Ensure chmod works against a temporary file', async () => {

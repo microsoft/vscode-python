@@ -5,7 +5,6 @@
 
 import { injectable, unmanaged } from 'inversify';
 import { Terminal } from 'vscode';
-import { traceVerbose } from '../../logger';
 import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from '../types';
 
 /*
@@ -19,17 +18,18 @@ When identifying the shell use the following algorithm:
 
 // Types of shells can be found here:
 // 1. https://wiki.ubuntu.com/ChangingShells
-const IS_GITBASH = /(gitbash.exe$)/i;
-const IS_BASH = /(bash.exe$|bash$)/i;
-const IS_WSL = /(wsl.exe$)/i;
+const IS_GITBASH = /(gitbash$)/i;
+const IS_BASH = /(bash$)/i;
+const IS_WSL = /(wsl$)/i;
 const IS_ZSH = /(zsh$)/i;
 const IS_KSH = /(ksh$)/i;
-const IS_COMMAND = /(cmd.exe$|cmd$)/i;
-const IS_POWERSHELL = /(powershell.exe$|powershell$)/i;
-const IS_POWERSHELL_CORE = /(pwsh.exe$|pwsh$)/i;
+const IS_COMMAND = /(cmd$)/i;
+const IS_POWERSHELL = /(powershell$)/i;
+const IS_POWERSHELL_CORE = /(pwsh$)/i;
 const IS_FISH = /(fish$)/i;
 const IS_CSHELL = /(csh$)/i;
 const IS_TCSHELL = /(tcsh$)/i;
+const IS_NUSHELL = /(nu$)/i;
 const IS_XONSH = /(xonsh$)/i;
 
 const detectableShells = new Map<TerminalShellType, RegExp>();
@@ -43,6 +43,7 @@ detectableShells.set(TerminalShellType.commandPrompt, IS_COMMAND);
 detectableShells.set(TerminalShellType.fish, IS_FISH);
 detectableShells.set(TerminalShellType.tcshell, IS_TCSHELL);
 detectableShells.set(TerminalShellType.cshell, IS_CSHELL);
+detectableShells.set(TerminalShellType.nushell, IS_NUSHELL);
 detectableShells.set(TerminalShellType.powershellCore, IS_POWERSHELL_CORE);
 detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
@@ -54,18 +55,24 @@ export abstract class BaseShellDetector implements IShellDetector {
         terminal?: Terminal,
     ): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
-        const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {
-            if (matchedShell === TerminalShellType.other) {
-                const pat = detectableShells.get(shellToDetect);
-                if (pat && pat.test(shellPath)) {
-                    return shellToDetect;
-                }
-            }
-            return matchedShell;
-        }, TerminalShellType.other);
-
-        traceVerbose(`Shell path '${shellPath}'`);
-        traceVerbose(`Shell path identified as shell '${shell}'`);
-        return shell;
+        return identifyShellFromShellPath(shellPath);
     }
+}
+
+export function identifyShellFromShellPath(shellPath: string): TerminalShellType {
+    // Remove .exe extension so shells can be more consistently detected
+    // on Windows (including Cygwin).
+    const basePath = shellPath.replace(/\.exe$/i, '');
+
+    const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {
+        if (matchedShell === TerminalShellType.other) {
+            const pat = detectableShells.get(shellToDetect);
+            if (pat && pat.test(basePath)) {
+                return shellToDetect;
+            }
+        }
+        return matchedShell;
+    }, TerminalShellType.other);
+
+    return shell;
 }

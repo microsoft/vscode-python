@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../common/application/types';
 import { Commands } from '../../../../common/constants';
+import { IConfigurationService, IPathUtils } from '../../../../common/types';
 import { IPythonPathUpdaterServiceManager } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 
@@ -16,8 +17,17 @@ export class ResetInterpreterCommand extends BaseInterpreterSelectorCommand {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(IPathUtils) pathUtils: IPathUtils,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
     ) {
-        super(pythonPathUpdaterService, commandManager, applicationShell, workspaceService);
+        super(
+            pythonPathUpdaterService,
+            commandManager,
+            applicationShell,
+            workspaceService,
+            pathUtils,
+            configurationService,
+        );
     }
 
     public async activate() {
@@ -27,13 +37,16 @@ export class ResetInterpreterCommand extends BaseInterpreterSelectorCommand {
     }
 
     public async resetInterpreter() {
-        const targetConfig = await this.getConfigTarget();
-        if (!targetConfig) {
+        const targetConfigs = await this.getConfigTargets({ resetTarget: true });
+        if (!targetConfigs) {
             return;
         }
-        const configTarget = targetConfig.configTarget;
-        const wkspace = targetConfig.folderUri;
-
-        await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
+        await Promise.all(
+            targetConfigs.map(async (targetConfig) => {
+                const configTarget = targetConfig.configTarget;
+                const wkspace = targetConfig.folderUri;
+                await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
+            }),
+        );
     }
 }

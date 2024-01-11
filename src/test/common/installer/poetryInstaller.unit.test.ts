@@ -14,17 +14,12 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { ProcessService } from '../../../client/common/process/proc';
-import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
-import { ExecutionResult, IProcessServiceFactory, ShellOptions } from '../../../client/common/process/types';
-import { ExecutionInfo, IConfigurationService, IExperimentService } from '../../../client/common/types';
+import { ExecutionResult, ShellOptions } from '../../../client/common/process/types';
+import { ExecutionInfo, IConfigurationService } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { TEST_LAYOUT_ROOT } from '../../pythonEnvironments/common/commonTestConstants';
 import * as externalDependencies from '../../../client/pythonEnvironments/common/externalDependencies';
-import { DiscoveryVariants } from '../../../client/common/experiments/groups';
 import { EnvironmentType } from '../../../client/pythonEnvironments/info';
 
 suite('Module Installer - Poetry', () => {
@@ -38,23 +33,16 @@ suite('Module Installer - Poetry', () => {
     let poetryInstaller: TestInstaller;
     let workspaceService: IWorkspaceService;
     let configurationService: IConfigurationService;
-    let fileSystem: IFileSystem;
-    let experimentService: IExperimentService;
     let interpreterService: IInterpreterService;
-    let processServiceFactory: IProcessServiceFactory;
     let serviceContainer: ServiceContainer;
     let shellExecute: sinon.SinonStub;
 
     setup(() => {
         serviceContainer = mock(ServiceContainer);
-        experimentService = mock<IExperimentService>();
         interpreterService = mock<IInterpreterService>();
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-        when(serviceContainer.get<IExperimentService>(IExperimentService)).thenReturn(instance(experimentService));
         workspaceService = mock(WorkspaceService);
         configurationService = mock(ConfigurationService);
-        fileSystem = mock(FileSystem);
-        processServiceFactory = mock(ProcessServiceFactory);
 
         shellExecute = sinon.stub(externalDependencies, 'shellExecute');
         shellExecute.callsFake((command: string, options: ShellOptions) => {
@@ -62,12 +50,14 @@ suite('Module Installer - Poetry', () => {
             switch (command) {
                 case 'poetry env list --full-path':
                     return Promise.resolve<ExecutionResult<string>>({ stdout: '' });
-                case 'poetry env info -p':
-                    if (options.cwd && externalDependencies.arePathsSame(options.cwd, project1)) {
+                case 'poetry env info -p': {
+                    const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
+                    if (cwd && externalDependencies.arePathsSame(cwd, project1)) {
                         return Promise.resolve<ExecutionResult<string>>({
                             stdout: `${path.join(project1, '.venv')} \n`,
                         });
                     }
+                }
             }
             return Promise.reject(new Error('Command failed'));
         });
@@ -76,8 +66,6 @@ suite('Module Installer - Poetry', () => {
             instance(serviceContainer),
             instance(workspaceService),
             instance(configurationService),
-            instance(fileSystem),
-            instance(processServiceFactory),
         );
     });
 
@@ -99,71 +87,14 @@ suite('Module Installer - Poetry', () => {
 
     test('Is not supported when there is no resource', async () => {
         const supported = await poetryInstaller.isSupported();
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
     test('Is not supported when there is no workspace', async () => {
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
-    });
-    test('Is not supported when the poetry file does not exists', async () => {
-        const uri = Uri.file(__dirname);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(false);
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, false);
-    });
-    test('Is not supported when the poetry is not available (with stderr)', async () => {
-        const uri = Uri.file(__dirname);
-        const processService = mock(ProcessService);
-        const settings = mock(PythonSettings);
-
-        when(configurationService.getSettings(anything())).thenReturn(instance(settings));
-        when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(true);
-        when(processServiceFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.shellExec(anything(), anything())).thenResolve({ stderr: 'Kaboom', stdout: '' });
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, false);
-    });
-    test('Is not supported when the poetry is not available (with error running poetry)', async () => {
-        const uri = Uri.file(__dirname);
-        const processService = mock(ProcessService);
-        const settings = mock(PythonSettings);
-
-        when(configurationService.getSettings(anything())).thenReturn(instance(settings));
-        when(settings.poetryPath).thenReturn('poetry');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(true);
-        when(processServiceFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.shellExec(anything(), anything())).thenReject(new Error('Kaboom'));
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, false);
-    });
-    test('Is supported', async () => {
-        const uri = Uri.file(__dirname);
-        const processService = mock(ProcessService);
-        const settings = mock(PythonSettings);
-
-        when(configurationService.getSettings(uri)).thenReturn(instance(settings));
-        when(settings.poetryPath).thenReturn('poetry path');
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ uri, name: '', index: 0 });
-        when(fileSystem.fileExists(anything())).thenResolve(true);
-        when(processServiceFactory.create(uri)).thenResolve(instance(processService));
-        when(processService.shellExec('poetry path env list', anything())).thenResolve({ stderr: '', stdout: '' });
-
-        const supported = await poetryInstaller.isSupported(Uri.file(__filename));
-
-        assert.equal(supported, true);
+        assert.strictEqual(supported, false);
     });
     test('Get Executable info', async () => {
         const uri = Uri.file(__dirname);
@@ -174,7 +105,7 @@ suite('Module Installer - Poetry', () => {
 
         const info = await poetryInstaller.getExecutionInfo('something', uri);
 
-        assert.deepEqual(info, { args: ['add', '--dev', 'something'], execPath: 'poetry path' });
+        assert.deepEqual(info, { args: ['add', '--group', 'dev', 'something'], execPath: 'poetry path' });
     });
     test('Get executable info when installing black', async () => {
         const uri = Uri.file(__dirname);
@@ -186,15 +117,14 @@ suite('Module Installer - Poetry', () => {
         const info = await poetryInstaller.getExecutionInfo('black', uri);
 
         assert.deepEqual(info, {
-            args: ['add', '--dev', 'black', '--allow-prereleases'],
+            args: ['add', '--group', 'dev', 'black'],
             execPath: 'poetry path',
         });
     });
-    test('When in experiment, is supported returns true if selected interpreter is related to the workspace', async () => {
+    test('Is supported returns true if selected interpreter is related to the workspace', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             path: path.join(project1, '.venv', 'Scripts', 'python.exe'),
             envType: EnvironmentType.Poetry,
@@ -206,14 +136,13 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, true);
+        assert.strictEqual(supported, true);
     });
 
-    test('When in experiment, is supported returns true if no interpreter is selected', async () => {
+    test('Is supported returns true if no interpreter is selected', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(undefined);
         when(configurationService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.poetryPath).thenReturn('poetry');
@@ -221,14 +150,13 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
 
-    test('When in experiment, is supported returns false if selected interpreter is not related to the workspace', async () => {
+    test('Is supported returns false if selected interpreter is not related to the workspace', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             path: path.join(project1, '.random', 'Scripts', 'python.exe'),
             envType: EnvironmentType.Poetry,
@@ -240,14 +168,13 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
 
-    test('When in experiment, is supported returns false if selected interpreter is not of Poetry type', async () => {
+    test('Is supported returns false if selected interpreter is not of Poetry type', async () => {
         const uri = Uri.file(project1);
         const settings = mock(PythonSettings);
 
-        when(experimentService.inExperiment(DiscoveryVariants.discoverWithFileWatching)).thenResolve(true);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             path: path.join(project1, '.venv', 'Scripts', 'python.exe'),
             envType: EnvironmentType.Pipenv,
@@ -259,6 +186,6 @@ suite('Module Installer - Poetry', () => {
 
         const supported = await poetryInstaller.isSupported(Uri.file(__filename));
 
-        assert.equal(supported, false);
+        assert.strictEqual(supported, false);
     });
 });

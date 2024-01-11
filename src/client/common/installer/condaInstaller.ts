@@ -3,12 +3,13 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ICondaService, ICondaLocatorService, IComponentAdapter } from '../../interpreter/contracts';
+import { ICondaService, IComponentAdapter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { inDiscoveryExperiment } from '../experiments/helpers';
-import { ExecutionInfo, IConfigurationService, IExperimentService } from '../types';
+import { getEnvPath } from '../../pythonEnvironments/base/info/env';
+import { ModuleInstallerType } from '../../pythonEnvironments/info';
+import { ExecutionInfo, IConfigurationService, Product } from '../types';
 import { isResource } from '../utils/misc';
-import { ModuleInstaller } from './moduleInstaller';
+import { ModuleInstaller, translateProductToModule } from './moduleInstaller';
 import { InterpreterUri, ModuleInstallFlags } from './types';
 
 /**
@@ -33,8 +34,12 @@ export class CondaInstaller extends ModuleInstaller {
         return 'Conda';
     }
 
+    public get type(): ModuleInstallerType {
+        return ModuleInstallerType.Conda;
+    }
+
     public get priority(): number {
-        return 0;
+        return 10;
     }
 
     /**
@@ -67,31 +72,33 @@ export class CondaInstaller extends ModuleInstaller {
         flags: ModuleInstallFlags = 0,
     ): Promise<ExecutionInfo> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const condaFile = await condaService.getCondaFile();
+        // Installation using `conda.exe` sometimes fails with a HTTP error on Windows:
+        // https://github.com/conda/conda/issues/11399
+        // Execute in a shell which uses a `conda.bat` file instead, using which installation works.
+        const useShell = true;
+        const condaFile = await condaService.getCondaFile(useShell);
 
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.path;
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaLocatorService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+            : getEnvPath(resource.path, resource.envPath).path ?? '';
+        const condaLocatorService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const info = await condaLocatorService.getCondaEnvironment(pythonPath);
         const args = [flags & ModuleInstallFlags.upgrade ? 'update' : 'install'];
 
-        // Temporarily ensure tensorboard is installed from the conda-forge
-        // channel since 2.4.1 is not yet available in the default index
-        if (moduleName === 'tensorboard') {
+        // Found that using conda-forge is best at packages like tensorboard & ipykernel which seem to get updated first on conda-forge
+        // https://github.com/microsoft/vscode-jupyter/issues/7787 & https://github.com/microsoft/vscode-python/issues/17628
+        // Do this just for the datascience packages.
+        if ([Product.tensorboard].map(translateProductToModule).includes(moduleName)) {
             args.push('-c', 'conda-forge');
         }
         if (info && info.name) {
             // If we have the name of the conda environment, then use that.
             args.push('--name');
-            args.push(info.name.toCommandArgument());
+            args.push(info.name.toCommandArgumentForPythonExt());
         } else if (info && info.path) {
             // Else provide the full path to the environment path.
             args.push('--prefix');
-            args.push(info.path.fileToCommandArgument());
+            args.push(info.path.fileToCommandArgumentForPythonExt());
         }
         if (flags & ModuleInstallFlags.updateDependencies) {
             args.push('--update-deps');
@@ -104,6 +111,7 @@ export class CondaInstaller extends ModuleInstaller {
         return {
             args,
             execPath: condaFile,
+            useShell,
         };
     }
 
@@ -111,13 +119,10 @@ export class CondaInstaller extends ModuleInstaller {
      * Is the provided interprter a conda environment
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
-        const experimentService = this.serviceContainer.get<IExperimentService>(IExperimentService);
-        const condaService = (await inDiscoveryExperiment(experimentService))
-            ? this.serviceContainer.get<IComponentAdapter>(IComponentAdapter)
-            : this.serviceContainer.get<ICondaLocatorService>(ICondaLocatorService);
+        const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         const pythonPath = isResource(resource)
             ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
-            : resource.path;
+            : getEnvPath(resource.path, resource.envPath).path ?? '';
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

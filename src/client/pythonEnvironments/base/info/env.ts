@@ -1,25 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { cloneDeep, uniq } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { getArchitectureDisplayName } from '../../../common/platform/registry';
-import { normalizeFilename } from '../../../common/utils/filesystem';
 import { Architecture } from '../../../common/utils/platform';
-import { arePathsSame } from '../../common/externalDependencies';
+import { arePathsSame, isParentPath, normCasePath } from '../../common/externalDependencies';
 import { getKindDisplayName } from './envKind';
-import { parseVersionFromExecutable } from './executable';
 import { areIdenticalVersion, areSimilarVersions, getVersionDisplayString, isVersionEmpty } from './pythonVersion';
 
 import {
-    FileInfo,
-    PythonDistroInfo,
+    EnvPathType,
+    globallyInstalledEnvKinds,
     PythonEnvInfo,
     PythonEnvKind,
     PythonEnvSource,
+    PythonEnvType,
     PythonReleaseLevel,
     PythonVersion,
+    virtualEnvKinds,
 } from '.';
+import { BasicEnvInfo } from '../locator';
 
 /**
  * Create a new info object with all values empty.
@@ -37,14 +39,17 @@ export function buildEnvInfo(init?: {
     fileInfo?: { ctime: number; mtime: number };
     source?: PythonEnvSource[];
     display?: string;
+    sysPrefix?: string;
+    searchLocation?: Uri;
+    type?: PythonEnvType;
 }): PythonEnvInfo {
-    const env = {
+    const env: PythonEnvInfo = {
         name: init?.name ?? '',
         location: '',
         kind: PythonEnvKind.Unknown,
         executable: {
             filename: '',
-            sysPrefix: '',
+            sysPrefix: init?.sysPrefix ?? '',
             ctime: init?.fileInfo?.ctime ?? -1,
             mtime: init?.fileInfo?.mtime ?? -1,
         },
@@ -68,7 +73,27 @@ export function buildEnvInfo(init?: {
     if (init !== undefined) {
         updateEnv(env, init);
     }
+    env.id = getEnvID(env.executable.filename, env.location);
     return env;
+}
+
+export function areEnvsDeepEqual(env1: PythonEnvInfo, env2: PythonEnvInfo): boolean {
+    const env1Clone = cloneDeep(env1);
+    const env2Clone = cloneDeep(env2);
+    // Cannot compare searchLocation as they are Uri objects.
+    delete env1Clone.searchLocation;
+    delete env2Clone.searchLocation;
+    env1Clone.source = env1Clone.source.sort();
+    env2Clone.source = env2Clone.source.sort();
+    const searchLocation1 = env1.searchLocation?.fsPath ?? '';
+    const searchLocation2 = env2.searchLocation?.fsPath ?? '';
+    const searchLocation1Scheme = env1.searchLocation?.scheme ?? '';
+    const searchLocation2Scheme = env2.searchLocation?.scheme ?? '';
+    return (
+        isEqual(env1Clone, env2Clone) &&
+        arePathsSame(searchLocation1, searchLocation2) &&
+        searchLocation1Scheme === searchLocation2Scheme
+    );
 }
 
 /**
@@ -98,6 +123,8 @@ function updateEnv(
         executable?: string;
         location?: string;
         version?: PythonVersion;
+        searchLocation?: Uri;
+        type?: PythonEnvType;
     },
 ): void {
     if (updates.kind !== undefined) {
@@ -112,6 +139,12 @@ function updateEnv(
     if (updates.version !== undefined) {
         env.version = updates.version;
     }
+    if (updates.searchLocation !== undefined) {
+        env.searchLocation = updates.searchLocation;
+    }
+    if (updates.type !== undefined) {
+        env.type = updates.type;
+    }
 }
 
 /**
@@ -120,22 +153,24 @@ function updateEnv(
  * The format is `Python <Version> <bitness> (<env name>: <env type>)`
  * E.g. `Python 3.5.1 32-bit (myenv2: virtualenv)`
  */
-export function getEnvDisplayString(env: PythonEnvInfo): string {
-    if (env.display === undefined || env.display === '') {
-        env.display = buildEnvDisplayString(env);
-    }
-    return env.display;
+export function setEnvDisplayString(env: PythonEnvInfo): void {
+    env.display = buildEnvDisplayString(env);
+    env.detailedDisplayName = buildEnvDisplayString(env, true);
 }
 
-function buildEnvDisplayString(env: PythonEnvInfo): string {
+function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): string {
     // main parts
+    const shouldDisplayKind = getAllDetails || env.searchLocation || globallyInstalledEnvKinds.includes(env.kind);
+    const shouldDisplayArch = !virtualEnvKinds.includes(env.kind);
     const displayNameParts: string[] = ['Python'];
     if (env.version && !isVersionEmpty(env.version)) {
         displayNameParts.push(getVersionDisplayString(env.version));
     }
-    const archName = getArchitectureDisplayName(env.arch);
-    if (archName !== '') {
-        displayNameParts.push(archName);
+    if (shouldDisplayArch) {
+        const archName = getArchitectureDisplayName(env.arch);
+        if (archName !== '') {
+            displayNameParts.push(archName);
+        }
     }
 
     // Note that currently we do not use env.distro in the display name.
@@ -145,9 +180,11 @@ function buildEnvDisplayString(env: PythonEnvInfo): string {
     if (env.name && env.name !== '') {
         envSuffixParts.push(`'${env.name}'`);
     }
-    const kindName = getKindDisplayName(env.kind);
-    if (kindName !== '') {
-        envSuffixParts.push(kindName);
+    if (shouldDisplayKind) {
+        const kindName = getKindDisplayName(env.kind);
+        if (kindName !== '') {
+            envSuffixParts.push(kindName);
+        }
     }
     const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
 
@@ -156,28 +193,18 @@ function buildEnvDisplayString(env: PythonEnvInfo): string {
 }
 
 /**
- * Determine the corresponding Python executable filename, if any.
- */
-export function getEnvExecutable(env: string | Partial<PythonEnvInfo>): string {
-    const executable = typeof env === 'string' ? env : env.executable?.filename || '';
-    if (executable === '') {
-        return '';
-    }
-    return normalizeFilename(executable);
-}
-
-/**
  * For the given data, build a normalized partial info object.
  *
  * If insufficient data is provided to generate a minimal object, such
  * that it is not identifiable, then `undefined` is returned.
  */
-export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Partial<PythonEnvInfo> | undefined {
+function getMinimalPartialInfo(env: string | PythonEnvInfo | BasicEnvInfo): Partial<PythonEnvInfo> | undefined {
     if (typeof env === 'string') {
         if (env === '') {
             return undefined;
         }
         return {
+            id: '',
             executable: {
                 filename: env,
                 sysPrefix: '',
@@ -186,114 +213,40 @@ export function getMinimalPartialInfo(env: string | Partial<PythonEnvInfo>): Par
             },
         };
     }
-    if (env.executable === undefined) {
-        return undefined;
-    }
-    if (env.executable.filename === '') {
-        return undefined;
+    if ('executablePath' in env) {
+        return {
+            id: '',
+            executable: {
+                filename: env.executablePath,
+                sysPrefix: '',
+                ctime: -1,
+                mtime: -1,
+            },
+            location: env.envPath,
+            kind: env.kind,
+            source: env.source,
+        };
     }
     return env;
 }
 
 /**
- * Build an object with at least the minimal info about a Python env.
- *
- * This is meant to be as fast an operation as possible.
- *
- * Note that passing `PythonEnvKind.Unknown` for `kind` is okay,
- * though not ideal.
+ * Returns path to environment folder or path to interpreter that uniquely identifies an environment.
  */
-export function getFastEnvInfo(kind: PythonEnvKind, executable: string): PythonEnvInfo {
-    const env = buildEnvInfo({ kind, executable });
-
-    try {
-        env.version = parseVersionFromExecutable(env.executable.filename);
-    } catch {
-        // It didn't have version info in it.
-        // We could probably walk up the directory tree trying dirnames
-        // too, but we'll skip that for now.  Windows gives us a few
-        // other options which we will also skip for now.
+export function getEnvPath(interpreterPath: string, envFolderPath?: string): EnvPathType {
+    let envPath: EnvPathType = { path: interpreterPath, pathType: 'interpreterPath' };
+    if (envFolderPath && !isParentPath(interpreterPath, envFolderPath)) {
+        // Executable is not inside the environment folder, env folder is the ID.
+        envPath = { path: envFolderPath, pathType: 'envFolderPath' };
     }
-
-    return env;
+    return envPath;
 }
 
 /**
- * Build a new object with at much info as possible about a Python env.
- *
- * This does as much as possible without distro-specific or other
- * special knowledge.
- *
- * @param minimal - the minimal info (e.g. from `getFastEnvInfo()`)
- *                  on which to base the "full" object; this may include
- *                  extra info beyond the "minimal", but at the very
- *                  least it will include the minimum info necessary
- *                  to be useful
+ * Gets general unique identifier for most environments.
  */
-export async function getMaxDerivedEnvInfo(minimal: PythonEnvInfo): Promise<PythonEnvInfo> {
-    const env = cloneDeep(minimal);
-
-    // For now we do not worry about adding anything more to env.executable.
-    // `ctime` and `mtime` would require a stat call,  `sysPrefix` would
-    // require guessing.
-
-    // For now we do not fill anything in for `name` or `location`.  If
-    // we had `env.executable.sysPrefix` we could set a meaningful
-    // `location`, but we don't.
-
-    if (isVersionEmpty(env.version)) {
-        try {
-            env.version = parseVersionFromExecutable(env.executable.filename);
-        } catch {
-            // It didn't have version info in it.
-            // We could probably walk up the directory tree trying dirnames
-            // too, but we'll skip that for now.  Windows gives us a few
-            // other options which we will also skip for now.
-        }
-    }
-
-    // Note that we do not set `env.arch` to the host's native
-    // architecture.  Nearly all Python builds will match the host
-    // architecture, with the notable exception being older PSF builds
-    // for Windows,  There is enough uncertainty that we play it safe
-    // by not setting `env.arch` here.
-
-    // We could probably make a decent guess at the distro, but that
-    // is best left to distro-specific locators.
-
-    return env;
-}
-
-/**
- * Create a function that decides if the given "query" matches some env info.
- *
- * The returned function is compatible with `Array.filter()`.
- */
-export function getEnvMatcher(query: string | Partial<PythonEnvInfo>): (env: PythonEnvInfo) => boolean {
-    const executable = getEnvExecutable(query);
-    if (executable === '') {
-        // We could throw an exception error, but skipping it is fine.
-        return () => false;
-    }
-    function matchEnv(candidate: PythonEnvInfo): boolean {
-        return arePathsSame(executable, candidate.executable.filename);
-    }
-    return matchEnv;
-}
-
-/**
- * Decide if the two sets of executables for the given envs are the same.
- */
-export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo[]): boolean {
-    if (envs1.length !== envs2.length) {
-        return false;
-    }
-    const executables1 = envs1.map(getEnvExecutable);
-    const executables2 = envs2.map(getEnvExecutable);
-    if (!executables2.every((e) => executables1.includes(e))) {
-        return false;
-    }
-    return true;
+export function getEnvID(interpreterPath: string, envFolderPath?: string): string {
+    return normCasePath(getEnvPath(interpreterPath, envFolderPath).path);
 }
 
 /**
@@ -305,12 +258,12 @@ export function haveSameExecutables(envs1: PythonEnvInfo[], envs2: PythonEnvInfo
  * Remarks: The current comparison assumes that if the path to the executables are the same
  * then it is the same environment. Additionally, if the paths are not same but executables
  * are in the same directory and the version of python is the same than we can assume it
- * to be same environment. This later case is needed for comparing windows store python,
+ * to be same environment. This later case is needed for comparing microsoft store python,
  * where multiple versions of python executables are all put in the same directory.
  */
 export function areSameEnv(
-    left: string | Partial<PythonEnvInfo>,
-    right: string | Partial<PythonEnvInfo>,
+    left: string | PythonEnvInfo | BasicEnvInfo,
+    right: string | PythonEnvInfo | BasicEnvInfo,
     allowPartialMatch = true,
 ): boolean | undefined {
     const leftInfo = getMinimalPartialInfo(left);
@@ -321,20 +274,30 @@ export function areSameEnv(
     const leftFilename = leftInfo.executable!.filename;
     const rightFilename = rightInfo.executable!.filename;
 
-    // For now we assume that matching executable means they are the same.
-    if (arePathsSame(leftFilename, rightFilename)) {
+    if (leftInfo.id && leftInfo.id === rightInfo.id) {
+        // In case IDs are available, use it.
         return true;
     }
 
-    if (arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename))) {
-        const leftVersion = typeof left === 'string' ? undefined : left.version;
-        const rightVersion = typeof right === 'string' ? undefined : right.version;
-        if (leftVersion && rightVersion) {
-            if (
-                areIdenticalVersion(leftVersion, rightVersion) ||
-                (allowPartialMatch && areSimilarVersions(leftVersion, rightVersion))
-            ) {
-                return true;
+    if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
+        // Otherwise use ID function to get the ID. Note ID returned by function may itself change if executable of
+        // an environment changes, for eg. when conda installs python into the env. So only use it as a fallback if
+        // ID is not available.
+        return true;
+    }
+
+    if (allowPartialMatch) {
+        const isSameDirectory =
+            leftFilename !== 'python' &&
+            rightFilename !== 'python' &&
+            arePathsSame(path.dirname(leftFilename), path.dirname(rightFilename));
+        if (isSameDirectory) {
+            const leftVersion = typeof left === 'string' ? undefined : leftInfo.version;
+            const rightVersion = typeof right === 'string' ? undefined : rightInfo.version;
+            if (leftVersion && rightVersion) {
+                if (areIdenticalVersion(leftVersion, rightVersion) || areSimilarVersions(leftVersion, rightVersion)) {
+                    return true;
+                }
             }
         }
     }
@@ -380,101 +343,4 @@ function getPythonVersionSpecificity(version: PythonVersion): number {
  */
 export function comparePythonVersionSpecificity(versionA: PythonVersion, versionB: PythonVersion): number {
     return Math.sign(getPythonVersionSpecificity(versionA) - getPythonVersionSpecificity(versionB));
-}
-
-/**
- * Returns a heuristic value on how much information is available in the given executable object.
- * @param {FileInfo} executable executable object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getFileInfoHeuristic(file: FileInfo): number {
-    let infoLevel = 0;
-    if (file.filename.length > 0) {
-        infoLevel += 5; // W2
-    }
-
-    if (file.mtime) {
-        infoLevel += 2; // W1
-    }
-
-    if (file.ctime) {
-        infoLevel += 1; // W0
-    }
-
-    return infoLevel;
-}
-
-/**
- * Returns a heuristic value on how much information is available in the given distro object.
- * @param {PythonDistroInfo} distro distro object to generate heuristic from.
- * @returns A heuristic value indicating the amount of info available in the object
- * weighted by most important to least important fields.
- * Wn > Wn-1 + Wn-2 + ... W0
- */
-function getDistroInfoHeuristic(distro: PythonDistroInfo): number {
-    let infoLevel = 0;
-    if (distro.org.length > 0) {
-        infoLevel += 20; // W3
-    }
-
-    if (distro.defaultDisplayName) {
-        infoLevel += 10; // W2
-    }
-
-    if (distro.binDir) {
-        infoLevel += 5; // W1
-    }
-
-    if (distro.version) {
-        infoLevel += 2;
-    }
-
-    return infoLevel;
-}
-
-/**
- * Merges properties of the `target` environment and `other` environment and returns the merged environment.
- * if the value in the `target` environment is not defined or has less information. This does not mutate
- * the `target` instead it returns a new object that contains the merged results.
- * @param {PythonEnvInfo} target : Properties of this object are favored.
- * @param {PythonEnvInfo} other : Properties of this object are used to fill the gaps in the merged result.
- */
-export function mergeEnvironments(target: PythonEnvInfo, other: PythonEnvInfo): PythonEnvInfo {
-    const merged = cloneDeep(target);
-
-    const version = cloneDeep(
-        getPythonVersionSpecificity(target.version) > getPythonVersionSpecificity(other.version)
-            ? target.version
-            : other.version,
-    );
-
-    const executable = cloneDeep(
-        getFileInfoHeuristic(target.executable) > getFileInfoHeuristic(other.executable)
-            ? target.executable
-            : other.executable,
-    );
-    executable.sysPrefix = target.executable.sysPrefix ?? other.executable.sysPrefix;
-
-    const distro = cloneDeep(
-        getDistroInfoHeuristic(target.distro) > getDistroInfoHeuristic(other.distro) ? target.distro : other.distro,
-    );
-
-    merged.arch = merged.arch === Architecture.Unknown ? other.arch : target.arch;
-    merged.display = merged.display ?? other.display;
-    merged.distro = distro;
-    merged.executable = executable;
-
-    // No need to check this just use preferred kind. Since the first thing we do is figure out the
-    // preferred env based on kind.
-    merged.kind = target.kind;
-
-    merged.location = merged.location.length ? merged.location : other.location;
-    merged.name = merged.name.length ? merged.name : other.name;
-    merged.searchLocation = merged.searchLocation ?? other.searchLocation;
-    merged.version = version;
-    merged.source = uniq([...target.source, ...other.source]);
-
-    return merged;
 }

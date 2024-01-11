@@ -8,6 +8,6 @@ obj = {}
 obj["versionInfo"] = tuple(sys.version_info)
 obj["sysPrefix"] = sys.prefix
 obj["sysVersion"] = sys.version
-obj["is64Bit"] = sys.maxsize > 2 ** 32
+obj["is64Bit"] = sys.maxsize > 2**32
 
 print(json.dumps(obj))

@@ -2,31 +2,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import TelemetryReporter from 'vscode-extension-telemetry/lib/telemetryReporter';
+import TelemetryReporter from '@vscode/extension-telemetry';
 
-import { LanguageServerType } from '../activation/types';
+import * as path from 'path';
+import * as fs from 'fs-extra';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { IWorkspaceService } from '../common/application/types';
-import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
-import { traceError, traceInfo } from '../common/logger';
-import { Telemetry } from '../common/startPage/constants';
+import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, isUnitTestExecution } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
-import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
-import { AutoSelectionRule } from '../interpreter/autoSelection/types';
-import { LinterId } from '../linters/types';
-import { EnvironmentType } from '../pythonEnvironments/info';
+import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
     TensorBoardPromptSelection,
     TensorBoardEntrypointTrigger,
     TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
 } from '../tensorBoard/constants';
-import { TestProvider } from '../testing/types';
-import { EventName, PlatformErrors } from './constants';
-import type { LinterTrigger, TestTool } from './types';
+import { EventName } from './constants';
+import type { TestTool } from './types';
 
 /**
  * Checks whether telemetry is supported.
@@ -37,7 +31,7 @@ import type { LinterTrigger, TestTool } from './types';
 function isTelemetrySupported(): boolean {
     try {
         const vsc = require('vscode');
-        const reporter = require('vscode-extension-telemetry');
+        const reporter = require('@vscode/extension-telemetry');
 
         return vsc !== undefined && reporter !== undefined;
     } catch {
@@ -46,12 +40,13 @@ function isTelemetrySupported(): boolean {
 }
 
 /**
- * Checks if the telemetry is disabled in user settings
+ * Checks if the telemetry is disabled
  * @returns {boolean}
  */
-export function isTelemetryDisabled(workspaceService: IWorkspaceService): boolean {
-    const settings = workspaceService.getConfiguration('telemetry').inspect<boolean>('enableTelemetry')!;
-    return settings.globalValue === false;
+export function isTelemetryDisabled(): boolean {
+    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
+    const packageJson = fs.readJSONSync(packageJsonPath);
+    return !packageJson.enableTelemetry;
 }
 
 const sharedProperties: Record<string, unknown> = {};
@@ -81,18 +76,17 @@ export function _resetSharedProperties(): void {
 }
 
 let telemetryReporter: TelemetryReporter | undefined;
-function getTelemetryReporter() {
+export function getTelemetryReporter(): TelemetryReporter {
     if (!isTestExecution() && telemetryReporter) {
         return telemetryReporter;
     }
-    const extensionId = PVSC_EXTENSION_ID;
 
-    const { extensions } = require('vscode') as typeof import('vscode');
-    const extension = extensions.getExtension(extensionId)!;
-    const extensionVersion = extension.packageJSON.version;
-
-    const Reporter = require('vscode-extension-telemetry').default as typeof TelemetryReporter;
-    telemetryReporter = new Reporter(extensionId, extensionVersion, AppinsightsKey, true);
+    const Reporter = require('@vscode/extension-telemetry').default as typeof TelemetryReporter;
+    telemetryReporter = new Reporter(AppinsightsKey, [
+        {
+            lookup: /(errorName|errorMessage|errorStack)/g,
+        },
+    ]);
 
     return telemetryReporter;
 }
@@ -107,7 +101,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     properties?: P[E],
     ex?: Error,
 ): void {
-    if (isTestExecution() || !isTelemetrySupported()) {
+    if (isTestExecution() || !isTelemetrySupported() || isTelemetryDisabled()) {
         return;
     }
     const reporter = getTelemetryReporter();
@@ -140,7 +134,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         break;
                 }
             } catch (exception) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception);
             }
         });
     }
@@ -151,20 +145,16 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (ex) {
         const errorProps = {
             errorName: ex.name,
-            errorMessage: ex.message,
             errorStack: ex.stack ?? '',
         };
         Object.assign(customProperties, errorProps);
-
-        // To avoid hardcoding the names and forgetting to update later.
-        const errorPropNames = Object.getOwnPropertyNames(errorProps);
-        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures, errorPropNames);
+        reporter.sendTelemetryErrorEvent(eventNameSent, customProperties, measures);
     } else {
         reporter.sendTelemetryEvent(eventNameSent, customProperties, measures);
     }
 
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
-        traceInfo(
+        console.info(
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties,
             )} `,
@@ -314,23 +304,21 @@ type FailedEventType = { failed: true };
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
     /**
-     * Telemetry event sent when providing completion items for the given position and document.
-     *
-     * This event also has a measure, "resultLength", which records the number of completions provided.
+     * Telemetry event sent when debug in terminal button was used to debug current file.
      */
-    [EventName.COMPLETION]: never | undefined;
-    /**
-     * Telemetry event sent with details 'python.autoComplete.addBrackets' setting
-     */
-    [EventName.COMPLETION_ADD_BRACKETS]: {
-        /**
-         * Carries boolean `true` if 'python.autoComplete.addBrackets' is set to true, `false` otherwise
-         */
-        enabled: boolean;
-    };
+    /* __GDPR__
+        "debug_in_terminal_button" : { "owner": "paulacamargo25" }
+    */
+    [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;
     /**
      * Telemetry event captured when debug adapter executable is created
      */
+    /* __GDPR__
+       "debug_adapter.using_wheels_path" : {
+          "usingwheels" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
+       }
+     */
+
     [EventName.DEBUG_ADAPTER_USING_WHEELS_PATH]: {
         /**
          * Carries boolean
@@ -341,6 +329,13 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry captured before starting debug session.
+     */
+    /* __GDPR__
+       "debug_session.start" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
+       }
      */
     [EventName.DEBUG_SESSION_START]: {
         /**
@@ -365,6 +360,13 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry captured when debug session runs into an error.
      */
+    /* __GDPR__
+       "debug_session.error" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
+       }
+     */
     [EventName.DEBUG_SESSION_ERROR]: {
         /**
          * Trigger for starting the debugger.
@@ -387,6 +389,13 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry captured after stopping debug session.
+     */
+    /* __GDPR__
+       "debug_session.stop" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
+       }
      */
     [EventName.DEBUG_SESSION_STOP]: {
         /**
@@ -411,6 +420,13 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry captured when user code starts running after loading the debugger.
      */
+    /* __GDPR__
+       "debug_session.user_code_running" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
+       }
+     */
     [EventName.DEBUG_SESSION_USER_CODE_RUNNING]: {
         /**
          * Trigger for starting the debugger.
@@ -433,6 +449,29 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry captured when starting the debugger.
+     */
+    /* __GDPR__
+       "debugger" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "hasenvvars": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "hasargs": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "django": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "fastapi": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "flask": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "jinja": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "islocalhost": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "ismodule": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "issudo": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "stoponentry": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "showreturnvalue": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "pyramid": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "subprocess": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "watson": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "pyspark": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "gevent": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
+          "scrapy": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
+       }
      */
     [EventName.DEBUGGER]: {
         /**
@@ -561,67 +600,29 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when attaching to child process
      */
+    /* __GDPR__
+       "debugger.attach_to_child_process" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "paulacamargo25" }
+       }
+     */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     /**
      * Telemetry event sent when attaching to a local process.
      */
+    /* __GDPR__
+       "debugger.attach_to_local_process" : { "owner": "paulacamargo25" }
+     */
     [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
     /**
-     * Telemetry sent after building configuration for debugger
-     */
-    [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
-        /**
-         * The type of debug configuration to build configuration for
-         *
-         * @type {DebugConfigurationType}
-         */
-        configurationType: DebugConfigurationType;
-        /**
-         * Carries `true` if we are able to auto-detect manage.py path for Django, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedDjangoManagePyPath?: boolean;
-        /**
-         * Carries `true` if we are able to auto-detect .ini file path for Pyramid, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedPyramidIniPath?: boolean;
-        /**
-         * Carries `true` if we are able to auto-detect main.py path for FastAPI, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedFastAPIMainPyPath?: boolean;
-        /**
-         * Carries `true` if we are able to auto-detect app.py path for Flask, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        autoDetectedFlaskAppPyPath?: boolean;
-        /**
-         * Carries `true` if user manually entered the required path for the app
-         * (path to `manage.py` for Django, path to `.ini` for Pyramid, path to `app.py` for Flask), `false` otherwise
-         *
-         * @type {boolean}
-         */
-        manuallyEnteredAValue?: boolean;
-    };
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_REQUEST]: never | undefined;
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_ERROR]: never | undefined;
-    [EventName.OPEN_DATAVIEWER_FROM_VARIABLE_WINDOW_SUCCESS]: never | undefined;
-    /**
-     * Telemetry event sent when providing completion provider in launch.json. It is sent just *after* inserting the completion.
-     */
-    [EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON]: never | undefined;
-    /**
-     * Telemetry is sent when providing definitions for python code, particularly when [go to definition](https://code.visualstudio.com/docs/editor/editingevolved#_go-to-definition)
-     * and peek definition features are used.
-     */
-    [EventName.DEFINITION]: never | undefined;
-    /**
      * Telemetry event sent with details of actions when invoking a diagnostic command
+     */
+    /* __GDPR__
+       "diagnostics.action" : {
+          "commandname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "ignorecode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "url" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.DIAGNOSTICS_ACTION]: {
         /**
@@ -648,6 +649,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when we are checking if we can handle the diagnostic code
      */
+    /* __GDPR__
+       "diagnostics.message" : {
+          "code" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
     [EventName.DIAGNOSTICS_MESSAGE]: {
         /**
          * Code of diagnostics message detected and displayed.
@@ -658,19 +664,43 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details just after editor loads
      */
+    /* __GDPR__
+       "editor.load" : {
+          "appName" : {"classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud"},
+          "codeloadingtime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "condaversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "errorname" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "installsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "luabud" },
+          "workspacefoldercount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "haspythonthree" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "startactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+       }
+     */
     [EventName.EDITOR_LOAD]: {
+        /**
+         * The name of the application where the Python extension is running
+         */
+        appName?: string | undefined;
         /**
          * The conda version if selected
          */
-        condaVersion: string | undefined;
+        condaVersion?: string | undefined;
         /**
          * The python interpreter version if selected
          */
-        pythonVersion: string | undefined;
+        pythonVersion?: string | undefined;
         /**
          * The type of interpreter (conda, virtualenv, pipenv etc.)
          */
-        interpreterType: EnvironmentType | undefined;
+        interpreterType?: EnvironmentType | undefined;
         /**
          * The type of terminal shell created: powershell, cmd, zsh, bash etc.
          *
@@ -684,27 +714,32 @@ export interface IEventNamePropertyMapping {
         /**
          * If interpreters found for the main workspace contains a python3 interpreter
          */
-        hasPython3: boolean;
+        hasPythonThree?: boolean;
         /**
          * If user has defined an interpreter in settings.json
          */
-        usingUserDefinedInterpreter: boolean;
-        /**
-         * If interpreter is auto selected for the workspace
-         */
-        usingAutoSelectedWorkspaceInterpreter: boolean;
+        usingUserDefinedInterpreter?: boolean;
         /**
          * If global interpreter is being used
          */
-        usingGlobalInterpreter: boolean;
+        usingGlobalInterpreter?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
+     */
+    /* __GDPR__
+       "envfile_variable_substitution" : { "owner": "karthiknadig" }
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
      * Telemetry event sent when an environment file is detected in the workspace.
      */
+    /* __GDPR__
+       "envfile_workspace" : {
+          "hascustomenvpath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+       }
+     */
+
     [EventName.ENVFILE_WORKSPACE]: {
         /**
          * If there's a custom path specified in the python.envFile workspace settings.
@@ -715,25 +750,42 @@ export interface IEventNamePropertyMapping {
      * Telemetry Event sent when user sends code to be executed in the terminal.
      *
      */
+    /* __GDPR__
+       "execution_code" : {
+          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
     [EventName.EXECUTION_CODE]: {
         /**
-         * Whether the user executed a file in the terminal or just the selected text.
+         * Whether the user executed a file in the terminal or just the selected text or line by shift+enter.
          *
          * @type {('file' | 'selection')}
          */
-        scope: 'file' | 'selection';
+        scope: 'file' | 'selection' | 'line';
         /**
          * How was the code executed (through the command or by clicking the `Run File` icon).
          *
          * @type {('command' | 'icon')}
          */
         trigger?: 'command' | 'icon';
+        /**
+         * Whether user chose to execute this Python file in a separate terminal or not.
+         *
+         * @type {boolean}
+         */
+        newTerminalPerFile?: boolean;
     };
     /**
      * Telemetry Event sent when user executes code against Django Shell.
      * Values sent:
      * scope
      *
+     */
+    /* __GDPR__
+       "execution_django" : {
+          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
      */
     [EventName.EXECUTION_DJANGO]: {
         /**
@@ -744,25 +796,14 @@ export interface IEventNamePropertyMapping {
          */
         scope: 'file' | 'selection';
     };
-    /**
-     * Telemetry event sent with details when formatting a document
-     */
-    [EventName.FORMAT]: {
-        /**
-         * Tool being used to format
-         */
-        tool: 'autopep8' | 'black' | 'yapf';
-        /**
-         * If arguments for formatter is provided in resource settings
-         */
-        hasCustomArgs: boolean;
-        /**
-         * Carries `true` when formatting a selection of text, `false` otherwise
-         */
-        formatSelection: boolean;
-    };
+
     /**
      * Telemetry event sent with the value of setting 'Format on type'
+     */
+    /* __GDPR__
+       "format.format_on_type" : {
+          "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.FORMAT_ON_TYPE]: {
         /**
@@ -772,20 +813,14 @@ export interface IEventNamePropertyMapping {
          */
         enabled: boolean;
     };
-    /**
-     * Telemetry event sent when sorting imports using formatter
-     */
-    [EventName.FORMAT_SORT_IMPORTS]: never | undefined;
-    /**
-     * Telemetry event sent when Go to Python object command is executed
-     */
-    [EventName.GO_TO_OBJECT_DEFINITION]: never | undefined;
-    /**
-     * Telemetry event sent when providing a hover for the given position and document for interactive window using Jedi.
-     */
-    [EventName.HOVER_DEFINITION]: never | undefined;
+
     /**
      * Telemetry event sent with details when tracking imports
+     */
+    /* __GDPR__
+       "hashed_package_name" : {
+          "hashedname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+       }
      */
     [EventName.HASHED_PACKAGE_NAME]: {
         /**
@@ -795,43 +830,19 @@ export interface IEventNamePropertyMapping {
          */
         hashedName: string;
     };
-    [EventName.HASHED_PACKAGE_PERF]: never | undefined;
-    /**
-     * Telemetry event sent with details of selection in prompt
-     * `Prompt message` :- 'Linter ${productName} is not installed'
-     */
-    [EventName.LINTER_NOT_INSTALLED_PROMPT]: {
-        /**
-         * Name of the linter
-         *
-         * @type {LinterId}
-         */
-        tool?: LinterId;
-        /**
-         * `select` When 'Select linter' option is selected
-         * `disablePrompt` When 'Do not show again' option is selected
-         * `install` When 'Install' option is selected
-         *
-         * @type {('select' | 'disablePrompt' | 'install')}
-         */
-        action: 'select' | 'disablePrompt' | 'install';
-    };
-
-    /**
-     * Telemetry event sent before showing the linter prompt to install
-     * pylint or flake8.
-     */
-    [EventName.LINTER_INSTALL_PROMPT]: {
-        /**
-         * Identify which prompt was shown.
-         *
-         * @type {('old' | 'noPrompt' | 'pylintFirst' | 'flake8first')}
-         */
-        prompt: 'old' | 'noPrompt' | 'pylintFirst' | 'flake8first';
-    };
 
     /**
      * Telemetry event sent when installing modules
+     */
+    /* __GDPR__
+       "python_install_package" : {
+          "installer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "requiredinstaller" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "productname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "isinstalled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "envtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "version" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.PYTHON_INSTALL_PACKAGE]: {
         /**
@@ -840,6 +851,10 @@ export interface IEventNamePropertyMapping {
          */
         installer: string;
         /**
+         * The name of the installer required (expected to be available) for installation of packages. (pipenv, Conda etc.)
+         */
+        requiredInstaller?: string;
+        /**
          * Name of the corresponding product (package) to be installed.
          */
         productName?: string;
@@ -847,64 +862,48 @@ export interface IEventNamePropertyMapping {
          * Whether the product (package) has been installed or not.
          */
         isInstalled?: boolean;
+        /**
+         * Type of the Python environment into which the Python package is being installed.
+         */
+        envType?: PythonEnvironment['envType'];
+        /**
+         * Version of the Python environment into which the Python package is being installed.
+         */
+        version?: string;
     };
     /**
-     * Telemetry sent with details immediately after linting a document completes
+     * Telemetry event sent when an environment without contain a python binary is selected.
      */
-    [EventName.LINTING]: {
-        /**
-         * Name of the linter being used
-         *
-         * @type {LinterId}
-         */
-        tool: LinterId;
-        /**
-         * If custom arguments for linter is provided in settings.json
-         *
-         * @type {boolean}
-         */
-        hasCustomArgs: boolean;
-        /**
-         * Carries the source which triggered configuration of tests
-         *
-         * @type {LinterTrigger}
-         */
-        trigger: LinterTrigger;
-        /**
-         * Carries `true` if linter executable is specified, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        executableSpecified: boolean;
-    };
-    /**
-     * Telemetry event sent after fetching the OS version
+    /* __GDPR__
+       "environment_without_python_selected" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+       }
      */
-    [EventName.PLATFORM_INFO]: {
-        /**
-         * If fetching OS version fails, list the failure type
-         *
-         * @type {PlatformErrors}
-         */
-        failureType?: PlatformErrors;
-        /**
-         * The OS version of the platform
-         *
-         * @type {string}
-         */
-        osVersion?: string;
-    };
+    [EventName.ENVIRONMENT_WITHOUT_PYTHON_SELECTED]: never | undefined;
     /**
      * Telemetry event sent when 'Select Interpreter' command is invoked.
+     */
+    /* __GDPR__
+       "select_interpreter" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
+       }
      */
     [EventName.SELECT_INTERPRETER]: never | undefined;
     /**
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
      */
+    /* __GDPR__
+       "select_interpreter_enter_button" : { "owner": "karrtikr" }
+     */
     [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
     /**
      * Telemetry event sent with details about what choice user made to input the interpreter path.
      */
+    /* __GDPR__
+       "select_interpreter_enter_choice" : {
+          "choice" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+    */
     [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
         /**
          * Carries 'enter' if user chose to enter the path to executable.
@@ -916,6 +915,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent after an action has been taken while the interpreter quickpick was displayed,
      * and if the action was not 'Enter interpreter path'.
      */
+    /* __GDPR__
+       "select_interpreter_selected" : {
+          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
     [EventName.SELECT_INTERPRETER_SELECTED]: {
         /**
          * 'escape' if the quickpick was dismissed.
@@ -926,9 +930,18 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
+    /* __GDPR__
+       "select_interpreter_enter_or_find" : { "owner": "karrtikr" }
+     */
+
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
     /**
      * Telemetry event sent after the user entered an interpreter path, or found it by browsing the filesystem.
+     */
+    /* __GDPR__
+       "select_interpreter_entered_exists" : {
+          "discovered" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
+       }
      */
     [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
         /**
@@ -936,8 +949,37 @@ export interface IEventNamePropertyMapping {
          */
         discovered: boolean;
     };
+
+    /**
+     * Telemetry event sent when another extension calls into python extension's environment API. Contains details
+     * of the other extension.
+     */
+    /* __GDPR__
+       "python_environments_api" : {
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false , "owner": "karrtikr"},
+          "apiName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false, "owner": "karrtikr" }
+       }
+     */
+    [EventName.PYTHON_ENVIRONMENTS_API]: {
+        /**
+         * The ID of the extension calling the API.
+         */
+        extensionId: string;
+        /**
+         * The name of the API called.
+         */
+        apiName: string;
+    };
     /**
      * Telemetry event sent with details after updating the python interpreter
+     */
+    /* __GDPR__
+       "python_interpreter" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
      */
     [EventName.PYTHON_INTERPRETER]: {
         /**
@@ -959,6 +1001,12 @@ export interface IEventNamePropertyMapping {
          */
         pythonVersion?: string;
     };
+    /* __GDPR__
+       "python_interpreter.activation_environment_variables" : {
+          "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
+       }
+     */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
         /**
          * Carries `true` if environment variables are present, `false` otherwise
@@ -975,6 +1023,15 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter
+     */
+    /* __GDPR__
+       "python_interpreter_activation_for_running_code" : {
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: {
         /**
@@ -1011,6 +1068,15 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when getting activation commands for terminal when interpreter is not specified
      */
+    /* __GDPR__
+       "python_interpreter_activation_for_terminal" : {
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: {
         /**
          * Carries `true` if activation commands exists for terminal, `false` otherwise
@@ -1043,83 +1109,124 @@ export interface IEventNamePropertyMapping {
          */
         interpreterType: EnvironmentType;
     };
+    /**
+     * Telemetry event sent when auto-selection is called.
+     */
+    /* __GDPR__
+       "python_interpreter_auto_selection" : {
+          "usecachedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+
     [EventName.PYTHON_INTERPRETER_AUTO_SELECTION]: {
         /**
-         * The rule used to auto-select the interpreter
-         *
-         * @type {AutoSelectionRule}
-         */
-        rule?: AutoSelectionRule;
-        /**
-         * If cached interpreter no longer exists or is invalid
+         * If auto-selection has been run earlier in this session, and this call returned a cached value.
          *
          * @type {boolean}
          */
-        interpreterMissing?: boolean;
-        /**
-         * Carries `true` if next rule is identified for autoselecting interpreter
-         *
-         * @type {boolean}
-         */
-        identified?: boolean;
-        /**
-         * Carries `true` if cached interpreter is updated to use the current interpreter, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        updated?: boolean;
+        useCachedInterpreter?: boolean;
     };
     /**
-     * Sends information regarding discovered python environments (virtualenv, conda, pipenv etc.)
+     * Telemetry event sent when discovery of all python environments (virtualenv, conda, pipenv etc.) finishes.
+     */
+    /* __GDPR__
+       "python_interpreter_discovery" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
+          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"},
+          "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+       }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
         /**
-         * Name of the locator
-         */
-        locator: string;
-        /**
-         * The number of the interpreters returned by locator
+         * The number of the interpreters discovered
          */
         interpreters?: number;
+        /**
+         * The number of environments discovered not containing an interpreter
+         */
+        environmentsWithoutPython?: number;
     };
     /**
-     * Telemetry event sent when pipenv interpreter discovery is executed.
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
-    [EventName.PIPENV_INTERPRETER_DISCOVERY]: never | undefined;
-    /**
-     * Telemetry event sent with details when user clicks the prompt with the following message
-     * `Prompt message` :- 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
+    /* __GDPR__
+       "conda_inherit_env_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
      */
     [EventName.CONDA_INHERIT_ENV_PROMPT]: {
         /**
-         * `Yes` When 'Yes' option is selected
-         * `No` When 'No' option is selected
-         * `More info` When 'More Info' option is selected
+         * `Yes` When 'Allow' option is selected
+         * `Close` When 'Close' option is selected
          */
-        selection: 'Yes' | 'No' | 'More Info' | undefined;
+        selection: 'Allow' | 'Close' | undefined;
     };
     /**
-     * Telemetry event sent with details when user clicks the prompt with the following message
-     * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
      */
-    [EventName.UNSAFE_INTERPRETER_PROMPT]: {
+    /* __GDPR__
+       "conda_inherit_env_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.TERMINAL_DEACTIVATE_PROMPT]: {
+        /**
+         * `Yes` When 'Allow' option is selected
+         * `Close` When 'Close' option is selected
+         */
+        selection: 'Edit script' | "Don't show again" | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user attempts to run in interactive window when Jupyter is not installed.
+     */
+    /* __GDPR__
+       "require_jupyter_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.REQUIRE_JUPYTER_PROMPT]: {
         /**
          * `Yes` When 'Yes' option is selected
          * `No` When 'No' option is selected
-         * `Learn more` When 'More Info' option is selected
-         * `Do not show again` When 'Do not show again' option is selected
+         * `undefined` When 'x' is selected
          */
-        selection: 'Yes' | 'No' | 'Learn more' | 'Do not show again' | undefined;
+        selection: 'Yes' | 'No' | undefined;
+    };
+    /**
+     * Telemetry event sent with details when user clicks the prompt with the following message:
+     *
+     * 'We noticed VS Code was launched from an activated conda environment, would you like to select it?'
+     */
+    /* __GDPR__
+       "activated_conda_env_launch" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
+    [EventName.ACTIVATED_CONDA_ENV_LAUNCH]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         */
+        selection: 'Yes' | 'No' | undefined;
     };
     /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */
+    /* __GDPR__
+       "python_interpreter_activate_environment_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: {
         /**
          * `Yes` When 'Yes' option is selected
          * `No` When 'No' option is selected
-         * `Ignore` When 'Do not show again' option is clicked
+         * `Ignore` When "Don't show again" option is clicked
          *
          * @type {('Yes' | 'No' | 'Ignore' | undefined)}
          */
@@ -1128,6 +1235,11 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent with details when the user clicks a button in the "Python is not installed" prompt.
      * * `Prompt message` :- 'Python is not installed. Please download and install Python before using the extension.'
+     */
+    /* __GDPR__
+       "python_not_installed_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
      */
     [EventName.PYTHON_NOT_INSTALLED_PROMPT]: {
         /**
@@ -1138,204 +1250,66 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Download' | 'Ignore' | undefined;
     };
+    /**
+     * Telemetry event sent when the experiments service is initialized for the first time.
+     */
+    /* __GDPR__
+       "python_experiments_init_performance" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+       }
+     */
+    [EventName.PYTHON_EXPERIMENTS_INIT_PERFORMANCE]: unknown;
+    /**
+     * Telemetry event sent when the user use the report issue command.
+     */
+    /* __GDPR__
+      "use_report_issue_command" : { "owner": "paulacamargo25" }
+     */
+    [EventName.USE_REPORT_ISSUE_COMMAND]: unknown;
+    /**
+     * Telemetry event sent when the New Python File command is executed.
+     */
+    /* __GDPR__
+      "create_new_file_command" : { "owner": "luabud" }
+     */
+    [EventName.CREATE_NEW_FILE_COMMAND]: unknown;
+    /**
+     * Telemetry event sent when the installed versions of Python, Jupyter, and Pylance are all capable
+     * of supporting the LSP notebooks experiment. This does not indicate that the experiment is enabled.
+     */
 
-    /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
+    /* __GDPR__
+      "python_experiments_lsp_notebooks" : { "owner": "luabud" }
      */
-    [EventName.INSIDERS_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel in insiders prompt
-         * `Yes, daily` When user selects to use "daily" as extension channel in insiders prompt
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
-     * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
-     * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
-     */
-    [EventName.INSIDERS_RELOAD_PROMPT]: {
-        /**
-         * `Reload` When 'Reload' option is clicked
-         * `undefined` When prompt is closed
-         *
-         * @type {('Reload' | undefined)}
-         */
-        selection: 'Reload' | undefined;
-    };
-    /**
-     * Telemetry sent with details about the current selection of language server
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION]: {
-        /**
-         * The startup value of the language server setting
-         */
-        lsStartup?: LanguageServerType;
-        /**
-         * Used to track switch between language servers. Carries the final state after the switch.
-         */
-        switchTo?: LanguageServerType;
-    };
-    /**
-     * Telemetry event sent with details after selected Language server has finished activating. This event
-     * is sent with `durationMs` specifying the total duration of time that the given language server took
-     * to activate.
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP_DURATION]: {
-        /**
-         * Type of Language server activated. Note it can be different from one that is chosen, if the
-         * chosen one fails to start.
-         */
-        languageServerType?: LanguageServerType;
-    };
-    /**
-     * Telemetry event sent with details after attempting to download LS
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED]: {
-        /**
-         * Whether LS downloading succeeds
-         */
-        success: boolean;
-        /**
-         * Version of LS downloaded
-         */
-        lsVersion?: string;
-        /**
-         * Whether download uri starts with `https:` or not
-         */
-        usedSSL?: boolean;
-
-        /**
-         * Name of LS downloaded
-         */
-        lsName?: string;
-    };
-    /**
-     * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_ENABLED]: {
-        lsVersion?: string;
-    };
-    /**
-     * Telemetry event sent with details when downloading or extracting LS fails
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_ERROR]: {
-        /**
-         * The error associated with initializing language server
-         */
-        error: string;
-    };
-    /**
-     * Telemetry event sent with details after attempting to extract LS
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED]: {
-        /**
-         * Whether LS extracting succeeds
-         */
-        success: boolean;
-        /**
-         * Version of LS extracted
-         */
-        lsVersion?: string;
-        /**
-         * Whether download uri starts with `https:` or not
-         */
-        usedSSL?: boolean;
-        /**
-         * Package name of LS extracted
-         */
-        lsName?: string;
-    };
-    /**
-     * Telemetry event sent if azure blob packages are being listed
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES]: never | undefined;
-    /**
-     * Tracks if LS is supported on platform or not
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED]: {
-        /**
-         * Carries `true` if LS is supported, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        supported: boolean;
-        /**
-         * If checking support for LS failed
-         *
-         * @type {'UnknownError'}
-         */
-        failureType?: 'UnknownError';
-    };
-    /**
-     * Telemetry event sent when LS is ready to start
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_READY]: {
-        lsVersion?: string;
-    };
-    /**
-     * Telemetry event sent when starting LS
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: {
-        lsVersion?: string;
-    };
-    /**
-     * Telemetry sent from language server (details of telemetry sent can be provided by LS team)
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: unknown;
-    /**
-     * Telemetry sent when the client makes a request to the language server
-     *
-     * This event also has a measure, "resultLength", which records the number of completions provided.
-     */
-    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: unknown;
-    /**
-     * Telemetry event sent with details when inExperiment() API is called
-     */
-    [EventName.PYTHON_EXPERIMENTS]: {
-        /**
-         * Name of the experiment group the user is in
-         * @type {string}
-         */
-        expName?: string;
-    };
-    /**
-     * Telemetry event sent when Experiments have been disabled.
-     */
-    [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
-    /**
-     * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
-     */
-    [EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE]: {
-        /**
-         * Carries `true` if downloading experiments successfully finishes within timeout, `false` otherwise
-         * @type {boolean}
-         */
-        success?: boolean;
-        /**
-         * Carries an error string if downloading experiments fails with error
-         * @type {string}
-         */
-        error?: string;
-    };
+    [EventName.PYTHON_EXPERIMENTS_LSP_NOTEBOOKS]: unknown;
     /**
      * Telemetry event sent once on session start with details on which experiments are opted into and opted out from.
+     */
+    /* __GDPR__
+       "python_experiments_opt_in_opt_out_settings" : {
+          "optedinto" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "optedoutfrom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+       }
      */
     [EventName.PYTHON_EXPERIMENTS_OPT_IN_OPT_OUT_SETTINGS]: {
         /**
          * List of valid experiments in the python.experiments.optInto setting
-         * @type {string[]}
+         * @type {string}
          */
-        optedInto: string[];
+        optedInto: string;
         /**
          * List of valid experiments in the python.experiments.optOutFrom setting
-         * @type {string[]}
+         * @type {string}
          */
-        optedOutFrom: string[];
+        optedOutFrom: string;
     };
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
+     */
+    /* __GDPR__
+       "language_server_enabled" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.LANGUAGE_SERVER_ENABLED]: {
         lsVersion?: string;
@@ -1343,11 +1317,21 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when Node.js server is ready to start
      */
+    /* __GDPR__
+       "language_server_ready" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
     [EventName.LANGUAGE_SERVER_READY]: {
         lsVersion?: string;
     };
     /**
      * Telemetry event sent when starting Node.js server
+     */
+    /* __GDPR__
+       "language_server_startup" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.LANGUAGE_SERVER_STARTUP]: {
         lsVersion?: string;
@@ -1355,30 +1339,41 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
+    /* __GDPR__
+       "language_server_telemetry" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
     [EventName.LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      *
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
+    /* __GDPR__
+       "language_server_request" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
     [EventName.LANGUAGE_SERVER_REQUEST]: unknown;
     /**
-     * Telemetry sent on user response to 'Try Pylance' prompt.
+     * Telemetry send when Language Server is restarted.
      */
-    [EventName.LANGUAGE_SERVER_TRY_PYLANCE]: {
-        /**
-         * User response to the prompt.
-         * @type {string}
-         */
-        userAction: string;
+    /* __GDPR__
+       "language_server_restart" : {
+          "reason" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.LANGUAGE_SERVER_RESTART]: {
+        reason: 'command' | 'settings' | 'notebooksExperiment';
     };
     /**
-     * Telemetry event sent when we fallback from JediLSP to Jedi in cases where JediLSP is
-     * not supported.
-     */
-    [EventName.JEDI_FALLBACK]: unknown;
-    /**
      * Telemetry event sent when Jedi Language Server is started for workspace (workspace folder in case of multi-root)
+     */
+    /* __GDPR__
+       "jedi_language_server.enabled" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.JEDI_LANGUAGE_SERVER_ENABLED]: {
         lsVersion?: string;
@@ -1386,139 +1381,75 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when Jedi Language Server server is ready to receive messages
      */
+    /* __GDPR__
+       "jedi_language_server.ready" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
     [EventName.JEDI_LANGUAGE_SERVER_READY]: {
         lsVersion?: string;
     };
     /**
      * Telemetry event sent when starting Node.js server
      */
+    /* __GDPR__
+       "jedi_language_server.startup" : {
+          "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
+     */
     [EventName.JEDI_LANGUAGE_SERVER_STARTUP]: {
         lsVersion?: string;
     };
-    /**
-     * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
-     */
-    [EventName.JEDI_LANGUAGE_SERVER_TELEMETRY]: unknown;
     /**
      * Telemetry sent when the client makes a request to the Node.js server
      *
      * This event also has a measure, "resultLength", which records the number of completions provided.
      */
+    /* __GDPR__
+       "jedi_language_server.request" : {
+           "method": {"classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig"}
+       }
+     */
     [EventName.JEDI_LANGUAGE_SERVER_REQUEST]: unknown;
     /**
-     * Telemetry captured for enabling reload.
-     */
-    [EventName.PYTHON_WEB_APP_RELOAD]: {
-        /**
-         * Carries value indicating if the experiment modified `subProcess` field in debug config:
-         * - `true` if reload experiment modified the `subProcess` field.
-         * - `false` if user provided debug configuration was not changed (already setup for reload)
-         */
-        subProcessModified?: boolean;
-        /**
-         * Carries value indicating if the experiment modified `args` field in debug config:
-         * - `true` if reload experiment modified the `args` field.
-         * - `false` if user provided debug configuration was not changed (already setup for reload)
-         */
-        argsModified?: boolean;
-    };
-    /**
      * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
+     */
+    /* __GDPR__
+       "extension_survey_prompt" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
+       }
      */
     [EventName.EXTENSION_SURVEY_PROMPT]: {
         /**
          * Carries the selection of user when they are asked to take the extension survey
          */
-        selection: 'Yes' | 'Maybe later' | 'Do not show again' | undefined;
+        selection: 'Yes' | 'Maybe later' | "Don't show again" | undefined;
     };
-    /**
-     * Telemetry event sent when the Python interpreter tip is shown on activation for new users.
-     */
-    [EventName.ACTIVATION_TIP_PROMPT]: never | undefined;
-    /**
-     * Telemetry event sent when the feedback survey prompt is shown on activation for new users, and they click on the survey link.
-     */
-    [EventName.ACTIVATION_SURVEY_PROMPT]: never | undefined;
-    /**
-     * Telemetry sent back when join mailing list prompt is shown.
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT_DISPLAYED]: never | undefined;
-    /**
-     * Telemetry sent back when user selects an option from join mailing list prompt.
-     */
-    [EventName.JOIN_MAILING_LIST_PROMPT]: {
-        /**
-         * Carries the selection of user when they are asked to join the mailing list.
-         */
-        selection: 'Yes' | 'No' | undefined;
-    };
-    /**
-     * Telemetry event sent when 'Extract Method' command is invoked
-     */
-    [EventName.REFACTOR_EXTRACT_FUNCTION]: never | undefined;
-    /**
-     * Telemetry event sent when 'Extract Variable' command is invoked
-     */
-    [EventName.REFACTOR_EXTRACT_VAR]: never | undefined;
-    /**
-     * Telemetry event sent when providing an edit that describes changes to rename a symbol to a different name
-     */
-    [EventName.REFACTOR_RENAME]: never | undefined;
-    /**
-     * Telemetry event sent when providing a set of project-wide references for the given position and document
-     */
-    [EventName.REFERENCE]: never | undefined;
     /**
      * Telemetry event sent when starting REPL
      */
+    /* __GDPR__
+       "repl" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+       }
+     */
     [EventName.REPL]: never | undefined;
     /**
-     * Telemetry event sent with details of linter selected in quickpick of linter list.
-     */
-    [EventName.SELECT_LINTER]: {
-        /**
-         * The name of the linter
-         */
-        tool?: LinterId;
-        /**
-         * Carries `true` if linter is enabled, `false` otherwise
-         */
-        enabled: boolean;
-    };
-    /**
-     * Telemetry event sent with details when clicking the prompt with the following message,
-     * `Prompt message` :- 'You have a pylintrc file in your workspace. Do you want to enable pylint?'
-     */
-    [EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT]: {
-        /**
-         * Name of the linter tool
-         *
-         * @type {LinterId}
-         */
-        tool: LinterId;
-        /**
-         * `enable` When 'Enable [linter name]' option is clicked
-         * `ignore` When 'Not now' option is clicked
-         * `disablePrompt` When 'Do not show again` option is clicked
-         *
-         * @type {('enable' | 'ignore' | 'disablePrompt' | undefined)}
-         */
-        action: 'enable' | 'ignore' | 'disablePrompt' | undefined;
-    };
-    /**
-     * Telemetry event sent when providing help for the signature at the given position and document.
-     */
-    [EventName.SIGNATURE]: never | undefined;
-    /**
-     * Telemetry event sent when providing document symbol information for Jedi autocomplete intellisense
-     */
-    [EventName.SYMBOL]: never | undefined;
-    /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
+     */
+    /* __GDPR__
+       "unittest.configure" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_CONFIGURE]: never | undefined;
     /**
      * Telemetry event sent when user chooses a test framework in the Quickpick displayed for enabling and configuring test framework
+     */
+    /* __GDPR__
+       "unittest.configuring" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "eleanorjboyd" }
+       }
      */
     [EventName.UNITTEST_CONFIGURING]: {
         /**
@@ -1542,6 +1473,11 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the extension is activated, if an active terminal is present and
      * the `python.terminal.activateEnvInCurrentTerminal` setting is set to `true`.
      */
+    /* __GDPR__
+       "activate_env_in_current_terminal" : {
+          "isterminalvisible" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
+     */
     [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
         /**
          * Carries boolean `true` if an active terminal is present (terminal is visible), `false` otherwise
@@ -1550,6 +1486,14 @@ export interface IEventNamePropertyMapping {
     };
     /**
      * Telemetry event sent with details when a terminal is created
+     */
+    /* __GDPR__
+       "terminal.create" : {
+         "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "triggeredby" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       }
      */
     [EventName.TERMINAL_CREATE]: {
         /**
@@ -1578,21 +1522,58 @@ export interface IEventNamePropertyMapping {
         interpreterType?: EnvironmentType;
     };
     /**
+     * Telemetry event sent indicating the trigger source for discovery.
+     */
+    /* __GDPR__
+       "unittest.discovery.trigger" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
+     */
+    [EventName.UNITTEST_DISCOVERY_TRIGGER]: {
+        /**
+         * Carries the source which triggered discovering of tests
+         *
+         * @type {('auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter')}
+         * auto           : Triggered by VS Code editor.
+         * ui             : Triggered by clicking a button.
+         * commandpalette : Triggered by running the command from the command palette.
+         * watching       : Triggered by filesystem or content changes.
+         * interpreter    : Triggered by interpreter change.
+         */
+        trigger: 'auto' | 'ui' | 'commandpalette' | 'watching' | 'interpreter';
+    };
+    /**
      * Telemetry event sent with details about discovering tests
      */
-    [EventName.UNITTEST_DISCOVER]: {
+    /* __GDPR__
+       "unittest.discovering" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
+     */
+    [EventName.UNITTEST_DISCOVERING]: {
         /**
          * The test framework used to discover tests
          *
          * @type {TestTool}
          */
         tool: TestTool;
+    };
+    /**
+     * Telemetry event sent with details about discovering tests
+     */
+    /* __GDPR__
+       "unittest.discovery.done" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
+     */
+    [EventName.UNITTEST_DISCOVERY_DONE]: {
         /**
-         * Carries the source which triggered discovering of tests
+         * The test framework used to discover tests
          *
-         * @type {('ui' | 'commandpalette')}
+         * @type {TestTool}
          */
-        trigger: 'ui' | 'commandpalette';
+        tool: TestTool;
         /**
          * Carries `true` if discovering tests failed, `false` otherwise
          *
@@ -1601,44 +1582,20 @@ export interface IEventNamePropertyMapping {
         failed: boolean;
     };
     /**
-     * Telemetry event is sent if we are doing test discovery using python code
+     * Telemetry event sent when cancelling discovering tests
      */
-    [EventName.UNITTEST_DISCOVER_WITH_PYCODE]: never | undefined;
-    /**
-     * Telemetry event sent when user clicks a file, function, or suite in test explorer.
+    /* __GDPR__
+       "unittest.discovery.stop" : { "owner": "eleanorjboyd" }
      */
-    [EventName.UNITTEST_NAVIGATE]: {
-        /**
-         * Carries `true` if user clicks a file, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFile?: boolean;
-        /**
-         * Carries `true` if user clicks a function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        byFunction?: boolean;
-        /**
-         * Carries `true` if user clicks a suite, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        bySuite?: boolean;
-        /**
-         * Carries `true` if we are changing focus to the suite/file/function, `false` otherwise
-         *
-         * @type {boolean}
-         */
-        focusCode?: boolean;
-    };
-    /**
-     * Tracks number of workspace folders shown in test explorer
-     */
-    [EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT]: { count: number };
+    [EventName.UNITTEST_DISCOVERING_STOP]: never | undefined;
     /**
      * Telemetry event sent with details about running the tests, what is being run, what framework is being used etc.
+     */
+    /* __GDPR__
+       "unittest.run" : {
+          "tool" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" },
+          "debugging" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "eleanorjboyd" }
+       }
      */
     [EventName.UNITTEST_RUN]: {
         /**
@@ -1646,61 +1603,31 @@ export interface IEventNamePropertyMapping {
          */
         tool: TestTool;
         /**
-         * Carries info what is being run
-         */
-        scope: 'currentFile' | 'all' | 'file' | 'class' | 'function' | 'failed';
-        /**
          * Carries `true` if debugging, `false` otherwise
          */
         debugging: boolean;
-        /**
-         * Carries what triggered the execution of the tests
-         */
-        triggerSource: 'ui' | 'codelens' | 'commandpalette' | 'auto' | 'testExplorer';
-        /**
-         * Carries `true` if running tests failed, `false` otherwise
-         */
-        failed: boolean;
     };
     /**
-     * Telemetry event sent when cancelling running or discovering tests
+     * Telemetry event sent when cancelling running tests
      */
-    [EventName.UNITTEST_STOP]: never | undefined;
+    /* __GDPR__
+       "unittest.run.stop" : { "owner": "eleanorjboyd" }
+     */
+    [EventName.UNITTEST_RUN_STOP]: never | undefined;
     /**
-     * Telemetry event sent when disabling all test frameworks
+     * Telemetry event sent when run all failed test command is triggered
      */
-    [EventName.UNITTEST_DISABLE]: never | undefined;
+    /* __GDPR__
+       "unittest.run.all_failed" : { "owner": "eleanorjboyd" }
+     */
+    [EventName.UNITTEST_RUN_ALL_FAILED]: never | undefined;
     /**
-     * Telemetry event sent when viewing Python test log output
+     * Telemetry event sent when testing is disabled for a workspace.
      */
-    [EventName.UNITTEST_VIEW_OUTPUT]: never | undefined;
-    /**
-     * Tracks which testing framework has been enabled by the user.
-     * Telemetry is sent when settings have been modified by the user.
-     * Values sent include:
-     * unittest -   If this value is `true`, then unittest has been enabled by the user.
-     * pytest   -   If this value is `true`, then pytest has been enabled by the user.
-     * nosetest -   If this value is `true`, then nose has been enabled by the user.
-     * @type {(never | undefined)}
-     * @memberof IEventNamePropertyMapping
+    /* __GDPR__
+       "unittest.disabled" : { "owner": "eleanorjboyd" }
      */
-    [EventName.UNITTEST_ENABLED]: Partial<Record<TestProvider, undefined | boolean>>;
-    /**
-     * Telemetry sent when building workspace symbols
-     */
-    [EventName.WORKSPACE_SYMBOLS_BUILD]: never | undefined;
-    /**
-     * Telemetry sent when providing workspace symbols doing Project-wide search for a symbol matching the given query string
-     */
-    [EventName.WORKSPACE_SYMBOLS_GO_TO]: never | undefined;
-    /*
-    Telemetry event sent with details of Jedi Memory usage.
-    memUse - Memory usage of Process in kb.
-    limit - Upper bound for memory usage of Jedi process.
-    isUserDefinedLimit - Whether the user has configfured the upper bound limit.
-    restart - Whether to restart the Jedi Process (i.e. memory > limit).
-    */
-    [EventName.JEDI_MEMORY]: { memUse: number; limit: number; isUserDefinedLimit: boolean; restart: boolean };
+    [EventName.UNITTEST_DISABLED]: never | undefined;
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.
@@ -1722,6 +1649,15 @@ export interface IEventNamePropertyMapping {
                     If true, user has a shell in their environment.
                     If false, user does not have a shell in their environment.
     */
+    /* __GDPR__
+      "terminal_shell_identification" : {
+         "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+         "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
+         "hasshellinenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+      }
+    */
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
         failed: boolean;
         terminalProvided: boolean;
@@ -1734,6 +1670,12 @@ export interface IEventNamePropertyMapping {
      *
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
+     */
+    /* __GDPR__
+       "activate_env_to_get_env_vars_failed" : {
+          "ispossiblycondaenv" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
+       }
      */
     [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
         /**
@@ -1750,39 +1692,16 @@ export interface IEventNamePropertyMapping {
         terminal: TerminalShellType;
     };
 
-    [Telemetry.WebviewStyleUpdate]: never | undefined;
-    [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
-    [Telemetry.WebviewStartup]: { type: string };
-    [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
-    [Telemetry.ShiftEnterBannerShown]: never | undefined;
-
-    // Start Page Events
-    [Telemetry.StartPageViewed]: never | undefined;
-    [Telemetry.StartPageOpenedFromCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewInstall]: never | undefined;
-    [Telemetry.StartPageOpenedFromNewUpdate]: never | undefined;
-    [Telemetry.StartPageWebViewError]: never | undefined;
-    [Telemetry.StartPageTime]: never | undefined;
-    [Telemetry.StartPageClickedDontShowAgain]: never | undefined;
-    [Telemetry.StartPageClosedWithoutAction]: never | undefined;
-    [Telemetry.StartPageUsedAnActionOnFirstTime]: never | undefined;
-    [Telemetry.StartPageOpenBlankNotebook]: never | undefined;
-    [Telemetry.StartPageOpenBlankPythonFile]: never | undefined;
-    [Telemetry.StartPageOpenInteractiveWindow]: never | undefined;
-    [Telemetry.StartPageOpenCommandPalette]: never | undefined;
-    [Telemetry.StartPageOpenCommandPaletteWithOpenNBSelected]: never | undefined;
-    [Telemetry.StartPageOpenSampleNotebook]: never | undefined;
-    [Telemetry.StartPageOpenFileBrowser]: never | undefined;
-    [Telemetry.StartPageOpenFolder]: never | undefined;
-    [Telemetry.StartPageOpenWorkspace]: never | undefined;
-
     // TensorBoard integration events
     /**
      * Telemetry event sent after the user has clicked on an option in the prompt we display
      * asking them if they want to launch an integrated TensorBoard session.
      * `selection` is one of 'yes', 'no', or 'do not ask again'.
      */
+    /* __GDPR__
+       "tensorboard.launch_prompt_selection" : { "owner": "donjayamanne" }
+     */
+
     [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
     };
@@ -1795,6 +1714,12 @@ export interface IEventNamePropertyMapping {
      * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
      * the workspace. For the palette entrypoint, the trigger is also 'palette'.
      */
+    /* __GDPR__
+       "tensorboard.session_launch" : {
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
+     */
     [EventName.TENSORBOARD_SESSION_LAUNCH]: {
         entrypoint: TensorBoardEntrypoint;
         trigger: TensorBoardEntrypointTrigger;
@@ -1802,28 +1727,44 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent after we have attempted to create a tensorboard program instance
      * by spawning a daemon to run the tensorboard_launcher.py script. The event is sent with
-     * `durationMs` which should never exceed 60_000ms. Depending on the value of `result`, `durationMs` means:
+     * `duration` which should never exceed 60_000ms. Depending on the value of `result`, `duration` means:
      * 1. 'success' --> the total amount of time taken for the execObservable daemon to report successful TB session launch
      * 2. 'canceled' --> the total amount of time that the user waited for the daemon to start before canceling launch
      * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
-     * In the first two cases durationMs should not be more than 60_000ms.
+     * In the first two cases, `duration` should not be more than 60_000ms.
+     */
+    /* __GDPR__
+       "tensorboard.session_daemon_startup_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
      */
     [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
         result: TensorBoardSessionStartResult;
     };
     /**
      * Telemetry event sent after the webview framing the TensorBoard website has been successfully shown.
-     * This event is sent with `durationMs` which represents the total time to create a TensorBoardSession.
+     * This event is sent with `duration` which represents the total time to create a TensorBoardSession.
      * Note that this event is only sent if an integrated TensorBoard session is successfully created in full.
      * This includes checking whether the tensorboard package is installed and installing it if it's not already
      * installed, requesting the user to select a log directory, starting the tensorboard
      * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
      */
+    /* __GDPR__
+       "tensorboard.session_e2e_startup_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
+     */
     [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
     /**
      * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
-     * sent with `durationMs` specifying the total duration of time that the TensorBoard session
+     * sent with `duration` specifying the total duration of time that the TensorBoard session
      * ran for before the user terminated the session.
+     */
+    /* __GDPR__
+       "tensorboard.session_duration" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
      */
     [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
     /**
@@ -1837,6 +1778,12 @@ export interface IEventNamePropertyMapping {
      * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
      * the workspace. For the palette entrypoint, the trigger is also 'palette'.
      */
+    /* __GDPR__
+       "tensorboard.entrypoint_shown" : {
+          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
+     */
     [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
         entrypoint: TensorBoardEntrypoint;
         trigger: TensorBoardEntrypointTrigger;
@@ -1845,11 +1792,20 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user is prompted to install Python packages that are
      * dependencies for launching an integrated TensorBoard session.
      */
+    /* __GDPR__
+       "tensorboard.session_duration" : { "owner": "donjayamanne" }
+     */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SHOWN]: never | undefined;
     /**
      * Telemetry event sent after the user has clicked on an option in the prompt we display
      * asking them if they want to install Python packages for launching an integrated TensorBoard session.
      * `selection` is one of 'yes' or 'no'.
+     */
+    /* __GDPR__
+       "tensorboard.install_prompt_selection" : {
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "operationtype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
      */
     [EventName.TENSORBOARD_INSTALL_PROMPT_SELECTION]: {
         selection: TensorBoardPromptSelection;
@@ -1858,12 +1814,24 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when we find an active integrated terminal running tensorboard.
      */
+    /* __GDPR__
+       "tensorboard_detected_in_integrated_terminal" : { "owner": "donjayamanne" }
+     */
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
      * Telemetry event sent after attempting to install TensorBoard session dependencies.
      * Note, this is only sent if install was attempted. It is not sent if the user opted
      * not to install, or if all dependencies were already installed.
      */
+    /* __GDPR__
+       "tensorboard.package_install_result" : {
+          "wasprofilerpluginattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" },
+          "wastensorboardattempted" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" },
+          "wasprofilerplugininstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" },
+          "wastensorboardinstalled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "donjayamanne" }
+       }
+     */
+
     [EventName.TENSORBOARD_PACKAGE_INSTALL_RESULT]: {
         wasProfilerPluginAttempted: boolean;
         wasTensorBoardAttempted: boolean;
@@ -1876,11 +1844,17 @@ export interface IEventNamePropertyMapping {
      * Matches cover import statements of the form `import torch.profiler` and
      * `from torch import profiler`.
      */
+    /* __GDPR__
+       "tensorboard.torch_profiler_import" : { "owner": "donjayamanne" }
+     */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
     /**
      * Telemetry event sent when the extension host receives a message from the
      * TensorBoard webview containing a valid jump to source payload from the
      * PyTorch profiler TensorBoard plugin.
+     */
+    /* __GDPR__
+       "tensorboard_jump_to_source_request" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
     /**
@@ -1889,5 +1863,160 @@ export interface IEventNamePropertyMapping {
      * PyTorch profiler TensorBoard plugin, but the source file does not exist
      * on the machine currently running TensorBoard.
      */
+    /* __GDPR__
+       "tensorboard_jump_to_source_file_not_found" : { "owner": "donjayamanne" }
+     */
     [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
+    [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
+    /**
+     * Telemetry event sent before creating an environment.
+     */
+    /* __GDPR__
+       "environment.creating" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "pythonVersion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_CREATING]: {
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        pythonVersion: string | undefined;
+    };
+    /**
+     * Telemetry event sent after creating an environment, but before attempting package installation.
+     */
+    /* __GDPR__
+       "environment.created" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+        }
+     */
+    [EventName.ENVIRONMENT_CREATED]: {
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        reason: 'created' | 'existing';
+    };
+    /**
+     * Telemetry event sent if creating an environment failed.
+     */
+    /* __GDPR__
+       "environment.failed" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_FAILED]: {
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        reason: 'noVenv' | 'noPip' | 'noDistUtils' | 'other';
+    };
+    /**
+     * Telemetry event sent before installing packages.
+     */
+    /* __GDPR__
+       "environment.installing_packages" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_INSTALLING_PACKAGES]: {
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipUpgrade' | 'pipInstall' | 'pipDownload';
+    };
+    /**
+     * Telemetry event sent after installing packages.
+     */
+    /* __GDPR__
+       "environment.installed_packages" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_INSTALLED_PACKAGES]: {
+        environmentType: 'venv' | 'conda';
+        using: 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipUpgrade';
+    };
+    /**
+     * Telemetry event sent if installing packages failed.
+     */
+    /* __GDPR__
+       "environment.installing_packages_failed" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "using" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_INSTALLING_PACKAGES_FAILED]: {
+        environmentType: 'venv' | 'conda' | 'microvenv';
+        using: 'pipUpgrade' | 'requirements.txt' | 'pyproject.toml' | 'environment.yml' | 'pipDownload' | 'pipInstall';
+    };
+    /**
+     * Telemetry event sent if create environment button was used to trigger the command.
+     */
+    /* __GDPR__
+       "environment.button" : {"owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_BUTTON]: never | undefined;
+    /**
+     * Telemetry event if user selected to delete the existing environment.
+     */
+    /* __GDPR__
+       "environment.delete" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "status" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_DELETE]: {
+        environmentType: 'venv' | 'conda';
+        status: 'triggered' | 'deleted' | 'failed';
+    };
+    /**
+     * Telemetry event if user selected to re-use the existing environment.
+     */
+    /* __GDPR__
+       "environment.reuse" : {
+          "environmentType" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_REUSE]: {
+        environmentType: 'venv' | 'conda';
+    };
+    /**
+     * Telemetry event sent when a check for environment creation conditions is triggered.
+     */
+    /* __GDPR__
+       "environemt.check.trigger" : {
+          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_CHECK_TRIGGER]: {
+        trigger:
+            | 'run-in-terminal'
+            | 'debug-in-terminal'
+            | 'run-selection'
+            | 'on-workspace-load'
+            | 'as-command'
+            | 'debug';
+    };
+    /**
+     * Telemetry event sent when a check for environment creation condition is computed.
+     */
+    /* __GDPR__
+       "environemt.check.result" : {
+          "result" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
+       }
+     */
+    [EventName.ENVIRONMENT_CHECK_RESULT]: {
+        result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
+    };
+    /* __GDPR__
+            "query-expfeature" : {
+                "owner": "luabud",
+                "comment": "Logs queries to the experiment service by feature for metric calculations",
+                "ABExp.queriedFeature": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "comment": "The experimental feature being queried" }
+            }
+    */
+    /* __GDPR__
+            "call-tas-error" : {
+                "owner": "luabud",
+                "comment": "Logs when calls to the experiment service fails",
+                "errortype": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "comment": "Type of error when calling TAS (ServerError, NoResponse, etc.)"}
+            }
+    */
 }

@@ -3,13 +3,14 @@
 
 import unittest
 
-from ...util import Stub, StubProxy
 from testing_tools.adapter.__main__ import (
-    parse_args,
-    main,
-    UnsupportedToolError,
     UnsupportedCommandError,
+    UnsupportedToolError,
+    main,
+    parse_args,
 )
+
+from ...util import Stub, StubProxy
 
 
 class StubTool(StubProxy):
@@ -111,13 +112,10 @@ class ParseDiscoverTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             parse_args(["discover", "unittest"])
         with self.assertRaises(SystemExit):
-            parse_args(["discover", "nose"])
-        with self.assertRaises(SystemExit):
             parse_args(["discover", "???"])
 
 
 class MainTests(unittest.TestCase):
-
     # TODO: We could use an integration test for pytest.discover().
 
     def test_discover(self):
@@ -153,15 +151,6 @@ class MainTests(unittest.TestCase):
         with self.assertRaises(UnsupportedToolError):
             main(
                 "unittest",
-                "discover",
-                {"spam": "eggs"},
-                [],
-                _tools={"pytest": None},
-                _reporters=None,
-            )
-        with self.assertRaises(UnsupportedToolError):
-            main(
-                "nose",
                 "discover",
                 {"spam": "eggs"},
                 [],

@@ -7,28 +7,36 @@ import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { InvalidPythonPathInDebuggerServiceId } from '../../../../application/diagnostics/checks/invalidPythonPathInDebugger';
 import { IDiagnosticsService, IInvalidPythonPathInDebuggerService } from '../../../../application/diagnostics/types';
-import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
+import { getOSType, OSType } from '../../../../common/utils/platform';
+import { EnvironmentVariables } from '../../../../common/variables/types';
+import { IEnvironmentActivationService } from '../../../../interpreter/activation/types';
+import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
-import { DebugOptions, LaunchRequestArguments } from '../../../types';
-import { PythonPathSource } from '../../types';
+import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
 import { BaseConfigurationResolver } from './base';
-import { IDebugEnvironmentVariablesService } from './helper';
+import { getProgram, IDebugEnvironmentVariablesService } from './helper';
+import {
+    CreateEnvironmentCheckKind,
+    triggerCreateEnvironmentCheckNonBlocking,
+} from '../../../../pythonEnvironments/creation/createEnvironmentTrigger';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { EventName } from '../../../../telemetry/constants';
 
 @injectable()
 export class LaunchConfigurationResolver extends BaseConfigurationResolver<LaunchRequestArguments> {
+    private isCustomPythonSet = false;
+
     constructor(
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IDiagnosticsService)
         @named(InvalidPythonPathInDebuggerServiceId)
         private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
-        @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IEnvironmentActivationService) private environmentActivationService: IEnvironmentActivationService,
     ) {
-        super(workspaceService, documentManager, platformService, configurationService);
+        super(configurationService, interpreterService);
     }
 
     public async resolveDebugConfiguration(
@@ -36,6 +44,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments,
         _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
+        this.isCustomPythonSet = debugConfiguration.python !== undefined;
         if (
             debugConfiguration.name === undefined &&
             debugConfiguration.type === undefined &&
@@ -43,7 +52,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.program === undefined &&
             debugConfiguration.env === undefined
         ) {
-            const defaultProgram = this.getProgram();
+            const defaultProgram = getProgram();
             debugConfiguration.name = 'Launch';
             debugConfiguration.type = DebuggerTypeName;
             debugConfiguration.request = 'launch';
@@ -51,8 +60,15 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.env = {};
         }
 
-        const workspaceFolder = this.getWorkspaceFolder(folder);
-        this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
+        const workspaceFolder = LaunchConfigurationResolver.getWorkspaceFolder(folder);
+        // Pass workspace folder so we can get this when we get debug events firing.
+        // Do it here itself instead of `resolveDebugConfigurationWithSubstitutedVariables` which is called after
+        // this method, as in order to calculate substituted variables, this might be needed.
+        debugConfiguration.workspaceFolder = workspaceFolder?.fsPath;
+        await this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
+        if (debugConfiguration.clientOS === undefined) {
+            debugConfiguration.clientOS = getOSType() === OSType.Windows ? 'windows' : 'unix';
+        }
         return debugConfiguration;
     }
 
@@ -61,12 +77,12 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         debugConfiguration: LaunchRequestArguments,
         _token?: CancellationToken,
     ): Promise<LaunchRequestArguments | undefined> {
-        const workspaceFolder = this.getWorkspaceFolder(folder);
+        const workspaceFolder = LaunchConfigurationResolver.getWorkspaceFolder(folder);
         await this.provideLaunchDefaults(workspaceFolder, debugConfiguration);
 
         const isValid = await this.validateLaunchConfiguration(folder, debugConfiguration);
         if (!isValid) {
-            return;
+            return undefined;
         }
 
         if (Array.isArray(debugConfiguration.debugOptions)) {
@@ -74,6 +90,8 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
                 (item, pos) => debugConfiguration.debugOptions!.indexOf(item) === pos,
             );
         }
+        sendTelemetryEvent(EventName.ENVIRONMENT_CHECK_TRIGGER, undefined, { trigger: 'debug' });
+        triggerCreateEnvironmentCheckNonBlocking(CreateEnvironmentCheckKind.Workspace, workspaceFolder);
         return debugConfiguration;
     }
 
@@ -99,10 +117,20 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             const settings = this.configurationService.getSettings(workspaceFolder);
             debugConfiguration.envFile = settings.envFile;
         }
+        let baseEnvVars: EnvironmentVariables | undefined;
+        if (this.isCustomPythonSet || debugConfiguration.console !== 'integratedTerminal') {
+            // We only have the right activated environment present in integrated terminal if no custom Python path
+            // is specified. Otherwise, we need to explicitly set the variables.
+            baseEnvVars = await this.environmentActivationService.getActivatedEnvironmentVariables(
+                workspaceFolder,
+                await this.interpreterService.getInterpreterDetails(debugConfiguration.python ?? ''),
+            );
+        }
         // Extract environment variables from .env file in the vscode context and
         // set the "env" debug configuration argument. This expansion should be
         // done here before handing of the environment settings to the debug adapter
-        debugConfiguration.env = await this.debugEnvHelper.getEnvironmentVariables(debugConfiguration);
+        debugConfiguration.env = await this.debugEnvHelper.getEnvironmentVariables(debugConfiguration, baseEnvVars);
+
         if (typeof debugConfiguration.stopOnEntry !== 'boolean') {
             debugConfiguration.stopOnEntry = false;
         }
@@ -121,61 +149,63 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             // Populate justMyCode using debugStdLib
             debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
         }
-        // Pass workspace folder so we can get this when we get debug events firing.
-        debugConfiguration.workspaceFolder = workspaceFolder ? workspaceFolder.fsPath : undefined;
         const debugOptions = debugConfiguration.debugOptions!;
         if (!debugConfiguration.justMyCode) {
-            this.debugOption(debugOptions, DebugOptions.DebugStdLib);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.DebugStdLib);
         }
         if (debugConfiguration.stopOnEntry) {
-            this.debugOption(debugOptions, DebugOptions.StopOnEntry);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.StopOnEntry);
         }
         if (debugConfiguration.showReturnValue) {
-            this.debugOption(debugOptions, DebugOptions.ShowReturnValue);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.ShowReturnValue);
         }
         if (debugConfiguration.django) {
-            this.debugOption(debugOptions, DebugOptions.Django);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Django);
         }
         if (debugConfiguration.jinja) {
-            this.debugOption(debugOptions, DebugOptions.Jinja);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.redirectOutput === undefined && debugConfiguration.console === 'internalConsole') {
             debugConfiguration.redirectOutput = true;
         }
         if (debugConfiguration.redirectOutput) {
-            this.debugOption(debugOptions, DebugOptions.RedirectOutput);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.RedirectOutput);
         }
         if (debugConfiguration.sudo) {
-            this.debugOption(debugOptions, DebugOptions.Sudo);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Sudo);
         }
         if (debugConfiguration.subProcess === true) {
-            this.debugOption(debugOptions, DebugOptions.SubProcess);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.SubProcess);
         }
-        if (this.platformService.isWindows) {
-            this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
+        if (getOSType() === OSType.Windows) {
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
-        const isFastAPI = this.isDebuggingFastAPI(debugConfiguration);
-        const isFlask = this.isDebuggingFlask(debugConfiguration);
+        const isFastAPI = LaunchConfigurationResolver.isDebuggingFastAPI(debugConfiguration);
+        const isFlask = LaunchConfigurationResolver.isDebuggingFlask(debugConfiguration);
         if (
             (debugConfiguration.pyramid || isFlask || isFastAPI) &&
             debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
             debugConfiguration.jinja !== false
         ) {
-            this.debugOption(debugOptions, DebugOptions.Jinja);
+            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.Jinja);
         }
         // Unlike with attach, we do not set a default path mapping.
         // (See: https://github.com/microsoft/vscode-python/issues/3568)
         if (debugConfiguration.pathMappings) {
-            let pathMappings = debugConfiguration.pathMappings;
+            let { pathMappings } = debugConfiguration;
             if (pathMappings.length > 0) {
-                pathMappings = this.fixUpPathMappings(
+                pathMappings = LaunchConfigurationResolver.fixUpPathMappings(
                     pathMappings || [],
                     workspaceFolder ? workspaceFolder.fsPath : '',
                 );
             }
             debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
         }
-        this.sendTelemetry(debugConfiguration.request as 'launch' | 'test', debugConfiguration);
+        const trigger =
+            debugConfiguration.purpose?.includes(DebugPurpose.DebugTest) || debugConfiguration.request === 'test'
+                ? 'test'
+                : 'launch';
+        LaunchConfigurationResolver.sendTelemetry(trigger, debugConfiguration);
     }
 
     protected async validateLaunchConfiguration(
@@ -188,9 +218,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             debugConfiguration.debugAdapterPython,
             debugConfiguration.debugLauncherPython,
         ]) {
-            const source =
-                executable === debugConfiguration.pythonPath ? this.pythonPathSource : PythonPathSource.launchJson;
-            if (!(await diagnosticService.validatePythonPath(executable, source, folder?.uri))) {
+            if (!(await diagnosticService.validatePythonPath(executable, this.pythonPathSource, folder?.uri))) {
                 return false;
             }
         }

@@ -1,9 +1,0 @@
-{
-    "python.languageServer": "Microsoft",
-    "python.formatting.provider": "black",
-    "editor.formatOnSave": true,
-    "python.testing.pytestArgs": ["."],
-    "python.testing.unittestEnabled": false,
-    "python.testing.nosetestsEnabled": false,
-    "python.testing.pytestEnabled": true
-}

@@ -8,7 +8,6 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, TextDocument, TextEditor, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
-import { IExperimentService } from '../../client/common/types';
 import { IComponentAdapter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -17,14 +16,12 @@ suite('Interpreters Display Helper', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let experimentService: TypeMoq.IMock<IExperimentService>;
     let helper: InterpreterHelper;
     let pyenvs: TypeMoq.IMock<IComponentAdapter>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        experimentService = TypeMoq.Mock.ofType<IExperimentService>();
         pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
 
         serviceContainer
@@ -34,7 +31,7 @@ suite('Interpreters Display Helper', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IDocumentManager)))
             .returns(() => documentManager.object);
 
-        helper = new InterpreterHelper(serviceContainer.object, pyenvs.object, experimentService.object);
+        helper = new InterpreterHelper(serviceContainer.object, pyenvs.object);
     });
     test('getActiveWorkspaceUri should return undefined if there are no workspaces', () => {
         workspaceService.setup((w) => w.workspaceFolders).returns(() => []);

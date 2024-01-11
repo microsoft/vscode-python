@@ -9,10 +9,10 @@ import { env, UIKind } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
-import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
 import { IBrowserService, IExperimentService, IPersistentStateFactory, IRandom } from '../common/types';
 import { Common, ExtensionSurveyBanner } from '../common/utils/localize';
+import { traceDecoratorError } from '../logging';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IExtensionSingleActivationService } from './types';
@@ -28,6 +28,7 @@ const WAIT_TIME_TO_SHOW_SURVEY = 1000 * 60 * 60 * 3; // 3 hours
 
 @injectable()
 export class ExtensionSurveyPrompt implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IBrowserService) private browserService: IBrowserService,
@@ -51,7 +52,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         setTimeout(() => this.showSurvey().ignoreErrors(), this.waitTimeToShowSurvey);
     }
 
-    @traceDecorators.error('Failed to check whether to display prompt for extension survey')
+    @traceDecoratorError('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
         if (env.uiKind === UIKind?.Web) {
             return false;
@@ -79,26 +80,22 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         return true;
     }
 
-    @traceDecorators.error('Failed to display prompt for extension survey')
+    @traceDecoratorError('Failed to display prompt for extension survey')
     public async showSurvey() {
-        const prompts = [
-            ExtensionSurveyBanner.bannerLabelYes(),
-            ExtensionSurveyBanner.maybeLater(),
-            Common.doNotShowAgain(),
-        ];
-        const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = [
+        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
+        const telemetrySelections: ['Yes', 'Maybe later', "Don't show again"] = [
             'Yes',
             'Maybe later',
-            'Do not show again',
+            "Don't show again",
         ];
-        const selection = await this.appShell.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts);
+        const selection = await this.appShell.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts);
         sendTelemetryEvent(EventName.EXTENSION_SURVEY_PROMPT, undefined, {
             selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
         if (!selection) {
             return;
         }
-        if (selection === ExtensionSurveyBanner.bannerLabelYes()) {
+        if (selection === ExtensionSurveyBanner.bannerLabelYes) {
             this.launchSurvey();
             // Disable survey for a few weeks
             await this.persistentState
@@ -108,7 +105,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
                     timeToDisableSurveyFor,
                 )
                 .updateValue(true);
-        } else if (selection === Common.doNotShowAgain()) {
+        } else if (selection === Common.doNotShowAgain) {
             // Never show the survey again
             await this.persistentState
                 .createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)

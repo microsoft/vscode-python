@@ -37,7 +37,7 @@ const DEDENT_ON_ENTER = [
     // block-ending statements
     // For now we are ignoring "return" completely.
     // See https://github.com/microsoft/vscode-python/issues/6564.
-    ///^return\b/,
+    /// ^return\b/,
     /^break$/,
     /^continue$/,
     // For now we are mostly ignoring "return".
@@ -79,12 +79,10 @@ function resolveExample(
             const kw = resolvedBase.split(' ', 1)[0];
             const remainder = resolvedBase.substring(kw.length);
             resolvedBase = `${kw}${postKeyword} ${remainder}`;
+        } else if (resolvedBase.endsWith(':')) {
+            resolvedBase = `${resolvedBase.substring(0, resolvedBase.length - 1)}${postKeyword}:`;
         } else {
-            if (resolvedBase.endsWith(':')) {
-                resolvedBase = `${resolvedBase.substring(0, resolvedBase.length - 1)}${postKeyword}:`;
-            } else {
-                resolvedBase = `${resolvedBase}${postKeyword}`;
-            }
+            resolvedBase = `${resolvedBase}${postKeyword}`;
         }
     }
     if (preColon !== '') {
@@ -125,8 +123,8 @@ suite('Language Configuration', () => {
         const OUTDENT_ONENTER_REGEX = cfg.onEnterRules![3].beforeText;
         // To see the actual (non-verbose) regex patterns, un-comment
         // the following lines:
-        //console.log(INDENT_ONENTER_REGEX.source);
-        //console.log(OUTDENT_ONENTER_REGEX.source);
+        // console.log(INDENT_ONENTER_REGEX.source);
+        // console.log(OUTDENT_ONENTER_REGEX.source);
 
         test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');

@@ -1,12 +1,8 @@
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { ConfigurationTarget, Uri, window } from 'vscode';
-import { inDiscoveryExperiment } from '../../common/experiments/helpers';
-import { traceError } from '../../common/logger';
-import { IPythonExecutionFactory } from '../../common/process/types';
-import { IExperimentService } from '../../common/types';
+import { ConfigurationTarget, l10n, Uri, window } from 'vscode';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { InterpreterInformation } from '../../pythonEnvironments/info';
+import { SystemVariables } from '../../common/variables/systemVariables';
+import { traceError } from '../../logging';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
@@ -18,9 +14,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
     constructor(
         @inject(IPythonPathUpdaterServiceFactory)
         private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
-        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {}
 
     public async updatePythonPath(
@@ -33,16 +27,16 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         const pythonPathUpdater = this.getPythonUpdaterService(configTarget, wkspace);
         let failed = false;
         try {
-            await pythonPathUpdater.updatePythonPath(pythonPath ? path.normalize(pythonPath) : undefined);
-        } catch (reason) {
+            await pythonPathUpdater.updatePythonPath(pythonPath);
+        } catch (err) {
             failed = true;
-
+            const reason = err as Error;
             const message = reason && typeof reason.message === 'string' ? (reason.message as string) : '';
-            window.showErrorMessage(`Failed to set 'pythonPath'. Error: ${message}`);
+            window.showErrorMessage(l10n.t('Failed to set interpreter path. Error: {0}', message));
             traceError(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch((ex) =>
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath, wkspace).catch((ex) =>
             traceError('Python Extension: sendTelemetry', ex),
         );
     }
@@ -52,26 +46,17 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         failed: boolean,
         trigger: 'ui' | 'shebang' | 'load',
         pythonPath: string | undefined,
+        wkspace?: Uri,
     ) {
         const telemetryProperties: PythonInterpreterTelemetry = {
             failed,
             trigger,
         };
         if (!failed && pythonPath) {
-            if (await inDiscoveryExperiment(this.experimentService)) {
-                const interpreterInfo = await this.pyenvs.getInterpreterInformation(pythonPath);
-                if (interpreterInfo) {
-                    telemetryProperties.pythonVersion = interpreterInfo.version?.raw;
-                }
-            } else {
-                const processService = await this.executionFactory.create({ pythonPath });
-                const info = await processService
-                    .getInterpreterInformation()
-                    .catch<InterpreterInformation | undefined>(() => undefined);
-
-                if (info && info.version) {
-                    telemetryProperties.pythonVersion = info.version.raw;
-                }
+            const systemVariables = new SystemVariables(undefined, wkspace?.fsPath);
+            const interpreterInfo = await this.pyenvs.getInterpreterInformation(systemVariables.resolveAny(pythonPath));
+            if (interpreterInfo) {
+                telemetryProperties.pythonVersion = interpreterInfo.version?.raw;
             }
         }
 

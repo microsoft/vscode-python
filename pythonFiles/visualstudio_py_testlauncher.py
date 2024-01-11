@@ -17,14 +17,13 @@
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
-import os
-import sys
 import json
-import unittest
-import socket
-import traceback
-from types import CodeType, FunctionType
+import os
 import signal
+import socket
+import sys
+import traceback
+import unittest
 
 try:
     import thread
@@ -162,13 +161,19 @@ class VsTestResult(unittest.TextTestResult):
 
     def addExpectedFailure(self, test, err):
         super(VsTestResult, self).addExpectedFailure(test, err)
-        self.sendResult(test, "failed", err)
+        self.sendResult(test, "failed-expected", err)
 
     def addUnexpectedSuccess(self, test):
         super(VsTestResult, self).addUnexpectedSuccess(test)
-        self.sendResult(test, "passed")
+        self.sendResult(test, "passed-unexpected")
 
-    def sendResult(self, test, outcome, trace=None):
+    def addSubTest(self, test, subtest, err):
+        super(VsTestResult, self).addSubTest(test, subtest, err)
+        self.sendResult(
+            test, "subtest-passed" if err is None else "subtest-failed", err, subtest
+        )
+
+    def sendResult(self, test, outcome, trace=None, subtest=None):
         if _channel is not None:
             tb = None
             message = None
@@ -179,13 +184,16 @@ class VsTestResult(unittest.TextTestResult):
                 formatted = formatted[1:]
                 tb = "".join(formatted)
                 message = str(trace[1])
-            _channel.send_event(
-                name="result",
-                outcome=outcome,
-                traceback=tb,
-                message=message,
-                test=test.id(),
-            )
+
+            result = {
+                "outcome": outcome,
+                "traceback": tb,
+                "message": message,
+                "test": test.id(),
+            }
+            if subtest is not None:
+                result["subtest"] = subtest.id()
+            _channel.send_event("result", **result)
 
 
 def stopTests():
@@ -286,8 +294,8 @@ def main():
     if opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(),
         # so we have to use Win32 API in a loop to do the same thing.
+        from ctypes import c_char, windll
         from time import sleep
-        from ctypes import windll, c_char
 
         while True:
             if windll.kernel32.IsDebuggerPresent() != 0:
@@ -325,7 +333,9 @@ def main():
             # Easier approach is find the test suite and use that for running
             loader = unittest.TestLoader()
             # opts.us will be passed in
-            suites = loader.discover(opts.us, pattern=os.path.basename(opts.testFile))
+            suites = loader.discover(
+                opts.us, pattern=os.path.basename(opts.testFile), top_level_dir=opts.ut
+            )
             suite = None
             tests = None
             if opts.tests is None:
@@ -340,9 +350,11 @@ def main():
                                 testId = m.id()
                                 if testId.startswith(opts.tests[0]):
                                     suite = cls
-                                if testId == opts.tests[0]:
-                                    tests = unittest.TestSuite([m])
-                                    break
+                                if testId in opts.tests:
+                                    if tests is None:
+                                        tests = unittest.TestSuite([m])
+                                    else:
+                                        tests.addTest(m)
                         except Exception as err:
                             errorMessage = traceback.format_exc()
                 if tests is None:

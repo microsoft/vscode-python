@@ -3,6 +3,5 @@
 'use strict';
 
 export namespace Commands {
-    export const ClearAnalyisCache = 'python.analysis.clearCache';
     export const RestartLS = 'python.analysis.restartLanguageServer';
 }

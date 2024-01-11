@@ -1,31 +1,18 @@
-<!-- Please search existing issues to avoid creating duplicates;
-     https://github.com/microsoft/vscode-python/issues?q=is%3Aopen+is%3Aissue+label%3Atype-bug
--->
-
+<!-- Please fill in all XXX markers -->
 # Behaviour
-
-[**NOTE**: If you suspect that your issue is related to the Microsoft Python Language Server (`python.languageServer: 'Microsoft'`), please download our new language server [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) from the VS Code marketplace to see if that fixes your issue]
-
-
-## Expected
-
-XXX
-
-## Actual
+## Expected vs. Actual
 
 XXX
 
 ## Steps to reproduce:
 
-[**NOTE**: Self-contained, minimal reproducing code samples are **extremely** helpful and will expedite addressing your issue]
-
-1.
+1. XXX
 
 <!--
-Note: If you think a GIF of what is happening would be helpful, consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ .
-You can attach such things **after** you create your issue on GitHub.
+**After** creating the issue on GitHub, you can add screenshots and GIFs of what is happening. Consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ for GIF creation.
 -->
 
+<!-- **NOTE**: Everything below except Python output panel is auto-generated; no editing required. Please do provide Python output panel. -->
 # Diagnostic data
 
 -   Python version (& distribution if applicable, e.g. Anaconda): {0}
@@ -34,13 +21,26 @@ You can attach such things **after** you create your issue on GitHub.
 
 <details>
 
-<summary>"Python" channel in the OUTPUT panel</summary>
+<summary>Output for <code>Python</code> in the <code>Output</code> panel (<code>View</code>→<code>Output</code>, change the drop-down the upper-right of the <code>Output</code> panel to <code>Python</code>)
+</summary>
 
 <p>
 
-<!-- Run the "Python: Show Output" command to see the requested output. --->
 ```
 XXX
+```
+
+</p>
+</details>
+
+<details>
+
+<summary>User Settings</summary>
+
+<p>
+
+```
+{3}{4}
 ```
 
 </p>

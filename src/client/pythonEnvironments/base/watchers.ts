@@ -2,7 +2,8 @@
 // Licensed under the MIT License.
 
 import { Event } from 'vscode';
-import { Disposables, IDisposable } from '../../common/utils/resourceLifecycle';
+import { IDisposable } from '../../common/types';
+import { Disposables } from '../../common/utils/resourceLifecycle';
 import { IPythonEnvsWatcher, PythonEnvsChangedEvent, PythonEnvsWatcher } from './watcher';
 
 /**
@@ -26,7 +27,7 @@ export class PythonEnvsWatchers implements IPythonEnvsWatcher, IDisposable {
         });
     }
 
-    public dispose(): void {
-        this.disposables.dispose().ignoreErrors();
+    public async dispose(): Promise<void> {
+        await this.disposables.dispose();
     }
 }

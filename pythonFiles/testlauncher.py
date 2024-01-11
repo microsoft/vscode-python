@@ -9,15 +9,12 @@ def parse_argv():
     """Parses arguments for use with the test launcher.
     Arguments are:
     1. Working directory.
-    2. Test runner, `pytest` or `nose`
+    2. Test runner `pytest`
     3. Rest of the arguments are passed into the test runner.
     """
     cwd = sys.argv[1]
     testRunner = sys.argv[2]
     args = sys.argv[3:]
-    if testRunner == "nose":
-        # Nose expects the program name to be first argument in vargs
-        args.insert(0, sys.argv[0])
 
     return (cwd, testRunner, args)
 
@@ -25,7 +22,7 @@ def parse_argv():
 def run(cwd, testRunner, args):
     """Runs the test
     cwd -- the current directory to be set
-    testRunner -- test runner to be used `pytest` or `nose`
+    testRunner -- test runner to be used `pytest`
     args -- arguments passed into the test runner
     """
 
@@ -37,10 +34,6 @@ def run(cwd, testRunner, args):
             import pytest
 
             pytest.main(args)
-        else:
-            import nose
-
-            nose.run(argv=args)
         sys.exit(0)
     finally:
         pass

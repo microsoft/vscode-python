@@ -88,7 +88,7 @@ suite('common utils - getVersionString', () => {
         test(`${expected}`, () => {
             const result = getVersionString(info);
 
-            assert.equal(result, expected);
+            assert.strictEqual(result, expected);
         });
     });
 });
@@ -123,7 +123,7 @@ suite('common utils - isVersionEmpty', () => {
         test(`not empty: ${info.major}.${info.minor}.${info.micro}`, () => {
             const result = isVersionInfoEmpty(info);
 
-            assert.equal(result, false);
+            assert.strictEqual(result, false);
         });
     });
 
@@ -132,7 +132,7 @@ suite('common utils - isVersionEmpty', () => {
         test(`bogus: ${info.major}`, () => {
             const result = isVersionInfoEmpty(info);
 
-            assert.equal(result, false);
+            assert.strictEqual(result, false);
         });
     });
 });
@@ -304,7 +304,7 @@ suite('common utils - parseVersionInfo', () => {
             test(`invalid - '${verStr}'`, () => {
                 const result = parseVersionInfo(verStr);
 
-                assert.equal(result, undefined);
+                assert.strictEqual(result, undefined);
             });
         }
     });

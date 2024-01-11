@@ -4,6 +4,11 @@
     "recommendations": [
         "editorconfig.editorconfig",
         "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint"
+        "dbaeumer.vscode-eslint",
+        "ms-python.python",
+        "ms-python.black-formatter",
+        "ms-python.vscode-pylance",
+        "ms-python.isort",
+        "ms-python.flake8"
     ]
 }

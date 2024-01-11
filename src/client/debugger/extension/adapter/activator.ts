@@ -2,19 +2,23 @@
 // Licensed under the MIT License.
 
 'use strict';
-
+import { Uri } from 'vscode';
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IDebugService } from '../../../common/application/types';
-import { IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { ICommandManager } from '../../../common/application/types';
 import { DebuggerTypeName } from '../../constants';
 import { IAttachProcessProviderFactory } from '../attachQuickPick/types';
 import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory, IOutdatedDebuggerPromptFactory } from '../types';
 
 @injectable()
 export class DebugAdapterActivator implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: false };
     constructor(
         @inject(IDebugService) private readonly debugService: IDebugService,
+        @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
+        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugAdapterDescriptorFactory) private descriptorFactory: IDebugAdapterDescriptorFactory,
         @inject(IDebugSessionLoggingFactory) private debugSessionLoggingFactory: IDebugSessionLoggingFactory,
         @inject(IOutdatedDebuggerPromptFactory) private debuggerPromptFactory: IOutdatedDebuggerPromptFactory,
@@ -31,8 +35,19 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         this.disposables.push(
             this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debuggerPromptFactory),
         );
+
         this.disposables.push(
             this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory),
         );
+        this.disposables.push(
+            this.debugService.onDidStartDebugSession((debugSession) => {
+                if (this.shouldTerminalFocusOnStart(debugSession.workspaceFolder?.uri))
+                    this.commandManager.executeCommand('workbench.action.terminal.focus');
+            }),
+        );
+    }
+
+    private shouldTerminalFocusOnStart(uri: Uri | undefined): boolean {
+        return this.configSettings.getSettings(uri)?.terminal.focusAfterLaunch;
     }
 }

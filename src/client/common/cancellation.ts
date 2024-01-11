@@ -11,7 +11,7 @@ import * as localize from './utils/localize';
  */
 export class CancellationError extends Error {
     constructor() {
-        super(localize.Common.canceled());
+        super(localize.Common.canceled);
     }
 }
 /**

@@ -8,9 +8,9 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticCommand } from '../types';
 
 export type CommandOption<Type, Option> = { type: Type; options: Option };
 type LaunchBrowserOption = CommandOption<'launch', string>;
-type IgnoreDiagnostOption = CommandOption<'ignore', DiagnosticScope>;
+type IgnoreDiagnosticOption = CommandOption<'ignore', DiagnosticScope>;
 type ExecuteVSCCommandOption = CommandOption<'executeVSCCommand', CommandsWithoutArgs>;
-export type CommandOptions = LaunchBrowserOption | IgnoreDiagnostOption | ExecuteVSCCommandOption;
+export type CommandOptions = LaunchBrowserOption | IgnoreDiagnosticOption | ExecuteVSCCommandOption;
 
 export const IDiagnosticsCommandFactory = Symbol('IDiagnosticsCommandFactory');
 

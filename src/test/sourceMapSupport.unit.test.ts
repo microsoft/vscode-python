@@ -46,7 +46,7 @@ suite('Source Map Support', () => {
             window: {
                 showWarningMessage: () => {
                     stubInfo.messageDisplayed = true;
-                    return Promise.resolve(selectDisableButton ? Diagnostics.disableSourceMaps() : undefined);
+                    return Promise.resolve(selectDisableButton ? Diagnostics.disableSourceMaps : undefined);
                 },
             },
             ConfigurationTarget: ConfigurationTarget,

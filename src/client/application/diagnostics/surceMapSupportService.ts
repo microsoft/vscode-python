@@ -34,9 +34,9 @@ export class SourceMapSupportService implements ISourceMapSupportService {
         await this.commandManager.executeCommand('workbench.action.reloadWindow');
     }
     protected async onEnable(): Promise<void> {
-        const enableSourceMapsAndReloadVSC = Diagnostics.enableSourceMapsAndReloadVSC();
+        const enableSourceMapsAndReloadVSC = Diagnostics.enableSourceMapsAndReloadVSC;
         const selection = await this.shell.showWarningMessage(
-            Diagnostics.warnBeforeEnablingSourceMaps(),
+            Diagnostics.warnBeforeEnablingSourceMaps,
             enableSourceMapsAndReloadVSC,
         );
         if (selection === enableSourceMapsAndReloadVSC) {

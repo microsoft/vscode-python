@@ -3,22 +3,17 @@
 
 'use strict';
 
+import { initializeFileLogging, logTo } from '../client/logging';
+import { LogLevel } from '../client/logging/types';
+
 // IMPORTANT: This file should only be importing from the '../client/logging' directory, as we
 // delete everything in '../client' except for '../client/logging' before running smoke tests.
 
-import { LogLevel } from '../client/logging/levels';
-import { configureLogger, createLogger, getPreDefinedConfiguration, logToAll } from '../client/logging/logger';
-
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
-const monkeyPatchLogger = createLogger();
 
 export function initializeLogger() {
-    const config = getPreDefinedConfiguration();
     if (isCI && process.env.VSC_PYTHON_LOG_FILE) {
-        delete config.console;
-        // This is a separate logger that matches our config but
-        // does not do any console logging.
-        configureLogger(monkeyPatchLogger, config);
+        initializeFileLogging([]);
         // Send console.*() to the non-console loggers.
         monkeypatchConsole();
     }
@@ -37,7 +32,11 @@ function monkeypatchConsole() {
     const streams = ['log', 'error', 'warn', 'info', 'debug', 'trace'];
     const levels: { [key: string]: LogLevel } = {
         error: LogLevel.Error,
-        warn: LogLevel.Warn,
+        warn: LogLevel.Warning,
+        debug: LogLevel.Debug,
+        trace: LogLevel.Debug,
+        info: LogLevel.Info,
+        log: LogLevel.Info,
     };
 
     const consoleAny: any = console;
@@ -47,13 +46,12 @@ function monkeypatchConsole() {
         // We could use a closure but it's a bit trickier.
         const sym = Symbol.for(stream);
         consoleAny[sym] = consoleAny[stream];
-
         consoleAny[stream] = function () {
             const args = Array.prototype.slice.call(arguments);
             const fn = consoleAny[sym];
             fn(...args);
             const level = levels[stream] || LogLevel.Info;
-            logToAll([monkeyPatchLogger], level, args);
+            logTo(level, args);
         };
     }
 }

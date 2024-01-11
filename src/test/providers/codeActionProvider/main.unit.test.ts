@@ -6,7 +6,7 @@
 import { assert, expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
-import { CodeActionProvider, CodeActionProviderMetadata, DocumentSelector } from 'vscode';
+import { CodeActionKind, CodeActionProvider, CodeActionProviderMetadata, DocumentSelector } from 'vscode';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { LaunchJsonCodeActionProvider } from '../../../client/providers/codeActionProvider/launchJsonCodeActionProvider';
 import { CodeActionProviderService } from '../../../client/providers/codeActionProvider/main';
@@ -48,7 +48,7 @@ suite('Code Action Provider service', async () => {
             pattern: '**/launch.json',
         });
         assert.deepEqual(metadata!, {
-            providedCodeActionKinds: ['CodeAction' as any],
+            providedCodeActionKinds: [('CodeAction' as unknown) as CodeActionKind],
         });
         expect(provider!).instanceOf(LaunchJsonCodeActionProvider);
     });

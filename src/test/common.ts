@@ -2,17 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 
+// IMPORTANT: Do not import anything from the 'client' folder in this file as that folder is not available during smoke tests.
+
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
-import { IExtensionApi } from '../client/api';
+import type { PythonExtension } from '../client/api/types';
 import { IProcessService } from '../client/common/process/types';
-import { IDisposable, IPythonSettings, Resource } from '../client/common/types';
+import { IDisposable } from '../client/common/types';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import { PythonEnvironment } from '../client/pythonEnvironments/info';
+import { ProposedExtensionAPI } from '../client/proposedApiTypes';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop, sleep } from './core';
 
@@ -36,29 +38,14 @@ export enum OSType {
 }
 
 export type PythonSettingKeys =
-    | 'workspaceSymbols.enabled'
-    | 'pythonPath'
+    | 'defaultInterpreterPath'
     | 'languageServer'
-    | 'linting.lintOnSave'
-    | 'linting.enabled'
-    | 'linting.pylintEnabled'
-    | 'linting.flake8Enabled'
-    | 'linting.pycodestyleEnabled'
-    | 'linting.pylamaEnabled'
-    | 'linting.prospectorEnabled'
-    | 'linting.pydocstyleEnabled'
-    | 'linting.mypyEnabled'
-    | 'linting.banditEnabled'
-    | 'testing.nosetestArgs'
     | 'testing.pytestArgs'
     | 'testing.unittestArgs'
     | 'formatting.provider'
-    | 'sortImports.args'
-    | 'testing.nosetestsEnabled'
     | 'testing.pytestEnabled'
     | 'testing.unittestEnabled'
     | 'envFile'
-    | 'linting.ignorePatterns'
     | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {
@@ -154,28 +141,6 @@ function getWorkspaceRoot() {
     return workspaceFolder ? workspaceFolder.uri : vscode.workspace.workspaceFolders[0].uri;
 }
 
-export function getExtensionSettings(resource: Uri | undefined): IPythonSettings {
-    const vscode = require('vscode') as typeof import('vscode');
-    class AutoSelectionService {
-        get onDidChangeAutoSelectedInterpreter(): Event<void> {
-            return new vscode.EventEmitter<void>().event;
-        }
-        public autoSelectInterpreter(_resource: Resource): Promise<void> {
-            return Promise.resolve();
-        }
-        public getAutoSelectedInterpreter(_resource: Resource): PythonEnvironment | undefined {
-            return;
-        }
-        public async setWorkspaceInterpreter(
-            _resource: Uri,
-            _interpreter: PythonEnvironment | undefined,
-        ): Promise<void> {
-            return;
-        }
-    }
-    const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
-    return pythonSettings.PythonSettings.getInstance(resource, new AutoSelectionService());
-}
 export function retryAsync(this: any, wrapped: Function, retryCount: number = 2) {
     return async (...args: any[]) => {
         return new Promise((resolve, reject) => {
@@ -225,11 +190,11 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    const value = settings.inspect<string>('defaultInterpreterPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
-        await settings.update('pythonPath', pythonPath, config);
+        await settings.update('defaultInterpreterPath', pythonPath, config);
         await disposePythonSettings();
     }
 }
@@ -237,7 +202,7 @@ async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await Promise.all([
-        pythonConfig.update('pythonPath', undefined, true),
+        pythonConfig.update('defaultInterpreterPath', undefined, true),
         pythonConfig.update('defaultInterpreterPath', undefined, true),
     ]);
     await disposePythonSettings();
@@ -327,10 +292,9 @@ export function correctPathForOsType(pathToCorrect: string, os?: OSType): string
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const decoder = await import('../client/common/process/decoder');
     const proc = await import('../client/common/process/proc');
 
-    const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
+    const pythonProcRunner = procService ? procService : new proc.ProcessService();
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
     return pythonProcRunner
@@ -462,7 +426,7 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
     }
 }
 
-export interface IExtensionTestApi extends IExtensionApi {
+export interface IExtensionTestApi extends PythonExtension, ProposedExtensionAPI {
     serviceContainer: IServiceContainer;
     serviceManager: IServiceManager;
 }
@@ -530,7 +494,7 @@ export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 6
             // Capture result, if no exceptions return that.
             return result;
         } catch (ex) {
-            lastEx = ex;
+            lastEx = ex as Error | undefined;
         }
         await sleep(10);
     }
@@ -549,89 +513,14 @@ export async function openFile(file: string): Promise<TextDocument> {
 }
 
 /**
- * Fakes for timers in nodejs when testing, using `lolex`.
- * An alternative to `sinon.useFakeTimers` (which in turn uses `lolex`, but doesn't expose the `async` methods).
- * Use this class when you have tests with `setTimeout` and which to avoid them for faster tests.
- *
- * For further information please refer:
- * - https://www.npmjs.com/package/lolex
- * - https://sinonjs.org/releases/v1.17.6/fake-timers/
- *
- * @class FakeClock
- */
-export class FakeClock {
-    private clock?: any;
-    /**
-     * Creates an instance of FakeClock.
-     * @param {number} [advacenTimeMs=10_000] Default `timeout` value. Defaults to 10s. Assuming we do not have anything bigger.
-     * @memberof FakeClock
-     */
-    constructor(private readonly advacenTimeMs: number = 10_000) {}
-    public install() {
-        const lolex = require('lolex');
-        this.clock = lolex.install();
-    }
-    public uninstall() {
-        this.clock?.uninstall();
-    }
-    /**
-     * Wait for timers to kick in, and then wait for all of them to complete.
-     *
-     * @returns {Promise<void>}
-     * @memberof FakeClock
-     */
-    public async wait(): Promise<void> {
-        await this.waitForTimersToStart();
-        await this.waitForTimersToFinish();
-    }
-
-    /**
-     * Wait for timers to start.
-     *
-     * @returns {Promise<void>}
-     * @memberof FakeClock
-     */
-    private async waitForTimersToStart(): Promise<void> {
-        if (!this.clock) {
-            throw new Error('Fake clock not installed');
-        }
-        while (this.clock.countTimers() === 0) {
-            // Relinquish control to event loop, so other timer code will run.
-            // We want to wait for `setTimeout` to kick in.
-            await new Promise((resolve) => process.nextTick(resolve));
-        }
-    }
-    /**
-     * Wait for timers to finish.
-     *
-     * @returns {Promise<void>}
-     * @memberof FakeClock
-     */
-    private async waitForTimersToFinish(): Promise<void> {
-        if (!this.clock) {
-            throw new Error('Fake clock not installed');
-        }
-        while (this.clock.countTimers()) {
-            // Advance clock by 10s (can be anything to ensure the next scheduled block of code executes).
-            // Assuming we do not have timers > 10s
-            // This will ensure any such such as `setTimeout(..., 10)` will get executed.
-            this.clock.tick(this.advacenTimeMs);
-
-            // Wait for the timer code to run to completion (incase they are promises).
-            await this.clock.runAllAsync();
-        }
-    }
-}
-
-/**
  * Helper class to test events.
  *
  * Usage: Assume xyz.onDidSave is the event we want to test.
  * const handler = new TestEventHandler(xyz.onDidSave);
  * // Do something that would trigger the event.
  * assert.ok(handler.fired)
- * assert.equal(handler.first, 'Args Passed to first onDidSave')
- * assert.equal(handler.count, 1)// Only one should have been fired.
+ * assert.strictEqual(handler.first, 'Args Passed to first onDidSave')
+ * assert.strictEqual(handler.count, 1)// Only one should have been fired.
  */
 export class TestEventHandler<T extends void | any = any> implements IDisposable {
     public get fired() {

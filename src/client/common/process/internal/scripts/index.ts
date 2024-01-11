@@ -2,31 +2,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { workspace } from 'vscode';
-import { _ISOLATED, _SCRIPTS_DIR } from './constants';
-import { CompletionResponse, SymbolProviderSymbols } from './types';
+import { _SCRIPTS_DIR } from './constants';
 
 const SCRIPTS_DIR = _SCRIPTS_DIR;
-const ISOLATED = _ISOLATED;
-
-// Re-export it so external modules can use it too.
-export { _ISOLATED } from './constants';
-
-export function getUseIsolationSetting(): boolean {
-    try {
-        return workspace.getConfiguration('python').get<boolean>('useIsolation', true);
-    } catch (ex) {
-        // If we can't get the setting for any reason we assume default
-        return true;
-    }
-}
-
-export function maybeIsolated(args: string[]): string[] {
-    if (getUseIsolationSetting()) {
-        args.splice(0, 0, ISOLATED);
-    }
-    return args;
-}
 
 // "scripts" contains everything relevant to the scripts found under
 // the top-level "pythonFiles" directory.  Each of those scripts has
@@ -47,9 +25,6 @@ export function maybeIsolated(args: string[]): string[] {
 // In some cases one or more types related to a script are exported
 // from the same module in which the script's function is located.
 // These types typically relate to the return type of "parse()".
-//
-// ignored scripts:
-//  * install_debugpy.py  (used only for extension development)
 export * as testingTools from './testing_tools';
 
 // interpreterInfo.py
@@ -63,71 +38,18 @@ export type InterpreterInfoJson = {
     is64Bit: boolean;
 };
 
+export const OUTPUT_MARKER_SCRIPT = path.join(_SCRIPTS_DIR, 'get_output_via_markers.py');
+
 export function interpreterInfo(): [string[], (out: string) => InterpreterInfoJson] {
     const script = path.join(SCRIPTS_DIR, 'interpreterInfo.py');
-    const args = maybeIsolated([script]);
+    const args = [script];
 
     function parse(out: string): InterpreterInfoJson {
-        let json: InterpreterInfoJson;
         try {
-            json = JSON.parse(out);
+            return JSON.parse(out);
         } catch (ex) {
             throw Error(`python ${args} returned bad JSON (${out}) (${ex})`);
         }
-        return json;
-    }
-
-    return [args, parse];
-}
-
-// completion.py
-
-export function completion(jediPath?: string): [string[], (out: string) => CompletionResponse[]] {
-    const script = path.join(SCRIPTS_DIR, 'completion.py');
-    const args = maybeIsolated([script]);
-    if (jediPath) {
-        args.push('custom');
-        args.push(jediPath);
-    }
-
-    function parse(out: string): CompletionResponse[] {
-        return out.splitLines().map((resp) => JSON.parse(resp));
-    }
-
-    return [args, parse];
-}
-
-// sortImports.py
-
-export function sortImports(filename: string, sortArgs?: string[]): [string[], (out: string) => string] {
-    const script = path.join(SCRIPTS_DIR, 'sortImports.py');
-    const args = maybeIsolated([script, filename, '--diff']);
-    if (sortArgs) {
-        args.push(...sortArgs);
-    }
-
-    function parse(out: string) {
-        // It should just be a diff that the extension will use directly.
-        return out;
-    }
-
-    return [args, parse];
-}
-
-// refactor.py
-
-export function refactor(root: string): [string[], (out: string) => Record<string, unknown>[]] {
-    const script = path.join(SCRIPTS_DIR, 'refactor.py');
-    const args = maybeIsolated([script, root]);
-
-    // TODO: Make the return type more specific, like we did
-    // with completion().
-    function parse(out: string): Record<string, unknown>[] {
-        // TODO: Also handle "STARTED"?
-        return out
-            .split(/\r?\n/g)
-            .filter((line) => line.length > 0)
-            .map((resp) => JSON.parse(resp));
     }
 
     return [args, parse];
@@ -137,7 +59,7 @@ export function refactor(root: string): [string[], (out: string) => Record<strin
 
 export function normalizeSelection(): [string[], (out: string) => string] {
     const script = path.join(SCRIPTS_DIR, 'normalizeSelection.py');
-    const args = maybeIsolated([script]);
+    const args = [script];
 
     function parse(out: string) {
         // The text will be used as-is.
@@ -147,31 +69,11 @@ export function normalizeSelection(): [string[], (out: string) => string] {
     return [args, parse];
 }
 
-// symbolProvider.py
-
-export function symbolProvider(
-    filename: string,
-    // If "text" is provided then it gets passed to the script as-is.
-    text?: string,
-): [string[], (out: string) => SymbolProviderSymbols] {
-    const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
-    const args = maybeIsolated([script, filename]);
-    if (text) {
-        args.push(text);
-    }
-
-    function parse(out: string): SymbolProviderSymbols {
-        return JSON.parse(out);
-    }
-
-    return [args, parse];
-}
-
 // printEnvVariables.py
 
 export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessEnv] {
-    const script = path.join(SCRIPTS_DIR, 'printEnvVariables.py').fileToCommandArgument();
-    const args = maybeIsolated([script]);
+    const script = path.join(SCRIPTS_DIR, 'printEnvVariables.py').fileToCommandArgumentForPythonExt();
+    const args = [script];
 
     function parse(out: string): NodeJS.ProcessEnv {
         return JSON.parse(out);
@@ -187,14 +89,14 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
     const script = path.join(SCRIPTS_DIR, 'shell_exec.py');
     // We don't bother with a "parse" function since the output
     // could be anything.
-    return maybeIsolated([
+    return [
         script,
-        command.fileToCommandArgument(),
+        command.fileToCommandArgumentForPythonExt(),
         // The shell args must come after the command
         // but before the lockfile.
         ...shellArgs,
-        lockfile.fileToCommandArgument(),
-    ]);
+        lockfile.fileToCommandArgumentForPythonExt(),
+    ];
 }
 
 // testlauncher.py
@@ -202,7 +104,14 @@ export function shell_exec(command: string, lockfile: string, shellArgs: string[
 export function testlauncher(testArgs: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'testlauncher.py');
     // There is no output to parse, so we do not return a function.
-    return maybeIsolated([script, ...testArgs]);
+    return [script, ...testArgs];
+}
+
+// run_pytest_script.py
+export function pytestlauncher(testArgs: string[]): string[] {
+    const script = path.join(SCRIPTS_DIR, 'vscode_pytest', 'run_pytest_script.py');
+    // There is no output to parse, so we do not return a function.
+    return [script, ...testArgs];
 }
 
 // visualstudio_py_testlauncher.py
@@ -214,9 +123,38 @@ export function visualstudio_py_testlauncher(testArgs: string[]): string[] {
     return [script, ...testArgs];
 }
 
+// execution.py
+// eslint-disable-next-line camelcase
+export function execution_py_testlauncher(testArgs: string[]): string[] {
+    const script = path.join(SCRIPTS_DIR, 'unittestadapter', 'execution.py');
+    return [script, ...testArgs];
+}
+
 // tensorboard_launcher.py
 
 export function tensorboardLauncher(args: string[]): string[] {
     const script = path.join(SCRIPTS_DIR, 'tensorboard_launcher.py');
-    return maybeIsolated([script, ...args]);
+    return [script, ...args];
+}
+
+// linter.py
+
+export function linterScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'linter.py');
+    return script;
+}
+
+export function createVenvScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'create_venv.py');
+    return script;
+}
+
+export function createCondaScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'create_conda.py');
+    return script;
+}
+
+export function installedCheckScript(): string {
+    const script = path.join(SCRIPTS_DIR, 'installed_check.py');
+    return script;
 }

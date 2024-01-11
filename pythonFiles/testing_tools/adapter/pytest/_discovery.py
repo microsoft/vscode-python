@@ -7,7 +7,7 @@ import sys
 
 import pytest
 
-from .. import util, discovery
+from .. import discovery, util
 from ._pytest_item import parse_item
 
 
@@ -26,11 +26,14 @@ def discover(
     pytestargs = _adjust_pytest_args(pytestargs)
     # We use this helper rather than "-pno:terminal" due to possible
     # platform-dependent issues.
-    with (util.hide_stdio() if hidestdio else util.noop_cm()) as stdio:
+    with util.hide_stdio() if hidestdio else util.noop_cm() as stdio:
         ec = _pytest_main(pytestargs, [_plugin])
     # See: https://docs.pytest.org/en/latest/usage.html#possible-exit-codes
     if ec == 5:
         # No tests were discovered.
+        pass
+    elif ec == 1:
+        # Some tests where collected but with errors.
         pass
     elif ec != 0:
         print(

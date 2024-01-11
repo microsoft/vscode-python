@@ -7,14 +7,12 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
-import { IInstaller, IOutputChannel, Product } from '../../client/common/types';
+import { IInstaller, ITestOutputChannel, Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ITestConfigSettingsService, ITestConfigurationManagerFactory } from '../../client/testing/common/types';
 import { TestConfigurationManagerFactory } from '../../client/testing/configurationFactory';
-import { TEST_OUTPUT_CHANNEL } from '../../client/testing/constants';
-import * as nose from '../../client/testing/nosetest/testConfigurationManager';
-import * as pytest from '../../client/testing/pytest/testConfigurationManager';
-import * as unittest from '../../client/testing/unittest/testConfigurationManager';
+import * as pytest from '../../client/testing/configuration/pytest/testConfigurationManager';
+import * as unittest from '../../client/testing/configuration/unittest/testConfigurationManager';
 
 use(chaiAsPromised);
 
@@ -27,7 +25,7 @@ suite('Unit Tests - ConfigurationManagerFactory', () => {
         const testConfigService = typeMoq.Mock.ofType<ITestConfigSettingsService>();
 
         serviceContainer
-            .setup((c) => c.get(typeMoq.It.isValue(IOutputChannel), typeMoq.It.isValue(TEST_OUTPUT_CHANNEL)))
+            .setup((c) => c.get(typeMoq.It.isValue(ITestOutputChannel)))
             .returns(() => outputChannel.object);
         serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IInstaller))).returns(() => installer.object);
         serviceContainer
@@ -42,9 +40,5 @@ suite('Unit Tests - ConfigurationManagerFactory', () => {
     test('Create pytest Configuration', async () => {
         const configMgr = factory.create(Uri.file(__filename), Product.pytest);
         expect(configMgr).to.be.instanceOf(pytest.ConfigurationManager);
-    });
-    test('Create nose Configuration', async () => {
-        const configMgr = factory.create(Uri.file(__filename), Product.nosetest);
-        expect(configMgr).to.be.instanceOf(nose.ConfigurationManager);
     });
 });

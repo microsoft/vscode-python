@@ -1,9 +1,12 @@
 import { spawnSync } from 'child_process';
 import * as fs from 'fs-extra';
+import * as os from 'os';
 import * as path from 'path';
-import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from 'vscode-test';
+import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../client/common/constants';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
+import { getChannel } from './utils/vscode';
+import { TestOptions } from '@vscode/test-electron/out/runTest';
 
 // If running smoke tests, we don't have access to this.
 if (process.env.TEST_FILES_SUFFIX !== 'smoke.test') {
@@ -26,8 +29,6 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
-const channel = process.env.VSC_PYTHON_CI_TEST_VSC_CHANNEL || 'stable';
-
 /**
  * Smoke tests & tests running in VSCode require Jupyter extension to be installed.
  */
@@ -37,7 +38,7 @@ async function installJupyterExtension(vscodeExecutablePath: string) {
         return;
     }
     console.info('Installing Jupyter Extension');
-    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
+    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, os.platform());
 
     // For now install Jupyter from the marketplace
     spawnSync(cliPath, ['--install-extension', JUPYTER_EXTENSION_ID], {
@@ -52,7 +53,7 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
         return;
     }
     console.info('Installing Pylance Extension');
-    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath);
+    const cliPath = resolveCliPathFromVSCodeExecutablePath(vscodeExecutablePath, os.platform());
 
     // For now install pylance from the marketplace
     spawnSync(cliPath, ['--install-extension', PYLANCE_EXTENSION_ID], {
@@ -76,6 +77,8 @@ async function installPylanceExtension(vscodeExecutablePath: string) {
 async function start() {
     console.log('*'.repeat(100));
     console.log('Start Standard tests');
+    const channel = getChannel();
+    console.log(`Using ${channel} build of VS Code.`);
     const vscodeExecutablePath = await downloadAndUnzipVSCode(channel);
     const baseLaunchArgs =
         requiresJupyterExtensionToBeInstalled() || requiresPylanceExtensionToBeInstalled()
@@ -83,18 +86,20 @@ async function start() {
             : ['--disable-extensions'];
     await installJupyterExtension(vscodeExecutablePath);
     await installPylanceExtension(vscodeExecutablePath);
+    console.log('VS Code executable', vscodeExecutablePath);
     const launchArgs = baseLaunchArgs
         .concat([workspacePath])
         .concat(channel === 'insiders' ? ['--enable-proposed-api'] : [])
         .concat(['--timeout', '5000']);
     console.log(`Starting vscode ${channel} with args ${launchArgs.join(' ')}`);
-    await runTests({
+    const options: TestOptions = {
         extensionDevelopmentPath: extensionDevelopmentPath,
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test'),
         launchArgs,
         version: channel,
         extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' },
-    });
+    };
+    await runTests(options);
 }
 start().catch((ex) => {
     console.error('End Standard tests (with errors)', ex);

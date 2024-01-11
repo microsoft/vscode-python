@@ -25,7 +25,7 @@ suite('Terminal Auto Activation', () => {
     let terminal: Terminal;
 
     setup(() => {
-        terminal = {
+        terminal = ({
             dispose: noop,
             hide: noop,
             name: 'Python',
@@ -34,7 +34,7 @@ suite('Terminal Auto Activation', () => {
             sendText: noop,
             show: noop,
             exitStatus: { code: 0 },
-        };
+        } as unknown) as Terminal;
         terminalManager = mock(TerminalManager);
         activator = mock(TerminalActivator);
         activeResourceService = mock(ActiveResourceService);
@@ -68,7 +68,7 @@ suite('Terminal Auto Activation', () => {
         verify(activator.activateEnvironmentInTerminal(terminal, anything())).once();
     });
     test('New Terminals should not be activated if hidden from user', async () => {
-        terminal = {
+        terminal = ({
             dispose: noop,
             hide: noop,
             name: 'Python',
@@ -77,7 +77,7 @@ suite('Terminal Auto Activation', () => {
             sendText: noop,
             show: noop,
             exitStatus: { code: 0 },
-        };
+        } as unknown) as Terminal;
         type EventHandler = (e: Terminal) => void;
         let handler: undefined | EventHandler;
         const handlerDisposable = TypeMoq.Mock.ofType<IDisposable>();
@@ -98,7 +98,7 @@ suite('Terminal Auto Activation', () => {
         verify(activator.activateEnvironmentInTerminal(terminal, anything())).never();
     });
     test('New Terminals should not be activated if auto activation is to be disabled', async () => {
-        terminal = {
+        terminal = ({
             dispose: noop,
             hide: noop,
             name: 'Python',
@@ -107,7 +107,7 @@ suite('Terminal Auto Activation', () => {
             sendText: noop,
             show: noop,
             exitStatus: { code: 0 },
-        };
+        } as unknown) as Terminal;
         type EventHandler = (e: Terminal) => void;
         let handler: undefined | EventHandler;
         const handlerDisposable = TypeMoq.Mock.ofType<IDisposable>();

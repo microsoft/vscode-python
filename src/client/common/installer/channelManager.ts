@@ -85,9 +85,9 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const search = 'Search for help';
         let result: string | undefined;
         if (interpreter.envType === EnvironmentType.Conda) {
-            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
+            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller, Installer.searchForHelp);
         } else {
-            result = await appShell.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp());
+            result = await appShell.showErrorMessage(Installer.noPipInstaller, Installer.searchForHelp);
         }
         if (result === search) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);

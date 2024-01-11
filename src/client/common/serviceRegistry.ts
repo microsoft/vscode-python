@@ -2,13 +2,20 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import {
+    IBrowserService,
+    IConfigurationService,
+    ICurrentProcess,
     IExperimentService,
-    IFileDownloader,
-    IHttpClient,
+    IExtensions,
+    IInstaller,
     IInterpreterPathService,
+    IPathUtils,
+    IPersistentStateFactory,
+    IRandom,
     IToolExecutionPath,
+    IsWindows,
     ToolExecutionPath,
-} from '../common/types';
+} from './types';
 import { IServiceManager } from '../ioc/types';
 import { JupyterExtensionDependencyManager } from '../jupyter/jupyterExtensionDependencyManager';
 import { ImportTracker } from '../telemetry/importTracker';
@@ -18,7 +25,6 @@ import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { ClipboardService } from './application/clipboard';
 import { CommandManager } from './application/commandManager';
-import { IPythonCommandManager } from './application/commands';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from './application/commands/reportIssueCommand';
 import { DebugService } from './application/debugService';
@@ -26,7 +32,6 @@ import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
-import { VSCodeNotebook } from './application/notebook';
 import { TerminalManager } from './application/terminalManager';
 import {
     IActiveResourceService,
@@ -34,56 +39,30 @@ import {
     IApplicationShell,
     IClipboard,
     ICommandManager,
+    IContextKeyManager,
     IDebugService,
     IDocumentManager,
     IJupyterExtensionDependencyManager,
     ILanguageService,
     ITerminalManager,
-    IVSCodeNotebook,
     IWorkspaceService,
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
-import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
 import { ConfigurationService } from './configuration/service';
 import { PipEnvExecutionPath } from './configuration/executionSettings/pipEnvExecution';
-import { CryptoUtils } from './crypto';
-import { EditorUtils } from './editor';
-import { ExperimentsManager } from './experiments/manager';
 import { ExperimentService } from './experiments/service';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule,
-} from './insidersBuild/downloadChannelRules';
-import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
-import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt,
-} from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { InterpreterPathService } from './interpreterPathService';
 import { BrowserService } from './net/browser';
-import { FileDownloader } from './net/fileDownloader';
-import { HttpClient } from './net/httpClient';
-import { NugetService } from './nuget/nugetService';
-import { INugetService } from './nuget/types';
 import { PersistentStateFactory } from './persistentState';
-import { IS_WINDOWS } from './platform/constants';
 import { PathUtils } from './platform/pathUtils';
 import { CurrentProcess } from './process/currentProcess';
 import { ProcessLogger } from './process/logger';
 import { IProcessLogger } from './process/types';
-import { CodeCssGenerator } from './startPage/codeCssGenerator';
-import { StartPage } from './startPage/startPage';
-import { ThemeFinder } from './startPage/themeFinder';
-import { ICodeCssGenerator, IStartPage, IThemeFinder } from './startPage/types';
 import { TerminalActivator } from './terminal/activator';
 import { PowershellTerminalActivationFailedHandler } from './terminal/activator/powershellFailedHandler';
 import { Bash } from './terminal/environmentActivationProviders/bash';
+import { Nushell } from './terminal/environmentActivationProviders/nushell';
 import { CommandPromptAndPowerShell } from './terminal/environmentActivationProviders/commandPrompt';
 import { CondaActivationCommandProvider } from './terminal/environmentActivationProviders/condaActivationProvider';
 import { PipEnvActivationCommandProvider } from './terminal/environmentActivationProviders/pipEnvActivationProvider';
@@ -103,26 +82,16 @@ import {
     ITerminalServiceFactory,
     TerminalActivationProviders,
 } from './terminal/types';
-import {
-    IAsyncDisposableRegistry,
-    IBrowserService,
-    IConfigurationService,
-    ICryptoUtils,
-    ICurrentProcess,
-    IEditorUtils,
-    IExperimentsManager,
-    IExtensions,
-    IInstaller,
-    IPathUtils,
-    IPersistentStateFactory,
-    IRandom,
-    IsWindows,
-} from './types';
+
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';
+import { ContextKeyManager } from './application/contextKeyManager';
+import { CreatePythonFileCommandHandler } from './application/commands/createPythonFile';
+import { RequireJupyterPrompt } from '../jupyter/requireJupyterPrompt';
+import { isWindows } from './platform/platformService';
 
-export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
+export function registerTypes(serviceManager: IServiceManager): void {
+    serviceManager.addSingletonInstance<boolean>(IsWindows, isWindows());
 
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
@@ -133,7 +102,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
-    serviceManager.addSingleton<IVSCodeNotebook>(IVSCodeNotebook, VSCodeNotebook);
     serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
@@ -141,7 +109,16 @@ export function registerTypes(serviceManager: IServiceManager) {
         IJupyterExtensionDependencyManager,
         JupyterExtensionDependencyManager,
     );
-    serviceManager.addSingleton<IPythonCommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        RequireJupyterPrompt,
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CreatePythonFileCommandHandler,
+    );
+    serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
+    serviceManager.addSingleton<IContextKeyManager>(IContextKeyManager, ContextKeyManager);
     serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
     serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
     serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
@@ -151,17 +128,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IApplicationEnvironment>(IApplicationEnvironment, ApplicationEnvironment);
     serviceManager.addSingleton<ILanguageService>(ILanguageService, LanguageService);
     serviceManager.addSingleton<IBrowserService>(IBrowserService, BrowserService);
-    serviceManager.addSingleton<IHttpClient>(IHttpClient, HttpClient);
-    serviceManager.addSingleton<IFileDownloader>(IFileDownloader, FileDownloader);
-    serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
-    serviceManager.addSingleton<INugetService>(INugetService, NugetService);
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
     serviceManager.addSingleton<ITerminalActivationHandler>(
         ITerminalActivationHandler,
         PowershellTerminalActivationFailedHandler,
     );
-    serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
-    serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
     serviceManager.addSingleton<IExperimentService>(IExperimentService, ExperimentService);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
@@ -174,6 +145,11 @@ export function registerTypes(serviceManager: IServiceManager) {
         ITerminalActivationCommandProvider,
         CommandPromptAndPowerShell,
         TerminalActivationProviders.commandPromptAndPowerShell,
+    );
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
+        Nushell,
+        TerminalActivationProviders.nushell,
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
@@ -192,7 +168,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IToolExecutionPath>(IToolExecutionPath, PipEnvExecutionPath, ToolExecutionPath.pipenv);
 
-    serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
     serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
@@ -200,11 +175,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, VSCEnvironmentShellDetector);
-    serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        InsidersExtensionService,
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReloadVSCodeCommandHandler,
@@ -213,27 +183,8 @@ export function registerTypes(serviceManager: IServiceManager) {
         IExtensionSingleActivationService,
         ReportIssueCommandHandler,
     );
-    serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersOffChannelRule,
-        ExtensionChannel.off,
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersDailyChannelRule,
-        ExtensionChannel.daily,
-    );
-    serviceManager.addSingleton<IExtensionChannelRule>(
-        IExtensionChannelRule,
-        ExtensionInsidersWeeklyChannelRule,
-        ExtensionChannel.weekly,
-    );
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         DebugSessionTelemetry,
     );
-    serviceManager.addSingleton<IStartPage>(IStartPage, StartPage, undefined, [IExtensionSingleActivationService]);
-    serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
-    serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
 }

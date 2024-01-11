@@ -2,28 +2,25 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { traceVerbose } from '../../common/logger';
 import { createDeferred } from '../../common/utils/async';
 import { getURIFilter } from '../../common/utils/misc';
-import { IDisposable } from '../../common/utils/resourceLifecycle';
+import { traceVerbose } from '../../logging';
 import { PythonEnvInfo } from './info';
-import { getEnvMatcher, getMaxDerivedEnvInfo } from './info/env';
-import { IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from './locator';
+import {
+    IPythonEnvsIterator,
+    isProgressEvent,
+    ProgressNotificationEvent,
+    ProgressReportStage,
+    PythonEnvUpdatedEvent,
+    PythonLocatorQuery,
+} from './locator';
 
 /**
  * Create a filter function to match the given query.
  */
 export function getQueryFilter(query: PythonLocatorQuery): (env: PythonEnvInfo) => boolean {
     const kinds = query.kinds !== undefined && query.kinds.length > 0 ? query.kinds : undefined;
-    let includeNonRooted = true;
-    if (query.searchLocations !== undefined) {
-        if (query.searchLocations.includeNonRooted !== undefined) {
-            includeNonRooted = query.searchLocations.includeNonRooted;
-        } else {
-            // We default to `false`.
-            includeNonRooted = false;
-        }
-    }
+    const includeNonRooted = !query.searchLocations?.doNotIncludeNonRooted; // We default to `true`.
     const locationFilters = getSearchLocationFilters(query);
     function checkKind(env: PythonEnvInfo): boolean {
         if (kinds === undefined) {
@@ -65,7 +62,6 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
     return query.searchLocations.roots.map((loc) =>
         getURIFilter(loc, {
             checkParent: true,
-            checkExact: true,
         }),
     );
 }
@@ -75,15 +71,18 @@ function getSearchLocationFilters(query: PythonLocatorQuery): ((u: Uri) => boole
  *
  * This includes applying any received updates.
  */
-export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
-    const envs: (PythonEnvInfo | undefined)[] = [];
+export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I>): Promise<I[]> {
+    const envs: (I | undefined)[] = [];
 
     const updatesDone = createDeferred<void>();
     if (iterator.onUpdated === undefined) {
         updatesDone.resolve();
     } else {
-        const listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
-            if (event === null) {
+        const listener = iterator.onUpdated((event: PythonEnvUpdatedEvent<I> | ProgressNotificationEvent) => {
+            if (isProgressEvent(event)) {
+                if (event.stage !== ProgressReportStage.discoveryFinished) {
+                    return;
+                }
                 updatesDone.resolve();
                 listener.dispose();
             } else {
@@ -112,94 +111,4 @@ export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvI
 
     // Do not return invalid environments
     return envs.filter((e) => e !== undefined).map((e) => e!);
-}
-
-/**
- * For each env info in the iterator, yield it and emit an update.
- *
- * This is suitable for use in `Locator.iterEnvs()` implementations:
- *
- * ```
- *     const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>;
- *     const iterator: PythonEnvsIterator = iterAndUpdateEnvs(envs, emitter.fire);
- *     iterator.onUpdated = emitter.event;
- *     return iterator;
- * ```
- *
- * @param notify - essentially `EventEmitter.fire()`
- * @param getUpdate - used to generate the updated env info
- */
-export async function* iterAndUpdateEnvs(
-    envs: PythonEnvInfo[] | AsyncIterableIterator<PythonEnvInfo>,
-    notify: (event: PythonEnvUpdatedEvent | null) => void,
-    getUpdate: (env: PythonEnvInfo) => Promise<PythonEnvInfo> = getMaxDerivedEnvInfo,
-): IPythonEnvsIterator {
-    let done = false;
-    let numRemaining = 0;
-
-    async function doUpdate(env: PythonEnvInfo, index: number): Promise<void> {
-        const update = await getUpdate(env);
-        if (update !== env) {
-            notify({ index, update, old: env });
-        }
-        numRemaining -= 1;
-        if (numRemaining === 0 && done) {
-            notify(null);
-        }
-    }
-
-    let numYielded = 0;
-    for await (const env of envs) {
-        const index = numYielded;
-        yield env;
-        numYielded += 1;
-
-        // Get the full info the in background and send updates.
-        numRemaining += 1;
-        doUpdate(env, index).ignoreErrors();
-    }
-    done = true;
-    if (numRemaining === 0) {
-        // There are no background updates left but `null` was not
-        // emitted yet (because `done` wasn't `true` yet).
-        notify(null);
-    }
-}
-
-/**
- * Naively implement `ILocator.resolveEnv()` by searching through an iterator.
- */
-export async function resolveEnvFromIterator(
-    env: string | Partial<PythonEnvInfo>,
-    iterator: IPythonEnvsIterator,
-): Promise<PythonEnvInfo | undefined> {
-    let resolved: PythonEnvInfo | undefined;
-
-    const matchEnv = getEnvMatcher(env);
-
-    let listener: IDisposable | undefined;
-    const done = createDeferred<void>();
-    if (iterator.onUpdated !== undefined) {
-        listener = iterator.onUpdated((event: PythonEnvUpdatedEvent | null) => {
-            if (event === null) {
-                done.resolve();
-            } else if (!event.update || matchEnv(event.update)) {
-                resolved = event.update;
-            }
-        });
-    } else {
-        done.resolve();
-    }
-    for await (const iterated of iterator) {
-        if (matchEnv(iterated)) {
-            resolved = iterated;
-        }
-    }
-    await done.promise;
-
-    if (listener !== undefined) {
-        listener.dispose();
-    }
-
-    return resolved;
 }

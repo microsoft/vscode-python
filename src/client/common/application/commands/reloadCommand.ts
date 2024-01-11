@@ -14,6 +14,7 @@ import { IApplicationShell, ICommandManager } from '../types';
  */
 @injectable()
 export class ReloadVSCodeCommandHandler implements IExtensionSingleActivationService {
+    public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
@@ -22,8 +23,8 @@ export class ReloadVSCodeCommandHandler implements IExtensionSingleActivationSer
         this.commandManager.registerCommand('python.reloadVSCode', this.onReloadVSCode, this);
     }
     private async onReloadVSCode(message: string) {
-        const item = await this.appShell.showInformationMessage(message, Common.reload());
-        if (item === Common.reload()) {
+        const item = await this.appShell.showInformationMessage(message, Common.reload);
+        if (item === Common.reload) {
             this.commandManager.executeCommand('workbench.action.reloadWindow').then(noop, noop);
         }
     }

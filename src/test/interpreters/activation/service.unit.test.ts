@@ -18,7 +18,7 @@ import { ProcessServiceFactory } from '../../../client/common/process/processFac
 import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper } from '../../../client/common/terminal/types';
-import { ICurrentProcess } from '../../../client/common/types';
+import { ICurrentProcess, Resource } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
@@ -28,6 +28,7 @@ import { EnvironmentActivationService } from '../../../client/interpreter/activa
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
@@ -48,7 +49,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     let workspace: IWorkspaceService;
     let interpreterService: IInterpreterService;
     let onDidChangeEnvVariables: EventEmitter<Uri | undefined>;
-    let onDidChangeInterpreter: EventEmitter<void>;
+    let onDidChangeInterpreter: EventEmitter<Resource>;
     const pythonInterpreter: PythonEnvironment = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -58,7 +59,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         architecture: Architecture.x64,
     };
 
-    function initSetup() {
+    function initSetup(interpreter: PythonEnvironment | undefined) {
         helper = mock(TerminalHelper);
         platform = mock(PlatformService);
         processServiceFactory = mock(ProcessServiceFactory);
@@ -68,9 +69,10 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         interpreterService = mock(InterpreterService);
         workspace = mock(WorkspaceService);
         onDidChangeEnvVariables = new EventEmitter<Uri | undefined>();
-        onDidChangeInterpreter = new EventEmitter<void>();
+        onDidChangeInterpreter = new EventEmitter<Resource>();
         when(envVarsService.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVariables.event);
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
         service = new EnvironmentActivationService(
             instance(helper),
             instance(platform),
@@ -89,7 +91,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     [undefined, Uri.parse('a')].forEach((resource) =>
         [undefined, pythonInterpreter].forEach((interpreter) => {
             suite(title(resource, interpreter), () => {
-                setup(initSetup);
+                setup(() => initSetup(interpreter));
                 test('Unknown os will return empty variables', async () => {
                     when(platform.osType).thenReturn(OSType.Unknown);
                     const env = await service.getActivatedEnvironmentVariables(resource);
@@ -102,7 +104,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                 osTypes.forEach((osType) => {
                     suite(osType.name, () => {
-                        setup(initSetup);
+                        setup(() => initSetup(interpreter));
                         test('getEnvironmentActivationShellCommands will be invoked', async () => {
                             when(platform.osType).thenReturn(osType.value);
                             when(
@@ -115,6 +117,25 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             expect(env).to.equal(undefined, 'Should not have any variables');
                             verify(
                                 helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter),
+                            ).once();
+                        });
+                        test('Env variables returned for microvenv', async () => {
+                            when(platform.osType).thenReturn(osType.value);
+
+                            const microVenv = { ...pythonInterpreter, envType: EnvironmentType.Venv };
+                            const key = getSearchPathEnvVarNames()[0];
+                            const varsFromEnv = { [key]: '/foo/bar' };
+
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), microVenv),
+                            ).thenResolve();
+
+                            const env = await service.getActivatedEnvironmentVariables(resource, microVenv);
+
+                            verify(platform.osType).once();
+                            expect(env).to.deep.equal(varsFromEnv);
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), microVenv),
                             ).once();
                         });
                         test('Validate command used to activation and printing env vars', async () => {
@@ -140,12 +161,11 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             const shellCmd = capture(processService.shellExec).first()[0];
 
-                            const isolated = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pyvsc-run-isolated.py');
                             const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
                             const expectedCommand = [
                                 ...cmd,
                                 `echo '${getEnvironmentPrefix}'`,
-                                `python ${isolated.toCommandArgument()} ${printEnvPyFile.fileToCommandArgument()}`,
+                                `python ${printEnvPyFile.fileToCommandArgumentForPythonExt()}`,
                             ].join(' && ');
 
                             expect(shellCmd).to.equal(expectedCommand);
@@ -322,9 +342,6 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             verify(envVarsService.getEnvironmentVariables(resource)).twice();
                             verify(processService.shellExec(anything(), anything())).twice();
                         }
-                        test('Cache Variables get cleared when changing interpreter', async () => {
-                            await testClearingCache(onDidChangeInterpreter.fire.bind(onDidChangeInterpreter));
-                        });
                         test('Cache Variables get cleared when changing env variables file', async () => {
                             await testClearingCache(onDidChangeEnvVariables.fire.bind(onDidChangeEnvVariables));
                         });

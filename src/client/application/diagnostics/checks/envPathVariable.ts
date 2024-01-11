@@ -8,6 +8,7 @@ import { IApplicationEnvironment } from '../../../common/application/types';
 import '../../../common/extensions';
 import { IPlatformService } from '../../../common/platform/types';
 import { ICurrentProcess, IDisposableRegistry, IPathUtils, Resource } from '../../../common/types';
+import { Common } from '../../../common/utils/localize';
 import { IServiceContainer } from '../../../ioc/types';
 import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
@@ -43,7 +44,13 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
     ) {
-        super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
+        super(
+            [DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic],
+            serviceContainer,
+            disposableRegistry,
+            true,
+            true,
+        );
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
@@ -72,14 +79,14 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
-                prompt: 'Ignore',
+                prompt: Common.ignore,
             },
             {
-                prompt: 'Always Ignore',
+                prompt: Common.alwaysIgnore,
                 command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
             {
-                prompt: 'More Info',
+                prompt: Common.moreInfo,
                 command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' }),
             },
         ];

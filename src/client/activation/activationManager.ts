@@ -7,40 +7,58 @@ import { inject, injectable, multiInject } from 'inversify';
 import { TextDocument } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { DEFAULT_INTERPRETER_SETTING, PYTHON_LANGUAGE } from '../common/constants';
-import { DeprecatePythonPath } from '../common/experiments/groups';
-import { traceDecorators } from '../common/logger';
+import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
-import { IDisposable, IExperimentsManager, IInterpreterPathService, Resource } from '../common/types';
-import { createDeferred, Deferred } from '../common/utils/async';
-import { IInterpreterAutoSelectionService, IInterpreterSecurityService } from '../interpreter/autoSelection/types';
-import { IInterpreterService } from '../interpreter/contracts';
+import { IDisposable, IInterpreterPathService, Resource } from '../common/types';
+import { Deferred } from '../common/utils/async';
+import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
+import { traceDecoratorError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
 import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
     public readonly activatedWorkspaces = new Set<string>();
+
     protected readonly isInterpreterSetForWorkspacePromises = new Map<string, Deferred<void>>();
+
     private readonly disposables: IDisposable[] = [];
+
     private docOpenedHandler?: IDisposable;
+
     constructor(
-        @multiInject(IExtensionActivationService) private readonly activationServices: IExtensionActivationService[],
+        @multiInject(IExtensionActivationService) private activationServices: IExtensionActivationService[],
         @multiInject(IExtensionSingleActivationService)
-        private readonly singleActivationServices: IExtensionSingleActivationService[],
+        private singleActivationServices: IExtensionSingleActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
         @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
-        @inject(IInterpreterSecurityService) private readonly interpreterSecurityService: IInterpreterSecurityService,
     ) {}
 
-    public dispose() {
+    private filterServices() {
+        if (!this.workspaceService.isTrusted) {
+            this.activationServices = this.activationServices.filter(
+                (service) => service.supportedWorkspaceTypes.untrustedWorkspace,
+            );
+            this.singleActivationServices = this.singleActivationServices.filter(
+                (service) => service.supportedWorkspaceTypes.untrustedWorkspace,
+            );
+        }
+        if (this.workspaceService.isVirtualWorkspace) {
+            this.activationServices = this.activationServices.filter(
+                (service) => service.supportedWorkspaceTypes.virtualWorkspace,
+            );
+            this.singleActivationServices = this.singleActivationServices.filter(
+                (service) => service.supportedWorkspaceTypes.virtualWorkspace,
+            );
+        }
+    }
+
+    public dispose(): void {
         while (this.disposables.length > 0) {
             const disposable = this.disposables.shift()!;
             disposable.dispose();
@@ -50,91 +68,65 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler = undefined;
         }
     }
+
     public async activate(): Promise<void> {
+        this.filterServices();
         await this.initialize();
+
         // Activate all activation services together.
+
         await Promise.all([
-            Promise.all(this.singleActivationServices.map((item) => item.activate())),
+            ...this.singleActivationServices.map((item) => item.activate()),
             this.activateWorkspace(this.activeResourceService.getActiveResource()),
         ]);
-        await this.autoSelection.autoSelectInterpreter(undefined);
     }
-    @traceDecorators.error('Failed to activate a workspace')
-    public async activateWorkspace(resource: Resource) {
+
+    @traceDecoratorError('Failed to activate a workspace')
+    public async activateWorkspace(resource: Resource): Promise<void> {
+        const folder = this.workspaceService.getWorkspaceFolder(resource);
+        resource = folder ? folder.uri : undefined;
         const key = this.getWorkspaceKey(resource);
         if (this.activatedWorkspaces.has(key)) {
             return;
         }
         this.activatedWorkspaces.add(key);
 
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (this.workspaceService.isTrusted) {
+            // Do not interact with interpreters in a untrusted workspace.
+            await this.autoSelection.autoSelectInterpreter(resource);
             await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-
-        // Get latest interpreter list in the background.
-        this.interpreterService.getInterpreters(resource).ignoreErrors();
-
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
-
-        await this.autoSelection.autoSelectInterpreter(resource);
-        await this.evaluateAutoSelectedInterpreterSafety(resource);
         await Promise.all(this.activationServices.map((item) => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
-    public async initialize() {
+
+    public async initialize(): Promise<void> {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
     }
-    public onDocOpened(doc: TextDocument) {
+
+    public onDocOpened(doc: TextDocument): void {
         if (doc.languageId !== PYTHON_LANGUAGE) {
             return;
         }
         const key = this.getWorkspaceKey(doc.uri);
+        const hasWorkspaceFolders = (this.workspaceService.workspaceFolders?.length || 0) > 0;
         // If we have opened a doc that does not belong to workspace, then do nothing.
-        if (key === '' && this.workspaceService.hasWorkspaceFolders) {
+        if (key === '' && hasWorkspaceFolders) {
             return;
         }
         if (this.activatedWorkspaces.has(key)) {
             return;
         }
-        const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
-        this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
+        this.activateWorkspace(doc.uri).ignoreErrors();
     }
 
-    public async evaluateAutoSelectedInterpreterSafety(resource: Resource) {
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            const workspaceKey = this.getWorkspaceKey(resource);
-            const interpreterSettingValue = this.interpreterPathService.get(resource);
-            if (interpreterSettingValue.length === 0 || interpreterSettingValue === DEFAULT_INTERPRETER_SETTING) {
-                // Setting is not set, extension will use the autoselected value. Make sure it's safe.
-                const interpreter = this.autoSelection.getAutoSelectedInterpreter(resource);
-                if (interpreter) {
-                    const isInterpreterSetForWorkspace = createDeferred<void>();
-                    this.isInterpreterSetForWorkspacePromises.set(workspaceKey, isInterpreterSetForWorkspace);
-                    await Promise.race([
-                        isInterpreterSetForWorkspace.promise,
-                        this.interpreterSecurityService.evaluateAndRecordInterpreterSafety(interpreter, resource),
-                    ]);
-                }
-            } else {
-                // Resolve any concurrent calls waiting on the promise
-                if (this.isInterpreterSetForWorkspacePromises.has(workspaceKey)) {
-                    this.isInterpreterSetForWorkspacePromises.get(workspaceKey)!.resolve();
-                    this.isInterpreterSetForWorkspacePromises.delete(workspaceKey);
-                }
-            }
-        }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-    }
-
-    protected addHandlers() {
+    protected addHandlers(): void {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
-        this.disposables.push(
-            this.interpreterPathService.onDidChange((i) => this.evaluateAutoSelectedInterpreterSafety(i.uri)),
-        );
     }
-    protected addRemoveDocOpenedHandlers() {
+
+    protected addRemoveDocOpenedHandlers(): void {
         if (this.hasMultipleWorkspaces()) {
             if (!this.docOpenedHandler) {
                 this.docOpenedHandler = this.documentManager.onDidOpenTextDocument(this.onDocOpened, this);
@@ -146,8 +138,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             this.docOpenedHandler = undefined;
         }
     }
-    protected onWorkspaceFoldersChanged() {
-        //If an activated workspace folder was removed, delete its key
+
+    protected onWorkspaceFoldersChanged(): void {
+        // If an activated workspace folder was removed, delete its key
         const workspaceKeys = this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
             this.getWorkspaceKey(workspaceFolder.uri),
         );
@@ -160,10 +153,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
         this.addRemoveDocOpenedHandlers();
     }
-    protected hasMultipleWorkspaces() {
-        return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
+
+    protected hasMultipleWorkspaces(): boolean {
+        return (this.workspaceService.workspaceFolders?.length || 0) > 1;
     }
-    protected getWorkspaceKey(resource: Resource) {
+
+    protected getWorkspaceKey(resource: Resource): string {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
     }
 }

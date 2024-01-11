@@ -1,92 +1,63 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable-next-line:no-single-line-block-comment
 /* eslint-disable max-classes-per-file */
 
-import { Event, EventEmitter } from 'vscode';
-import { traceError } from '../../../../common/logger';
-import { DirEntry } from '../../../../common/utils/filesystem';
+import { Event } from 'vscode';
 import { iterPythonExecutablesInDir } from '../../../common/commonUtils';
-import { resolvePath } from '../../../common/externalDependencies';
-import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import { getFastEnvInfo } from '../../info/env';
-import { ILocator, IPythonEnvsIterator, PythonEnvUpdatedEvent, PythonLocatorQuery } from '../../locator';
-import { iterAndUpdateEnvs, resolveEnvFromIterator } from '../../locatorUtils';
+import { PythonEnvKind, PythonEnvSource } from '../../info';
+import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../../locator';
 import { PythonEnvsChangedEvent, PythonEnvsWatcher } from '../../watcher';
 
-type Executable = string | DirEntry;
-
-type GetExecutablesFunc = () => Promise<Executable[]> | AsyncIterableIterator<Executable>;
+type GetExecutablesFunc = () => AsyncIterableIterator<string>;
 
 /**
  * A naive locator the wraps a function that finds Python executables.
  */
-class FoundFilesLocator implements ILocator {
+abstract class FoundFilesLocator implements ILocator<BasicEnvInfo> {
+    public abstract readonly providerId: string;
+
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
 
     protected readonly watcher = new PythonEnvsWatcher();
 
     constructor(
-        private readonly defaultKind: PythonEnvKind,
-        // This is used only in iterEnvs().
+        private readonly kind: PythonEnvKind,
         private readonly getExecutables: GetExecutablesFunc,
+        private readonly source?: PythonEnvSource[],
     ) {
         this.onChanged = this.watcher.onChanged;
     }
 
-    public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator {
-        const executablesPromise = this.getExecutables();
-        const emitter = new EventEmitter<PythonEnvUpdatedEvent | null>();
-        async function* generator(defaultKind: PythonEnvKind): IPythonEnvsIterator {
-            const executables = await executablesPromise;
-            yield* iterAndUpdateEnvs(
-                iterMinimalEnvsFromExecutables(executables, defaultKind),
-                (evt: PythonEnvUpdatedEvent | null) => emitter.fire(evt),
-            );
+    public iterEnvs(_query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
+        const executables = this.getExecutables();
+        async function* generator(kind: PythonEnvKind, source?: PythonEnvSource[]): IPythonEnvsIterator<BasicEnvInfo> {
+            for await (const executablePath of executables) {
+                yield { executablePath, kind, source };
+            }
         }
-        const iterator = generator(this.defaultKind);
-        iterator.onUpdated = emitter.event;
+        const iterator = generator(this.kind, this.source);
         return iterator;
     }
-
-    public async resolveEnv(env: string | Partial<PythonEnvInfo>): Promise<PythonEnvInfo | undefined> {
-        const iterator = this.iterEnvs();
-        return resolveEnvFromIterator(env, iterator);
-    }
 }
 
-/**
- * Build minimal env info corresponding to each executable filename.
- */
-async function* iterMinimalEnvsFromExecutables(
-    executables: Executable[] | AsyncIterableIterator<Executable>,
-    defaultKind: PythonEnvKind,
-): AsyncIterableIterator<PythonEnvInfo> {
-    for await (const executable of executables) {
-        const filename = typeof executable === 'string' ? executable : executable.filename;
-        const normFile = resolvePath(filename);
-        try {
-            yield getFastEnvInfo(defaultKind, normFile);
-        } catch (ex) {
-            traceError(`Failed to process environment: ${normFile}`, ex);
-        }
-    }
-}
-
-type GetDirExecutablesFunc = (dir: string) => AsyncIterableIterator<Executable>;
+type GetDirExecutablesFunc = (dir: string) => AsyncIterableIterator<string>;
 
 /**
  * A locator for executables in a single directory.
  */
 export class DirFilesLocator extends FoundFilesLocator {
+    public readonly providerId: string;
+
     constructor(
         dirname: string,
         defaultKind: PythonEnvKind,
         // This is put in a closure and otherwise passed through as-is.
         getExecutables: GetDirExecutablesFunc = getExecutablesDefault,
+        source?: PythonEnvSource[],
     ) {
-        super(defaultKind, () => getExecutables(dirname));
+        super(defaultKind, () => getExecutables(dirname), source);
+        this.providerId = `dir-files-${dirname}`;
     }
 }
 
@@ -94,8 +65,8 @@ export class DirFilesLocator extends FoundFilesLocator {
 // a subclass of FSWatchingLocator that wraps a DirFilesLocator
 // instance.
 
-async function* getExecutablesDefault(dirname: string): AsyncIterableIterator<DirEntry> {
+async function* getExecutablesDefault(dirname: string): AsyncIterableIterator<string> {
     for await (const entry of iterPythonExecutablesInDir(dirname)) {
-        yield entry;
+        yield entry.filename;
     }
 }

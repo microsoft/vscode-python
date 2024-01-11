@@ -68,7 +68,7 @@ suite('Diagnostisc - Source Maps', () => {
             configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global),
         ).thenResolve();
         when(shell.showWarningMessage(anything(), anything())).thenResolve(
-            Diagnostics.enableSourceMapsAndReloadVSC() as any,
+            Diagnostics.enableSourceMapsAndReloadVSC as any,
         );
         when(commandManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
 

@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { Event } from 'vscode';
+import { Event, Uri } from 'vscode';
 import { createDeferred, flattenIterator, iterable, mapToIterator } from '../../../client/common/utils/async';
 import { getArchitecture } from '../../../client/common/utils/platform';
 import { getVersionString } from '../../../client/common/utils/version';
@@ -11,17 +11,23 @@ import {
     PythonDistroInfo,
     PythonEnvInfo,
     PythonEnvKind,
+    PythonEnvSource,
     PythonExecutableInfo,
 } from '../../../client/pythonEnvironments/base/info';
 import { buildEnvInfo } from '../../../client/pythonEnvironments/base/info/env';
 import { getEmptyVersion, parseVersion } from '../../../client/pythonEnvironments/base/info/pythonVersion';
 import {
+    BasicEnvInfo,
     IPythonEnvsIterator,
+    isProgressEvent,
     Locator,
+    ProgressNotificationEvent,
+    ProgressReportStage,
     PythonEnvUpdatedEvent,
     PythonLocatorQuery,
 } from '../../../client/pythonEnvironments/base/locator';
 import { PythonEnvsChangedEvent } from '../../../client/pythonEnvironments/base/watcher';
+import { noop } from '../../core';
 
 export function createLocatedEnv(
     locationStr: string,
@@ -29,6 +35,7 @@ export function createLocatedEnv(
     kind = PythonEnvKind.Unknown,
     exec: string | PythonExecutableInfo = 'python',
     distro: PythonDistroInfo = { org: '' },
+    searchLocation?: Uri,
 ): PythonEnvInfo {
     const location =
         locationStr === ''
@@ -51,6 +58,7 @@ export function createLocatedEnv(
         executable,
         location,
         version,
+        searchLocation,
     });
     env.arch = getArchitecture();
     env.distro = distro;
@@ -58,6 +66,22 @@ export function createLocatedEnv(
         env.executable = exec;
     }
     return env;
+}
+
+export function createBasicEnv(
+    kind: PythonEnvKind,
+    executablePath: string,
+    source?: PythonEnvSource[],
+    envPath?: string,
+): BasicEnvInfo {
+    const basicEnv = { executablePath, kind, source, envPath };
+    if (!source) {
+        delete basicEnv.source;
+    }
+    if (!envPath) {
+        delete basicEnv.envPath;
+    }
+    return basicEnv;
 }
 
 export function createNamedEnv(
@@ -72,20 +96,23 @@ export function createNamedEnv(
     return env;
 }
 
-export class SimpleLocator extends Locator {
+export class SimpleLocator<I = PythonEnvInfo> extends Locator<I> {
+    public readonly providerId: string = 'SimpleLocator';
+
     private deferred = createDeferred<void>();
 
     constructor(
-        private envs: PythonEnvInfo[],
+        private envs: I[],
         public callbacks: {
-            resolve?: null | ((env: PythonEnvInfo) => Promise<PythonEnvInfo | undefined>);
-            before?: Promise<void>;
-            after?: Promise<void>;
-            onUpdated?: Event<PythonEnvUpdatedEvent | null>;
-            beforeEach?(e: PythonEnvInfo): Promise<void>;
-            afterEach?(e: PythonEnvInfo): Promise<void>;
-            onQuery?(query: PythonLocatorQuery | undefined, envs: PythonEnvInfo[]): Promise<PythonEnvInfo[]>;
+            resolve?: null | ((env: PythonEnvInfo | string) => Promise<PythonEnvInfo | undefined>);
+            before?(): Promise<void>;
+            after?(): Promise<void>;
+            onUpdated?: Event<PythonEnvUpdatedEvent<I> | ProgressNotificationEvent>;
+            beforeEach?(e: I): Promise<void>;
+            afterEach?(e: I): Promise<void>;
+            onQuery?(query: PythonLocatorQuery | undefined, envs: I[]): Promise<I[]>;
         } = {},
+        private options?: { resolveAsString?: boolean },
     ) {
         super();
     }
@@ -98,16 +125,16 @@ export class SimpleLocator extends Locator {
         this.emitter.fire(event);
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator {
+    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<I> {
         const { deferred } = this;
         const { callbacks } = this;
         let { envs } = this;
-        const iterator: IPythonEnvsIterator = (async function* () {
+        const iterator: IPythonEnvsIterator<I> = (async function* () {
             if (callbacks?.onQuery !== undefined) {
                 envs = await callbacks.onQuery(query, envs);
             }
             if (callbacks.before !== undefined) {
-                await callbacks.before;
+                await callbacks.before();
             }
             if (callbacks.beforeEach !== undefined) {
                 // The results will likely come in a different order.
@@ -130,7 +157,7 @@ export class SimpleLocator extends Locator {
                 }
             }
             if (callbacks?.after !== undefined) {
-                await callbacks.after;
+                await callbacks.after();
             }
             deferred.resolve();
         })();
@@ -138,23 +165,65 @@ export class SimpleLocator extends Locator {
         return iterator;
     }
 
-    public async resolveEnv(env: string | PythonEnvInfo): Promise<PythonEnvInfo | undefined> {
-        const envInfo: PythonEnvInfo =
-            typeof env === 'string'
-                ? createLocatedEnv('', '', undefined, env) // an executable
-                : env;
+    public async resolveEnv(env: string): Promise<PythonEnvInfo | undefined> {
+        const envInfo: PythonEnvInfo = createLocatedEnv('', '', undefined, env);
         if (this.callbacks.resolve === undefined) {
             return envInfo;
         }
         if (this.callbacks?.resolve === null) {
             return undefined;
         }
-        return this.callbacks.resolve(envInfo);
+        return this.callbacks.resolve(this.options?.resolveAsString ? env : envInfo);
     }
 }
 
-export async function getEnvs(iterator: IPythonEnvsIterator): Promise<PythonEnvInfo[]> {
+export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I>): Promise<I[]> {
     return flattenIterator(iterator);
+}
+
+/**
+ * Unroll the given iterator into an array.
+ *
+ * This includes applying any received updates.
+ */
+export async function getEnvsWithUpdates<I = PythonEnvInfo>(
+    iterator: IPythonEnvsIterator<I>,
+    iteratorUpdateCallback: () => void = noop,
+): Promise<I[]> {
+    const envs: (I | undefined)[] = [];
+
+    const updatesDone = createDeferred<void>();
+    if (iterator.onUpdated === undefined) {
+        updatesDone.resolve();
+    } else {
+        const listener = iterator.onUpdated((event) => {
+            if (isProgressEvent(event)) {
+                if (event.stage !== ProgressReportStage.discoveryFinished) {
+                    return;
+                }
+                updatesDone.resolve();
+                listener.dispose();
+            } else {
+                const { index, update } = event;
+                // We don't worry about if envs[index] is set already.
+                envs[index] = update;
+            }
+        });
+    }
+
+    let itemIndex = 0;
+    for await (const env of iterator) {
+        // We can't just push because updates might get emitted early.
+        if (envs[itemIndex] === undefined) {
+            envs[itemIndex] = env;
+        }
+        itemIndex += 1;
+    }
+    iteratorUpdateCallback();
+    await updatesDone.promise;
+
+    // Do not return invalid environments
+    return envs.filter((e) => e !== undefined).map((e) => e!);
 }
 
 export function sortedEnvs(envs: PythonEnvInfo[]): PythonEnvInfo[] {

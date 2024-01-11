@@ -3,10 +3,9 @@
 
 import { instance, mock } from 'ts-mockito';
 import { IServiceContainer, IServiceManager } from '../../client/ioc/types';
-import { PythonEnvironments } from '../../client/pythonEnvironments/api';
+import { IDiscoveryAPI } from '../../client/pythonEnvironments/base/locator';
 import { initializeExternalDependencies } from '../../client/pythonEnvironments/common/externalDependencies';
-import { registerLegacyDiscoveryForIOC, registerNewDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
-import { EnvironmentsSecurity } from '../../client/pythonEnvironments/security';
+import { registerNewDiscoveryForIOC } from '../../client/pythonEnvironments/legacyIOC';
 
 /**
  * This is here to support old tests.
@@ -18,10 +17,5 @@ export async function registerForIOC(
 ): Promise<void> {
     initializeExternalDependencies(serviceContainer);
     // The old tests do not need real instances, directly pass in mocks.
-    registerNewDiscoveryForIOC(
-        serviceManager,
-        instance(mock(PythonEnvironments)),
-        instance(mock(EnvironmentsSecurity)),
-    );
-    await registerLegacyDiscoveryForIOC(serviceManager);
+    registerNewDiscoveryForIOC(serviceManager, instance(mock<IDiscoveryAPI>()));
 }

@@ -222,11 +222,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         const packageJson = {
             version: 'extensionVersion',
         };
-        const prompts = [
-            ExtensionSurveyBanner.bannerLabelYes(),
-            ExtensionSurveyBanner.maybeLater(),
-            Common.doNotShowAgain(),
-        ];
+        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
         const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=sessionId`;
         appEnvironment
             .setup((a) => a.packageJson)
@@ -245,8 +241,8 @@ suite('Extension survey prompt - showSurvey()', () => {
             .returns(() => OSType.Windows)
             .verifiable(TypeMoq.Times.once());
         appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-            .returns(() => Promise.resolve(ExtensionSurveyBanner.bannerLabelYes()))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
+            .returns(() => Promise.resolve(ExtensionSurveyBanner.bannerLabelYes))
             .verifiable(TypeMoq.Times.once());
         browserService
             .setup((s) => s.launch(expectedUrl))
@@ -282,15 +278,11 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 
     test("Do nothing if 'Maybe later' option is clicked", async () => {
-        const prompts = [
-            ExtensionSurveyBanner.bannerLabelYes(),
-            ExtensionSurveyBanner.maybeLater(),
-            Common.doNotShowAgain(),
-        ];
+        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-            .returns(() => Promise.resolve(ExtensionSurveyBanner.maybeLater()))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
+            .returns(() => Promise.resolve(ExtensionSurveyBanner.maybeLater))
             .verifiable(TypeMoq.Times.once());
         browserService
             .setup((s) => s.launch(TypeMoq.It.isAny()))
@@ -325,14 +317,10 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 
     test('Do nothing if no option is clicked', async () => {
-        const prompts = [
-            ExtensionSurveyBanner.bannerLabelYes(),
-            ExtensionSurveyBanner.maybeLater(),
-            Common.doNotShowAgain(),
-        ];
+        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         browserService
@@ -367,16 +355,12 @@ suite('Extension survey prompt - showSurvey()', () => {
         platformService.verifyAll();
     });
 
-    test("Disable prompt if 'Do not show again' option is clicked", async () => {
-        const prompts = [
-            ExtensionSurveyBanner.bannerLabelYes(),
-            ExtensionSurveyBanner.maybeLater(),
-            Common.doNotShowAgain(),
-        ];
+    test('Disable prompt if "Don\'t show again" option is clicked', async () => {
+        const prompts = [ExtensionSurveyBanner.bannerLabelYes, ExtensionSurveyBanner.maybeLater, Common.doNotShowAgain];
         platformService.setup((p) => p.osType).verifiable(TypeMoq.Times.never());
         appShell
-            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
-            .returns(() => Promise.resolve(Common.doNotShowAgain()))
+            .setup((a) => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage, ...prompts))
+            .returns(() => Promise.resolve(Common.doNotShowAgain))
             .verifiable(TypeMoq.Times.once());
         browserService
             .setup((s) => s.launch(TypeMoq.It.isAny()))

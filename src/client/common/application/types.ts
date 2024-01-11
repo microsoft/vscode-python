@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
 import {
     Breakpoint,
     BreakpointsChangeEvent,
@@ -14,6 +16,7 @@ import {
     DebugConsole,
     DebugSession,
     DebugSessionCustomEvent,
+    DebugSessionOptions,
     DecorationRenderOptions,
     Disposable,
     DocumentSelector,
@@ -22,10 +25,11 @@ import {
     GlobPattern,
     InputBox,
     InputBoxOptions,
+    LanguageStatusItem,
+    LogOutputChannel,
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
-    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -50,7 +54,6 @@ import {
     UIKind,
     Uri,
     ViewColumn,
-    WebviewPanel,
     WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
@@ -58,25 +61,71 @@ import {
     WorkspaceFolderPickOptions,
     WorkspaceFoldersChangeEvent,
 } from 'vscode';
-import type { NotebookConcatTextDocument, NotebookDocument } from 'vscode-proposed';
 
-import { IAsyncDisposable, Resource } from '../types';
+import { Channel } from '../constants';
+import { Resource } from '../types';
+import { ICommandNameArgumentTypeMapping } from './commands';
+import { ExtensionContextKey } from './contextKeys';
 
-export enum CommandSource {
-    auto = 'auto',
-    ui = 'ui',
-    codelens = 'codelens',
-    commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer',
+export interface TerminalDataWriteEvent {
+    /**
+     * The {@link Terminal} for which the data was written.
+     */
+    readonly terminal: Terminal;
+    /**
+     * The data being written.
+     */
+    readonly data: string;
+}
+
+export interface TerminalExecutedCommand {
+    /**
+     * The {@link Terminal} the command was executed in.
+     */
+    terminal: Terminal;
+    /**
+     * The full command line that was executed, including both the command and the arguments.
+     */
+    commandLine: string | undefined;
+    /**
+     * The current working directory that was reported by the shell. This will be a {@link Uri}
+     * if the string reported by the shell can reliably be mapped to the connected machine.
+     */
+    cwd: Uri | string | undefined;
+    /**
+     * The exit code reported by the shell.
+     */
+    exitCode: number | undefined;
+    /**
+     * The output of the command when it has finished executing. This is the plain text shown in
+     * the terminal buffer and does not include raw escape sequences. Depending on the shell
+     * setup, this may include the command line as part of the output.
+     */
+    output: string | undefined;
 }
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
     /**
+     * An event that is emitted when a terminal with shell integration activated has completed
+     * executing a command.
+     *
+     * Note that this event will not fire if the executed command exits the shell, listen to
+     * {@link onDidCloseTerminal} to handle that case.
+     */
+    readonly onDidExecuteTerminalCommand: Event<TerminalExecutedCommand> | undefined;
+    /**
      * An [event](#Event) which fires when the focus state of the current window
      * changes. The value of the event represents whether the window is focused.
      */
     readonly onDidChangeWindowState: Event<WindowState>;
+
+    /**
+     * An event which fires when the terminal's child pseudo-device is written to (the shell).
+     * In other words, this provides access to the raw data stream from the process running
+     * within the terminal, including VT sequences.
+     */
+    readonly onDidWriteTerminalData: Event<TerminalDataWriteEvent>;
 
     showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
 
@@ -278,6 +327,19 @@ export interface IApplicationShell {
     showInputBox(options?: InputBoxOptions, token?: CancellationToken): Thenable<string | undefined>;
 
     /**
+     * Show the given document in a text editor. A {@link ViewColumn column} can be provided
+     * to control where the editor is being shown. Might change the {@link window.activeTextEditor active editor}.
+     *
+     * @param document A text document to be shown.
+     * @param column A view column in which the {@link TextEditor editor} should be shown. The default is the {@link ViewColumn.Active active}, other values
+     * are adjusted to be `Min(column, columnCount + 1)`, the {@link ViewColumn.Active active}-column is not adjusted. Use {@linkcode ViewColumn.Beside}
+     * to open the editor to the side of the currently active one.
+     * @param preserveFocus When `true` the editor will not take focus.
+     * @return A promise that resolves to an {@link TextEditor editor}.
+     */
+    showTextDocument(document: TextDocument, column?: ViewColumn, preserveFocus?: boolean): Thenable<TextEditor>;
+
+    /**
      * Creates a [QuickPick](#QuickPick) to let the user pick an item from a list
      * of items of type T.
      *
@@ -324,6 +386,7 @@ export interface IApplicationShell {
      * @param hideWhenDone Thenable on which completion (resolve or reject) the message will be disposed.
      * @return A disposable which hides the status bar message.
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setStatusBarMessage(text: string, hideWhenDone: Thenable<any>): Disposable;
 
     /**
@@ -345,7 +408,7 @@ export interface IApplicationShell {
      * @param priority The priority of the item. Higher values mean the item should be shown more to the left.
      * @return A new status bar item.
      */
-    createStatusBarItem(alignment?: StatusBarAlignment, priority?: number): StatusBarItem;
+    createStatusBarItem(alignment?: StatusBarAlignment, priority?: number, id?: string): StatusBarItem;
     /**
      * Shows a selection list of [workspace folders](#workspace.workspaceFolders) to pick from.
      * Returns `undefined` if no folder is open.
@@ -419,7 +482,8 @@ export interface IApplicationShell {
      *
      * @param name Human-readable string which will be used to represent the channel in the UI.
      */
-    createOutputChannel(name: string): OutputChannel;
+    createOutputChannel(name: string): LogOutputChannel;
+    createLanguageStatusItem(id: string, selector: DocumentSelector): LanguageStatusItem;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -437,7 +501,13 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable;
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        callback: (...args: U) => any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        thisArg?: any,
+    ): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -455,7 +525,9 @@ export interface ICommandManager {
      */
     registerTextEditorCommand(
         command: string,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         thisArg?: any,
     ): Disposable;
 
@@ -473,7 +545,10 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T>(command: string, ...rest: any[]): Thenable<T | undefined>;
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        ...rest: U
+    ): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are
@@ -485,10 +560,14 @@ export interface ICommandManager {
     getCommands(filterInternal?: boolean): Thenable<string[]>;
 }
 
+export const IContextKeyManager = Symbol('IContextKeyManager');
+export interface IContextKeyManager {
+    setContext(key: ExtensionContextKey, value: boolean): Promise<void>;
+}
+
 export const IJupyterExtensionDependencyManager = Symbol('IJupyterExtensionDependencyManager');
 export interface IJupyterExtensionDependencyManager {
     readonly isJupyterExtensionInstalled: boolean;
-    installJupyterExtension(commandManager: ICommandManager): Promise<undefined>;
 }
 
 export const IDocumentManager = Symbol('IDocumentManager');
@@ -510,7 +589,7 @@ export interface IDocumentManager {
     /**
      * The currently visible editors or an empty array.
      */
-    readonly visibleTextEditors: TextEditor[];
+    readonly visibleTextEditors: readonly TextEditor[];
 
     /**
      * An [event](#Event) which fires when the [active editor](#window.activeTextEditor)
@@ -530,7 +609,7 @@ export interface IDocumentManager {
      * An [event](#Event) which fires when the array of [visible editors](#window.visibleTextEditors)
      * has changed.
      */
-    readonly onDidChangeVisibleTextEditors: Event<TextEditor[]>;
+    readonly onDidChangeVisibleTextEditors: Event<readonly TextEditor[]>;
 
     /**
      * An [event](#Event) which fires when the selection in an editor has changed.
@@ -664,6 +743,16 @@ export interface IWorkspaceService {
     readonly rootPath: string | undefined;
 
     /**
+     * When true, the user has explicitly trusted the contents of the workspace.
+     */
+    readonly isTrusted: boolean;
+
+    /**
+     * Event that fires when the current workspace has been trusted.
+     */
+    readonly onDidGrantWorkspaceTrust: Event<void>;
+
+    /**
      * List of workspace folders or `undefined` when no folder is open.
      * *Note* that the first entry corresponds to the value of `rootPath`.
      *
@@ -712,12 +801,9 @@ export interface IWorkspaceService {
      */
     readonly onDidChangeConfiguration: Event<ConfigurationChangeEvent>;
     /**
-     * Whether a workspace folder exists
-     * @type {boolean}
-     * @memberof IWorkspaceService
+     * Returns if we're running in a virtual workspace.
      */
-    readonly hasWorkspaceFolders: boolean;
-
+    readonly isVirtualWorkspace: boolean;
     /**
      * Returns the [workspace folder](#WorkspaceFolder) that contains a given uri.
      * * returns `undefined` when the given uri doesn't match any workspace folder
@@ -804,9 +890,30 @@ export interface IWorkspaceService {
      *
      * @param section A dot-separated identifier.
      * @param resource A resource for which the configuration is asked for
+     * @param languageSpecific Should the [python] language-specific settings be obtained?
      * @return The full configuration or a subset.
      */
-    getConfiguration(section?: string, resource?: Uri): WorkspaceConfiguration;
+    getConfiguration(section?: string, resource?: Uri, languageSpecific?: boolean): WorkspaceConfiguration;
+
+    /**
+     * Opens an untitled text document. The editor will prompt the user for a file
+     * path when the document is to be saved. The `options` parameter allows to
+     * specify the *language* and/or the *content* of the document.
+     *
+     * @param options Options to control how the document will be created.
+     * @return A promise that resolves to a {@link TextDocument document}.
+     */
+    openTextDocument(options?: { language?: string; content?: string }): Thenable<TextDocument>;
+    /**
+     * Saves the editor identified by the given resource and returns the resulting resource or `undefined`
+     * if save was not successful.
+     *
+     * **Note** that an editor with the provided resource must be opened in order to be saved.
+     *
+     * @param uri the associated uri for the opened editor to save.
+     * @return A thenable that resolves when the save operation has finished.
+     */
+    save(uri: Uri): Thenable<Uri | undefined>;
 }
 
 export const ITerminalManager = Symbol('ITerminalManager');
@@ -849,7 +956,7 @@ export interface IDebugService {
     /**
      * List of breakpoints.
      */
-    readonly breakpoints: Breakpoint[];
+    readonly breakpoints: readonly Breakpoint[];
 
     /**
      * An [event](#Event) which fires when the [active debug session](#debug.activeDebugSession)
@@ -921,7 +1028,7 @@ export interface IDebugService {
     startDebugging(
         folder: WorkspaceFolder | undefined,
         nameOrConfiguration: string | DebugConfiguration,
-        parentSession?: DebugSession,
+        parentSession?: DebugSession | DebugSessionOptions,
     ): Thenable<boolean>;
 
     /**
@@ -987,6 +1094,7 @@ export interface IApplicationEnvironment {
      * @type {any}
      * @memberof IApplicationEnvironment
      */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     readonly packageJson: any;
     /**
      * Gets the full path to the user settings file. (may or may not exist).
@@ -1003,6 +1111,10 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly shell: string;
+    /**
+     * An {@link Event} which fires when the default shell changes.
+     */
+    readonly onDidChangeShell: Event<string>;
     /**
      * Gets the vscode channel (whether 'insiders' or 'stable').
      */
@@ -1028,117 +1140,16 @@ export interface IApplicationEnvironment {
      * from a desktop application or a web browser.
      */
     readonly uiKind: UIKind;
-}
-
-export interface IWebviewMessageListener {
     /**
-     * Listens to webview messages
-     * @param message: the message being sent
-     * @param payload: extra data that came with the message
-     */
-    onMessage(message: string, payload: any): void;
-}
-
-export const IWebviewPanelMessageListener = Symbol('IWebviewPanelMessageListener');
-export interface IWebviewPanelMessageListener extends IWebviewMessageListener, IAsyncDisposable {
-    /**
-     * Listens to web panel state changes
-     */
-    onChangeViewState(panel: IWebviewPanel): void;
-}
-
-export type WebviewMessage = {
-    /**
-     * Message type
-     */
-    type: string;
-
-    /**
-     * Payload
-     */
-    payload?: any;
-};
-
-// Wraps a VS Code webview
-export const IWebview = Symbol('IWebview');
-export interface IWebview {
-    /**
-     * Sends a message to the hosted html page
-     */
-    postMessage(message: WebviewMessage): void;
-    /**
-     * Convert a uri for the local file system to one that can be used inside webviews.
+     * The name of a remote. Defined by extensions, popular samples are `wsl` for the Windows
+     * Subsystem for Linux or `ssh-remote` for remotes using a secure shell.
      *
-     * Webviews cannot directly load resources from the workspace or local file system using `file:` uris. The
-     * `asWebviewUri` function takes a local `file:` uri and converts it into a uri that can be used inside of
-     * a webview to load the same resource:
-     *
-     * ```ts
-     * webview.html = `<img src="${webview.asWebviewUri(vscode.Uri.file('/Users/codey/workspace/cat.gif'))}">`
-     * ```
+     * *Note* that the value is `undefined` when there is no remote extension host but that the
+     * value is defined in all extension hosts (local and remote) in case a remote extension host
+     * exists. Use {@link Extension.extensionKind} to know if
+     * a specific extension runs remote or not.
      */
-    asWebviewUri(localResource: Uri): Uri;
-}
-
-// Wraps the VS Code webview panel
-export const IWebviewPanel = Symbol('IWebviewPanel');
-export interface IWebviewPanel extends IWebview {
-    /**
-     * Event is fired when the load for a web panel fails
-     */
-    readonly loadFailed: Event<void>;
-    setTitle(val: string): void;
-    /**
-     * Makes the webpanel show up.
-     * @return A Promise that can be waited on
-     */
-    show(preserveFocus: boolean): Promise<void>;
-
-    /**
-     * Indicates if this web panel is visible or not.
-     */
-    isVisible(): boolean;
-
-    /**
-     * Attempts to close the panel if it's visible
-     */
-    close(): void;
-    /**
-     * Indicates if the webview has the focus or not.
-     */
-    isActive(): boolean;
-    /**
-     * Updates the current working directory for serving up files.
-     * @param cwd
-     */
-    updateCwd(cwd: string): void;
-}
-
-export interface IWebviewOptions {
-    rootPath: string;
-    cwd: string;
-    scripts: string[];
-}
-
-export interface IWebviewPanelOptions extends IWebviewOptions {
-    viewColumn: ViewColumn;
-    listener: IWebviewPanelMessageListener;
-    title: string;
-    /**
-     * Additional paths apart from cwd and rootPath, that webview would allow loading resources/files from.
-     * E.g. required for webview to serve images from worksapces when nb is in a nested folder.
-     */
-    additionalPaths?: string[];
-
-    settings?: any;
-    // Web panel to use if supplied by VS code instead
-    webViewPanel?: WebviewPanel;
-}
-
-// Wraps the VS Code api for creating a web panel
-export const IWebviewPanelProvider = Symbol('IWebviewPanelProvider');
-export interface IWebviewPanelProvider {
-    create(options: IWebviewPanelOptions): Promise<IWebviewPanel>;
+    readonly remoteName: string | undefined;
 }
 
 export const ILanguageService = Symbol('ILanguageService');
@@ -1164,8 +1175,6 @@ export interface ILanguageService {
     ): Disposable;
 }
 
-export type Channel = 'stable' | 'insiders';
-
 /**
  * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing
  */
@@ -1173,287 +1182,6 @@ export const IActiveResourceService = Symbol('IActiveResourceService');
 export interface IActiveResourceService {
     getActiveResource(): Resource;
 }
-
-// Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
-
-//#region Custom editor https://github.com/microsoft/vscode/issues/77131
-
-/**
- * Represents a custom document used by a [`CustomEditorProvider`](#CustomEditorProvider).
- *
- * Custom documents are only used within a given `CustomEditorProvider`. The lifecycle of a `CustomDocument` is
- * managed by VS Code. When no more references remain to a `CustomDocument`, it is disposed of.
- */
-export interface CustomDocument {
-    /**
-     * The associated uri for this document.
-     */
-    readonly uri: Uri;
-
-    /**
-     * Dispose of the custom document.
-     *
-     * This is invoked by VS Code when there are no more references to a given `CustomDocument` (for example when
-     * all editors associated with the document have been closed.)
-     */
-    dispose(): void;
-}
-
-/**
- * Event triggered by extensions to signal to VS Code that an edit has occurred on an [`CustomDocument`](#CustomDocument).
- *
- * @see [`CustomDocumentProvider.onDidChangeCustomDocument`](#CustomDocumentProvider.onDidChangeCustomDocument).
- */
-export interface CustomDocumentEditEvent<T extends CustomDocument = CustomDocument> {
-    /**
-     * The document that the edit is for.
-     */
-    readonly document: T;
-
-    /**
-     * Display name describing the edit.
-     *
-     * This is shown in the UI to users.
-     */
-    readonly label?: string;
-
-    /**
-     * Undo the edit operation.
-     *
-     * This is invoked by VS Code when the user undoes this edit. To implement `undo`, your
-     * extension should restore the document and editor to the state they were in just before this
-     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
-     */
-    undo(): Thenable<void> | void;
-
-    /**
-     * Redo the edit operation.
-     *
-     * This is invoked by VS Code when the user redoes this edit. To implement `redo`, your
-     * extension should restore the document and editor to the state they were in just after this
-     * edit was added to VS Code's internal edit stack by `onDidChangeCustomDocument`.
-     */
-    redo(): Thenable<void> | void;
-}
-
-/**
- * Event triggered by extensions to signal to VS Code that the content of a [`CustomDocument`](#CustomDocument)
- * has changed.
- *
- * @see [`CustomDocumentProvider.onDidChangeCustomDocument`](#CustomDocumentProvider.onDidChangeCustomDocument).
- */
-export interface CustomDocumentContentChangeEvent<T extends CustomDocument = CustomDocument> {
-    /**
-     * The document that the change is for.
-     */
-    readonly document: T;
-}
-
-/**
- * A backup for an [`CustomDocument`](#CustomDocument).
- */
-export interface CustomDocumentBackup {
-    /**
-     * Unique identifier for the backup.
-     *
-     * This id is passed back to your extension in `openCustomDocument` when opening a custom editor from a backup.
-     */
-    readonly id: string;
-
-    /**
-     * Delete the current backup.
-     *
-     * This is called by VS Code when it is clear the current backup is no longer needed, such as when a new backup
-     * is made or when the file is saved.
-     */
-    delete(): void;
-}
-
-/**
- * Additional information used to implement [`CustomEditableDocument.backup`](#CustomEditableDocument.backup).
- */
-export interface CustomDocumentBackupContext {
-    /**
-     * Suggested file location to write the new backup.
-     *
-     * Note that your extension is free to ignore this and use its own strategy for backup.
-     *
-     * For editors for workspace resource, this destination will be in the workspace storage. The path may not
-     */
-    readonly destination: Uri;
-}
-
-/**
- * Additional information about the opening custom document.
- */
-export interface CustomDocumentOpenContext {
-    /**
-     * The id of the backup to restore the document from or `undefined` if there is no backup.
-     *
-     * If this is provided, your extension should restore the editor from the backup instead of reading the file
-     * the user's workspace.
-     */
-    readonly backupId?: string;
-}
-
-/**
- * Provider for readonly custom editors that use a custom document model.
- *
- * Custom editors use [`CustomDocument`](#CustomDocument) as their document model instead of a [`TextDocument`](#TextDocument).
- *
- * You should use this type of custom editor when dealing with binary files or more complex scenarios. For simple
- * text based documents, use [`CustomTextEditorProvider`](#CustomTextEditorProvider) instead.
- *
- * @param T Type of the custom document returned by this provider.
- */
-export interface CustomReadonlyEditorProvider<T extends CustomDocument = CustomDocument> {
-    /**
-     * Create a new document for a given resource.
-     *
-     * `openCustomDocument` is called when the first editor for a given resource is opened, and the resolve document
-     * is passed to `resolveCustomEditor`. The resolved `CustomDocument` is re-used for subsequent editor opens.
-     * If all editors for a given resource are closed, the `CustomDocument` is disposed of. Opening an editor at
-     * this point will trigger another call to `openCustomDocument`.
-     *
-     * @param uri Uri of the document to open.
-     * @param openContext Additional information about the opening custom document.
-     * @param token A cancellation token that indicates the result is no longer needed.
-     *
-     * @return The custom document.
-     */
-    openCustomDocument(uri: Uri, openContext: CustomDocumentOpenContext, token: CancellationToken): Thenable<T> | T;
-
-    /**
-     * Resolve a custom editor for a given resource.
-     *
-     * This is called whenever the user opens a new editor for this `CustomEditorProvider`.
-     *
-     * To resolve a custom editor, the provider must fill in its initial html content and hook up all
-     * the event listeners it is interested it. The provider can also hold onto the `WebviewPanel` to use later,
-     * for example in a command. See [`WebviewPanel`](#WebviewPanel) for additional details.
-     *
-     * @param document Document for the resource being resolved.
-     * @param webviewPanel Webview to resolve.
-     * @param token A cancellation token that indicates the result is no longer needed.
-     *
-     * @return Optional thenable indicating that the custom editor has been resolved.
-     */
-    resolveCustomEditor(document: T, webviewPanel: WebviewPanel, token: CancellationToken): Thenable<void> | void;
-}
-
-/**
- * Provider for editiable custom editors that use a custom document model.
- *
- * Custom editors use [`CustomDocument`](#CustomDocument) as their document model instead of a [`TextDocument`](#TextDocument).
- * This gives extensions full control over actions such as edit, save, and backup.
- *
- * You should use this type of custom editor when dealing with binary files or more complex scenarios. For simple
- * text based documents, use [`CustomTextEditorProvider`](#CustomTextEditorProvider) instead.
- *
- * @param T Type of the custom document returned by this provider.
- */
-export interface CustomEditorProvider<T extends CustomDocument = CustomDocument>
-    extends CustomReadonlyEditorProvider<T> {
-    /**
-     * Signal that an edit has occurred inside a custom editor.
-     *
-     * This event must be fired by your extension whenever an edit happens in a custom editor. An edit can be
-     * anything from changing some text, to cropping an image, to reordering a list. Your extension is free to
-     * define what an edit is and what data is stored on each edit.
-     *
-     * Firing `onDidChange` causes VS Code to mark the editors as being dirty. This is cleared when the user either
-     * saves or reverts the file.
-     *
-     * Editors that support undo/redo must fire a `CustomDocumentEditEvent` whenever an edit happens. This allows
-     * users to undo and redo the edit using VS Code's standard VS Code keyboard shortcuts. VS Code will also mark
-     * the editor as no longer being dirty if the user undoes all edits to the last saved state.
-     *
-     * Editors that support editing but cannot use VS Code's standard undo/redo mechanism must fire a `CustomDocumentContentChangeEvent`.
-     * The only way for a user to clear the dirty state of an editor that does not support undo/redo is to either
-     * `save` or `revert` the file.
-     *
-     * An editor should only ever fire `CustomDocumentEditEvent` events, or only ever fire `CustomDocumentContentChangeEvent` events.
-     */
-    readonly onDidChangeCustomDocument: Event<CustomDocumentEditEvent<T>> | Event<CustomDocumentContentChangeEvent<T>>;
-
-    /**
-     * Save a custom document.
-     *
-     * This method is invoked by VS Code when the user saves a custom editor. This can happen when the user
-     * triggers save while the custom editor is active, by commands such as `save all`, or by auto save if enabled.
-     *
-     * To implement `save`, the implementer must persist the custom editor. This usually means writing the
-     * file data for the custom document to disk. After `save` completes, any associated editor instances will
-     * no longer be marked as dirty.
-     *
-     * @param document Document to save.
-     * @param cancellation Token that signals the save is no longer required (for example, if another save was triggered).
-     *
-     * @return Thenable signaling that saving has completed.
-     */
-    saveCustomDocument(document: T, cancellation: CancellationToken): Thenable<void>;
-
-    /**
-     * Save a custom document to a different location.
-     *
-     * This method is invoked by VS Code when the user triggers 'save as' on a custom editor. The implementer must
-     * persist the custom editor to `destination`.
-     *
-     * When the user accepts save as, the current editor is be replaced by an non-dirty editor for the newly saved file.
-     *
-     * @param document Document to save.
-     * @param destination Location to save to.
-     * @param cancellation Token that signals the save is no longer required.
-     *
-     * @return Thenable signaling that saving has completed.
-     */
-    saveCustomDocumentAs(document: T, destination: Uri, cancellation: CancellationToken): Thenable<void>;
-
-    /**
-     * Revert a custom document to its last saved state.
-     *
-     * This method is invoked by VS Code when the user triggers `File: Revert File` in a custom editor. (Note that
-     * this is only used using VS Code's `File: Revert File` command and not on a `git revert` of the file).
-     *
-     * To implement `revert`, the implementer must make sure all editor instances (webviews) for `document`
-     * are displaying the document in the same state is saved in. This usually means reloading the file from the
-     * workspace.
-     *
-     * @param document Document to revert.
-     * @param cancellation Token that signals the revert is no longer required.
-     *
-     * @return Thenable signaling that the change has completed.
-     */
-    revertCustomDocument(document: T, cancellation: CancellationToken): Thenable<void>;
-
-    /**
-     * Back up a dirty custom document.
-     *
-     * Backups are used for hot exit and to prevent data loss. Your `backup` method should persist the resource in
-     * its current state, i.e. with the edits applied. Most commonly this means saving the resource to disk in
-     * the `ExtensionContext.storagePath`. When VS Code reloads and your custom editor is opened for a resource,
-     * your extension should first check to see if any backups exist for the resource. If there is a backup, your
-     * extension should load the file contents from there instead of from the resource in the workspace.
-     *
-     * `backup` is triggered whenever an edit it made. Calls to `backup` are debounced so that if multiple edits are
-     * made in quick succession, `backup` is only triggered after the last one. `backup` is not invoked when
-     * `auto save` is enabled (since auto save already persists resource ).
-     *
-     * @param document Document to backup.
-     * @param context Information that can be used to backup the document.
-     * @param cancellation Token that signals the current backup since a new backup is coming in. It is up to your
-     * extension to decided how to respond to cancellation. If for example your extension is backing up a large file
-     * in an operation that takes time to complete, your extension may decide to finish the ongoing backup rather
-     * than cancelling it to ensure that VS Code has some valid backup.
-     */
-    backupCustomDocument(
-        document: T,
-        context: CustomDocumentBackupContext,
-        cancellation: CancellationToken,
-    ): Thenable<CustomDocumentBackup>;
-}
-
-// #endregion
 
 export const IClipboard = Symbol('IClipboard');
 export interface IClipboard {
@@ -1466,11 +1194,4 @@ export interface IClipboard {
      * Writes text into the clipboard.
      */
     writeText(value: string): Promise<void>;
-}
-export const IVSCodeNotebook = Symbol('IVSCodeNotebook');
-export interface IVSCodeNotebook {
-    readonly notebookDocuments: ReadonlyArray<NotebookDocument>;
-    readonly onDidOpenNotebookDocument: Event<NotebookDocument>;
-    readonly onDidCloseNotebookDocument: Event<NotebookDocument>;
-    createConcatTextDocument(notebook: NotebookDocument, selector?: DocumentSelector): NotebookConcatTextDocument;
 }

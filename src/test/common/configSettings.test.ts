@@ -1,11 +1,10 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IWorkspaceSymbolSettings } from '../../client/common/types';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
-import { getExtensionSettings } from '../common';
+import { getExtensionSettings } from '../extensionSettings';
 import { initialize } from './../initialize';
+import { isWindows } from '../../client/common/platform/platformService';
 
 const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');
 
@@ -28,28 +27,10 @@ suite('Configuration Settings', () => {
             }
 
             const pythonSettingValue = (pythonSettings as any)[key] as string;
-            if (key.endsWith('Path') && IS_WINDOWS) {
-                assert.equal(
+            if (key.endsWith('Path') && isWindows()) {
+                assert.strictEqual(
                     settingValue.toUpperCase(),
                     pythonSettingValue.toUpperCase(),
-                    `Setting ${key} not the same`,
-                );
-            } else if (key === 'workspaceSymbols' && IS_WINDOWS) {
-                const workspaceSettings = (pythonSettingValue as {}) as IWorkspaceSymbolSettings;
-                const workspaceSttings = (settingValue as {}) as IWorkspaceSymbolSettings;
-                assert.equal(
-                    workspaceSettings.tagFilePath.toUpperCase(),
-                    workspaceSttings.tagFilePath.toUpperCase(),
-                    `Setting ${key} not the same`,
-                );
-
-                const workspaceSettingsWithoutPath = { ...workspaceSettings };
-                workspaceSettingsWithoutPath.tagFilePath = '';
-                const pythonSettingValueWithoutPath = { ...((pythonSettingValue as {}) as IWorkspaceSymbolSettings) };
-                pythonSettingValueWithoutPath.tagFilePath = '';
-                assert.deepEqual(
-                    workspaceSettingsWithoutPath,
-                    pythonSettingValueWithoutPath,
                     `Setting ${key} not the same`,
                 );
             }

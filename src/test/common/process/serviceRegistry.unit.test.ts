@@ -4,13 +4,11 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonToolExecutionService } from '../../../client/common/process/pythonToolService';
 import { registerTypes } from '../../../client/common/process/serviceRegistry';
 import {
-    IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonToolExecutionService,
@@ -27,7 +25,6 @@ suite('Common Process Service Registry', () => {
 
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
-        verify(serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder)).once();
         verify(
             serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory),
         ).once();

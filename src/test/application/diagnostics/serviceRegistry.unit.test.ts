@@ -4,7 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
-import { IExtensionSingleActivationService, LanguageServerType } from '../../../client/activation/types';
+import { IExtensionSingleActivationService } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
@@ -15,13 +15,9 @@ import {
     InvalidLaunchJsonDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
-    InvalidPythonPathInDebuggerService,
-    InvalidPythonPathInDebuggerServiceId,
-} from '../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
-import {
-    LSNotSupportedDiagnosticService,
-    LSNotSupportedDiagnosticServiceId,
-} from '../../../client/application/diagnostics/checks/lsNotSupported';
+    JediPython27NotSupportedDiagnosticService,
+    JediPython27NotSupportedDiagnosticServiceId,
+} from '../../../client/application/diagnostics/checks/jediPython27NotSupported';
 import {
     InvalidMacPythonInterpreterService,
     InvalidMacPythonInterpreterServiceId,
@@ -35,13 +31,9 @@ import {
     InvalidPythonInterpreterServiceId,
 } from '../../../client/application/diagnostics/checks/pythonInterpreter';
 import {
-    PythonPathDeprecatedDiagnosticService,
-    PythonPathDeprecatedDiagnosticServiceId,
-} from '../../../client/application/diagnostics/checks/pythonPathDeprecated';
-import {
-    UpgradeCodeRunnerDiagnosticService,
-    UpgradeCodeRunnerDiagnosticServiceId,
-} from '../../../client/application/diagnostics/checks/upgradeCodeRunner';
+    SwitchToDefaultLanguageServerDiagnosticService,
+    SwitchToDefaultLanguageServerDiagnosticServiceId,
+} from '../../../client/application/diagnostics/checks/switchToDefaultLS';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
 import { DiagnosticFilterService } from '../../../client/application/diagnostics/filter';
@@ -56,7 +48,6 @@ import {
     IDiagnosticHandlerService,
     IDiagnosticsService,
 } from '../../../client/application/diagnostics/types';
-import { JoinMailingListPrompt } from '../../../client/application/misc/joinMailingListPrompt';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
@@ -67,7 +58,7 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         serviceManager = mock(ServiceManager);
     });
     test('Register Classes', () => {
-        registerTypes(instance(serviceManager), LanguageServerType.Microsoft);
+        registerTypes(instance(serviceManager));
 
         verify(
             serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService),
@@ -96,8 +87,8 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
-                UpgradeCodeRunnerDiagnosticService,
-                UpgradeCodeRunnerDiagnosticServiceId,
+                InvalidPythonInterpreterService,
+                InvalidPythonInterpreterServiceId,
             ),
         );
         verify(
@@ -108,17 +99,16 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
             ),
         );
         verify(
-            serviceManager.addSingleton<IDiagnosticsService>(
-                IDiagnosticsService,
-                InvalidPythonPathInDebuggerService,
-                InvalidPythonPathInDebuggerServiceId,
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                InvalidPythonInterpreterService,
             ),
         );
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
-                LSNotSupportedDiagnosticService,
-                LSNotSupportedDiagnosticServiceId,
+                JediPython27NotSupportedDiagnosticService,
+                JediPython27NotSupportedDiagnosticServiceId,
             ),
         );
         verify(
@@ -138,8 +128,8 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         verify(
             serviceManager.addSingleton<IDiagnosticsService>(
                 IDiagnosticsService,
-                PythonPathDeprecatedDiagnosticService,
-                PythonPathDeprecatedDiagnosticServiceId,
+                SwitchToDefaultLanguageServerDiagnosticService,
+                SwitchToDefaultLanguageServerDiagnosticServiceId,
             ),
         );
         verify(
@@ -149,11 +139,5 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
             ),
         );
         verify(serviceManager.addSingleton<IApplicationDiagnostics>(IApplicationDiagnostics, ApplicationDiagnostics));
-        verify(
-            serviceManager.addSingleton<IExtensionSingleActivationService>(
-                IExtensionSingleActivationService,
-                JoinMailingListPrompt,
-            ),
-        );
     });
 });
