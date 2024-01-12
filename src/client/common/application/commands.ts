@@ -7,6 +7,7 @@ import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
 import { Channel, Commands, CommandSource } from '../constants';
+import { CreateEnvironmentOptions } from '../../pythonEnvironments/creation/proposed.createEnvApis';
 
 export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 
@@ -56,6 +57,7 @@ export type AllCommands = keyof ICommandNameArgumentTypeMapping;
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
+    [Commands.Create_Environment]: [CreateEnvironmentOptions];
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
     ['workbench.action.openWalkthrough']: [string | { category: string; step: string }, boolean | undefined];

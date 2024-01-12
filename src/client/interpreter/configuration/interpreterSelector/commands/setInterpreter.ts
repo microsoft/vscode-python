@@ -81,8 +81,13 @@ export namespace EnvGroups {
 
 @injectable()
 export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implements IInterpreterQuickPick {
+    private readonly createEnvironmentSuggestion: QuickPickItem = {
+        label: `${Octicons.Add} ${InterpreterQuickPickList.create.label}`,
+        alwaysShow: true,
+    };
+
     private readonly manualEntrySuggestion: ISpecialQuickPickItem = {
-        label: `${Octicons.Add} ${InterpreterQuickPickList.enterPath.label}`,
+        label: `${Octicons.Folder} ${InterpreterQuickPickList.enterPath.label}`,
         alwaysShow: true,
     };
 
@@ -220,6 +225,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         } else if (selection.label === this.manualEntrySuggestion.label) {
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
             return this._enterOrBrowseInterpreterPath.bind(this);
+        } else if (selection.label === this.createEnvironmentSuggestion.label) {
+            this.commandManager
+                .executeCommand(Commands.Create_Environment, {
+                    showBackButton: false,
+                    selectEnvironment: true,
+                })
+                .then(noop, noop);
         } else if (selection.label === this.noPythonInstalled.label) {
             this.commandManager.executeCommand(Commands.InstallPython).then(noop, noop);
             this.wasNoPythonInstalledItemClicked = true;
@@ -237,7 +249,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         filter: ((i: PythonEnvironment) => boolean) | undefined,
         params?: InterpreterQuickPickParams,
     ): QuickPickType[] {
-        const suggestions: QuickPickType[] = [this.manualEntrySuggestion];
+        const suggestions: QuickPickType[] = [];
+        if (params?.showCreateEnvironment) {
+            suggestions.push(this.createEnvironmentSuggestion, { label: '', kind: QuickPickItemKind.Separator });
+        }
+
+        suggestions.push(this.manualEntrySuggestion, { label: '', kind: QuickPickItemKind.Separator });
+
         const defaultInterpreterPathSuggestion = this.getDefaultInterpreterPathSuggestion(resource);
         if (defaultInterpreterPathSuggestion) {
             suggestions.push(defaultInterpreterPathSuggestion);
@@ -553,7 +571,10 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         const wkspace = targetConfig[0].folderUri;
         const interpreterState: InterpreterStateArgs = { path: undefined, workspace: wkspace };
         const multiStep = this.multiStepFactory.create<InterpreterStateArgs>();
-        await multiStep.run((input, s) => this._pickInterpreter(input, s, undefined), interpreterState);
+        await multiStep.run(
+            (input, s) => this._pickInterpreter(input, s, undefined, { showCreateEnvironment: true }),
+            interpreterState,
+        );
 
         if (interpreterState.path !== undefined) {
             // User may choose to have an empty string stored, so variable `interpreterState.path` may be

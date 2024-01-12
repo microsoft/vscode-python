@@ -74,12 +74,14 @@ export namespace Octicons {
     export const Test_Skip = '$(circle-slash)';
     export const Downloading = '$(cloud-download)';
     export const Installing = '$(desktop-download)';
+    export const Search = '$(search)';
     export const Search_Stop = '$(search-stop)';
     export const Star = '$(star-full)';
     export const Gear = '$(gear)';
     export const Warning = '$(warning)';
     export const Error = '$(error)';
     export const Lightbulb = '$(lightbulb)';
+    export const Folder = '$(folder)';
 }
 
 /**

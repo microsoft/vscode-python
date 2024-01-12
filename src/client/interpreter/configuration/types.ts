@@ -80,6 +80,11 @@ export interface InterpreterQuickPickParams {
      * Specify `true` to show back button.
      */
     showBackButton?: boolean;
+
+    /**
+     * Show button to create a new environment.
+     */
+    showCreateEnvironment?: boolean;
 }
 
 export const IInterpreterQuickPick = Symbol('IInterpreterQuickPick');
