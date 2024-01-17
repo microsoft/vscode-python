@@ -2,17 +2,11 @@
 # Licensed under the MIT License.
 
 # Replace the "." entry.
-import os.path
+import os
 import sys
+from pathlib import Path
 
-sys.path.insert(
-    1,
-    os.path.dirname(  # pythonFiles
-        os.path.dirname(  # pythonFiles/testing_tools
-            os.path.abspath(__file__)  # this file
-        )
-    ),
-)
+sys.path.insert(1, os.fspath(Path(__file__).resolve().parent.parent))
 
 from testing_tools.adapter.__main__ import parse_args, main
 

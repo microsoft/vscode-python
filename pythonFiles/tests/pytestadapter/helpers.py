@@ -10,7 +10,7 @@ import subprocess
 import sys
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -195,7 +195,9 @@ def _run_test_code(
     return result
 
 
-def find_test_line_number(test_name: str, test_file_path) -> str:
+def find_test_line_number(
+    test_name: str, test_file_path: Union[str, pathlib.Path]
+) -> str:
     """Function which finds the correct line number for a test by looking for the "test_marker--[test_name]" string.
 
     The test_name is split on the "[" character to remove the parameterization information.
@@ -205,9 +207,9 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
     test_file_path: The path to the test file where the test is located.
     """
     test_file_unique_id: str = "test_marker--" + test_name.split("[")[0]
-    with open(test_file_path) as f:
-        for i, line in enumerate(f):
-            if test_file_unique_id in line:
-                return str(i + 1)
+    lines = pathlib.Path(test_file_path).read_text().splitlines()
+    for i, line in enumerate(lines):
+        if test_file_unique_id in line:
+            return str(i + 1)
     error_str: str = f"Test {test_name!r} not found on any line in {test_file_path}"
     raise ValueError(error_str)

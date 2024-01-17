@@ -76,9 +76,9 @@ def discover_tests(
         "status": "error",
     }
     """
-    cwd = os.path.abspath(start_dir)
+    cwd = os.fspath(pathlib.Path(start_dir).resolve())
     if "/" in start_dir:  #  is a subdir
-        parent_dir = os.path.dirname(start_dir)
+        parent_dir = os.fspath(pathlib.Path(start_dir).parent)
         sys.path.insert(0, parent_dir)
     else:
         sys.path.insert(0, cwd)
@@ -95,7 +95,7 @@ def discover_tests(
             top_level_dir = start_dir
 
         # Get abspath of top level directory for build_test_tree.
-        top_level_dir = os.path.abspath(top_level_dir)
+        top_level_dir = os.fspath(pathlib.Path(top_level_dir).resolve())
 
         tests, error = build_test_tree(
             suite, top_level_dir

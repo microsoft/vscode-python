@@ -71,17 +71,17 @@ def is_installed(module: str) -> bool:
 
 
 def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
-    return os.path.exists(path)
+    return pathlib.Path.exists(path)
 
 
 def venv_exists(name: str) -> bool:
-    return os.path.exists(CWD / name) and file_exists(get_venv_path(name))
+    return pathlib.Path.exists(CWD / name) and file_exists(get_venv_path(name))
 
 
 def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
-        subprocess.run(args, cwd=os.getcwd(), check=True)
+        subprocess.run(args, cwd=CWD, check=True)
     except subprocess.CalledProcessError:
         raise VenvError(error_message)
 
@@ -129,9 +129,8 @@ def upgrade_pip(venv_path: str) -> None:
 def add_gitignore(name: str) -> None:
     git_ignore = CWD / name / ".gitignore"
     if not file_exists(git_ignore):
-        print("Creating: " + os.fspath(git_ignore))
-        with open(git_ignore, "w") as f:
-            f.write("*")
+        print(f"Creating: {git_ignore}")
+        git_ignore.write_text("*")
 
 
 def download_pip_pyz(name: str):
@@ -140,11 +139,9 @@ def download_pip_pyz(name: str):
 
     try:
         with url_lib.urlopen(url) as response:
-            pip_pyz_path = os.fspath(CWD / name / "pip.pyz")
-            with open(pip_pyz_path, "wb") as out_file:
-                data = response.read()
-                out_file.write(data)
-                out_file.flush()
+            pip_pyz_path = CWD / name / "pip.pyz"
+            pip_pyz_path.write_bytes(response.read())
+
     except Exception:
         raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED")
 

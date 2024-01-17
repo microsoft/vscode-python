@@ -48,17 +48,17 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
 
 
 def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
-    return os.path.exists(path)
+    return pathlib.Path.exists(path)
 
 
 def conda_env_exists(name: Union[str, pathlib.PurePath]) -> bool:
-    return os.path.exists(CWD / name)
+    return pathlib.Path.exists(CWD / name)
 
 
 def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
-        subprocess.run(args, cwd=os.getcwd(), check=True)
+        subprocess.run(args, cwd=CWD, check=True)
     except subprocess.CalledProcessError:
         raise VenvError(error_message)
 
@@ -89,11 +89,10 @@ def install_packages(env_path: str) -> None:
 
 
 def add_gitignore(name: str) -> None:
-    git_ignore = os.fspath(CWD / name / ".gitignore")
+    git_ignore = CWD / name / ".gitignore"
     if not file_exists(git_ignore):
         print(f"Creating: {git_ignore}")
-        with open(git_ignore, "w") as f:
-            f.write("*")
+        git_ignore.write_text("*")
 
 
 def main(argv: Optional[Sequence[str]] = None) -> None:

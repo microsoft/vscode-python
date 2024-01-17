@@ -20,7 +20,7 @@ class MicroVenvError(Exception):
 def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
-        subprocess.run(args, cwd=os.getcwd(), check=True)
+        subprocess.run(args, cwd=CWD, check=True)
     except subprocess.CalledProcessError:
         raise MicroVenvError(error_message)
 

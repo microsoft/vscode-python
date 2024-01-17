@@ -44,8 +44,8 @@ def printTestOutput(testlog):
 
 def splitByPid(testlog):
     # Split testlog into prefixed logs based on pid
-    baseFile = os.path.splitext(testlog[0])[0]
     p = Path(testlog[0])
+    baseFile = p.parent / p.stem
     pids = set()
     logs = {}
     pid = None
@@ -64,7 +64,7 @@ def splitByPid(testlog):
                     # See if we've created a log for this pid or not
                     if pid not in pids:
                         pids.add(pid)
-                        logFile = "{}_{}.log".format(baseFile, pid)
+                        logFile = f"{os.fspath(baseFile)}_{pid}.log"
                         print("Writing to new log: " + logFile)
                         logs[pid] = Path(logFile).open(mode="w")
 

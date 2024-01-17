@@ -171,7 +171,7 @@ def run_tests(
     failfast: Optional[bool],
     locals: Optional[bool] = None,
 ) -> PayloadDict:
-    cwd = os.path.abspath(start_dir)
+    cwd = os.fspath(pathlib.Path(start_dir).resolve())
     status = TestExecutionStatus.error
     error = None
     payload: PayloadDict = {"cwd": cwd, "status": status, "result": None}
@@ -180,8 +180,8 @@ def run_tests(
         # If it's a file, split path and file name.
         start_dir = cwd
         if cwd.endswith(".py"):
-            start_dir = os.path.dirname(cwd)
-            pattern = os.path.basename(cwd)
+            start_dir = pathlib.Path(cwd).parent
+            pattern = pathlib.Path(cwd).name
 
         # Discover tests at path with the file name as a pattern (if any).
         loader = unittest.TestLoader()
@@ -232,7 +232,7 @@ atexit.register(lambda: __socket.close() if __socket else None)
 
 def send_run_data(raw_data, port, uuid):
     status = raw_data["outcome"]
-    cwd = os.path.abspath(START_DIR)
+    cwd = os.fspath(pathlib.Path(START_DIR).resolve())
     if raw_data["subtest"]:
         test_id = raw_data["subtest"]
     else:
@@ -349,7 +349,7 @@ if __name__ == "__main__":
             locals,
         )
     else:
-        cwd = os.path.abspath(start_dir)
+        cwd = os.fspath(pathlib.Path(start_dir).resolve())
         status = TestExecutionStatus.error
         payload: PayloadDict = {
             "cwd": cwd,

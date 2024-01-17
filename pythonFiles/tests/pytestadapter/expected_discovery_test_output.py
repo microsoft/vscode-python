@@ -1,4 +1,8 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import os
+from pathlib import Path
 
 
 from .helpers import TEST_DATA_PATH, find_test_line_number, get_absolute_test_id
@@ -845,10 +849,10 @@ root_with_config_expected_output = {
             "children": [
                 {
                     "name": "test_a_function",
-                    "path": os.fspath(os.path.join(tests_path, "test_a.py")),
+                    "path": os.fspath(tests_path / "test_a.py"),
                     "lineno": find_test_line_number(
                         "test_a_function",
-                        os.path.join(tests_path, "test_a.py"),
+                        os.fspath(tests_path / "test_a.py"),
                     ),
                     "type_": "test",
                     "id_": get_absolute_test_id(
@@ -868,10 +872,10 @@ root_with_config_expected_output = {
             "children": [
                 {
                     "name": "test_b_function",
-                    "path": os.fspath(os.path.join(tests_path, "test_b.py")),
+                    "path": os.fspath(tests_path / "test_b.py"),
                     "lineno": find_test_line_number(
                         "test_b_function",
-                        os.path.join(tests_path, "test_b.py"),
+                        os.fspath(tests_path / "test_b.py"),
                     ),
                     "type_": "test",
                     "id_": get_absolute_test_id(

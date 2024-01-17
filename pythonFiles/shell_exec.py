@@ -3,6 +3,7 @@
 
 import subprocess
 import sys
+from pathlib import Path
 
 # This is a simple solution to waiting for completion of commands sent to terminal.
 # 1. Intercept commands send to a terminal
@@ -11,12 +12,12 @@ import sys
 # 4. Calling code monitors the contents of the file to determine state of execution.
 
 # Last argument is a file that's used for synchronizing the actions in the terminal with the calling code in extension.
-lock_file = sys.argv[-1]
+lock_file = Path(sys.argv[-1])
 shell_args = sys.argv[1:-1]
 
 print("Executing command in shell >> " + " ".join(shell_args))
 
-with open(lock_file, "w") as fp:
+with lock_file.open("w") as fp:
     try:
         # Signal start of execution.
         fp.write("START\n")
@@ -36,7 +37,8 @@ with open(lock_file, "w") as fp:
         fp.flush()
         try:
             # ALso log the error for use from the other side.
-            with open(lock_file + ".error", "w") as fpError:
+            error_path = lock_file.with_suffix(".error")
+            with error_path.open("w") as fpError:
                 fpError.write(traceback.format_exc())
         except Exception:
             pass

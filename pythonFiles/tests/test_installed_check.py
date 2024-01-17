@@ -20,13 +20,12 @@ DEFAULT_SEVERITY = 3
 def generate_file(base_file: pathlib.Path):
     basename = "pyproject.toml" if "pyproject" in base_file.name else "requirements.txt"
     fullpath = base_file.parent / basename
-    if fullpath.exists():
-        os.unlink(os.fspath(fullpath))
+    fullpath.unlink(missing_ok=True)
     fullpath.write_text(base_file.read_text(encoding="utf-8"))
     try:
         yield fullpath
     finally:
-        os.unlink(str(fullpath))
+        fullpath.unlink(missing_ok=True)
 
 
 def run_on_file(

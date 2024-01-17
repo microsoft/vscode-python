@@ -2,10 +2,11 @@
 # Licensed under the MIT License.
 
 # Replace the "." entry.
-import os.path
+import os
 import sys
+from pathlib import Path
 
-sys.path[0] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path[0] = os.fspath(Path(__file__).resolve().parent.parent)
 
 from tests.__main__ import main, parse_args
 

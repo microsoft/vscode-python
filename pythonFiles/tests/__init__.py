@@ -1,11 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-import os.path
+import os
+from pathlib import Path
 
-TEST_ROOT = os.path.dirname(__file__)
-SRC_ROOT = os.path.dirname(TEST_ROOT)
-PROJECT_ROOT = os.path.dirname(SRC_ROOT)
-TESTING_TOOLS_ROOT = os.path.join(SRC_ROOT, "testing_tools")
-DEBUG_ADAPTER_ROOT = os.path.join(SRC_ROOT, "debug_adapter")
+TEST_ROOT = os.fspath(Path(__file__).resolve().parent)
+SRC_ROOT = os.fspath(Path(TEST_ROOT).parent)
+PROJECT_ROOT = os.fspath(Path(SRC_ROOT).parent)
+TESTING_TOOLS_ROOT = os.fspath(Path(SRC_ROOT) / "testing_tools")
+DEBUG_ADAPTER_ROOT = os.fspath(Path(SRC_ROOT) / "debug_adapter")
 
-PYTHONFILES = os.path.join(SRC_ROOT, "lib", "python")
+PYTHONFILES = os.fspath(Path(SRC_ROOT) / "lib" / "python")
