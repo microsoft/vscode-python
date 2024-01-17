@@ -19,7 +19,7 @@ sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import process_json_util, socket_manager
 from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
-from unittestadapter.utils import parse_unittest_args
+from unittestadapter.pvsc_utils import parse_unittest_args
 
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]

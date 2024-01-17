@@ -7,7 +7,7 @@ from typing import List
 
 import pytest
 from unittestadapter.discovery import discover_tests
-from unittestadapter.utils import TestNodeTypeEnum, parse_unittest_args
+from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
 
 from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, is_same_tree

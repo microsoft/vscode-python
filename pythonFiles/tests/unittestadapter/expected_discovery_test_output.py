@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 import os
-from unittestadapter.utils import TestNodeTypeEnum
+from unittestadapter.pvsc_utils import TestNodeTypeEnum
 from .helpers import TEST_DATA_PATH
 import pathlib
 

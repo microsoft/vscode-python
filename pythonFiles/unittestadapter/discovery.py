@@ -17,7 +17,11 @@ from testing_tools import socket_manager
 from typing_extensions import Literal, NotRequired, TypedDict
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittestadapter.utils import TestNode, build_test_tree, parse_unittest_args
+from unittestadapter.pvsc_utils import (
+    TestNode,
+    build_test_tree,
+    parse_unittest_args,
+)
 
 DEFAULT_PORT = 45454
 
