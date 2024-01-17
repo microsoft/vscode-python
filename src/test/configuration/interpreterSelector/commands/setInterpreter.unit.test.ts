@@ -237,7 +237,7 @@ suite('Set Interpreter Command', () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
-            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.label = item.label;
             recommended.description = interpreterPath;
             const suggestions = [
                 expectedEnterInterpreterPathSuggestion,
@@ -287,7 +287,7 @@ suite('Set Interpreter Command', () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
-            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.label = item.label;
             recommended.description = interpreterPath;
             const suggestions = [
                 expectedCreateEnvSuggestion,
@@ -496,7 +496,7 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => item);
             const recommended = cloneDeep(item);
-            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.label = item.label;
             recommended.description = interpreterPath;
             const suggestions = [
                 expectedEnterInterpreterPathSuggestion,
@@ -613,7 +613,7 @@ suite('Set Interpreter Command', () => {
                 .setup((i) => i.getRecommendedSuggestion(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => item);
             const recommended = cloneDeep(item);
-            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.label = item.label;
             recommended.description = interpreterPath;
             const suggestions = [
                 expectedEnterInterpreterPathSuggestion,
@@ -703,7 +703,7 @@ suite('Set Interpreter Command', () => {
             const state: InterpreterStateArgs = { path: 'some path', workspace: undefined };
             const multiStepInput = TypeMoq.Mock.ofType<IMultiStepInput<InterpreterStateArgs>>();
             const recommended = cloneDeep(item);
-            recommended.label = `${Octicons.Star} ${item.label}`;
+            recommended.label = item.label;
             recommended.description = interpreterPath;
             const separator = { label: EnvGroups.Recommended, kind: QuickPickItemKind.Separator };
 
@@ -854,7 +854,7 @@ suite('Set Interpreter Command', () => {
             await sleep(1);
 
             const recommended = cloneDeep(refreshedItem);
-            recommended.label = `${Octicons.Star} ${refreshedItem.label}`;
+            recommended.label = refreshedItem.label;
             recommended.description = `${interpreterPath} - ${Common.recommended}`;
             assert.deepStrictEqual(
                 quickPick,

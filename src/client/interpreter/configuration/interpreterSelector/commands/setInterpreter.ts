@@ -468,7 +468,6 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         }
         const areItemsGrouped = items.find((item) => isSeparatorItem(item) && item.label === EnvGroups.Recommended);
         const recommended = cloneDeep(suggestion);
-        recommended.label = `${Octicons.Star} ${recommended.label}`;
         recommended.description = areItemsGrouped
             ? // No need to add a tag as "Recommended" group already exists.
               recommended.description
