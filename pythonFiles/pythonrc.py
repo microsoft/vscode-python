@@ -1,17 +1,7 @@
 import sys
 
-# import os
-
-# sys.path.insert(0, os.getcwd())
-# EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-# os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
 if sys.platform != "win32":
     import readline
-
-# from pyreadline3 import Readline
-
-
-# readline = Readline()
 
 original_ps1 = ">>> "
 
@@ -43,8 +33,7 @@ def get_last_command():
     last_command = ""
     if sys.platform != "win32":
         last_command = readline.get_history_item(readline.get_current_history_length())
-    else:
-        last_command = ""
+
     return last_command
 
 
