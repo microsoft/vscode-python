@@ -63,11 +63,11 @@ async function* iterEnvsIterator(
                 throw new Error(
                     'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in reducer',
                 );
-            } else if (event.index && seen[event.index] !== undefined) {
+            } else if (event.index !== undefined && seen[event.index] !== undefined) {
                 const oldEnv = seen[event.index];
                 seen[event.index] = event.update;
                 didUpdate.fire({ index: event.index, old: oldEnv, update: event.update });
-            } else {
+            } else if (event.update) {
                 didUpdate.fire({ update: event.update });
             }
             checkIfFinishedAndNotify(state, didUpdate);
