@@ -222,7 +222,7 @@ suite('Windows Registry', () => {
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
         ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
-        const iterator = locator.iterEnvs();
+        const iterator = locator.iterEnvs(undefined, false);
         const actualEnvs = await getEnvs(iterator);
 
         assertBasicEnvsEqual(actualEnvs, expectedEnvs);

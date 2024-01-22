@@ -28,7 +28,9 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     ): IPythonEnvsIterator<BasicEnvInfo> {
         const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
         const iterator = useWorkerThreads ? iterEnvsIterator(didUpdate) : oldIterEnvsIterator();
-        iterator.onUpdated = didUpdate.event;
+        if (useWorkerThreads) {
+            iterator.onUpdated = didUpdate.event;
+        }
         return iterator;
     }
 }
