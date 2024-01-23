@@ -28,6 +28,7 @@ import { MicrosoftStoreLocator } from './base/locators/lowLevel/microsoftStoreLo
 import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
+import { HatchLocator } from './base/locators/hatchLocator';
 import { createPythonEnvironments } from './api';
 import {
     createCollectionCache as createCache,
@@ -186,6 +187,7 @@ function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
         (root: vscode.Uri) => [
             new WorkspaceVirtualEnvironmentLocator(root.fsPath),
             new PoetryLocator(root.fsPath),
+            new HatchLocator(root.fsPath),
             new CustomWorkspaceLocator(root.fsPath),
         ],
         // Add an ILocator factory func here for each kind of workspace-rooted locator.
