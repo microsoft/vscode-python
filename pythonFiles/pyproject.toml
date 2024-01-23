@@ -55,7 +55,6 @@ select = [
   "A",  # flake8-builtins
   "C",  # flake8-comprehensions
   "DTZ",  # flake8-dasetimez
-  "T",  # flake8-debugger
   "INP",  # flake8-no-pep420
   "PIE",  # flake8-pie
   "PYI",  # flake8-pyi
