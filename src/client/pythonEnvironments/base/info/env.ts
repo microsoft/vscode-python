@@ -179,6 +179,11 @@ function buildEnvDisplayString(env: PythonEnvInfo, getAllDetails = false): strin
     const envSuffixParts: string[] = [];
     if (env.name && env.name !== '') {
         envSuffixParts.push(`'${env.name}'`);
+    } else if (env.location && env.location !== '') {
+        if (env.kind === PythonEnvKind.Conda) {
+            const condaEnvName = path.basename(env.location);
+            envSuffixParts.push(`'${condaEnvName}'`);
+        }
     }
     if (shouldDisplayKind) {
         const kindName = getKindDisplayName(env.kind);

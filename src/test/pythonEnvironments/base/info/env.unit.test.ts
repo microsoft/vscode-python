@@ -22,6 +22,9 @@ suite('Environment helpers', () => {
         version: parseVersionInfo('1.2.3')?.version,
         binDir: 'distroX/bin',
     };
+    const locationConda1 = 'x/y/z/conda1';
+    const locationConda2 = 'x/y/z/conda2';
+    const kindConda = PythonEnvKind.Conda;
     function getEnv(info: {
         version?: string;
         arch?: Architecture;
@@ -65,6 +68,10 @@ suite('Environment helpers', () => {
                 "Python 3.8.1 64-bit ('my-env')",
                 "Python 3.8.1 64-bit ('my-env')",
             ],
+            // conda env.name is empty.
+            [getEnv({ kind: kindConda }), 'Python', 'Python (conda)'],
+            [getEnv({ location: locationConda1, kind: kindConda }), "Python ('conda1')", "Python ('conda1': conda)"],
+            [getEnv({ location: locationConda2, kind: kindConda }), "Python ('conda2')", "Python ('conda2': conda)"],
         ];
         return tests;
     }

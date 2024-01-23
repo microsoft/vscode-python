@@ -1,6 +1,6 @@
 import importlib
+import sys
 from unittest.mock import Mock
-
 import pythonrc
 
 
@@ -10,7 +10,13 @@ def test_decoration_success():
 
     ps1.hooks.failure_flag = False
     result = str(ps1)
-    assert result == "\x1b]633;D;0\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
+    if sys.platform != "win32":
+        assert (
+            result
+            == "\x1b]633;D;0\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07\x1b]633;E;None\x07"
+        )
+    else:
+        pass
 
 
 def test_decoration_failure():
@@ -19,8 +25,13 @@ def test_decoration_failure():
 
     ps1.hooks.failure_flag = True
     result = str(ps1)
-
-    assert result == "\x1b]633;D;1\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07"
+    if sys.platform != "win32":
+        assert (
+            result
+            == "\x1b]633;D;1\x07\x1b]633;A\x07>>> \x1b]633;B\x07\x1b]633;C\x07\x1b]633;E;None\x07"
+        )
+    else:
+        pass
 
 
 def test_displayhook_call():

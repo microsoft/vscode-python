@@ -7,7 +7,7 @@ import unittest
 
 import pytest
 
-from unittestadapter.utils import (
+from unittestadapter.pvsc_utils import (
     TestNode,
     TestNodeTypeEnum,
     build_test_tree,

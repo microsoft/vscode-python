@@ -259,6 +259,9 @@ export namespace InterpreterQuickPickList {
     };
     export const refreshInterpreterList = l10n.t('Refresh Interpreter list');
     export const refreshingInterpreterList = l10n.t('Refreshing Interpreter list...');
+    export const create = {
+        label: l10n.t('Create Virtual Environment...'),
+    };
 }
 
 export namespace OutputChannelNames {
