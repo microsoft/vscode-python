@@ -233,8 +233,7 @@ def test_pytest_config_file():
     actual = runner_with_cwd(
         [
             "--collect-only",
-            "-c",
-            "tests/pytest.ini",
+            "tests/",
         ],
         TEST_DATA_PATH / "root",
     )

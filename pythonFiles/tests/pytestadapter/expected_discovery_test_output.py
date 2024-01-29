@@ -350,48 +350,6 @@ dual_level_nested_folder_expected_output = {
             "id_": os.fspath(dual_level_nested_folder_path),
             "children": [
                 {
-                    "name": "test_top_folder.py",
-                    "path": os.fspath(test_top_folder_path),
-                    "type_": "file",
-                    "id_": os.fspath(test_top_folder_path),
-                    "children": [
-                        {
-                            "name": "test_top_function_t",
-                            "path": os.fspath(test_top_folder_path),
-                            "lineno": find_test_line_number(
-                                "test_top_function_t",
-                                test_top_folder_path,
-                            ),
-                            "type_": "test",
-                            "id_": get_absolute_test_id(
-                                "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
-                                test_top_folder_path,
-                            ),
-                            "runID": get_absolute_test_id(
-                                "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
-                                test_top_folder_path,
-                            ),
-                        },
-                        {
-                            "name": "test_top_function_f",
-                            "path": os.fspath(test_top_folder_path),
-                            "lineno": find_test_line_number(
-                                "test_top_function_f",
-                                test_top_folder_path,
-                            ),
-                            "type_": "test",
-                            "id_": get_absolute_test_id(
-                                "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
-                                test_top_folder_path,
-                            ),
-                            "runID": get_absolute_test_id(
-                                "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
-                                test_top_folder_path,
-                            ),
-                        },
-                    ],
-                },
-                {
                     "name": "nested_folder_one",
                     "path": os.fspath(test_nested_folder_one_path),
                     "type_": "folder",
@@ -439,6 +397,48 @@ dual_level_nested_folder_expected_output = {
                                 },
                             ],
                         }
+                    ],
+                },
+                {
+                    "name": "test_top_folder.py",
+                    "path": os.fspath(test_top_folder_path),
+                    "type_": "file",
+                    "id_": os.fspath(test_top_folder_path),
+                    "children": [
+                        {
+                            "name": "test_top_function_t",
+                            "path": os.fspath(test_top_folder_path),
+                            "lineno": find_test_line_number(
+                                "test_top_function_t",
+                                test_top_folder_path,
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
+                                test_top_folder_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
+                                test_top_folder_path,
+                            ),
+                        },
+                        {
+                            "name": "test_top_function_f",
+                            "path": os.fspath(test_top_folder_path),
+                            "lineno": find_test_line_number(
+                                "test_top_function_f",
+                                test_top_folder_path,
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
+                                test_top_folder_path,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
+                                test_top_folder_path,
+                            ),
+                        },
                     ],
                 },
             ],

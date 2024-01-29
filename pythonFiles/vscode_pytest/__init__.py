@@ -540,7 +540,7 @@ def create_session_node(session: pytest.Session) -> TestNode:
     """
     node_path = get_node_path(session)
     return {
-        "name": session.name,
+        "name": node_path.name,
         "path": node_path,
         "type_": "folder",
         "children": [],
