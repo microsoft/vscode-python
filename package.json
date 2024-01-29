@@ -22,7 +22,6 @@
         "quickPickSortByLabel",
         "testObserver",
         "quickPickItemTooltip",
-        "saveEditor",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent"
     ],
