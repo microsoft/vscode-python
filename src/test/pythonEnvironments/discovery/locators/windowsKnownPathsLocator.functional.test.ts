@@ -68,14 +68,16 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
               <py.exe>
     `.trimEnd();
 
-    suiteSetup(async () => {
-        await ensureFSTree(dataTree, __dirname);
-    });
-    setup(async function () {
+    suiteSetup(async function () {
         if (!IS_WINDOWS) {
             if (!process.env.PVSC_TEST_FORCE) {
                 this.skip();
             }
+        }
+        await ensureFSTree(dataTree, __dirname);
+    });
+    setup(async () => {
+        if (!IS_WINDOWS) {
             // eslint-disable-next-line global-require
             const platformAPI = require('../../../../../client/common/utils/platform');
             const stub = sinon.stub(platformAPI, 'getOSType');
