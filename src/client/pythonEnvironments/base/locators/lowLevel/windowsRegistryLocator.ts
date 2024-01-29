@@ -10,6 +10,7 @@ import {
     IPythonEnvsIterator,
     Locator,
     ProgressNotificationEvent,
+    ProgressReportStage,
     PythonEnvUpdatedEvent,
 } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
@@ -66,6 +67,7 @@ async function updateLazily(didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicE
             traceError(`Failed to process environment: ${interpreter}`, ex);
         }
     }
+    didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
     traceVerbose('Finished searching for windows registry interpreters');
 }
 
