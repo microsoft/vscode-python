@@ -3,16 +3,13 @@
 
 import { assert, expect } from 'chai';
 import * as path from 'path';
-import { EventEmitter } from 'vscode';
 import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base/locators/composite/envsReducer';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 import {
-    PythonEnvUpdatedEvent,
     BasicEnvInfo,
-    ProgressNotificationEvent,
     ProgressReportStage,
     isProgressEvent,
 } from '../../../../../client/pythonEnvironments/base/locator';
