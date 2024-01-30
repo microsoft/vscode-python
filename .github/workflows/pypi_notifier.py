@@ -1,8 +1,8 @@
-# import github
-# import os
+import github
+import os
 
-# GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
-# GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
+GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
+GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
 
 
 import pathlib
@@ -60,6 +60,16 @@ def main():
 
     latest_packages = get_entire_latest_package_version(packages)
     packages_with_difference = mark_version_difference(packages, latest_packages)
+
+    # If package_with_difference is not empty,
+    # generate github issue to state we may need to update version of package
+    if packages_with_difference:
+        issue_body = "The following packages may need to be updated:\n"
+        for package, version in packages_with_difference.items():
+            issue_body += f"- {package}: {version}\n"
+        GH_REPO.create_issue(
+            title="Packages may need to be updated", body=issue_body, labels=["debt"]
+        )
 
 
 if __name__ == "__main__":
