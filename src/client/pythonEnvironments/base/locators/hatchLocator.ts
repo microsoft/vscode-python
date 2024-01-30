@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 import { PythonEnvKind } from '../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../locator';
@@ -15,7 +15,7 @@ import { getInterpreterPathFromDir } from '../../common/commonUtils';
  */
 async function getVirtualEnvDirs(root: string): Promise<string[]> {
     const hatch = await Hatch.getHatch(root);
-    const envDirs = await hatch?.getEnvList() ?? [];
+    const envDirs = (await hatch?.getEnvList()) ?? [];
     return asyncFilter(envDirs, pathExists);
 }
 
