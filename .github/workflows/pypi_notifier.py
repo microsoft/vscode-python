@@ -6,6 +6,18 @@
 
 
 import pathlib
+from urllib import request
+
+from urllib.request import urlopen
+import json
+
+
+# From PyPI, get the latest package version for single package
+def get_latest_package_version(package_name):
+    with urlopen(f"https://pypi.org/pypi/{package_name}/json") as response:
+        data = json.loads(response.read().decode())
+        print(data["info"]["version"])
+        return data["info"]["version"]
 
 
 def main():
@@ -23,9 +35,10 @@ def main():
             package, version = line.split("==")
             # remove \ in version string and blank spaces
             version = version.replace("\\", "").strip()
-            print(version)
+            # print(version)
             packages[package] = version
 
 
 if __name__ == "__main__":
     main()
+    get_latest_package_version("black")
