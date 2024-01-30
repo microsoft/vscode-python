@@ -109,12 +109,14 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install specific pytest version
+        if: matrix.pytest-version == 'pytest@pre-release'
         run: |
-          if [ "${{ matrix.pytest-version }}" = "pytest@pre-release" ]; then
           python -m pip install --pre pytest
-          else
+
+      - name: Install specific pytest version
+        if: matrix.pytest-version != 'pytest@pre-release'
+        run: |
           python -m pip install "${{ matrix.pytest-version }}"
-          fi
 
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
