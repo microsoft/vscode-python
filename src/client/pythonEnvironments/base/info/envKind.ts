@@ -15,6 +15,7 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
         [PythonEnvKind.MicrosoftStore, 'Microsoft Store'],
         [PythonEnvKind.Pyenv, 'pyenv'],
         [PythonEnvKind.Poetry, 'Poetry'],
+        [PythonEnvKind.Hatch, 'Hatch'],
         [PythonEnvKind.Custom, 'custom'],
         // For now we treat OtherGlobal like Unknown.
         [PythonEnvKind.Venv, 'venv'],
@@ -61,6 +62,7 @@ export function getPrioritizedEnvKinds(): PythonEnvKind[] {
         PythonEnvKind.MicrosoftStore,
         PythonEnvKind.Pipenv,
         PythonEnvKind.Poetry,
+        PythonEnvKind.Hatch,
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnvWrapper,
         PythonEnvKind.VirtualEnv,
