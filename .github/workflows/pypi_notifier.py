@@ -16,8 +16,21 @@ import json
 def get_latest_package_version(package_name):
     with urlopen(f"https://pypi.org/pypi/{package_name}/json") as response:
         data = json.loads(response.read().decode())
-        print(data["info"]["version"])
+        # print(data["info"]["version"]) # debug
         return data["info"]["version"]
+
+
+# Iterate through all package we have to fetch latest
+def get_entire_latest_package_version(our_packages):
+    latest_versions = {}
+    for package, _ in our_packages.items():
+        latest_versions[package] = get_latest_package_version(package)
+    return latest_versions
+
+
+def mark_version_difference(our_packages, latest_packages):
+    print(our_packages)
+    print(latest_packages)
 
 
 def main():
@@ -38,7 +51,10 @@ def main():
             # print(version)
             packages[package] = version
 
+    # entire latest package
+    temp = get_entire_latest_package_version(packages)
+
 
 if __name__ == "__main__":
     main()
-    get_latest_package_version("black")
+    # get_latest_package_version("black")
