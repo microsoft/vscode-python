@@ -29,8 +29,15 @@ def get_entire_latest_package_version(our_packages):
 
 
 def mark_version_difference(our_packages, latest_packages):
-    print(our_packages)
-    print(latest_packages)
+    different_packages = {}
+    # Check to see if there are version differences
+    for package, version in our_packages.items():
+        if version != latest_packages[package]:
+            # If the version doesn't match,
+            # store package name and latest version.
+            different_packages[package] = latest_packages[package]
+
+    return different_packages
 
 
 def main():
@@ -51,8 +58,8 @@ def main():
             # print(version)
             packages[package] = version
 
-    # entire latest package
-    temp = get_entire_latest_package_version(packages)
+    latest_packages = get_entire_latest_package_version(packages)
+    packages_with_difference = mark_version_difference(packages, latest_packages)
 
 
 if __name__ == "__main__":
