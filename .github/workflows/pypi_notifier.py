@@ -1,6 +1,8 @@
 import github
 import os
 
+# import pytest
+
 GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
 GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
 
@@ -70,6 +72,8 @@ def main():
         GH_REPO.create_issue(
             title="Packages may need to be updated", body=issue_body, labels=["debt"]
         )
+    # print("pytest version")
+    # print(pytest.__version__)
 
 
 if __name__ == "__main__":
