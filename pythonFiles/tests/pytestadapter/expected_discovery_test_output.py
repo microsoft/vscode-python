@@ -902,7 +902,7 @@ yaml_expected_output = {
                 {
                     "name": "test_integer_type",
                     "path": str(TEST_YAML_PATH),
-                    "lineno": "6",
+                    "lineno": "1",  # Since the yaml test type is not in the pytest library (instead pytest-mypy-plugins), we will not support their line number but instead changing the default value to "1"  to prevent failure.
                     "type_": "test",
                     "id_": get_absolute_test_id(
                         "test_yaml.yaml::test_integer_type", TEST_YAML_PATH

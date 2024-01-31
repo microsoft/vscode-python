@@ -260,7 +260,7 @@
             "type": "python",
             "request": "launch",
             "module": "pytest",
-            "args": ["${workspaceFolder}/pythonFiles/tests/pytestadapter"],
+            "args": ["${workspaceFolder}/pythonFiles/tests/pytestadapter", "-vv"],
             "justMyCode": true
         }
     ],
