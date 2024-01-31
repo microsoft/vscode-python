@@ -192,9 +192,9 @@ def test_pytest_collect(file, expected_const):
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        actual_item = actual_list.pop(0)
         try:
-            assert actual_list.pop(-1).get("eot")
-            actual_item = actual_list.pop(0)
             assert all(
                 item in actual_item.keys() for item in ("status", "cwd", "error")
             )
