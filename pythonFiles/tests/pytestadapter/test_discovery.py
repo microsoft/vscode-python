@@ -184,7 +184,7 @@ def test_pytest_collect(file, expected_const):
     """
     path_fs = TEST_DATA_PATH / file
     print("PATH: EJFB", path_fs)
-    os.listdir(TEST_DATA_PATH)
+    print("os diff list EJFB", os.listdir(TEST_DATA_PATH))
     assert path_fs.exists()
     actual = runner(
         [
