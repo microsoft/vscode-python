@@ -1,10 +1,12 @@
-import github
-import os
+import subprocess
 
-# import pytest
+# import github
+# import os
 
-GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
-GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
+# # import pytest
+
+# GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
+# GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
 
 
 import pathlib
@@ -12,6 +14,45 @@ from urllib import request
 
 from urllib.request import urlopen
 import json
+
+# importlib.metadata
+#####################################################################
+import importlib.metadata
+
+
+def use_importlib_metadata():
+    # List all installed distributions???
+    distributions = importlib.metadata.distributions()
+
+    # Create a dictionary to store package names and their versions .
+    installed_packages = {}
+
+    # Iterate over the distributions and get their name and version .
+    for distribution in distributions:
+        name = distribution.metadata["Name"]
+        version = distribution.version
+        installed_packages[name] = version
+
+    # Print pair of package and the version .
+    for package, version in installed_packages.items():
+        print(f"{package}: {version}")
+    #######################################################################
+
+
+###### pip list way vs. importlib_metadata way ######
+def get_installed_packages():
+    # Run "pip list" and output in JSON format
+    process = subprocess.run(
+        ["pip", "list", "--format=json"], capture_output=True, text=True, check=True
+    )
+
+    # Parse the JSON output
+    packages = json.loads(process.stdout)
+    print(packages)
+    return packages
+
+
+###### pip list way vs. importlib_metadata way ######
 
 
 # From PyPI, get the latest package version for single package
@@ -65,17 +106,19 @@ def main():
 
     # If package_with_difference is not empty,
     # generate github issue to state we may need to update version of package
-    if packages_with_difference:
-        issue_body = "The following packages may need to be updated:\n"
-        for package, version in packages_with_difference.items():
-            issue_body += f"- {package}: {version}\n"
-        GH_REPO.create_issue(
-            title="Packages may need to be updated", body=issue_body, labels=["debt"]
-        )
+    # if packages_with_difference:
+    #     issue_body = "The following packages may need to be updated:\n"
+    #     for package, version in packages_with_difference.items():
+    #         issue_body += f"- {package}: {version}\n"
+    #     GH_REPO.create_issue(
+    #         title="Packages may need to be updated", body=issue_body, labels=["debt"]
+    #     )
     # print("pytest version")
     # print(pytest.__version__)
 
 
 if __name__ == "__main__":
     main()
+    # get_installed_packages()
+    use_importlib_metadata()
     # get_latest_package_version("black")
