@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import json
 import os
 import shutil
 from typing import Any, Dict, List, Optional
@@ -191,12 +192,18 @@ def test_pytest_collect(file, expected_const):
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
-        actual_item = actual_list.pop(0)
-        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
-        assert actual_item.get("status") == "success"
-        assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
-        assert actual_item.get("tests") == expected_const
+        try:
+            assert actual_list.pop(-1).get("eot")
+            actual_item = actual_list.pop(0)
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            )
+            assert actual_item.get("status") == "success"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+            assert actual_item.get("tests") == expected_const
+        except AssertionError:
+            print(json.dumps(actual_item, indent=4))
+            raise
 
 
 def test_pytest_root_dir():
