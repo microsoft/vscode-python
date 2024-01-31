@@ -182,10 +182,14 @@ def test_pytest_collect(file, expected_const):
     file -- a string with the file or folder to run pytest discovery on.
     expected_const -- the expected output from running pytest discovery on the file.
     """
+    path_fs = TEST_DATA_PATH / file
+    print("PATH: EJFB", path_fs)
+    os.listdir(TEST_DATA_PATH)
+    assert path_fs.exists()
     actual = runner(
         [
             "--collect-only",
-            os.fspath(TEST_DATA_PATH / file),
+            os.fspath(path_fs),
         ]
     )
 
@@ -202,7 +206,8 @@ def test_pytest_collect(file, expected_const):
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             assert actual_item.get("tests") == expected_const
         except AssertionError:
-            print(json.dumps(actual_item, indent=4))
+            print("assertion error occured, the actual item value is: \n")
+            print(json.dumps(actual_item, indent=4), "\n")
             raise
 
 
