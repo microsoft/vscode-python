@@ -55,6 +55,8 @@ async function* iterEnvsIterator(
             if (isProgressEvent(event)) {
                 if (event.stage === ProgressReportStage.discoveryFinished) {
                     state.done = true;
+                    // For super slow locators such as Windows registry, we expect updates even after discovery
+                    // is "officially" finished, hence do not dispose listeners.
                     // listener.dispose();
                 } else {
                     didUpdate.fire(event);
@@ -122,7 +124,6 @@ function checkIfFinishedAndNotify(
 ) {
     if (state.done && state.pending === 0) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
-        // didUpdate.dispose();
         traceVerbose(`Finished with environment reducer`);
         state.done = false; // No need to notify again.
     }
