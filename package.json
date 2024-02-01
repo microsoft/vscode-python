@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (Python Debugger), code formatting, refactoring, unit tests, and more.",
-    "version": "2024.0.0-rc",
+    "version": "2024.0.0",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
