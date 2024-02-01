@@ -2,8 +2,8 @@ name: Packages Update Check
 
 on:
     schedule:
-        # Run at UTC 00:00 Mon-Fri
-        - cron: '0 0 * * 1-5'
+        # Run at UTC 00:00 Mon
+        - cron: '0 0 * * 1'
 
 jobs:
     check-PyPI:
