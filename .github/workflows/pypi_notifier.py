@@ -8,15 +8,10 @@ import subprocess
 # GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
 # GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
 
-
 import pathlib
 from urllib import request
-
 from urllib.request import urlopen
 import json
-
-# importlib.metadata
-#####################################################################
 import importlib.metadata
 
 
@@ -36,23 +31,6 @@ def use_importlib_metadata():
     # Print pair of package and the version .
     for package, version in installed_packages.items():
         print(f"{package}: {version}")
-    #######################################################################
-
-
-###### pip list way vs. importlib_metadata way ######
-def get_installed_packages():
-    # Run "pip list" and output in JSON format
-    process = subprocess.run(
-        ["pip", "list", "--format=json"], capture_output=True, text=True, check=True
-    )
-
-    # Parse the JSON output
-    packages = json.loads(process.stdout)
-    print(packages)
-    return packages
-
-
-###### pip list way vs. importlib_metadata way ######
 
 
 # From PyPI, get the latest package version for single package
@@ -89,16 +67,18 @@ def main():
     requirement_content = pathlib.Path(root_path, "requirements.txt").read_text(
         encoding="utf-8"
     )
+
     # Dictionary of package name and its version
     packages = {}
     for line in requirement_content.splitlines():
         # print(line)
         # If line has == and \ then perform line split to store package and version
-        if "==" in line and "\\" in line:
-            package, version = line.split("==")
-            # remove \ in version string and blank spaces
-            version = version.replace("\\", "").strip()
-            # print(version)
+        if "==" in line and line.endswith("\\"):
+            requirement = line.removesuffix("\\")
+            # dont use split
+            # package, version = line.split("==")
+            package, _, version = requirement.partition("==")
+
             packages[package] = version
 
     latest_packages = get_entire_latest_package_version(packages)
