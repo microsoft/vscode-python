@@ -1,5 +1,4 @@
-# import subprocess
-
+import subprocess
 import github
 import os
 import pathlib
@@ -47,6 +46,32 @@ def main():
         issue_body = "Pytest may need to be updated:\n"
         GH_REPO.create_issue(
             title="Packages may need to be updated", body=issue_body, labels=["debt"]
+        )
+
+    # Now run --pre with pip on requirements.txt and run Python files in pythonFiles/tests/run_all.py
+    # Check to see if those tests pass, if they do not, then create an issue.
+    subprocess.run(
+        [
+            "python",
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            "-r",
+            "build/test-requirements.txt",
+        ],
+        check=False,
+    )
+    subprocess.run(["pip", "install", "-r", "build/requirements.txt", "--pre"])
+    # Run all tests in pythonFiles/tests/run_all.py using subprocess
+
+    test_exit_code = subprocess.run(["python", "pythonFiles/tests/run_all.py"])
+    if test_exit_code != 0:
+        issue_body = "Tests failed with newest Pytest version"
+        GH_REPO.create_issue(
+            title="Tests failed with newest Pytest version",
+            body=issue_body,
+            labels=["debt"],
         )
 
 
