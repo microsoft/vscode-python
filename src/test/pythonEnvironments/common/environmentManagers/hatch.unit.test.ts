@@ -29,7 +29,7 @@ interface VerifyOptions {
     cwd?: string;
 }
 
-export function makeExecHandler(venvDir: string, verify: VerifyOptions = {}) {
+export function makeExecHandler(venvDirs: Record<string, string>, verify: VerifyOptions = {}) {
     return async (file: string, args: string[], options: ShellOptions): Promise<ExecutionResult<string>> => {
         if (verify.hatchPath && file !== verify.hatchPath) {
             throw new Error('Command failed');
@@ -42,10 +42,11 @@ export function makeExecHandler(venvDir: string, verify: VerifyOptions = {}) {
         }
         const cmd = hatchCommand(args);
         if (cmd.cmd === 'env show --json') {
-            return { stdout: '{"default":{"type":"virtual"}}' };
+            const envs = Object.fromEntries(Object.keys(venvDirs).map((name) => [name, { type: 'virtual' }]));
+            return { stdout: JSON.stringify(envs) };
         }
-        if (cmd.cmd === 'env find' && cmd.env === 'default') {
-            return { stdout: venvDir };
+        if (cmd.cmd === 'env find' && cmd.env in venvDirs) {
+            return { stdout: venvDirs[cmd.env] };
         }
         throw new Error('Command failed');
     };
@@ -54,8 +55,17 @@ export function makeExecHandler(venvDir: string, verify: VerifyOptions = {}) {
 const testHatchDir = path.join(TEST_LAYOUT_ROOT, 'hatch');
 // This is usually in <data-dir>/hatch, e.g. `~/.local/share/hatch`
 const hatchEnvsDir = path.join(testHatchDir, 'env/virtual/python');
-export const projectDirs = { project1: path.join(testHatchDir, 'project1') };
-export const venvDirs = { project1: { default: path.join(hatchEnvsDir, 'cK2g6fIm/project1') } };
+export const projectDirs = {
+    project1: path.join(testHatchDir, 'project1'),
+    project2: path.join(testHatchDir, 'project2'),
+};
+export const venvDirs = {
+    project1: { default: path.join(hatchEnvsDir, 'cK2g6fIm/project1') },
+    project2: {
+        default: path.join(hatchEnvsDir, 'q4In3tK-/project2'),
+        test: path.join(hatchEnvsDir, 'q4In3tK-/test'),
+    },
+};
 
 suite('Hatch binary is located correctly', async () => {
     let exec: sinon.SinonStub;
@@ -74,7 +84,7 @@ suite('Hatch binary is located correctly', async () => {
         getPythonSetting.returns(hatchPath);
         // If `verify` is false, don’t verify that the command has been called with that path
         exec.callsFake(
-            makeExecHandler(venvDirs.project1.default, verify ? { hatchPath, cwd: projectDirs.project1 } : undefined),
+            makeExecHandler(venvDirs.project1, verify ? { hatchPath, cwd: projectDirs.project1 } : undefined),
         );
         const hatch = await Hatch.getHatch(projectDirs.project1);
         expect(hatch?.command).to.equal(hatchPath);

@@ -27,23 +27,34 @@ suite('Hatch Locator', () => {
 
     suiteTeardown(() => sinon.restore());
 
-    suite('Non-Windows', () => {
+    suite('iterEnvs()', () => {
         setup(() => {
-            locator = new HatchLocator(projectDirs.project1);
             getOSType.returns(platformUtils.OSType.Linux);
-            exec.callsFake(
-                makeExecHandler(venvDirs.project1.default, { hatchPath: 'hatch', cwd: projectDirs.project1 }),
-            );
         });
 
-        test('iterEnvs()', async () => {
-            // Act
+        test('project with only the default env', async () => {
+            locator = new HatchLocator(projectDirs.project1);
+            exec.callsFake(makeExecHandler(venvDirs.project1, { hatchPath: 'hatch', cwd: projectDirs.project1 }));
+
             const iterator = locator.iterEnvs();
             const actualEnvs = await getEnvs(iterator);
 
-            // Assert
             const expectedEnvs = [
                 createBasicEnv(PythonEnvKind.Hatch, path.join(venvDirs.project1.default, 'bin/python')),
+            ];
+            assertBasicEnvsEqual(actualEnvs, expectedEnvs);
+        });
+
+        test('project with multiple defined envs', async () => {
+            locator = new HatchLocator(projectDirs.project2);
+            exec.callsFake(makeExecHandler(venvDirs.project2, { hatchPath: 'hatch', cwd: projectDirs.project2 }));
+
+            const iterator = locator.iterEnvs();
+            const actualEnvs = await getEnvs(iterator);
+
+            const expectedEnvs = [
+                createBasicEnv(PythonEnvKind.Hatch, path.join(venvDirs.project2.default, 'bin/python')),
+                createBasicEnv(PythonEnvKind.Hatch, path.join(venvDirs.project2.test, 'bin/python')),
             ];
             assertBasicEnvsEqual(actualEnvs, expectedEnvs);
         });
