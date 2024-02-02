@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import json
 import os
 import shutil
+import string
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -196,6 +198,41 @@ def test_pytest_collect(file, expected_const):
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
         assert actual_item.get("tests") == expected_const
+
+
+def test_symlink_root_dir(tmp_path):
+    """
+    Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+    Discovery should succeed and testids should be relative to the symlinked root directory.
+    Keyword arguments:
+    tmp_path -- pytest fixture that creates a temporary directory.
+    """
+    # create symlink
+    source = TEST_DATA_PATH / "root"
+    destination = tmp_path / "symlink_root"
+    os.symlink(source, destination)
+
+    "--symlink-path-insert-here--"
+    # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
+    actual = runner_with_cwd(["--collect-only", f"--rootdir={destination}"], source)
+
+    # now assert the output is the same, but sub in the tmp_path for a placeholder in the expected output object.
+    json_expected = json.dumps(
+        expected_discovery_test_output.symlink_expected_discovery_output
+    )
+    json_expected_new = json_expected.replace(
+        "--symlink-path-insert-here--", str(destination)
+    )
+    expected = json.loads(json_expected_new)
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        assert actual_list.pop(-1).get("eot")
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success"
+        assert actual_item.get("cwd") == os.fspath(source)
+        assert actual_item.get("tests") == expected
 
 
 def test_pytest_root_dir():

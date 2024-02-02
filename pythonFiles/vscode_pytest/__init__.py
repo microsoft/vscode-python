@@ -57,6 +57,7 @@ map_id_to_path = dict()
 collected_tests_so_far = list()
 TEST_PORT = os.getenv("TEST_PORT")
 TEST_UUID = os.getenv("TEST_UUID")
+SYMLINK_PATH = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
@@ -74,6 +75,26 @@ def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+    # check if --rootdir is in the args
+    for arg in args:
+        if "--rootdir=" in arg:
+            rootdir = arg.split("--rootdir=")[1]
+            print("--rootdir= argument found:", rootdir)
+            if not os.path.exists(rootdir):
+                raise VSCodePytestError(
+                    f"The path set in the argument --rootdir={rootdir} does not exist."
+                )
+            if (
+                os.path.islink(rootdir)
+                and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
+            ):
+                print(
+                    f"rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.
+                      Therefore setting symlink path to rootdir argument."
+                )
+                global SYMLINK_PATH
+                SYMLINK_PATH = pathlib.Path(rootdir)
 
 
 def pytest_internalerror(excrepr, excinfo):
@@ -388,6 +409,12 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     class_nodes_dict: Dict[str, TestNode] = {}
     function_nodes_dict: Dict[str, TestNode] = {}
 
+    # Check to see if the global variable for symlink path is set
+    global SYMLINK_PATH
+    if SYMLINK_PATH:
+        session_node["path"] = SYMLINK_PATH
+        session_node["id_"] = os.fspath(SYMLINK_PATH)
+
     for test_case in session.items:
         test_node = create_test_node(test_case)
         if isinstance(test_case.parent, pytest.Class):
@@ -645,13 +672,29 @@ class EOTPayloadDict(TypedDict):
 
 
 def get_node_path(node: Any) -> pathlib.Path:
-    """A function that returns the path of a node given the switch to pathlib.Path."""
+    """
+    A function that returns the path of a node given the switch to pathlib.Path.
+    It also evaluates if the node is a symlink and returns the equivalent path.
+    """
     path = getattr(node, "path", None) or pathlib.Path(node.fspath)
 
     if not path:
         raise VSCodePytestError(
             f"Unable to find path for node: {node}, node.path: {node.path}, node.fspath: {node.fspath}"
         )
+
+    global SYMLINK_PATH
+    # Check for the session node since it has the symlink already.
+    if SYMLINK_PATH and not isinstance(node, pytest.Session):
+        # Get relative between the cwd (resolved path) and the node path.
+        try:
+            rel_path = os.path.relpath(path, pathlib.Path.cwd())
+            # Calculate the new node path by making it relative to the symlink path.
+            sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
+            return sym_path
+        except Exception as e:
+            raise VSCodePytestError(f"Error occurred while calculating symlink equivalent from node path: {e} \n",
+                                    "SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {path}, \n cwd: {{pathlib.Path.cwd()}}")
     return path
 
 

@@ -994,3 +994,52 @@ nested_classes_expected_test_output = {
     ],
     "id_": str(TEST_DATA_PATH),
 }
+
+symlink_expected_discovery_output = {
+    "name": "symlink_root",
+    "path": "--symlink-path-insert-here--",
+    "type_": "folder",
+    "children": [
+        {
+            "name": "tests",
+            "path": "--symlink-path-insert-here--/tests",
+            "type_": "folder",
+            "id_": "--symlink-path-insert-here--/tests",
+            "children": [
+                {
+                    "name": "test_a.py",
+                    "path": "--symlink-path-insert-here--/tests/test_a.py",
+                    "type_": "file",
+                    "id_": "--symlink-path-insert-here--/tests/test_a.py",
+                    "children": [
+                        {
+                            "name": "test_a_function",
+                            "path": "--symlink-path-insert-here--/tests/test_a.py",
+                            "lineno": "5",
+                            "type_": "test",
+                            "id_": "--symlink-path-insert-here--/tests/test_a.py::test_a_function",
+                            "runID": "--symlink-path-insert-here--/tests/test_a.py::test_a_function",
+                        }
+                    ],
+                },
+                {
+                    "name": "test_b.py",
+                    "path": "--symlink-path-insert-here--/tests/test_b.py",
+                    "type_": "file",
+                    "id_": "--symlink-path-insert-here--/tests/test_b.py",
+                    "children": [
+                        {
+                            "name": "test_b_function",
+                            "path": "--symlink-path-insert-here--/tests/test_b.py",
+                            "lineno": "5",
+                            "type_": "test",
+                            "id_": "--symlink-path-insert-here--/tests/test_b.py::test_b_function",
+                            "runID": "--symlink-path-insert-here--/tests/test_b.py::test_b_function",
+                        }
+                    ],
+                },
+            ],
+        }
+    ],
+    "id_": "--symlink-path-insert-here--",
+}

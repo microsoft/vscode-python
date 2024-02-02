@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import * as path from 'path';
 import { Uri } from 'vscode';
+import * as fs from 'fs';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -68,6 +69,19 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
+
+        const stats = fs.lstatSync(cwd);
+
+        if (stats.isSymbolicLink()) {
+            console.log('The path is a symbolic link.');
+            const rootDir = getRootDirValue(pytestArgs);
+            if (rootDir === null) {
+                pytestArgs.push(`--rootdir=${cwd}`);
+                console.log(`The --rootdir argument is set to ${cwd} since it is a symlink.`);
+            }
+        } else {
+            console.log('The path is not a symbolic link.');
+        }
 
         // get and edit env vars
         const mutableEnv = {
@@ -149,4 +163,17 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         });
         await deferredTillExecClose.promise;
     }
+}
+
+function getRootDirValue(pytestArgs: string[]): string | null {
+    // Find the argument that contains '--rootdir='
+    const rootdirArg = pytestArgs.find((arg) => arg.startsWith('--rootdir='));
+
+    if (rootdirArg) {
+        // Extract the value after '--rootdir='
+        return rootdirArg.split('=')[1];
+    }
+
+    // Return null if '--rootdir=' is not found
+    return null;
 }
