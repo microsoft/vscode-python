@@ -10,7 +10,9 @@ from unittestadapter.discovery import discover_tests
 from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
 
 from . import expected_discovery_test_output
-from .helpers import TEST_DATA_PATH, is_same_tree
+from pythonFiles.tests.tree_comparison_helper import is_same_tree
+
+TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(

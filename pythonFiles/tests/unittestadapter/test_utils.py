@@ -15,7 +15,9 @@ from unittestadapter.pvsc_utils import (
     get_test_case,
 )
 
-from .helpers import TEST_DATA_PATH, is_same_tree
+from pythonFiles.tests.tree_comparison_helper import is_same_tree
+
+TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(

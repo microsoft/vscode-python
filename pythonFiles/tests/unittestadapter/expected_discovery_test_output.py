@@ -3,8 +3,10 @@
 
 import os
 from unittestadapter.pvsc_utils import TestNodeTypeEnum
-from .helpers import TEST_DATA_PATH
 import pathlib
+
+TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
+
 
 skip_unittest_folder_discovery_output = {
     "path": os.fspath(TEST_DATA_PATH / "unittest_skip"),

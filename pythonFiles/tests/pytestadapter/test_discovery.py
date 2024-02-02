@@ -6,6 +6,8 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
+from pythonFiles.tests.tree_comparison_helper import is_same_tree
+
 from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
 
@@ -195,7 +197,7 @@ def test_pytest_collect(file, expected_const):
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
-        assert actual_item.get("tests") == expected_const
+        assert is_same_tree(actual_item.get("tests"), expected_const)
 
 
 def test_pytest_root_dir():
@@ -219,9 +221,9 @@ def test_pytest_root_dir():
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH / "root")
-        assert (
-            actual_item.get("tests")
-            == expected_discovery_test_output.root_with_config_expected_output
+        assert is_same_tree(
+            actual_item.get("tests"),
+            expected_discovery_test_output.root_with_config_expected_output,
         )
 
 
@@ -245,7 +247,7 @@ def test_pytest_config_file():
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH / "root")
-        assert (
-            actual_item.get("tests")
-            == expected_discovery_test_output.root_with_config_expected_output
+        assert is_same_tree(
+            actual_item.get("tests"),
+            expected_discovery_test_output.root_with_config_expected_output,
         )
