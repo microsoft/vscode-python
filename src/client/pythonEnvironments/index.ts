@@ -28,7 +28,7 @@ import { MicrosoftStoreLocator } from './base/locators/lowLevel/microsoftStoreLo
 import { getEnvironmentInfoService } from './base/info/environmentInfoService';
 import { registerNewDiscoveryForIOC } from './legacyIOC';
 import { PoetryLocator } from './base/locators/lowLevel/poetryLocator';
-import { HatchLocator } from './base/locators/hatchLocator';
+import { HatchLocator } from './base/locators/lowLevel/hatchLocator';
 import { createPythonEnvironments } from './api';
 import {
     createCollectionCache as createCache,

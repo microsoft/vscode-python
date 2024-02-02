@@ -1,14 +1,14 @@
 'use strict';
 
-import { PythonEnvKind } from '../info';
-import { BasicEnvInfo, IPythonEnvsIterator } from '../locator';
-import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
-import { Hatch } from '../../common/environmentManagers/hatch';
-import { asyncFilter } from '../../../common/utils/arrayUtils';
-import { pathExists } from '../../common/externalDependencies';
-import { traceError, traceVerbose } from '../../../logging';
-import { chain, iterable } from '../../../common/utils/async';
-import { getInterpreterPathFromDir } from '../../common/commonUtils';
+import { PythonEnvKind } from '../../info';
+import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
+import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
+import { Hatch } from '../../../common/environmentManagers/hatch';
+import { asyncFilter } from '../../../../common/utils/arrayUtils';
+import { pathExists } from '../../../common/externalDependencies';
+import { traceError, traceVerbose } from '../../../../logging';
+import { chain, iterable } from '../../../../common/utils/async';
+import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 
 /**
  * Gets all default virtual environment locations to look for in a workspace.
