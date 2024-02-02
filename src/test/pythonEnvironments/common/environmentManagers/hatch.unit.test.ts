@@ -44,7 +44,7 @@ export function makeExecHandler(venvDir: string, verify: VerifyOptions = {}) {
         if (cmd.cmd === 'env show --json') {
             return { stdout: '{"default":{"type":"virtual"}}' };
         }
-        if (cmd.cmd === 'env find') {
+        if (cmd.cmd === 'env find' && cmd.env === 'default') {
             return { stdout: venvDir };
         }
         throw new Error('Command failed');
