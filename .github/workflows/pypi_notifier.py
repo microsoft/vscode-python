@@ -100,5 +100,5 @@ def main():
 if __name__ == "__main__":
     main()
     # get_installed_packages()
-    use_importlib_metadata()
+    # use_importlib_metadata()
     # get_latest_package_version("black")
