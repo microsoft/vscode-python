@@ -103,6 +103,8 @@ export class PythonSettings implements IPythonSettings {
 
     public poetryPath = '';
 
+    public hatchPath = '';
+
     public devOptions: string[] = [];
 
     public autoComplete!: IAutoCompleteSettings;
@@ -260,6 +262,8 @@ export class PythonSettings implements IPythonSettings {
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
+        const hatchPath = systemVariables.resolveAny(pythonSettings.get<string>('hatchPath'))!;
+        this.hatchPath = hatchPath && hatchPath.length > 0 ? getAbsolutePath(hatchPath, workspaceRoot) : hatchPath;
 
         this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? {
             infoVisibility: 'onPythonRelated',
