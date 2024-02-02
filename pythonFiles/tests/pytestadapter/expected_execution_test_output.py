@@ -308,7 +308,7 @@ skip_tests_execution_expected_output = {
 #    └── test_top_folder.py
 #       └── test_top_function_t: success
 #       └── test_top_function_f: failure
-#    └── nested_folder_one
+#    └── z_nested_folder_one
 #       └── test_bottom_folder.py
 #          └── test_bottom_function_t: success
 #          └── test_bottom_function_f: failure
@@ -318,7 +318,7 @@ dual_level_nested_folder_top_path = (
 dual_level_nested_folder_bottom_path = (
     TEST_DATA_PATH
     / "dual_level_nested_folder"
-    / "nested_folder_one"
+    / "z_nested_folder_one"
     / "test_bottom_folder.py"
 )
 dual_level_nested_folder_execution_expected_output = {
@@ -345,11 +345,11 @@ dual_level_nested_folder_execution_expected_output = {
         "subtest": None,
     },
     get_absolute_test_id(
-        "nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+        "z_nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
         dual_level_nested_folder_bottom_path,
     ): {
         "test": get_absolute_test_id(
-            "nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+            "z_nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
             dual_level_nested_folder_bottom_path,
         ),
         "outcome": "success",
@@ -358,11 +358,11 @@ dual_level_nested_folder_execution_expected_output = {
         "subtest": None,
     },
     get_absolute_test_id(
-        "nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+        "z_nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
         dual_level_nested_folder_bottom_path,
     ): {
         "test": get_absolute_test_id(
-            "nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+            "z_nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
             dual_level_nested_folder_bottom_path,
         ),
         "outcome": "failure",
@@ -479,7 +479,7 @@ dual_level_nested_folder_top_path = (
 dual_level_nested_folder_bottom_path = (
     TEST_DATA_PATH
     / "dual_level_nested_folder"
-    / "nested_folder_one"
+    / "z_nested_folder_one"
     / "test_bottom_folder.py"
 )
 unittest_folder_add_path = TEST_DATA_PATH / "unittest_folder" / "test_add.py"
