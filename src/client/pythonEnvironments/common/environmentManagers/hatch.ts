@@ -1,6 +1,5 @@
-import * as path from 'path';
 import { isTestExecution } from '../../../common/constants';
-import { exec, getPythonSetting, pathExists, pathExistsSync, readFileSync } from '../externalDependencies';
+import { exec, getPythonSetting, pathExists } from '../externalDependencies';
 import { traceError, traceVerbose } from '../../../logging';
 import { cache } from '../../../common/utils/decorators';
 
@@ -27,13 +26,10 @@ export class Hatch {
 
     /**
      * Returns a Hatch instance corresponding to the binary which can be used to run commands for the cwd.
+     *
+     * Every directory is a valid Hatch project, so this should always return a Hatch instance.
      */
     public static async getHatch(cwd: string): Promise<Hatch | undefined> {
-        // Following check should be performed synchronously so we trigger hatch execution as soon as possible.
-        if (!hasValidHatchConfig(cwd)) {
-            // This check is not expensive and may change during a session, so we need not cache it.
-            return undefined;
-        }
         if (Hatch.hatchPromise.get(cwd) === undefined || isTestExecution()) {
             Hatch.hatchPromise.set(cwd, Hatch.locate(cwd));
         }
@@ -113,23 +109,4 @@ export class Hatch {
         );
         return envPaths.flatMap((r) => (r ? [r] : []));
     }
-}
-
-/**
- * Does best effort to verify whether a folder has been setup for hatch.
- *
- * @param dir Directory to look for pyproject.toml file in.
- */
-function hasValidHatchConfig(dir: string): boolean {
-    if (pathExistsSync(path.join(dir, 'hatch.toml'))) {
-        return true;
-    }
-    const pyprojectToml = path.join(dir, 'pyproject.toml');
-    if (pathExistsSync(pyprojectToml)) {
-        const content = readFileSync(pyprojectToml);
-        if (/^\[?tool.hatch\b/.test(content)) {
-            return true;
-        }
-    }
-    return false;
 }
