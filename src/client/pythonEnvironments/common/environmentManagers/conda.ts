@@ -10,6 +10,7 @@ import {
     readFile,
     onDidChangePythonSetting,
     exec,
+    inExperiment,
 } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
@@ -24,6 +25,7 @@ import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
 import { sleep } from '../../../common/utils/async';
+import { DiscoveryUsingWorkers } from '../../../common/experiments/groups';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -269,7 +271,7 @@ export class Conda {
         readonly command: string,
         shellCommand?: string,
         private readonly shellPath?: string,
-        private readonly useWorkerThreads = true,
+        private readonly useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
     ) {
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
@@ -290,7 +292,10 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string, useWorkerThreads = true): Promise<Conda | undefined> {
+    private static async locate(
+        shellPath?: string,
+        useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
+    ): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         let customCondaPath: string | undefined = 'conda';
