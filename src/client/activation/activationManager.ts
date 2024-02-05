@@ -11,6 +11,7 @@ import { PYTHON_LANGUAGE } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IDisposable, IInterpreterPathService, Resource } from '../common/types';
 import { Deferred } from '../common/utils/async';
+import { StopWatch } from '../common/utils/stopWatch';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { traceDecoratorError } from '../logging';
 import { sendActivationTelemetry } from '../telemetry/envFileTelemetry';
@@ -69,7 +70,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         }
     }
 
-    public async activate(): Promise<void> {
+    public async activate(startupStopWatch: StopWatch): Promise<void> {
         this.filterServices();
         await this.initialize();
 
@@ -77,12 +78,12 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
 
         await Promise.all([
             ...this.singleActivationServices.map((item) => item.activate()),
-            this.activateWorkspace(this.activeResourceService.getActiveResource()),
+            this.activateWorkspace(this.activeResourceService.getActiveResource(), startupStopWatch),
         ]);
     }
 
     @traceDecoratorError('Failed to activate a workspace')
-    public async activateWorkspace(resource: Resource): Promise<void> {
+    public async activateWorkspace(resource: Resource, startupStopWatch?: StopWatch): Promise<void> {
         const folder = this.workspaceService.getWorkspaceFolder(resource);
         resource = folder ? folder.uri : undefined;
         const key = this.getWorkspaceKey(resource);
@@ -97,7 +98,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
             await this.interpreterPathService.copyOldInterpreterStorageValuesToNew(resource);
         }
         await sendActivationTelemetry(this.fileSystem, this.workspaceService, resource);
-        await Promise.all(this.activationServices.map((item) => item.activate(resource)));
+        await Promise.all(this.activationServices.map((item) => item.activate(resource, startupStopWatch)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
 

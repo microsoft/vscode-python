@@ -81,13 +81,15 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const seen: PythonEnvInfo[] = [];
 
         if (iterator.onUpdated !== undefined) {
-            const listener = iterator.onUpdated(async (event) => {
+            iterator.onUpdated(async (event) => {
                 state.pending += 1;
                 if (isProgressEvent(event)) {
                     if (event.stage === ProgressReportStage.discoveryFinished) {
                         didUpdate.fire({ stage: ProgressReportStage.allPathsDiscovered });
                         state.done = true;
-                        listener.dispose();
+                        // For super slow locators such as Windows registry, we expect updates even after discovery
+                        // is "officially" finished, hence do not dispose listeners.
+                        // listener.dispose();
                     } else {
                         didUpdate.fire(event);
                     }
@@ -95,15 +97,14 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     throw new Error(
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
-                } else if (seen[event.index] !== undefined) {
+                } else if (event.index && seen[event.index] !== undefined) {
                     const old = seen[event.index];
                     await setKind(event.update, environmentKinds);
                     seen[event.index] = await resolveBasicEnv(event.update);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
                 } else {
-                    // This implies a problem in a downstream locator
-                    traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
+                    didUpdate.fire({ update: await this.resolveEnv(event.update.executablePath) });
                 }
                 state.pending -= 1;
                 checkIfFinishedAndNotify(state, didUpdate);
@@ -173,7 +174,6 @@ function checkIfFinishedAndNotify(
 ) {
     if (state.done && state.pending === 0) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
-        didUpdate.dispose();
         traceVerbose(`Finished with environment resolver`);
     }
 }

@@ -38,7 +38,11 @@ import { Interpreters } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { cache } from '../common/utils/decorators';
-import { PythonLocatorQuery, TriggerRefreshOptions } from '../pythonEnvironments/base/locator';
+import {
+    GetRefreshEnvironmentsOptions,
+    PythonLocatorQuery,
+    TriggerRefreshOptions,
+} from '../pythonEnvironments/base/locator';
 import { sleep } from '../common/utils/async';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
@@ -57,6 +61,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     public get refreshPromise(): Promise<void> | undefined {
         return this.pyenvs.getRefreshPromise();
+    }
+
+    public getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined {
+        return this.pyenvs.getRefreshPromise(options);
     }
 
     public get onDidChangeInterpreter(): Event<Uri | undefined> {

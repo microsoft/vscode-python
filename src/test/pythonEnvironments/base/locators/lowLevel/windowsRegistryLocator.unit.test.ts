@@ -222,7 +222,7 @@ suite('Windows Registry', () => {
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
         ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
-        const iterator = locator.iterEnvs();
+        const iterator = locator.iterEnvs(undefined, true);
         const actualEnvs = await getEnvs(iterator);
 
         assertBasicEnvsEqual(actualEnvs, expectedEnvs);
@@ -233,7 +233,7 @@ suite('Windows Registry', () => {
             throw Error();
         });
 
-        const iterator = locator.iterEnvs();
+        const iterator = locator.iterEnvs(undefined, true);
         const actualEnvs = await getEnvs(iterator);
 
         assert.deepStrictEqual(actualEnvs, []);
@@ -252,7 +252,7 @@ suite('Windows Registry', () => {
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
         ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
-        const iterator = locator.iterEnvs();
+        const iterator = locator.iterEnvs(undefined, true);
         const actualEnvs = await getEnvs(iterator);
 
         assertBasicEnvsEqual(actualEnvs, expectedEnvs);

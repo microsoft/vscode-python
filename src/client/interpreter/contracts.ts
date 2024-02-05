@@ -4,6 +4,7 @@ import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { Resource } from '../common/types';
 import { PythonEnvSource } from '../pythonEnvironments/base/info';
 import {
+    GetRefreshEnvironmentsOptions,
     ProgressNotificationEvent,
     PythonLocatorQuery,
     TriggerRefreshOptions,
@@ -22,7 +23,7 @@ export const IComponentAdapter = Symbol('IComponentAdapter');
 export interface IComponentAdapter {
     readonly onProgress: Event<ProgressNotificationEvent>;
     triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void>;
-    getRefreshPromise(): Promise<void> | undefined;
+    getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined;
     readonly onChanged: Event<PythonEnvironmentsChangedEvent>;
     // VirtualEnvPrompt
     onDidCreate(resource: Resource, callback: () => void): Disposable;
@@ -74,6 +75,7 @@ export const IInterpreterService = Symbol('IInterpreterService');
 export interface IInterpreterService {
     triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void>;
     readonly refreshPromise: Promise<void> | undefined;
+    getRefreshPromise(options?: GetRefreshEnvironmentsOptions): Promise<void> | undefined;
     readonly onDidChangeInterpreters: Event<PythonEnvironmentsChangedEvent>;
     onDidChangeInterpreterConfiguration: Event<Uri | undefined>;
     onDidChangeInterpreter: Event<Uri | undefined>;
