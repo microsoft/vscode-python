@@ -271,8 +271,15 @@ export class Conda {
         readonly command: string,
         shellCommand?: string,
         private readonly shellPath?: string,
-        private readonly useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
+        private readonly useWorkerThreads?: boolean,
     ) {
+        if (this.useWorkerThreads === undefined) {
+            try {
+                this.useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
+            } catch {
+                this.useWorkerThreads = false; // Temporarily support for legacy tests
+            }
+        }
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
             Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
@@ -292,10 +299,14 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(
-        shellPath?: string,
-        useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
-    ): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string, useWorkerThreads?: boolean): Promise<Conda | undefined> {
+        if (useWorkerThreads === undefined) {
+            try {
+                useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
+            } catch {
+                useWorkerThreads = false; // Temporarily support for legacy tests
+            }
+        }
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         let customCondaPath: string | undefined = 'conda';
