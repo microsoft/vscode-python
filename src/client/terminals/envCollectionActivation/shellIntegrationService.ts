@@ -5,6 +5,7 @@ import { injectable, inject } from 'inversify';
 import { IApplicationShell, ITerminalManager, IWorkspaceService } from '../../common/application/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
+import { IPersistentStateFactory } from '../../common/types';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
@@ -22,12 +23,22 @@ const ShellIntegrationShells = [
     TerminalShellType.fish,
 ];
 
+export const isShellIntegrationWorkingKey = 'SHELL_INTEGRATION_WORKING_KEY';
+
 @injectable()
 export class ShellIntegrationService implements IShellIntegrationService {
+    /**
+     * It seems to have a couple of issues:
+     * * Ends up cluterring terminal history
+     * * Does not work for hidden terminals: https://github.com/microsoft/vscode/issues/199611
+     */
+    private readonly USE_COMMAND_APPROACH = false;
+
     constructor(
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
     ) {}
 
     public async isWorking(shell: string): Promise<boolean> {
@@ -50,6 +61,23 @@ export class ShellIntegrationService implements IShellIntegrationService {
         if (!isSupposedToWork) {
             return false;
         }
+        if (!this.USE_COMMAND_APPROACH) {
+            // For now, based on problems with using the command approach, assume it always works.
+            return true;
+        }
+        const key = `${isShellIntegrationWorkingKey}_${shellType}`;
+        const persistedResult = this.persistentStateFactory.createGlobalPersistentState<boolean>(key);
+        if (persistedResult.value !== undefined) {
+            return persistedResult.value;
+        }
+        const result = await this.checkIfWorkingByRunningCommand(shell);
+        // Persist result to storage to avoid running commands unncecessary.
+        await persistedResult.updateValue(result);
+        return result;
+    }
+
+    private async checkIfWorkingByRunningCommand(shell: string): Promise<boolean> {
+        const shellType = identifyShellFromShellPath(shell);
         const deferred = createDeferred<void>();
         const timestamp = new Date().getTime();
         const name = `Python ${timestamp}`;
