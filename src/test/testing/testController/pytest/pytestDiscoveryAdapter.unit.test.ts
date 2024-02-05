@@ -6,6 +6,8 @@ import { Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
+import * as fs from 'fs';
+import * as sinon from 'sinon';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestServer } from '../../../../client/testing/testController/common/types';
@@ -52,6 +54,8 @@ suite('pytest test discovery adapter', () => {
             TEST_PORT: portNum.toString(),
         };
 
+        sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
+
         // set up test server
         testServer = typeMoq.Mock.ofType<ITestServer>();
         testServer.setup((t) => t.getPort()).returns(() => portNum);
@@ -93,6 +97,9 @@ suite('pytest test discovery adapter', () => {
                     },
                 };
             });
+    });
+    teardown(() => {
+        sinon.restore();
     });
     test('Discovery should call exec with correct basic args', async () => {
         // set up exec mock
