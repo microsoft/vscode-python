@@ -14,7 +14,7 @@ import { IDisposableRegistry, IConfigurationService, Resource } from '../../comm
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
@@ -44,6 +44,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             (cmd) => {
                 this.disposableRegistry.push(
                     this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
+                        traceVerbose(`Attempting to run Python file`, file?.fsPath);
                         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
                         const interpreter = await interpreterService.getActiveInterpreter(file);
                         if (!interpreter) {
