@@ -25,6 +25,9 @@ import {
     createEOTPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
+    argsToMap,
+    addArgIfNotExist,
+    mapToArgs,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
@@ -67,18 +70,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const relativePathToPytest = 'pythonFiles';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
-        const { pytestArgs } = settings.testing;
+        let pytestArgsMap = argsToMap(settings.testing.pytestArgs);
+        console.log(`pytestArgsMap: ${JSON.stringify(pytestArgsMap)}`);
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
+        // check for symbolic path
         const stats = fs.lstatSync(cwd);
-
         if (stats.isSymbolicLink()) {
             console.log('The path is a symbolic link.');
-            const rootDir = getRootDirValue(pytestArgs);
-            if (rootDir === null) {
-                pytestArgs.push(`--rootdir=${cwd}`);
-                console.log(`The --rootdir argument is set to ${cwd} since it is a symlink.`);
-            }
+            pytestArgsMap = addArgIfNotExist(pytestArgsMap, '--rootdir', cwd);
         } else {
             console.log('The path is not a symbolic link.');
         }
@@ -112,7 +112,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(mapToArgs(pytestArgsMap));
         traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
@@ -163,17 +163,4 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         });
         await deferredTillExecClose.promise;
     }
-}
-
-function getRootDirValue(pytestArgs: string[]): string | null {
-    // Find the argument that contains '--rootdir='
-    const rootdirArg = pytestArgs.find((arg) => arg.startsWith('--rootdir='));
-
-    if (rootdirArg) {
-        // Extract the value after '--rootdir='
-        return rootdirArg.split('=')[1];
-    }
-
-    // Return null if '--rootdir=' is not found
-    return null;
 }
