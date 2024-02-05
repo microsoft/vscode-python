@@ -3,11 +3,16 @@
 
 import os
 import pathlib
+import sys
 from typing import List
 
 import pytest
 from unittestadapter.discovery import discover_tests
 from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
+
+script_dir = pathlib.Path(__file__).parent.parent.parent
+sys.path.append(os.fspath(script_dir))
+
 
 from . import expected_discovery_test_output
 from pythonFiles.tests.tree_comparison_helper import is_same_tree

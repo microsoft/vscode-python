@@ -3,6 +3,7 @@
 
 import os
 import pathlib
+import sys
 import unittest
 
 import pytest
@@ -14,6 +15,9 @@ from unittestadapter.pvsc_utils import (
     get_child_node,
     get_test_case,
 )
+
+script_dir = pathlib.Path(__file__).parent.parent.parent
+sys.path.append(os.fspath(script_dir))
 
 from pythonFiles.tests.tree_comparison_helper import is_same_tree
 

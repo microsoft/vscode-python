@@ -1,10 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 import os
+import pathlib
 import shutil
+import sys
 from typing import Any, Dict, List, Optional
 
 import pytest
+
+script_dir = pathlib.Path(__file__).parent.parent.parent
+sys.path.append(os.fspath(script_dir))
 
 from pythonFiles.tests.tree_comparison_helper import is_same_tree
 
