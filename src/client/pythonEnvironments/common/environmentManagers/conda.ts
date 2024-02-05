@@ -299,8 +299,9 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string, useWorkerThreads?: boolean): Promise<Conda | undefined> {
-        if (useWorkerThreads === undefined) {
+    private static async locate(shellPath?: string, useWorkerThread?: boolean): Promise<Conda | undefined> {
+        let useWorkerThreads: boolean;
+        if (useWorkerThread === undefined) {
             try {
                 useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
             } catch {
@@ -411,7 +412,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath, undefined, shellPath, useWorkerThreads);
+            let conda = new Conda(condaPath, undefined, shellPath);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
