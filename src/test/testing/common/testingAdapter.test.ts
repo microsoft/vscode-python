@@ -198,29 +198,65 @@ suite('End to End Tests: test adapters', () => {
             status: 'success' | 'error';
             error?: string[];
         };
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
+        // run pytest discovery
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(
+            pythonTestServer,
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+
         // set workspace to test workspace folder
-        const target = rootPathSmallWorkspace;
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+            // verification after discovery is complete
+
+            // 1. Check the status is "success"
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            ); // 2. Confirm no errors
+            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+        });
+    });
+    test('pytest discovery adapter small workspace with symlink', async () => {
+        // result resolver and saved data for assertions
+        let actualData: {
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
+        };
+        // set workspace to test workspace folder
+        // const target = rootPathSmallWorkspace;
         const rootPathSmallWorkspaceSymlink = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
             'testTestingRootWkspc',
-            'symlinkSmallWorkspace3',
+            'symlinkWorkspace',
+            'smallWorkspace',
         );
-        fs.symlink(target, rootPathSmallWorkspaceSymlink, 'dir', (err) => {
-            if (err) {
-                console.error(err);
-            } else {
-                console.log('Directory symlink created');
-            }
-        });
+        const testSimpleSymlinkPath = path.join(rootPathSmallWorkspaceSymlink, 'test_simple.py');
         workspaceUri = Uri.parse(rootPathSmallWorkspaceSymlink);
         const stats = fs.lstatSync(rootPathSmallWorkspaceSymlink);
 
-        if (stats.isSymbolicLink()) {
-            console.log('The path is a symbolic link.');
-        } else {
-            console.log('The path is not a symbolic link.');
-        }
+        // confirm that the path is a symbolic link
+        assert.ok(stats.isSymbolicLink(), 'The path is not a symbolic link but must be for this test.');
+
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
@@ -250,7 +286,15 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
-
+            // 4. Confirm that the cwd returned is the symlink path
+            assert.strictEqual(actualData.cwd, rootPathSmallWorkspaceSymlink, 'Expected cwd to be the symlink path');
+            // 5. Confirm that the test's path is also using the symlink as the root
+            assert.strictEqual(
+                (actualData.tests as { children: { path: string }[] }).children[0].path,
+                testSimpleSymlinkPath,
+                'Expected test path to be the symlink path',
+            );
+            // 5. Confirm that resolveDiscovery was called once
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });

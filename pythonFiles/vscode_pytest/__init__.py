@@ -90,7 +90,7 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
             ):
                 print(
-                    f"rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
                     "Therefore setting symlink path to rootdir argument.",
                 )
                 global SYMLINK_PATH
@@ -347,6 +347,14 @@ def pytest_sessionfinish(session, exitstatus):
     Exit code 5: No tests were collected
     """
     cwd = pathlib.Path.cwd()
+    global SYMLINK_PATH
+    if SYMLINK_PATH:
+        print("Plugin warning[vscode-pytest]: SYMLINK set, adjusting cwd.")
+        # Get relative between the cwd (resolved path) and the node path.
+        rel_path = os.path.relpath(cwd, pathlib.Path.cwd())
+        # Calculate the new node path by making it relative to the symlink path.
+        cwd = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
+
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
             errorNode: TestNode = {
