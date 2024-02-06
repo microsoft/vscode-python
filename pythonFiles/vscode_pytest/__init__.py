@@ -90,8 +90,8 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
             ):
                 print(
-                    f"rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.
-                      Therefore setting symlink path to rootdir argument."
+                    f"rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
+                    "Therefore setting symlink path to rootdir argument.",
                 )
                 global SYMLINK_PATH
                 SYMLINK_PATH = pathlib.Path(rootdir)
@@ -693,8 +693,10 @@ def get_node_path(node: Any) -> pathlib.Path:
             sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
             return sym_path
         except Exception as e:
-            raise VSCodePytestError(f"Error occurred while calculating symlink equivalent from node path: {e} \n",
-                                    "SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {path}, \n cwd: {{pathlib.Path.cwd()}}")
+            raise VSCodePytestError(
+                f"Error occurred while calculating symlink equivalent from node path: {e} \n",
+                "SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {path}, \n cwd: {{pathlib.Path.cwd()}}",
+            )
     return path
 
 

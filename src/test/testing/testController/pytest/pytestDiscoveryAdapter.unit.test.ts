@@ -54,8 +54,6 @@ suite('pytest test discovery adapter', () => {
             TEST_PORT: portNum.toString(),
         };
 
-        sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
-
         // set up test server
         testServer = typeMoq.Mock.ofType<ITestServer>();
         testServer.setup((t) => t.getPort()).returns(() => portNum);
@@ -111,6 +109,7 @@ suite('pytest test discovery adapter', () => {
                 deferred.resolve();
                 return Promise.resolve(execService.object);
             });
+        sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
         adapter = new PytestTestDiscoveryAdapter(testServer.object, configService, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
@@ -150,6 +149,8 @@ suite('pytest test discovery adapter', () => {
             }),
         } as unknown) as IConfigurationService;
 
+        sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
+
         // set up exec mock
         deferred = createDeferred();
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
@@ -168,6 +169,7 @@ suite('pytest test discovery adapter', () => {
         mockProc.trigger('close');
 
         // verification
+
         const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
         execService.verify(
             (x) =>
@@ -176,6 +178,65 @@ suite('pytest test discovery adapter', () => {
                     typeMoq.It.is<SpawnOptions>((options) => {
                         assert.deepEqual(options.env, expectedExtraVariables);
                         assert.equal(options.cwd, expectedPathNew);
+                        assert.equal(options.throwOnStdErr, true);
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+    test('Test discovery adds cwd to pytest args when path is symlink', async () => {
+        sinon.stub(fs, 'lstatSync').returns({
+            isFile: () => true,
+            isSymbolicLink: () => true,
+        } as fs.Stats);
+
+        // set up a config service with different pytest args
+        const configServiceNew: IConfigurationService = ({
+            getSettings: () => ({
+                testing: {
+                    pytestArgs: ['.', 'abc', 'xyz'],
+                    cwd: expectedPath,
+                },
+            }),
+        } as unknown) as IConfigurationService;
+
+        // set up exec mock
+        deferred = createDeferred();
+        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => {
+                deferred.resolve();
+                return Promise.resolve(execService.object);
+            });
+
+        adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
+        adapter.discoverTests(uri, execFactory.object);
+        // add in await and trigger
+        await deferred.promise;
+        await deferred2.promise;
+        mockProc.trigger('close');
+
+        // verification
+        const expectedArgs = [
+            '-m',
+            'pytest',
+            '-p',
+            'vscode_pytest',
+            '--collect-only',
+            '.',
+            'abc',
+            'xyz',
+            `--rootdir=${expectedPath}`,
+        ];
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        assert.deepEqual(options.env, expectedExtraVariables);
+                        assert.equal(options.cwd, expectedPath);
                         assert.equal(options.throwOnStdErr, true);
                         return true;
                     }),
