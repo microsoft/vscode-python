@@ -2,10 +2,15 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
-import { IApplicationShell, ITerminalManager, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    ITerminalManager,
+    IWorkspaceService,
+} from '../../common/application/types';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
-import { IPersistentStateFactory } from '../../common/types';
+import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { createDeferred, sleep } from '../../common/utils/async';
 import { cache } from '../../common/utils/decorators';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
@@ -34,12 +39,29 @@ export class ShellIntegrationService implements IShellIntegrationService {
      */
     private readonly USE_COMMAND_APPROACH = false;
 
+    private isWorkingForShell = new Set<TerminalShellType>();
+
     constructor(
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-    ) {}
+        @inject(IApplicationShell) private readonly appEnvironment: IApplicationEnvironment,
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+    ) {
+        this.disposables.push(
+            this.appShell.onDidWriteTerminalData((e) => {
+                if (e.data.includes('\x1b]633;A\x07')) {
+                    let { shell } = this.appEnvironment;
+                    if ('shellPath' in e.terminal.creationOptions && e.terminal.creationOptions.shellPath) {
+                        shell = e.terminal.creationOptions.shellPath;
+                    }
+                    const shellType = identifyShellFromShellPath(shell);
+                    this.isWorkingForShell.add(shellType);
+                }
+            }),
+        );
+    }
 
     public async isWorking(shell: string): Promise<boolean> {
         return this._isWorking(shell).catch((ex) => {
@@ -62,8 +84,12 @@ export class ShellIntegrationService implements IShellIntegrationService {
             return false;
         }
         if (!this.USE_COMMAND_APPROACH) {
-            // For now, based on problems with using the command approach, assume it always works.
-            return true;
+            // For now, based on problems with using the command approach, use terminal data write event.
+            if (!this.isWorkingForShell.has(shellType)) {
+                // Maybe data write event has not been processed yet, wait a bit.
+                await sleep(1000);
+            }
+            return this.isWorkingForShell.has(shellType);
         }
         const key = `${isShellIntegrationWorkingKey}_${shellType}`;
         const persistedResult = this.persistentStateFactory.createGlobalPersistentState<boolean>(key);
