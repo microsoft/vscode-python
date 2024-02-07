@@ -10,6 +10,7 @@ import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.append(os.fspath(script_dir))
+print("SCRIPT DIR: ", script_dir)
 
 from pythonFiles.tests.tree_comparison_helper import is_same_tree
 
