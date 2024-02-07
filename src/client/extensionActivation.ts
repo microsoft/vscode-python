@@ -51,11 +51,13 @@ import { registerCreateEnvironmentTriggers } from './pythonEnvironments/creation
 import { initializePersistentStateForTriggers } from './common/persistentState';
 import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
+import { StopWatch } from './common/utils/stopWatch';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
     ext: ExtensionState,
     components: Components,
+    startupStopWatch: StopWatch,
 ): Promise<ActivationResult[]> {
     // Note that each activation returns a promise that resolves
     // when that activation completes.  However, it might have started
@@ -73,7 +75,7 @@ export async function activateComponents(
     // activate them in parallel with the other components.
     // https://github.com/microsoft/vscode-python/issues/15380
     // These will go away eventually once everything is refactored into components.
-    const legacyActivationResult = await activateLegacy(ext);
+    const legacyActivationResult = await activateLegacy(ext, startupStopWatch);
     const workspaceService = new WorkspaceService();
     if (!workspaceService.isTrusted) {
         return [legacyActivationResult];
@@ -105,7 +107,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
 // init and activation: move them to activateComponents().
 // See https://github.com/microsoft/vscode-python/issues/10454.
 
-async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
+async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch): Promise<ActivationResult> {
     const { legacyIOC } = ext;
     const { serviceManager, serviceContainer } = legacyIOC;
 
@@ -183,7 +185,7 @@ async function activateLegacy(ext: ExtensionState): Promise<ActivationResult> {
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     disposables.push(manager);
 
-    const activationPromise = manager.activate();
+    const activationPromise = manager.activate(startupStopWatch);
 
     return { fullyReady: activationPromise };
 }

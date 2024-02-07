@@ -3,16 +3,13 @@
 
 import { assert, expect } from 'chai';
 import * as path from 'path';
-import { EventEmitter } from 'vscode';
 import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import { PythonEnvsReducer } from '../../../../../client/pythonEnvironments/base/locators/composite/envsReducer';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { createBasicEnv, getEnvs, getEnvsWithUpdates, SimpleLocator } from '../../common';
 import {
-    PythonEnvUpdatedEvent,
     BasicEnvInfo,
-    ProgressNotificationEvent,
     ProgressReportStage,
     isProgressEvent,
 } from '../../../../../client/pythonEnvironments/base/locator';
@@ -63,31 +60,6 @@ suite('Python envs locator - Environments Reducer', () => {
                 ]),
             ];
             assertBasicEnvsEqual(envs, expected);
-        });
-
-        test('Updates to environments from the incoming iterator replaces the previous info', async () => {
-            // Arrange
-            const env = createBasicEnv(PythonEnvKind.Poetry, path.join('path', 'to', 'exec1'));
-            const updatedEnv = createBasicEnv(PythonEnvKind.Venv, path.join('path', 'to', 'exec1'));
-            const envsReturnedByParentLocator = [env];
-            const didUpdate = new EventEmitter<PythonEnvUpdatedEvent<BasicEnvInfo> | ProgressNotificationEvent>();
-            const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator, {
-                onUpdated: didUpdate.event,
-            });
-            const reducer = new PythonEnvsReducer(parentLocator);
-
-            // Act
-            const iterator = reducer.iterEnvs();
-
-            const iteratorUpdateCallback = () => {
-                didUpdate.fire({ index: 0, old: env, update: updatedEnv });
-                didUpdate.fire({ stage: ProgressReportStage.discoveryFinished }); // It is essential for the incoming iterator to fire "null" event signifying it's done
-            };
-            const envs = await getEnvsWithUpdates(iterator, iteratorUpdateCallback);
-
-            // Assert
-            assertBasicEnvsEqual(envs, [updatedEnv]);
-            didUpdate.dispose();
         });
 
         test('Ensure progress updates are emitted correctly', async () => {

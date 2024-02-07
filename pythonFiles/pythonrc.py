@@ -49,7 +49,7 @@ class ps1:
             exit_code = 1
         else:
             exit_code = 0
-
+        self.hooks.failure_flag = False
         # Guide following official VS Code doc for shell integration sequence:
         result = ""
         # For non-windows allow recent_command history.

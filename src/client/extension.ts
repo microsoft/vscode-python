@@ -110,6 +110,7 @@ async function activateUnsafe(
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
     startupDurations.startActivateTime = startupStopWatch.elapsedTime;
+    const activationStopWatch = new StopWatch();
 
     //===============================================
     // activation starts here
@@ -127,7 +128,7 @@ async function activateUnsafe(
     const components = await initializeComponents(ext);
 
     // Then we finish activating.
-    const componentsActivated = await activateComponents(ext, components);
+    const componentsActivated = await activateComponents(ext, components, activationStopWatch);
     activateFeatures(ext, components);
 
     const nonBlocking = componentsActivated.map((r) => r.fullyReady);

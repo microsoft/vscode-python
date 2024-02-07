@@ -10,6 +10,7 @@ import {
     readFile,
     onDidChangePythonSetting,
     exec,
+    inExperiment,
 } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
@@ -24,6 +25,7 @@ import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
 import { sleep } from '../../../common/utils/async';
+import { DiscoveryUsingWorkers } from '../../../common/experiments/groups';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -269,8 +271,15 @@ export class Conda {
         readonly command: string,
         shellCommand?: string,
         private readonly shellPath?: string,
-        private readonly useWorkerThreads = true,
+        private readonly useWorkerThreads?: boolean,
     ) {
+        if (this.useWorkerThreads === undefined) {
+            try {
+                this.useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
+            } catch {
+                this.useWorkerThreads = false; // Temporarily support for legacy tests
+            }
+        }
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
             Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
@@ -290,7 +299,15 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string, useWorkerThreads = true): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string, useWorkerThread?: boolean): Promise<Conda | undefined> {
+        let useWorkerThreads: boolean;
+        if (useWorkerThread === undefined) {
+            try {
+                useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
+            } catch {
+                useWorkerThreads = false; // Temporarily support for legacy tests
+            }
+        }
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         let customCondaPath: string | undefined = 'conda';
@@ -395,7 +412,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath, undefined, shellPath, useWorkerThreads);
+            let conda = new Conda(condaPath, undefined, shellPath);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {
