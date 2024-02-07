@@ -12,7 +12,7 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 print("SCRIPT DIR: ", script_dir)
 
-from tree_comparison_helper import is_same_tree
+from tests.tree_comparison_helper import is_same_tree
 
 from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
