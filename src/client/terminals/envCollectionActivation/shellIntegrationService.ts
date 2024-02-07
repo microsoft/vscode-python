@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable, inject } from 'inversify';
+import { EventEmitter } from 'vscode';
 import {
     IApplicationEnvironment,
     IApplicationShell,
@@ -41,27 +42,53 @@ export class ShellIntegrationService implements IShellIntegrationService {
 
     private isWorkingForShell = new Set<TerminalShellType>();
 
+    private readonly didChange = new EventEmitter<void>();
+
+    private isDataWriteEventWorking = true;
+
     constructor(
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IApplicationShell) private readonly appEnvironment: IApplicationEnvironment,
+        @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {
-        this.disposables.push(
-            this.appShell.onDidWriteTerminalData((e) => {
-                if (e.data.includes('\x1b]633;A\x07')) {
-                    let { shell } = this.appEnvironment;
-                    if ('shellPath' in e.terminal.creationOptions && e.terminal.creationOptions.shellPath) {
-                        shell = e.terminal.creationOptions.shellPath;
+        try {
+            this.appShell.onDidWriteTerminalData(
+                (e) => {
+                    if (e.data.includes('\x1b]633;A\x07')) {
+                        let { shell } = this.appEnvironment;
+                        if ('shellPath' in e.terminal.creationOptions && e.terminal.creationOptions.shellPath) {
+                            shell = e.terminal.creationOptions.shellPath;
+                        }
+                        const shellType = identifyShellFromShellPath(shell);
+                        const wasWorking = this.isWorkingForShell.has(shellType);
+                        this.isWorkingForShell.add(shellType);
+                        if (!wasWorking) {
+                            // If it wasn't working previously, status has changed.
+                            this.didChange.fire();
+                        }
                     }
-                    const shellType = identifyShellFromShellPath(shell);
-                    this.isWorkingForShell.add(shellType);
-                }
-            }),
-        );
+                },
+                this,
+                this.disposables,
+            );
+            this.appEnvironment.onDidChangeShell(
+                async (shell: string) => {
+                    this.createDummyHiddenTerminal(shell);
+                },
+                this,
+                this.disposables,
+            );
+            this.createDummyHiddenTerminal(this.appEnvironment.shell);
+        } catch (ex) {
+            this.isDataWriteEventWorking = false;
+            traceError('Unable to check if shell integration is active', ex);
+        }
     }
+
+    public readonly onDidChangeStatus = this.didChange.event;
 
     public async isWorking(shell: string): Promise<boolean> {
         return this._isWorking(shell).catch((ex) => {
@@ -85,6 +112,14 @@ export class ShellIntegrationService implements IShellIntegrationService {
         }
         if (!this.USE_COMMAND_APPROACH) {
             // For now, based on problems with using the command approach, use terminal data write event.
+            if (!this.isDataWriteEventWorking) {
+                // Assume shell integration is working, if data write event isn't working.
+                return true;
+            }
+            if (shellType === TerminalShellType.powershell || shellType === TerminalShellType.powershellCore) {
+                // Due to upstream bug: https://github.com/microsoft/vscode/issues/204616, assume shell integration is working for now.
+                return true;
+            }
             if (!this.isWorkingForShell.has(shellType)) {
                 // Maybe data write event has not been processed yet, wait a bit.
                 await sleep(1000);
@@ -100,6 +135,16 @@ export class ShellIntegrationService implements IShellIntegrationService {
         // Persist result to storage to avoid running commands unncecessary.
         await persistedResult.updateValue(result);
         return result;
+    }
+
+    /**
+     * Creates a dummy terminal so that we are guaranteed a data write event for this shell type.
+     */
+    private createDummyHiddenTerminal(shell: string) {
+        this.terminalManager.createTerminal({
+            shellPath: shell,
+            hideFromUser: true,
+        });
     }
 
     private async checkIfWorkingByRunningCommand(shell: string): Promise<boolean> {
