@@ -1015,7 +1015,10 @@ symlink_expected_discovery_output = {
                         {
                             "name": "test_a_function",
                             "path": "--symlink-path-insert-here--/tests/test_a.py",
-                            "lineno": "5",
+                            "lineno": find_test_line_number(
+                                "test_a_function",
+                                os.path.join(tests_path, "test_a.py"),
+                            ),
                             "type_": "test",
                             "id_": "--symlink-path-insert-here--/tests/test_a.py::test_a_function",
                             "runID": "--symlink-path-insert-here--/tests/test_a.py::test_a_function",
@@ -1031,7 +1034,10 @@ symlink_expected_discovery_output = {
                         {
                             "name": "test_b_function",
                             "path": "--symlink-path-insert-here--/tests/test_b.py",
-                            "lineno": "5",
+                            "lineno": find_test_line_number(
+                                "test_b_function",
+                                os.path.join(tests_path, "test_b.py"),
+                            ),
                             "type_": "test",
                             "id_": "--symlink-path-insert-here--/tests/test_b.py::test_b_function",
                             "runID": "--symlink-path-insert-here--/tests/test_b.py::test_b_function",

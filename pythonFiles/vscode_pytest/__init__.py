@@ -80,7 +80,6 @@ def pytest_load_initial_conftests(early_config, parser, args):
     for arg in args:
         if "--rootdir=" in arg:
             rootdir = arg.split("--rootdir=")[1]
-            print("--rootdir= argument found:", rootdir)
             if not os.path.exists(rootdir):
                 raise VSCodePytestError(
                     f"The path set in the argument --rootdir={rootdir} does not exist."

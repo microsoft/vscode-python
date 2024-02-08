@@ -11,7 +11,7 @@ import {
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import {
     DataReceivedEvent,
     DiscoveredTestPayload,
@@ -71,16 +71,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
         let pytestArgsMap = argsToMap(settings.testing.pytestArgs);
-        console.log(`pytestArgsMap: ${JSON.stringify(pytestArgsMap)}`);
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         // check for symbolic path
         const stats = fs.lstatSync(cwd);
         if (stats.isSymbolicLink()) {
-            console.log('The path is a symbolic link.');
+            traceWarn(
+                "The cwd is a symbolic link, adding '--rootdir' to pytestArgsMap only if it doesn't already exist.",
+            );
             pytestArgsMap = addArgIfNotExist(pytestArgsMap, '--rootdir', cwd);
-        } else {
-            console.log('The path is not a symbolic link.');
         }
 
         // get and edit env vars
