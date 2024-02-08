@@ -3,7 +3,6 @@
 import json
 import os
 import shutil
-import string
 from typing import Any, Dict, List, Optional
 
 import pytest
