@@ -141,12 +141,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const updatesDone = createDeferred<void>();
 
         if (iterator.onUpdated !== undefined) {
-            const listener = iterator.onUpdated(async (event) => {
+            iterator.onUpdated(async (event) => {
                 if (isProgressEvent(event)) {
                     switch (event.stage) {
                         case ProgressReportStage.discoveryFinished:
                             state.done = true;
-                            listener.dispose();
+                            // listener.dispose();
                             break;
                         case ProgressReportStage.allPathsDiscovered:
                             if (!query) {
@@ -157,13 +157,17 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         default:
                             this.progress.fire(event);
                     }
-                } else {
+                } else if (event.index !== undefined) {
                     state.pending += 1;
                     this.cache.updateEnv(seen[event.index], event.update);
                     if (event.update) {
                         seen[event.index] = event.update;
                     }
                     state.pending -= 1;
+                } else if (event.update) {
+                    // New env, add it to cache.
+                    seen.push(event.update);
+                    this.cache.addEnv(event.update);
                 }
                 if (state.done && state.pending === 0) {
                     updatesDone.resolve();

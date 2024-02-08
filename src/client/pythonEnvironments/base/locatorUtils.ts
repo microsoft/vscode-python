@@ -85,7 +85,7 @@ export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I
                 }
                 updatesDone.resolve();
                 listener.dispose();
-            } else {
+            } else if (event.index !== undefined) {
                 const { index, update } = event;
                 if (envs[index] === undefined) {
                     const json = JSON.stringify(update);
@@ -95,6 +95,8 @@ export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I
                 }
                 // We don't worry about if envs[index] is set already.
                 envs[index] = update;
+            } else if (event.update) {
+                envs.push(event.update);
             }
         });
     }

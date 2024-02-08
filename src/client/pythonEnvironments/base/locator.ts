@@ -20,7 +20,7 @@ export type PythonEnvUpdatedEvent<I = PythonEnvInfo> = {
     /**
      * The iteration index of The env info that was previously provided.
      */
-    index: number;
+    index?: number;
     /**
      * The env info that was previously provided.
      */

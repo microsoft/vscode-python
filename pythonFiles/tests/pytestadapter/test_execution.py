@@ -193,8 +193,8 @@ def test_bad_id_error_execution():
             [
                 "dual_level_nested_folder/test_top_folder.py::test_top_function_t",
                 "dual_level_nested_folder/test_top_folder.py::test_top_function_f",
-                "dual_level_nested_folder/z_nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
-                "dual_level_nested_folder/z_nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+                "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+                "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
             ],
             expected_execution_test_output.dual_level_nested_folder_execution_expected_output,
         ),

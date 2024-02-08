@@ -317,7 +317,7 @@ unittest_folder_discovery_expected_output = {
 #    └── test_top_folder.py
 #       └── test_top_function_t
 #       └── test_top_function_f
-#    └── z_nested_folder_one
+#    └── nested_folder_one
 #       └── test_bottom_folder.py
 #          └── test_bottom_function_t
 #          └── test_bottom_function_f
@@ -326,14 +326,14 @@ test_top_folder_path = (
     TEST_DATA_PATH / "dual_level_nested_folder" / "test_top_folder.py"
 )
 
-test_z_nested_folder_one_path = (
-    TEST_DATA_PATH / "dual_level_nested_folder" / "z_nested_folder_one"
+test_nested_folder_one_path = (
+    TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one"
 )
 
 test_bottom_folder_path = (
     TEST_DATA_PATH
     / "dual_level_nested_folder"
-    / "z_nested_folder_one"
+    / "nested_folder_one"
     / "test_bottom_folder.py"
 )
 
@@ -392,10 +392,10 @@ dual_level_nested_folder_expected_output = {
                     ],
                 },
                 {
-                    "name": "z_nested_folder_one",
-                    "path": os.fspath(test_z_nested_folder_one_path),
+                    "name": "nested_folder_one",
+                    "path": os.fspath(test_nested_folder_one_path),
                     "type_": "folder",
-                    "id_": os.fspath(test_z_nested_folder_one_path),
+                    "id_": os.fspath(test_nested_folder_one_path),
                     "children": [
                         {
                             "name": "test_bottom_folder.py",
@@ -412,11 +412,11 @@ dual_level_nested_folder_expected_output = {
                                     ),
                                     "type_": "test",
                                     "id_": get_absolute_test_id(
-                                        "dual_level_nested_folder/z_nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+                                        "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
                                         test_bottom_folder_path,
                                     ),
                                     "runID": get_absolute_test_id(
-                                        "dual_level_nested_folder/z_nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
+                                        "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_t",
                                         test_bottom_folder_path,
                                     ),
                                 },
@@ -429,11 +429,11 @@ dual_level_nested_folder_expected_output = {
                                     ),
                                     "type_": "test",
                                     "id_": get_absolute_test_id(
-                                        "dual_level_nested_folder/z_nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+                                        "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
                                         test_bottom_folder_path,
                                     ),
                                     "runID": get_absolute_test_id(
-                                        "dual_level_nested_folder/z_nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
+                                        "dual_level_nested_folder/nested_folder_one/test_bottom_folder.py::test_bottom_function_f",
                                         test_bottom_folder_path,
                                     ),
                                 },

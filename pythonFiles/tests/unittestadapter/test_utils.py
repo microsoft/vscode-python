@@ -3,6 +3,7 @@
 
 import os
 import pathlib
+import sys
 import unittest
 
 import pytest
@@ -15,7 +16,13 @@ from unittestadapter.pvsc_utils import (
     get_test_case,
 )
 
-from .helpers import TEST_DATA_PATH, is_same_tree
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+
+from tests.tree_comparison_helper import is_same_tree
+
+
+TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(

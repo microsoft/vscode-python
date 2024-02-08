@@ -6,6 +6,7 @@
 import { Event } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient/node';
 import type { IDisposable, ILogOutputChannel, Resource } from '../common/types';
+import { StopWatch } from '../common/utils/stopWatch';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
@@ -23,7 +24,7 @@ export interface IExtensionActivationManager extends IDisposable {
      * @returns {Promise<void>}
      * @memberof IExtensionActivationManager
      */
-    activate(): Promise<void>;
+    activate(startupStopWatch: StopWatch): Promise<void>;
     /**
      * Method invoked when a workspace is loaded.
      * This is where we place initialization scripts for each workspace.
@@ -47,7 +48,7 @@ export const IExtensionActivationService = Symbol('IExtensionActivationService')
  */
 export interface IExtensionActivationService {
     supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean };
-    activate(resource: Resource): Promise<void>;
+    activate(resource: Resource, startupStopWatch?: StopWatch): Promise<void>;
 }
 
 export enum LanguageServerType {

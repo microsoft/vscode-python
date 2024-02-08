@@ -3,6 +3,7 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import { getOSType, OSType } from '../../../../client/common/utils/platform';
 import { PythonEnvKind, PythonEnvSource } from '../../../../client/pythonEnvironments/base/info';
 import { BasicEnvInfo, PythonLocatorQuery } from '../../../../client/pythonEnvironments/base/locator';
@@ -10,6 +11,7 @@ import { WindowsPathEnvVarLocator } from '../../../../client/pythonEnvironments/
 import { ensureFSTree } from '../../../utils/fs';
 import { assertBasicEnvsEqual } from '../../base/locators/envTestUtils';
 import { createBasicEnv, getEnvs } from '../../base/common';
+import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 
 const IS_WINDOWS = getOSType() === OSType.Windows;
 
@@ -71,17 +73,17 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
             if (!process.env.PVSC_TEST_FORCE) {
                 this.skip();
             }
-            // eslint-disable-next-line global-require
-            const sinon = require('sinon');
+        }
+        await ensureFSTree(dataTree, __dirname);
+    });
+    setup(async () => {
+        if (!IS_WINDOWS) {
             // eslint-disable-next-line global-require
             const platformAPI = require('../../../../../client/common/utils/platform');
             const stub = sinon.stub(platformAPI, 'getOSType');
             stub.returns(OSType.Windows);
         }
-
-        await ensureFSTree(dataTree, __dirname);
-    });
-    setup(() => {
+        sinon.stub(externalDependencies, 'inExperiment').returns(true);
         cleanUps = [];
 
         const oldSearchPath = process.env[ENV_VAR];
@@ -97,6 +99,7 @@ suite('Python envs locator - WindowsPathEnvVarLocator', async () => {
                 console.log(err);
             }
         });
+        sinon.restore();
     });
 
     function getActiveLocator(...roots: string[]): WindowsPathEnvVarLocator {
