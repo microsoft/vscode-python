@@ -231,7 +231,7 @@ def test_symlink_root_dir(tmp_path):
         actual_item = actual_list.pop(0)
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
-        assert actual_item.get("cwd") == os.fspath(source)
+        assert actual_item.get("cwd") == os.fspath(destination)
         assert actual_item.get("tests") == expected
 
 
