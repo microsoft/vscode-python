@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { Diagnostics, Repl } from '../../common/utils/localize';
 import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -30,6 +30,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
         @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
         @inject(ICommandManager) protected readonly commandManager: ICommandManager,
+        @inject(IApplicationShell) protected readonly applicationShell: IApplicationShell,
     ) {}
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
@@ -67,8 +68,31 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             const replCommandArgs = await this.getExecutableInfo(resource);
             terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
 
+            let listener: IDisposable;
+            Promise.race([
+                new Promise<void>((r) => {
+                    let count = 0;
+                    listener = this.applicationShell.onDidWriteTerminalData((e) => {
+                        // if (e.terminal === myTerminal) {
+                        for (let i = 0; i < e.data.length; i++) {
+                            if (e.data[i] === '>') {
+                                count++;
+                                if (count === 3) {
+                                    r();
+                                }
+                            }
+                        }
+                        // }
+                    });
+                }),
+                new Promise<void>((r) => setTimeout(() => r(), 3000)),
+            ]).then(() => {
+                listener.dispose();
+                resolve(true);
+            });
+
             // Give python repl time to start before we start sending text.
-            setTimeout(() => resolve(true), 1000);
+            // setTimeout(() => resolve(true), 1000);
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
