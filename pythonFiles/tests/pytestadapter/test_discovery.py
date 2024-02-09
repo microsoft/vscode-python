@@ -206,7 +206,7 @@ def test_pytest_collect(file, expected_const):
         assert is_same_tree(actual_item.get("tests"), expected_const)
 
 
-def test_symlink_root_dir(tmpdir):
+def test_symlink_root_dir(tmp_path):
     """
     Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
     Discovery should succeed and testids should be relative to the symlinked root directory.
@@ -214,11 +214,21 @@ def test_symlink_root_dir(tmpdir):
     tmp_path -- pytest fixture that creates a temporary directory.
     """
     # create symlink
+    print("tmp_path: ", tmp_path)
     source = TEST_DATA_PATH / "root"
-    # destination is a path type
-    sub_dir = tmpdir.mkdir("sub")
-    destination = sub_dir / "symlink_root"
-    os.symlink(source, destination)
+
+    # Create a destination path for the symlink within the tmp_path directory
+    destination = tmp_path / "symlink_root"
+    print(f"destination: {destination}")
+
+    # Create the symlink at the destination pointing to the source
+    destination.symlink_to(
+        source, target_is_directory=True
+    )  # Make sure to specify target_is_directory=True
+
+    print("made symlink")
+    assert destination.is_symlink()
+    # os.symlink(source, destination)
 
     "--symlink-path-insert-here--"
     # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).

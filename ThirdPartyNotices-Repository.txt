@@ -17,6 +17,7 @@ Microsoft Python extension for Visual Studio Code incorporates third party mater
 11. vscode-cpptools (https://github.com/microsoft/vscode-cpptools)
 12. mocha (https://github.com/mochajs/mocha)
 13. get-pip (https://github.com/pypa/get-pip)
+14. Test controller arg mapping utils functions (https://github.com/microsoft/vscode-js-debug)
 
 %%
 Go for Visual Studio Code NOTICES, INFORMATION, AND LICENSE BEGIN HERE
