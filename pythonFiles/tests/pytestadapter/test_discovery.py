@@ -249,10 +249,22 @@ def test_symlink_root_dir(tmp_path):
     if actual_list is not None:
         assert actual_list.pop(-1).get("eot")
         actual_item = actual_list.pop(0)
-        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
-        assert actual_item.get("status") == "success"
-        assert actual_item.get("cwd") == os.fspath(destination)
-        assert actual_item.get("tests") == expected
+        try:
+            # Check if all requirements
+            assert all(
+                item in actual_item.keys() for item in ("status", "cwd", "error")
+            ), "Required keys are missing"
+            assert actual_item.get("status") == "success", "Status is not 'success'"
+            assert actual_item.get("cwd") == os.fspath(
+                destination
+            ), f"CWD does not match: {os.fspath(destination)}"
+            assert (
+                actual_item.get("tests") == expected
+            ), "Tests do not match expected value"
+        except AssertionError as e:
+            # Print the actual_item in JSON format if an assertion fails
+            print(json.dumps(actual_item, indent=4))
+            pytest.fail(str(e))
 
 
 def test_pytest_root_dir():
