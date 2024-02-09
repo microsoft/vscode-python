@@ -215,19 +215,23 @@ def test_symlink_root_dir(tmpdir):
     """
     # create symlink
     source = TEST_DATA_PATH / "root"
-    destination = tmpdir.mkdir("sub") / "symlink_root"
+    # destination is a path type
+    sub_dir = tmpdir.mkdir("sub")
+    destination = sub_dir / "symlink_root"
     os.symlink(source, destination)
 
     "--symlink-path-insert-here--"
     # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
-    actual = runner_with_cwd(["--collect-only", f"--rootdir={destination}"], source)
+    actual = runner_with_cwd(
+        ["--collect-only", f"--rootdir={os.fspath(destination)}"], source
+    )
 
     # now assert the output is the same, but sub in the tmp_path for a placeholder in the expected output object.
     json_expected = json.dumps(
         expected_discovery_test_output.symlink_expected_discovery_output
     )
     json_expected_new = json_expected.replace(
-        "--symlink-path-insert-here--", str(destination)
+        "--symlink-path-insert-here--", os.fspath(destination)
     )
     expected = json.loads(json_expected_new)
     assert actual
