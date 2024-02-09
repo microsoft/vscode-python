@@ -365,6 +365,7 @@ def pytest_sessionfinish(session, exitstatus):
             }
             post_response(os.fsdecode(cwd), errorNode)
         try:
+            print("building test tree")
             session_node: Union[TestNode, None] = build_test_tree(session)
             if not session_node:
                 raise VSCodePytestError(
@@ -419,6 +420,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     # Check to see if the global variable for symlink path is set
     global SYMLINK_PATH
     if SYMLINK_PATH:
+        print("local 3: symlink path and a session node")
         session_node["path"] = SYMLINK_PATH
         session_node["id_"] = os.fspath(SYMLINK_PATH)
 
@@ -693,6 +695,7 @@ def get_node_path(node: Any) -> pathlib.Path:
     global SYMLINK_PATH
     # Check for the session node since it has the symlink already.
     if SYMLINK_PATH and not isinstance(node, pytest.Session):
+        print("local 2: symlink path and is not a session node")
         # Get relative between the cwd (resolved path) and the node path.
         try:
             rel_path = os.path.relpath(path, pathlib.Path.cwd())
