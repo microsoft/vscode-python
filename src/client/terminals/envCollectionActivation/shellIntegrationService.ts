@@ -12,9 +12,8 @@ import {
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { TerminalShellType } from '../../common/terminal/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
-import { createDeferred, sleep } from '../../common/utils/async';
-import { cache } from '../../common/utils/decorators';
-import { traceError, traceInfo, traceVerbose } from '../../logging';
+import { sleep } from '../../common/utils/async';
+import { traceError, traceVerbose } from '../../logging';
 import { IShellIntegrationService } from '../types';
 
 /**
@@ -33,13 +32,6 @@ export const isShellIntegrationWorkingKey = 'SHELL_INTEGRATION_WORKING_KEY';
 
 @injectable()
 export class ShellIntegrationService implements IShellIntegrationService {
-    /**
-     * It seems to have a couple of issues:
-     * * Ends up cluterring terminal history
-     * * Does not work for hidden terminals: https://github.com/microsoft/vscode/issues/199611
-     */
-    private readonly USE_COMMAND_APPROACH = false;
-
     private isWorkingForShell = new Set<TerminalShellType>();
 
     private readonly didChange = new EventEmitter<void>();
@@ -55,6 +47,12 @@ export class ShellIntegrationService implements IShellIntegrationService {
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
     ) {
         try {
+            const activeShellType = identifyShellFromShellPath(this.appEnvironment.shell);
+            const key = getKeyForShell(activeShellType);
+            const persistedResult = this.persistentStateFactory.createGlobalPersistentState<boolean>(key);
+            if (persistedResult.value) {
+                this.isWorkingForShell.add(activeShellType);
+            }
             this.appShell.onDidWriteTerminalData(
                 (e) => {
                     if (e.data.includes('\x1b]633;A\x07')) {
@@ -63,6 +61,7 @@ export class ShellIntegrationService implements IShellIntegrationService {
                             shell = e.terminal.creationOptions.shellPath;
                         }
                         const shellType = identifyShellFromShellPath(shell);
+                        traceVerbose('Received shell integration sequence for', shellType);
                         const wasWorking = this.isWorkingForShell.has(shellType);
                         this.isWorkingForShell.add(shellType);
                         if (!wasWorking) {
@@ -86,6 +85,12 @@ export class ShellIntegrationService implements IShellIntegrationService {
             this.isDataWriteEventWorking = false;
             traceError('Unable to check if shell integration is active', ex);
         }
+        const isEnabled = this.workspaceService
+            .getConfiguration('terminal')
+            .get<boolean>('integrated.shellIntegration.enabled')!;
+        if (!isEnabled) {
+            traceVerbose('Shell integrated is disabled in user settings.');
+        }
     }
 
     public readonly onDidChangeStatus = this.didChange.event;
@@ -97,44 +102,40 @@ export class ShellIntegrationService implements IShellIntegrationService {
         });
     }
 
-    @cache(-1, true)
     public async _isWorking(shell: string): Promise<boolean> {
-        const isEnabled = this.workspaceService
-            .getConfiguration('terminal')
-            .get<boolean>('integrated.shellIntegration.enabled')!;
-        if (!isEnabled) {
-            traceVerbose('Shell integrated is disabled in user settings.');
-        }
         const shellType = identifyShellFromShellPath(shell);
-        const isSupposedToWork = isEnabled && ShellIntegrationShells.includes(shellType);
+        const isSupposedToWork = ShellIntegrationShells.includes(shellType);
         if (!isSupposedToWork) {
             return false;
         }
-        if (!this.USE_COMMAND_APPROACH) {
-            // For now, based on problems with using the command approach, use terminal data write event.
-            if (!this.isDataWriteEventWorking) {
-                // Assume shell integration is working, if data write event isn't working.
-                return true;
-            }
-            if (shellType === TerminalShellType.powershell || shellType === TerminalShellType.powershellCore) {
-                // Due to upstream bug: https://github.com/microsoft/vscode/issues/204616, assume shell integration is working for now.
-                return true;
-            }
-            if (!this.isWorkingForShell.has(shellType)) {
-                // Maybe data write event has not been processed yet, wait a bit.
-                await sleep(1000);
-            }
-            return this.isWorkingForShell.has(shellType);
-        }
-        const key = `${isShellIntegrationWorkingKey}_${shellType}`;
+        const key = getKeyForShell(shellType);
         const persistedResult = this.persistentStateFactory.createGlobalPersistentState<boolean>(key);
         if (persistedResult.value !== undefined) {
             return persistedResult.value;
         }
-        const result = await this.checkIfWorkingByRunningCommand(shell);
-        // Persist result to storage to avoid running commands unncecessary.
-        await persistedResult.updateValue(result);
+        const result = await this.useDataWriteApproach(shellType);
+        // Persist result to storage to avoid running commands unneccessary.
+        if (result) {
+            await persistedResult.updateValue(result);
+        }
         return result;
+    }
+
+    private async useDataWriteApproach(shellType: TerminalShellType) {
+        // For now, based on problems with using the command approach, use terminal data write event.
+        if (!this.isDataWriteEventWorking) {
+            // Assume shell integration is working, if data write event isn't working.
+            return true;
+        }
+        if (shellType === TerminalShellType.powershell || shellType === TerminalShellType.powershellCore) {
+            // Due to upstream bug: https://github.com/microsoft/vscode/issues/204616, assume shell integration is working for now.
+            return true;
+        }
+        if (!this.isWorkingForShell.has(shellType)) {
+            // Maybe data write event has not been processed yet, wait a bit.
+            await sleep(1000);
+        }
+        return this.isWorkingForShell.has(shellType);
     }
 
     /**
@@ -146,39 +147,8 @@ export class ShellIntegrationService implements IShellIntegrationService {
             hideFromUser: true,
         });
     }
+}
 
-    private async checkIfWorkingByRunningCommand(shell: string): Promise<boolean> {
-        const shellType = identifyShellFromShellPath(shell);
-        const deferred = createDeferred<void>();
-        const timestamp = new Date().getTime();
-        const name = `Python ${timestamp}`;
-        const onDidExecuteTerminalCommand = this.appShell.onDidExecuteTerminalCommand?.bind(this.appShell);
-        if (!onDidExecuteTerminalCommand) {
-            // Proposed API is not available, assume shell integration is working at this point.
-            return true;
-        }
-        try {
-            const disposable = onDidExecuteTerminalCommand((e) => {
-                if (e.terminal.name === name) {
-                    deferred.resolve();
-                }
-            });
-            const terminal = this.terminalManager.createTerminal({
-                name,
-                shellPath: shell,
-                hideFromUser: true,
-            });
-            terminal.sendText(`echo ${shell}`);
-            const success = await Promise.race([sleep(3000).then(() => false), deferred.promise.then(() => true)]);
-            disposable.dispose();
-            if (!success) {
-                traceInfo(`Shell integration is not working for ${shellType}`);
-            }
-            return success;
-        } catch (ex) {
-            traceVerbose(`Proposed API is not available, failed to subscribe to onDidExecuteTerminalCommand`, ex);
-            // Proposed API is not available, assume shell integration is working at this point.
-            return true;
-        }
-    }
+function getKeyForShell(shellType: TerminalShellType) {
+    return `${isShellIntegrationWorkingKey}_${shellType}`;
 }

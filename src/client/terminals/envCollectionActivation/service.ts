@@ -26,7 +26,7 @@ import {
     IPathUtils,
 } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
-import { traceError, traceVerbose, traceWarn } from '../../logging';
+import { traceError, traceInfo, traceVerbose, traceWarn } from '../../logging';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { defaultShells } from '../../interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -111,6 +111,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this,
                     this.disposables,
                 );
+                this.shellIntegrationService.onDidChangeStatus(
+                    async () => {
+                        traceInfo("Shell integration status changed, can confirm it's working.");
+                        await this._applyCollection(undefined).ignoreErrors();
+                    },
+                    this,
+                    this.disposables,
+                );
                 this.applicationEnvironment.onDidChangeShell(
                     async (shell: string) => {
                         this.processEnvVars = undefined;
@@ -125,7 +133,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 const isActive = await this.shellIntegrationService.isWorking(shell);
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
-                    traceWarn(`Shell integration is not active, environment activated maybe overriden by the shell.`);
+                    traceWarn(`Shell integration may not active, environment activated maybe overriden by the shell.`);
                 }
                 this.registeredOnce = true;
             }
