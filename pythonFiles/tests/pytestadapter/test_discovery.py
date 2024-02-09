@@ -219,6 +219,7 @@ def test_symlink_root_dir(tmp_path):
 
     # Create a destination path for the symlink within the tmp_path directory
     destination = tmp_path / "symlink_root"
+    destination.mkdir()
     print(f"destination: {destination}")
 
     # Create the symlink at the destination pointing to the source
