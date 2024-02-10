@@ -28,7 +28,9 @@ const ShellIntegrationShells = [
     TerminalShellType.fish,
 ];
 
-export const isShellIntegrationWorkingKey = 'SHELL_INTEGRATION_WORKING_KEY';
+export enum isShellIntegrationWorking {
+    key = 'SHELL_INTEGRATION_WORKING_KEY',
+}
 
 @injectable()
 export class ShellIntegrationService implements IShellIntegrationService {
@@ -85,11 +87,11 @@ export class ShellIntegrationService implements IShellIntegrationService {
             this.isDataWriteEventWorking = false;
             traceError('Unable to check if shell integration is active', ex);
         }
-        const isEnabled = this.workspaceService
+        const isEnabled = !!this.workspaceService
             .getConfiguration('terminal')
-            .get<boolean>('integrated.shellIntegration.enabled')!;
+            .get<boolean>('integrated.shellIntegration.enabled');
         if (!isEnabled) {
-            traceVerbose('Shell integrated is disabled in user settings.');
+            traceVerbose('Shell integration is disabled in user settings.');
         }
     }
 
@@ -114,8 +116,8 @@ export class ShellIntegrationService implements IShellIntegrationService {
             return persistedResult.value;
         }
         const result = await this.useDataWriteApproach(shellType);
-        // Persist result to storage to avoid running commands unneccessary.
         if (result) {
+            // Once we know that shell integration is working for a shell, persist it so we need not do this check every session.
             await persistedResult.updateValue(result);
         }
         return result;
@@ -135,6 +137,12 @@ export class ShellIntegrationService implements IShellIntegrationService {
             // Maybe data write event has not been processed yet, wait a bit.
             await sleep(1000);
         }
+        traceVerbose(
+            'Did we determine shell integration to be working for',
+            shellType,
+            '?',
+            this.isWorkingForShell.has(shellType),
+        );
         return this.isWorkingForShell.has(shellType);
     }
 
@@ -150,5 +158,5 @@ export class ShellIntegrationService implements IShellIntegrationService {
 }
 
 function getKeyForShell(shellType: TerminalShellType) {
-    return `${isShellIntegrationWorkingKey}_${shellType}`;
+    return `${isShellIntegrationWorking.key}_${shellType}`;
 }

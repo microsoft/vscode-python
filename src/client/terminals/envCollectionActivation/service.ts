@@ -133,7 +133,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 const isActive = await this.shellIntegrationService.isWorking(shell);
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
-                    traceWarn(`Shell integration may not active, environment activated maybe overriden by the shell.`);
+                    traceWarn(
+                        `Shell integration may not be active, environment activated may be overridden by the shell.`,
+                    );
                 }
                 this.registeredOnce = true;
             }
