@@ -6,7 +6,12 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -47,6 +52,7 @@ suite('Terminal - Code Execution', () => {
         let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
         let isDjangoRepl: boolean;
+        let applicationShell: TypeMoq.IMock<IApplicationShell>;
 
         teardown(() => {
             disposables.forEach((disposable) => {
@@ -71,6 +77,7 @@ suite('Terminal - Code Execution', () => {
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -85,6 +92,7 @@ suite('Terminal - Code Execution', () => {
                         platform.object,
                         interpreterService.object,
                         commandManager.object,
+                        applicationShell.object,
                     );
                     break;
                 }
@@ -97,6 +105,7 @@ suite('Terminal - Code Execution', () => {
                         platform.object,
                         interpreterService.object,
                         commandManager.object,
+                        applicationShell.object,
                     );
                     expectedTerminalTitle = 'REPL';
                     break;
@@ -120,6 +129,7 @@ suite('Terminal - Code Execution', () => {
                         fileSystem.object,
                         disposables,
                         interpreterService.object,
+                        applicationShell.object,
                     );
                     expectedTerminalTitle = 'Django Shell';
                     break;
