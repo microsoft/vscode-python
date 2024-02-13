@@ -75,7 +75,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
         shellIntegrationService = mock<IShellIntegrationService>();
-        when(shellIntegrationService.isWorking(anything())).thenResolve(true);
+        when(shellIntegrationService.isWorking()).thenResolve(true);
         globalCollection = mock<GlobalEnvironmentVariableCollection>();
         collection = mock<EnvironmentVariableCollection>();
         when(context.environmentVariableCollection).thenReturn(instance(globalCollection));
@@ -523,7 +523,7 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('Correct track that prompt was set for PS1 if shell integration is disabled', async () => {
         reset(shellIntegrationService);
-        when(shellIntegrationService.isWorking(anything())).thenResolve(false);
+        when(shellIntegrationService.isWorking()).thenResolve(false);
         when(platform.osType).thenReturn(OSType.Linux);
         const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', PS1: '(.venv)', ...process.env };
         const ps1Shell = 'bash';
