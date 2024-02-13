@@ -57,7 +57,8 @@ export class ShellIntegrationService implements IShellIntegrationService {
             }
             this.appShell.onDidWriteTerminalData(
                 (e) => {
-                    if (e.data.includes('\x1b]633;A\x07')) {
+                    traceVerbose(e.data);
+                    if (e.data.includes('\x1b]633;A\x07') || e.data.includes('\x1b]133;A\x07')) {
                         let { shell } = this.appEnvironment;
                         if ('shellPath' in e.terminal.creationOptions && e.terminal.creationOptions.shellPath) {
                             shell = e.terminal.creationOptions.shellPath;
