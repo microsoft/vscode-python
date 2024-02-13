@@ -181,7 +181,7 @@ suite('Terminal - Code Execution', () => {
         });
 
         suite(testSuiteName, async function () {
-            this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
+            this.timeout(9000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
                 terminalFactory
                     .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
