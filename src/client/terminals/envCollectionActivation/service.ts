@@ -354,11 +354,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     private async handleMicroVenv(resource: Resource) {
         try {
             const settings = this.configurationService.getSettings(resource);
+            const workspaceFolder = this.getWorkspaceFolder(resource);
             if (!settings.terminal.activateEnvironment) {
+                this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
                 traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
                 return;
             }
-            const workspaceFolder = this.getWorkspaceFolder(resource);
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             if (interpreter?.envType === EnvironmentType.Venv) {
                 const activatePath = path.join(path.dirname(interpreter.path), 'activate');
