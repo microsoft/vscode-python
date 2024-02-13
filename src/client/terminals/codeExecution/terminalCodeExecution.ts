@@ -68,36 +68,36 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             const replCommandArgs = await this.getExecutableInfo(resource);
             terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
 
-            let listener: IDisposable;
-            Promise.race([
-                new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)),
-                new Promise<void>((resolve) => {
-                    let count = 0;
-                    const terminalDataTimeout = setTimeout(() => {
-                        resolve(); // Fall back for test case scenarios.
-                    }, 3000);
+            // let listener: IDisposable;
+            // Promise.race([
+            //     new Promise<void>((resolve) => setTimeout(() => resolve(), 1000)),
+            //     new Promise<void>((resolve) => {
+            //         let count = 0;
+            //         const terminalDataTimeout = setTimeout(() => {
+            //             resolve(); // Fall back for test case scenarios.
+            //         }, 1000);
 
-                    listener = this.applicationShell.onDidWriteTerminalData((e) => {
-                        for (let i = 0; i < e.data.length; i++) {
-                            if (e.data[i] === '>') {
-                                count++;
-                                if (count === 3) {
-                                    clearTimeout(terminalDataTimeout); // Clear the timeout if condition is met.
-                                    resolve();
-                                }
-                            }
-                        }
-                    });
-                }),
-            ]).then(() => {
-                if (listener) {
-                    listener.dispose();
-                }
-                resolve(true);
-            });
+            //         listener = this.applicationShell.onDidWriteTerminalData((e) => {
+            //             for (let i = 0; i < e.data.length; i++) {
+            //                 if (e.data[i] === '>') {
+            //                     count++;
+            //                     if (count === 3) {
+            //                         clearTimeout(terminalDataTimeout); // Clear the timeout if condition is met.
+            //                         resolve();
+            //                     }
+            //                 }
+            //             }
+            //         });
+            //     }),
+            // ]).then(() => {
+            //     if (listener) {
+            //         listener.dispose();
+            //     }
+            //     resolve(true);
+            // });
 
             // Give python repl time to start before we start sending text.
-            // setTimeout(() => resolve(true), 1000);
+            setTimeout(() => resolve(true), 1000);
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
