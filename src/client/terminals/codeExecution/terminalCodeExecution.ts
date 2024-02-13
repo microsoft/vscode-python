@@ -69,8 +69,26 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
 
             let listener: IDisposable;
-            Promise.race([
-                new Promise<void>((r) => {
+            // Promise.race([
+            //     new Promise<void>((r) => {
+            //         let count = 0;
+            //         listener = this.applicationShell.onDidWriteTerminalData((e) => {
+            //             // if (e.terminal === myTerminal) {
+            //             for (let i = 0; i < e.data.length; i++) {
+            //                 if (e.data[i] === '>') {
+            //                     count++;
+            //                     if (count === 3) {
+            //                         r();
+            //                     }
+            //                 }
+            //             }
+            //             // }
+            //         });
+            //     }),
+            //     new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)),
+
+            new Promise<void>(
+                (r) => {
                     let count = 0;
                     listener = this.applicationShell.onDidWriteTerminalData((e) => {
                         // if (e.terminal === myTerminal) {
@@ -84,10 +102,10 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                         }
                         // }
                     });
-                }),
-                new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)),
+                },
+
                 // new Promise<void>((r) => setTimeout(() => r(), 1000)),
-            ]).then(() => {
+            ).then(() => {
                 listener.dispose();
                 resolve(true);
             });
