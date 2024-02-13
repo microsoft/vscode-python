@@ -181,7 +181,7 @@ suite('Terminal - Code Execution', () => {
         });
 
         suite(testSuiteName, async function () {
-            this.timeout(9000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
+            this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
                 terminalFactory
                     .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
@@ -629,7 +629,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.atLeastOnce(),
+                    TypeMoq.Times.once(),
                 );
 
                 closeTerminalCallback!.call(terminalService.object);
@@ -637,7 +637,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.atLeastOnce(),
+                    TypeMoq.Times.once(),
                 );
 
                 closeTerminalCallback!.call(terminalService.object);
@@ -645,7 +645,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.atLeastOnce(),
+                    TypeMoq.Times.once(),
                 );
             });
 
