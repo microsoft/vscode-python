@@ -130,7 +130,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this.disposables,
                 );
                 const { shell } = this.applicationEnvironment;
-                const isActive = await this.shellIntegrationService.isWorking(shell);
+                const isActive = await this.shellIntegrationService.isWorking();
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
                     traceWarn(
@@ -218,6 +218,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         return;
                     }
                     if (key === 'PATH') {
+                        const options = {
+                            applyAtShellIntegration: true,
+                            applyAtProcessCreation: true,
+                        };
                         if (processEnv.PATH && env.PATH?.endsWith(processEnv.PATH)) {
                             // Prefer prepending to PATH instead of replacing it, as we do not want to replace any
                             // changes to PATH users might have made it in their init scripts (~/.bashrc etc.)
@@ -226,7 +230,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                                 value = `${deactivate}${this.separator}${value}`;
                             }
                             traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                            envVarCollection.prepend(key, value, prependOptions);
+                            envVarCollection.prepend(key, value, options);
                         } else {
                             if (!value.endsWith(this.separator)) {
                                 value = value.concat(this.separator);
@@ -235,7 +239,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                                 value = `${deactivate}${this.separator}${value}`;
                             }
                             traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
-                            envVarCollection.prepend(key, value, prependOptions);
+                            envVarCollection.prepend(key, value, options);
                         }
                         return;
                     }
@@ -300,7 +304,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = await this.shellIntegrationService.isWorking(shell);
+            const config = await this.shellIntegrationService.isWorking();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -356,7 +360,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async getPrependOptions(): Promise<EnvironmentVariableMutatorOptions> {
-        const isActive = await this.shellIntegrationService.isWorking(this.applicationEnvironment.shell);
+        const isActive = await this.shellIntegrationService.isWorking();
         // Ideally we would want to prepend exactly once, either at shell integration or process creation.
         // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
         return isActive

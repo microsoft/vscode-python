@@ -97,7 +97,8 @@ export class ShellIntegrationService implements IShellIntegrationService {
 
     public readonly onDidChangeStatus = this.didChange.event;
 
-    public async isWorking(shell: string): Promise<boolean> {
+    public async isWorking(): Promise<boolean> {
+        const { shell } = this.appEnvironment;
         return this._isWorking(shell).catch((ex) => {
             traceError(`Failed to determine if shell supports shell integration`, shell, ex);
             return false;
