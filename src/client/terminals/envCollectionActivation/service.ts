@@ -357,7 +357,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             const workspaceFolder = this.getWorkspaceFolder(resource);
             if (!settings.terminal.activateEnvironment) {
                 this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
-                traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
+                traceVerbose(
+                    'Do not activate microvenv as activating environments in terminal is disabled for',
+                    resource?.fsPath,
+                );
                 return;
             }
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
