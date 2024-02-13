@@ -60,7 +60,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     }
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
-        if (await this.replActive) {
+        if (this.replActive && (await this.replActive)) {
             await terminalService.show();
             return;
         }
@@ -70,12 +70,12 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
             let listener: IDisposable;
             Promise.race([
-                new Promise<void>((resolve) => setTimeout(() => resolve(), 1000)),
+                new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)),
                 new Promise<void>((resolve) => {
                     let count = 0;
                     const terminalDataTimeout = setTimeout(() => {
                         resolve(); // Fall back for test case scenarios.
-                    }, 1000);
+                    }, 3000);
 
                     listener = this.applicationShell.onDidWriteTerminalData((e) => {
                         for (let i = 0; i < e.data.length; i++) {

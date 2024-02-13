@@ -625,11 +625,13 @@ suite('Terminal - Code Execution', () => {
 
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
-                // expect(closeTerminalCallback).not.to.be.an('undefined', 'Callback not initialized');
+                expect(closeTerminalCallback).not.to.be.an('undefined', 'Callback not initialized');
+                // Now check if sendCommand from the initializeRepl is called atLeastOnce. Should be twice.
+                // This is due to newly added Promise race and fallback to lower risk of swollen first command
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                    TypeMoq.Times.atLeastOnce(),
                 );
 
                 closeTerminalCallback!.call(terminalService.object);
@@ -637,7 +639,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                    TypeMoq.Times.atLeastOnce(),
                 );
 
                 closeTerminalCallback!.call(terminalService.object);
@@ -645,7 +647,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                    TypeMoq.Times.atLeastOnce(),
                 );
             });
 
