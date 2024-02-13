@@ -71,43 +71,28 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             let listener: IDisposable;
             Promise.race([
                 new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)),
-
-                new Promise<void>((r) => {
+                new Promise<void>((resolve) => {
                     let count = 0;
+                    const terminalDataTimeout = setTimeout(() => {
+                        resolve(); // Fall back for test case scenarios.
+                    }, 3000);
+
                     listener = this.applicationShell.onDidWriteTerminalData((e) => {
-                        // if (e.terminal === myTerminal) {
                         for (let i = 0; i < e.data.length; i++) {
                             if (e.data[i] === '>') {
                                 count++;
                                 if (count === 3) {
-                                    r();
+                                    clearTimeout(terminalDataTimeout); // Clear the timeout if condition is met.
+                                    resolve();
                                 }
                             }
                         }
-                        // }
                     });
                 }),
-
-                // new Promise<void>(
-                //     (r) => {
-                //         let count = 0;
-                //         listener = this.applicationShell.onDidWriteTerminalData((e) => {
-                //             // if (e.terminal === myTerminal) {
-                //             for (let i = 0; i < e.data.length; i++) {
-                //                 if (e.data[i] === '>') {
-                //                     count++;
-                //                     if (count === 3) {
-                //                         r();
-                //                     }
-                //                 }
-                //             }
-                //             // }
-                //         });
-                //     },
-
-                // new Promise<void>((r) => setTimeout(() => r(), 1000)),
             ]).then(() => {
-                listener.dispose();
+                if (listener) {
+                    listener.dispose();
+                }
                 resolve(true);
             });
 
