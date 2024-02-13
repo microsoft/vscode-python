@@ -33,7 +33,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(IApplicationShell) protected readonly applicationShell: IApplicationShell,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
     ) {
         super(
             terminalServiceFactory,

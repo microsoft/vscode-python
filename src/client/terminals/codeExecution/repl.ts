@@ -22,7 +22,7 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(IApplicationShell) protected readonly applicationShell: IApplicationShell,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
     ) {
         super(
             terminalServiceFactory,
