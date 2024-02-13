@@ -85,7 +85,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                         // }
                     });
                 }),
-                new Promise<void>((r) => setTimeout(() => r(), 3000)),
+                new Promise<void>((r) => setTimeout(() => r(), 9000)),
             ]).then(() => {
                 listener.dispose();
                 resolve(true);
