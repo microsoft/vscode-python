@@ -198,7 +198,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
-        const prependOptions = await this.getPrependOptions();
+        const defaultPrependOptions = await this.getPrependOptions();
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
@@ -213,8 +213,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 if (value !== undefined) {
                     if (key === 'PS1') {
                         // We cannot have the full PS1 without executing in terminal, which we do not. Hence prepend it.
-                        traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                        envVarCollection.prepend(key, value, prependOptions);
+                        traceVerbose(
+                            `Prepending environment variable ${key} in collection with ${value} ${JSON.stringify(
+                                defaultPrependOptions,
+                            )}`,
+                        );
+                        envVarCollection.prepend(key, value, defaultPrependOptions);
                         return;
                     }
                     if (key === 'PATH') {
@@ -229,7 +233,11 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             if (deactivate) {
                                 value = `${deactivate}${this.separator}${value}`;
                             }
-                            traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
+                            traceVerbose(
+                                `Prepending environment variable ${key} in collection with ${value} ${JSON.stringify(
+                                    options,
+                                )}`,
+                            );
                             envVarCollection.prepend(key, value, options);
                         } else {
                             if (!value.endsWith(this.separator)) {
@@ -238,16 +246,23 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             if (deactivate) {
                                 value = `${deactivate}${this.separator}${value}`;
                             }
-                            traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
+                            traceVerbose(
+                                `Prepending environment variable ${key} in collection to ${value} ${JSON.stringify(
+                                    options,
+                                )}`,
+                            );
                             envVarCollection.prepend(key, value, options);
                         }
                         return;
                     }
-                    traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    envVarCollection.replace(key, value, {
+                    const options = {
                         applyAtShellIntegration: true,
                         applyAtProcessCreation: true,
-                    });
+                    };
+                    traceVerbose(
+                        `Setting environment variable ${key} in collection to ${value} ${JSON.stringify(options)}`,
+                    );
+                    envVarCollection.replace(key, value, options);
                 }
             }
         });
