@@ -365,15 +365,12 @@ def pytest_sessionfinish(session, exitstatus):
             }
             post_response(os.fsdecode(cwd), errorNode)
         try:
-            print("building test tree")
             session_node: Union[TestNode, None] = build_test_tree(session)
-            print("done building test tree")
             if not session_node:
                 raise VSCodePytestError(
                     "Something went wrong following pytest finish, \
                         no session node was created"
                 )
-            print("posting response local 4")
             post_response(os.fsdecode(cwd), session_node)
         except Exception as e:
             ERRORS.append(
@@ -422,14 +419,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     # Check to see if the global variable for symlink path is set
     global SYMLINK_PATH
     if SYMLINK_PATH:
-        print("local 3: symlink path and a session node", SYMLINK_PATH)
-        print("as os path", os.fspath(SYMLINK_PATH))
         session_node["path"] = SYMLINK_PATH
         session_node["id_"] = os.fspath(SYMLINK_PATH)
 
-    print("after local 3")
     for test_case in session.items:
-        print("test case", test_case)
         test_node = create_test_node(test_case)
         if isinstance(test_case.parent, pytest.Class):
             case_iter = test_case.parent
@@ -698,10 +691,8 @@ def get_node_path(node: Any) -> pathlib.Path:
         )
 
     global SYMLINK_PATH
-    print("local 1: symlink path", SYMLINK_PATH)
     # Check for the session node since it has the symlink already.
     if SYMLINK_PATH and not isinstance(node, pytest.Session):
-        print("local 2: symlink path and is not a session node")
         # Get relative between the cwd (resolved path) and the node path.
         try:
             rel_path = os.path.relpath(path, pathlib.Path.cwd())
@@ -748,7 +739,6 @@ def post_response(cwd: str, session_node: TestNode) -> None:
         cwd (str): Current working directory.
         session_node (TestNode): Node information of the test session.
     """
-    print("post response")
     payload: DiscoveryPayloadDict = {
         "cwd": cwd,
         "status": "success" if not ERRORS else "error",
@@ -757,7 +747,6 @@ def post_response(cwd: str, session_node: TestNode) -> None:
     }
     if ERRORS is not None:
         payload["error"] = ERRORS
-    print("sending post request")
     send_post_request(payload, cls_encoder=PathEncoder)
 
 
@@ -812,7 +801,6 @@ def send_post_request(
             __socket = None
             raise VSCodePytestError(error_msg)
 
-    print("dump payload")
     data = json.dumps(payload, cls=cls_encoder)
     request = f"""Content-Length: {len(data)}
 Content-Type: application/json

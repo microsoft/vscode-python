@@ -38,7 +38,7 @@ def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
         try:
             destination.symlink_to(target)
         except Exception as e:
-            print("error occurred", e)
+            print("error occurred when attempting to create a symlink", e)
         yield target, destination
     finally:
         destination.unlink()
