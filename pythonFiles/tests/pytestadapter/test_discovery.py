@@ -232,7 +232,11 @@ def test_symlink_root_dir():
         json_expected_new = json_expected.replace(
             "--symlink-path-insert-here--", os.fspath(destination)
         )
-        expected = json.loads(json_expected_new)
+        try:
+            expected = json.loads(json_expected_new)
+        except json.JSONDecodeError:
+            print(f"Output which could not be parsed as JSON: {json_expected_new}")
+            pytest.fail("Expected output is not valid JSON")
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
