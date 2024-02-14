@@ -710,8 +710,8 @@ def get_node_path(node: Any) -> pathlib.Path:
             return sym_path
         except Exception as e:
             raise VSCodePytestError(
-                f"Error occurred while calculating symlink equivalent from node path: {e} \n",
-                "SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {path}, \n cwd: {{pathlib.Path.cwd()}}",
+                f"Error occurred while calculating symlink equivalent from node path: {e}"
+                "\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {path}, \n cwd: {{pathlib.Path.cwd()}}"
             )
     return path
 
