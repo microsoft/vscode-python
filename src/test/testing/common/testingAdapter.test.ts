@@ -60,8 +60,25 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'discoveryErrorWorkspace',
     );
+    const rootPathDiscoverySymlink = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'symlinkWorkspace',
+    );
     suiteSetup(async () => {
         serviceContainer = (await initialize()).serviceContainer;
+
+        // create symlink for specific symlink test
+        const target = rootPathSmallWorkspace;
+        const dest = rootPathDiscoverySymlink;
+        fs.symlink(target, dest, 'dir', (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log('Symlink created successfully for end to end tests.');
+            }
+        });
     });
 
     setup(async () => {
@@ -96,6 +113,17 @@ suite('End to End Tests: test adapters', () => {
     });
     teardown(async () => {
         pythonTestServer.dispose();
+    });
+    suiteTeardown(async () => {
+        // remove symlink
+        const dest = rootPathDiscoverySymlink;
+        fs.unlink(dest, (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log('Symlink removed successfully after tests.');
+            }
+        });
     });
     test('unittest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -242,17 +270,9 @@ suite('End to End Tests: test adapters', () => {
             error?: string[];
         };
         // set workspace to test workspace folder
-        // const target = rootPathSmallWorkspace;
-        const rootPathSmallWorkspaceSymlink = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'testTestingRootWkspc',
-            'symlinkWorkspace',
-            'smallWorkspace',
-        );
-        const testSimpleSymlinkPath = path.join(rootPathSmallWorkspaceSymlink, 'test_simple.py');
-        workspaceUri = Uri.parse(rootPathSmallWorkspaceSymlink);
-        const stats = fs.lstatSync(rootPathSmallWorkspaceSymlink);
+        const testSimpleSymlinkPath = path.join(rootPathDiscoverySymlink, 'test_simple.py');
+        workspaceUri = Uri.parse(rootPathDiscoverySymlink);
+        const stats = fs.lstatSync(rootPathDiscoverySymlink);
 
         // confirm that the path is a symbolic link
         assert.ok(stats.isSymbolicLink(), 'The path is not a symbolic link but must be for this test.');
@@ -287,7 +307,7 @@ suite('End to End Tests: test adapters', () => {
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
             // 4. Confirm that the cwd returned is the symlink path
-            assert.strictEqual(actualData.cwd, rootPathSmallWorkspaceSymlink, 'Expected cwd to be the symlink path');
+            assert.strictEqual(actualData.cwd, rootPathDiscoverySymlink, 'Expected cwd to be the symlink path');
             // 5. Confirm that the test's path is also using the symlink as the root
             assert.strictEqual(
                 (actualData.tests as { children: { path: string }[] }).children[0].path,
