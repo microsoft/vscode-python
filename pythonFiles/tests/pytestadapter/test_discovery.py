@@ -219,24 +219,11 @@ def test_symlink_root_dir():
         print(f"symlink target: {source}")
         assert destination.is_symlink()
 
-        "--symlink-path-insert-here--"
         # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
         actual = runner_with_cwd(
             ["--collect-only", f"--rootdir={os.fspath(destination)}"], source
         )
-
-        # now assert the output is the same, but sub in the tmp_path for a placeholder in the expected output object.
-        json_expected = json.dumps(
-            expected_discovery_test_output.symlink_expected_discovery_output
-        )
-        json_expected_new = json_expected.replace(
-            "--symlink-path-insert-here--", os.fspath(destination)
-        )
-        try:
-            expected = json.loads(json_expected_new)
-        except json.JSONDecodeError:
-            print(f"Output which could not be parsed as JSON: {json_expected_new}")
-            pytest.fail("Expected output is not valid JSON")
+        expected = expected_discovery_test_output.symlink_expected_discovery_output
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
