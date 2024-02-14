@@ -309,16 +309,15 @@ suite('End to End Tests: test adapters', () => {
             // 4. Confirm that the cwd returned is the symlink path
             if (process.platform === 'win32') {
                 // covert string to lowercase for windows as the path is case insensitive
-                assert.strictEqual(
-                    actualData.cwd.toLowerCase(),
-                    rootPathDiscoverySymlink.toLowerCase(),
-                    'Expected cwd to be the symlink path',
-                );
+                traceLog('windows machine detected, converting path to lowercase for comparison');
+                const a = actualData.cwd.toLowerCase();
+                const b = rootPathDiscoverySymlink.toLowerCase();
+                assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
             } else {
                 assert.strictEqual(
                     path.join(actualData.cwd),
                     path.join(rootPathDiscoverySymlink),
-                    'Expected cwd to be the symlink path',
+                    'Expected cwd to be the symlink path, check for non-windows machines',
                 );
             }
 
