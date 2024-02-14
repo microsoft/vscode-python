@@ -206,27 +206,17 @@ def test_pytest_collect(file, expected_const):
         assert is_same_tree(actual_item.get("tests"), expected_const)
 
 
-def test_symlink_root_dir(tmp_path):
+def test_symlink_root_dir():
     """
     Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
     Discovery should succeed and testids should be relative to the symlinked root directory.
-    Keyword arguments:
-    tmp_path -- pytest fixture that creates a temporary directory.
     """
     # create symlink
-    print("tmp_path: ", tmp_path)
     source = TEST_DATA_PATH / "root"
 
     # Create a destination path for the symlink within the tmp_path directory
-    destination = tmp_path / "symlink_root"
+    destination = TEST_DATA_PATH / "symlink_folder"
     print(f"destination: {destination}")
-
-    # Create the symlink at the destination pointing to the source
-    destination.symlink_to(
-        source, target_is_directory=True
-    )  # Make sure to specify target_is_directory=True
-
-    print("made symlink")
     assert destination.is_symlink()
     # os.symlink(source, destination)
 

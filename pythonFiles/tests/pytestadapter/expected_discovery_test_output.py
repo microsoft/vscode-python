@@ -996,7 +996,7 @@ nested_classes_expected_test_output = {
 }
 
 symlink_expected_discovery_output = {
-    "name": "symlink_root",
+    "name": "symlink_folder",
     "path": "--symlink-path-insert-here--",
     "type_": "folder",
     "children": [
