@@ -307,11 +307,21 @@ suite('End to End Tests: test adapters', () => {
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
             // 4. Confirm that the cwd returned is the symlink path
-            assert.strictEqual(
-                path.join(actualData.cwd),
-                path.join(rootPathDiscoverySymlink),
-                'Expected cwd to be the symlink path',
-            );
+            if (process.platform === 'win32') {
+                // covert string to lowercase for windows as the path is case insensitive
+                assert.strictEqual(
+                    actualData.cwd.toLowerCase(),
+                    rootPathDiscoverySymlink.toLowerCase(),
+                    'Expected cwd to be the symlink path',
+                );
+            } else {
+                assert.strictEqual(
+                    path.join(actualData.cwd),
+                    path.join(rootPathDiscoverySymlink),
+                    'Expected cwd to be the symlink path',
+                );
+            }
+
             // 5. Confirm that the test's path is also using the symlink as the root
             assert.strictEqual(
                 (actualData.tests as { children: { path: string }[] }).children[0].path,
