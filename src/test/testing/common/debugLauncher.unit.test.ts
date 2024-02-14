@@ -16,7 +16,7 @@ import { IApplicationShell, IDebugService } from '../../../client/common/applica
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
-import { DebuggerTypeName } from '../../../client/debugger/constants';
+import { PythonDebuggerTypeName } from '../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions } from '../../../client/debugger/types';
@@ -166,7 +166,7 @@ suite('Unit Tests - Debug Launcher', () => {
     function getDefaultDebugConfig(): DebugConfiguration {
         return {
             name: 'Debug Unit Test',
-            type: DebuggerTypeName,
+            type: PythonDebuggerTypeName,
             request: 'launch',
             console: 'internalConsole',
             env: {},
@@ -329,7 +329,7 @@ suite('Unit Tests - Debug Launcher', () => {
         };
         const expected = getDefaultDebugConfig();
         expected.name = 'spam';
-        setupSuccess(options, 'unittest', expected, [{ name: 'spam', type: DebuggerTypeName, request: 'test' }]);
+        setupSuccess(options, 'unittest', expected, [{ name: 'spam', type: PythonDebuggerTypeName, request: 'test' }]);
 
         await debugLauncher.launchDebugger(options);
 
@@ -363,7 +363,7 @@ suite('Unit Tests - Debug Launcher', () => {
         };
         const expected = {
             name: 'my tests',
-            type: DebuggerTypeName,
+            type: PythonDebuggerTypeName,
             request: 'launch',
             python: 'some/dir/bin/py3',
             debugAdapterPython: 'some/dir/bin/py3',
@@ -388,7 +388,7 @@ suite('Unit Tests - Debug Launcher', () => {
         setupSuccess(options, 'unittest', expected, [
             {
                 name: 'my tests',
-                type: DebuggerTypeName,
+                type: PythonDebuggerTypeName,
                 request: 'test',
                 pythonPath: expected.python,
                 stopOnEntry: expected.stopOnEntry,
@@ -417,9 +417,9 @@ suite('Unit Tests - Debug Launcher', () => {
         const expected = getDefaultDebugConfig();
         expected.name = 'spam1';
         setupSuccess(options, 'unittest', expected, [
-            { name: 'spam1', type: DebuggerTypeName, request: 'test' },
-            { name: 'spam2', type: DebuggerTypeName, request: 'test' },
-            { name: 'spam3', type: DebuggerTypeName, request: 'test' },
+            { name: 'spam1', type: PythonDebuggerTypeName, request: 'test' },
+            { name: 'spam2', type: PythonDebuggerTypeName, request: 'test' },
+            { name: 'spam3', type: PythonDebuggerTypeName, request: 'test' },
         ]);
 
         await debugLauncher.launchDebugger(options);
@@ -446,7 +446,7 @@ suite('Unit Tests - Debug Launcher', () => {
         '// test 2 \n\
     { \n\
         "name": "spam", \n\
-        "type": "python", \n\
+        "type": "debugpy", \n\
         "request": "test" \n\
     } \n\
             ',
@@ -454,7 +454,7 @@ suite('Unit Tests - Debug Launcher', () => {
     [ \n\
         { \n\
             "name": "spam", \n\
-            "type": "python", \n\
+            "type": "debugpy", \n\
             "request": "test" \n\
         } \n\
     ] \n\
@@ -464,7 +464,7 @@ suite('Unit Tests - Debug Launcher', () => {
         "configurations": [ \n\
             { \n\
                 "name": "spam", \n\
-                "type": "python", \n\
+                "type": "debugpy", \n\
                 "request": "test" \n\
             } \n\
         ] \n\
@@ -499,10 +499,10 @@ suite('Unit Tests - Debug Launcher', () => {
         setupSuccess(options, 'unittest', expected, [
             {} as DebugConfiguration,
             { name: 'spam1' } as DebugConfiguration,
-            { name: 'spam2', type: DebuggerTypeName } as DebugConfiguration,
+            { name: 'spam2', type: PythonDebuggerTypeName } as DebugConfiguration,
             { name: 'spam3', request: 'test' } as DebugConfiguration,
-            { type: DebuggerTypeName } as DebugConfiguration,
-            { type: DebuggerTypeName, request: 'test' } as DebugConfiguration,
+            { type: PythonDebuggerTypeName } as DebugConfiguration,
+            { type: PythonDebuggerTypeName, request: 'test' } as DebugConfiguration,
             { request: 'test' } as DebugConfiguration,
         ]);
 
@@ -532,7 +532,7 @@ suite('Unit Tests - Debug Launcher', () => {
             testProvider: 'unittest',
         };
         const expected = getDefaultDebugConfig();
-        setupSuccess(options, 'unittest', expected, [{ name: 'spam', type: DebuggerTypeName, request: 'bogus' }]);
+        setupSuccess(options, 'unittest', expected, [{ name: 'spam', type: PythonDebuggerTypeName, request: 'bogus' }]);
 
         await debugLauncher.launchDebugger(options);
 
@@ -547,8 +547,8 @@ suite('Unit Tests - Debug Launcher', () => {
         };
         const expected = getDefaultDebugConfig();
         setupSuccess(options, 'unittest', expected, [
-            { name: 'spam', type: DebuggerTypeName, request: 'launch' },
-            { name: 'spam', type: DebuggerTypeName, request: 'attach' },
+            { name: 'spam', type: PythonDebuggerTypeName, request: 'launch' },
+            { name: 'spam', type: PythonDebuggerTypeName, request: 'attach' },
         ]);
 
         await debugLauncher.launchDebugger(options);
@@ -567,9 +567,9 @@ suite('Unit Tests - Debug Launcher', () => {
         setupSuccess(options, 'unittest', expected, [
             { name: 'foo1', type: 'other', request: 'bar' },
             { name: 'foo2', type: 'other', request: 'bar' },
-            { name: 'spam1', type: DebuggerTypeName, request: 'launch' },
-            { name: 'spam2', type: DebuggerTypeName, request: 'test' },
-            { name: 'spam3', type: DebuggerTypeName, request: 'attach' },
+            { name: 'spam1', type: PythonDebuggerTypeName, request: 'launch' },
+            { name: 'spam2', type: PythonDebuggerTypeName, request: 'test' },
+            { name: 'spam3', type: PythonDebuggerTypeName, request: 'attach' },
             { name: 'xyz', type: 'another', request: 'abc' },
         ]);
 
@@ -599,7 +599,7 @@ suite('Unit Tests - Debug Launcher', () => {
             { \n\
                 // "test" debug config \n\
                 "name": "spam",  /* non-empty */ \n\
-                "type": "python",  /* must be "python" */ \n\
+                "type": "debugpy",  /* must be "python" */ \n\
                 "request": "test",  /* must be "test" */ \n\
                 // extra stuff here: \n\
                 "stopOnEntry": true \n\

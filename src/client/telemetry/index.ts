@@ -1330,7 +1330,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_trigger_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr", "isMeasurement": true }
        }
      */
     [EventName.LANGUAGE_SERVER_TRIGGER_DURATION]: unknown;

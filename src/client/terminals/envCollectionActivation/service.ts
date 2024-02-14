@@ -26,7 +26,7 @@ import {
     IPathUtils,
 } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
-import { traceError, traceVerbose, traceWarn } from '../../logging';
+import { traceError, traceInfo, traceVerbose, traceWarn } from '../../logging';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { defaultShells } from '../../interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -111,6 +111,14 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this,
                     this.disposables,
                 );
+                this.shellIntegrationService.onDidChangeStatus(
+                    async () => {
+                        traceInfo("Shell integration status changed, can confirm it's working.");
+                        await this._applyCollection(undefined).ignoreErrors();
+                    },
+                    this,
+                    this.disposables,
+                );
                 this.applicationEnvironment.onDidChangeShell(
                     async (shell: string) => {
                         this.processEnvVars = undefined;
@@ -122,10 +130,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this.disposables,
                 );
                 const { shell } = this.applicationEnvironment;
-                const isActive = await this.shellIntegrationService.isWorking(shell);
+                const isActive = await this.shellIntegrationService.isWorking();
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
-                    traceWarn(`Shell integration is not active, environment activated maybe overriden by the shell.`);
+                    traceWarn(
+                        `Shell integration may not be active, environment activated may be overridden by the shell.`,
+                    );
                 }
                 this.registeredOnce = true;
             }
@@ -188,7 +198,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
         env.PS1 = await this.getPS1(shell, resource, env);
-        const prependOptions = await this.getPrependOptions();
+        const defaultPrependOptions = await this.getPrependOptions();
 
         // Clear any previously set env vars from collection
         envVarCollection.clear();
@@ -203,11 +213,19 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 if (value !== undefined) {
                     if (key === 'PS1') {
                         // We cannot have the full PS1 without executing in terminal, which we do not. Hence prepend it.
-                        traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                        envVarCollection.prepend(key, value, prependOptions);
+                        traceVerbose(
+                            `Prepending environment variable ${key} in collection with ${value} ${JSON.stringify(
+                                defaultPrependOptions,
+                            )}`,
+                        );
+                        envVarCollection.prepend(key, value, defaultPrependOptions);
                         return;
                     }
                     if (key === 'PATH') {
+                        const options = {
+                            applyAtShellIntegration: true,
+                            applyAtProcessCreation: true,
+                        };
                         if (processEnv.PATH && env.PATH?.endsWith(processEnv.PATH)) {
                             // Prefer prepending to PATH instead of replacing it, as we do not want to replace any
                             // changes to PATH users might have made it in their init scripts (~/.bashrc etc.)
@@ -215,8 +233,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             if (deactivate) {
                                 value = `${deactivate}${this.separator}${value}`;
                             }
-                            traceVerbose(`Prepending environment variable ${key} in collection with ${value}`);
-                            envVarCollection.prepend(key, value, prependOptions);
+                            traceVerbose(
+                                `Prepending environment variable ${key} in collection with ${value} ${JSON.stringify(
+                                    options,
+                                )}`,
+                            );
+                            envVarCollection.prepend(key, value, options);
                         } else {
                             if (!value.endsWith(this.separator)) {
                                 value = value.concat(this.separator);
@@ -224,16 +246,23 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             if (deactivate) {
                                 value = `${deactivate}${this.separator}${value}`;
                             }
-                            traceVerbose(`Prepending environment variable ${key} in collection to ${value}`);
-                            envVarCollection.prepend(key, value, prependOptions);
+                            traceVerbose(
+                                `Prepending environment variable ${key} in collection to ${value} ${JSON.stringify(
+                                    options,
+                                )}`,
+                            );
+                            envVarCollection.prepend(key, value, options);
                         }
                         return;
                     }
-                    traceVerbose(`Setting environment variable ${key} in collection to ${value}`);
-                    envVarCollection.replace(key, value, {
+                    const options = {
                         applyAtShellIntegration: true,
                         applyAtProcessCreation: true,
-                    });
+                    };
+                    traceVerbose(
+                        `Setting environment variable ${key} in collection to ${value} ${JSON.stringify(options)}`,
+                    );
+                    envVarCollection.replace(key, value, options);
                 }
             }
         });
@@ -290,7 +319,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = await this.shellIntegrationService.isWorking(shell);
+            const config = await this.shellIntegrationService.isWorking();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -324,7 +353,16 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private async handleMicroVenv(resource: Resource) {
         try {
+            const settings = this.configurationService.getSettings(resource);
             const workspaceFolder = this.getWorkspaceFolder(resource);
+            if (!settings.terminal.activateEnvironment) {
+                this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
+                traceVerbose(
+                    'Do not activate microvenv as activating environments in terminal is disabled for',
+                    resource?.fsPath,
+                );
+                return;
+            }
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             if (interpreter?.envType === EnvironmentType.Venv) {
                 const activatePath = path.join(path.dirname(interpreter.path), 'activate');
@@ -346,7 +384,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async getPrependOptions(): Promise<EnvironmentVariableMutatorOptions> {
-        const isActive = await this.shellIntegrationService.isWorking(this.applicationEnvironment.shell);
+        const isActive = await this.shellIntegrationService.isWorking();
         // Ideally we would want to prepend exactly once, either at shell integration or process creation.
         // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
         return isActive
