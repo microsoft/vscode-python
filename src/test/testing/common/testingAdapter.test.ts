@@ -306,27 +306,41 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
-            // 4. Confirm that the cwd returned is the symlink path
+            // 4. Confirm that the cwd returned is the symlink path and the test's path is also using the symlink as the root
             if (process.platform === 'win32') {
                 // covert string to lowercase for windows as the path is case insensitive
                 traceLog('windows machine detected, converting path to lowercase for comparison');
                 const a = actualData.cwd.toLowerCase();
                 const b = rootPathDiscoverySymlink.toLowerCase();
+                const testSimpleActual = (actualData.tests as {
+                    children: {
+                        path: string;
+                    }[];
+                }).children[0].path.toLowerCase();
+                const testSimpleExpected = testSimpleSymlinkPath.toLowerCase();
                 assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
+                assert.strictEqual(
+                    testSimpleActual,
+                    testSimpleExpected,
+                    `Expected test path to be the symlink path actual: ${testSimpleActual} expected: ${testSimpleExpected}`,
+                );
             } else {
                 assert.strictEqual(
                     path.join(actualData.cwd),
                     path.join(rootPathDiscoverySymlink),
                     'Expected cwd to be the symlink path, check for non-windows machines',
                 );
+                assert.strictEqual(
+                    (actualData.tests as {
+                        children: {
+                            path: string;
+                        }[];
+                    }).children[0].path,
+                    testSimpleSymlinkPath,
+                    'Expected test path to be the symlink path, check for non windows machines',
+                );
             }
 
-            // 5. Confirm that the test's path is also using the symlink as the root
-            assert.strictEqual(
-                (actualData.tests as { children: { path: string }[] }).children[0].path,
-                testSimpleSymlinkPath,
-                'Expected test path to be the symlink path',
-            );
             // 5. Confirm that resolveDiscovery was called once
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
