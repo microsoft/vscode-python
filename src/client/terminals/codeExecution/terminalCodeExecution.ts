@@ -76,13 +76,13 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                     const terminalDataTimeout = setTimeout(() => {
                         resolve(); // Fall back for test case scenarios.
                     }, 3000);
-
+                    // Watch TerminalData to see if REPL launched.
                     listener = this.applicationShell.onDidWriteTerminalData((e) => {
                         for (let i = 0; i < e.data.length; i++) {
                             if (e.data[i] === '>') {
                                 count++;
                                 if (count === 3) {
-                                    clearTimeout(terminalDataTimeout); // Clear the timeout if condition is met.
+                                    clearTimeout(terminalDataTimeout);
                                     resolve();
                                 }
                             }
@@ -95,9 +95,6 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 }
                 resolve(true);
             });
-
-            // Give python repl time to start before we start sending text.
-            // setTimeout(() => resolve(true), 1000);
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
