@@ -41,7 +41,7 @@ suite('Debugging - Adapter Factory', () => {
     let commandManager: ICommandManager;
 
     const nodeExecutable = undefined;
-    const debugAdapterPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'adapter');
+    const debugAdapterPath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'lib', 'python', 'debugpy', 'adapter');
     const pythonPath = path.join('path', 'to', 'python', 'interpreter');
     const interpreter = {
         architecture: Architecture.Unknown,

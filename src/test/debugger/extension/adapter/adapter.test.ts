@@ -19,7 +19,7 @@ function resolveWSFile(wsRoot: string, ...filePath: string[]): string {
 }
 
 suite('Debugger Integration', () => {
-    const file = resolveWSFile(WS_ROOT, 'pythonFiles', 'debugging', 'wait_for_file.py');
+    const file = resolveWSFile(WS_ROOT, 'python_files', 'debugging', 'wait_for_file.py');
     const doneFile = resolveWSFile(WS_ROOT, 'should-not-exist');
     const outFile = resolveWSFile(WS_ROOT, 'output.txt');
     const resource = vscode.Uri.file(file);

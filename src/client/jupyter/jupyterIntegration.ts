@@ -34,7 +34,7 @@ type PythonApiForJupyterExtension = {
      */
     getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
     /**
-     * Returns path to where `debugpy` is. In python extension this is `/pythonFiles/lib/python`.
+     * Returns path to where `debugpy` is. In python extension this is `/python_files/lib/python`.
      */
     getDebuggerPath(): Promise<string>;
     /**

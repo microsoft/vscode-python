@@ -93,7 +93,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
             const debuggerAdapterPathToUse = path.join(
                 EXTENSION_ROOT_DIR,
-                'pythonFiles',
+                'python_files',
                 'lib',
                 'python',
                 'debugpy',

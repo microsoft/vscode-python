@@ -35,7 +35,7 @@ suite('Smoke Test: Datascience', () => {
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
             'test',
-            'pythonFiles',
+            'python_files',
             'datascience',
             'simple_note_book.py',
         );
@@ -60,7 +60,7 @@ suite('Smoke Test: Datascience', () => {
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
             'test',
-            'pythonFiles',
+            'python_files',
             'datascience',
             'simple_nb.ipynb',
         );

@@ -7,7 +7,7 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import '../../../common/extensions';
 
-const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'python_files', 'lib', 'python');
 const pathToDebugger = path.join(pathToPythonLibDir, 'debugpy');
 
 type RemoteDebugOptions = {

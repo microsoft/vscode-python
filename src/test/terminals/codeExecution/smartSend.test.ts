@@ -24,7 +24,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
 import { l10n } from '../../mocks/vsc';
 
-const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'terminalExec');
+const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
 
 suite('REPL - Smart Send', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;

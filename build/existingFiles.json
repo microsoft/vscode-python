@@ -500,7 +500,7 @@
     "src/test/providers/shebangCodeLenseProvider.test.ts",
     "src/test/providers/symbolProvider.unit.test.ts",
     "src/test/providers/terminal.unit.test.ts",
-    "src/test/pythonFiles/formatting/dummy.ts",
+    "src/test/python_files/formatting/dummy.ts",
     "src/test/refactor/extension.refactor.extract.method.test.ts",
     "src/test/refactor/extension.refactor.extract.var.test.ts",
     "src/test/refactor/rename.test.ts",

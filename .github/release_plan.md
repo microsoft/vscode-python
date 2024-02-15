@@ -37,7 +37,7 @@ NOTE: the number of this release is in the issue title and can be substituted in
 -   [ ] Create a new branch called  **`bump-release-[YYYY.minor]`**.
 -   [ ] Change the version in `package.json` to the next **even** number and switch the `-dev` to `-rc`. (🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` at this point which update the version number **only**)_. (🤖)
--   [ ] Check [debugpy on PyPI](https://pypi.org/project/debugpy/) for a new release and update the version of debugpy in [`install_debugpy.py`](https://github.com/microsoft/vscode-python/blob/main/pythonFiles/install_debugpy.py) if necessary.
+-   [ ] Check [debugpy on PyPI](https://pypi.org/project/debugpy/) for a new release and update the version of debugpy in [`install_debugpy.py`](https://github.com/microsoft/vscode-python/blob/main/python_files/install_debugpy.py) if necessary.
 -   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team.
 -   [ ] Create a PR from your branch  **`bump-release-[YYYY.minor]`** to `main`. Add the `"no change-log"` tag to the PR so it does not show up on the release notes before merging it.
 

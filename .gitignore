@@ -23,8 +23,8 @@ cucumber-report.json
 **/.venv*/
 port.txt
 precommit.hook
-pythonFiles/lib/**
-pythonFiles/get-pip.py
+python_files/lib/**
+python_files/get-pip.py
 debug_coverage*/**
 languageServer/**
 languageServer.*/**
