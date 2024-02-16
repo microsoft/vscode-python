@@ -70,12 +70,12 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
             let listener: IDisposable;
             Promise.race([
-                new Promise<void>((resolve) => setTimeout(() => resolve(), 2000)),
-                new Promise<void>((resolve) => {
+                new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 3000)),
+                new Promise<boolean>((resolve) => {
                     let count = 0;
                     const terminalDataTimeout = setTimeout(() => {
-                        resolve(); // Fall back for test case scenarios.
-                    }, 2000);
+                        resolve(true); // Fall back for test case scenarios.
+                    }, 3000);
                     // Watch TerminalData to see if REPL launched.
                     listener = this.applicationShell.onDidWriteTerminalData((e) => {
                         for (let i = 0; i < e.data.length; i++) {
@@ -83,7 +83,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                                 count++;
                                 if (count === 3) {
                                     clearTimeout(terminalDataTimeout);
-                                    resolve();
+                                    resolve(true);
                                 }
                             }
                         }
