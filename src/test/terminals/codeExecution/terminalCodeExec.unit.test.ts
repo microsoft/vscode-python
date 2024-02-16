@@ -613,8 +613,7 @@ suite('Terminal - Code Execution', () => {
                 await executor.execute('cmd2');
                 await executor.execute('cmd3');
 
-                // const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
-                // Now check if sendCommand from the initializeRepl is called atLeastOnce. Should be twice.
+                // Now check if sendCommand from the initializeRepl is called atLeastOnce.
                 // This is due to newly added Promise race and fallback to lower risk of swollen first command
                 // check applicationShell is calling onDidWriteTerminalData at least once
                 applicationShell.verify(
