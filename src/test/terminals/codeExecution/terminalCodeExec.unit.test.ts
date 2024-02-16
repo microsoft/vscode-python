@@ -600,7 +600,7 @@ suite('Terminal - Code Execution', () => {
                 );
             });
 
-            test('Ensure repl is re-initialized when terminal is closed', async () => {
+            test('Ensure REPL launches after reducing risk of command being ignored or duplicated', async () => {
                 const pythonPath = 'usr/bin/python1234';
                 const terminalArgs = ['-a', 'b', 'c'];
                 platform.setup((p) => p.isWindows).returns(() => false);
@@ -608,16 +608,6 @@ suite('Terminal - Code Execution', () => {
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
-
-                // let closeTerminalCallback: undefined | (() => void);
-                // terminalService
-                //     .setup((t) => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                //     .returns((callback) => {
-                //         closeTerminalCallback = callback;
-                //         return {
-                //             dispose: noop,
-                //         };
-                //     });
 
                 await executor.execute('cmd1');
                 await executor.execute('cmd2');
@@ -631,34 +621,18 @@ suite('Terminal - Code Execution', () => {
                     async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.atLeastOnce(),
                 );
-                // closeTerminalCallback!.call(terminalService.object);
+
                 await executor.execute('cmd4');
                 applicationShell.verify(
                     async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.atLeastOnce(),
                 );
 
-                // terminalService.verify(
-                //     async (t) =>
-                //         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                //     TypeMoq.Times.atLeastOnce(),
-                // );
-
-                // closeTerminalCallback!.call(terminalService.object);
-                // await executor.execute('cmd4');
-                // terminalService.verify(
-                //     async (t) =>
-                //         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                //     TypeMoq.Times.atLeastOnce(),
-                // );
-
-                // closeTerminalCallback!.call(terminalService.object);
-                // await executor.execute('cmd5');
-                // terminalService.verify(
-                //     async (t) =>
-                //         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                //     TypeMoq.Times.atLeastOnce(),
-                // );
+                await executor.execute('cmd5');
+                applicationShell.verify(
+                    async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    TypeMoq.Times.atLeastOnce(),
+                );
             });
 
             test('Ensure code is sent to terminal', async () => {
