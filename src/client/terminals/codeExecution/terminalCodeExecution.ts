@@ -70,12 +70,12 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
             let listener: IDisposable;
             Promise.race([
-                new Promise<void>((resolve) => setTimeout(() => resolve(), 1000)),
+                new Promise<void>((resolve) => setTimeout(() => resolve(), 3000)),
                 new Promise<void>((resolve) => {
                     let count = 0;
                     const terminalDataTimeout = setTimeout(() => {
                         resolve(); // Fall back for test case scenarios.
-                    }, 1000);
+                    }, 3000);
                     // Watch TerminalData to see if REPL launched.
                     listener = this.applicationShell.onDidWriteTerminalData((e) => {
                         for (let i = 0; i < e.data.length; i++) {
