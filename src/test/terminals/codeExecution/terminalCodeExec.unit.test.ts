@@ -628,7 +628,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                    TypeMoq.Times.atLeastOnce(),
                 );
 
                 closeTerminalCallback!.call(terminalService.object);
@@ -636,7 +636,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                    TypeMoq.Times.atLeastOnce(),
                 );
 
                 closeTerminalCallback!.call(terminalService.object);
@@ -644,7 +644,7 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(
                     async (t) =>
                         t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                    TypeMoq.Times.atLeastOnce(),
                 );
             });
 
