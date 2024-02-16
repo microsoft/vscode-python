@@ -346,7 +346,6 @@ def pytest_sessionfinish(session, exitstatus):
     Exit code 5: No tests were collected
     """
     cwd = pathlib.Path.cwd()
-    global SYMLINK_PATH
     if SYMLINK_PATH:
         print("Plugin warning[vscode-pytest]: SYMLINK set, adjusting cwd.")
         # Get relative between the cwd (resolved path) and the node path.
@@ -417,7 +416,6 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     function_nodes_dict: Dict[str, TestNode] = {}
 
     # Check to see if the global variable for symlink path is set
-    global SYMLINK_PATH
     if SYMLINK_PATH:
         session_node["path"] = SYMLINK_PATH
         session_node["id_"] = os.fspath(SYMLINK_PATH)
@@ -690,12 +688,12 @@ def get_node_path(node: Any) -> pathlib.Path:
             f"Unable to find path for node: {node}, node.path: {node.path}, node.fspath: {node.fspath}"
         )
 
-    global SYMLINK_PATH
     # Check for the session node since it has the symlink already.
     if SYMLINK_PATH and not isinstance(node, pytest.Session):
         # Get relative between the cwd (resolved path) and the node path.
         try:
-            rel_path = os.path.relpath(path, pathlib.Path.cwd())
+            rel_path = path.relative_to(pathlib.Path.cwd())
+
             # Calculate the new node path by making it relative to the symlink path.
             sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
             return sym_path

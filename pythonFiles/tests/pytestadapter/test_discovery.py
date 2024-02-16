@@ -215,8 +215,6 @@ def test_symlink_root_dir():
         source,
         destination,
     ):
-        print(f"symlink destination: {destination}")
-        print(f"symlink target: {source}")
         assert destination.is_symlink()
 
         # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
