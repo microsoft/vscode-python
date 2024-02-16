@@ -31,8 +31,8 @@ export class WorkspaceTestAdapter {
 
     constructor(
         private testProvider: TestProvider,
-        private discoveryAdapter: ITestDiscoveryAdapter,
-        private executionAdapter: ITestExecutionAdapter,
+        private discoveryAdapter: ITestDiscoveryAdapter | undefined,
+        private executionAdapter: ITestExecutionAdapter | undefined,
         private workspaceUri: Uri,
         private resultResolver: ITestResultResolver,
     ) {}
@@ -49,6 +49,9 @@ export class WorkspaceTestAdapter {
         if (this.executing) {
             traceError('Test execution already in progress, not starting a new one.');
             return this.executing.promise;
+        }
+        if (!this.executionAdapter) {
+            throw new Error('No test execution adapter available');
         }
 
         const deferred = createDeferred<void>();
@@ -122,6 +125,9 @@ export class WorkspaceTestAdapter {
         if (this.discovering) {
             traceError('Test discovery already in progress, not starting a new one.');
             return this.discovering.promise;
+        }
+        if (!this.discoveryAdapter) {
+            throw new Error('No test discovery adapter available');
         }
 
         const deferred = createDeferred<void>();
