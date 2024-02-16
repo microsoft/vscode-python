@@ -614,8 +614,7 @@ suite('Terminal - Code Execution', () => {
                 await executor.execute('cmd3');
 
                 // Now check if sendCommand from the initializeRepl is called atLeastOnce.
-                // This is due to newly added Promise race and fallback to lower risk of swollen first command
-                // check applicationShell is calling onDidWriteTerminalData at least once
+                // This is due to newly added Promise race and fallback to lower risk of swollen first command.
                 applicationShell.verify(
                     async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.atLeastOnce(),
