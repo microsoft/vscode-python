@@ -609,15 +609,15 @@ suite('Terminal - Code Execution', () => {
                     .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
-                // let closeTerminalCallback: undefined | (() => void);
-                // terminalService
-                //     .setup((t) => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                //     .returns((callback) => {
-                //         closeTerminalCallback = callback;
-                //         return {
-                //             dispose: noop,
-                //         };
-                //     });
+                let closeTerminalCallback: undefined | (() => void);
+                terminalService
+                    .setup((t) => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns((callback) => {
+                        closeTerminalCallback = callback;
+                        return {
+                            dispose: noop,
+                        };
+                    });
 
                 await executor.execute('cmd1');
                 await executor.execute('cmd2');
@@ -627,6 +627,12 @@ suite('Terminal - Code Execution', () => {
                 // Now check if sendCommand from the initializeRepl is called atLeastOnce. Should be twice.
                 // This is due to newly added Promise race and fallback to lower risk of swollen first command
                 // check applicationShell is calling onDidWriteTerminalData at least once
+                applicationShell.verify(
+                    async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    TypeMoq.Times.atLeastOnce(),
+                );
+                closeTerminalCallback!.call(terminalService.object);
+                await executor.execute('cmd4');
                 applicationShell.verify(
                     async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.atLeastOnce(),
