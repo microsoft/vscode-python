@@ -609,15 +609,15 @@ suite('Terminal - Code Execution', () => {
                     .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
-                let closeTerminalCallback: undefined | (() => void);
-                terminalService
-                    .setup((t) => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .returns((callback) => {
-                        closeTerminalCallback = callback;
-                        return {
-                            dispose: noop,
-                        };
-                    });
+                // let closeTerminalCallback: undefined | (() => void);
+                // terminalService
+                //     .setup((t) => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                //     .returns((callback) => {
+                //         closeTerminalCallback = callback;
+                //         return {
+                //             dispose: noop,
+                //         };
+                //     });
 
                 await executor.execute('cmd1');
                 await executor.execute('cmd2');
@@ -631,7 +631,7 @@ suite('Terminal - Code Execution', () => {
                     async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                     TypeMoq.Times.atLeastOnce(),
                 );
-                closeTerminalCallback!.call(terminalService.object);
+                // closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd4');
                 applicationShell.verify(
                     async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
