@@ -66,8 +66,6 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         }
         this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
-            terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
-
             let listener: IDisposable;
             Promise.race([
                 new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 3000)),
@@ -95,6 +93,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 }
                 resolve(true);
             });
+            terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
