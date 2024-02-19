@@ -32,18 +32,32 @@ suite('Hatch Locator', () => {
             getOSType.returns(platformUtils.OSType.Linux);
         });
 
-        test('project with only the default env', async () => {
+        interface TestArgs {
+            osType?: platformUtils.OSType;
+            pythonBin?: string;
+        }
+
+        const testProj1 = async ({ osType, pythonBin = 'bin/python' }: TestArgs = {}) => {
+            if (osType) {
+                getOSType.returns(osType);
+            }
+
             locator = new HatchLocator(projectDirs.project1);
             exec.callsFake(makeExecHandler(venvDirs.project1, { hatchPath: 'hatch', cwd: projectDirs.project1 }));
 
             const iterator = locator.iterEnvs();
             const actualEnvs = await getEnvs(iterator);
 
-            const expectedEnvs = [
-                createBasicEnv(PythonEnvKind.Hatch, path.join(venvDirs.project1.default, 'bin/python')),
-            ];
+            const expectedEnvs = [createBasicEnv(PythonEnvKind.Hatch, path.join(venvDirs.project1.default, pythonBin))];
             assertBasicEnvsEqual(actualEnvs, expectedEnvs);
-        });
+        };
+
+        test('project with only the default env', () => testProj1());
+        test('project with only the default env on Windows', () =>
+            testProj1({
+                osType: platformUtils.OSType.Windows,
+                pythonBin: 'Scripts/python.exe',
+            }));
 
         test('project with multiple defined envs', async () => {
             locator = new HatchLocator(projectDirs.project2);
