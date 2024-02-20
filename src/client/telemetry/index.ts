@@ -1329,12 +1329,12 @@ export interface IEventNamePropertyMapping {
      * Track how long it takes to trigger language server activation code, after Python extension starts activating.
      */
     /* __GDPR__
-       "language_server_trigger_duration" : {
+       "language_server_trigger_time" : {
           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
           "triggerTime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
        }
      */
-    [EventName.LANGUAGE_SERVER_TRIGGER_DURATION]: {
+    [EventName.LANGUAGE_SERVER_TRIGGER_TIME]: {
         /**
          * Time it took to trigger language server startup.
          */
