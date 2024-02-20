@@ -1330,10 +1330,15 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_trigger_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr", "isMeasurement": true }
+          "triggerTime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
        }
      */
-    [EventName.LANGUAGE_SERVER_TRIGGER_DURATION]: unknown;
+    [EventName.LANGUAGE_SERVER_TRIGGER_DURATION]: {
+        /**
+         * Time it took to trigger language server startup.
+         */
+        triggerTime: number;
+    };
     /**
      * Telemetry event sent when starting Node.js server
      */
