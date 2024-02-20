@@ -6,7 +6,12 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -47,6 +52,7 @@ suite('Terminal - Code Execution', () => {
         let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
         let interpreterService: TypeMoq.IMock<IInterpreterService>;
         let isDjangoRepl: boolean;
+        let applicationShell: TypeMoq.IMock<IApplicationShell>;
 
         teardown(() => {
             disposables.forEach((disposable) => {
@@ -71,6 +77,7 @@ suite('Terminal - Code Execution', () => {
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -85,6 +92,7 @@ suite('Terminal - Code Execution', () => {
                         platform.object,
                         interpreterService.object,
                         commandManager.object,
+                        applicationShell.object,
                     );
                     break;
                 }
@@ -97,6 +105,7 @@ suite('Terminal - Code Execution', () => {
                         platform.object,
                         interpreterService.object,
                         commandManager.object,
+                        applicationShell.object,
                     );
                     expectedTerminalTitle = 'REPL';
                     break;
@@ -120,6 +129,7 @@ suite('Terminal - Code Execution', () => {
                         fileSystem.object,
                         disposables,
                         interpreterService.object,
+                        applicationShell.object,
                     );
                     expectedTerminalTitle = 'Django Shell';
                     break;
@@ -590,7 +600,7 @@ suite('Terminal - Code Execution', () => {
                 );
             });
 
-            test('Ensure repl is re-initialized when terminal is closed', async () => {
+            test('Ensure REPL launches after reducing risk of command being ignored or duplicated', async () => {
                 const pythonPath = 'usr/bin/python1234';
                 const terminalArgs = ['-a', 'b', 'c'];
                 platform.setup((p) => p.isWindows).returns(() => false);
@@ -599,43 +609,27 @@ suite('Terminal - Code Execution', () => {
                     .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
-                let closeTerminalCallback: undefined | (() => void);
-                terminalService
-                    .setup((t) => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                    .returns((callback) => {
-                        closeTerminalCallback = callback;
-                        return {
-                            dispose: noop,
-                        };
-                    });
-
                 await executor.execute('cmd1');
                 await executor.execute('cmd2');
                 await executor.execute('cmd3');
 
-                const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
-
-                expect(closeTerminalCallback).not.to.be.an('undefined', 'Callback not initialized');
-                terminalService.verify(
-                    async (t) =>
-                        t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.once(),
+                // Now check if sendCommand from the initializeRepl is called atLeastOnce.
+                // This is due to newly added Promise race and fallback to lower risk of swollen first command.
+                applicationShell.verify(
+                    async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    TypeMoq.Times.atLeastOnce(),
                 );
 
-                closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd4');
-                terminalService.verify(
-                    async (t) =>
-                        t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.exactly(2),
+                applicationShell.verify(
+                    async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    TypeMoq.Times.atLeastOnce(),
                 );
 
-                closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd5');
-                terminalService.verify(
-                    async (t) =>
-                        t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
-                    TypeMoq.Times.exactly(3),
+                applicationShell.verify(
+                    async (t) => t.onDidWriteTerminalData(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    TypeMoq.Times.atLeastOnce(),
                 );
             });
 

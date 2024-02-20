@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import contextlib
 import io
 import json
 import os
@@ -25,6 +26,23 @@ def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
     absolute_test_id = "::".join([str(testPath), *split_id])
     print("absolute path", absolute_test_id)
     return absolute_test_id
+
+
+@contextlib.contextmanager
+def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
+    try:
+        destination = root / destination_ext
+        target = root / target_ext
+        if destination.exists():
+            print("destination already exists", destination)
+        try:
+            destination.symlink_to(target)
+        except Exception as e:
+            print("error occurred when attempting to create a symlink", e)
+        yield target, destination
+    finally:
+        destination.unlink()
+        print("destination unlinked", destination)
 
 
 def create_server(

@@ -9,6 +9,10 @@ import {
     ExtractJsonRPCData,
     parseJsonRPCHeadersAndData,
     splitTestNameWithRegex,
+    mapToArgs,
+    addArgIfNotExist,
+    argKeyExists,
+    argsToMap,
 } from '../../../client/testing/testController/common/utils';
 
 suite('Test Controller Utils: JSON RPC', () => {
@@ -156,6 +160,176 @@ ${data}${secondPayload}`;
                 const splitResult = splitTestNameWithRegex(testCase.input);
                 assert.deepStrictEqual(splitResult, [testCase.expectedParent, testCase.expectedSubtest]);
             });
+        });
+    });
+    suite('Test Controller Utils: Args Mapping', () => {
+        test('Converts map with mixed values to array of strings', async () => {
+            const inputMap = {
+                key1: 'value1',
+                key2: null,
+                key3: undefined,
+                key4: 'value4',
+            };
+            const expectedOutput = ['key1=value1', 'key2', 'key4=value4'];
+
+            const result = mapToArgs(inputMap);
+
+            assert.deepStrictEqual(result, expectedOutput);
+        });
+
+        test('Returns an empty array for an empty map', async () => {
+            const inputMap = {};
+            const expectedOutput: unknown[] = [];
+
+            const result = mapToArgs(inputMap);
+
+            assert.deepStrictEqual(result, expectedOutput);
+        });
+
+        test('Skips undefined values', async () => {
+            const inputMap = {
+                key1: undefined,
+                key2: undefined,
+            };
+            const expectedOutput: unknown[] = [];
+
+            const result = mapToArgs(inputMap);
+
+            assert.deepStrictEqual(result, expectedOutput);
+        });
+
+        test('Handles null values correctly', async () => {
+            const inputMap = {
+                key1: null,
+                key2: null,
+            };
+            const expectedOutput = ['key1', 'key2'];
+
+            const result = mapToArgs(inputMap);
+
+            assert.deepStrictEqual(result, expectedOutput);
+        });
+        test('Adds new argument if it does not exist', () => {
+            const map = {};
+            const argKey = 'newKey';
+            const argValue = 'newValue';
+
+            const updatedMap = addArgIfNotExist(map, argKey, argValue);
+
+            assert.deepStrictEqual(updatedMap, { [argKey]: argValue });
+        });
+
+        test('Does not overwrite existing argument', () => {
+            const map = { existingKey: 'existingValue' };
+            const argKey = 'existingKey';
+            const argValue = 'newValue';
+
+            const updatedMap = addArgIfNotExist(map, argKey, argValue);
+
+            assert.deepStrictEqual(updatedMap, { [argKey]: 'existingValue' });
+        });
+
+        test('Handles null value for new key', () => {
+            const map = {};
+            const argKey = 'nullKey';
+            const argValue = null;
+
+            const updatedMap = addArgIfNotExist(map, argKey, argValue);
+
+            assert.deepStrictEqual(updatedMap, { [argKey]: argValue });
+        });
+
+        test('Ignores addition if key exists with null value', () => {
+            const map = { nullKey: null };
+            const argKey = 'nullKey';
+            const argValue = 'newValue';
+
+            const updatedMap = addArgIfNotExist(map, argKey, argValue);
+
+            assert.deepStrictEqual(updatedMap, { [argKey]: null });
+        });
+
+        test('Accepts addition if key exists with undefined value', () => {
+            const map = { undefinedKey: undefined };
+            const argKey = 'undefinedKey';
+            const argValue = 'newValue';
+
+            // Attempting to add a key that is explicitly set to undefined
+            const updatedMap = addArgIfNotExist(map, argKey, argValue);
+
+            // Expect the map to remain unchanged because the key exists as undefined
+            assert.strictEqual(map[argKey], argValue);
+            assert.deepStrictEqual(updatedMap, { [argKey]: argValue });
+        });
+        test('Complex test for argKeyExists with various key types', () => {
+            const map = {
+                stringKey: 'stringValue',
+                nullKey: null,
+                // Note: not adding an 'undefinedKey' explicitly since it's not present and hence undefined by default
+            };
+
+            // Should return true for keys that are present, even with a null value
+            assert.strictEqual(
+                argKeyExists(map, 'stringKey'),
+                true,
+                "Failed to recognize 'stringKey' which has a string value.",
+            );
+            assert.strictEqual(
+                argKeyExists(map, 'nullKey'),
+                true,
+                "Failed to recognize 'nullKey' which has a null value.",
+            );
+
+            // Should return false for keys that are not present
+            assert.strictEqual(
+                argKeyExists(map, 'undefinedKey'),
+                false,
+                "Incorrectly recognized 'undefinedKey' as existing.",
+            );
+        });
+        test('Converts array of strings with "=" into a map', () => {
+            const args = ['key1=value1', 'key2=value2'];
+            const expectedMap = { key1: 'value1', key2: 'value2' };
+
+            const resultMap = argsToMap(args);
+
+            assert.deepStrictEqual(resultMap, expectedMap);
+        });
+
+        test('Assigns null to keys without "="', () => {
+            const args = ['key1', 'key2'];
+            const expectedMap = { key1: null, key2: null };
+
+            const resultMap = argsToMap(args);
+
+            assert.deepStrictEqual(resultMap, expectedMap);
+        });
+
+        test('Handles mixed keys with and without "="', () => {
+            const args = ['key1=value1', 'key2'];
+            const expectedMap = { key1: 'value1', key2: null };
+
+            const resultMap = argsToMap(args);
+
+            assert.deepStrictEqual(resultMap, expectedMap);
+        });
+
+        test('Handles strings with multiple "=" characters', () => {
+            const args = ['key1=part1=part2'];
+            const expectedMap = { key1: 'part1=part2' };
+
+            const resultMap = argsToMap(args);
+
+            assert.deepStrictEqual(resultMap, expectedMap);
+        });
+
+        test('Returns an empty map for an empty input array', () => {
+            const args: ReadonlyArray<string> = [];
+            const expectedMap = {};
+
+            const resultMap = argsToMap(args);
+
+            assert.deepStrictEqual(resultMap, expectedMap);
         });
     });
 });

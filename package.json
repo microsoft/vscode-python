@@ -483,9 +483,6 @@
                     "enum": [
                         "off",
                         "prompt"
-                    ],
-                    "tags": [
-                        "experimental"
                     ]
                 },
                 "python.condaPath": {

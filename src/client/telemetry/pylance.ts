@@ -118,6 +118,8 @@
       "custom_completionitemtelemetrybuildtimeinms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "custom_extensiontotaltimeinms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "custom_selecteditemtelemetrybuildtimeinms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "custom_completiontype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "custom_filetype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "parsecallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "parsetime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },

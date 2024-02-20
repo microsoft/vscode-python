@@ -6,7 +6,12 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
@@ -28,6 +33,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
     ) {
         super(
             terminalServiceFactory,
@@ -37,6 +43,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
             platformService,
             interpreterService,
             commandManager,
+            applicationShell,
         );
         this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));

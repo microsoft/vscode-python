@@ -58,6 +58,8 @@ if __name__ == "__main__":
             except json.JSONDecodeError:
                 # JSON decoding error, the complete JSON object is not yet received
                 continue
+            except UnicodeDecodeError:
+                continue
     except socket.error as e:
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
