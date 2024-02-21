@@ -723,6 +723,11 @@ export interface IEventNamePropertyMapping {
          * If global interpreter is being used
          */
         usingGlobalInterpreter?: boolean;
+        /**
+         * Carries `true` if it is the very first session of the user. We check whether persistent cache is empty
+         * to approximately guess if it's the first session.
+         */
+        isFirstSession?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables

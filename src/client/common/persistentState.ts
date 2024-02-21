@@ -108,7 +108,7 @@ export class PersistentState<T> implements IPersistentState<T> {
 export const GLOBAL_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_GLOBAL_STORAGE_KEYS';
 export const WORKSPACE_PERSISTENT_KEYS_DEPRECATED = 'PYTHON_EXTENSION_WORKSPACE_STORAGE_KEYS';
 
-const GLOBAL_PERSISTENT_KEYS = 'PYTHON_GLOBAL_STORAGE_KEYS';
+export const GLOBAL_PERSISTENT_KEYS = 'PYTHON_GLOBAL_STORAGE_KEYS';
 const WORKSPACE_PERSISTENT_KEYS = 'PYTHON_WORKSPACE_STORAGE_KEYS';
 type KeysStorageType = 'global' | 'workspace';
 export type KeysStorage = { key: string; defaultValue: unknown };
