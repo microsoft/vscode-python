@@ -63,8 +63,9 @@ export async function activate(context: IExtensionContext): Promise<PythonExtens
     let api: PythonExtension;
     let ready: Promise<void>;
     let serviceContainer: IServiceContainer;
-    const isFirstSession = context.globalState.get(GLOBAL_PERSISTENT_KEYS, []).length === 0;
+    let isFirstSession: boolean | undefined;
     try {
+        isFirstSession = context.globalState.get(GLOBAL_PERSISTENT_KEYS, []).length === 0;
         const workspaceService = new WorkspaceService();
         context.subscriptions.push(
             workspaceService.onDidGrantWorkspaceTrust(async () => {
