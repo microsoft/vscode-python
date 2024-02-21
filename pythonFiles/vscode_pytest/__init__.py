@@ -225,6 +225,8 @@ def pytest_report_teststatus(report, config):
     config -- configuration object.
     """
     cwd = pathlib.Path.cwd()
+    if SYMLINK_PATH:
+        cwd = SYMLINK_PATH
 
     if report.when == "call":
         traceback = None

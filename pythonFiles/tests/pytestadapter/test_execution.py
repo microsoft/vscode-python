@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+import json
 import os
 import shutil
 from typing import Any, Dict, List
@@ -8,7 +9,13 @@ import pytest
 
 from tests.pytestadapter import expected_execution_test_output
 
-from .helpers import TEST_DATA_PATH, runner, runner_with_cwd
+from .helpers import (
+    TEST_DATA_PATH,
+    create_symlink,
+    get_absolute_test_id,
+    runner,
+    runner_with_cwd,
+)
 
 
 def test_config_file():
@@ -276,3 +283,50 @@ def test_pytest_execution(test_ids, expected_const):
         if actual_result_dict[key]["traceback"] is not None:
             actual_result_dict[key]["traceback"] = "TRACEBACK"
     assert actual_result_dict == expected_const
+
+
+def test_symlink_run():
+    """
+    Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+    Discovery should succeed and testids should be relative to the symlinked root directory.
+    """
+    with create_symlink(TEST_DATA_PATH, "root", "symlink_folder") as (
+        source,
+        destination,
+    ):
+        assert destination.is_symlink()
+        test_a_path = TEST_DATA_PATH / "symlink_folder" / "tests" / "test_a.py"
+        test_a_id = get_absolute_test_id(
+            "tests/test_a.py::test_a_function",
+            test_a_path,
+        )
+
+        # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
+        actual = runner_with_cwd(
+            [f"--rootdir={os.fspath(destination)}", test_a_id], source
+        )
+
+        expected_const = (
+            expected_execution_test_output.symlink_run_expected_execution_output
+        )
+        assert actual
+        actual_list: List[Dict[str, Any]] = actual
+        if actual_list is not None:
+            assert actual_list.pop(-1).get("eot")
+            actual_item = actual_list.pop(0)
+            try:
+                # Check if all requirements
+                assert all(
+                    item in actual_item.keys() for item in ("status", "cwd", "result")
+                ), "Required keys are missing"
+                assert actual_item.get("status") == "success", "Status is not 'success'"
+                assert actual_item.get("cwd") == os.fspath(
+                    destination
+                ), f"CWD does not match: {os.fspath(destination)}"
+                actual_result_dict = dict()
+                actual_result_dict.update(actual_item["result"])
+                assert actual_result_dict == expected_const
+            except AssertionError as e:
+                # Print the actual_item in JSON format if an assertion fails
+                print(json.dumps(actual_item, indent=4))
+                pytest.fail(str(e))
