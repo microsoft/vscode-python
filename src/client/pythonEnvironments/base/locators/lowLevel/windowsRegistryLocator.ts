@@ -57,12 +57,12 @@ async function updateLazily(didUpdate: EventEmitter<PythonEnvUpdatedEvent<BasicE
             if (isMicrosoftStoreDir(interpreter.interpreterPath)) {
                 continue;
             }
-            const env: BasicEnvInfo = {
-                kind: PythonEnvKind.OtherGlobal,
-                executablePath: interpreter.interpreterPath,
-                source: [PythonEnvSource.WindowsRegistry],
-            };
-            didUpdate.fire({ update: env });
+            // const env: BasicEnvInfo = {
+            //     kind: PythonEnvKind.OtherGlobal,
+            //     executablePath: interpreter.interpreterPath,
+            //     source: [PythonEnvSource.WindowsRegistry],
+            // };
+            // didUpdate.fire({ update: env });
         } catch (ex) {
             traceError(`Failed to process environment: ${interpreter}`, ex);
         }
