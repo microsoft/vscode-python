@@ -684,3 +684,15 @@ unsafe_clear_env_vars_expected_execution_output = {
         "subtest": None,
     },
 }
+
+# Constant for the symlink execution test where TEST_DATA_PATH / "root" the target and TEST_DATA_PATH / "symlink_folder" the symlink
+test_a_symlink_path = TEST_DATA_PATH / "symlink_folder" / "tests" / "test_a.py"
+symlink_run_expected_execution_output = {
+    get_absolute_test_id("test_a.py::test_a_function", test_a_symlink_path): {
+        "test": get_absolute_test_id("test_a.py::test_a_function", test_a_symlink_path),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}

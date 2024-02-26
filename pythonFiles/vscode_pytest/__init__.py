@@ -225,6 +225,8 @@ def pytest_report_teststatus(report, config):
     config -- configuration object.
     """
     cwd = pathlib.Path.cwd()
+    if SYMLINK_PATH:
+        cwd = SYMLINK_PATH
 
     if report.when == "call":
         traceback = None
@@ -348,10 +350,7 @@ def pytest_sessionfinish(session, exitstatus):
     cwd = pathlib.Path.cwd()
     if SYMLINK_PATH:
         print("Plugin warning[vscode-pytest]: SYMLINK set, adjusting cwd.")
-        # Get relative between the cwd (resolved path) and the node path.
-        rel_path = os.path.relpath(cwd, pathlib.Path.cwd())
-        # Calculate the new node path by making it relative to the symlink path.
-        cwd = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
+        cwd = pathlib.Path(SYMLINK_PATH)
 
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
@@ -681,9 +680,9 @@ def get_node_path(node: Any) -> pathlib.Path:
     A function that returns the path of a node given the switch to pathlib.Path.
     It also evaluates if the node is a symlink and returns the equivalent path.
     """
-    path = getattr(node, "path", None) or pathlib.Path(node.fspath)
+    node_path = getattr(node, "path", None) or pathlib.Path(node.fspath)
 
-    if not path:
+    if not node_path:
         raise VSCodePytestError(
             f"Unable to find path for node: {node}, node.path: {node.path}, node.fspath: {node.fspath}"
         )
@@ -692,17 +691,24 @@ def get_node_path(node: Any) -> pathlib.Path:
     if SYMLINK_PATH and not isinstance(node, pytest.Session):
         # Get relative between the cwd (resolved path) and the node path.
         try:
-            rel_path = path.relative_to(pathlib.Path.cwd())
-
-            # Calculate the new node path by making it relative to the symlink path.
-            sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
-            return sym_path
+            # check to see if the node path contains the symlink root already
+            common_path = os.path.commonpath([SYMLINK_PATH, node_path])
+            if common_path == os.fsdecode(SYMLINK_PATH):
+                # node path is already relative to the SYMLINK_PATH root therefore return
+                return node_path
+            else:
+                # if the node path is not a symlink, then we need to calculate the equivalent symlink path
+                # get the relative path between the cwd and the node path (as the node path is not a symlink)
+                rel_path = node_path.relative_to(pathlib.Path.cwd())
+                # combine the difference between the cwd and the node path with the symlink path
+                sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
+                return sym_path
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
-                "\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {path}, \n cwd: {{pathlib.Path.cwd()}}"
+                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {pathlib.Path.cwd()}"
             )
-    return path
+    return node_path
 
 
 __socket = None

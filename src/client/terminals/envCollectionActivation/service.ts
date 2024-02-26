@@ -32,7 +32,7 @@ import { defaultShells } from '../../interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
-import { EnvironmentVariables } from '../../common/variables/types';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
@@ -81,6 +81,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IShellIntegrationService) private readonly shellIntegrationService: IShellIntegrationService,
+        @inject(IEnvironmentVariablesProvider)
+        private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
@@ -115,6 +117,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     async () => {
                         traceInfo("Shell integration status changed, can confirm it's working.");
                         await this._applyCollection(undefined).ignoreErrors();
+                    },
+                    this,
+                    this.disposables,
+                );
+                this.environmentVariablesProvider.onDidEnvironmentVariablesChange(
+                    async (r: Resource) => {
+                        await this._applyCollection(r).ignoreErrors();
                     },
                     this,
                     this.disposables,

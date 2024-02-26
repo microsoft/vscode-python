@@ -95,8 +95,6 @@ export async function getEnvs<I = PythonEnvInfo>(iterator: IPythonEnvsIterator<I
                 }
                 // We don't worry about if envs[index] is set already.
                 envs[index] = update;
-            } else if (event.update) {
-                envs.push(event.update);
             }
         });
     }
