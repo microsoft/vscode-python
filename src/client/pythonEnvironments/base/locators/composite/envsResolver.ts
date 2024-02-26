@@ -81,7 +81,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         const seen: PythonEnvInfo[] = [];
 
         if (iterator.onUpdated !== undefined) {
-            const listener =iterator.onUpdated(async (event) => {
+            const listener = iterator.onUpdated(async (event) => {
                 state.pending += 1;
                 if (isProgressEvent(event)) {
                     if (event.stage === ProgressReportStage.discoveryFinished) {
@@ -101,7 +101,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     seen[event.index] = await resolveBasicEnv(event.update);
                     didUpdate.fire({ old, index: event.index, update: seen[event.index] });
                     this.resolveInBackground(event.index, state, didUpdate, seen).ignoreErrors();
-                } else {                    
+                } else {
                     // This implies a problem in a downstream locator
                     traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
                 }
@@ -172,7 +172,7 @@ function checkIfFinishedAndNotify(
     didUpdate: EventEmitter<PythonEnvUpdatedEvent | ProgressNotificationEvent>,
 ) {
     if (state.done && state.pending === 0) {
-        didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });        
+        didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
         didUpdate.dispose();
         traceVerbose(`Finished with environment resolver`);
     }

@@ -50,7 +50,7 @@ async function* iterEnvsIterator(
     const seen: BasicEnvInfo[] = [];
 
     if (iterator.onUpdated !== undefined) {
-        const listener =iterator.onUpdated((event) => {
+        const listener = iterator.onUpdated((event) => {
             if (isProgressEvent(event)) {
                 if (event.stage === ProgressReportStage.discoveryFinished) {
                     state.done = true;
