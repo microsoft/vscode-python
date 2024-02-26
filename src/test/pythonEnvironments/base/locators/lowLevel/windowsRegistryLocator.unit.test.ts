@@ -4,10 +4,14 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { expect } from 'chai';
 import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import * as winreg from '../../../../../client/pythonEnvironments/common/windowsRegistry';
-import { WindowsRegistryLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
+import {
+    WindowsRegistryLocator,
+    WINDOWS_REG_PROVIDER_ID,
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
 import { createBasicEnv } from '../../common';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
@@ -201,7 +205,7 @@ suite('Windows Registry', () => {
     }
 
     setup(async () => {
-        sinon.stub(externalDependencies, 'inExperiment').returns(false);
+        sinon.stub(externalDependencies, 'inExperiment').returns(true);
         stubReadRegistryValues = sinon.stub(winreg, 'readRegistryValues');
         stubReadRegistryKeys = sinon.stub(winreg, 'readRegistryKeys');
         stubReadRegistryValues.callsFake(fakeRegistryValues);
@@ -222,10 +226,21 @@ suite('Windows Registry', () => {
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
         ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
-        const iterator = locator.iterEnvs(undefined, true);
+        const lazyIterator = locator.iterEnvs(undefined, true);
+        const envs = await getEnvs(lazyIterator);
+        expect(envs.length).to.equal(0);
+
+        const iterator = locator.iterEnvs({ providerId: WINDOWS_REG_PROVIDER_ID }, true);
         const actualEnvs = await getEnvs(iterator);
 
         assertBasicEnvsEqual(actualEnvs, expectedEnvs);
+    });
+
+    test('iterEnvs(): query is undefined', async () => {
+        // Iterate no envs when query is `undefined`, i.e notify completion immediately.
+        const lazyIterator = locator.iterEnvs(undefined, true);
+        const envs = await getEnvs(lazyIterator);
+        expect(envs.length).to.equal(0);
     });
 
     test('iterEnvs(): no registry permission', async () => {
@@ -233,7 +248,7 @@ suite('Windows Registry', () => {
             throw Error();
         });
 
-        const iterator = locator.iterEnvs(undefined, true);
+        const iterator = locator.iterEnvs({ providerId: WINDOWS_REG_PROVIDER_ID }, true);
         const actualEnvs = await getEnvs(iterator);
 
         assert.deepStrictEqual(actualEnvs, []);
@@ -252,7 +267,7 @@ suite('Windows Registry', () => {
             createBasicEnv(PythonEnvKind.OtherGlobal, path.join(regTestRoot, 'python38', 'python.exe')),
         ].map((e) => ({ ...e, source: [PythonEnvSource.WindowsRegistry] }));
 
-        const iterator = locator.iterEnvs(undefined, true);
+        const iterator = locator.iterEnvs({ providerId: WINDOWS_REG_PROVIDER_ID }, true);
         const actualEnvs = await getEnvs(iterator);
 
         assertBasicEnvsEqual(actualEnvs, expectedEnvs);

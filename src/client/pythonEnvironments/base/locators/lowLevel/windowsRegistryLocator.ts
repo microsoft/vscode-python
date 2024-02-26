@@ -12,10 +12,10 @@ import { inExperiment } from '../../../common/externalDependencies';
 import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
-const PROVIDER_ID = 'windows-registry';
+export const WINDOWS_REG_PROVIDER_ID = 'windows-registry';
 
 export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
-    public readonly providerId: string = PROVIDER_ID;
+    public readonly providerId: string = WINDOWS_REG_PROVIDER_ID;
 
     // eslint-disable-next-line class-methods-use-this
     public iterEnvs(
@@ -44,7 +44,7 @@ async function* iterateEnvsLazily(changed: IEmitter<PythonEnvsChangedEvent>): IP
 async function loadAllEnvs(changed: IEmitter<PythonEnvsChangedEvent>) {
     traceVerbose('Searching for windows registry interpreters');
     await getRegistryInterpreters(true);
-    changed.fire({ providerId: PROVIDER_ID });
+    changed.fire({ providerId: WINDOWS_REG_PROVIDER_ID });
     traceVerbose('Finished searching for windows registry interpreters');
 }
 
