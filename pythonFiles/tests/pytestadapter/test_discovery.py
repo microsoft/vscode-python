@@ -18,6 +18,10 @@ from . import expected_discovery_test_output
 from .helpers import TEST_DATA_PATH, runner, runner_with_cwd, create_symlink
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="See https://github.com/microsoft/vscode-python/issues/22965",
+)
 def test_import_error(tmp_path):
     """Test pytest discovery on a file that has a pytest marker but does not import pytest.
 
@@ -59,6 +63,10 @@ def test_import_error(tmp_path):
                 assert False
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="See https://github.com/microsoft/vscode-python/issues/22965",
+)
 def test_syntax_error(tmp_path):
     """Test pytest discovery on a file that has a syntax error.
 

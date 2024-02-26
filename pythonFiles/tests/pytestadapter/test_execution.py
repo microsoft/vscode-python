@@ -6,6 +6,7 @@ import shutil
 from typing import Any, Dict, List
 
 import pytest
+import sys
 
 from tests.pytestadapter import expected_execution_test_output
 
@@ -71,6 +72,10 @@ def test_rootdir_specified():
         assert actual_result_dict == expected_const
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="See https://github.com/microsoft/vscode-python/issues/22965",
+)
 def test_syntax_error_execution(tmp_path):
     """Test pytest execution on a file that has a syntax error.
 
