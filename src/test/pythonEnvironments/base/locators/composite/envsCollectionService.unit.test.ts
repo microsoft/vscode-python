@@ -78,6 +78,9 @@ suite('Python envs locator - Environments Collection', async () => {
     ) {
         const env = buildEnvInfo({ executable, searchLocation, name, location, kind });
         env.id = id ?? env.id;
+        env.version.major = 3;
+        env.version.minor = 10;
+        env.version.micro = 10;
         return env;
     }
 
