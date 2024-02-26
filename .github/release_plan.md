@@ -1,14 +1,34 @@
+### General Notes
 All dates should align with VS Code's [iteration](https://github.com/microsoft/vscode/labels/iteration-plan) and [endgame](https://github.com/microsoft/vscode/labels/endgame-plan) plans.
 
 Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commits to `main` should only be in response to bugs found during endgame testing until the release candidate is ready.
 
+<details>
+  <summary>Release Primary and Secondary Assignments for the 2024 Calendar Year</summary>
 
-NOTE: the number of this release is in the issue title and can be substituted in wherever you see [YYYY.minor].
+|   Month   | Primary   | Secondary   |
+|:----------|:----------|:------------|
+| ~~January~~   | ~~Eleanor~~   | ~~Karthik~~     |
+| February  | Kartik    | Anthony     |
+| March     | Karthik   | Eleanor     |
+| April     | Paula     | Kartik      |
+| May       | Anthony   | Karthik     |
+| June      | Eleanor   | Paula       |
+| July      | Anthony   | Karthik     |
+| August    | Paula     | Kartik      |
+| September | Anthony   | Eleanor     |
+| October   | Paula     | Kartik     |
+| November  | Kartik    | Eleanor     |
+| December  | Karthik   | Anthony     |
+
+</details>
 
 
 # Release candidate (Monday, XXX XX)
 
 NOTE: Third Party Notices are automatically added by our build pipelines using  https://tools.opensource.microsoft.com/notice.
+NOTE: the number of this release is in the issue title and can be substituted in wherever you see [YYYY.minor].
+
 
 ### Step 1:
 ##### Bump the version of `main` to be a release candidate (also updating debugpy dependences, third party notices, and package-lock.json).❄️ (steps with ❄️ will dictate this step happens while main is frozen 🥶)
