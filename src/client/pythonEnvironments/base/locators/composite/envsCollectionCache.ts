@@ -245,6 +245,10 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             // Any environment with complete information is flushed, so this env does not contain complete info.
             return false;
         }
+        if (env.version.micro === -1 || env.version.major === -1 || env.version.minor === -1) {
+            // Env should not contain incomplete versions.
+            return false;
+        }
         const { ctime, mtime } = await getFileInfo(env.executable.filename);
         if (ctime !== -1 && mtime !== -1 && ctime === env.executable.ctime && mtime === env.executable.mtime) {
             return true;
