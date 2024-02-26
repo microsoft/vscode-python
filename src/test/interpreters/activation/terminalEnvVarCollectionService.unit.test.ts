@@ -38,6 +38,7 @@ import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IShellIntegrationService, ITerminalDeactivateService } from '../../../client/terminals/types';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -74,6 +75,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         interpreterService = mock<IInterpreterService>();
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
+        const envVarProvider = mock<IEnvironmentVariablesProvider>();
         shellIntegrationService = mock<IShellIntegrationService>();
         when(shellIntegrationService.isWorking()).thenResolve(true);
         globalCollection = mock<GlobalEnvironmentVariableCollection>();
@@ -113,6 +115,7 @@ suite('Terminal Environment Variable Collection Service', () => {
             instance(terminalDeactivateService),
             new PathUtils(getOSType() === OSType.Windows),
             instance(shellIntegrationService),
+            instance(envVarProvider),
         );
     });
 
