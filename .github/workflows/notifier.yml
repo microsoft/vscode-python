@@ -7,7 +7,7 @@ on:
 
 jobs:
   check-PyPI:
-    name: Check for package updates on PyPI and create issue
+    name: Check for package updates on PyPI and create issue if tests fail
     runs-on: ubuntu-latest
     permissions:
       issues: write
