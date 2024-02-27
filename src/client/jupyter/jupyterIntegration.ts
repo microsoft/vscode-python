@@ -57,14 +57,6 @@ type PythonApiForJupyterExtension = {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
-
-    /**
-     * Call to provide a function that the Python extension can call to request the notebook
-     * document URI related to a particular text document URI, or undefined if there is no
-     * associated notebook.
-     * @param func : The function that Python should call when requesting the notebook URI.
-     */
-    registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
 };
 
 type JupyterExtensionApi = {
@@ -82,8 +74,6 @@ export class JupyterExtensionIntegration {
     private pylanceExtension: Extension<PylanceApi> | undefined;
 
     private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
-
-    private getNotebookUriForTextDocumentUriFunction: ((textDocumentUri: Uri) => Uri | undefined) | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -123,8 +113,6 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
-            registerGetNotebookUriForTextDocumentUriFunction: (func: (textDocumentUri: Uri) => Uri | undefined) =>
-                this.registerGetNotebookUriForTextDocumentUriFunction(func),
         });
         return undefined;
     }
@@ -179,18 +167,5 @@ export class JupyterExtensionIntegration {
 
     public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
         return this.jupyterPythonPathFunction;
-    }
-
-    public registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void {
-        this.getNotebookUriForTextDocumentUriFunction = func;
-
-        const api = this.getPylanceApi();
-        if (api) {
-            api.notebook!.registerGetNotebookUriForTextDocumentUriFunction(func);
-        }
-    }
-
-    public getGetNotebookUriForTextDocumentUriFunction(): ((textDocumentUri: Uri) => Uri | undefined) | undefined {
-        return this.getNotebookUriForTextDocumentUriFunction;
     }
 }

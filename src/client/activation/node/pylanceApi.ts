@@ -18,7 +18,6 @@ export interface PylanceApi {
     };
     notebook?: {
         registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
-        registerGetNotebookUriForTextDocumentUriFunction(func: (textDocumentUri: Uri) => Uri | undefined): void;
         getCompletionItems(
             document: TextDocument,
             position: Position,
