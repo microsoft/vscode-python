@@ -28,9 +28,9 @@ def fetch_all_package_versions(package_name):
 def main():
     # load in list of packages and its version from requirements.txt that is in one directory above
     root_path = pathlib.Path(__file__).parent.parent.parent
-    requirement_content = pathlib.Path(root_path, "requirements.txt").read_text(
-        encoding="utf-8"
-    )
+    # requirement_content = pathlib.Path(root_path, "requirements.txt").read_text(
+    #     encoding="utf-8"
+    # )
     # Check Pytest version for Python Repo,
     # If there is new version, run Python test,
     # If Python tests fail, then create issue
