@@ -25,8 +25,20 @@ def get_last_comment_date(pr_number):
     return None
 
 
+# Fetch all open PR in repository
+def get_all_open_pull_requests(owner, repo_name):
+    url = f"https://api.github.com/repos/{owner}/{repo_name}/pulls?state=open"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.json()  # Returns list of opened PRs.
+    else:
+        print("Failed to fetch PRs:", response.content)
+        return []
+
+
 def main():
-    print(get_last_comment_date(22741))
+    # print(get_last_comment_date(22741)) testing
+    all_open_prs = get_all_open_pull_requests("microsoft", "vscode-python")
 
 
 if __name__ == "__main__":
