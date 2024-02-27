@@ -73,8 +73,6 @@ export class JupyterExtensionIntegration {
 
     private pylanceExtension: Extension<PylanceApi> | undefined;
 
-    private jupyterPythonPathFunction: ((uri: Uri) => Promise<string | undefined>) | undefined;
-
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
@@ -157,15 +155,9 @@ export class JupyterExtensionIntegration {
     }
 
     private registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>) {
-        this.jupyterPythonPathFunction = func;
-
         const api = this.getPylanceApi();
         if (api) {
             api.notebook!.registerJupyterPythonPathFunction(func);
         }
-    }
-
-    public getJupyterPythonPathFunction(): ((uri: Uri) => Promise<string | undefined>) | undefined {
-        return this.jupyterPythonPathFunction;
     }
 }
