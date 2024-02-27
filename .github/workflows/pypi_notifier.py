@@ -2,10 +2,6 @@ import subprocess
 import github
 import os
 import pathlib
-
-# from urllib import request
-# from urllib.request import urlopen
-# import json
 import importlib.metadata
 import pytest
 from packaging import version
