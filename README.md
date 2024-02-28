@@ -88,7 +88,7 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Questions, issues, feature requests, and contributions
 
--   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python).
+-   If you have a question about how to accomplish something with the extension, please [ask on our Discussions page](https://github.com/microsoft/vscode-python/discussions/categories/q-a).
 -   If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python).
 -   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md) for more details.
 -   Any and all feedback is appreciated and welcome!
