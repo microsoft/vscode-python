@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import unittest
-from typing import List, Literal, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple, Union, Dict
 
 
 script_dir = pathlib.Path(__file__).parent.parent

@@ -156,7 +156,7 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
     return json_messages  # return the list of json messages, only the params part with the EOT token
 
 
-def parse_rpc_message(data: str) -> Tuple[dict[str, str], str]:
+def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
     """Process the JSON data which comes from the server.
     returns:
     json_data: A single rpc payload of JSON data from the server.

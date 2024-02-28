@@ -18,7 +18,6 @@ sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import process_json_util, socket_manager
-from typing_extensions import NotRequired
 from unittestadapter.pvsc_utils import (
     VSCodeUnittestError,
     parse_unittest_args,
