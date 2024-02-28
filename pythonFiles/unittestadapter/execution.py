@@ -251,10 +251,16 @@ if __name__ == "__main__":
 
     if not run_test_ids_pipe:
         print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
+        raise VSCodeUnittestError(
+            "Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set."
+        )
     if not test_run_pipe:
         print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
+        raise VSCodeUnittestError(
+            "Error[vscode-unittest]: TEST_RUN_PIPE env var is not set."
+        )
     test_ids_from_buffer = []
-
+    raw_json = None
     try:
         with socket_manager.PipeManager(run_test_ids_pipe) as sock:
             buffer: str = ""
@@ -283,18 +289,19 @@ if __name__ == "__main__":
         raise VSCodeUnittestError(msg)
 
     try:
-        test_ids_from_buffer = raw_json["params"]
-        if test_ids_from_buffer:
-            # Perform test execution.
-            payload = run_tests(
-                start_dir,
-                test_ids_from_buffer,
-                pattern,
-                top_level_dir,
-                verbosity,
-                failfast,
-                locals,
-            )
+        if raw_json and "params" in raw_json:
+            test_ids_from_buffer = raw_json["params"]
+            if test_ids_from_buffer:
+                # Perform test execution.
+                payload = run_tests(
+                    start_dir,
+                    test_ids_from_buffer,
+                    pattern,
+                    top_level_dir,
+                    verbosity,
+                    failfast,
+                    locals,
+                )
         else:
             # No test ids received from buffer
             cwd = os.path.abspath(start_dir)

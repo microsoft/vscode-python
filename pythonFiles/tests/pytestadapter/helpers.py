@@ -99,20 +99,22 @@ class PipeManager:
             return data
 
 
-async def create_pipe(test_run_pipe: str) -> socket.socket:
+async def create_pipe(test_run_pipe: str) -> PipeManager:
     __pipe = PipeManager(test_run_pipe)
     return __pipe
 
 
 CONTENT_LENGTH: str = "Content-Length:"
 CONTENT_TYPE: str = "Content-Type:"
-  
+
+
 @contextlib.contextmanager
 def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
+    destination = None
     try:
         destination = root / destination_ext
         target = root / target_ext
-        if destination.exists():
+        if destination and destination.exists():
             print("destination already exists", destination)
         try:
             destination.symlink_to(target)
@@ -120,7 +122,8 @@ def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
             print("error occurred when attempting to create a symlink", e)
         yield target, destination
     finally:
-        destination.unlink()
+        if destination and destination.exists():
+            destination.unlink()
         print("destination unlinked", destination)
 
 
@@ -138,10 +141,14 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
     while remaining:
         json_data, remaining = parse_rpc_message(remaining)
         # here json_data is a single rpc payload, now check its jsonrpc 2 and save the param data
-        if json_data["jsonrpc"] == "2.0":
-            json_messages.append(json_data["params"])
+        if "params" or "jsonrpc" not in json_data:
+            raise ValueError(
+                "Invalid JSON-RPC message received, missing params or jsonrpc key"
+            )
+        elif json_data["jsonrpc"] != "2.0":
+            raise ValueError("Invalid JSON-RPC version received, not version 2.0")
         else:
-            raise ValueError("Invalid JSON-RPC message received")
+            json_messages.append(json_data["params"])
 
     last_json = json_messages.pop(-1)
     if "eot" not in last_json:
@@ -151,7 +158,7 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
     return json_messages  # return the list of json messages, only the params part with the EOT token
 
 
-def parse_rpc_message(data: str) -> Tuple[str, str]:
+def parse_rpc_message(data: str) -> Tuple[dict[str, str], str]:
     """Process the JSON data which comes from the server.
     returns:
     json_data: A single rpc payload of JSON data from the server.
@@ -186,7 +193,7 @@ def parse_rpc_message(data: str) -> Tuple[str, str]:
         line: str = str_stream.readline(length)
         try:
             # try to parse the json, if successful it is single payload so return with remaining data
-            json_data = json.loads(line)
+            json_data: dict[str, str] = json.loads(line)
             return json_data, str_stream.read()
         except json.JSONDecodeError:
             print("json decode error")
