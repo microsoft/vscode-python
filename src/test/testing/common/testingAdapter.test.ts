@@ -275,7 +275,6 @@ suite('End to End Tests: test adapters', () => {
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,

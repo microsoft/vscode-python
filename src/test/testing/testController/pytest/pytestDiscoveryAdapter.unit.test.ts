@@ -205,7 +205,7 @@ suite('pytest test discovery adapter', () => {
                 return Promise.resolve(execService.object);
             });
 
-        adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
+        adapter = new PytestTestDiscoveryAdapter(configServiceNew, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
         await deferred.promise;
