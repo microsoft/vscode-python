@@ -23,7 +23,6 @@ import {
     argsToMap,
     addArgIfNotExist,
     mapToArgs,
-
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 

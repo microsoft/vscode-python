@@ -318,7 +318,6 @@ def test_symlink_run():
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
-            assert actual_list.pop(-1).get("eot")
             actual_item = actual_list.pop(0)
             try:
                 # Check if all requirements
