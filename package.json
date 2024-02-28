@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "IntelliSense (Pylance), Linting, Debugging (Python Debugger), code formatting, refactoring, unit tests, and more.",
-    "version": "2024.1.0-dev",
+    "version": "2024.3.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1569,7 +1569,7 @@
         "vscode-jsonrpc": "^8.2.0",
         "vscode-languageclient": "^9.0.1",
         "vscode-languageserver-protocol": "^3.17.5",
-        "vscode-tas-client": "^0.1.75",
+        "vscode-tas-client": "^0.1.84",
         "which": "^2.0.2",
         "winreg": "^1.2.4",
         "xml2js": "^0.5.0"

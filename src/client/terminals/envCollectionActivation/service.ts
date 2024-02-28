@@ -26,13 +26,13 @@ import {
     IPathUtils,
 } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
-import { traceError, traceInfo, traceVerbose, traceWarn } from '../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../logging';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { defaultShells } from '../../interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { EnvironmentType, PythonEnvironment } from '../../pythonEnvironments/info';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
-import { EnvironmentVariables } from '../../common/variables/types';
+import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
 import { normCase } from '../../common/platform/fs-paths';
@@ -81,6 +81,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IShellIntegrationService) private readonly shellIntegrationService: IShellIntegrationService,
+        @inject(IEnvironmentVariablesProvider)
+        private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
         this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
@@ -115,6 +117,13 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     async () => {
                         traceInfo("Shell integration status changed, can confirm it's working.");
                         await this._applyCollection(undefined).ignoreErrors();
+                    },
+                    this,
+                    this.disposables,
+                );
+                this.environmentVariablesProvider.onDidEnvironmentVariablesChange(
+                    async (r: Resource) => {
+                        await this._applyCollection(r).ignoreErrors();
                     },
                     this,
                     this.disposables,
@@ -213,7 +222,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 if (value !== undefined) {
                     if (key === 'PS1') {
                         // We cannot have the full PS1 without executing in terminal, which we do not. Hence prepend it.
-                        traceVerbose(
+                        traceLog(
                             `Prepending environment variable ${key} in collection with ${value} ${JSON.stringify(
                                 defaultPrependOptions,
                             )}`,
@@ -233,7 +242,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             if (deactivate) {
                                 value = `${deactivate}${this.separator}${value}`;
                             }
-                            traceVerbose(
+                            traceLog(
                                 `Prepending environment variable ${key} in collection with ${value} ${JSON.stringify(
                                     options,
                                 )}`,
@@ -246,7 +255,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                             if (deactivate) {
                                 value = `${deactivate}${this.separator}${value}`;
                             }
-                            traceVerbose(
+                            traceLog(
                                 `Prepending environment variable ${key} in collection to ${value} ${JSON.stringify(
                                     options,
                                 )}`,
@@ -259,7 +268,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         applyAtShellIntegration: true,
                         applyAtProcessCreation: true,
                     };
-                    traceVerbose(
+                    traceLog(
                         `Setting environment variable ${key} in collection to ${value} ${JSON.stringify(options)}`,
                     );
                     envVarCollection.replace(key, value, options);

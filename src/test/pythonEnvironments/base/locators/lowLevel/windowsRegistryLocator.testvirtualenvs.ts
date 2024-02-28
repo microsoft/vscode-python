@@ -2,7 +2,10 @@
 // Licensed under the MIT License.
 
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
-import { WindowsRegistryLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
+import {
+    WindowsRegistryLocator,
+    WINDOWS_REG_PROVIDER_ID,
+} from '../../../../../client/pythonEnvironments/base/locators/lowLevel/windowsRegistryLocator';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { TEST_TIMEOUT } from '../../../../constants';
 import { getOSType, OSType } from '../../../../../client/common/utils/platform';
@@ -19,8 +22,8 @@ suite('Windows Registry Locator', async () => {
     });
 
     test('Worker thread to fetch registry interpreters is working', async () => {
-        const items = await getEnvs(locator.iterEnvs(undefined, false));
-        const workerItems = await getEnvs(locator.iterEnvs(undefined, true));
+        const items = await getEnvs(locator.iterEnvs({ providerId: WINDOWS_REG_PROVIDER_ID }, false));
+        const workerItems = await getEnvs(locator.iterEnvs({ providerId: WINDOWS_REG_PROVIDER_ID }, true));
         console.log('Number of items Windows registry locator returned:', items.length);
         // Make sure items returned when using worker threads v/s not are the same.
         assertBasicEnvsEqual(items, workerItems);

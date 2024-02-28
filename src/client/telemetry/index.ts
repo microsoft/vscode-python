@@ -681,7 +681,8 @@ export interface IEventNamePropertyMapping {
           "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -723,6 +724,11 @@ export interface IEventNamePropertyMapping {
          * If global interpreter is being used
          */
         usingGlobalInterpreter?: boolean;
+        /**
+         * Carries `true` if it is the very first session of the user. We check whether persistent cache is empty
+         * to approximately guess if it's the first session.
+         */
+        isFirstSession?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -1329,11 +1335,17 @@ export interface IEventNamePropertyMapping {
      * Track how long it takes to trigger language server activation code, after Python extension starts activating.
      */
     /* __GDPR__
-       "language_server_trigger_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+       "language_server_trigger_time" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
+          "triggerTime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
        }
      */
-    [EventName.LANGUAGE_SERVER_TRIGGER_DURATION]: unknown;
+    [EventName.LANGUAGE_SERVER_TRIGGER_TIME]: {
+        /**
+         * Time it took to trigger language server startup.
+         */
+        triggerTime: number;
+    };
     /**
      * Telemetry event sent when starting Node.js server
      */

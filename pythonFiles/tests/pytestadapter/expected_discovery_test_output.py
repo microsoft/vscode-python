@@ -994,3 +994,78 @@ nested_classes_expected_test_output = {
     ],
     "id_": str(TEST_DATA_PATH),
 }
+SYMLINK_FOLDER_PATH = TEST_DATA_PATH / "symlink_folder"
+SYMLINK_FOLDER_PATH_TESTS = TEST_DATA_PATH / "symlink_folder" / "tests"
+SYMLINK_FOLDER_PATH_TESTS_TEST_A = (
+    TEST_DATA_PATH / "symlink_folder" / "tests" / "test_a.py"
+)
+SYMLINK_FOLDER_PATH_TESTS_TEST_B = (
+    TEST_DATA_PATH / "symlink_folder" / "tests" / "test_b.py"
+)
+
+symlink_expected_discovery_output = {
+    "name": "symlink_folder",
+    "path": str(SYMLINK_FOLDER_PATH),
+    "type_": "folder",
+    "children": [
+        {
+            "name": "tests",
+            "path": str(SYMLINK_FOLDER_PATH_TESTS),
+            "type_": "folder",
+            "id_": str(SYMLINK_FOLDER_PATH_TESTS),
+            "children": [
+                {
+                    "name": "test_a.py",
+                    "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_A),
+                    "type_": "file",
+                    "id_": str(SYMLINK_FOLDER_PATH_TESTS_TEST_A),
+                    "children": [
+                        {
+                            "name": "test_a_function",
+                            "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_A),
+                            "lineno": find_test_line_number(
+                                "test_a_function",
+                                os.path.join(tests_path, "test_a.py"),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "tests/test_a.py::test_a_function",
+                                SYMLINK_FOLDER_PATH_TESTS_TEST_A,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "tests/test_a.py::test_a_function",
+                                SYMLINK_FOLDER_PATH_TESTS_TEST_A,
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "name": "test_b.py",
+                    "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_B),
+                    "type_": "file",
+                    "id_": str(SYMLINK_FOLDER_PATH_TESTS_TEST_B),
+                    "children": [
+                        {
+                            "name": "test_b_function",
+                            "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_B),
+                            "lineno": find_test_line_number(
+                                "test_b_function",
+                                os.path.join(tests_path, "test_b.py"),
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "tests/test_b.py::test_b_function",
+                                SYMLINK_FOLDER_PATH_TESTS_TEST_B,
+                            ),
+                            "runID": get_absolute_test_id(
+                                "tests/test_b.py::test_b_function",
+                                SYMLINK_FOLDER_PATH_TESTS_TEST_B,
+                            ),
+                        }
+                    ],
+                },
+            ],
+        }
+    ],
+    "id_": str(SYMLINK_FOLDER_PATH),
+}

@@ -49,15 +49,12 @@ async function* iterEnvsIterator(
     };
     const seen: BasicEnvInfo[] = [];
 
-    didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
     if (iterator.onUpdated !== undefined) {
-        iterator.onUpdated((event) => {
+        const listener = iterator.onUpdated((event) => {
             if (isProgressEvent(event)) {
                 if (event.stage === ProgressReportStage.discoveryFinished) {
                     state.done = true;
-                    // For super slow locators such as Windows registry, we expect updates even after discovery
-                    // is "officially" finished, hence do not dispose listeners.
-                    // listener.dispose();
+                    listener.dispose();
                 } else {
                     didUpdate.fire(event);
                 }
@@ -69,11 +66,15 @@ async function* iterEnvsIterator(
                 const oldEnv = seen[event.index];
                 seen[event.index] = event.update;
                 didUpdate.fire({ index: event.index, old: oldEnv, update: event.update });
-            } else if (event.update) {
-                didUpdate.fire({ update: event.update });
+            } else {
+                // This implies a problem in a downstream locator
+                traceVerbose(`Expected already iterated env, got ${event.old} (#${event.index})`);
             }
+            state.pending -= 1;
             checkIfFinishedAndNotify(state, didUpdate);
         });
+    } else {
+        didUpdate.fire({ stage: ProgressReportStage.discoveryStarted });
     }
 
     let result = await iterator.next();
@@ -89,8 +90,10 @@ async function* iterEnvsIterator(
         }
         result = await iterator.next();
     }
-    state.done = true;
-    checkIfFinishedAndNotify(state, didUpdate);
+    if (iterator.onUpdated === undefined) {
+        state.done = true;
+        checkIfFinishedAndNotify(state, didUpdate);
+    }
 }
 
 async function resolveDifferencesInBackground(
@@ -124,8 +127,8 @@ function checkIfFinishedAndNotify(
 ) {
     if (state.done && state.pending === 0) {
         didUpdate.fire({ stage: ProgressReportStage.discoveryFinished });
+        didUpdate.dispose();
         traceVerbose(`Finished with environment reducer`);
-        state.done = false; // No need to notify again.
     }
 }
 

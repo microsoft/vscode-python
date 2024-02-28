@@ -23,7 +23,7 @@ runs:
 
     # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.7.
     - name: Use Python 3.8 for JediLSP
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: 3.8
         cache: 'pip'

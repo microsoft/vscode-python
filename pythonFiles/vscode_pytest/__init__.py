@@ -54,6 +54,7 @@ IS_DISCOVERY = False
 map_id_to_path = dict()
 collected_tests_so_far = list()
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
+SYMLINK_PATH = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
@@ -70,6 +71,25 @@ def pytest_load_initial_conftests(early_config, parser, args):
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+    # check if --rootdir is in the args
+    for arg in args:
+        if "--rootdir=" in arg:
+            rootdir = arg.split("--rootdir=")[1]
+            if not os.path.exists(rootdir):
+                raise VSCodePytestError(
+                    f"The path set in the argument --rootdir={rootdir} does not exist."
+                )
+            if (
+                os.path.islink(rootdir)
+                and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
+            ):
+                print(
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
+                    "Therefore setting symlink path to rootdir argument.",
+                )
+                global SYMLINK_PATH
+                SYMLINK_PATH = pathlib.Path(rootdir)
 
 
 def pytest_internalerror(excrepr, excinfo):
@@ -201,6 +221,8 @@ def pytest_report_teststatus(report, config):
     config -- configuration object.
     """
     cwd = pathlib.Path.cwd()
+    if SYMLINK_PATH:
+        cwd = SYMLINK_PATH
 
     if report.when == "call":
         traceback = None
@@ -322,6 +344,10 @@ def pytest_sessionfinish(session, exitstatus):
     Exit code 5: No tests were collected
     """
     cwd = pathlib.Path.cwd()
+    if SYMLINK_PATH:
+        print("Plugin warning[vscode-pytest]: SYMLINK set, adjusting cwd.")
+        cwd = pathlib.Path(SYMLINK_PATH)
+
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
             errorNode: TestNode = {
@@ -383,6 +409,11 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     file_nodes_dict: Dict[Any, TestNode] = {}
     class_nodes_dict: Dict[str, TestNode] = {}
     function_nodes_dict: Dict[str, TestNode] = {}
+
+    # Check to see if the global variable for symlink path is set
+    if SYMLINK_PATH:
+        session_node["path"] = SYMLINK_PATH
+        session_node["id_"] = os.fspath(SYMLINK_PATH)
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
@@ -641,14 +672,39 @@ class EOTPayloadDict(TypedDict):
 
 
 def get_node_path(node: Any) -> pathlib.Path:
-    """A function that returns the path of a node given the switch to pathlib.Path."""
-    path = getattr(node, "path", None) or pathlib.Path(node.fspath)
+    """
+    A function that returns the path of a node given the switch to pathlib.Path.
+    It also evaluates if the node is a symlink and returns the equivalent path.
+    """
+    node_path = getattr(node, "path", None) or pathlib.Path(node.fspath)
 
-    if not path:
+    if not node_path:
         raise VSCodePytestError(
             f"Unable to find path for node: {node}, node.path: {node.path}, node.fspath: {node.fspath}"
         )
-    return path
+
+    # Check for the session node since it has the symlink already.
+    if SYMLINK_PATH and not isinstance(node, pytest.Session):
+        # Get relative between the cwd (resolved path) and the node path.
+        try:
+            # check to see if the node path contains the symlink root already
+            common_path = os.path.commonpath([SYMLINK_PATH, node_path])
+            if common_path == os.fsdecode(SYMLINK_PATH):
+                # node path is already relative to the SYMLINK_PATH root therefore return
+                return node_path
+            else:
+                # if the node path is not a symlink, then we need to calculate the equivalent symlink path
+                # get the relative path between the cwd and the node path (as the node path is not a symlink)
+                rel_path = node_path.relative_to(pathlib.Path.cwd())
+                # combine the difference between the cwd and the node path with the symlink path
+                sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
+                return sym_path
+        except Exception as e:
+            raise VSCodePytestError(
+                f"Error occurred while calculating symlink equivalent from node path: {e}"
+                f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {pathlib.Path.cwd()}"
+            )
+    return node_path
 
 
 __writer = None
@@ -683,7 +739,6 @@ def post_response(cwd: str, session_node: TestNode) -> None:
         cwd (str): Current working directory.
         session_node (TestNode): Node information of the test session.
     """
-
     payload: DiscoveryPayloadDict = {
         "cwd": cwd,
         "status": "success" if not ERRORS else "error",

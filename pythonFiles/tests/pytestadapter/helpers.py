@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import contextlib
 import io
 import json
 import os
@@ -40,7 +41,6 @@ class PipeManager:
 
     def listen(self):
         # find library that creates named pipes for windows
-
         if sys.platform == "win32":
             print("current not enabled for windows")
 
@@ -106,6 +106,22 @@ async def create_pipe(test_run_pipe: str) -> socket.socket:
 
 CONTENT_LENGTH: str = "Content-Length:"
 CONTENT_TYPE: str = "Content-Type:"
+  
+@contextlib.contextmanager
+def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
+    try:
+        destination = root / destination_ext
+        target = root / target_ext
+        if destination.exists():
+            print("destination already exists", destination)
+        try:
+            destination.symlink_to(target)
+        except Exception as e:
+            print("error occurred when attempting to create a symlink", e)
+        yield target, destination
+    finally:
+        destination.unlink()
+        print("destination unlinked", destination)
 
 
 def process_data_received(data: str) -> List[Dict[str, Any]]:

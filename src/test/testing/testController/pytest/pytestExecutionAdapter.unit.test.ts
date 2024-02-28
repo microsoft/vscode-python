@@ -190,7 +190,8 @@ suite('pytest test execution adapter', () => {
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
-        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath];
+        const rootDirArg = `--rootdir=${myTestPath}`;
+        const expectedArgs = [pathToPythonScript, rootDirArg];
         const expectedExtraVariables = {
             PYTHONPATH: pathToPythonFiles,
             TEST_RUN_PIPE: 'runResultPipe-mockName',
@@ -261,7 +262,7 @@ suite('pytest test execution adapter', () => {
 
         const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
-        const expectedArgs = [pathToPythonScript, '--rootdir', myTestPath];
+        const expectedArgs = [pathToPythonScript, `--rootdir=${newCwd}`];
         const expectedExtraVariables = {
             PYTHONPATH: pathToPythonFiles,
             TEST_RUN_PIPE: 'runResultPipe-mockName',
@@ -331,7 +332,7 @@ suite('pytest test execution adapter', () => {
                 x.launchDebugger(
                     typeMoq.It.is<LaunchOptions>((launchOptions) => {
                         assert.equal(launchOptions.cwd, uri.fsPath);
-                        assert.deepEqual(launchOptions.args, ['--rootdir', myTestPath, '--capture', 'no']);
+                        assert.deepEqual(launchOptions.args, [`--rootdir=${myTestPath}`, '--capture=no']);
                         assert.equal(launchOptions.testProvider, 'pytest');
                         assert.equal(launchOptions.pytestPort, 'runResultPipe-mockName');
                         assert.strictEqual(launchOptions.runTestIdsPort, 'testIdPipe-mockName');

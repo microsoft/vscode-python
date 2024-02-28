@@ -178,7 +178,9 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
             // Start the language server.
             if (startupStopWatch) {
                 // It means that startup is triggering this code, track time it takes since startup to activate this code.
-                sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRIGGER_DURATION, startupStopWatch.elapsedTime);
+                sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRIGGER_TIME, startupStopWatch.elapsedTime, {
+                    triggerTime: startupStopWatch.elapsedTime,
+                });
             }
             await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
 
