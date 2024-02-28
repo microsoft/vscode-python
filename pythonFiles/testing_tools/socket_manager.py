@@ -21,9 +21,11 @@ class PipeManager:
     def connect(self):
         if sys.platform == "win32":
             self._writer = open(self.name, "wt", encoding="utf-8")
+            self._reader = open(self.name, "rt", encoding="utf-8")
+
         else:
             self._socket = _SOCKET(socket.AF_UNIX, socket.SOCK_STREAM)
-        self._socket.connect(self.name)
+            self._socket.connect(self.name)
         return self
 
     def close(self):
@@ -34,32 +36,41 @@ class PipeManager:
             self._socket.close()
 
     def write(self, data: str):
-        # must include the carriage-return defined (as \r\n) for unix systems
-        request = f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
         if sys.platform == "win32":
-            self._writer.write(request)
-            self._writer.flush()
+            try:
+                # for windows, is should only use \n\n
+                print("platform is windows, writing now", self.name)
+                request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
+                a = self._writer.write(request)
+                print("num written? ", a)
+                self._writer.flush()
+            except Exception as e:
+                print("THERE WAS AN ERROR ALERT!!!!", e)
+                raise (e)
         else:
+            # must include the carriage-return defined (as \r\n) for unix systems
+            request = f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
             self._socket.send(request.encode("utf-8"))
             # does this also need a flush on the socket?
 
-    def read(self, bufsize=1024):
+    def read(self, bufsize=1024) -> str:
         """Read data from the socket.
 
         Args:
             bufsize (int): Number of bytes to read from the socket.
 
         Returns:
-            data (bytes): Data received from the socket.
+            data (str): Data received from the socket.
         """
         if sys.platform == "win32":
+            # returns a string automatically from read
             return self._reader.read(bufsize)
         else:
-            data = b""
+            # receive bytes and convert to string
             while True:
-                part = self._socket.recv(bufsize)
-                data += part
-                if len(part) < bufsize:
+                part: bytes = self._socket.recv(bufsize)
+                data: str = part.decode("utf-8")
+                if len(part) < bufsize:  # is this necessary ?
                     # No more data, or less than bufsize data received
                     break
             return data

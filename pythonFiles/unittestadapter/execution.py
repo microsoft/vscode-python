@@ -257,10 +257,10 @@ if __name__ == "__main__":
 
     try:
         with socket_manager.PipeManager(run_test_ids_pipe) as sock:
-            buffer = b""
+            buffer: str = ""
             while True:
                 # Receive the data from the client
-                data = sock.read()
+                data: str = sock.read()
                 if not data:
                     break
 
@@ -269,11 +269,9 @@ if __name__ == "__main__":
 
                 try:
                     # Try to parse the buffer as JSON
-                    raw_json = process_json_util.process_rpc_json(
-                        buffer.decode("utf-8")
-                    )
+                    raw_json = process_json_util.process_rpc_json(buffer)
                     # Clear the buffer as complete JSON object is received
-                    buffer = b""
+                    buffer = ""
                     print("Received JSON data in run")
                     break
                 except json.JSONDecodeError:
