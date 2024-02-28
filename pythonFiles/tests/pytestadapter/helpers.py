@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import asyncio
 import io
 import json
 import os
@@ -11,6 +10,9 @@ import subprocess
 import sys
 import threading
 from typing import Any, Dict, List, Optional, Tuple
+
+if os.name == "nt":
+    from namedpipe import NPopen
 
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
@@ -174,33 +176,67 @@ def parse_rpc_message(data: str) -> Tuple[str, str]:
             print("json decode error")
 
 
+# def listen_on_pipe_manager():
+
+
 def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event):
     """Listen on the named pipe or Unix domain socket for JSON data from the server.
     Created as a separate function for clarity in threading context.
     """
     # Accept a connection. Note: For named pipes, the accept method might be different.
-    connection, _ = listener.socket.accept()
-    listener.socket.settimeout(1)
-    all_data: list = []
-    while True:
-        # Reading from connection
-        data: bytes = connection.recv(
-            1024 * 1024
-        )  # You might replace this with connection.read() based on your abstraction
-        if not data:
-            if completed.is_set():
-                break  # Exit loop if completed event is set
+    if os.name == "nt":
+        # windows design
+        print("listen on pipe new for windows")
+        # accept a connection
+        # set a timeout
+        # create a data array
+        all_data: list = []
+        stream = listener.wait()
+        while True:
+            # Read data from collection
+            close = stream.closed
+            if close:
+                break
+            data = stream.readlines()
+            if not data:
+                if completed.is_set():
+                    break  # Exit loop if completed event is set
             else:
                 try:
                     # Attempt to accept another connection if the current one closes unexpectedly
-                    connection, _ = listener.socket.accept()
+                    print("attempt another connection")
                 except socket.timeout:
                     # On timeout, append all collected data to result and return
-                    result.append("".join(all_data))
+                    # result.append("".join(all_data))
                     return
-        all_data.append(data.decode("utf-8"))
-    # Append all collected data to result array
-    result.append("".join(all_data))
+            data_decoded = "".join(data)
+            all_data.append(data_decoded)
+        # Append all collected data to result array
+        result.append("".join(all_data))
+        #
+    else:
+        connection, _ = listener.socket.accept()
+        listener.socket.settimeout(1)
+        all_data: list = []
+        while True:
+            # Reading from connection
+            data: bytes = connection.recv(
+                1024 * 1024
+            )  # You might replace this with connection.read() based on your abstraction
+            if not data:
+                if completed.is_set():
+                    break  # Exit loop if completed event is set
+                else:
+                    try:
+                        # Attempt to accept another connection if the current one closes unexpectedly
+                        connection, _ = listener.socket.accept()
+                    except socket.timeout:
+                        # On timeout, append all collected data to result and return
+                        result.append("".join(all_data))
+                        return
+            all_data.append(data.decode("utf-8"))
+        # Append all collected data to result array
+        result.append("".join(all_data))
 
 
 def _run_test_code(
@@ -229,40 +265,74 @@ def runner_with_cwd(
         "-s",
     ] + args
 
-    # create a pipe with the pipe manager
-    # when I create it will listen
-    # Example usage
-    # Replace '/tmp/example.sock' with a Windows-compatible path for named pipes if on Windows.
+    # already windows compatible name
     pipe_name = generate_random_pipe_name("pytest-discovery-test")
     print("pipe name generated", pipe_name)
-    server = SingleConnectionPipeServer(pipe_name)
-    server.start()
 
-    env = os.environ.copy()
-    env.update(
-        {
-            "TEST_RUN_PIPE": pipe_name,
-            "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-        }
-    )
-    completed = threading.Event()
+    # unix
+    if os.name == "nt":
+        #     # TODO: for windows
+        #     print("windows machine detected")
+        with NPopen("rt", name=pipe_name) as pipe:  # Added a `name` parameter
+            env = os.environ.copy()
+            env.update(
+                {
+                    "TEST_RUN_PIPE": pipe.path,
+                    "PYTHONPATH": os.fspath(
+                        pathlib.Path(__file__).parent.parent.parent
+                    ),
+                }
+            )
+            completed = threading.Event()
 
-    result = []  # result is a string array to store the data during threading
-    t1: threading.Thread = threading.Thread(
-        target=_listen_on_pipe_new, args=(server, result, completed)
-    )
-    t1.start()
+            result = []  # result is a string array to store the data during threading
+            t1: threading.Thread = threading.Thread(
+                target=_listen_on_pipe_new, args=(pipe, result, completed)
+            )
+            t1.start()
 
-    t2 = threading.Thread(
-        target=_run_test_code,
-        args=(process_args, env, path, completed),
-    )
-    t2.start()
+            t2 = threading.Thread(
+                target=_run_test_code,
+                args=(process_args, env, path, completed),
+            )
+            t2.start()
 
-    t1.join()
-    t2.join()
+            t1.join()
+            t2.join()
 
-    return process_data_received(result[0]) if result else None
+            return process_data_received(result[0]) if result else None
+    else:
+        # unix etc
+        server = SingleConnectionPipeServer(pipe_name)
+        server.start()
+
+        #
+
+        env = os.environ.copy()
+        env.update(
+            {
+                "TEST_RUN_PIPE": pipe_name,
+                "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+            }
+        )
+        completed = threading.Event()
+
+        result = []  # result is a string array to store the data during threading
+        t1: threading.Thread = threading.Thread(
+            target=_listen_on_pipe_new, args=(server, result, completed)
+        )
+        t1.start()
+
+        t2 = threading.Thread(
+            target=_run_test_code,
+            args=(process_args, env, path, completed),
+        )
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+        return process_data_received(result[0]) if result else None
 
 
 def find_test_line_number(test_name: str, test_file_path) -> str:
