@@ -8,37 +8,53 @@ REPO = "microsoft/vscode-python"
 STALE_DAYS = 30  # Number of days to consider a PR stale. Set for a month.
 
 
-def get_last_comment_date(pr_number):
+def get_last_comment_date(pr_object):
     # pr_number = # We need to iterate through all PR we have open in the repo
-    url = f"https://api.github.com/repos/{REPO}/issues/{pr_number}/comments"
+    url = f"https://api.github.com/repos/{REPO}/issues/{pr_object['number']}/comments"
     response = requests.get(url)
     if response.status_code == 200:
         comments = response.json()
-        # print(comments)
+        print(comments)
         if comments:
             # Find maximum by comment creation date value.
             last_comment = max(comments, key=lambda c: c["created_at"])
             # Convert to datetime object and remove "Z" at end of string.
             # Z is part of ISO 8601 standard that represent zero UTC offset,
             # but datetime.fromisoformat does not support it.
+            # print("what are we returning")
+            # print(datetime.fromisoformat(last_comment["created_at"].rstrip("Z")))
             return datetime.fromisoformat(last_comment["created_at"].rstrip("Z"))
-    return None
+        # return None
+        # In case there are no comments, create date when the PR was created
+        return datetime.fromisoformat(pr_object["created_at"].rstrip("Z"))
 
 
 # Fetch all open PR in repository
-def get_all_open_pull_requests(owner, repo_name):
-    url = f"https://api.github.com/repos/{owner}/{repo_name}/pulls?state=open"
+def get_open_pull_requests(owner, repo):
+    url = f"https://api.github.com/repos/{owner}/{repo}/pulls?state=open"
     response = requests.get(url)
     if response.status_code == 200:
-        return response.json()  # Returns list of opened PRs.
+        # print(type(response.json()))
+        return response.json()
     else:
         print("Failed to fetch PRs:", response.content)
         return []
 
 
 def main():
-    # print(get_last_comment_date(22741)) testing
-    all_open_prs = get_all_open_pull_requests("microsoft", "vscode-python")
+    # print(get_last_comment_date(22741))
+    all_pr = get_open_pull_requests("microsoft", "vscode-python")
+    # Itarate through all PRs, and check if the latest comment in the PR is older than 30 days.
+    for pr in all_pr:
+        today = datetime.now()
+        latest_comment_date = get_last_comment_date(pr)
+        # print(type(latest_comment_date))
+        age_of_pr = today - latest_comment_date
+        if age_of_pr.days > 30:
+            print("Older than one month!!!")
+            print(pr["number"])
+        else:
+            print("pretty new")
 
 
 if __name__ == "__main__":
