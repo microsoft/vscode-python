@@ -105,9 +105,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
         }
 
         // Start the FS watchers.
-        traceVerbose('Getting roots');
         let roots = await this.getRoots();
-        traceVerbose('Found roots');
         if (typeof roots === 'string') {
             roots = [roots];
         }
