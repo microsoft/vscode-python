@@ -45,7 +45,7 @@ def main() -> None:
     # Check to see if those tests pass, if they do not, then create an issue.
     subprocess.run(
         [
-            "python",
+            "sys.executable",
             "-m",
             "pip",
             "install",
@@ -55,7 +55,7 @@ def main() -> None:
         ],
         check=False,
     )
-    subprocess.run(["pip", "install", "-r", "build/requirements.txt", "--pre"])
+    subprocess.run(["sys.executable", "-m", "build/requirements.txt", "--pre"])
     # Run all tests in pythonFiles/tests/run_all.py using subprocess
     test_exit_code: subprocess.CompletedProcess = subprocess.run(
         ["python", "pythonFiles/tests/run_all.py"]
