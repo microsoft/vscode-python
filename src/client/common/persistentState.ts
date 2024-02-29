@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { traceError, traceVerbose, traceWarn } from '../logging';
+import { traceError } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
 import {
