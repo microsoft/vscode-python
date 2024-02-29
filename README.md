@@ -16,6 +16,15 @@ The Python extension will automatically install the following extensions by defa
 
 These extensions are optional dependencies, meaning the Python extension will remain fully functional if they fail to be installed. Any or all of these extensions can be [disabled](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) or [uninstalled](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) at the expense of some features. Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf).
 
+## Extensibility 
+
+To further improve your Python development experience, you can install various extensions to extend functionality in various feature areas. These extensions are all optional and depend on your project configuration and preferences. 
+
+- [Python formatters](https://code.visualstudio.com/docs/python/formatting#_choose-a-formatter)
+- [Python linters](https://code.visualstudio.com/docs/python/linting#_choose-a-linter)
+
+If you encounter issues with any of the listed extensions, please file an issue in its corresponding repo. 
+
 ## Quick start
 
 -   **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported).
