@@ -1,11 +1,12 @@
-import subprocess
-import github
+import importlib.metadata
 import os
 import pathlib
-import importlib.metadata
+import subprocess
+
+import github
 import pytest
-from packaging import version
 import requests
+from packaging import version
 
 GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
 GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))

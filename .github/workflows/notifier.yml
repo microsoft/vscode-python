@@ -21,8 +21,8 @@ jobs:
         with:
           python-version: 3.12
 
-      - name: Update pip, install wheel and nox
-        run: python -m pip install -U pip wheel nox PyGithub
+      - name: Update pip, install wheel
+        run: python -m pip install -U pip wheel PyGithub
         shell: bash
 
       - name: Run Checker
