@@ -2,6 +2,7 @@ import importlib.metadata
 import os
 import pathlib
 import subprocess
+from typing import List, Optional
 
 import github
 import pytest
@@ -12,7 +13,7 @@ GH = github.Github(os.getenv("GITHUB_ACCESS_TOKEN"))
 GH_REPO = GH.get_repo(os.getenv("GITHUB_REPOSITORY"))
 
 
-def fetch_all_package_versions(package_name):
+def fetch_all_package_versions(package_name: str) -> Optional[List[str]]:
     url = f"https://pypi.org/pypi/{package_name}/json"
     response = requests.get(url)
 
@@ -26,16 +27,16 @@ def fetch_all_package_versions(package_name):
         return None
 
 
-def main():
+def main() -> None:
     # Check Pytest version for Python Repo,
     # If there is new version, run Python test,
     # If Python tests fail, then create issue
     # OR We still notify to be safe.
-    latest_pytest_version = fetch_all_package_versions("pytest")[-1]
-    our_pytest = importlib.metadata.version("pytest")
+    latest_pytest_version: str = fetch_all_package_versions("pytest")[-1]
+    our_pytest: str = importlib.metadata.version("pytest")
 
     if (latest_pytest_version != our_pytest) or (latest_pytest_version is None):
-        issue_body = "Pytest may need to be updated:\n"
+        issue_body: str = "Pytest may need to be updated:\n"
         GH_REPO.create_issue(
             title="Packages may need to be updated", body=issue_body, labels=["debt"]
         )
@@ -56,7 +57,9 @@ def main():
     )
     subprocess.run(["pip", "install", "-r", "build/requirements.txt", "--pre"])
     # Run all tests in pythonFiles/tests/run_all.py using subprocess
-    test_exit_code = subprocess.run(["python", "pythonFiles/tests/run_all.py"])
+    test_exit_code: subprocess.CompletedProcess = subprocess.run(
+        ["python", "pythonFiles/tests/run_all.py"]
+    )
     if test_exit_code != 0:
         issue_body = "Tests failed with newest Pytest version"
         GH_REPO.create_issue(
