@@ -155,7 +155,7 @@ export function buildEnvironmentApi(
             if (e.old) {
                 if (e.new) {
                     const newEnv = convertEnvInfoAndGetReference(e.new);
-                    knownCache.updateEnv(convertEnvInfoAndGetReference(e.old), newEnv);
+                    knownCache.updateEnv(convertEnvInfo(e.old), newEnv);
                     traceVerbose('Python API env change detected', env.id, 'update');
                     onEnvironmentsChanged.fire({ type: 'update', env: newEnv });
                     reportInterpretersChanged([
