@@ -33,7 +33,6 @@ import {
 } from './api/types';
 import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
 import { EnvironmentKnownCache } from './environmentKnownCache';
-import { StopWatch } from './common/utils/stopWatch';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
