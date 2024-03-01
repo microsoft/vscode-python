@@ -87,3 +87,4 @@ extends:
                 - 'lszomoru@microsoft.com'
                 - 'brcan@microsoft.com'
                 - 'kanadig@microsoft.com'
+    apiScanSoftwareVersion: '2024'
