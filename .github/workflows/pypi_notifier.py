@@ -61,7 +61,7 @@ def main() -> None:
         ["python", "pythonFiles/tests/run_all.py"]
     )
     if test_exit_code != 0:
-        issue_body = "Tests failed with newest Pytest version"
+        issue_body = "Tests failed with newest Pytest version. Please check for compatibility, or regression."
         GH_REPO.create_issue(
             title="Tests failed with newest Pytest version",
             body=issue_body,
