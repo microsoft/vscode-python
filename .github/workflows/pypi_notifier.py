@@ -55,7 +55,7 @@ def main() -> None:
         ],
         check=False,
     )
-    subprocess.run(["sys.executable", "-m", "build/requirements.txt", "--pre"])
+    subprocess.run(["sys.executable", "-m", "build/requirements.txt"])
     # Run all tests in pythonFiles/tests/run_all.py using subprocess
     test_exit_code: subprocess.CompletedProcess = subprocess.run(
         ["python", "pythonFiles/tests/run_all.py"]
