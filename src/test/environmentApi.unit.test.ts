@@ -74,7 +74,7 @@ suite('Python Environment API', () => {
         envVarsProvider = typemoq.Mock.ofType<IEnvironmentVariablesProvider>();
         extensions
             .setup((e) => e.determineExtensionFromCallStack())
-            .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }))
+            .returns(() => ({ extensionId: 'id', displayName: 'displayName' }))
             .verifiable(typemoq.Times.atLeastOnce());
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         configService = typemoq.Mock.ofType<IConfigurationService>();
@@ -95,7 +95,7 @@ suite('Python Environment API', () => {
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
         discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
 
-        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object);
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object, '');
     });
 
     teardown(() => {

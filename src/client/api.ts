@@ -11,7 +11,7 @@ import { PYLANCE_NAME } from './activation/node/languageClientFactory';
 import { ILanguageServerOutputChannel } from './activation/types';
 import { PythonExtension } from './api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
-import { IConfigurationService, Resource } from './common/types';
+import { IConfigurationService, IExtensions, Resource } from './common/types';
 import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -41,6 +41,7 @@ export function buildApi(
         TensorboardExtensionIntegration,
     );
     const outputChannel = serviceContainer.get<ILanguageServerOutputChannel>(ILanguageServerOutputChannel);
+    const extensions = serviceContainer.get<IExtensions>(IExtensions);
 
     const api: PythonExtension & {
         /**
@@ -146,7 +147,10 @@ export function buildApi(
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
             getTelemetryReporter: () => getTelemetryReporter(),
         },
-        environments: buildEnvironmentApi(discoveryApi, serviceContainer),
+        get environments() {
+            const info = extensions.determineExtensionFromCallStack();
+            return buildEnvironmentApi(discoveryApi, serviceContainer, info.extensionId);
+        },
     };
 
     // In test environment return the DI Container.

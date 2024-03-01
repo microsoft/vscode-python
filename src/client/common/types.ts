@@ -308,7 +308,7 @@ export interface IExtensions {
     /**
      * Determines which extension called into our extension code based on call stacks.
      */
-    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }>;
+    determineExtensionFromCallStack(): { extensionId: string; displayName: string };
 }
 
 export const IBrowserService = Symbol('IBrowserService');
