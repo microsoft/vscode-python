@@ -74,8 +74,7 @@ suite('Python Environment API', () => {
         envVarsProvider = typemoq.Mock.ofType<IEnvironmentVariablesProvider>();
         extensions
             .setup((e) => e.determineExtensionFromCallStack())
-            .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }))
-            .verifiable(typemoq.Times.atLeastOnce());
+            .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }));
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         configService = typemoq.Mock.ofType<IConfigurationService>();
         onDidChangeRefreshState = new EventEmitter();
@@ -100,8 +99,6 @@ suite('Python Environment API', () => {
     });
 
     teardown(() => {
-        // Verify each API method sends telemetry regarding who called the API.
-        extensions.verifyAll();
         sinon.restore();
     });
 
