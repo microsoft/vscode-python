@@ -72,10 +72,6 @@ suite('Python Environment API', () => {
         extensions = typemoq.Mock.ofType<IExtensions>();
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         envVarsProvider = typemoq.Mock.ofType<IEnvironmentVariablesProvider>();
-        extensions
-            .setup((e) => e.determineExtensionFromCallStack())
-            .returns(() => Promise.resolve({ extensionId: 'id', displayName: 'displayName', apiName: 'apiName' }))
-            .verifiable(typemoq.Times.atLeastOnce());
         interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
         configService = typemoq.Mock.ofType<IConfigurationService>();
         onDidChangeRefreshState = new EventEmitter();
@@ -95,7 +91,7 @@ suite('Python Environment API', () => {
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
         discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
 
-        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object);
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object, '');
     });
 
     teardown(() => {
@@ -325,6 +321,7 @@ suite('Python Environment API', () => {
             },
         ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object, '');
         const actual = environmentApi.known;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(

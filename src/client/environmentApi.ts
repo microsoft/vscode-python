@@ -4,7 +4,7 @@
 
 import { ConfigurationTarget, EventEmitter, Uri, workspace, WorkspaceFolder } from 'vscode';
 import * as pathUtils from 'path';
-import { IConfigurationService, IDisposableRegistry, IExtensions, IInterpreterPathService } from './common/types';
+import { IConfigurationService, IDisposableRegistry, IInterpreterPathService } from './common/types';
 import { Architecture } from './common/utils/platform';
 import { IServiceContainer } from './ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
@@ -114,23 +114,18 @@ function filterUsingVSCodeContext(e: PythonEnvInfo) {
 export function buildEnvironmentApi(
     discoveryApi: IDiscoveryAPI,
     serviceContainer: IServiceContainer,
+    extensionId: string,
 ): PythonExtension['environments'] {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-    const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
     function sendApiTelemetry(apiName: string, args?: unknown) {
-        extensions
-            .determineExtensionFromCallStack()
-            .then((info) => {
-                sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
-                    apiName,
-                    extensionId: info.extensionId,
-                });
-                traceVerbose(`Extension ${info.extensionId} accessed ${apiName} with args: ${JSON.stringify(args)}`);
-            })
-            .ignoreErrors();
+        sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
+            apiName,
+            extensionId,
+        });
+        traceVerbose(`Extension ${extensionId} accessed ${apiName} with args: ${JSON.stringify(args)}`);
     }
     disposables.push(
         discoveryApi.onChanged((e) => {
