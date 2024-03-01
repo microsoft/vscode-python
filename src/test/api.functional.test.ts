@@ -37,6 +37,7 @@ suite('Extension API', () => {
         interpreterService = mock(InterpreterService);
         environmentVariablesProvider = mock<IEnvironmentVariablesProvider>();
         discoverAPI = mock<IDiscoveryAPI>();
+        when(discoverAPI.getEnvs()).thenReturn([]);
 
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
             instance(configurationService),
