@@ -127,7 +127,7 @@ export function buildEnvironmentApi(
         const knownEnvs = discoveryApi
             .getEnvs()
             .filter((e) => filterUsingVSCodeContext(e))
-            .map((e) => convertEnvInfoAndGetReference(e));
+            .map((e) => updateReference(e));
         return new EnvironmentKnownCache(knownEnvs);
     }
     function sendApiTelemetry(apiName: string, args?: unknown) {
@@ -154,7 +154,7 @@ export function buildEnvironmentApi(
             }
             if (e.old) {
                 if (e.new) {
-                    const newEnv = convertEnvInfoAndGetReference(e.new);
+                    const newEnv = updateReference(e.new);
                     knownCache.updateEnv(convertEnvInfo(e.old), newEnv);
                     traceVerbose('Python API env change detected', env.id, 'update');
                     onEnvironmentsChanged.fire({ type: 'update', env: newEnv });
@@ -165,7 +165,7 @@ export function buildEnvironmentApi(
                         },
                     ]);
                 } else {
-                    const oldEnv = convertEnvInfoAndGetReference(e.old);
+                    const oldEnv = updateReference(e.old);
                     knownCache.updateEnv(oldEnv, undefined);
                     traceVerbose('Python API env change detected', env.id, 'remove');
                     onEnvironmentsChanged.fire({ type: 'remove', env: oldEnv });
@@ -177,7 +177,7 @@ export function buildEnvironmentApi(
                     ]);
                 }
             } else if (e.new) {
-                const newEnv = convertEnvInfoAndGetReference(e.new);
+                const newEnv = updateReference(e.new);
                 knownCache.addEnv(newEnv);
                 traceVerbose('Python API env change detected', env.id, 'add');
                 onEnvironmentsChanged.fire({ type: 'add', env: newEnv });
@@ -370,7 +370,7 @@ export function convertEnvInfo(env: PythonEnvInfo): Environment {
     return convertedEnv as Environment;
 }
 
-function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
+function updateReference(env: PythonEnvInfo): Environment {
     return getEnvReference(convertEnvInfo(env));
 }
 
