@@ -4,7 +4,7 @@
 import { Environment } from './api/types';
 
 /**
- * Environment info cache using persistent storage to save and retrieve pre-cached env info.
+ * Workaround temp cache until types are consolidated.
  */
 export class EnvironmentKnownCache {
     private _envs: Environment[] = [];
