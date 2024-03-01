@@ -58,7 +58,7 @@ def main() -> None:
     subprocess.run(["sys.executable", "-m", "build/requirements.txt"])
     # Run all tests in pythonFiles/tests/run_all.py using subprocess
     test_exit_code: subprocess.CompletedProcess = subprocess.run(
-        ["python", "pythonFiles/tests/run_all.py"]
+        ["sys.executable", "pythonFiles/tests/run_all.py"]
     )
     if test_exit_code != 0:
         issue_body = "Tests failed with newest Pytest version. Please check for compatibility, or regression."
