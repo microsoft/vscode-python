@@ -3,7 +3,7 @@
 // Licensed under the MIT License.
 
 import TelemetryReporter from '@vscode/extension-telemetry';
-import * as vscode from 'vscode';
+import type * as vscodeTypes from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
@@ -46,6 +46,7 @@ let packageJSON: any;
  */
 export function isTelemetryDisabled(): boolean {
     if (!packageJSON) {
+        const vscode = require('vscode') as typeof vscodeTypes;
         const pythonExtension = vscode.extensions.getExtension(PVSC_EXTENSION_ID)!;
         packageJSON = pythonExtension.packageJSON;
     }
