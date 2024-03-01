@@ -256,7 +256,8 @@ export function buildEnvironmentApi(
             return resolveEnvironment(path, discoveryApi);
         },
         get known(): Environment[] {
-            sendApiTelemetry('known');
+            // Do not send telemetry for "known", as this may be called 1000s of times so it can significant:
+            // sendApiTelemetry('known');
             return knownCache.envs;
         },
         async refreshEnvironments(options?: RefreshOptions) {
