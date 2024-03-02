@@ -49,7 +49,8 @@ def main() -> None:
             title="Packages may need to be updated", body=issue_body, labels=["debt"]
         )
 
-    # Now run --pre with pip on requirements.txt and run Python files in pythonFiles/tests/run_all.py
+    # Note: --pre will not work if requirements uses hashes.
+    # We should already be using latest Pytest, but can force via -m pip install pytest==<version> .
     # Check to see if those tests pass, if they do not, then create an issue.
     subprocess.run(
         [
