@@ -35,7 +35,15 @@ def main() -> None:
     latest_pytest_version: str = fetch_all_package_versions("pytest")[-1]
     our_pytest: str = importlib.metadata.version("pytest")
 
-    if (latest_pytest_version != our_pytest) or (latest_pytest_version is None):
+    if latest_pytest_version is None:
+        issue_body: str = (
+            "Failed to fetch latest Pytest version in Python extension Repository"
+        )
+        GH_REPO.create_issue(
+            title="Packages may need to be updated", body=issue_body, labels=["debt"]
+        )
+
+    if latest_pytest_version != our_pytest:
         issue_body: str = "Pytest may need to be updated:\n"
         GH_REPO.create_issue(
             title="Packages may need to be updated", body=issue_body, labels=["debt"]
