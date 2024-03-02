@@ -1,6 +1,5 @@
 import importlib.metadata
 import os
-import pathlib
 import subprocess
 from typing import List, Optional
 
