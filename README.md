@@ -18,7 +18,7 @@ These extensions are optional dependencies, meaning the Python extension will re
 
 ## Extensibility 
 
-To further improve your Python development experience, you can install various extensions to extend functionality in various feature areas. These extensions are all optional and depend on your project configuration and preferences. 
+The Python extension provides pluggable access points for extensions that extend various feature areas to further improve your Python development experience. These extensions are all optional and depend on your project configuration and preferences. 
 
 - [Python formatters](https://code.visualstudio.com/docs/python/formatting#_choose-a-formatter)
 - [Python linters](https://code.visualstudio.com/docs/python/linting#_choose-a-linter)
