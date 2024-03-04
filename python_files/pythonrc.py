@@ -54,13 +54,13 @@ class ps1:
         result = ""
         # For non-windows allow recent_command history.
         if sys.platform != "win32":
-            result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}{command_line}".format(
+            result = "{command_line}{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
+                command_line="\x1b]633;E;" + str(get_last_command()) + "\x07",
                 command_finished="\x1b]633;D;" + str(exit_code) + "\x07",
                 prompt_started="\x1b]633;A\x07",
                 prompt=original_ps1,
                 command_start="\x1b]633;B\x07",
                 command_executed="\x1b]633;C\x07",
-                command_line="\x1b]633;E;" + str(get_last_command()) + "\x07",
             )
         else:
             result = "{command_finished}{prompt_started}{prompt}{command_start}{command_executed}".format(
