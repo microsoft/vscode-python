@@ -1,6 +1,6 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported Python versions](https://devguide.python.org/versions/#supported-versions)), including features such as IntelliSense (Pylance), debugging (Python Debugger), code navigation, refactoring, variable explorer, test explorer, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported Python versions](https://devguide.python.org/versions/#supported-versions)), providing access points for extensions to seamlessly integrate and offer support for IntelliSense (Pylance), debugging (Python Debugger), formatting, linting, code navigation, refactoring, variable explorer, test explorer, and more!
 
 ## Support for [vscode.dev](https://vscode.dev/)
 
