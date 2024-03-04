@@ -373,7 +373,6 @@ export const argsToMap = (args: ReadonlyArray<string>): { [key: string]: Array<s
                 // add to the array
                 const arr = map[key] as string[];
                 arr.push(value);
-                // do I need to resave?
                 map[key] = arr;
             } else {
                 // create a new array
@@ -407,7 +406,6 @@ export const mapToArgs = (map: { [key: string]: Array<string> | null | undefined
             out.push(key);
         } else {
             const values = Array.isArray(value) ? (value as string[]) : [value];
-            // what happens if this is just "value" and not "values"?
             for (const v of values) {
                 out.push(`${key}=${v}`);
             }
