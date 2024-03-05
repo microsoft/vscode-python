@@ -10,7 +10,6 @@ import {
     readFile,
     onDidChangePythonSetting,
     exec,
-    inExperiment,
 } from '../externalDependencies';
 
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../base/info';
@@ -25,7 +24,6 @@ import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
 import { sleep } from '../../../common/utils/async';
-import { DiscoveryUsingWorkers } from '../../../common/experiments/groups';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -274,11 +272,7 @@ export class Conda {
         private readonly useWorkerThreads?: boolean,
     ) {
         if (this.useWorkerThreads === undefined) {
-            try {
-                this.useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
-            } catch {
-                this.useWorkerThreads = false; // Temporarily support for legacy tests
-            }
+            this.useWorkerThreads = false;
         }
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
@@ -302,11 +296,7 @@ export class Conda {
     private static async locate(shellPath?: string, useWorkerThread?: boolean): Promise<Conda | undefined> {
         let useWorkerThreads: boolean;
         if (useWorkerThread === undefined) {
-            try {
-                useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment);
-            } catch {
-                useWorkerThreads = false; // Temporarily support for legacy tests
-            }
+            useWorkerThreads = false;
         }
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
