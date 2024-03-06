@@ -8,8 +8,6 @@ import { BasicEnvInfo, IPythonEnvsIterator, Locator, PythonLocatorQuery, IEmitte
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { traceError, traceVerbose } from '../../../../logging';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
-import { inExperiment } from '../../../common/externalDependencies';
-import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
 import { PythonEnvsChangedEvent } from '../../watcher';
 
 export const WINDOWS_REG_PROVIDER_ID = 'windows-registry';
@@ -18,10 +16,7 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     public readonly providerId: string = WINDOWS_REG_PROVIDER_ID;
 
     // eslint-disable-next-line class-methods-use-this
-    public iterEnvs(
-        query?: PythonLocatorQuery,
-        useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
-    ): IPythonEnvsIterator<BasicEnvInfo> {
+    public iterEnvs(query?: PythonLocatorQuery, useWorkerThreads = false): IPythonEnvsIterator<BasicEnvInfo> {
         if (useWorkerThreads) {
             /**
              * Windows registry is slow and often not necessary, so notify completion immediately, but use watcher
