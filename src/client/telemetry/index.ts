@@ -3,11 +3,9 @@
 // Licensed under the MIT License.
 
 import TelemetryReporter from '@vscode/extension-telemetry';
-
-import * as path from 'path';
-import * as fs from 'fs-extra';
+import type * as vscodeTypes from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -39,14 +37,20 @@ function isTelemetrySupported(): boolean {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let packageJSON: any;
+
 /**
  * Checks if the telemetry is disabled
  * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
-    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    const packageJson = fs.readJSONSync(packageJsonPath);
-    return !packageJson.enableTelemetry;
+    if (!packageJSON) {
+        const vscode = require('vscode') as typeof vscodeTypes;
+        const pythonExtension = vscode.extensions.getExtension(PVSC_EXTENSION_ID)!;
+        packageJSON = pythonExtension.packageJSON;
+    }
+    return !packageJSON.enableTelemetry;
 }
 
 const sharedProperties: Record<string, unknown> = {};
@@ -681,7 +685,8 @@ export interface IEventNamePropertyMapping {
           "totalactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "totalnonblockingactivatetime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
           "usinguserdefinedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
-          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
+          "usingglobalinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" },
+          "isfirstsession" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "luabud" }
        }
      */
     [EventName.EDITOR_LOAD]: {
@@ -723,6 +728,11 @@ export interface IEventNamePropertyMapping {
          * If global interpreter is being used
          */
         usingGlobalInterpreter?: boolean;
+        /**
+         * Carries `true` if it is the very first session of the user. We check whether persistent cache is empty
+         * to approximately guess if it's the first session.
+         */
+        isFirstSession?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables
@@ -1324,6 +1334,21 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.LANGUAGE_SERVER_READY]: {
         lsVersion?: string;
+    };
+    /**
+     * Track how long it takes to trigger language server activation code, after Python extension starts activating.
+     */
+    /* __GDPR__
+       "language_server_trigger_time" : {
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
+          "triggerTime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+       }
+     */
+    [EventName.LANGUAGE_SERVER_TRIGGER_TIME]: {
+        /**
+         * Time it took to trigger language server startup.
+         */
+        triggerTime: number;
     };
     /**
      * Telemetry event sent when starting Node.js server

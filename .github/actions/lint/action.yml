@@ -45,12 +45,12 @@ runs:
       run: |
         python -m pip install -U black
         python -m black . --check
-      working-directory: pythonFiles
+      working-directory: python_files
       shell: bash
 
     - name: Run Ruff
       run: |
         python -m pip install -U ruff
         python -m ruff check .
-      working-directory: pythonFiles
+      working-directory: python_files
       shell: bash

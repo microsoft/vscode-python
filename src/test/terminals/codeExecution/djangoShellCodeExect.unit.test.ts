@@ -6,7 +6,12 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService,
+} from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { createCondaEnv } from '../../../client/common/process/pythonEnvironment';
 import { createPythonProcessService } from '../../../client/common/process/pythonProcess';
@@ -32,12 +37,14 @@ suite('Terminal - Django Shell Code Execution', () => {
     let settings: TypeMoq.IMock<IPythonSettings>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
+    let applicationShell: TypeMoq.IMock<IApplicationShell>;
     let disposables: Disposable[] = [];
     setup(() => {
         const terminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
         terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
         terminalService = TypeMoq.Mock.ofType<ITerminalService>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+        applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspace
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -62,6 +69,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             fileSystem.object,
             disposables,
             interpreterService.object,
+            applicationShell.object,
         );
 
         terminalFactory.setup((f) => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);

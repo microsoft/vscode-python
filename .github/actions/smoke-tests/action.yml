@@ -34,12 +34,12 @@ runs:
     - name: Install Python requirements
       uses: brettcannon/pip-secure-install@v1
       with:
-        options: '-t ./pythonFiles/lib/python --implementation py'
+        options: '-t ./python_files/lib/python --implementation py'
 
     - name: pip install system test requirements
       run: |
         python -m pip install --upgrade -r build/test-requirements.txt
-        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade --pre debugpy
+        python -m pip --disable-pip-version-check install -t ./python_files/lib/python --implementation py --no-deps --upgrade --pre debugpy
       shell: bash
 
     # Bits from the VSIX are reused by smokeTest.ts to speed things up.

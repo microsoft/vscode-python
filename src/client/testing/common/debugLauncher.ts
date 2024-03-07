@@ -5,7 +5,7 @@ import { IApplicationShell, IDebugService } from '../../common/application/types
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
 import { IConfigurationService, IPythonSettings } from '../../common/types';
-import { DebuggerTypeName } from '../../debugger/constants';
+import { DebuggerTypeName, PythonDebuggerTypeName } from '../../debugger/constants';
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -78,7 +78,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         if (!debugConfig) {
             debugConfig = {
                 name: 'Debug Unit Test',
-                type: 'python',
+                type: 'debugpy',
                 request: 'test',
                 subProcess: true,
             };
@@ -87,7 +87,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             debugConfig.rules = [];
         }
         debugConfig.rules.push({
-            path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
+            path: path.join(EXTENSION_ROOT_DIR, 'python_files'),
             include: false,
         });
 
@@ -118,7 +118,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             for (const cfg of configs) {
                 if (
                     cfg.name &&
-                    cfg.type === DebuggerTypeName &&
+                    (cfg.type === DebuggerTypeName || cfg.type === PythonDebuggerTypeName) &&
                     (cfg.request === 'test' ||
                         (cfg as LaunchRequestArguments).purpose?.includes(DebugPurpose.DebugTest))
                 ) {
@@ -219,7 +219,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                 );
             }
         }
-        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
         // check if PYTHONPATH is already set in the environment variables
         if (launchArgs.env) {
             const additionalPythonPath = [pluginPath];

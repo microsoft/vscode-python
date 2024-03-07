@@ -95,7 +95,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
                     throw new Error(
                         'Unsupported behavior: `undefined` environment updates are not supported from downstream locators in resolver',
                     );
-                } else if (seen[event.index] !== undefined) {
+                } else if (event.index !== undefined && seen[event.index] !== undefined) {
                     const old = seen[event.index];
                     await setKind(event.update, environmentKinds);
                     seen[event.index] = await resolveBasicEnv(event.update);

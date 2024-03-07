@@ -31,7 +31,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
-    private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pythonrc.py');
+    private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }

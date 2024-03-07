@@ -32,6 +32,7 @@ import {
     Resource,
 } from './api/types';
 import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
+import { EnvironmentKnownCache } from './environmentKnownCache';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -120,6 +121,15 @@ export function buildEnvironmentApi(
     const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envVarsProvider = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
+    let knownCache: EnvironmentKnownCache;
+
+    function initKnownCache() {
+        const knownEnvs = discoveryApi
+            .getEnvs()
+            .filter((e) => filterUsingVSCodeContext(e))
+            .map((e) => updateReference(e));
+        return new EnvironmentKnownCache(knownEnvs);
+    }
     function sendApiTelemetry(apiName: string, args?: unknown) {
         extensions
             .determineExtensionFromCallStack()
@@ -139,10 +149,15 @@ export function buildEnvironmentApi(
                 // Filter out environments that are not in the current workspace.
                 return;
             }
+            if (!knownCache) {
+                knownCache = initKnownCache();
+            }
             if (e.old) {
                 if (e.new) {
+                    const newEnv = updateReference(e.new);
+                    knownCache.updateEnv(convertEnvInfo(e.old), newEnv);
                     traceVerbose('Python API env change detected', env.id, 'update');
-                    onEnvironmentsChanged.fire({ type: 'update', env: convertEnvInfoAndGetReference(e.new) });
+                    onEnvironmentsChanged.fire({ type: 'update', env: newEnv });
                     reportInterpretersChanged([
                         {
                             path: getEnvPath(e.new.executable.filename, e.new.location).path,
@@ -150,8 +165,10 @@ export function buildEnvironmentApi(
                         },
                     ]);
                 } else {
+                    const oldEnv = updateReference(e.old);
+                    knownCache.updateEnv(oldEnv, undefined);
                     traceVerbose('Python API env change detected', env.id, 'remove');
-                    onEnvironmentsChanged.fire({ type: 'remove', env: convertEnvInfoAndGetReference(e.old) });
+                    onEnvironmentsChanged.fire({ type: 'remove', env: oldEnv });
                     reportInterpretersChanged([
                         {
                             path: getEnvPath(e.old.executable.filename, e.old.location).path,
@@ -160,8 +177,10 @@ export function buildEnvironmentApi(
                     ]);
                 }
             } else if (e.new) {
+                const newEnv = updateReference(e.new);
+                knownCache.addEnv(newEnv);
                 traceVerbose('Python API env change detected', env.id, 'add');
-                onEnvironmentsChanged.fire({ type: 'add', env: convertEnvInfoAndGetReference(e.new) });
+                onEnvironmentsChanged.fire({ type: 'add', env: newEnv });
                 reportInterpretersChanged([
                     {
                         path: getEnvPath(e.new.executable.filename, e.new.location).path,
@@ -179,6 +198,9 @@ export function buildEnvironmentApi(
         onEnvironmentsChanged,
         onEnvironmentVariablesChanged,
     );
+    if (!knownCache!) {
+        knownCache = initKnownCache();
+    }
 
     const environmentApi: PythonExtension['environments'] = {
         getEnvironmentVariables: (resource?: Resource) => {
@@ -234,11 +256,9 @@ export function buildEnvironmentApi(
             return resolveEnvironment(path, discoveryApi);
         },
         get known(): Environment[] {
-            sendApiTelemetry('known');
-            return discoveryApi
-                .getEnvs()
-                .filter((e) => filterUsingVSCodeContext(e))
-                .map((e) => convertEnvInfoAndGetReference(e));
+            // Do not send telemetry for "known", as this may be called 1000s of times so it can significant:
+            // sendApiTelemetry('known');
+            return knownCache.envs;
         },
         async refreshEnvironments(options?: RefreshOptions) {
             if (!workspace.isTrusted) {
@@ -351,7 +371,7 @@ export function convertEnvInfo(env: PythonEnvInfo): Environment {
     return convertedEnv as Environment;
 }
 
-function convertEnvInfoAndGetReference(env: PythonEnvInfo): Environment {
+function updateReference(env: PythonEnvInfo): Environment {
     return getEnvReference(convertEnvInfo(env));
 }
 

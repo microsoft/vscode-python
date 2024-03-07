@@ -29,6 +29,7 @@ import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { StopWatch } from '../common/utils/stopWatch';
 
 @injectable()
 /**
@@ -73,14 +74,18 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
     // IExtensionActivationService
 
-    public async activate(resource?: Resource): Promise<void> {
+    public async activate(resource?: Resource, startupStopWatch?: StopWatch): Promise<void> {
         this.register();
-        await this.startLanguageServer(this.languageServerType, resource);
+        await this.startLanguageServer(this.languageServerType, resource, startupStopWatch);
     }
 
     // ILanguageServerWatcher
-    public async startLanguageServer(languageServerType: LanguageServerType, resource?: Resource): Promise<void> {
-        await this.startAndGetLanguageServer(languageServerType, resource);
+    public async startLanguageServer(
+        languageServerType: LanguageServerType,
+        resource?: Resource,
+        startupStopWatch?: StopWatch,
+    ): Promise<void> {
+        await this.startAndGetLanguageServer(languageServerType, resource, startupStopWatch);
     }
 
     public register(): void {
@@ -124,6 +129,7 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
     private async startAndGetLanguageServer(
         languageServerType: LanguageServerType,
         resource?: Resource,
+        startupStopWatch?: StopWatch,
     ): Promise<ILanguageServerExtensionManager> {
         const lsResource = this.getWorkspaceUri(resource);
         const currentInterpreter = this.workspaceInterpreters.get(lsResource.fsPath);
@@ -170,6 +176,12 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
         if (languageServerExtensionManager.canStartLanguageServer(interpreter)) {
             // Start the language server.
+            if (startupStopWatch) {
+                // It means that startup is triggering this code, track time it takes since startup to activate this code.
+                sendTelemetryEvent(EventName.LANGUAGE_SERVER_TRIGGER_TIME, startupStopWatch.elapsedTime, {
+                    triggerTime: startupStopWatch.elapsedTime,
+                });
+            }
             await languageServerExtensionManager.startLanguageServer(lsResource, interpreter);
 
             logStartup(languageServerType, lsResource);
