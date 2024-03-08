@@ -43,7 +43,7 @@ suite('Hatch Locator', () => {
             }
 
             locator = new HatchLocator(projectDirs.project1);
-            exec.callsFake(makeExecHandler(venvDirs.project1, { hatchPath: 'hatch', cwd: projectDirs.project1 }));
+            exec.callsFake(makeExecHandler(venvDirs.project1, { path: true, cwd: projectDirs.project1 }));
 
             const iterator = locator.iterEnvs();
             const actualEnvs = await getEnvs(iterator);
@@ -61,7 +61,7 @@ suite('Hatch Locator', () => {
 
         test('project with multiple defined envs', async () => {
             locator = new HatchLocator(projectDirs.project2);
-            exec.callsFake(makeExecHandler(venvDirs.project2, { hatchPath: 'hatch', cwd: projectDirs.project2 }));
+            exec.callsFake(makeExecHandler(venvDirs.project2, { path: true, cwd: projectDirs.project2 }));
 
             const iterator = locator.iterEnvs();
             const actualEnvs = await getEnvs(iterator);

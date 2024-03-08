@@ -25,13 +25,13 @@ export function hatchCommand(args: string[]): HatchCommand {
 }
 
 interface VerifyOptions {
-    hatchPath?: string;
+    path?: boolean;
     cwd?: string;
 }
 
 export function makeExecHandler(venvDirs: Record<string, string>, verify: VerifyOptions = {}) {
     return async (file: string, args: string[], options: ShellOptions): Promise<ExecutionResult<string>> => {
-        if (verify.hatchPath && file !== verify.hatchPath) {
+        if (verify.path && file !== 'hatch') {
             throw new Error('Command failed');
         }
         if (verify.cwd) {
@@ -80,20 +80,16 @@ suite('Hatch binary is located correctly', async () => {
         sinon.restore();
     });
 
-    const testPath = async (hatchPath: string, verify = true) => {
-        getPythonSetting.returns(hatchPath);
+    const testPath = async (verify = true) => {
         // If `verify` is false, don’t verify that the command has been called with that path
         exec.callsFake(
-            makeExecHandler(venvDirs.project1, verify ? { hatchPath, cwd: projectDirs.project1 } : undefined),
+            makeExecHandler(venvDirs.project1, verify ? { path: true, cwd: projectDirs.project1 } : undefined),
         );
         const hatch = await Hatch.getHatch(projectDirs.project1);
-        expect(hatch?.command).to.equal(hatchPath);
+        expect(hatch?.command).to.equal('hatch');
     };
 
-    test('Return a Hatch instance in an empty directory', () => testPath('hatchPath', false));
-    test('When user has specified a valid Hatch path, use it', () => testPath('path/to/hatch/binary'));
-    // 'hatch' is the default value
-    test('When user hasn’t specified a path, use Hatch on PATH if available', () => testPath('hatch'));
+    test('Use Hatch on PATH if available', () => testPath());
 
     test('Return undefined if Hatch cannot be found', async () => {
         getPythonSetting.returns('hatch');

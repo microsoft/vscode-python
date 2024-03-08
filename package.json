@@ -650,12 +650,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.hatchPath": {
-                    "default": "hatch",
-                    "description": "%python.hatchPath.description%",
-                    "scope": "machine-overridable",
-                    "type": "string"
-                },
                 "python.tensorBoard.logDirectory": {
                     "default": "",
                     "description": "%python.tensorBoard.logDirectory.description%",

@@ -1,6 +1,6 @@
 import { isTestExecution } from '../../../common/constants';
-import { exec, getPythonSetting, pathExists } from '../externalDependencies';
-import { traceError, traceVerbose } from '../../../logging';
+import { exec, pathExists } from '../externalDependencies';
+import { traceVerbose } from '../../../logging';
 import { cache } from '../../../common/utils/decorators';
 
 /** Wraps the "Hatch" utility, and exposes its functionality.
@@ -39,37 +39,18 @@ export class Hatch {
     private static async locate(cwd: string): Promise<Hatch | undefined> {
         // First thing this method awaits on should be hatch command execution,
         // hence perform all operations before that synchronously.
-
-        traceVerbose(`Getting hatch for cwd ${cwd}`);
-        // Produce a list of candidate binaries to be probed by exec'ing them.
-        function* getCandidates() {
-            try {
-                const customHatchPath = getPythonSetting<string>('hatchPath');
-                if (customHatchPath && customHatchPath !== 'hatch') {
-                    // If user has specified a custom Hatch path, use it first.
-                    yield customHatchPath;
-                }
-            } catch (ex) {
-                traceError(`Failed to get Hatch setting`, ex);
-            }
-            // Check unqualified filename, in case it's on PATH.
-            yield 'hatch';
+        const hatchPath = 'hatch';
+        traceVerbose(`Probing Hatch binary ${hatchPath}`);
+        const hatch = new Hatch(hatchPath, cwd);
+        const virtualenvs = await hatch.getEnvList();
+        if (virtualenvs !== undefined) {
+            traceVerbose(`Found hatch binary ${hatchPath}`);
+            return hatch;
         }
-
-        // Probe the candidates, and pick the first one that exists and does what we need.
-        for (const hatchPath of getCandidates()) {
-            traceVerbose(`Probing Hatch binary for ${cwd}: ${hatchPath}`);
-            const hatch = new Hatch(hatchPath, cwd);
-            const virtualenvs = await hatch.getEnvList();
-            if (virtualenvs !== undefined) {
-                traceVerbose(`Found hatch via filesystem probing for ${cwd}: ${hatchPath}`);
-                return hatch;
-            }
-            traceVerbose(`Failed to find Hatch for ${cwd}: ${hatchPath}`);
-        }
+        traceVerbose(`Failed to find Hatch binary ${hatchPath}`);
 
         // Didn't find anything.
-        traceVerbose(`No Hatch binary found for ${cwd}`);
+        traceVerbose(`No Hatch binary found`);
         return undefined;
     }
 

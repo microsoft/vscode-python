@@ -167,7 +167,6 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
-    readonly hatchPath: string;
     readonly devOptions: string[];
     readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
