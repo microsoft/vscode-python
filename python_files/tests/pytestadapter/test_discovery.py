@@ -227,7 +227,7 @@ def test_symlink_root_dir():
         assert destination.is_symlink()
 
         # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
-        actual = helpers.helpers.runner_with_cwd(
+        actual = helpers.runner_with_cwd(
             ["--collect-only", f"--rootdir={os.fspath(destination)}"], source
         )
         expected = expected_discovery_test_output.symlink_expected_discovery_output
@@ -260,7 +260,7 @@ def test_pytest_root_dir():
     of the workspace root. Discovery should succeed and testids should be relative to workspace root.
     """
     rd = f"--rootdir={helpers.TEST_DATA_PATH / 'root' / 'tests'}"
-    actual = helpers.helpers.runner_with_cwd(
+    actual = helpers.runner_with_cwd(
         [
             "--collect-only",
             rd,
