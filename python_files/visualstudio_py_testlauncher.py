@@ -201,7 +201,7 @@ def stopTests():
     try:
         os.kill(os.getpid(), signal.SIGUSR1)
     except Exception:
-            os.kill(os.getpid(), signal.SIGTERM)
+        os.kill(os.getpid(), signal.SIGTERM)
 
 
 class ExitCommand(Exception):
