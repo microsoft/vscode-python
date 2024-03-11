@@ -286,7 +286,7 @@ def test_pytest_config_file():
     Test to test pytest discovery with the command line arg -c with a specified config file which
     changes the workspace root. Discovery should succeed and testids should be relative to workspace root.
     """
-    actual = helpers.helpers.runner_with_cwd(
+    actual = helpers.runner_with_cwd(
         [
             "--collect-only",
             "tests/",
