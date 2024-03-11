@@ -6,11 +6,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Disposable, Uri } from 'vscode';
-import { ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
-import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
 import { Diagnostics, Repl } from '../../common/utils/localize';
 import { showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -30,6 +30,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
         @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
         @inject(ICommandManager) protected readonly commandManager: ICommandManager,
+        @inject(IApplicationShell) protected readonly applicationShell: IApplicationShell,
     ) {}
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
@@ -65,10 +66,34 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         }
         this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
+            let listener: IDisposable;
+            Promise.race([
+                new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 3000)),
+                new Promise<boolean>((resolve) => {
+                    let count = 0;
+                    const terminalDataTimeout = setTimeout(() => {
+                        resolve(true); // Fall back for test case scenarios.
+                    }, 3000);
+                    // Watch TerminalData to see if REPL launched.
+                    listener = this.applicationShell.onDidWriteTerminalData((e) => {
+                        for (let i = 0; i < e.data.length; i++) {
+                            if (e.data[i] === '>') {
+                                count++;
+                                if (count === 3) {
+                                    clearTimeout(terminalDataTimeout);
+                                    resolve(true);
+                                }
+                            }
+                        }
+                    });
+                }),
+            ]).then(() => {
+                if (listener) {
+                    listener.dispose();
+                }
+                resolve(true);
+            });
             terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
-
-            // Give python repl time to start before we start sending text.
-            setTimeout(() => resolve(true), 1000);
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {

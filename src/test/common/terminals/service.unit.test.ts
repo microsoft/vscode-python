@@ -170,7 +170,7 @@ suite('Terminal Service', () => {
             .setup((t) => t.createTerminal(TypeMoq.It.isAny()))
             .returns(() => terminal.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
-        const envVarScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'pythonrc.py');
+        const envVarScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
         terminalManager
             .setup((t) =>
                 t.createTerminal({

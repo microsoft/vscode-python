@@ -44,7 +44,8 @@ export interface ITerminalEnvVarCollectionService {
 
 export const IShellIntegrationService = Symbol('IShellIntegrationService');
 export interface IShellIntegrationService {
-    isWorking(shell: string): Promise<boolean>;
+    onDidChangeStatus: Event<void>;
+    isWorking(): Promise<boolean>;
 }
 
 export const ITerminalDeactivateService = Symbol('ITerminalDeactivateService');

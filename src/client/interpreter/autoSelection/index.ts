@@ -6,11 +6,13 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
+import { DiscoveryUsingWorkers } from '../../common/experiments/groups';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { IExperimentService, IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { compareSemVerLikeVersions } from '../../pythonEnvironments/base/info/pythonVersion';
+import { ProgressReportStage } from '../../pythonEnvironments/base/locator';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -44,6 +46,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         @inject(IInterpreterComparer) private readonly envTypeComparer: IInterpreterComparer,
         @inject(IInterpreterAutoSelectionProxyService) proxy: IInterpreterAutoSelectionProxyService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
+        @inject(IExperimentService) private readonly experimentService: IExperimentService,
     ) {
         proxy.registerInstance!(this);
     }
@@ -183,7 +186,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
 
     private getAutoSelectionQueriedOnceState(): IPersistentState<boolean | undefined> {
         const key = `autoSelectionInterpretersQueriedOnce`;
-        return this.stateFactory.createWorkspacePersistentState(key, undefined);
+        return this.stateFactory.createGlobalPersistentState(key, undefined);
     }
 
     /**
@@ -199,22 +202,44 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     private async autoselectInterpreterWithLocators(resource: Resource): Promise<void> {
         // Do not perform a full interpreter search if we already have cached interpreters for this workspace.
         const queriedState = this.getAutoSelectionInterpretersQueryState(resource);
-        if (queriedState.value !== true && resource) {
+        const globalQueriedState = this.getAutoSelectionQueriedOnceState();
+        if (globalQueriedState.value && queriedState.value !== true && resource) {
             await this.interpreterService.triggerRefresh({
                 searchLocations: { roots: [resource], doNotIncludeNonRooted: true },
             });
         }
 
-        const globalQueriedState = this.getAutoSelectionQueriedOnceState();
-        if (!globalQueriedState.value) {
-            // Global interpreters are loaded the first time an extension loads, after which we don't need to
-            // wait on global interpreter promise refresh.
-            await this.interpreterService.refreshPromise;
-        }
-        const interpreters = this.interpreterService.getInterpreters(resource);
+        const inExperiment = this.experimentService.inExperimentSync(DiscoveryUsingWorkers.experiment);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
+        let recommendedInterpreter: PythonEnvironment | undefined;
+        if (inExperiment) {
+            if (!globalQueriedState.value) {
+                // Global interpreters are loaded the first time an extension loads, after which we don't need to
+                // wait on global interpreter promise refresh.
+                // Do not wait for validation of all interpreters to finish, we only need to validate the recommended interpreter.
+                await this.interpreterService.getRefreshPromise({ stage: ProgressReportStage.allPathsDiscovered });
+            }
+            let interpreters = this.interpreterService.getInterpreters(resource);
 
-        const recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
+            recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
+            const details = recommendedInterpreter
+                ? await this.interpreterService.getInterpreterDetails(recommendedInterpreter.path)
+                : undefined;
+            if (!details || !recommendedInterpreter) {
+                await this.interpreterService.refreshPromise; // Interpreter is invalid, wait for all of validation to finish.
+                interpreters = this.interpreterService.getInterpreters(resource);
+                recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
+            }
+        } else {
+            if (!globalQueriedState.value) {
+                // Global interpreters are loaded the first time an extension loads, after which we don't need to
+                // wait on global interpreter promise refresh.
+                await this.interpreterService.refreshPromise;
+            }
+            const interpreters = this.interpreterService.getInterpreters(resource);
+
+            recommendedInterpreter = this.envTypeComparer.getRecommended(interpreters, workspaceUri?.folderUri);
+        }
         if (!recommendedInterpreter) {
             return;
         }

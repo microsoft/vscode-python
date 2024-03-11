@@ -269,8 +269,11 @@ export class Conda {
         readonly command: string,
         shellCommand?: string,
         private readonly shellPath?: string,
-        private readonly useWorkerThreads = true,
+        private readonly useWorkerThreads?: boolean,
     ) {
+        if (this.useWorkerThreads === undefined) {
+            this.useWorkerThreads = false;
+        }
         this.shellCommand = shellCommand ?? command;
         onDidChangePythonSetting(CONDAPATH_SETTING_KEY, () => {
             Conda.condaPromise = new Map<string | undefined, Promise<Conda | undefined>>();
@@ -290,7 +293,11 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string, useWorkerThreads = true): Promise<Conda | undefined> {
+    private static async locate(shellPath?: string, useWorkerThread?: boolean): Promise<Conda | undefined> {
+        let useWorkerThreads: boolean;
+        if (useWorkerThread === undefined) {
+            useWorkerThreads = false;
+        }
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         let customCondaPath: string | undefined = 'conda';
@@ -395,7 +402,7 @@ export class Conda {
         // Probe the candidates, and pick the first one that exists and does what we need.
         for await (const condaPath of getCandidates()) {
             traceVerbose(`Probing conda binary: ${condaPath}`);
-            let conda = new Conda(condaPath, undefined, shellPath, useWorkerThreads);
+            let conda = new Conda(condaPath, undefined, shellPath);
             try {
                 await conda.getInfo();
                 if (getOSType() === OSType.Windows && (isTestExecution() || condaPath !== customCondaPath)) {

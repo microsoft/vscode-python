@@ -461,7 +461,7 @@ suite('TensorBoard session creation', async () => {
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
             'test',
-            'pythonFiles',
+            'python_files',
             'tensorBoard',
             'sourcefile.py',
         );

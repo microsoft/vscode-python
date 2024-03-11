@@ -243,7 +243,7 @@ export interface IDiscoveryAPI {
     resolveEnv(path: string): Promise<PythonEnvInfo | undefined>;
 }
 
-interface IEmitter<E> {
+export interface IEmitter<E> {
     fire(e: E): void;
 }
 

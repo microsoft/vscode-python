@@ -27,7 +27,8 @@
       "errorstack" : { "classification": "CallstackOrException", "purpose": "PerformanceAndHealth" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "resultLength" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
    }
 */
 /* __GDPR__
@@ -118,6 +119,8 @@
       "custom_completionitemtelemetrybuildtimeinms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "custom_extensiontotaltimeinms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "custom_selecteditemtelemetrybuildtimeinms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "custom_completiontype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "custom_filetype" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "parsecallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "parsetime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
@@ -309,6 +312,15 @@
       "totaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "typeevalcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "typeevaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+   }
+*/
+/* __GDPR__
+   "language_server/server_side_request" : {
+      "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "resultLength" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
    }
 */
 /* __GDPR__

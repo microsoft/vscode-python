@@ -64,7 +64,7 @@
     // Open merge editor for resolving conflicts.
     "git.mergeEditor": true,
     "python.testing.pytestArgs": [
-        "pythonFiles/tests"
+        "python_files/tests"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true

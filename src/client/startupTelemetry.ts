@@ -22,6 +22,7 @@ export async function sendStartupTelemetry(
     durations: IStartupDurations,
     stopWatch: IStopWatch,
     serviceContainer: IServiceContainer,
+    isFirstSession: boolean,
 ) {
     if (isTestExecution()) {
         return;
@@ -30,7 +31,7 @@ export async function sendStartupTelemetry(
     try {
         await activatedPromise;
         durations.totalNonBlockingActivateTime = stopWatch.elapsedTime - durations.startActivateTime;
-        const props = await getActivationTelemetryProps(serviceContainer);
+        const props = await getActivationTelemetryProps(serviceContainer, isFirstSession);
         sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props);
     } catch (ex) {
         traceError('sendStartupTelemetry() failed.', ex);
@@ -76,7 +77,10 @@ export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: I
         : false;
 }
 
-async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
+async function getActivationTelemetryProps(
+    serviceContainer: IServiceContainer,
+    isFirstSession?: boolean,
+): Promise<EditorLoadTelemetry> {
     // TODO: Not all of this data is showing up in the database...
 
     // TODO: If any one of these parts fails we send no info.  We should
@@ -88,7 +92,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     const terminalShellType = terminalHelper.identifyTerminalShell();
     if (!workspaceService.isTrusted) {
-        return { workspaceFolderCount, terminal: terminalShellType };
+        return { workspaceFolderCount, terminal: terminalShellType, isFirstSession };
     }
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const mainWorkspaceUri = workspaceService.workspaceFolders?.length
@@ -132,5 +136,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         usingUserDefinedInterpreter,
         usingGlobalInterpreter,
         appName,
+        isFirstSession,
     };
 }

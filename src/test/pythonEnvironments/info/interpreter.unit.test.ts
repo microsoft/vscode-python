@@ -11,7 +11,7 @@ import { buildPythonExecInfo } from '../../../client/pythonEnvironments/exec';
 import { getInterpreterInfo } from '../../../client/pythonEnvironments/info/interpreter';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 
-const script = pathJoin(EXTENSION_ROOT_DIR_FOR_TESTS, 'pythonFiles', 'interpreterInfo.py');
+const script = pathJoin(EXTENSION_ROOT_DIR_FOR_TESTS, 'python_files', 'interpreterInfo.py');
 
 suite('extractInterpreterInfo()', () => {
     // Tests go here.

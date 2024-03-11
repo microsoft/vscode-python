@@ -38,6 +38,7 @@ import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IShellIntegrationService, ITerminalDeactivateService } from '../../../client/terminals/types';
+import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -74,8 +75,9 @@ suite('Terminal Environment Variable Collection Service', () => {
         interpreterService = mock<IInterpreterService>();
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
+        const envVarProvider = mock<IEnvironmentVariablesProvider>();
         shellIntegrationService = mock<IShellIntegrationService>();
-        when(shellIntegrationService.isWorking(anything())).thenResolve(true);
+        when(shellIntegrationService.isWorking()).thenResolve(true);
         globalCollection = mock<GlobalEnvironmentVariableCollection>();
         collection = mock<EnvironmentVariableCollection>();
         when(context.environmentVariableCollection).thenReturn(instance(globalCollection));
@@ -113,6 +115,7 @@ suite('Terminal Environment Variable Collection Service', () => {
             instance(terminalDeactivateService),
             new PathUtils(getOSType() === OSType.Windows),
             instance(shellIntegrationService),
+            instance(envVarProvider),
         );
     });
 
@@ -336,7 +339,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.clear()).once();
         verify(collection.prepend('PATH', prependedPart, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
-        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+        assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
     });
 
     test('Also prepend deactivate script location if available', async () => {
@@ -372,7 +375,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         const separator = getOSType() === OSType.Windows ? ';' : ':';
         verify(collection.prepend('PATH', `scriptLocation${separator}${prependedPart}`, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
-        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+        assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
     });
 
     test('Prepend full PATH with separator otherwise', async () => {
@@ -405,7 +408,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.clear()).once();
         verify(collection.prepend('PATH', `${finalPath}${separator}`, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
-        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+        assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
     });
 
     test('Prepend full PATH with separator otherwise', async () => {
@@ -441,7 +444,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(collection.clear()).once();
         verify(collection.prepend('PATH', `scriptLocation${separator}${finalPath}${separator}`, anything())).once();
         verify(collection.replace('PATH', anything(), anything())).never();
-        assert.deepEqual(opts, { applyAtProcessCreation: false, applyAtShellIntegration: true });
+        assert.deepEqual(opts, { applyAtProcessCreation: true, applyAtShellIntegration: true });
     });
 
     test('Verify envs are not applied if env activation is disabled', async () => {
@@ -523,7 +526,7 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('Correct track that prompt was set for PS1 if shell integration is disabled', async () => {
         reset(shellIntegrationService);
-        when(shellIntegrationService.isWorking(anything())).thenResolve(false);
+        when(shellIntegrationService.isWorking()).thenResolve(false);
         when(platform.osType).thenReturn(OSType.Linux);
         const envVars: NodeJS.ProcessEnv = { VIRTUAL_ENV: 'prefix/to/venv', PS1: '(.venv)', ...process.env };
         const ps1Shell = 'bash';

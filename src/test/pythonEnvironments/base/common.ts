@@ -203,7 +203,7 @@ export async function getEnvsWithUpdates<I = PythonEnvInfo>(
                 }
                 updatesDone.resolve();
                 listener.dispose();
-            } else {
+            } else if (event.index !== undefined) {
                 const { index, update } = event;
                 // We don't worry about if envs[index] is set already.
                 envs[index] = update;
