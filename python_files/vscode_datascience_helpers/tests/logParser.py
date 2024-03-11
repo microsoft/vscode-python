@@ -1,10 +1,11 @@
 import argparse
 import os
+import re
 from io import TextIOWrapper
+from pathlib import Path
 
 os.system("color")
-import re
-from pathlib import Path
+
 
 parser = argparse.ArgumentParser(description="Parse a test log into its parts")
 parser.add_argument("testlog", type=str, nargs=1, help="Log to parse")

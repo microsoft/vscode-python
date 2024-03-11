@@ -18,7 +18,7 @@ sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict  # noqa: E402
 
 
 def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:

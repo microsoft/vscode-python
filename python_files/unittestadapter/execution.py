@@ -17,9 +17,10 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import process_json_util, socket_manager
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
-from unittestadapter.pvsc_utils import parse_unittest_args
+from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa: E402
+
+from testing_tools import process_json_util, socket_manager  # noqa: E402
+from unittestadapter.pvsc_utils import parse_unittest_args  # noqa: E402
 
 ErrorType = Union[
     Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]

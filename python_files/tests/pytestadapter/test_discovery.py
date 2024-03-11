@@ -12,10 +12,10 @@ import pytest
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
-from tests.tree_comparison_helper import is_same_tree
+from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
-from . import expected_discovery_test_output
-from .helpers import TEST_DATA_PATH, runner, runner_with_cwd, create_symlink
+from . import expected_discovery_test_output  # noqa: E402
+from .helpers import TEST_DATA_PATH, create_symlink, runner, runner_with_cwd  # noqa: E402
 
 
 @pytest.mark.skipif(

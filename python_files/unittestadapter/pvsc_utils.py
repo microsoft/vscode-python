@@ -14,7 +14,7 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import TypedDict
+from typing_extensions import TypedDict  # noqa: E402
 
 # Types
 
