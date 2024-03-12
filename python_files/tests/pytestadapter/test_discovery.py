@@ -209,7 +209,10 @@ def test_pytest_collect(file, expected_const):
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
-        assert is_same_tree(actual_item.get("tests"), expected_const)
+        if not is_same_tree(actual_item.get("tests"), expected_const):
+            print("Expected:", json.dumps(expected_const, indent=4))
+            print("Actual:", json.dumps(actual_item.get("tests"), indent=4))
+            assert False, "Tests tree does not match expected value"
 
 
 def test_symlink_root_dir():
@@ -272,10 +275,19 @@ def test_pytest_root_dir():
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "root")
-        assert is_same_tree(
+        if not is_same_tree(
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
-        )
+        ):
+            print(
+                "Expected:",
+                json.dumps(
+                    expected_discovery_test_output.root_with_config_expected_output,
+                    indent=4,
+                ),
+            )
+            print("Actual:", json.dumps(actual_item.get("tests"), indent=4))
+            assert False, "Tests tree does not match expected value"
 
 
 def test_pytest_config_file():
@@ -298,7 +310,16 @@ def test_pytest_config_file():
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "root")
-        assert is_same_tree(
+        if not is_same_tree(
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
-        )
+        ):
+            print(
+                "Expected:",
+                json.dumps(
+                    expected_discovery_test_output.root_with_config_expected_output,
+                    indent=4,
+                ),
+            )
+            print("Actual:", json.dumps(actual_item.get("tests"), indent=4))
+            assert False, "Tests tree does not match expected value"
