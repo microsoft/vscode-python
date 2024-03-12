@@ -28,7 +28,7 @@
             "source.fixAll.eslint": "explicit",
             "source.organizeImports.isort": "explicit"
         },
-        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.defaultFormatter": "charliermarsh.ruff",
     },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",

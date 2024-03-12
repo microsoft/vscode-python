@@ -36,8 +36,11 @@ ignore = [
 ]
 
 [tool.ruff]
-line-length = 140
+line-length = 100
 exclude = ["tests/testing_tools/adapter/.data"]
+
+[tool.ruff.format]
+docstring-code-format = true
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
