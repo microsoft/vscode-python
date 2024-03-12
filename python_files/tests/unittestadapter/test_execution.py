@@ -10,7 +10,7 @@ import pytest
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from unittestadapter.execution import run_tests
+from unittestadapter.execution import run_tests  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 

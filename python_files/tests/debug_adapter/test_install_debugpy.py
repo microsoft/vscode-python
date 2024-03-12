@@ -1,7 +1,4 @@
 import os
-import pytest
-import subprocess
-import sys
 
 
 def _check_binaries(dir_path):

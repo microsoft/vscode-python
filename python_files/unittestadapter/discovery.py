@@ -13,11 +13,12 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import socket_manager
-from typing_extensions import Literal, NotRequired, TypedDict
+from typing_extensions import Literal, NotRequired, TypedDict  # noqa: E402
+
+from testing_tools import socket_manager  # noqa: E402
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittestadapter.pvsc_utils import (
+from unittestadapter.pvsc_utils import (  # noqa: E402
     TestNode,
     build_test_tree,
     parse_unittest_args,

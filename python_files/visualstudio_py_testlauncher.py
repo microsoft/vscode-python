@@ -17,6 +17,7 @@
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
+import contextlib
 import json
 import os
 import signal
@@ -27,7 +28,7 @@ import unittest
 
 try:
     import thread
-except:
+except ModuleNotFoundError:
     import _thread as thread
 
 
@@ -115,7 +116,7 @@ class _IpcChannel(object):
 
     def readSocket(self):
         try:
-            data = self.socket.recv(1024)
+            self.socket.recv(1024)
             self.callback()
         except OSError:
             if not self._closed:
@@ -199,11 +200,8 @@ class VsTestResult(unittest.TextTestResult):
 def stopTests():
     try:
         os.kill(os.getpid(), signal.SIGUSR1)
-    except:
-        try:
-            os.kill(os.getpid(), signal.SIGTERM)
-        except:
-            pass
+    except Exception:
+        os.kill(os.getpid(), signal.SIGTERM)
 
 
 class ExitCommand(Exception):
@@ -280,11 +278,9 @@ def main():
     if opts.result_port:
         try:
             signal.signal(signal.SIGUSR1, signal_handler)
-        except:
-            try:
+        except Exception:
+            with contextlib.suppress(Exception):
                 signal.signal(signal.SIGTERM, signal_handler)
-            except:
-                pass
         _channel = _IpcChannel(
             socket.create_connection(("127.0.0.1", opts.result_port)), stopTests
         )
@@ -314,14 +310,12 @@ def main():
     cov = None
     try:
         if opts.coverage:
-            try:
+            with contextlib.suppress(Exception):
                 import coverage
 
                 cov = coverage.coverage(opts.coverage)
                 cov.load()
                 cov.start()
-            except:
-                pass
         if opts.tests is None and opts.testFile is None:
             if opts.us is None:
                 opts.us = "."
@@ -345,7 +339,7 @@ def main():
                 # Run a specific test class or test method
                 for test_suite in suites._tests:
                     for cls in test_suite._tests:
-                        try:
+                        with contextlib.suppress(Exception):
                             for m in cls._tests:
                                 testId = m.id()
                                 if testId.startswith(opts.tests[0]):
@@ -355,8 +349,6 @@ def main():
                                         tests = unittest.TestSuite([m])
                                     else:
                                         tests.addTest(m)
-                        except Exception as err:
-                            errorMessage = traceback.format_exc()
                 if tests is None:
                     tests = suite
             if tests is None and suite is None:
@@ -390,14 +382,10 @@ def main():
             _channel.send_event(name="done")
             _channel.socket.close()
         # prevent generation of the error 'Error in sys.exitfunc:'
-        try:
+        with contextlib.suppress(Exception):
             sys.stdout.close()
-        except:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             sys.stderr.close()
-        except:
-            pass
 
 
 if __name__ == "__main__":

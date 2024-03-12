@@ -1,3 +1,4 @@
+import contextlib
 import inspect
 import os
 import sys
@@ -13,13 +14,13 @@ sys.path.insert(0, os.getcwd())
 def get_sourceline(obj):
     try:
         s, n = inspect.getsourcelines(obj)
-    except:
+    except Exception:
         try:
             # this handles `tornado` case we need a better
             # way to get to the wrapped function.
-            # This is a temporary solution
+            # XXX This is a temporary solution
             s, n = inspect.getsourcelines(obj.orig_method)
-        except:
+        except Exception:
             return "*"
 
     for i, v in enumerate(s):
@@ -50,16 +51,14 @@ try:
             loader_errors.append(s._exception)
         else:
             print(testId.replace(".", ":") + ":" + get_sourceline(tm))
-except:
+except Exception:
     print("=== exception start ===")
     traceback.print_exc()
     print("=== exception end ===")
 
 
 for error in loader_errors:
-    try:
+    with contextlib.suppress(Exception):
         print("=== exception start ===")
         print(error.msg)
         print("=== exception end ===")
-    except:
-        pass
