@@ -7,7 +7,6 @@ import unittest
 # and the two tests with their outcome as "success".
 
 
-
 class DiscoveryA(unittest.TestCase):
     """Test class for the two file pattern test. It is pattern *test.py
 

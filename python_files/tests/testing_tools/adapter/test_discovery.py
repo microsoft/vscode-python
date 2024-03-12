@@ -252,9 +252,7 @@ class DiscoveredTestsTests(unittest.TestCase):
             # missing "./":
             parentid=relfile,
         )
-        expected = test._replace(
-            id=_fix_nodeid(test.id), parentid=_fix_nodeid(test.parentid)
-        )
+        expected = test._replace(id=_fix_nodeid(test.id), parentid=_fix_nodeid(test.parentid))
         discovered = DiscoveredTests()
 
         before = list(discovered), discovered.parents

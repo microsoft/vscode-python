@@ -25,9 +25,7 @@ if __name__ == "__main__":
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
     run_test_ids_port = os.environ.get("RUN_TEST_IDS_PORT")
-    run_test_ids_port_int = (
-        int(run_test_ids_port) if run_test_ids_port is not None else 0
-    )
+    run_test_ids_port_int = int(run_test_ids_port) if run_test_ids_port is not None else 0
     if run_test_ids_port_int == 0:
         print("Error[vscode-pytest]: RUN_TEST_IDS_PORT env var is not set.")
     test_ids_from_buffer = []
@@ -48,9 +46,7 @@ if __name__ == "__main__":
 
             try:
                 # Try to parse the buffer as JSON
-                test_ids_from_buffer = process_json_util.process_rpc_json(
-                    buffer.decode("utf-8")
-                )
+                test_ids_from_buffer = process_json_util.process_rpc_json(buffer.decode("utf-8"))
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
                 print("Received JSON data in run script")

@@ -14,9 +14,7 @@ import pytest
 import create_venv
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows does not have micro venv fallback."
-)
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows does not have micro venv fallback.")
 def test_venv_not_installed_unix():
     importlib.reload(create_venv)
     create_venv.is_installed = lambda module: module != "venv"
@@ -43,9 +41,7 @@ def test_venv_not_installed_unix():
     assert run_process_called is True
 
 
-@pytest.mark.skipif(
-    sys.platform != "win32", reason="Windows does not have microvenv fallback."
-)
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows does not have microvenv fallback.")
 def test_venv_not_installed_windows():
     importlib.reload(create_venv)
     create_venv.is_installed = lambda module: module != "venv"
@@ -106,9 +102,7 @@ def test_create_env(env_exists, git_ignore, install):
     assert run_process_called == (env_exists == "noEnv")
 
     # add_gitignore is called when new venv is created and git_ignore is True
-    assert add_gitignore_called == (
-        (env_exists == "noEnv") and (git_ignore == "useGitIgnore")
-    )
+    assert add_gitignore_called == ((env_exists == "noEnv") and (git_ignore == "useGitIgnore"))
 
 
 @pytest.mark.parametrize("install_type", ["requirements", "pyproject", "both"])
@@ -238,9 +232,7 @@ def test_create_venv_missing_pip():
         if "install" in args and "pip" in args:
             nonlocal run_process_called
             run_process_called = True
-            pip_pyz_path = os.fspath(
-                create_venv.CWD / create_venv.VENV_NAME / "pip.pyz"
-            )
+            pip_pyz_path = os.fspath(create_venv.CWD / create_venv.VENV_NAME / "pip.pyz")
             assert args[1:] == [pip_pyz_path, "install", "pip"]
             assert error_message == "CREATE_VENV.INSTALL_PIP_FAILED"
 

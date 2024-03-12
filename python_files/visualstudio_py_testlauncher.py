@@ -170,9 +170,7 @@ class VsTestResult(unittest.TextTestResult):
 
     def addSubTest(self, test, subtest, err):
         super(VsTestResult, self).addSubTest(test, subtest, err)
-        self.sendResult(
-            test, "subtest-passed" if err is None else "subtest-failed", err, subtest
-        )
+        self.sendResult(test, "subtest-passed" if err is None else "subtest-failed", err, subtest)
 
     def sendResult(self, test, outcome, trace=None, subtest=None):
         if _channel is not None:
@@ -224,9 +222,7 @@ def main():
         prog="visualstudio_py_testlauncher",
         usage="Usage: %prog [<option>] <test names>... ",
     )
-    parser.add_option(
-        "--debug", action="store_true", help="Whether debugging the unit tests"
-    )
+    parser.add_option("--debug", action="store_true", help="Whether debugging the unit tests")
     parser.add_option(
         "-x",
         "--mixed-mode",
@@ -241,9 +237,7 @@ def main():
         action="append",
         help="specifies a test to run",
     )
-    parser.add_option(
-        "--testFile", type="str", help="Fully qualitified path to file name"
-    )
+    parser.add_option("--testFile", type="str", help="Fully qualitified path to file name")
     parser.add_option(
         "-c", "--coverage", type="str", help="enable code coverage and specify filename"
     )
@@ -269,9 +263,7 @@ def main():
         help="Verbose output (0 none, 1 (no -v) simple, 2 (-v) full)",
     )
     parser.add_option("--uf", "--failfast", type="str", help="Stop on first failure")
-    parser.add_option(
-        "--uc", "--catch", type="str", help="Catch control-C and display results"
-    )
+    parser.add_option("--uc", "--catch", type="str", help="Catch control-C and display results")
     (opts, _) = parser.parse_args()
 
     sys.path[0] = os.getcwd()
@@ -281,9 +273,7 @@ def main():
         except Exception:
             with contextlib.suppress(Exception):
                 signal.signal(signal.SIGTERM, signal_handler)
-        _channel = _IpcChannel(
-            socket.create_connection(("127.0.0.1", opts.result_port)), stopTests
-        )
+        _channel = _IpcChannel(socket.create_connection(("127.0.0.1", opts.result_port)), stopTests)
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
 
@@ -366,9 +356,7 @@ def main():
                 verbosity=opts.uvInt, resultclass=VsTestResult, failfast=True
             )
         else:
-            runner = unittest.TextTestRunner(
-                verbosity=opts.uvInt, resultclass=VsTestResult
-            )
+            runner = unittest.TextTestRunner(verbosity=opts.uvInt, resultclass=VsTestResult)
         result = runner.run(tests)
         if _channel is not None:
             _channel.close()

@@ -61,9 +61,7 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
             raise TypeError("missing relpath")
 
 
-class SingleTestInfo(
-    namedtuple("TestInfo", "id name path source markers parentid kind")
-):
+class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parentid kind")):
     """Info for a single test."""
 
     MARKERS = ("skip", "skip-if", "expected-failure")

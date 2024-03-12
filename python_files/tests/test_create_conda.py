@@ -29,9 +29,7 @@ def test_create_env(env_exists, git_ignore, install, python):
     def run_process(args, error_message):
         nonlocal run_process_called
         run_process_called = True
-        version = (
-            "12345" if python else f"{sys.version_info.major}.{sys.version_info.minor}"
-        )
+        version = "12345" if python else f"{sys.version_info.major}.{sys.version_info.minor}"
         if not env_exists:
             assert args == [
                 sys.executable,

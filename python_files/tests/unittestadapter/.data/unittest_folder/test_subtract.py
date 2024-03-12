@@ -6,6 +6,7 @@ import unittest
 # files in the same folder. The cwd is set to the parent folder. This should return
 # a dictionary with a "success" status and the two tests with their outcome as "success".
 
+
 def subtract(a, b):
     return a - b
 
@@ -14,7 +15,6 @@ class TestSubtractFunction(unittest.TestCase):
     def test_subtract_positive_numbers(self):
         result = subtract(5, 3)
         self.assertEqual(result, 2)
-
 
     def test_subtract_negative_numbers(self):
         result = subtract(-2, -3)

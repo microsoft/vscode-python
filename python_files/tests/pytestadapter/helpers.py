@@ -68,9 +68,7 @@ def create_server(
 
 
 def _new_sock() -> socket.socket:
-    sock: socket.socket = socket.socket(
-        socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-    )
+    sock: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
     options = [
         ("SOL_SOCKET", "SO_KEEPALIVE", 1),
         ("IPPROTO_TCP", "TCP_KEEPIDLE", 1),
@@ -88,9 +86,7 @@ def _new_sock() -> socket.socket:
 
 
 CONTENT_LENGTH: str = "Content-Length:"
-Env_Dict = TypedDict(
-    "Env_Dict", {"TEST_UUID": str, "TEST_PORT": str, "PYTHONPATH": str}
-)
+Env_Dict = TypedDict("Env_Dict", {"TEST_UUID": str, "TEST_PORT": str, "PYTHONPATH": str})
 
 
 def process_rpc_message(data: str) -> Tuple[Dict[str, Any], str]:
@@ -133,9 +129,7 @@ def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     return runner_with_cwd(args, TEST_DATA_PATH)
 
 
-def runner_with_cwd(
-    args: List[str], path: pathlib.Path
-) -> Optional[List[Dict[str, Any]]]:
+def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
@@ -177,9 +171,7 @@ def runner_with_cwd(
     return process_rpc_json(result[0]) if result else None
 
 
-def _listen_on_socket(
-    listener: socket.socket, result: List[str], completed: threading.Event
-):
+def _listen_on_socket(listener: socket.socket, result: List[str], completed: threading.Event):
     """Listen on the socket for the JSON data from the server.
     Created as a separate function for clarity in threading.
     """
@@ -201,9 +193,7 @@ def _listen_on_socket(
     result.append("".join(all_data))
 
 
-def _run_test_code(
-    proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event
-):
+def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
     result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
     completed.set()
     return result

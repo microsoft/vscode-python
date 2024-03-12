@@ -118,13 +118,9 @@ def pytest_exception_interact(node, call, report):
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
                 return
-            ERRORS.append(
-                call.excinfo.exconly() + "\n Check Python Test Logs for more details."
-            )
+            ERRORS.append(call.excinfo.exconly() + "\n Check Python Test Logs for more details.")
         else:
-            ERRORS.append(
-                report.longreprtext + "\n Check Python Test Logs for more details."
-            )
+            ERRORS.append(report.longreprtext + "\n Check Python Test Logs for more details.")
     else:
         # If during execution, send this data that the given node failed.
         report_value = "error"
@@ -445,10 +441,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 test_file_node = create_file_node(parent_module)
                 file_nodes_dict[parent_module] = test_file_node
             # Check if the class is already a child of the file node.
-            if (
-                test_class_node is not None
-                and test_class_node not in test_file_node["children"]
-            ):
+            if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
         elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
             function_name: str = ""
@@ -463,9 +456,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 ERRORS.append(
                     f"unable to find original name for {test_case.name} with parameterization detected."
                 )
-                raise VSCodePytestError(
-                    "Unable to find original name for parameterized test case"
-                )
+                raise VSCodePytestError("Unable to find original name for parameterized test case")
             except KeyError:
                 function_test_case: TestNode = create_parameterized_function_node(
                     function_name, get_node_path(test_case), test_case.nodeid
@@ -522,13 +513,9 @@ def build_nested_folders(
     while iterator_path != get_node_path(session):
         curr_folder_name = iterator_path.name
         try:
-            curr_folder_node: TestNode = created_files_folders_dict[
-                os.fspath(iterator_path)
-            ]
+            curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
         except KeyError:
-            curr_folder_node: TestNode = create_folder_node(
-                curr_folder_name, iterator_path
-            )
+            curr_folder_node: TestNode = create_folder_node(curr_folder_name, iterator_path)
             created_files_folders_dict[os.fspath(iterator_path)] = curr_folder_node
         if prev_folder_node not in curr_folder_node["children"]:
             curr_folder_node["children"].append(prev_folder_node)

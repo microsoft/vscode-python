@@ -14,20 +14,14 @@ skip_unittest_folder_discovery_output = {
     "type_": TestNodeTypeEnum.folder,
     "children": [
         {
-            "path": os.fspath(
-                TEST_DATA_PATH / "unittest_skip" / "unittest_skip_file.py"
-            ),
+            "path": os.fspath(TEST_DATA_PATH / "unittest_skip" / "unittest_skip_file.py"),
             "name": "unittest_skip_file.py",
             "type_": TestNodeTypeEnum.file,
             "children": [],
-            "id_": os.fspath(
-                TEST_DATA_PATH / "unittest_skip" / "unittest_skip_file.py"
-            ),
+            "id_": os.fspath(TEST_DATA_PATH / "unittest_skip" / "unittest_skip_file.py"),
         },
         {
-            "path": os.fspath(
-                TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"
-            ),
+            "path": os.fspath(TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"),
             "name": "unittest_skip_function.py",
             "type_": TestNodeTypeEnum.file,
             "children": [
@@ -41,30 +35,22 @@ skip_unittest_folder_discovery_output = {
                         {
                             "name": "testadd1",
                             "path": os.fspath(
-                                TEST_DATA_PATH
-                                / "unittest_skip"
-                                / "unittest_skip_function.py"
+                                TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"
                             ),
                             "lineno": "13",
                             "type_": TestNodeTypeEnum.test,
                             "id_": os.fspath(
-                                TEST_DATA_PATH
-                                / "unittest_skip"
-                                / "unittest_skip_function.py"
+                                TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"
                             )
                             + "\\SimpleTest\\testadd1",
                             "runID": "unittest_skip_function.SimpleTest.testadd1",
                         }
                     ],
-                    "id_": os.fspath(
-                        TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"
-                    )
+                    "id_": os.fspath(TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py")
                     + "\\SimpleTest",
                 }
             ],
-            "id_": os.fspath(
-                TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"
-            ),
+            "id_": os.fspath(TEST_DATA_PATH / "unittest_skip" / "unittest_skip_function.py"),
         },
     ],
     "id_": os.fspath(TEST_DATA_PATH / "unittest_skip"),
@@ -88,9 +74,7 @@ complex_tree_expected_output = {
             "name": "test_outer_folder",
             "type_": TestNodeTypeEnum.folder,
             "path": os.fsdecode(
-                pathlib.PurePath(
-                    TEST_DATA_PATH, "utils_complex_tree", "test_outer_folder"
-                )
+                pathlib.PurePath(TEST_DATA_PATH, "utils_complex_tree", "test_outer_folder")
             ),
             "children": [
                 {
@@ -145,9 +129,7 @@ complex_tree_expected_output = {
                 },
             ],
             "id_": os.fsdecode(
-                pathlib.PurePath(
-                    TEST_DATA_PATH, "utils_complex_tree", "test_outer_folder"
-                )
+                pathlib.PurePath(TEST_DATA_PATH, "utils_complex_tree", "test_outer_folder")
             ),
         }
     ],

@@ -18,12 +18,8 @@ def test_install_debugpy(tmpdir):
     import install_debugpy
 
     install_debugpy.main(str(tmpdir))
-    dir_path = os.path.join(
-        str(tmpdir), "debugpy", "_vendored", "pydevd", "_pydevd_bundle"
-    )
+    dir_path = os.path.join(str(tmpdir), "debugpy", "_vendored", "pydevd", "_pydevd_bundle")
     _check_binaries(dir_path)
 
-    dir_path = os.path.join(
-        str(tmpdir), "debugpy", "_vendored", "pydevd", "_pydevd_frame_eval"
-    )
+    dir_path = os.path.join(str(tmpdir), "debugpy", "_vendored", "pydevd", "_pydevd_frame_eval")
     _check_binaries(dir_path)
