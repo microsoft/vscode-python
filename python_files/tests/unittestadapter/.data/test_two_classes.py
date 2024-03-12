@@ -9,10 +9,12 @@ import unittest
 
 
 class ClassOne(unittest.TestCase):
+
     def test_one(self) -> None:
         self.assertGreater(2, 1)
 
-
 class ClassTwo(unittest.TestCase):
+
     def test_two(self) -> None:
         self.assertGreater(2, 1)
+

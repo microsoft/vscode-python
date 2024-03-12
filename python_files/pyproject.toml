@@ -37,7 +37,10 @@ ignore = [
 
 [tool.ruff]
 line-length = 100
-exclude = ["tests/testing_tools/adapter/.data"]
+exclude = [
+    "tests/testing_tools/adapter/.data",
+    "tests/unittestadapter/.data"
+]
 
 [tool.ruff.format]
 docstring-code-format = true
