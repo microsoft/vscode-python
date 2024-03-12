@@ -9,9 +9,6 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-
 from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output, helpers  # noqa: E402
