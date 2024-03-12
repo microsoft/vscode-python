@@ -13,9 +13,6 @@ import threading
 import uuid
 from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
-script_dir = pathlib.Path(__file__).parent.parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
