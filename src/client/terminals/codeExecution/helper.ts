@@ -20,8 +20,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
-import { IConfigurationService, IExperimentService, Resource } from '../../common/types';
-import { EnableREPLSmartSend } from '../../common/experiments/groups';
+import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 
@@ -93,7 +92,6 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const startLineVal = activeEditor?.selection?.start.line ?? 0;
             const endLineVal = activeEditor?.selection?.end.line ?? 0;
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
-            const smartSendExperimentEnabledVal = pythonSmartSendEnabled(this.serviceContainer);
             let smartSendSettingsEnabledVal = false;
             const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             if (configuration) {
@@ -107,7 +105,6 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 startLine: startLineVal,
                 endLine: endLineVal,
                 emptyHighlight: emptyHighlightVal,
-                smartSendExperimentEnabled: smartSendExperimentEnabledVal,
                 smartSendSettingsEnabled: smartSendSettingsEnabledVal,
             });
             observable.proc?.stdin?.write(input);
@@ -117,12 +114,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
 
-            if (
-                activeEditor?.selection &&
-                smartSendExperimentEnabledVal &&
-                smartSendSettingsEnabledVal &&
-                object.normalized !== 'deprecated'
-            ) {
+            if (activeEditor?.selection && smartSendSettingsEnabledVal && object.normalized !== 'deprecated') {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line - 1;
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }
@@ -145,16 +137,15 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
      */
     // eslint-disable-next-line class-methods-use-this
     private async moveToNextBlock(lineOffset: number, activeEditor?: TextEditor): Promise<void> {
-        if (pythonSmartSendEnabled(this.serviceContainer)) {
-            if (activeEditor?.selection?.isEmpty) {
-                await this.commandManager.executeCommand('cursorMove', {
-                    to: 'down',
-                    by: 'line',
-                    value: Number(lineOffset),
-                });
-                await this.commandManager.executeCommand('cursorEnd');
-            }
+        if (activeEditor?.selection?.isEmpty) {
+            await this.commandManager.executeCommand('cursorMove', {
+                to: 'down',
+                by: 'line',
+                value: Number(lineOffset),
+            });
+            await this.commandManager.executeCommand('cursorEnd');
         }
+
         return Promise.resolve();
     }
 
@@ -313,10 +304,4 @@ function getMultiLineSelectionText(textEditor: TextEditor): string {
     //         and n == 0)
     //                   ↑<---------------- To here
     return selectionText;
-}
-
-function pythonSmartSendEnabled(serviceContainer: IServiceContainer): boolean {
-    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
-
-    return experiment ? experiment.inExperimentSync(EnableREPLSmartSend.experiment) : false;
 }
