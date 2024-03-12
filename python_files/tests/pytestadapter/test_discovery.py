@@ -36,17 +36,13 @@ def test_import_error(tmp_path):
     temp_dir.mkdir()
     p = temp_dir / "error_pytest_import.py"
     shutil.copyfile(file_path, p)
-    actual: Optional[List[Dict[str, Any]]] = helpers.runner(
-        ["--collect-only", os.fspath(p)]
-    )
+    actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         assert actual_list.pop(-1).get("eot")
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "error")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
 
@@ -89,9 +85,7 @@ def test_syntax_error(tmp_path):
     if actual_list is not None:
         assert actual_list.pop(-1).get("eot")
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "error")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
 
@@ -117,9 +111,7 @@ def test_parameterized_error_collect():
     if actual_list is not None:
         assert actual_list.pop(-1).get("eot")
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "error")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
 
@@ -243,9 +235,7 @@ def test_symlink_root_dir():
                 assert actual_item.get("cwd") == os.fspath(
                     destination
                 ), f"CWD does not match: {os.fspath(destination)}"
-                assert (
-                    actual_item.get("tests") == expected
-                ), "Tests do not match expected value"
+                assert actual_item.get("tests") == expected, "Tests do not match expected value"
             except AssertionError as e:
                 # Print the actual_item in JSON format if an assertion fails
                 print(json.dumps(actual_item, indent=4))

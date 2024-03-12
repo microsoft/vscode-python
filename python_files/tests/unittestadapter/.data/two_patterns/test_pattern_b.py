@@ -6,8 +6,8 @@ import unittest
 # The test_ids_multiple_runs function should return a dictionary with a "success" status,
 # and the two tests with their outcome as "success".
 
-class DiscoveryB(unittest.TestCase):
 
+class DiscoveryB(unittest.TestCase):
     def test_one_b(self) -> None:
         self.assertGreater(2, 1)
 

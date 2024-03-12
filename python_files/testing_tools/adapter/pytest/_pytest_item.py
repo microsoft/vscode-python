@@ -170,9 +170,7 @@ def parse_item(
         parents = [(parentid, item.originalname, kind)] + parents
         name = parameterized[1:-1] or "<empty>"
     else:
-        (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
-            item.nodeid, kind
-        )
+        (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(item.nodeid, kind)
         name = item.name
 
     # Note: testfunc does not necessarily match item.function.__name__.

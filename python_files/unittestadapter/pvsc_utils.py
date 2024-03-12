@@ -91,9 +91,7 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
     return {"path": path, "name": name, "type_": type_, "children": [], "id_": id_gen}
 
 
-def get_child_node(
-    name: str, path: str, type_: TestNodeTypeEnum, root: TestNode
-) -> TestNode:
+def get_child_node(name: str, path: str, type_: TestNodeTypeEnum, root: TestNode) -> TestNode:
     """Find a child node in a test tree given its name, type and path. If the node doesn't exist, create it.
     Path is required to distinguish between nodes with the same name and type."""
     try:
@@ -154,9 +152,7 @@ def build_test_tree(
     """
     error = []
     directory_path = pathlib.PurePath(top_level_directory)
-    root = build_test_node(
-        top_level_directory, directory_path.name, TestNodeTypeEnum.folder
-    )
+    root = build_test_node(top_level_directory, directory_path.name, TestNodeTypeEnum.folder)
 
     for test_case in get_test_case(suite):
         test_id = test_case.id()
@@ -167,9 +163,7 @@ def build_test_tree(
             class_name = f"{components[-1]}.py"
             # Find/build class node.
             file_path = os.fsdecode(os.path.join(directory_path, class_name))
-            current_node = get_child_node(
-                class_name, file_path, TestNodeTypeEnum.file, root
-            )
+            current_node = get_child_node(class_name, file_path, TestNodeTypeEnum.file, root)
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")

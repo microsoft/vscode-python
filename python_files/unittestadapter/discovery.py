@@ -98,9 +98,7 @@ def discover_tests(
         # Get abspath of top level directory for build_test_tree.
         top_level_dir = os.path.abspath(top_level_dir)
 
-        tests, error = build_test_tree(
-            suite, top_level_dir
-        )  # test tree built successfully here.
+        tests, error = build_test_tree(suite, top_level_dir)  # test tree built successfully here.
 
     except Exception:
         error.append(traceback.format_exc())
@@ -116,9 +114,7 @@ def discover_tests(
     return payload
 
 
-def post_response(
-    payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str
-) -> None:
+def post_response(payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str) -> None:
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
     data = json.dumps(payload)

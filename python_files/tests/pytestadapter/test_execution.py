@@ -28,9 +28,7 @@ def test_config_file():
     ]
     new_cwd = TEST_DATA_PATH / "root"
     actual = runner_with_cwd(args, new_cwd)
-    expected_const = (
-        expected_execution_test_output.config_file_pytest_expected_execution_output
-    )
+    expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     assert actual_list.pop(-1).get("eot")
@@ -38,9 +36,7 @@ def test_config_file():
     actual_result_dict = dict()
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "result")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
             assert actual_item.get("status") == "success"
             assert actual_item.get("cwd") == os.fspath(new_cwd)
             actual_result_dict.update(actual_item["result"])
@@ -53,9 +49,7 @@ def test_rootdir_specified():
     args = [rd, "tests/test_a.py::test_a_function"]
     new_cwd = TEST_DATA_PATH / "root"
     actual = runner_with_cwd(args, new_cwd)
-    expected_const = (
-        expected_execution_test_output.config_file_pytest_expected_execution_output
-    )
+    expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     assert actual_list.pop(-1).get("eot")
@@ -63,9 +57,7 @@ def test_rootdir_specified():
     actual_result_dict = dict()
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "result")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
             assert actual_item.get("status") == "success"
             assert actual_item.get("cwd") == os.fspath(new_cwd)
             actual_result_dict.update(actual_item["result"])
@@ -101,9 +93,7 @@ def test_syntax_error_execution(tmp_path):
     assert actual_list.pop(-1).get("eot")
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "error")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             error_content = actual_item.get("error")
@@ -126,9 +116,7 @@ def test_bad_id_error_execution():
     assert actual_list.pop(-1).get("eot")
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "error")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             error_content = actual_item.get("error")
@@ -273,9 +261,7 @@ def test_pytest_execution(test_ids, expected_const):
     actual_result_dict = dict()
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(
-                item in actual_item.keys() for item in ("status", "cwd", "result")
-            )
+            assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
             assert actual_item.get("status") == "success"
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             actual_result_dict.update(actual_item["result"])
@@ -307,13 +293,9 @@ def test_symlink_run():
         )
 
         # Run pytest with the cwd being the resolved symlink path (as it will be when we run the subprocess from node).
-        actual = runner_with_cwd(
-            [f"--rootdir={os.fspath(destination)}", test_a_id], source
-        )
+        actual = runner_with_cwd([f"--rootdir={os.fspath(destination)}", test_a_id], source)
 
-        expected_const = (
-            expected_execution_test_output.symlink_run_expected_execution_output
-        )
+        expected_const = expected_execution_test_output.symlink_run_expected_execution_output
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:

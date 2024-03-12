@@ -259,9 +259,7 @@ class FilePathTests(unittest.TestCase):
         )
         for fileid, rootdir, _os_path, expected in tests:
             pathsep = _os_path.sep
-            with self.subTest(
-                r"for {} (with rootdir {!r}): {!r}".format(pathsep, rootdir, fileid)
-            ):
+            with self.subTest(r"for {} (with rootdir {!r}): {!r}".format(pathsep, rootdir, fileid)):
                 fixed = fix_fileid(
                     fileid,
                     rootdir,

@@ -107,22 +107,14 @@ def test_simple_discovery() -> None:
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_one",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_two",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_two",
                             },
                         ],
                         "id_": file_path + "\\" + "DiscoverySimple",
@@ -170,22 +162,14 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_one",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_two",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_two",
                             },
                         ],
                         "id_": file_path + "\\" + "DiscoverySimple",
@@ -253,22 +237,14 @@ def test_error_discovery() -> None:
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoveryErrorTwo"
-                                + "\\"
-                                + "test_one",
+                                "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoveryErrorTwo"
-                                + "\\"
-                                + "test_two",
+                                "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_two",
                             },
                         ],
                         "id_": file_path + "\\" + "DiscoveryErrorTwo",

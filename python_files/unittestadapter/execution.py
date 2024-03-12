@@ -22,9 +22,7 @@ from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa
 from testing_tools import process_json_util, socket_manager  # noqa: E402
 from unittestadapter.pvsc_utils import parse_unittest_args  # noqa: E402
 
-ErrorType = Union[
-    Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]
-]
+ErrorType = Union[Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]]
 testPort = 0
 testUuid = 0
 START_DIR = ""
@@ -244,9 +242,7 @@ def send_run_data(raw_data, port, uuid):
     post_response(payload, port, uuid)
 
 
-def post_response(
-    payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str
-) -> None:
+def post_response(payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str) -> None:
     # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
     addr = ("localhost", port)
     global __socket
@@ -286,9 +282,7 @@ if __name__ == "__main__":
     ) = parse_unittest_args(argv[index + 1 :])
 
     run_test_ids_port = os.environ.get("RUN_TEST_IDS_PORT")
-    run_test_ids_port_int = (
-        int(run_test_ids_port) if run_test_ids_port is not None else 0
-    )
+    run_test_ids_port_int = int(run_test_ids_port) if run_test_ids_port is not None else 0
     if run_test_ids_port_int == 0:
         print("Error[vscode-unittest]: RUN_TEST_IDS_PORT env var is not set.")
     # get data from socket
@@ -309,9 +303,7 @@ if __name__ == "__main__":
 
             try:
                 # Try to parse the buffer as JSON
-                test_ids_from_buffer = process_json_util.process_rpc_json(
-                    buffer.decode("utf-8")
-                )
+                test_ids_from_buffer = process_json_util.process_rpc_json(buffer.decode("utf-8"))
                 # Clear the buffer as complete JSON object is received
                 buffer = b""
                 break

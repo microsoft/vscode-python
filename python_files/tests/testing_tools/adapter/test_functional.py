@@ -48,9 +48,7 @@ def _run_adapter(cmd, tool, *cliargs, **kwargs):
         argv.insert(4, "--no-hide-stdio")
         kwds["stderr"] = subprocess.STDOUT
     argv.append("--cache-clear")
-    print(
-        "running {!r}".format(" ".join(arg.rpartition(CWD + "/")[-1] for arg in argv))
-    )
+    print("running {!r}".format(" ".join(arg.rpartition(CWD + "/")[-1] for arg in argv)))
     output = subprocess.check_output(argv, universal_newlines=True, **kwds)
     return output
 

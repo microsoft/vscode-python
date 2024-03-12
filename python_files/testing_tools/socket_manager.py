@@ -29,9 +29,7 @@ class SocketManager(object):
         self.close()
 
     def connect(self):
-        self.socket = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-        )
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         if sys.platform == "win32":
             addr_use = socket.SO_EXCLUSIVEADDRUSE
         else:

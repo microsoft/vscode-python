@@ -9,13 +9,12 @@
     "customizations": {
         "vscode": {
             "extensions": [
+                "charliermarsh.ruff",
                 "editorconfig.editorconfig",
                 "esbenp.prettier-vscode",
                 "dbaeumer.vscode-eslint",
                 "ms-python.python",
-                "ms-python.black-formatter",
                 "ms-python.vscode-pylance",
-                "charliermarsh.ruff",
                 "ms-python.debugpy"
             ]
         }

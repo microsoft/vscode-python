@@ -128,7 +128,7 @@ def fix_fileid(
     normalize=False,
     strictpathsep=None,
     _pathsep=PATH_SEP,
-    **kwargs
+    **kwargs,
 ):
     """Return a pathsep-separated file ID ("./"-prefixed) for the given value.
 
@@ -150,7 +150,7 @@ def fix_fileid(
         rootdir,
         _pathsep=_pathsep,
         # ...
-        **kwargs
+        **kwargs,
     )
     if relpath:  # Note that we treat "" here as an absolute path.
         _fileid = "./" + relpath

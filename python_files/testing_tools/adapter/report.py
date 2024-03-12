@@ -13,7 +13,7 @@ def report_discovered(
     pretty=False,
     simple=False,
     _send=print,
-    **_ignored
+    **_ignored,
 ):
     """Serialize the discovered tests and write to stdout."""
     if simple:
