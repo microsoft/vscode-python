@@ -23,7 +23,8 @@
         "testObserver",
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
-        "terminalExecuteCommandEvent"
+        "terminalExecuteCommandEvent",
+        "contribIssueReporter"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -1243,6 +1244,11 @@
             }
         ],
         "menus": {
+            "issue/reporter": [
+				{
+					"command": "python.reportIssue"
+				}
+			],
             "commandPalette": [
                 {
                     "category": "Python",

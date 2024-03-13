@@ -19,6 +19,7 @@ import { EventName } from '../../../telemetry/constants';
 import { EnvironmentType } from '../../../pythonEnvironments/info';
 import { PythonSettings } from '../../configSettings';
 import { SystemVariables } from '../../variables/systemVariables';
+import { getExtensions } from '../../vscodeApis/extensionsApi';
 
 /**
  * Allows the user to report an issue related to the Python extension using our template.
@@ -47,6 +48,8 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
     private argSettingsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_user_settings.json');
 
     private templatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_template.md');
+
+    private userDataTemplatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_user_data_template.md');
 
     public async openReportIssue(): Promise<void> {
         const settings: IPythonSettings = this.configurationService.getSettings();
@@ -86,6 +89,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
             }
         });
         const template = await fs.readFile(this.templatePath, 'utf8');
+        const userTemplate = await fs.readFile(this.userDataTemplatePath, 'utf8');
         const interpreter = await this.interpreterService.getActiveInterpreter();
         const pythonVersion = interpreter?.version?.raw ?? '';
         const languageServer =
@@ -97,14 +101,25 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
             hasMultipleFolders && userSettings !== ''
                 ? `Multiroot scenario, following user settings may not apply:${os.EOL}`
                 : '';
+
+        const installedExtensions = getExtensions()
+            .filter((extension) => !extension.id.startsWith('vscode.'))
+            .sort((a, b) => a.packageJSON.displayName.localeCompare(b.packageJSON.displayName))
+            .map(
+                (extension) =>
+                    `|${extension.packageJSON.displayName}|${extension.id}|${extension.packageJSON.version}|`,
+            );
+
         await this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',
-            issueBody: template.format(
+            issueBody: template,
+            data: userTemplate.format(
                 pythonVersion,
                 virtualEnvKind,
                 languageServer,
                 hasMultipleFoldersText,
                 userSettings,
+                installedExtensions.join('\n'),
             ),
         });
         sendTelemetryEvent(EventName.USE_REPORT_ISSUE_COMMAND, undefined, {});

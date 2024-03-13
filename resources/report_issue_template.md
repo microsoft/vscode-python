@@ -1,6 +1,5 @@
 <!-- Please fill in all XXX markers -->
 # Behaviour
-## Expected vs. Actual
 
 XXX
 
@@ -12,12 +11,8 @@ XXX
 **After** creating the issue on GitHub, you can add screenshots and GIFs of what is happening. Consider tools like https://www.cockos.com/licecap/, https://github.com/phw/peek or https://www.screentogif.com/ for GIF creation.
 -->
 
-<!-- **NOTE**: Everything below except Python output panel is auto-generated; no editing required. Please do provide Python output panel. -->
+<!-- **NOTE**: Please do provide logs from Python Output panel. -->
 # Diagnostic data
-
--   Python version (& distribution if applicable, e.g. Anaconda): {0}
--   Type of virtual environment used (e.g. conda, venv, virtualenv, etc.): {1}
--   Value of the `python.languageServer` setting: {2}
 
 <details>
 
@@ -28,19 +23,6 @@ XXX
 
 ```
 XXX
-```
-
-</p>
-</details>
-
-<details>
-
-<summary>User Settings</summary>
-
-<p>
-
-```
-{3}{4}
 ```
 
 </p>
