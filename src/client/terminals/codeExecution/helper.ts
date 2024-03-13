@@ -92,7 +92,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const startLineVal = activeEditor?.selection?.start.line ?? 0;
             const endLineVal = activeEditor?.selection?.end.line ?? 0;
             const emptyHighlightVal = activeEditor?.selection?.isEmpty ?? true;
-            let smartSendSettingsEnabledVal = false;
+            let smartSendSettingsEnabledVal = true;
             const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             if (configuration) {
                 const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
