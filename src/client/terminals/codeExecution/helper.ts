@@ -20,7 +20,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 import { traceError } from '../../logging';
-import { IConfigurationService, IExperimentService, Resource } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 
