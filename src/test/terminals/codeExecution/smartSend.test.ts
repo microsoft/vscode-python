@@ -16,7 +16,6 @@ import { IConfigurationService, IExperimentService, IPythonSettings } from '../.
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { EnableREPLSmartSend } from '../../../client/common/experiments/groups';
 import { Commands, EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../../common';
