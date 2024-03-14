@@ -111,6 +111,7 @@ suite('Terminal - Code Execution Helper', () => {
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns({
                 REPL: {
+                    EnableREPLSmartSend: false,
                     REPLSmartSend: false,
                 },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -150,6 +151,7 @@ suite('Terminal - Code Execution Helper', () => {
                 .setup((c) => c.getSettings(TypeMoq.It.isAny()))
                 .returns({
                     REPL: {
+                        EnableREPLSmartSend: false,
                         REPLSmartSend: false,
                     },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
