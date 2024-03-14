@@ -225,7 +225,7 @@ function putIntoStorage(storage: IPersistentStorage<PythonEnvInfo[]>, envs: Pyth
 }
 
 async function createCollectionCache(ext: ExtensionState): Promise<IEnvsCollectionCache> {
-    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []);
+    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHEv2', []);
     const cache = await createCache({
         get: () => getFromStorage(storage),
         store: async (e) => putIntoStorage(storage, e),
