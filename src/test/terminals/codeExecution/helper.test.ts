@@ -142,7 +142,7 @@ suite('Terminal - Code Execution Helper', () => {
                 .setup((c) => c.getSettings(TypeMoq.It.isAny()))
                 .returns({
                     REPL: {
-                        REPLSmartSend: true,
+                        REPLSmartSend: false,
                     },
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } as any);
