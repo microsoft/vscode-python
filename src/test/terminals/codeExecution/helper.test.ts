@@ -107,6 +107,14 @@ suite('Terminal - Code Execution Helper', () => {
         document = TypeMoq.Mock.ofType<TextDocument>();
         editor = TypeMoq.Mock.ofType<TextEditor>();
         editor.setup((e) => e.document).returns(() => document.object);
+        configurationService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns({
+                REPL: {
+                    REPLSmartSend: false,
+                },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
     });
 
     test('normalizeLines should call normalizeSelection.py', async () => {
