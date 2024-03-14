@@ -23,6 +23,7 @@ import {
     IProcessServiceFactory,
     ObservableExecutionResult,
 } from '../../../client/common/process/types';
+import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -44,6 +45,8 @@ suite('Terminal - Code Execution Helper', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let configurationService: TypeMoq.IMock<IConfigurationService>;
+    let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     const workingPython: PythonEnvironment = {
         path: PYTHON_PATH,
         version: new SemVer('3.6.6-final'),
@@ -57,6 +60,7 @@ suite('Terminal - Code Execution Helper', () => {
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -95,8 +99,11 @@ suite('Terminal - Code Execution Helper', () => {
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
             .returns(() => envVariablesProvider.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .returns(() => configurationService.object);
         helper = new CodeExecutionHelper(serviceContainer.object);
-
+        configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         document = TypeMoq.Mock.ofType<TextDocument>();
         editor = TypeMoq.Mock.ofType<TextEditor>();
         editor.setup((e) => e.document).returns(() => document.object);
@@ -131,6 +138,14 @@ suite('Terminal - Code Execution Helper', () => {
 
     ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
         test(`Ensure code is normalized (Sample${fileNameSuffix})`, async () => {
+            configurationService
+                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                .returns({
+                    REPL: {
+                        REPLSmartSend: false,
+                    },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any);
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
             const expectedCode = await fs.readFile(
                 path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
