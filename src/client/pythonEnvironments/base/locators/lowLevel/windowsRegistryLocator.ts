@@ -9,6 +9,8 @@ import { getRegistryInterpreters } from '../../../common/windowsUtils';
 import { traceError, traceVerbose } from '../../../../logging';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
 import { PythonEnvsChangedEvent } from '../../watcher';
+import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
+import { inExperiment } from '../../../common/externalDependencies';
 
 export const WINDOWS_REG_PROVIDER_ID = 'windows-registry';
 
@@ -16,7 +18,10 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
     public readonly providerId: string = WINDOWS_REG_PROVIDER_ID;
 
     // eslint-disable-next-line class-methods-use-this
-    public iterEnvs(query?: PythonLocatorQuery, useWorkerThreads = false): IPythonEnvsIterator<BasicEnvInfo> {
+    public iterEnvs(
+        query?: PythonLocatorQuery,
+        useWorkerThreads = inExperiment(DiscoveryUsingWorkers.experiment),
+    ): IPythonEnvsIterator<BasicEnvInfo> {
         if (useWorkerThreads) {
             /**
              * Windows registry is slow and often not necessary, so notify completion immediately, but use watcher
@@ -24,11 +29,11 @@ export class WindowsRegistryLocator extends Locator<BasicEnvInfo> {
              */
             if (query?.providerId === this.providerId) {
                 // Query via change event, so iterate all envs.
-                return iterateEnvs(true);
+                return iterateEnvs();
             }
             return iterateEnvsLazily(this.emitter);
         }
-        return iterateEnvs(false);
+        return iterateEnvs();
     }
 }
 
@@ -38,13 +43,13 @@ async function* iterateEnvsLazily(changed: IEmitter<PythonEnvsChangedEvent>): IP
 
 async function loadAllEnvs(changed: IEmitter<PythonEnvsChangedEvent>) {
     traceVerbose('Searching for windows registry interpreters');
-    await getRegistryInterpreters(true);
+    await getRegistryInterpreters();
     changed.fire({ providerId: WINDOWS_REG_PROVIDER_ID });
     traceVerbose('Finished searching for windows registry interpreters');
 }
 
-async function* iterateEnvs(useWorkerThreads: boolean): IPythonEnvsIterator<BasicEnvInfo> {
-    const interpreters = await getRegistryInterpreters(useWorkerThreads);
+async function* iterateEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+    const interpreters = await getRegistryInterpreters(); // Value should already be loaded at this point, so this returns immediately.
     for (const interpreter of interpreters) {
         try {
             // Filter out Microsoft Store app directories. We have a store app locator that handles this.
