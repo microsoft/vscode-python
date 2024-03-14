@@ -39,6 +39,8 @@ import { traceError } from '../logging';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 import { CustomWorkspaceLocator } from './base/locators/lowLevel/customWorkspaceLocator';
 
+const PYTHON_ENV_INFO_CACHE_KEY = 'PYTHON_ENV_INFO_CACHEv2';
+
 /**
  * Set up the Python environments component (during extension activation).'
  */
@@ -68,7 +70,7 @@ export async function activate(api: IDiscoveryAPI, ext: ExtensionState): Promise
      */
     const folders = vscode.workspace.workspaceFolders;
     // Trigger discovery if environment cache is empty.
-    const wasTriggered = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHE', []).get().length > 0;
+    const wasTriggered = getGlobalStorage<PythonEnvInfo[]>(ext.context, PYTHON_ENV_INFO_CACHE_KEY, []).get().length > 0;
     if (!wasTriggered) {
         api.triggerRefresh().ignoreErrors();
         folders?.forEach(async (folder) => {
@@ -225,7 +227,7 @@ function putIntoStorage(storage: IPersistentStorage<PythonEnvInfo[]>, envs: Pyth
 }
 
 async function createCollectionCache(ext: ExtensionState): Promise<IEnvsCollectionCache> {
-    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, 'PYTHON_ENV_INFO_CACHEv2', []);
+    const storage = getGlobalStorage<PythonEnvInfo[]>(ext.context, PYTHON_ENV_INFO_CACHE_KEY, []);
     const cache = await createCache({
         get: () => getFromStorage(storage),
         store: async (e) => putIntoStorage(storage, e),
