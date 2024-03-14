@@ -19,8 +19,8 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
     }
 
     // eslint-disable-next-line class-methods-use-this
-    public async *doIterEnvs(_: unknown, useWorkerThreads = false): IPythonEnvsIterator<BasicEnvInfo> {
-        const conda = await Conda.getConda(undefined, useWorkerThreads);
+    public async *doIterEnvs(_: unknown): IPythonEnvsIterator<BasicEnvInfo> {
+        const conda = await Conda.getConda();
         if (conda === undefined) {
             traceVerbose(`Couldn't locate the conda binary.`);
             return;
