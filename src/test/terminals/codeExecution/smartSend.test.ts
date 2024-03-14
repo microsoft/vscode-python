@@ -16,7 +16,6 @@ import { IConfigurationService, IExperimentService, IPythonSettings } from '../.
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { EnableREPLSmartSend } from '../../../client/common/experiments/groups';
 import { Commands, EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { PYTHON_PATH } from '../../common';
@@ -117,10 +116,6 @@ suite('REPL - Smart Send', () => {
     });
 
     test('Cursor is not moved when explicit selection is present', async () => {
-        experimentService
-            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-            .returns(() => true);
-
         const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
         const firstIndexPosition = new Position(0, 0);
         const selection = TypeMoq.Mock.ofType<Selection>();
@@ -164,15 +159,10 @@ suite('REPL - Smart Send', () => {
     });
 
     test('Smart send should perform smart selection and move cursor', async () => {
-        experimentService
-            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-            .returns(() => true);
-
         configurationService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns({
                 REPL: {
-                    EnableREPLSmartSend: true,
                     REPLSmartSend: true,
                 },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -228,9 +218,6 @@ suite('REPL - Smart Send', () => {
 
     // Do not perform smart selection when there is explicit selection
     test('Smart send should not perform smart selection when there is explicit selection', async () => {
-        experimentService
-            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-            .returns(() => true);
         const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
         const firstIndexPosition = new Position(0, 0);
         const selection = TypeMoq.Mock.ofType<Selection>();
@@ -257,15 +244,10 @@ suite('REPL - Smart Send', () => {
     });
 
     test('Smart Send should provide warning when code is not valid', async () => {
-        experimentService
-            .setup((exp) => exp.inExperimentSync(TypeMoq.It.isValue(EnableREPLSmartSend.experiment)))
-            .returns(() => true);
-
         configurationService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns({
                 REPL: {
-                    EnableREPLSmartSend: true,
                     REPLSmartSend: true,
                 },
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
