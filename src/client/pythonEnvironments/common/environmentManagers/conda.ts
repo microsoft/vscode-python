@@ -280,9 +280,9 @@ export class Conda {
         });
     }
 
-    public static async getConda(shellPath?: string, useWorkerThreads?: boolean): Promise<Conda | undefined> {
+    public static async getConda(shellPath?: string): Promise<Conda | undefined> {
         if (Conda.condaPromise.get(shellPath) === undefined || isTestExecution()) {
-            Conda.condaPromise.set(shellPath, Conda.locate(shellPath, useWorkerThreads));
+            Conda.condaPromise.set(shellPath, Conda.locate(shellPath));
         }
         return Conda.condaPromise.get(shellPath);
     }
@@ -293,11 +293,7 @@ export class Conda {
      *
      * @return A Conda instance corresponding to the binary, if successful; otherwise, undefined.
      */
-    private static async locate(shellPath?: string, useWorkerThread?: boolean): Promise<Conda | undefined> {
-        let useWorkerThreads: boolean;
-        if (useWorkerThread === undefined) {
-            useWorkerThreads = false;
-        }
+    private static async locate(shellPath?: string): Promise<Conda | undefined> {
         traceVerbose(`Searching for conda.`);
         const home = getUserHomeDir();
         let customCondaPath: string | undefined = 'conda';
