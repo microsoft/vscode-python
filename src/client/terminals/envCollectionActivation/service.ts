@@ -347,7 +347,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const shouldSetPS1 = shouldPS1BeSet(interpreter?.type, env);
             if (shouldSetPS1) {
-                const prompt = getPromptForEnv(interpreter);
+                const prompt = getPromptForEnv(interpreter, env);
                 if (prompt) {
                     return prompt;
                 }
@@ -456,7 +456,7 @@ function shouldSkip(env: string) {
     ].includes(env);
 }
 
-function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
+function getPromptForEnv(interpreter: PythonEnvironment | undefined, env: EnvironmentVariables) {
     if (!interpreter) {
         return undefined;
     }
@@ -464,6 +464,9 @@ function getPromptForEnv(interpreter: PythonEnvironment | undefined) {
         if (interpreter.envName === 'base') {
             // If conda base environment is selected, it can lead to "(base)" appearing twice if we return the env name.
             return undefined;
+        }
+        if (interpreter.type === PythonEnvType.Virtual && env.VIRTUAL_ENV_PROMPT) {
+            return `(${env.VIRTUAL_ENV_PROMPT}) `;
         }
         return `(${interpreter.envName}) `;
     }
