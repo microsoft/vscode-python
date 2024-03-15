@@ -338,6 +338,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async getPS1(shell: string, resource: Resource, env: EnvironmentVariables) {
+        // PS1 returned by shell is not predictable: #22078
+        // Hence calculate it ourselves where possible. Should no longer be needed once #22128 is available.
         const customShellType = identifyShellFromShellPath(shell);
         if (this.noPromptVariableShells.includes(customShellType)) {
             return env.PS1;
