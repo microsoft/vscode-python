@@ -38,6 +38,7 @@ const convertedKinds = new Map(
         [PythonEnvKind.VirtualEnv]: EnvironmentType.VirtualEnv,
         [PythonEnvKind.Pipenv]: EnvironmentType.Pipenv,
         [PythonEnvKind.Poetry]: EnvironmentType.Poetry,
+        [PythonEnvKind.Hatch]: EnvironmentType.Hatch,
         [PythonEnvKind.Venv]: EnvironmentType.Venv,
         [PythonEnvKind.VirtualEnvWrapper]: EnvironmentType.VirtualEnvWrapper,
         [PythonEnvKind.ActiveState]: EnvironmentType.ActiveState,

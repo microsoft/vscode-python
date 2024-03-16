@@ -338,6 +338,8 @@ function convertKind(kind: PythonEnvKind): EnvironmentTools | undefined {
             return 'Pipenv';
         case PythonEnvKind.Poetry:
             return 'Poetry';
+        case PythonEnvKind.Hatch:
+            return 'Hatch';
         case PythonEnvKind.VirtualEnvWrapper:
             return 'VirtualEnvWrapper';
         case PythonEnvKind.VirtualEnv:

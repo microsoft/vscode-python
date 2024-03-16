@@ -268,6 +268,7 @@ export type KnownEnvironmentTools =
     | 'Venv'
     | 'VirtualEnvWrapper'
     | 'Pyenv'
+    | 'Hatch'
     | 'Unknown';
 
 /**

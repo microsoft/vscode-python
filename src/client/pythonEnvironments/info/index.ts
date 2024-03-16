@@ -19,6 +19,7 @@ export enum EnvironmentType {
     Venv = 'Venv',
     MicrosoftStore = 'MicrosoftStore',
     Poetry = 'Poetry',
+    Hatch = 'Hatch',
     VirtualEnvWrapper = 'VirtualEnvWrapper',
     ActiveState = 'ActiveState',
     Global = 'Global',
@@ -28,6 +29,7 @@ export enum EnvironmentType {
 export const virtualEnvTypes = [
     EnvironmentType.Poetry,
     EnvironmentType.Pipenv,
+    EnvironmentType.Hatch,
     EnvironmentType.Venv,
     EnvironmentType.VirtualEnvWrapper,
     EnvironmentType.Conda,
@@ -114,6 +116,9 @@ export function getEnvironmentTypeName(environmentType: EnvironmentType): string
         }
         case EnvironmentType.Poetry: {
             return 'Poetry';
+        }
+        case EnvironmentType.Hatch: {
+            return 'Hatch';
         }
         case EnvironmentType.VirtualEnvWrapper: {
             return 'virtualenvwrapper';
