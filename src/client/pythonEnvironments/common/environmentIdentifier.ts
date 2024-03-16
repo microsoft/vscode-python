@@ -40,7 +40,7 @@ function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>
     return identifier;
 }
 
-export function hasIdentifierRegistered(kind: PythonEnvKind): boolean {
+export function isIdentifierRegistered(kind: PythonEnvKind): boolean {
     const identifiers = getIdentifiers();
     const identifier = identifiers.get(kind);
     if (identifier === notImplemented) {

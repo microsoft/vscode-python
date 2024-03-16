@@ -3,7 +3,7 @@
 
 import { cloneDeep } from 'lodash';
 import { Event, EventEmitter } from 'vscode';
-import { hasIdentifierRegistered, identifyEnvironment } from '../../../common/environmentIdentifier';
+import { isIdentifierRegistered, identifyEnvironment } from '../../../common/environmentIdentifier';
 import { IEnvironmentInfoService } from '../../info/environmentInfoService';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getEnvPath, setEnvDisplayString } from '../../info/env';
@@ -156,7 +156,7 @@ async function setKind(env: BasicEnvInfo, environmentKinds: Map<string, PythonEn
     const { path } = getEnvPath(env.executablePath, env.envPath);
     let kind = environmentKinds.get(path);
     if (!kind) {
-        if (!hasIdentifierRegistered(env.kind)) {
+        if (!isIdentifierRegistered(env.kind)) {
             // If identifier is not registered, skip setting env kind.
             return;
         }
