@@ -262,10 +262,10 @@ export function getEnvLocationHeuristic(environment: PythonEnvironment, workspac
 function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment): number {
     if (!a.type && !b.type) {
         // Unless one of them is pyenv interpreter, return 0 if two global interpreters are being compared.
-        if (a.envType === EnvironmentType.Pyenv) {
+        if (a.envType === EnvironmentType.Pyenv && b.envType !== EnvironmentType.Pyenv) {
             return -1;
         }
-        if (b.envType === EnvironmentType.Pyenv) {
+        if (a.envType !== EnvironmentType.Pyenv && b.envType === EnvironmentType.Pyenv) {
             return 1;
         }
         return 0;
