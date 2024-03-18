@@ -79,3 +79,8 @@ extends:
 
       - script: gulp prePublishBundle
         displayName: Build
+    tsa:
+        config:
+            areaPath: 'Visual Studio Code Python Extensions'
+            serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
+        enabled: true
