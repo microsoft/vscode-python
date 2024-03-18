@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
-import { arePathsSame, isParentPath, pathExists } from '../externalDependencies';
+import { arePathsSame, isParentPath, pathExists, shellExecute } from '../externalDependencies';
+import { traceVerbose } from '../../../logging';
 
 export function getPyenvDir(): string {
     // Check if the pyenv environment variables exist: PYENV on Windows, PYENV_ROOT on Unix.
@@ -18,6 +19,29 @@ export function getPyenvDir(): string {
     }
 
     return pyenvDir;
+}
+
+async function getPyenvBinary(): Promise<string | undefined> {
+    const pyenvDir = getPyenvDir();
+    const pyenvBin = path.join(pyenvDir, 'bin', 'pyenv');
+    if (await pathExists(pyenvBin)) {
+        return pyenvBin;
+    }
+    return undefined;
+}
+
+export async function getActivePyenvForDirectory(cwd: string): Promise<string | undefined> {
+    const pyenvBin = await getPyenvBinary();
+    if (!pyenvBin) {
+        return undefined;
+    }
+    try {
+        const pyenvInterpreterPath = await shellExecute(`${pyenvBin} which python`, { cwd });
+        return pyenvInterpreterPath.stdout.trim();
+    } catch (ex) {
+        traceVerbose(ex);
+        return undefined;
+    }
 }
 
 export function getPyenvVersionsDir(): string {
