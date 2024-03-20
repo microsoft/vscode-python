@@ -25,11 +25,14 @@ export enum EnvironmentType {
     Global = 'Global',
     System = 'System',
 }
+/**
+ * These envs are only created for a specific workspace, which we're able to detect.
+ */
+export const workspaceVirtualEnvTypes = [EnvironmentType.Poetry, EnvironmentType.Pipenv];
 
 export const virtualEnvTypes = [
-    EnvironmentType.Poetry,
-    EnvironmentType.Pipenv,
-    EnvironmentType.Hatch,
+    ...workspaceVirtualEnvTypes,
+    EnvironmentType.Hatch, // This is also a workspace virtual env, but we're not treating it as such as of today.
     EnvironmentType.Venv,
     EnvironmentType.VirtualEnvWrapper,
     EnvironmentType.Conda,
