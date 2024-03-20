@@ -141,9 +141,8 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(filename);
                             const searchLocation = await getSearchLocation({ kind, executablePath: filename });
-                            yield { kind, executablePath: filename, searchLocation };
                             try {
-                                yield { kind, executablePath: filename };
+                                yield { kind, executablePath: filename, searchLocation };
                                 traceVerbose(`Global Virtual Environment: [added] ${filename}`);
                             } catch (ex) {
                                 traceError(`Failed to process environment: ${filename}`, ex);
