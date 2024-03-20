@@ -4,7 +4,6 @@
 import * as path from 'path';
 import { getEnvironmentVariable } from '../../../common/utils/platform';
 import { traceError, traceVerbose } from '../../../logging';
-import { getEnvironmentDirFromPath } from '../commonUtils';
 import { arePathsSame, normCasePath, pathExists, readFile } from '../externalDependencies';
 
 function getSearchHeight() {
