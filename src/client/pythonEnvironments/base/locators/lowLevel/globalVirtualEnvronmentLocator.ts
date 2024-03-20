@@ -9,11 +9,7 @@ import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../..
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
-import {
-    findInterpretersInDir,
-    getEnvironmentDirFromPath,
-    looksLikeBasicVirtualPython,
-} from '../../../common/commonUtils';
+import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
 import { pathExists, untildify } from '../../../common/externalDependencies';
 import { getProjectDir, isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
