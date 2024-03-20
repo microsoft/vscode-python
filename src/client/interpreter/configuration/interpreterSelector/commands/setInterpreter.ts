@@ -387,6 +387,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             );
         }
         if (event.new) {
+            // TODO: We should be able to add the new item in the correct group.
             const newSuggestion = this.interpreterSelector.suggestionToQuickPickItem(
                 event.new,
                 resource,
