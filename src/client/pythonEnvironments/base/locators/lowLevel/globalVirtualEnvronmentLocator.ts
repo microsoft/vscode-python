@@ -66,7 +66,7 @@ async function getSearchLocation(env: BasicEnvInfo): Promise<Uri | undefined> {
     if (env.kind === PythonEnvKind.Pipenv) {
         // Pipenv environments are created only for a specific project, so they must only
         // appear if that particular project is being queried.
-        const project = await getProjectDir(getEnvironmentDirFromPath(env.executablePath));
+        const project = await getProjectDir(path.dirname(path.dirname(env.executablePath)));
         if (project) {
             return Uri.file(project);
         }

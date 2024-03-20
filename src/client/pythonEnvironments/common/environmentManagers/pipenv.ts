@@ -99,7 +99,7 @@ export async function getProjectDir(envFolder: string): Promise<string | undefin
  * @param interpreterPath Absolute path to any python interpreter.
  */
 async function getPipfileIfGlobal(interpreterPath: string): Promise<string | undefined> {
-    const envFolder = getEnvironmentDirFromPath(interpreterPath);
+    const envFolder = path.dirname(path.dirname(interpreterPath));
     const projectDir = await getProjectDir(envFolder);
     if (projectDir === undefined) {
         return undefined;
