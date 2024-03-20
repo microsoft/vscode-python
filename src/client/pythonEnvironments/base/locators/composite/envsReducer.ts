@@ -2,8 +2,9 @@
 // Licensed under the MIT License.
 
 import { cloneDeep, isEqual, uniq } from 'lodash';
-import { Event, EventEmitter } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { traceVerbose } from '../../../../logging';
+import { isParentPath } from '../../../common/externalDependencies';
 import { PythonEnvKind } from '../../info';
 import { areSameEnv } from '../../info/env';
 import { getPrioritizedEnvKinds } from '../../info/envKind';
@@ -136,7 +137,22 @@ function resolveEnvCollision(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): BasicE
     const [env] = sortEnvInfoByPriority(oldEnv, newEnv);
     const merged = cloneDeep(env);
     merged.source = uniq((oldEnv.source ?? []).concat(newEnv.source ?? []));
+    merged.searchLocation = getMergedSearchLocation(oldEnv, newEnv);
     return merged;
+}
+
+function getMergedSearchLocation(oldEnv: BasicEnvInfo, newEnv: BasicEnvInfo): Uri | undefined {
+    if (oldEnv.searchLocation && newEnv.searchLocation) {
+        // Choose the deeper project path of the two, as that can be used to signify
+        // that the environment is related to both the projects.
+        if (isParentPath(oldEnv.searchLocation.fsPath, newEnv.searchLocation.fsPath)) {
+            return oldEnv.searchLocation;
+        }
+        if (isParentPath(newEnv.searchLocation.fsPath, oldEnv.searchLocation.fsPath)) {
+            return newEnv.searchLocation;
+        }
+    }
+    return oldEnv.searchLocation ?? newEnv.searchLocation;
 }
 
 /**

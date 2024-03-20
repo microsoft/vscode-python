@@ -3,14 +3,19 @@
 
 import { toLower, uniq, uniqBy } from 'lodash';
 import * as path from 'path';
+import { Uri } from 'vscode';
 import { chain, iterable } from '../../../../common/utils/async';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../../common/utils/platform';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
-import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
+import {
+    findInterpretersInDir,
+    getEnvironmentDirFromPath,
+    looksLikeBasicVirtualPython,
+} from '../../../common/commonUtils';
 import { pathExists, untildify } from '../../../common/externalDependencies';
-import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
+import { getProjectDir, isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
     isVenvEnvironment,
     isVirtualenvEnvironment,
@@ -55,6 +60,18 @@ async function getGlobalVirtualEnvDirs(): Promise<string[]> {
     }
 
     return [OSType.Windows, OSType.OSX].includes(getOSType()) ? uniqBy(venvDirs, toLower) : uniq(venvDirs);
+}
+
+async function getSearchLocation(env: BasicEnvInfo): Promise<Uri | undefined> {
+    if (env.kind === PythonEnvKind.Pipenv) {
+        // Pipenv environments are created only for a specific project, so they must only
+        // appear if that particular project is being queried.
+        const project = await getProjectDir(getEnvironmentDirFromPath(env.executablePath));
+        if (project) {
+            return Uri.file(project);
+        }
+    }
+    return undefined;
 }
 
 /**
@@ -123,6 +140,8 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
                             // check multiple times. Those checks are file system heavy and
                             // we can use the kind to determine this anyway.
                             const kind = await getVirtualEnvKind(filename);
+                            const searchLocation = await getSearchLocation({ kind, executablePath: filename });
+                            yield { kind, executablePath: filename, searchLocation };
                             try {
                                 yield { kind, executablePath: filename };
                                 traceVerbose(`Global Virtual Environment: [added] ${filename}`);

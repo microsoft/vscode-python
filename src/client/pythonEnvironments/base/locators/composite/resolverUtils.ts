@@ -53,11 +53,11 @@ function getResolvers(): Map<PythonEnvKind, (env: BasicEnvInfo) => Promise<Pytho
  * returned could still be invalid.
  */
 export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
-    const { kind, source } = env;
+    const { kind, source, searchLocation } = env;
     const resolvers = getResolvers();
     const resolverForKind = resolvers.get(kind)!;
     const resolvedEnv = await resolverForKind(env);
-    resolvedEnv.searchLocation = getSearchLocation(resolvedEnv);
+    resolvedEnv.searchLocation = getSearchLocation(resolvedEnv, searchLocation);
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
     if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
         // We can update env further using information we can get from the Windows registry.
@@ -87,7 +87,11 @@ async function getEnvType(env: PythonEnvInfo) {
     return undefined;
 }
 
-function getSearchLocation(env: PythonEnvInfo): Uri | undefined {
+function getSearchLocation(env: PythonEnvInfo, searchLocation: Uri | undefined): Uri | undefined {
+    if (searchLocation) {
+        // A search location has already been established by the downstream locators, simply use that.
+        return searchLocation;
+    }
     const folders = getWorkspaceFolderPaths();
     const isRootedEnv = folders.some((f) => isParentPath(env.executable.filename, f) || isParentPath(env.location, f));
     if (isRootedEnv) {
