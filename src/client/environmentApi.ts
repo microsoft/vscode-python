@@ -135,7 +135,7 @@ export function buildEnvironmentApi(
             .determineExtensionFromCallStack()
             .then((info) => {
                 const p = Math.random();
-                if (p <= 0.01) {
+                if (p <= 0.001) {
                     // Only send API telemetry 1% of the time, as it can be chatty.
                     sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
                         apiName,
