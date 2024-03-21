@@ -15,6 +15,7 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
         [PythonEnvKind.MicrosoftStore, 'Microsoft Store'],
         [PythonEnvKind.Pyenv, 'pyenv'],
         [PythonEnvKind.Poetry, 'Poetry'],
+        [PythonEnvKind.Hatch, 'Hatch'],
         [PythonEnvKind.Custom, 'custom'],
         // For now we treat OtherGlobal like Unknown.
         [PythonEnvKind.Venv, 'venv'],
@@ -39,12 +40,13 @@ export function getKindDisplayName(kind: PythonEnvKind): string {
  * Remarks: This is the order of detection based on how the various distributions and tools
  * configure the environment, and the fall back for identification.
  * Top level we have the following environment types, since they leave a unique signature
- * in the environment or * use a unique path for the environments they create.
+ * in the environment or use a unique path for the environments they create.
  *  1. Conda
  *  2. Microsoft Store
  *  3. PipEnv
  *  4. Pyenv
  *  5. Poetry
+ *  6. Hatch
  *
  * Next level we have the following virtual environment tools. The are here because they
  * are consumed by the tools above, and can also be used independently.
@@ -61,6 +63,7 @@ export function getPrioritizedEnvKinds(): PythonEnvKind[] {
         PythonEnvKind.MicrosoftStore,
         PythonEnvKind.Pipenv,
         PythonEnvKind.Poetry,
+        PythonEnvKind.Hatch,
         PythonEnvKind.Venv,
         PythonEnvKind.VirtualEnvWrapper,
         PythonEnvKind.VirtualEnv,

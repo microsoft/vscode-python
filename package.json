@@ -1,8 +1,8 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "IntelliSense (Pylance), Linting, Debugging (Python Debugger), code formatting, refactoring, unit tests, and more.",
-    "version": "2024.1.0-dev",
+    "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
+    "version": "2024.3.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -23,7 +23,8 @@
         "testObserver",
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
-        "terminalExecuteCommandEvent"
+        "terminalExecuteCommandEvent",
+        "contribIssueReporter"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -44,7 +45,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.82.0"
+        "vscode": "^1.86.0"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -56,8 +57,6 @@
     "categories": [
         "Programming Languages",
         "Debuggers",
-        "Linters",
-        "Formatters",
         "Other",
         "Data Science",
         "Machine Learning"
@@ -1236,6 +1235,11 @@
             }
         ],
         "menus": {
+            "issue/reporter": [
+				{
+					"command": "python.reportIssue"
+				}
+			],
             "commandPalette": [
                 {
                     "category": "Python",
@@ -1557,9 +1561,9 @@
         "unicode": "^14.0.0",
         "untildify": "^4.0.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-jsonrpc": "^8.2.0",
-        "vscode-languageclient": "^9.0.1",
-        "vscode-languageserver-protocol": "^3.17.5",
+        "vscode-jsonrpc": "^9.0.0-next.2",
+        "vscode-languageclient": "^10.0.0-next.2",
+        "vscode-languageserver-protocol": "^3.17.6-next.3",
         "vscode-tas-client": "^0.1.84",
         "which": "^2.0.2",
         "winreg": "^1.2.4",

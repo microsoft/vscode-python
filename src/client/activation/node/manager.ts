@@ -116,11 +116,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     @traceDecoratorVerbose('Starting language server')
     protected async startLanguageServer(): Promise<void> {
         const options = await this.analysisOptions.getAnalysisOptions();
-        this.middleware = new NodeLanguageClientMiddleware(
-            this.serviceContainer,
-            () => this.languageServerProxy.languageClient,
-            this.lsVersion,
-        );
+        this.middleware = new NodeLanguageClientMiddleware(this.serviceContainer, this.lsVersion);
         options.middleware = this.middleware;
 
         // Make sure the middleware is connected if we restart and we we're already connected.

@@ -87,7 +87,7 @@ export class DebugLauncher implements ITestDebugLauncher {
             debugConfig.rules = [];
         }
         debugConfig.rules.push({
-            path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
+            path: path.join(EXTENSION_ROOT_DIR, 'python_files'),
             include: false,
         });
 
@@ -219,7 +219,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                 );
             }
         }
-        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
         // check if PYTHONPATH is already set in the environment variables
         if (launchArgs.env) {
             const additionalPythonPath = [pluginPath];

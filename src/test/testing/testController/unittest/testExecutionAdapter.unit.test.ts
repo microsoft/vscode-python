@@ -50,7 +50,7 @@ suite('Unittest test execution adapter', () => {
         } as unknown) as ITestServer;
 
         const uri = Uri.file('/foo/bar');
-        const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'execution.py');
 
         const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         const testIds = ['test1id', 'test2id'];
@@ -94,7 +94,7 @@ suite('Unittest test execution adapter', () => {
 
         const newCwd = '/foo';
         const uri = Uri.file('/foo/bar');
-        const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'execution.py');
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'execution.py');
 
         const adapter = new UnittestTestExecutionAdapter(stubTestServer, stubConfigSettings, outputChannel.object);
         const testIds = ['test1id', 'test2id'];

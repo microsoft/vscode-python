@@ -1,6 +1,6 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported versions](https://devguide.python.org/#status-of-python-branches) of the language: >=3.7), including features such as IntelliSense (Pylance), linting, debugging (Python Debugger), code navigation, code formatting, refactoring, variable explorer, test explorer, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported Python versions](https://devguide.python.org/versions/#supported-versions)), providing access points for extensions to seamlessly integrate and offer support for IntelliSense (Pylance), debugging (Python Debugger), formatting, linting, code navigation, refactoring, variable explorer, test explorer, and more!
 
 ## Support for [vscode.dev](https://vscode.dev/)
 
@@ -15,6 +15,15 @@ The Python extension will automatically install the following extensions by defa
 - [Python Debugger](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy) - to provide a seamless debug experience with debugpy
 
 These extensions are optional dependencies, meaning the Python extension will remain fully functional if they fail to be installed. Any or all of these extensions can be [disabled](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) or [uninstalled](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) at the expense of some features. Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf).
+
+## Extensibility 
+
+The Python extension provides pluggable access points for extensions that extend various feature areas to further improve your Python development experience. These extensions are all optional and depend on your project configuration and preferences. 
+
+- [Python formatters](https://code.visualstudio.com/docs/python/formatting#_choose-a-formatter)
+- [Python linters](https://code.visualstudio.com/docs/python/linting#_choose-a-linter)
+
+If you encounter issues with any of the listed extensions, please file an issue in its corresponding repo. 
 
 ## Quick start
 
@@ -63,7 +72,6 @@ Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/L
 | `Python: Select Interpreter`          | Switch between Python interpreters, versions, and environments.                                                                                                |
 | `Python: Start REPL`                  | Start an interactive Python REPL using the selected interpreter in the VS Code terminal.                                                                       |
 | `Python: Run Python File in Terminal` | Runs the active Python file in the VS Code terminal. You can also run a Python file by right-clicking on the file and selecting `Run Python File in Terminal`. |
-| `Format Document`                     | Formats code using the provided [formatter](https://code.visualstudio.com/docs/python/formatting) in the `settings.json` file.                                 |
 | `Python: Configure Tests`             | Select a test framework and configure it to display the Test Explorer.                                                                                         |
 
 To see all available Python commands, open the Command Palette and type `Python`. For Jupyter extension commands, just type `Jupyter`.
@@ -89,13 +97,13 @@ The extension is available in multiple languages: `de`, `en`, `es`, `fa`, `fr`, 
 
 ## Questions, issues, feature requests, and contributions
 
--   If you have a question about how to accomplish something with the extension, please [ask on Stack Overflow](https://stackoverflow.com/questions/tagged/visual-studio-code+python)
--   If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python)
--   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md) for more details
+-   If you have a question about how to accomplish something with the extension, please [ask on our Discussions page](https://github.com/microsoft/vscode-python/discussions/categories/q-a).
+-   If you come across a problem with the extension, please [file an issue](https://github.com/microsoft/vscode-python).
+-   Contributions are always welcome! Please see our [contributing guide](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md) for more details.
 -   Any and all feedback is appreciated and welcome!
-    -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue
-    -   Otherwise please start a [new discussion](https://github.com/microsoft/vscode-python/discussions/categories/ideas)
--   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md#development-process)
+    -   If someone has already [filed an issue](https://github.com/Microsoft/vscode-python) that encompasses your feedback, please leave a 👍/👎 reaction on the issue.
+    -   Otherwise please start a [new discussion](https://github.com/microsoft/vscode-python/discussions/categories/ideas).
+-   If you're interested in the development of the extension, you can read about our [development process](https://github.com/Microsoft/vscode-python/blob/main/CONTRIBUTING.md#development-process).
 
 ## Data and telemetry
 

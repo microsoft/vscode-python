@@ -5,7 +5,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { convertFileType, DirEntry, FileType, getFileFilter, getFileType } from '../../common/utils/filesystem';
 import { getOSType, OSType } from '../../common/utils/platform';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { PythonVersion, UNKNOWN_PYTHON_VERSION } from '../base/info';
 import { comparePythonVersionSpecificity } from '../base/info/env';
 import { parseVersion } from '../base/info/pythonVersion';
@@ -246,8 +246,11 @@ export async function getPythonVersionFromPath(interpreterPath: string, hint?: s
         versionA = UNKNOWN_PYTHON_VERSION;
     }
     const versionB = interpreterPath ? await getPythonVersionFromNearByFiles(interpreterPath) : UNKNOWN_PYTHON_VERSION;
+    traceVerbose('Best effort version B for', interpreterPath, JSON.stringify(versionB));
     const versionC = interpreterPath ? await getPythonVersionFromPyvenvCfg(interpreterPath) : UNKNOWN_PYTHON_VERSION;
+    traceVerbose('Best effort version C for', interpreterPath, JSON.stringify(versionC));
     const versionD = interpreterPath ? await getPythonVersionFromConda(interpreterPath) : UNKNOWN_PYTHON_VERSION;
+    traceVerbose('Best effort version D for', interpreterPath, JSON.stringify(versionD));
 
     let version = UNKNOWN_PYTHON_VERSION;
     for (const v of [versionA, versionB, versionC, versionD]) {

@@ -64,6 +64,17 @@ suite('Interpreter Path Command', () => {
         expect(setting).to.equal('settingValue');
     });
 
+    test('If interpreter path contains spaces, double quote it before returning', async () => {
+        const args = ['command', 'folderPath'];
+        when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
+            assert.deepEqual(arg, Uri.file('folderPath'));
+
+            return Promise.resolve({ path: 'setting Value' }) as unknown;
+        });
+        const setting = await interpreterPathCommand._getSelectedInterpreterPath(args);
+        expect(setting).to.equal('"setting Value"');
+    });
+
     test('If neither of these exists, value of workspace folder is `undefined`', async () => {
         const args = ['command'];
 

@@ -13,6 +13,7 @@ const KIND_NAMES: [PythonEnvKind, string][] = [
     [PythonEnvKind.MicrosoftStore, 'winStore'],
     [PythonEnvKind.Pyenv, 'pyenv'],
     [PythonEnvKind.Poetry, 'poetry'],
+    [PythonEnvKind.Hatch, 'hatch'],
     [PythonEnvKind.Custom, 'customGlobal'],
     [PythonEnvKind.OtherGlobal, 'otherGlobal'],
     [PythonEnvKind.Venv, 'venv'],

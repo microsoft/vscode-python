@@ -74,6 +74,7 @@ export namespace EnvGroups {
     export const Pyenv = 'Pyenv';
     export const Venv = 'Venv';
     export const Poetry = 'Poetry';
+    export const Hatch = 'Hatch';
     export const VirtualEnvWrapper = 'VirtualEnvWrapper';
     export const ActiveState = 'ActiveState';
     export const Recommended = Common.recommended;

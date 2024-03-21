@@ -61,24 +61,24 @@ jobs:
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          options: '-t ./pythonFiles/lib/python --no-cache-dir --implementation py'
+          options: '-t ./python_files/lib/python --no-cache-dir --implementation py'
 
       - name: Install Jedi requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
-          options: '-t ./pythonFiles/lib/jedilsp --no-cache-dir --implementation py'
+          requirements-file: './python_files/jedilsp_requirements/requirements.txt'
+          options: '-t ./python_files/lib/jedilsp --no-cache-dir --implementation py'
 
       - name: Install other Python requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip --disable-pip-version-check install -t ./python_files/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
         uses: jakebailey/pyright-action@v2
         with:
           version: 1.1.308
-          working-directory: 'pythonFiles'
+          working-directory: 'python_files'
 
   python-tests:
     name: Python Tests
@@ -124,13 +124,13 @@ jobs:
         uses: brettcannon/pip-secure-install@v1
         with:
           requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
-          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/python" --no-cache-dir --implementation py'
+          options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/python" --no-cache-dir --implementation py'
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Python unit tests
-        run: python pythonFiles/tests/run_all.py
+        run: python python_files/tests/run_all.py
 
   tests:
     name: Tests
@@ -179,26 +179,26 @@ jobs:
       - name: Install debugpy
         run: |
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip --disable-pip-version-check install -t ./python_files/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 
       - name: Download get-pip.py
         run: |
           python -m pip install wheel
           python -m pip install -r build/build-install-requirements.txt
-          python ./pythonFiles/download_get_pip.py
+          python ./python_files/download_get_pip.py
         shell: bash
 
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
           requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
-          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/python" --no-cache-dir --implementation py'
+          options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/python" --no-cache-dir --implementation py'
 
       - name: Install Jedi requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          requirements-file: '"${{ env.special-working-directory-relative }}/pythonFiles/jedilsp_requirements/requirements.txt"'
-          options: '-t "${{ env.special-working-directory-relative }}/pythonFiles/lib/jedilsp" --no-cache-dir --implementation py'
+          requirements-file: '"${{ env.special-working-directory-relative }}/python_files/jedilsp_requirements/requirements.txt"'
+          options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/jedilsp" --no-cache-dir --implementation py'
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
@@ -207,7 +207,7 @@ jobs:
         run: |
           python -m pip install wheel
           python -m pip --disable-pip-version-check install -r build/build-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
+          python ./python_files/install_debugpy.py
         shell: bash
         if: matrix.test-suite == 'debugger'
 
@@ -393,25 +393,25 @@ jobs:
           cache: 'pip'
           cache-dependency-path: |
             requirements.txt
-            pythonFiles/jedilsp_requirements/requirements.txt
+            python_files/jedilsp_requirements/requirements.txt
             build/test-requirements.txt
             build/functional-test-requirements.txt
 
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          options: '-t ./pythonFiles/lib/python --implementation py'
+          options: '-t ./python_files/lib/python --implementation py'
 
       - name: Install Jedi requirements
         uses: brettcannon/pip-secure-install@v1
         with:
-          requirements-file: './pythonFiles/jedilsp_requirements/requirements.txt'
-          options: '-t ./pythonFiles/lib/jedilsp --implementation py'
+          requirements-file: './python_files/jedilsp_requirements/requirements.txt'
+          options: '-t ./python_files/lib/jedilsp --implementation py'
 
       - name: Install debugpy
         run: |
           # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip --disable-pip-version-check install -t ./python_files/lib/python --implementation py --no-deps --upgrade --pre debugpy
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
@@ -487,7 +487,7 @@ jobs:
 
       - name: Run Python unit tests
         run: |
-          python pythonFiles/tests/run_all.py
+          python python_files/tests/run_all.py
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
       # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`,

@@ -161,7 +161,11 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             const shellCmd = capture(processService.shellExec).first()[0];
 
-                            const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
+                            const printEnvPyFile = path.join(
+                                EXTENSION_ROOT_DIR,
+                                'python_files',
+                                'printEnvVariables.py',
+                            );
                             const expectedCommand = [
                                 ...cmd,
                                 `echo '${getEnvironmentPrefix}'`,

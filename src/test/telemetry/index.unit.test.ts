@@ -10,7 +10,6 @@ import * as fs from 'fs-extra';
 import {
     _resetSharedProperties,
     clearTelemetryReporter,
-    isTelemetryDisabled,
     sendTelemetryEvent,
     setSharedProperty,
 } from '../../client/telemetry';
@@ -58,29 +57,6 @@ suite('Telemetry', () => {
         rewiremock.disable();
         _resetSharedProperties();
         sinon.restore();
-    });
-
-    const testsForisTelemetryDisabled = [
-        {
-            testName: 'Returns true',
-            settings: { enableTelemetry: true },
-            expectedResult: false,
-        },
-        {
-            testName: 'Returns false ',
-            settings: { enableTelemetry: false },
-            expectedResult: true,
-        },
-    ];
-
-    suite('Function isTelemetryDisabled()', () => {
-        testsForisTelemetryDisabled.forEach((testParams) => {
-            test(testParams.testName, async () => {
-                readJSONSyncStub.returns(testParams.settings);
-                expect(isTelemetryDisabled()).to.equal(testParams.expectedResult);
-                sinon.assert.calledOnce(readJSONSyncStub);
-            });
-        });
     });
 
     test('Send Telemetry', () => {

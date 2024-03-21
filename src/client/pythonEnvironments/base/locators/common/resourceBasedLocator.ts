@@ -43,18 +43,9 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
         await this.disposables.dispose();
     }
 
-    public iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
-        const iterator = this.doIterEnvs(query);
-        const it = this._iterEnvs(iterator, query);
-        it.onUpdated = iterator.onUpdated;
-        return it;
-    }
-
-    private async *_iterEnvs(
-        iterator: IPythonEnvsIterator<BasicEnvInfo>,
-        query?: PythonLocatorQuery,
-    ): IPythonEnvsIterator<BasicEnvInfo> {
+    public async *iterEnvs(query?: PythonLocatorQuery): IPythonEnvsIterator<BasicEnvInfo> {
         await this.activate();
+        const iterator = this.doIterEnvs(query);
         if (query?.envPath) {
             let result = await iterator.next();
             while (!result.done) {

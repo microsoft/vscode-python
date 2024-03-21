@@ -17,8 +17,9 @@ import {
 import { isMicrosoftStoreEnvironment } from './environmentManagers/microsoftStoreEnv';
 import { isActiveStateEnvironment } from './environmentManagers/activestate';
 
+const notImplemented = () => Promise.resolve(false);
+
 function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>> {
-    const notImplemented = () => Promise.resolve(false);
     const defaultTrue = () => Promise.resolve(true);
     const identifier: Map<PythonEnvKind, (path: string) => Promise<boolean>> = new Map();
     Object.values(PythonEnvKind).forEach((k) => {
@@ -37,6 +38,15 @@ function getIdentifiers(): Map<PythonEnvKind, (path: string) => Promise<boolean>
     identifier.set(PythonEnvKind.Unknown, defaultTrue);
     identifier.set(PythonEnvKind.OtherGlobal, isGloballyInstalledEnv);
     return identifier;
+}
+
+export function isIdentifierRegistered(kind: PythonEnvKind): boolean {
+    const identifiers = getIdentifiers();
+    const identifier = identifiers.get(kind);
+    if (identifier === notImplemented) {
+        return false;
+    }
+    return true;
 }
 
 /**

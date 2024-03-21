@@ -359,14 +359,25 @@ export function splitTestNameWithRegex(testName: string): [string, string] {
  * @param args - Readonly array of strings to be converted to a map.
  * @returns A map representation of the input strings.
  */
-export const argsToMap = (args: ReadonlyArray<string>): { [key: string]: string | null | undefined } => {
-    const map: { [key: string]: string | null } = {};
+export const argsToMap = (args: ReadonlyArray<string>): { [key: string]: Array<string> | null | undefined } => {
+    const map: { [key: string]: Array<string> | null } = {};
     for (const arg of args) {
         const delimiter = arg.indexOf('=');
         if (delimiter === -1) {
+            // If no delimiter is found, the entire string becomes a key with a value of null.
             map[arg] = null;
         } else {
-            map[arg.slice(0, delimiter)] = arg.slice(delimiter + 1);
+            const key = arg.slice(0, delimiter);
+            const value = arg.slice(delimiter + 1);
+            if (map[key]) {
+                // add to the array
+                const arr = map[key] as string[];
+                arr.push(value);
+                map[key] = arr;
+            } else {
+                // create a new array
+                map[key] = [value];
+            }
         }
     }
 
@@ -383,7 +394,7 @@ export const argsToMap = (args: ReadonlyArray<string>): { [key: string]: string 
  * @param map - The map to be converted to an array of strings.
  * @returns An array of strings representation of the input map.
  */
-export const mapToArgs = (map: { [key: string]: string | null | undefined }): string[] => {
+export const mapToArgs = (map: { [key: string]: Array<string> | null | undefined }): string[] => {
     const out: string[] = [];
     for (const key of Object.keys(map)) {
         const value = map[key];
@@ -391,8 +402,14 @@ export const mapToArgs = (map: { [key: string]: string | null | undefined }): st
             // eslint-disable-next-line no-continue
             continue;
         }
-
-        out.push(value === null ? key : `${key}=${value}`);
+        if (value === null) {
+            out.push(key);
+        } else {
+            const values = Array.isArray(value) ? (value as string[]) : [value];
+            for (const v of values) {
+                out.push(`${key}=${v}`);
+            }
+        }
     }
 
     return out;
@@ -407,13 +424,18 @@ export const mapToArgs = (map: { [key: string]: string | null | undefined }): st
  * @returns The updated map.
  */
 export function addArgIfNotExist(
-    map: { [key: string]: string | null | undefined },
+    map: { [key: string]: Array<string> | null | undefined },
     argKey: string,
     argValue: string | null,
-): { [key: string]: string | null | undefined } {
+): { [key: string]: Array<string> | null | undefined } {
     // Only add the argument if it doesn't exist in the map.
     if (map[argKey] === undefined) {
-        map[argKey] = argValue;
+        // if null then set to null, otherwise set to an array with the value
+        if (argValue === null) {
+            map[argKey] = null;
+        } else {
+            map[argKey] = [argValue];
+        }
     }
 
     return map;
@@ -426,6 +448,6 @@ export function addArgIfNotExist(
  * @param argKey - The argument key to be checked.
  * @returns True if the argument key exists in the map, false otherwise.
  */
-export function argKeyExists(map: { [key: string]: string | null | undefined }, argKey: string): boolean {
+export function argKeyExists(map: { [key: string]: Array<string> | null | undefined }, argKey: string): boolean {
     return map[argKey] !== undefined;
 }

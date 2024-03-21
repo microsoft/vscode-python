@@ -169,7 +169,7 @@ suite('pytest test execution adapter', () => {
         await deferred4.promise;
         mockProc.trigger('close');
 
-        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'python_files');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
         const rootDirArg = `--rootdir=${myTestPath}`;
         const expectedArgs = [pathToPythonScript, rootDirArg];
@@ -237,7 +237,7 @@ suite('pytest test execution adapter', () => {
         await deferred4.promise;
         mockProc.trigger('close');
 
-        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'python_files');
         const pathToPythonScript = path.join(pathToPythonFiles, 'vscode_pytest', 'run_pytest_script.py');
         const expectedArgs = [pathToPythonScript, `--rootdir=${newCwd}`];
         const expectedExtraVariables = {

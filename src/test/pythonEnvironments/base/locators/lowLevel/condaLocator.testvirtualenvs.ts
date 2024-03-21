@@ -14,8 +14,6 @@ import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments
 import { EXTENSION_ROOT_DIR_FOR_TESTS, TEST_TIMEOUT } from '../../../../constants';
 import { traceWarn } from '../../../../../client/logging';
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
-import { getEnvs } from '../../common';
-import { assertBasicEnvsEqual } from '../envTestUtils';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../../ciConstants';
 import { isCI } from '../../../../../client/common/constants';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
@@ -131,14 +129,4 @@ suite('Conda Env Locator', async () => {
 
         assert.deepEqual(actualEvent!, expectedEvent, 'Unexpected event emitted');
     });
-
-    test('Worker thread to fetch conda environments is working', async () => {
-        locator = new CondaEnvironmentLocator();
-        const items = await getEnvs(locator.doIterEnvs(undefined, false));
-        const workerItems = await getEnvs(locator.doIterEnvs(undefined, true));
-        console.log('Number of items Conda locator returned:', items.length);
-        // Make sure items returned when using worker threads v/s not are the same.
-        assertBasicEnvsEqual(items, workerItems);
-        assert(workerItems.length > 0, 'No environments found');
-    }).timeout(TEST_TIMEOUT * 2);
 });

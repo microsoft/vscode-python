@@ -209,6 +209,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             });
         }
 
+        await this.envTypeComparer.initialize(resource);
         const inExperiment = this.experimentService.inExperimentSync(DiscoveryUsingWorkers.experiment);
         const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
         let recommendedInterpreter: PythonEnvironment | undefined;

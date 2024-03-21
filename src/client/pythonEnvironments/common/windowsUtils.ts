@@ -126,15 +126,15 @@ export function getRegistryInterpretersSync(): IRegistryInterpreterData[] | unde
 
 let registryInterpretersPromise: Promise<IRegistryInterpreterData[]> | undefined;
 
-export async function getRegistryInterpreters(useWorkerThreads: boolean): Promise<IRegistryInterpreterData[]> {
+export async function getRegistryInterpreters(): Promise<IRegistryInterpreterData[]> {
     if (!isTestExecution() && registryInterpretersPromise !== undefined) {
         return registryInterpretersPromise;
     }
-    registryInterpretersPromise = getRegistryInterpretersImpl(useWorkerThreads);
+    registryInterpretersPromise = getRegistryInterpretersImpl();
     return registryInterpretersPromise;
 }
 
-async function getRegistryInterpretersImpl(useWorkerThreads: boolean): Promise<IRegistryInterpreterData[]> {
+async function getRegistryInterpretersImpl(useWorkerThreads = false): Promise<IRegistryInterpreterData[]> {
     let registryData: IRegistryInterpreterData[] = [];
 
     for (const arch of ['x64', 'x86']) {

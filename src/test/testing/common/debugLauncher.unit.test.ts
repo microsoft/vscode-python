@@ -151,10 +151,10 @@ suite('Unit Tests - Debug Launcher', () => {
         if (!pythonTestAdapterRewriteExperiment) {
             switch (testProvider) {
                 case 'unittest': {
-                    return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
+                    return path.join(EXTENSION_ROOT_DIR, 'python_files', 'visualstudio_py_testlauncher.py');
                 }
                 case 'pytest': {
-                    return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testlauncher.py');
+                    return path.join(EXTENSION_ROOT_DIR, 'python_files', 'testlauncher.py');
                 }
                 default: {
                     throw new Error(`Unknown test provider '${testProvider}'`);
@@ -208,14 +208,14 @@ suite('Unit Tests - Debug Launcher', () => {
         if (!expected) {
             expected = getDefaultDebugConfig();
         }
-        expected.rules = [{ path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'), include: false }];
+        expected.rules = [{ path: path.join(EXTENSION_ROOT_DIR, 'python_files'), include: false }];
         expected.program = testLaunchScript;
         expected.args = options.args;
 
         if (!expected.cwd) {
             expected.cwd = workspaceFolders[0].uri.fsPath;
         }
-        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
         const pythonPath = `${pluginPath}${path.delimiter}${expected.cwd}`;
         expected.env.PYTHONPATH = pythonPath;
 
@@ -345,7 +345,7 @@ suite('Unit Tests - Debug Launcher', () => {
         };
         const expected = getDefaultDebugConfig();
         expected.cwd = 'path/to/settings/cwd';
-        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
+        const pluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
         const pythonPath = `${pluginPath}${path.delimiter}${expected.cwd}`;
         expected.env.PYTHONPATH = pythonPath;
 
