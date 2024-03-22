@@ -86,6 +86,7 @@
     "walkthrough.step.python.createPythonFile.description": {
         "message": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D)",
         "comment": [
+            "{Locked='](command:toSide:workbench.action.files.openFile'}",
             "{Locked='](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D'}",
             "Do not translate the 'command:*' part inside of the '(..)'. It is an internal command syntax for VS Code",
             "Please make sure there is no space between the right bracket and left parenthesis:  ]( this is an internal syntax for links"
@@ -123,7 +124,7 @@
     "walkthrough.step.python.selectInterpreter.description": {
         "message": "Choose which Python interpreter/environment you want to use for your Python project.\n[Select Python Interpreter](command:python.setInterpreter)\n**Tip**: Run the ``Python: Select Interpreter`` command in the [Command Palette](command:workbench.action.showCommands).",
         "comment": [
-            "{Locked='](command:python.setInterpreter'}",
+             "{Locked='](command:python.setInterpreter'}",
              "{Locked='](command:workbench.action.showCommands'}",
              "Do not translate the 'command:*' part inside of the '(..)'. It is an internal command syntax for VS Code",
              "Please make sure there is no space between the right bracket and left parenthesis:  ]( this is an internal syntax for links"
