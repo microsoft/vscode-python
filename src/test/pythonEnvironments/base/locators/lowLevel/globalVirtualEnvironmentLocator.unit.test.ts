@@ -3,6 +3,7 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { Uri } from 'vscode';
 import * as fsWatcher from '../../../../../client/common/platform/fileSystemWatcher';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
@@ -22,6 +23,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
     let readFileStub: sinon.SinonStub;
     let locator: GlobalVirtualEnvironmentLocator;
     let watchLocationForPatternStub: sinon.SinonStub;
+    const project2 = path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2');
 
     setup(async () => {
         getEnvVariableStub = sinon.stub(platformUtils, 'getEnvironmentVariable');
@@ -49,7 +51,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
             '.project',
         );
         readFileStub = sinon.stub(externalDependencies, 'readFile');
-        readFileStub.withArgs(expectedDotProjectFile).returns(path.join(TEST_LAYOUT_ROOT, 'pipenv', 'project2'));
+        readFileStub.withArgs(expectedDotProjectFile).returns(project2);
         readFileStub.callThrough();
     });
     teardown(async () => {
@@ -131,6 +133,11 @@ suite('GlobalVirtualEnvironment Locator', () => {
     });
 
     test('iterEnvs(): Non-Windows', async () => {
+        const pipenv = createBasicEnv(
+            PythonEnvKind.Pipenv,
+            path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
+        );
+        pipenv.searchLocation = Uri.file(project2);
         const expectedEnvs = [
             createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python')),
             createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python')),
@@ -147,10 +154,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, 'workonhome', 'posix2', 'bin', 'python'),
             ),
-            createBasicEnv(
-                PythonEnvKind.Pipenv,
-                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
-            ),
+            pipenv,
         ];
 
         locator = new GlobalVirtualEnvironmentLocator();
@@ -179,6 +183,11 @@ suite('GlobalVirtualEnvironment Locator', () => {
 
     test('iterEnvs(): Non-Windows (WORKON_HOME not set)', async () => {
         getEnvVariableStub.withArgs('WORKON_HOME').returns(undefined);
+        const pipenv = createBasicEnv(
+            PythonEnvKind.Pipenv,
+            path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
+        );
+        pipenv.searchLocation = Uri.file(project2);
         const expectedEnvs = [
             createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'posix1', 'python')),
             createBasicEnv(PythonEnvKind.Venv, path.join(testVirtualHomeDir, '.venvs', 'posix2', 'bin', 'python')),
@@ -190,10 +199,7 @@ suite('GlobalVirtualEnvironment Locator', () => {
                 PythonEnvKind.VirtualEnvWrapper,
                 path.join(testVirtualHomeDir, '.virtualenvs', 'posix2', 'bin', 'python'),
             ),
-            createBasicEnv(
-                PythonEnvKind.Pipenv,
-                path.join(testVirtualHomeDir, '.local', 'share', 'virtualenvs', 'project2-vnNIWe9P', 'bin', 'python'),
-            ),
+            pipenv,
         ];
 
         locator = new GlobalVirtualEnvironmentLocator();
