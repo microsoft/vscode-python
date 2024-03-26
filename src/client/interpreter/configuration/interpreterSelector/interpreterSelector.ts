@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, Uri } from 'vscode';
-import { arePathsSame } from '../../../common/platform/fs-paths';
+import { arePathsSame, isParentPath } from '../../../common/platform/fs-paths';
 import { IPathUtils, Resource } from '../../../common/types';
 import { getEnvPath } from '../../../pythonEnvironments/base/info/env';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -45,6 +45,13 @@ export class InterpreterSelector implements IInterpreterSelector {
         workspaceUri?: Uri,
         useDetailedName = false,
     ): IInterpreterQuickPickItem {
+        if (!useDetailedName) {
+            const workspacePath = workspaceUri?.fsPath;
+            if (workspacePath && isParentPath(interpreter.path, workspacePath)) {
+                // If interpreter is in the workspace, then display the full path.
+                useDetailedName = true;
+            }
+        }
         const path =
             interpreter.envPath && getEnvPath(interpreter.path, interpreter.envPath).pathType === 'envFolderPath'
                 ? interpreter.envPath

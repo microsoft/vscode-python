@@ -172,16 +172,6 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "python.createPythonFolder",
-                        "title": "%walkthrough.step.python.createPythonFolder.title%",
-                        "description": "%walkthrough.step.python.createPythonFolder.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "%walkthrough.step.python.createPythonFile.altText%"
-                        },
-                        "when": "workspaceFolderCount = 0"
-                    },
-                    {
                         "id": "python.createPythonFile",
                         "title": "%walkthrough.step.python.createPythonFile.title%",
                         "description": "%walkthrough.step.python.createPythonFile.description%",
@@ -225,14 +215,15 @@
                         "title": "%walkthrough.step.python.createEnvironment.title2%",
                         "description": "%walkthrough.step.python.createEnvironment.description2%",
                         "media": {
-                            "markdown": "resources/walkthrough/environments-info.md"
+                            "svg": "resources/walkthrough/create-environment.svg",
+                            "altText": "%walkthrough.step.python.createEnvironment.altText%"
                         },
                         "when": ""
                     },
                     {
-                        "id": "python.runAndDebug",
-                        "title": "%walkthrough.step.python.runAndDebug.title%",
-                        "description": "%walkthrough.step.python.runAndDebug.description%",
+                        "id": "python.runAndDebug2",
+                        "title": "%walkthrough.step.python.runAndDebug2.title%",
+                        "description": "%walkthrough.step.python.runAndDebug2.description%",
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
                             "altText": "%walkthrough.step.python.runAndDebug.altText%"
@@ -241,7 +232,7 @@
                     },
                     {
                         "id": "python.learnMoreWithDS2",
-                        "title": "%walkthrough.step.python.learnMoreWithDS.title%",
+                        "title": "%walkthrough.step.python.learnMoreWithDS2.title%",
                         "description": "%walkthrough.step.python.learnMoreWithDS.description2%",
                         "media": {
                             "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",

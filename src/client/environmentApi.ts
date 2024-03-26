@@ -134,10 +134,14 @@ export function buildEnvironmentApi(
         extensions
             .determineExtensionFromCallStack()
             .then((info) => {
-                sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
-                    apiName,
-                    extensionId: info.extensionId,
-                });
+                const p = Math.random();
+                if (p <= 0.001) {
+                    // Only send API telemetry 1% of the time, as it can be chatty.
+                    sendTelemetryEvent(EventName.PYTHON_ENVIRONMENTS_API, undefined, {
+                        apiName,
+                        extensionId: info.extensionId,
+                    });
+                }
                 traceVerbose(`Extension ${info.extensionId} accessed ${apiName} with args: ${JSON.stringify(args)}`);
             })
             .ignoreErrors();

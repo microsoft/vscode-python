@@ -2,6 +2,7 @@ import { isTestExecution } from '../../../common/constants';
 import { exec, pathExists } from '../externalDependencies';
 import { traceVerbose } from '../../../logging';
 import { cache } from '../../../common/utils/decorators';
+import { getOSType, OSType } from '../../../common/utils/platform';
 
 /** Wraps the "Hatch" utility, and exposes its functionality.
  */
@@ -22,7 +23,9 @@ export class Hatch {
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
      * @param cwd - The working directory to use as cwd when running hatch.
      */
-    constructor(public readonly command: string, private cwd: string) {}
+    constructor(public readonly command: string, private cwd: string) {
+        this.fixCwd();
+    }
 
     /**
      * Returns a Hatch instance corresponding to the binary which can be used to run commands for the cwd.
@@ -89,5 +92,25 @@ export class Hatch {
             }),
         );
         return envPaths.flatMap((r) => (r ? [r] : []));
+    }
+
+    /**
+     * Due to an upstream hatch issue on Windows https://github.com/pypa/hatch/issues/1350,
+     * 'hatch env find default' does not handle case-insensitive paths as cwd, which are valid on Windows.
+     * So we need to pass the case-exact path as cwd.
+     * It has been observed that only the drive letter in `cwd` is lowercased here. Unfortunately,
+     * there's no good way to get case of the drive letter correctly without using Win32 APIs:
+     * https://stackoverflow.com/questions/33086985/how-to-obtain-case-exact-path-of-a-file-in-node-js-on-windows
+     * So we do it manually.
+     */
+    private fixCwd(): void {
+        if (getOSType() === OSType.Windows) {
+            if (/^[a-z]:/.test(this.cwd)) {
+                // Replace first character by the upper case version of the character.
+                const a = this.cwd.split(':');
+                a[0] = a[0].toUpperCase();
+                this.cwd = a.join(':');
+            }
+        }
     }
 }

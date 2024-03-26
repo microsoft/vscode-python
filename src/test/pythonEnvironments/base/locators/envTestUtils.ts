@@ -103,10 +103,12 @@ export function assertBasicEnvsEqual(actualEnvs: BasicEnvInfo[], expectedEnvs: B
         const [actual, expected] = value;
         if (actual) {
             actual.source = actual.source ?? [];
+            actual.searchLocation = actual.searchLocation ?? undefined;
             actual.source.sort();
         }
         if (expected) {
             expected.source = expected.source ?? [];
+            expected.searchLocation = expected.searchLocation ?? undefined;
             expected.source.sort();
         }
         assert.deepStrictEqual(actual, expected);
