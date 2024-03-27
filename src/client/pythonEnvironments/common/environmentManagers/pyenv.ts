@@ -21,20 +21,17 @@ export function getPyenvDir(): string {
     return pyenvDir;
 }
 
-async function getPyenvBinary(): Promise<string | undefined> {
+async function getPyenvBinary(): Promise<string> {
     const pyenvDir = getPyenvDir();
     const pyenvBin = path.join(pyenvDir, 'bin', 'pyenv');
     if (await pathExists(pyenvBin)) {
         return pyenvBin;
     }
-    return undefined;
+    return 'pyenv';
 }
 
 export async function getActivePyenvForDirectory(cwd: string): Promise<string | undefined> {
     const pyenvBin = await getPyenvBinary();
-    if (!pyenvBin) {
-        return undefined;
-    }
     try {
         const pyenvInterpreterPath = await shellExecute(`${pyenvBin} which python`, { cwd });
         return pyenvInterpreterPath.stdout.trim();
