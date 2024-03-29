@@ -25,9 +25,6 @@ import {
     createEOTPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
-    argsToMap,
-    addArgIfNotExist,
-    mapToArgs,
     addValueIfKeyNotExist,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
