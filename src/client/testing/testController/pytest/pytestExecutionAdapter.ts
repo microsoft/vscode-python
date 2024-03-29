@@ -128,17 +128,16 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         try {
             // Remove positional test folders and files, we will add as needed per node
-            const testArgs = removePositionalFoldersAndFiles(pytestArgs);
-            let testArgsMap = utils.argsToMap(testArgs);
+            let testArgs = removePositionalFoldersAndFiles(pytestArgs);
 
             // if user has provided `--rootdir` then use that, otherwise add `cwd`
             // root dir is required so pytest can find the relative paths and for symlinks
-            utils.addArgIfNotExist(testArgsMap, '--rootdir', cwd);
+            utils.addValueIfKeyNotExist(testArgs, '--rootdir', cwd);
 
             // -s and --capture are both command line options that control how pytest captures output.
             // if neither are set, then set --capture=no to prevent pytest from capturing output.
-            if (debugBool && !utils.argKeyExists(testArgsMap, '-s')) {
-                testArgsMap = utils.addArgIfNotExist(testArgsMap, '--capture', 'no');
+            if (debugBool && !utils.argKeyExists(testArgs, '-s')) {
+                testArgs = utils.addValueIfKeyNotExist(testArgs, '--capture', 'no');
             }
 
             // add port with run test ids to env vars
@@ -163,18 +162,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const pytestUUID = uuid.toString();
                 const launchOptions: LaunchOptions = {
                     cwd,
-                    args: utils.mapToArgs(testArgsMap),
+                    args: testArgs,
                     token: spawnOptions.token,
                     testProvider: PYTEST_PROVIDER,
                     pytestPort,
                     pytestUUID,
                     runTestIdsPort: pytestRunTestIdsPort.toString(),
                 };
-                traceInfo(
-                    `Running DEBUG pytest with arguments: ${utils.mapToArgs(testArgsMap).join(' ')} for workspace ${
-                        uri.fsPath
-                    } \r\n`,
-                );
+                traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     deferredTillEOT?.resolve();
                 });
@@ -183,7 +178,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
                 // combine path to run script with run args
                 const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
-                const runArgs = [scriptPath, ...utils.mapToArgs(testArgsMap)];
+                const runArgs = [scriptPath, ...testArgs];
                 traceInfo(`Running pytest with arguments: ${runArgs.join(' ')} for workspace ${uri.fsPath} \r\n`);
 
                 let resultProc: ChildProcess | undefined;
