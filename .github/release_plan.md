@@ -8,8 +8,8 @@ Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commi
 
 |   Month   | Primary   | Secondary   |
 |:----------|:----------|:------------|
-| ~~January~~   | ~~Eleanor~~   | ~~Karthik~~     |
-| February  | Kartik    | Anthony     |
+✅ | ~~January~~   | ~~Eleanor~~   | ~~Karthik~~     |
+✅ | February  | Kartik    | Anthony     |
 | March     | Karthik   | Eleanor     |
 | April     | Paula     | Kartik      |
 | May       | Anthony   | Karthik     |
