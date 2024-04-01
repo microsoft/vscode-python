@@ -68,17 +68,13 @@ suite('End to End Tests: test adapters', () => {
         // create symlink for specific symlink test
         const target = rootPathSmallWorkspace;
         const dest = rootPathDiscoverySymlink;
-        try {
-            fs.symlink(target, dest, 'dir', (err) => {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.log('Symlink created successfully for end to end tests.');
-                }
-            });
-        } catch (err) {
-            console.error(err);
-        }
+        fs.symlink(target, dest, 'dir', (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log('Symlink created successfully for end to end tests.');
+            }
+        });
     });
 
     setup(async () => {
@@ -111,17 +107,13 @@ suite('End to End Tests: test adapters', () => {
     suiteTeardown(async () => {
         // remove symlink
         const dest = rootPathDiscoverySymlink;
-        if (fs.existsSync(dest)) {
-            fs.unlink(dest, (err) => {
-                if (err) {
-                    console.error(err);
-                } else {
-                    console.log('Symlink removed successfully after tests.');
-                }
-            });
-        } else {
-            console.log('Symlink was not found to remove after tests, exiting successfully');
-        }
+        fs.unlink(dest, (err) => {
+            if (err) {
+                console.error(err);
+            } else {
+                console.log('Symlink removed successfully after tests.');
+            }
+        });
     });
     test('unittest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -288,7 +280,6 @@ suite('End to End Tests: test adapters', () => {
             resultResolver,
             envVarsService,
         );
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
@@ -367,7 +358,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
@@ -564,7 +554,6 @@ suite('End to End Tests: test adapters', () => {
         };
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
@@ -654,7 +643,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // generate list of test_ids
         const testIds: string[] = [];
@@ -734,7 +722,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             configService,
@@ -804,8 +791,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
-
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
             assert.ok(
@@ -867,7 +852,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run pytest execution
         const executionAdapter = new UnittestTestExecutionAdapter(
@@ -928,7 +912,6 @@ suite('End to End Tests: test adapters', () => {
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
