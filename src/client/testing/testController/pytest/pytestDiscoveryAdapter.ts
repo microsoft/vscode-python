@@ -60,7 +60,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         deferredTillEOT: Deferred<void>,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
-        const relativePathToPytest = 'pythonFiles';
+        const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
         let { pytestArgs } = settings.testing;

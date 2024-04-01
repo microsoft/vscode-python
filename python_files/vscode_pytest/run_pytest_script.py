@@ -14,6 +14,11 @@ sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import process_json_util
 from testing_tools import socket_manager
 
+# sys.path.append("/Users/eleanorboyd/vscode-python/python_files/lib/python")
+# import debugpy  # noqa
+
+# debugpy.connect(5678)
+# debugpy.breakpoint()
 
 # This script handles running pytest via pytest.main(). It is called via run in the
 # pytest execution adapter and gets the test_ids to run via stdin and the rest of the
@@ -37,7 +42,8 @@ if __name__ == "__main__":
             buffer = ""
             while True:
                 # Receive the data from the client as a string
-                data = sock.read()
+                data = sock.read(3000)
+                print("Data: ", data, "\n-\n--")
                 if not data:
                     break
 
@@ -46,6 +52,7 @@ if __name__ == "__main__":
 
                 try:
                     # Try to parse the buffer as JSON
+                    print("Buffer: ", buffer, "\n\n")
                     raw_json = process_json_util.process_rpc_json(buffer)
                     # Clear the buffer as complete JSON object is received
                     buffer = ""
@@ -60,6 +67,7 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
     try:
+        print("RAW JSON BUFFER ---------------", raw_json)
         test_ids_from_buffer = raw_json["params"]
         if test_ids_from_buffer:
             arg_array = ["-p", "vscode_pytest"] + args + test_ids_from_buffer
@@ -73,4 +81,7 @@ if __name__ == "__main__":
             arg_array = ["-p", "vscode_pytest"] + args
             pytest.main(arg_array)
     except json.JSONDecodeError:
-        print("Error: Could not parse test ids from stdin")
+        print(
+            "Error: Could not parse test ids from stdin. Raw json received from socket: \n",
+            raw_json,
+        )

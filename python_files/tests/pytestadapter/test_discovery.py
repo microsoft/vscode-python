@@ -196,7 +196,7 @@ def test_pytest_collect(file, expected_const):
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
-        assert not is_same_tree(
+        assert is_same_tree(
             actual_item.get("tests"), expected_const
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 

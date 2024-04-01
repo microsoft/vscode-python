@@ -74,10 +74,10 @@ class PipeManager:
             while True:
                 part: bytes = self._socket.recv(bufsize)
                 data: str = part.decode("utf-8")
-                if len(part) < bufsize:  # is this necessary ?
-                    # No more data, or less than bufsize data received
-                    break
-            return data
+                # if len(part) < bufsize:  # is this necessary ?
+                #     # No more data, or less than bufsize data received
+                #     break
+                return data
 
 
 class SocketManager(object):

@@ -172,17 +172,21 @@ export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> 
     // uses callback so the on connect action occurs after the pipe is created
     await createNamedPipeServer(pipeName, ([_reader, writer]) => {
         traceVerbose('Test Ids named pipe connected');
+        // const num = await
+        const msg = {
+            jsonrpc: '2.0',
+            params: testIds,
+        } as Message;
         writer
-            .write({
-                jsonrpc: '2.0',
-                params: testIds,
-            } as Message)
+            .write(msg)
             .then(() => {
                 writer.end();
             })
             .catch((ex) => {
                 traceError('Failed to write test ids to named pipe', ex);
             });
+        // traceVerbose(`Test Ids named pipe wrote ${num} test ids`);
+        // writer.end();
     });
     return pipeName;
 }
