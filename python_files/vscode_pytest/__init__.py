@@ -11,12 +11,13 @@ import traceback
 
 import pytest
 
-from typing import Any, Dict, List, Optional, Union, Literal, TypedDict  # noqa: E402
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-
-from testing_tools import socket_manager  # noqa: E402
-
-DEFAULT_PORT = 45454
+from testing_tools import socket_manager
+from typing import Any, Dict, List, Optional, Union
+from typing_extensions import Literal, TypedDict
 
 
 class TestData(TypedDict):
