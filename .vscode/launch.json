@@ -250,7 +250,7 @@
         },
         {
             "name": "Listen",
-            "type": "debugpy",
+            "type": "python",
             "request": "attach",
             "listen": { "host": "localhost", "port": 5678 },
             "justMyCode": true
@@ -258,10 +258,10 @@
         {
             "name": "Debug pytest plugin tests",
 
-            "type": "debugpy",
+            "type": "python",
             "request": "launch",
             "module": "pytest",
-            "args": ["${workspaceFolder}/python_files/tests/pytestadapter"],
+            "args": ["${workspaceFolder}/pythonFiles/tests/pytestadapter", "-x"],
             "justMyCode": true
         }
     ],
