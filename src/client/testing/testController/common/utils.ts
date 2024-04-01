@@ -3,7 +3,7 @@
 import * as net from 'net';
 import * as path from 'path';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range } from 'vscode';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 
 import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
 import { IExperimentService } from '../../../common/types';
@@ -351,39 +351,103 @@ export function splitTestNameWithRegex(testName: string): [string, string] {
 }
 
 /**
- * Takes a list of arguments and adds an key-value pair to the list if the key doesn't already exist. Searches each element
- * in the array for the key to see if it is contained within the element.
- * @param args list of arguments to search
- * @param argToAdd argument to add if it doesn't already exist
- * @returns the list of arguments with the key-value pair added if it didn't already exist
+ * Converts an array of strings (with or without '=') into a map.
+ * If a string contains '=', it is split into a key-value pair, with the portion
+ * before the '=' as the key and the portion after the '=' as the value.
+ * If no '=' is found in the string, the entire string becomes a key with a value of null.
+ *
+ * @param args - Readonly array of strings to be converted to a map.
+ * @returns A map representation of the input strings.
  */
-export function addValueIfKeyNotExist(args: string[], key: string, value: string | null): string[] {
+export const argsToMap = (args: ReadonlyArray<string>): { [key: string]: Array<string> | null | undefined } => {
+    const map: { [key: string]: Array<string> | null } = {};
     for (const arg of args) {
-        if (arg.includes(key)) {
-            traceInfo(`arg: ${key} already exists in args, not adding.`);
-            return args;
+        const delimiter = arg.indexOf('=');
+        if (delimiter === -1) {
+            // If no delimiter is found, the entire string becomes a key with a value of null.
+            map[arg] = null;
+        } else {
+            const key = arg.slice(0, delimiter);
+            const value = arg.slice(delimiter + 1);
+            if (map[key]) {
+                // add to the array
+                const arr = map[key] as string[];
+                arr.push(value);
+                map[key] = arr;
+            } else {
+                // create a new array
+                map[key] = [value];
+            }
         }
     }
-    if (value) {
-        args.push(`${key}=${value}`);
-    } else {
-        args.push(`${key}`);
+
+    return map;
+};
+
+/**
+ * Converts a map into an array of strings.
+ * Each key-value pair in the map is transformed into a string.
+ * If the value is null, only the key is represented in the string.
+ * If the value is defined (and not null), the string is in the format "key=value".
+ * If a value is undefined, the key-value pair is skipped.
+ *
+ * @param map - The map to be converted to an array of strings.
+ * @returns An array of strings representation of the input map.
+ */
+export const mapToArgs = (map: { [key: string]: Array<string> | null | undefined }): string[] => {
+    const out: string[] = [];
+    for (const key of Object.keys(map)) {
+        const value = map[key];
+        if (value === undefined) {
+            // eslint-disable-next-line no-continue
+            continue;
+        }
+        if (value === null) {
+            out.push(key);
+        } else {
+            const values = Array.isArray(value) ? (value as string[]) : [value];
+            for (const v of values) {
+                out.push(`${key}=${v}`);
+            }
+        }
     }
-    return args;
+
+    return out;
+};
+
+/**
+ * Adds an argument to the map only if it doesn't already exist.
+ *
+ * @param map - The map of arguments.
+ * @param argKey - The argument key to be checked and added.
+ * @param argValue - The value to set for the argument if it's not already in the map.
+ * @returns The updated map.
+ */
+export function addArgIfNotExist(
+    map: { [key: string]: Array<string> | null | undefined },
+    argKey: string,
+    argValue: string | null,
+): { [key: string]: Array<string> | null | undefined } {
+    // Only add the argument if it doesn't exist in the map.
+    if (map[argKey] === undefined) {
+        // if null then set to null, otherwise set to an array with the value
+        if (argValue === null) {
+            map[argKey] = null;
+        } else {
+            map[argKey] = [argValue];
+        }
+    }
+
+    return map;
 }
 
 /**
- * Checks if a key exists in a list of arguments. Searches each element in the array
- *  for the key to see if it is contained within the element.
- * @param args list of arguments to search
- * @param key string to search for
- * @returns true if the key exists in the list of arguments, false otherwise
+ * Checks if an argument key exists in the map.
+ *
+ * @param map - The map of arguments.
+ * @param argKey - The argument key to be checked.
+ * @returns True if the argument key exists in the map, false otherwise.
  */
-export function argKeyExists(args: string[], key: string): boolean {
-    for (const arg of args) {
-        if (arg.includes(key)) {
-            return true;
-        }
-    }
-    return false;
+export function argKeyExists(map: { [key: string]: Array<string> | null | undefined }, argKey: string): boolean {
+    return map[argKey] !== undefined;
 }

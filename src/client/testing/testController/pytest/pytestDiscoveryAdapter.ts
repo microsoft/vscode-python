@@ -25,7 +25,9 @@ import {
     createEOTPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
-    addValueIfKeyNotExist,
+    argsToMap,
+    addArgIfNotExist,
+    mapToArgs,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
@@ -68,14 +70,16 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
-        let { pytestArgs } = settings.testing;
+        let pytestArgsMap = argsToMap(settings.testing.pytestArgs);
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         // check for symbolic path
         const stats = fs.lstatSync(cwd);
         if (stats.isSymbolicLink()) {
-            traceWarn("The cwd is a symbolic link, adding '--rootdir' to pytestArgs only if it doesn't already exist.");
-            pytestArgs = addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
+            traceWarn(
+                "The cwd is a symbolic link, adding '--rootdir' to pytestArgsMap only if it doesn't already exist.",
+            );
+            pytestArgsMap = addArgIfNotExist(pytestArgsMap, '--rootdir', cwd);
         }
 
         // get and edit env vars
@@ -107,7 +111,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(mapToArgs(pytestArgsMap));
         traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
