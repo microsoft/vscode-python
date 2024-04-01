@@ -6,7 +6,7 @@
 import { inject, injectable, named } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { traceError, traceVerbose, traceWarn } from '../logging';
+import { traceError } from '../logging';
 import { ICommandManager } from './application/types';
 import { Commands } from './constants';
 import {
@@ -92,12 +92,8 @@ export class PersistentState<T> implements IPersistentState<T> {
                 // Due to a VSCode bug sometimes the changes are not reflected in the storage, atleast not immediately.
                 // It is noticed however that if we reset the storage first and then update it, it works.
                 // https://github.com/microsoft/vscode/issues/171827
-                traceVerbose('Storage update failed for key', this.key, ' retrying by resetting first');
                 await this.updateValue(undefined as any, false);
                 await this.updateValue(newValue, false);
-                if (JSON.stringify(this.value) != JSON.stringify(newValue)) {
-                    traceWarn('Retry failed, storage update failed for key', this.key);
-                }
             }
         } catch (ex) {
             traceError('Error while updating storage for key:', this.key, ex);

@@ -7,6 +7,7 @@ import sys
 from typing import List
 
 import pytest
+
 from unittestadapter.discovery import discover_tests
 from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
 
@@ -14,8 +15,9 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
 
-from . import expected_discovery_test_output
-from tests.tree_comparison_helper import is_same_tree
+from tests.tree_comparison_helper import is_same_tree  # noqa: E402
+
+from . import expected_discovery_test_output  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
@@ -105,22 +107,14 @@ def test_simple_discovery() -> None:
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_one",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_two",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_two",
                             },
                         ],
                         "id_": file_path + "\\" + "DiscoverySimple",
@@ -167,22 +161,14 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_one",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoverySimple"
-                                + "\\"
-                                + "test_two",
+                                "id_": file_path + "\\" + "DiscoverySimple" + "\\" + "test_two",
                             },
                         ],
                         "id_": file_path + "\\" + "DiscoverySimple",
@@ -248,22 +234,14 @@ def test_error_discovery() -> None:
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "14",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoveryErrorTwo"
-                                + "\\"
-                                + "test_one",
+                                "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_one",
                             },
                             {
                                 "name": "test_two",
                                 "path": file_path,
                                 "type_": TestNodeTypeEnum.test,
                                 "lineno": "17",
-                                "id_": file_path
-                                + "\\"
-                                + "DiscoveryErrorTwo"
-                                + "\\"
-                                + "test_two",
+                                "id_": file_path + "\\" + "DiscoveryErrorTwo" + "\\" + "test_two",
                             },
                         ],
                         "id_": file_path + "\\" + "DiscoveryErrorTwo",

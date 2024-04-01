@@ -20,9 +20,7 @@ FAILURE = "failure"
 test_add_path = TEST_DATA_PATH / "unittest_folder" / "test_add.py"
 test_subtract_path = TEST_DATA_PATH / "unittest_folder" / "test_subtract.py"
 uf_execution_expected_output = {
-    get_absolute_test_id(
-        f"{TEST_ADD_FUNCTION}test_add_negative_numbers", test_add_path
-    ): {
+    get_absolute_test_id(f"{TEST_ADD_FUNCTION}test_add_negative_numbers", test_add_path): {
         "test": get_absolute_test_id(
             f"{TEST_ADD_FUNCTION}test_add_negative_numbers", test_add_path
         ),
@@ -31,9 +29,7 @@ uf_execution_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
-    ): {
+    get_absolute_test_id(f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path): {
         "test": get_absolute_test_id(
             f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
         ),
@@ -80,9 +76,7 @@ uf_execution_expected_output = {
 test_add_path = TEST_DATA_PATH / "unittest_folder" / "test_add.py"
 
 uf_single_file_expected_output = {
-    get_absolute_test_id(
-        f"{TEST_ADD_FUNCTION}test_add_negative_numbers", test_add_path
-    ): {
+    get_absolute_test_id(f"{TEST_ADD_FUNCTION}test_add_negative_numbers", test_add_path): {
         "test": get_absolute_test_id(
             f"{TEST_ADD_FUNCTION}test_add_negative_numbers", test_add_path
         ),
@@ -91,9 +85,7 @@ uf_single_file_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
-    ): {
+    get_absolute_test_id(f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path): {
         "test": get_absolute_test_id(
             f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
         ),
@@ -111,9 +103,7 @@ uf_single_file_expected_output = {
 #    │   └── TestAddFunction
 #    │       └── test_add_positive_numbers: success
 uf_single_method_execution_expected_output = {
-    get_absolute_test_id(
-        f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
-    ): {
+    get_absolute_test_id(f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path): {
         "test": get_absolute_test_id(
             f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
         ),
@@ -149,9 +139,7 @@ uf_non_adjacent_tests_execution_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
-    ): {
+    get_absolute_test_id(f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path): {
         "test": get_absolute_test_id(
             f"{TEST_ADD_FUNCTION}test_add_positive_numbers", test_add_path
         ),
@@ -252,35 +240,27 @@ skip_tests_execution_expected_output = {
         "subtest": None,
     },
     get_absolute_test_id("skip_tests.py::test_another_thing", skip_tests_path): {
-        "test": get_absolute_test_id(
-            "skip_tests.py::test_another_thing", skip_tests_path
-        ),
+        "test": get_absolute_test_id("skip_tests.py::test_another_thing", skip_tests_path),
         "outcome": "skipped",
         "message": None,
         "traceback": None,
         "subtest": None,
     },
     get_absolute_test_id("skip_tests.py::test_decorator_thing", skip_tests_path): {
-        "test": get_absolute_test_id(
-            "skip_tests.py::test_decorator_thing", skip_tests_path
-        ),
+        "test": get_absolute_test_id("skip_tests.py::test_decorator_thing", skip_tests_path),
         "outcome": "skipped",
         "message": None,
         "traceback": None,
         "subtest": None,
     },
     get_absolute_test_id("skip_tests.py::test_decorator_thing_2", skip_tests_path): {
-        "test": get_absolute_test_id(
-            "skip_tests.py::test_decorator_thing_2", skip_tests_path
-        ),
+        "test": get_absolute_test_id("skip_tests.py::test_decorator_thing_2", skip_tests_path),
         "outcome": "skipped",
         "message": None,
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "skip_tests.py::TestClass::test_class_function_a", skip_tests_path
-    ): {
+    get_absolute_test_id("skip_tests.py::TestClass::test_class_function_a", skip_tests_path): {
         "test": get_absolute_test_id(
             "skip_tests.py::TestClass::test_class_function_a", skip_tests_path
         ),
@@ -289,9 +269,7 @@ skip_tests_execution_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "skip_tests.py::TestClass::test_class_function_b", skip_tests_path
-    ): {
+    get_absolute_test_id("skip_tests.py::TestClass::test_class_function_b", skip_tests_path): {
         "test": get_absolute_test_id(
             "skip_tests.py::TestClass::test_class_function_b", skip_tests_path
         ),
@@ -316,10 +294,7 @@ dual_level_nested_folder_top_path = (
     TEST_DATA_PATH / "dual_level_nested_folder" / "test_top_folder.py"
 )
 dual_level_nested_folder_bottom_path = (
-    TEST_DATA_PATH
-    / "dual_level_nested_folder"
-    / "nested_folder_one"
-    / "test_bottom_folder.py"
+    TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one" / "test_bottom_folder.py"
 )
 dual_level_nested_folder_execution_expected_output = {
     get_absolute_test_id(
@@ -379,9 +354,7 @@ dual_level_nested_folder_execution_expected_output = {
 #           └── test_nest.py
 #               └── test_function: success
 
-nested_folder_path = (
-    TEST_DATA_PATH / "folder_a" / "folder_b" / "folder_a" / "test_nest.py"
-)
+nested_folder_path = TEST_DATA_PATH / "folder_a" / "folder_b" / "folder_a" / "test_nest.py"
 double_nested_folder_expected_execution_output = {
     get_absolute_test_id(
         "folder_a/folder_b/folder_a/test_nest.py::test_function", nested_folder_path
@@ -403,9 +376,7 @@ double_nested_folder_expected_execution_output = {
 parametrize_tests_path = TEST_DATA_PATH / "parametrize_tests.py"
 
 parametrize_tests_expected_execution_output = {
-    get_absolute_test_id(
-        "parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path
-    ): {
+    get_absolute_test_id("parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path): {
         "test": get_absolute_test_id(
             "parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path
         ),
@@ -414,9 +385,7 @@ parametrize_tests_expected_execution_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "parametrize_tests.py::test_adding[2+4-6]", parametrize_tests_path
-    ): {
+    get_absolute_test_id("parametrize_tests.py::test_adding[2+4-6]", parametrize_tests_path): {
         "test": get_absolute_test_id(
             "parametrize_tests.py::test_adding[2+4-6]", parametrize_tests_path
         ),
@@ -425,9 +394,7 @@ parametrize_tests_expected_execution_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "parametrize_tests.py::test_adding[6+9-16]", parametrize_tests_path
-    ): {
+    get_absolute_test_id("parametrize_tests.py::test_adding[6+9-16]", parametrize_tests_path): {
         "test": get_absolute_test_id(
             "parametrize_tests.py::test_adding[6+9-16]", parametrize_tests_path
         ),
@@ -442,9 +409,7 @@ parametrize_tests_expected_execution_output = {
 # └── parametrize_tests.py
 #    └── test_adding[3+5-8]: success
 single_parametrize_tests_expected_execution_output = {
-    get_absolute_test_id(
-        "parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path
-    ): {
+    get_absolute_test_id("parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path): {
         "test": get_absolute_test_id(
             "parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path
         ),
@@ -461,9 +426,7 @@ single_parametrize_tests_expected_execution_output = {
 doc_test_path = TEST_DATA_PATH / "text_docstring.txt"
 doctest_pytest_expected_execution_output = {
     get_absolute_test_id("text_docstring.txt::text_docstring.txt", doc_test_path): {
-        "test": get_absolute_test_id(
-            "text_docstring.txt::text_docstring.txt", doc_test_path
-        ),
+        "test": get_absolute_test_id("text_docstring.txt::text_docstring.txt", doc_test_path),
         "outcome": "success",
         "message": None,
         "traceback": None,
@@ -477,10 +440,7 @@ dual_level_nested_folder_top_path = (
     TEST_DATA_PATH / "dual_level_nested_folder" / "test_top_folder.py"
 )
 dual_level_nested_folder_bottom_path = (
-    TEST_DATA_PATH
-    / "dual_level_nested_folder"
-    / "nested_folder_one"
-    / "test_bottom_folder.py"
+    TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one" / "test_bottom_folder.py"
 )
 unittest_folder_add_path = TEST_DATA_PATH / "unittest_folder" / "test_add.py"
 unittest_folder_subtract_path = TEST_DATA_PATH / "unittest_folder" / "test_subtract.py"
@@ -494,26 +454,20 @@ no_test_ids_pytest_execution_expected_output = {
         "subtest": None,
     },
     get_absolute_test_id("test_top_function_t", dual_level_nested_folder_top_path): {
-        "test": get_absolute_test_id(
-            "test_top_function_t", dual_level_nested_folder_top_path
-        ),
+        "test": get_absolute_test_id("test_top_function_t", dual_level_nested_folder_top_path),
         "outcome": "success",
         "message": None,
         "traceback": None,
         "subtest": None,
     },
     get_absolute_test_id("test_top_function_f", dual_level_nested_folder_top_path): {
-        "test": get_absolute_test_id(
-            "test_top_function_f", dual_level_nested_folder_top_path
-        ),
+        "test": get_absolute_test_id("test_top_function_f", dual_level_nested_folder_top_path),
         "outcome": "failure",
         "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "test_bottom_function_t", dual_level_nested_folder_bottom_path
-    ): {
+    get_absolute_test_id("test_bottom_function_t", dual_level_nested_folder_bottom_path): {
         "test": get_absolute_test_id(
             "test_bottom_function_t", dual_level_nested_folder_bottom_path
         ),
@@ -522,9 +476,7 @@ no_test_ids_pytest_execution_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "test_bottom_function_f", dual_level_nested_folder_bottom_path
-    ): {
+    get_absolute_test_id("test_bottom_function_f", dual_level_nested_folder_bottom_path): {
         "test": get_absolute_test_id(
             "test_bottom_function_f", dual_level_nested_folder_bottom_path
         ),
@@ -533,9 +485,7 @@ no_test_ids_pytest_execution_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "TestAddFunction::test_add_negative_numbers", unittest_folder_add_path
-    ): {
+    get_absolute_test_id("TestAddFunction::test_add_negative_numbers", unittest_folder_add_path): {
         "test": get_absolute_test_id(
             "TestAddFunction::test_add_negative_numbers", unittest_folder_add_path
         ),
@@ -544,9 +494,7 @@ no_test_ids_pytest_execution_expected_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "TestAddFunction::test_add_positive_numbers", unittest_folder_add_path
-    ): {
+    get_absolute_test_id("TestAddFunction::test_add_positive_numbers", unittest_folder_add_path): {
         "test": get_absolute_test_id(
             "TestAddFunction::test_add_positive_numbers", unittest_folder_add_path
         ),
@@ -606,18 +554,14 @@ test_logging_path = TEST_DATA_PATH / "test_logging.py"
 
 logging_test_expected_execution_output = {
     get_absolute_test_id("test_logging.py::test_logging2", test_logging_path): {
-        "test": get_absolute_test_id(
-            "test_logging.py::test_logging2", test_logging_path
-        ),
+        "test": get_absolute_test_id("test_logging.py::test_logging2", test_logging_path),
         "outcome": "failure",
         "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },
     get_absolute_test_id("test_logging.py::test_logging", test_logging_path): {
-        "test": get_absolute_test_id(
-            "test_logging.py::test_logging", test_logging_path
-        ),
+        "test": get_absolute_test_id("test_logging.py::test_logging", test_logging_path),
         "outcome": "success",
         "message": None,
         "traceback": None,
@@ -632,9 +576,7 @@ logging_test_expected_execution_output = {
 
 test_safe_clear_env_vars_path = TEST_DATA_PATH / "test_env_vars.py"
 safe_clear_env_vars_expected_execution_output = {
-    get_absolute_test_id(
-        "test_env_vars.py::test_clear_env", test_safe_clear_env_vars_path
-    ): {
+    get_absolute_test_id("test_env_vars.py::test_clear_env", test_safe_clear_env_vars_path): {
         "test": get_absolute_test_id(
             "test_env_vars.py::test_clear_env", test_safe_clear_env_vars_path
         ),
@@ -643,9 +585,7 @@ safe_clear_env_vars_expected_execution_output = {
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id(
-        "test_env_vars.py::test_check_env", test_safe_clear_env_vars_path
-    ): {
+    get_absolute_test_id("test_env_vars.py::test_check_env", test_safe_clear_env_vars_path): {
         "test": get_absolute_test_id(
             "test_env_vars.py::test_check_env", test_safe_clear_env_vars_path
         ),

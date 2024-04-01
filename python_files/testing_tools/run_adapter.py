@@ -7,8 +7,8 @@ import sys
 
 sys.path.insert(
     1,
-    os.path.dirname(  # pythonFiles
-        os.path.dirname(  # pythonFiles/testing_tools
+    os.path.dirname(  # python_files
+        os.path.dirname(  # python_files/testing_tools
             os.path.abspath(__file__)  # this file
         )
     ),

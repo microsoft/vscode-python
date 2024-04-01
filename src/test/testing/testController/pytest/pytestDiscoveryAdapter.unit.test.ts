@@ -52,7 +52,7 @@ suite('pytest test discovery adapter', () => {
         // constants
         expectedPath = path.join('/', 'my', 'test', 'path');
         uri = Uri.file(expectedPath);
-        const relativePathToPytest = 'pythonFiles';
+        const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         expectedExtraVariables = {
             PYTHONPATH: fullPluginPath,

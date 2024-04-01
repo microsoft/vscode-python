@@ -1,16 +1,15 @@
 import argparse
 import os
+import re
 from io import TextIOWrapper
+from pathlib import Path
 
 os.system("color")
-import re
-from pathlib import Path
+
 
 parser = argparse.ArgumentParser(description="Parse a test log into its parts")
 parser.add_argument("testlog", type=str, nargs=1, help="Log to parse")
-parser.add_argument(
-    "--testoutput", action="store_true", help="Show all failures and passes"
-)
+parser.add_argument("--testoutput", action="store_true", help="Show all failures and passes")
 parser.add_argument(
     "--split",
     action="store_true",
@@ -38,7 +37,7 @@ def printTestOutput(testlog):
     with p.open() as f:
         for line in readStripLines(f):
             stripped = line.strip()
-            if len(stripped) > 2 and stripped[0] == "\x1B" and stripped[1] == "[":
+            if len(stripped) > 2 and stripped[0] == "\x1b" and stripped[1] == "[":
                 print(line.rstrip())  # Should be a test line as it has color encoding
 
 

@@ -19,8 +19,7 @@ from unittestadapter.pvsc_utils import (
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
-from tests.tree_comparison_helper import is_same_tree
-
+from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 

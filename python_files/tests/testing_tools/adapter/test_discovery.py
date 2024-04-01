@@ -5,7 +5,7 @@ from __future__ import absolute_import, print_function
 
 import unittest
 
-from testing_tools.adapter.discovery import DiscoveredTests, fix_nodeid
+from testing_tools.adapter.discovery import DiscoveredTests
 from testing_tools.adapter.info import ParentInfo, SingleTestInfo, SingleTestPath
 from testing_tools.adapter.util import fix_path, fix_relpath
 
@@ -252,9 +252,7 @@ class DiscoveredTestsTests(unittest.TestCase):
             # missing "./":
             parentid=relfile,
         )
-        expected = test._replace(
-            id=_fix_nodeid(test.id), parentid=_fix_nodeid(test.parentid)
-        )
+        expected = test._replace(id=_fix_nodeid(test.id), parentid=_fix_nodeid(test.parentid))
         discovered = DiscoveredTests()
 
         before = list(discovered), discovered.parents

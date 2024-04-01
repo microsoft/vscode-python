@@ -46,12 +46,6 @@ def group_attr_names(attrnames):
     return grouped
 
 
-if sys.version_info < (3,):
-    _str_to_lower = lambda val: val.decode().lower()
-else:
-    _str_to_lower = str.lower
-
-
 #############################
 # file paths
 
@@ -134,7 +128,7 @@ def fix_fileid(
     normalize=False,
     strictpathsep=None,
     _pathsep=PATH_SEP,
-    **kwargs
+    **kwargs,
 ):
     """Return a pathsep-separated file ID ("./"-prefixed) for the given value.
 
@@ -156,7 +150,7 @@ def fix_fileid(
         rootdir,
         _pathsep=_pathsep,
         # ...
-        **kwargs
+        **kwargs,
     )
     if relpath:  # Note that we treat "" here as an absolute path.
         _fileid = "./" + relpath
@@ -164,7 +158,7 @@ def fix_fileid(
     if normalize:
         if strictpathsep:
             raise ValueError("cannot normalize *and* keep strict path separator")
-        _fileid = _str_to_lower(_fileid)
+        _fileid = _fileid.lower()
     elif strictpathsep:
         # We do not use _normcase since we want to preserve capitalization.
         _fileid = _fileid.replace("/", _pathsep)
@@ -224,12 +218,6 @@ def _replace_stderr(target):
         sys.stderr = orig
 
 
-if sys.version_info < (3,):
-    _coerce_unicode = lambda s: unicode(s)
-else:
-    _coerce_unicode = lambda s: s
-
-
 @contextlib.contextmanager
 def _temp_io():
     sio = StringIO()
@@ -239,7 +227,7 @@ def _temp_io():
         finally:
             tmp.seek(0)
             buff = tmp.read()
-            sio.write(_coerce_unicode(buff))
+            sio.write(buff)
 
 
 @contextlib.contextmanager

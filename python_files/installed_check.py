@@ -11,9 +11,9 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 LIB_ROOT = pathlib.Path(__file__).parent / "lib" / "python"
 sys.path.insert(0, os.fspath(LIB_ROOT))
 
-import tomli
-from importlib_metadata import metadata
-from packaging.requirements import Requirement
+import tomli  # noqa: E402
+from importlib_metadata import metadata  # noqa: E402
+from packaging.requirements import Requirement  # noqa: E402
 
 DEFAULT_SEVERITY = "3"  # 'Hint'
 try:

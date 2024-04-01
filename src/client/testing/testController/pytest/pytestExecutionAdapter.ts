@@ -101,7 +101,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
-        const relativePathToPytest = 'pythonFiles';
+        const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
         const { pytestArgs } = settings.testing;

@@ -3,7 +3,8 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
+import { Uri } from 'vscode';
+import { PythonEnvKind, PythonEnvSource } from '../../../../../client/pythonEnvironments/base/info';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
@@ -11,7 +12,8 @@ import { PoetryLocator } from '../../../../../client/pythonEnvironments/base/loc
 import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { assertBasicEnvsEqual } from '../envTestUtils';
 import { ExecutionResult, ShellOptions } from '../../../../../client/common/process/types';
-import { createBasicEnv } from '../../common';
+import { createBasicEnv as createBasicEnvCommon } from '../../common';
+import { BasicEnvInfo } from '../../../../../client/pythonEnvironments/base/locator';
 
 suite('Poetry Locator', () => {
     let shellExecute: sinon.SinonStub;
@@ -31,6 +33,17 @@ suite('Poetry Locator', () => {
 
     suite('Windows', () => {
         const project1 = path.join(testPoetryDir, 'project1');
+
+        function createBasicEnv(
+            kind: PythonEnvKind,
+            executablePath: string,
+            source?: PythonEnvSource[],
+            envPath?: string,
+        ): BasicEnvInfo {
+            const basicEnv = createBasicEnvCommon(kind, executablePath, source, envPath);
+            basicEnv.searchLocation = Uri.file(project1);
+            return basicEnv;
+        }
         setup(() => {
             locator = new PoetryLocator(project1);
             getOSTypeStub.returns(platformUtils.OSType.Windows);
@@ -72,6 +85,17 @@ suite('Poetry Locator', () => {
 
     suite('Non-Windows', () => {
         const project2 = path.join(testPoetryDir, 'project2');
+
+        function createBasicEnv(
+            kind: PythonEnvKind,
+            executablePath: string,
+            source?: PythonEnvSource[],
+            envPath?: string,
+        ): BasicEnvInfo {
+            const basicEnv = createBasicEnvCommon(kind, executablePath, source, envPath);
+            basicEnv.searchLocation = Uri.file(project2);
+            return basicEnv;
+        }
         setup(() => {
             locator = new PoetryLocator(project2);
             getOSTypeStub.returns(platformUtils.OSType.Linux);

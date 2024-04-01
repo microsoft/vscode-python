@@ -17,6 +17,7 @@
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
+import contextlib
 import json
 import os
 import signal
@@ -27,7 +28,7 @@ import unittest
 
 try:
     import thread
-except:
+except ModuleNotFoundError:
     import _thread as thread
 
 
@@ -115,7 +116,7 @@ class _IpcChannel(object):
 
     def readSocket(self):
         try:
-            data = self.socket.recv(1024)
+            self.socket.recv(1024)
             self.callback()
         except OSError:
             if not self._closed:
@@ -169,9 +170,7 @@ class VsTestResult(unittest.TextTestResult):
 
     def addSubTest(self, test, subtest, err):
         super(VsTestResult, self).addSubTest(test, subtest, err)
-        self.sendResult(
-            test, "subtest-passed" if err is None else "subtest-failed", err, subtest
-        )
+        self.sendResult(test, "subtest-passed" if err is None else "subtest-failed", err, subtest)
 
     def sendResult(self, test, outcome, trace=None, subtest=None):
         if _channel is not None:
@@ -199,11 +198,8 @@ class VsTestResult(unittest.TextTestResult):
 def stopTests():
     try:
         os.kill(os.getpid(), signal.SIGUSR1)
-    except:
-        try:
-            os.kill(os.getpid(), signal.SIGTERM)
-        except:
-            pass
+    except Exception:
+        os.kill(os.getpid(), signal.SIGTERM)
 
 
 class ExitCommand(Exception):
@@ -226,9 +222,7 @@ def main():
         prog="visualstudio_py_testlauncher",
         usage="Usage: %prog [<option>] <test names>... ",
     )
-    parser.add_option(
-        "--debug", action="store_true", help="Whether debugging the unit tests"
-    )
+    parser.add_option("--debug", action="store_true", help="Whether debugging the unit tests")
     parser.add_option(
         "-x",
         "--mixed-mode",
@@ -243,9 +237,7 @@ def main():
         action="append",
         help="specifies a test to run",
     )
-    parser.add_option(
-        "--testFile", type="str", help="Fully qualitified path to file name"
-    )
+    parser.add_option("--testFile", type="str", help="Fully qualitified path to file name")
     parser.add_option(
         "-c", "--coverage", type="str", help="enable code coverage and specify filename"
     )
@@ -271,23 +263,17 @@ def main():
         help="Verbose output (0 none, 1 (no -v) simple, 2 (-v) full)",
     )
     parser.add_option("--uf", "--failfast", type="str", help="Stop on first failure")
-    parser.add_option(
-        "--uc", "--catch", type="str", help="Catch control-C and display results"
-    )
+    parser.add_option("--uc", "--catch", type="str", help="Catch control-C and display results")
     (opts, _) = parser.parse_args()
 
     sys.path[0] = os.getcwd()
     if opts.result_port:
         try:
             signal.signal(signal.SIGUSR1, signal_handler)
-        except:
-            try:
+        except Exception:
+            with contextlib.suppress(Exception):
                 signal.signal(signal.SIGTERM, signal_handler)
-            except:
-                pass
-        _channel = _IpcChannel(
-            socket.create_connection(("127.0.0.1", opts.result_port)), stopTests
-        )
+        _channel = _IpcChannel(socket.create_connection(("127.0.0.1", opts.result_port)), stopTests)
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
 
@@ -314,14 +300,12 @@ def main():
     cov = None
     try:
         if opts.coverage:
-            try:
+            with contextlib.suppress(Exception):
                 import coverage
 
                 cov = coverage.coverage(opts.coverage)
                 cov.load()
                 cov.start()
-            except:
-                pass
         if opts.tests is None and opts.testFile is None:
             if opts.us is None:
                 opts.us = "."
@@ -345,7 +329,7 @@ def main():
                 # Run a specific test class or test method
                 for test_suite in suites._tests:
                     for cls in test_suite._tests:
-                        try:
+                        with contextlib.suppress(Exception):
                             for m in cls._tests:
                                 testId = m.id()
                                 if testId.startswith(opts.tests[0]):
@@ -355,8 +339,6 @@ def main():
                                         tests = unittest.TestSuite([m])
                                     else:
                                         tests.addTest(m)
-                        except Exception as err:
-                            errorMessage = traceback.format_exc()
                 if tests is None:
                     tests = suite
             if tests is None and suite is None:
@@ -374,9 +356,7 @@ def main():
                 verbosity=opts.uvInt, resultclass=VsTestResult, failfast=True
             )
         else:
-            runner = unittest.TextTestRunner(
-                verbosity=opts.uvInt, resultclass=VsTestResult
-            )
+            runner = unittest.TextTestRunner(verbosity=opts.uvInt, resultclass=VsTestResult)
         result = runner.run(tests)
         if _channel is not None:
             _channel.close()
@@ -390,14 +370,10 @@ def main():
             _channel.send_event(name="done")
             _channel.socket.close()
         # prevent generation of the error 'Error in sys.exitfunc:'
-        try:
+        with contextlib.suppress(Exception):
             sys.stdout.close()
-        except:
-            pass
-        try:
+        with contextlib.suppress(Exception):
             sys.stderr.close()
-        except:
-            pass
 
 
 if __name__ == "__main__":

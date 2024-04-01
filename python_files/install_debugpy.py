@@ -10,7 +10,7 @@ import zipfile
 from packaging.version import parse as version_parser
 
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python")
+DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "python_files", "lib", "python")
 DEBUGGER_PACKAGE = "debugpy"
 DEBUGGER_PYTHON_ABI_VERSIONS = ("cp310",)
 DEBUGGER_VERSION = "1.8.1"  # can also be "latest"

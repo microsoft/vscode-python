@@ -24,7 +24,7 @@ suite('Smoke Test: Jedi LSP', () => {
     teardown(closeActiveWindows);
 
     test('Verify diagnostics on a python file', async () => {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'intellisense', 'test.py');
+        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'python_files', 'intellisense', 'test.py');
         const outputFile = path.join(path.dirname(file), 'ds.log');
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);

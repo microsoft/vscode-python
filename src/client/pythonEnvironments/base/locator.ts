@@ -144,6 +144,7 @@ export type BasicEnvInfo = {
     executablePath: string;
     source?: PythonEnvSource[];
     envPath?: string;
+    searchLocation?: Uri;
 };
 
 /**

@@ -12,9 +12,7 @@ from . import DEBUG_ADAPTER_ROOT, SRC_ROOT, TEST_ROOT, TESTING_TOOLS_ROOT
 def parse_args():
     parser = argparse.ArgumentParser()
     # To mark a test as functional:  (decorator) @pytest.mark.functional
-    parser.add_argument(
-        "--functional", dest="markers", action="append_const", const="functional"
-    )
+    parser.add_argument("--functional", dest="markers", action="append_const", const="functional")
     parser.add_argument(
         "--no-functional", dest="markers", action="append_const", const="not functional"
     )

@@ -7,7 +7,7 @@ import { _SCRIPTS_DIR } from './constants';
 const SCRIPTS_DIR = _SCRIPTS_DIR;
 
 // "scripts" contains everything relevant to the scripts found under
-// the top-level "pythonFiles" directory.  Each of those scripts has
+// the top-level "python_files" directory.  Each of those scripts has
 // a function in this module which matches the script's filename.
 // Each function provides the commandline arguments that should be
 // used when invoking a Python executable, whether through spawn/exec
@@ -18,7 +18,7 @@ const SCRIPTS_DIR = _SCRIPTS_DIR;
 // into the corresponding object or objects.  "parse()" takes a single
 // string as the stdout text and returns the relevant data.
 //
-// Some of the scripts are located in subdirectories of "pythonFiles".
+// Some of the scripts are located in subdirectories of "python_files".
 // For each of those subdirectories there is a sub-module where
 // those scripts' functions may be found.
 //

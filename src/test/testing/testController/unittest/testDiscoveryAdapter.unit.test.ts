@@ -59,7 +59,7 @@ suite('Unittest test discovery adapter', () => {
         const deferred = createDeferred();
 
         const uri = Uri.file('/foo/bar');
-        const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
 
         const adapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
@@ -82,7 +82,7 @@ suite('Unittest test discovery adapter', () => {
 
         const uri = Uri.file('/foo/bar');
         const newCwd = '/foo';
-        const script = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'unittestadapter', 'discovery.py');
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
 
         const adapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);

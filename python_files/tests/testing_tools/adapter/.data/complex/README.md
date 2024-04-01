@@ -1,7 +1,7 @@
 ## Directory Structure
 
 ```
-pythonFiles/tests/testing_tools/adapter/.data/
+python_files/tests/testing_tools/adapter/.data/
    tests/  # test root
        test_doctest.txt
        test_pytest.py

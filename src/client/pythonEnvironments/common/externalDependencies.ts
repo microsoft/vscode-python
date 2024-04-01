@@ -11,7 +11,6 @@ import { chain, iterable } from '../../common/utils/async';
 import { getOSType, OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { traceError, traceVerbose } from '../../logging';
-import { DiscoveryUsingWorkers } from '../../common/experiments/groups';
 
 let internalServiceContainer: IServiceContainer;
 export function initializeExternalDependencies(serviceContainer: IServiceContainer): void {
@@ -21,7 +20,7 @@ export function initializeExternalDependencies(serviceContainer: IServiceContain
 // processes
 
 export async function shellExecute(command: string, options: ShellOptions = {}): Promise<ExecutionResult<string>> {
-    const useWorker = inExperiment(DiscoveryUsingWorkers.experiment);
+    const useWorker = false;
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     options = { ...options, useWorker };
     return service.shellExec(command, options);
@@ -31,7 +30,7 @@ export async function exec(
     file: string,
     args: string[],
     options: SpawnOptions = {},
-    useWorker = inExperiment(DiscoveryUsingWorkers.experiment),
+    useWorker = false,
 ): Promise<ExecutionResult<string>> {
     const service = await internalServiceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
     options = { ...options, useWorker };

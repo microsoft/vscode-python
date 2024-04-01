@@ -19,7 +19,7 @@ import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { IDiscoveryAPI } from '../client/pythonEnvironments/base/locator';
 
 suite('Extension API', () => {
-    const debuggerPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
+    const debuggerPath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'lib', 'python', 'debugpy');
     const debuggerHost = 'somehost';
     const debuggerPort = 12345;
 
@@ -37,6 +37,7 @@ suite('Extension API', () => {
         interpreterService = mock(InterpreterService);
         environmentVariablesProvider = mock<IEnvironmentVariablesProvider>();
         discoverAPI = mock<IDiscoveryAPI>();
+        when(discoverAPI.getEnvs()).thenReturn([]);
 
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
             instance(configurationService),

@@ -3,11 +3,9 @@
 // Licensed under the MIT License.
 
 import TelemetryReporter from '@vscode/extension-telemetry';
-
-import * as path from 'path';
-import * as fs from 'fs-extra';
+import type * as vscodeTypes from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
-import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, isUnitTestExecution } from '../common/constants';
+import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
@@ -39,14 +37,20 @@ function isTelemetrySupported(): boolean {
     }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let packageJSON: any;
+
 /**
  * Checks if the telemetry is disabled
  * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
-    const packageJsonPath = path.join(EXTENSION_ROOT_DIR, 'package.json');
-    const packageJson = fs.readJSONSync(packageJsonPath);
-    return !packageJson.enableTelemetry;
+    if (!packageJSON) {
+        const vscode = require('vscode') as typeof vscodeTypes;
+        const pythonExtension = vscode.extensions.getExtension(PVSC_EXTENSION_ID)!;
+        packageJSON = pythonExtension.packageJSON;
+    }
+    return !packageJSON.enableTelemetry;
 }
 
 const sharedProperties: Record<string, unknown> = {};

@@ -40,7 +40,9 @@ class PipeManager:
             try:
                 # for windows, is should only use \n\n
                 print("platform is windows, writing now", self.name)
-                request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
+                request = (
+                    f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
+                )
                 a = self._writer.write(request)
                 print("num written? ", a)
                 self._writer.flush()
@@ -49,7 +51,9 @@ class PipeManager:
                 raise (e)
         else:
             # must include the carriage-return defined (as \r\n) for unix systems
-            request = f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
             self._socket.send(request.encode("utf-8"))
             # does this also need a flush on the socket?
 
@@ -100,9 +104,7 @@ class SocketManager(object):
         self.close()
 
     def connect(self):
-        self.socket = socket.socket(
-            socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-        )
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         if sys.platform == "win32":
             addr_use = socket.SO_EXCLUSIVEADDRUSE
         else:

@@ -87,10 +87,7 @@ export class LanguageClientMiddlewareBase implements Middleware {
                     const settingDict: LSPObject & { pythonPath: string; _envPYTHONPATH: string } = settings[
                         i
                     ] as LSPObject & { pythonPath: string; _envPYTHONPATH: string };
-                    settingDict.pythonPath =
-                        (await this.getPythonPathOverride(uri)) ??
-                        (await interpreterService.getActiveInterpreter(uri))?.path ??
-                        'python';
+                    settingDict.pythonPath = (await interpreterService.getActiveInterpreter(uri))?.path ?? 'python';
 
                     const env = await envService.getEnvironmentVariables(uri);
                     const envPYTHONPATH = env.PYTHONPATH;
@@ -105,11 +102,6 @@ export class LanguageClientMiddlewareBase implements Middleware {
             return settings;
         },
     };
-
-    // eslint-disable-next-line class-methods-use-this
-    protected async getPythonPathOverride(_uri: Uri | undefined): Promise<string | undefined> {
-        return undefined;
-    }
 
     // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
     protected configurationHook(_item: ConfigurationItem, _settings: LSPObject): void {}

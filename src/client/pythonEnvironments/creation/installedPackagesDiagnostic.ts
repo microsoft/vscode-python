@@ -29,7 +29,6 @@ async function setContextForActiveEditor(diagnosticCollection: DiagnosticCollect
     }
 
     // undefined here in the logs means no file was selected
-    traceVerbose(`Clearing context for python dependencies not installed: ${doc?.uri.fsPath}`);
     await executeCommand('setContext', DEPS_NOT_INSTALLED_KEY, false);
 }
 

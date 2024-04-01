@@ -191,9 +191,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             ast.IfExp,
             ast.ExceptHandler,
         )
-        if isinstance(node, ast_types_with_nodebody) and isinstance(
-            node.body, Iterable
-        ):
+        if isinstance(node, ast_types_with_nodebody) and isinstance(node.body, Iterable):
             for child_nodes in node.body:
                 top_level_nodes.append(child_nodes)
 
@@ -204,9 +202,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         which_line_next = 0
         for same_line_node in exact_nodes:
             should_run_top_blocks.append(same_line_node)
-            smart_code += (
-                f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
-            )
+            smart_code += f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
             which_line_next = get_next_block_lineno(should_run_top_blocks)
         return {
             "normalized_smart_result": smart_code,
@@ -277,11 +273,7 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
 
-    if (
-        empty_Highlight
-        and contents.get("smartSendExperimentEnabled")
-        and contents.get("smartSendSettingsEnabled")
-    ):
+    if empty_Highlight and contents.get("smartSendSettingsEnabled"):
         result = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,

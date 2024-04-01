@@ -12,6 +12,7 @@ import {
 } from '../../client/interpreter/configuration/environmentTypeComparer';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { PythonEnvType } from '../../client/pythonEnvironments/base/info';
+import * as pyenv from '../../client/pythonEnvironments/common/environmentManagers/pyenv';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 suite('Environment sorting', () => {
@@ -19,6 +20,7 @@ suite('Environment sorting', () => {
     let interpreterHelper: IInterpreterHelper;
     let getActiveWorkspaceUriStub: sinon.SinonStub;
     let getInterpreterTypeDisplayNameStub: sinon.SinonStub;
+    const preferredPyenv = path.join('path', 'to', 'preferred', 'pyenv');
 
     setup(() => {
         getActiveWorkspaceUriStub = sinon.stub().returns({ folderUri: { fsPath: workspacePath } });
@@ -28,6 +30,8 @@ suite('Environment sorting', () => {
             getActiveWorkspaceUri: getActiveWorkspaceUriStub,
             getInterpreterTypeDisplayName: getInterpreterTypeDisplayNameStub,
         } as unknown) as IInterpreterHelper;
+        const getActivePyenvForDirectory = sinon.stub(pyenv, 'getActivePyenvForDirectory');
+        getActivePyenvForDirectory.resolves(preferredPyenv);
     });
 
     teardown(() => {
@@ -144,6 +148,33 @@ suite('Environment sorting', () => {
                 type: PythonEnvType.Virtual,
                 envName: 'pipenv-env',
                 version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment,
+            expected: 1,
+        },
+        {
+            title: 'Preferred Pyenv interpreter should come before any global interpreter',
+            envA: {
+                envType: EnvironmentType.Pyenv,
+                version: { major: 3, minor: 12, patch: 2 },
+                path: preferredPyenv,
+            } as PythonEnvironment,
+            envB: {
+                envType: EnvironmentType.Pyenv,
+                version: { major: 3, minor: 10, patch: 2 },
+                path: path.join('path', 'to', 'normal', 'pyenv'),
+            } as PythonEnvironment,
+            expected: -1,
+        },
+        {
+            title: 'Pyenv interpreters should come first when there are global interpreters',
+            envA: {
+                envType: EnvironmentType.Global,
+                version: { major: 3, minor: 10, patch: 2 },
+            } as PythonEnvironment,
+            envB: {
+                envType: EnvironmentType.Pyenv,
+                version: { major: 3, minor: 7, patch: 2 },
+                path: path.join('path', 'to', 'normal', 'pyenv'),
             } as PythonEnvironment,
             expected: 1,
         },
@@ -283,8 +314,9 @@ suite('Environment sorting', () => {
     ];
 
     testcases.forEach(({ title, envA, envB, expected }) => {
-        test(title, () => {
+        test(title, async () => {
             const envTypeComparer = new EnvironmentTypeComparer(interpreterHelper);
+            await envTypeComparer.initialize(undefined);
             const result = envTypeComparer.compare(envA, envB);
 
             assert.strictEqual(result, expected);

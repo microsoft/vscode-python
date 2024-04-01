@@ -1,7 +1,7 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "IntelliSense (Pylance), Linting, Debugging (Python Debugger), code formatting, refactoring, unit tests, and more.",
+    "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
     "version": "2024.3.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
@@ -23,7 +23,8 @@
         "testObserver",
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
-        "terminalExecuteCommandEvent"
+        "terminalExecuteCommandEvent",
+        "contribIssueReporter"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -44,7 +45,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.82.0"
+        "vscode": "^1.86.0"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -56,8 +57,6 @@
     "categories": [
         "Programming Languages",
         "Debuggers",
-        "Linters",
-        "Formatters",
         "Other",
         "Data Science",
         "Machine Learning"
@@ -173,16 +172,6 @@
                 "when": "false",
                 "steps": [
                     {
-                        "id": "python.createPythonFolder",
-                        "title": "%walkthrough.step.python.createPythonFolder.title%",
-                        "description": "%walkthrough.step.python.createPythonFolder.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "%walkthrough.step.python.createPythonFile.altText%"
-                        },
-                        "when": "workspaceFolderCount = 0"
-                    },
-                    {
                         "id": "python.createPythonFile",
                         "title": "%walkthrough.step.python.createPythonFile.title%",
                         "description": "%walkthrough.step.python.createPythonFile.description%",
@@ -226,14 +215,15 @@
                         "title": "%walkthrough.step.python.createEnvironment.title2%",
                         "description": "%walkthrough.step.python.createEnvironment.description2%",
                         "media": {
-                            "markdown": "resources/walkthrough/environments-info.md"
+                            "svg": "resources/walkthrough/create-environment.svg",
+                            "altText": "%walkthrough.step.python.createEnvironment.altText%"
                         },
                         "when": ""
                     },
                     {
-                        "id": "python.runAndDebug",
-                        "title": "%walkthrough.step.python.runAndDebug.title%",
-                        "description": "%walkthrough.step.python.runAndDebug.description%",
+                        "id": "python.runAndDebug2",
+                        "title": "%walkthrough.step.python.runAndDebug2.title%",
+                        "description": "%walkthrough.step.python.runAndDebug2.description%",
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
                             "altText": "%walkthrough.step.python.runAndDebug.altText%"
@@ -242,7 +232,7 @@
                     },
                     {
                         "id": "python.learnMoreWithDS2",
-                        "title": "%walkthrough.step.python.learnMoreWithDS.title%",
+                        "title": "%walkthrough.step.python.learnMoreWithDS2.title%",
                         "description": "%walkthrough.step.python.learnMoreWithDS.description2%",
                         "media": {
                             "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
@@ -466,7 +456,7 @@
                     "uniqueItems": true
                 },
                 "python.createEnvironment.contentButton": {
-                    "default": "show",
+                    "default": "hide",
                     "markdownDescription": "%python.createEnvironment.contentButton.description%",
                     "scope": "machine-overridable",
                     "type": "string",
@@ -476,7 +466,7 @@
                     ]
                 },
                 "python.createEnvironment.trigger": {
-                    "default": "off",
+                    "default": "prompt",
                     "markdownDescription": "%python.createEnvironment.trigger.description%",
                     "scope": "machine-overridable",
                     "type": "string",
@@ -1245,6 +1235,11 @@
             }
         ],
         "menus": {
+            "issue/reporter": [
+				{
+					"command": "python.reportIssue"
+				}
+			],
             "commandPalette": [
                 {
                     "category": "Python",
@@ -1566,9 +1561,9 @@
         "unicode": "^14.0.0",
         "untildify": "^4.0.0",
         "vscode-debugprotocol": "^1.28.0",
-        "vscode-jsonrpc": "^8.2.0",
-        "vscode-languageclient": "^9.0.1",
-        "vscode-languageserver-protocol": "^3.17.5",
+        "vscode-jsonrpc": "^9.0.0-next.2",
+        "vscode-languageclient": "^10.0.0-next.2",
+        "vscode-languageserver-protocol": "^3.17.6-next.3",
         "vscode-tas-client": "^0.1.84",
         "which": "^2.0.2",
         "winreg": "^1.2.4",

@@ -6,10 +6,17 @@ import { Resource } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
 import { isActiveStateEnvironmentForWorkspace } from '../../pythonEnvironments/common/environmentManagers/activestate';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
-import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
+import {
+    EnvironmentType,
+    PythonEnvironment,
+    virtualEnvTypes,
+    workspaceVirtualEnvTypes,
+} from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
+import { getActivePyenvForDirectory } from '../../pythonEnvironments/common/environmentManagers/pyenv';
+import { arePathsSame } from '../../common/platform/fs-paths';
 
 export enum EnvLocationHeuristic {
     /**
@@ -25,6 +32,8 @@ export enum EnvLocationHeuristic {
 @injectable()
 export class EnvironmentTypeComparer implements IInterpreterComparer {
     private workspaceFolderPath: string;
+
+    private preferredPyenvInterpreterPath = new Map<string, string | undefined>();
 
     constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {
         this.workspaceFolderPath = this.interpreterHelper.getActiveWorkspaceUri(undefined)?.folderUri.fsPath ?? '';
@@ -52,6 +61,18 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         const envLocationComparison = compareEnvironmentLocation(a, b, this.workspaceFolderPath);
         if (envLocationComparison !== 0) {
             return envLocationComparison;
+        }
+
+        if (a.envType === EnvironmentType.Pyenv && b.envType === EnvironmentType.Pyenv) {
+            const preferredPyenv = this.preferredPyenvInterpreterPath.get(this.workspaceFolderPath);
+            if (preferredPyenv) {
+                if (arePathsSame(preferredPyenv, b.path)) {
+                    return 1;
+                }
+                if (arePathsSame(preferredPyenv, a.path)) {
+                    return -1;
+                }
+            }
         }
 
         // Check environment type.
@@ -85,6 +106,16 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
         return nameA > nameB ? 1 : -1;
     }
 
+    public async initialize(resource: Resource): Promise<void> {
+        const workspaceUri = this.interpreterHelper.getActiveWorkspaceUri(resource);
+        const cwd = workspaceUri?.folderUri.fsPath;
+        if (!cwd) {
+            return;
+        }
+        const preferredPyenvInterpreter = await getActivePyenvForDirectory(cwd);
+        this.preferredPyenvInterpreterPath.set(cwd, preferredPyenvInterpreter);
+    }
+
     public getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined {
         // When recommending an intepreter for a workspace, we either want to return a local one
         // or fallback on a globally-installed interpreter, and we don't want want to suggest a global environment
@@ -105,8 +136,8 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
-            if (virtualEnvTypes.includes(i.envType)) {
-                // We're not sure if these envs were created for the workspace, so do not recommend them.
+            if (!workspaceVirtualEnvTypes.includes(i.envType) && virtualEnvTypes.includes(i.envType)) {
+                // These are global virtual envs so we're not sure if these envs were created for the workspace, skip them.
                 return false;
             }
             if (i.version?.major === 2) {
@@ -235,7 +266,13 @@ export function getEnvLocationHeuristic(environment: PythonEnvironment, workspac
  */
 function compareEnvironmentType(a: PythonEnvironment, b: PythonEnvironment): number {
     if (!a.type && !b.type) {
-        // Return 0 if two global interpreters are being compared.
+        // Unless one of them is pyenv interpreter, return 0 if two global interpreters are being compared.
+        if (a.envType === EnvironmentType.Pyenv && b.envType !== EnvironmentType.Pyenv) {
+            return -1;
+        }
+        if (a.envType !== EnvironmentType.Pyenv && b.envType === EnvironmentType.Pyenv) {
+            return 1;
+        }
         return 0;
     }
     const envTypeByPriority = getPrioritizedEnvironmentType();
@@ -248,6 +285,7 @@ function getPrioritizedEnvironmentType(): EnvironmentType[] {
         EnvironmentType.Poetry,
         EnvironmentType.Pipenv,
         EnvironmentType.VirtualEnvWrapper,
+        EnvironmentType.Hatch,
         EnvironmentType.Venv,
         EnvironmentType.VirtualEnv,
         EnvironmentType.ActiveState,

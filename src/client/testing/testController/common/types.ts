@@ -228,7 +228,7 @@ export interface ITestExecutionAdapter {
     ): Promise<ExecutionTestPayload>;
 }
 
-// Same types as in pythonFiles/unittestadapter/utils.py
+// Same types as in python_files/unittestadapter/utils.py
 export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
 
 export type DiscoveredTestCommon = {

@@ -322,19 +322,12 @@ unittest_folder_discovery_expected_output = {
 #          └── test_bottom_function_t
 #          └── test_bottom_function_f
 dual_level_nested_folder_path = TEST_DATA_PATH / "dual_level_nested_folder"
-test_top_folder_path = (
-    TEST_DATA_PATH / "dual_level_nested_folder" / "test_top_folder.py"
-)
+test_top_folder_path = TEST_DATA_PATH / "dual_level_nested_folder" / "test_top_folder.py"
 
-test_nested_folder_one_path = (
-    TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one"
-)
+test_nested_folder_one_path = TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one"
 
 test_bottom_folder_path = (
-    TEST_DATA_PATH
-    / "dual_level_nested_folder"
-    / "nested_folder_one"
-    / "test_bottom_folder.py"
+    TEST_DATA_PATH / "dual_level_nested_folder" / "nested_folder_one" / "test_bottom_folder.py"
 )
 
 
@@ -851,12 +844,8 @@ root_with_config_expected_output = {
                         os.path.join(tests_path, "test_a.py"),
                     ),
                     "type_": "test",
-                    "id_": get_absolute_test_id(
-                        "tests/test_a.py::test_a_function", tests_a_path
-                    ),
-                    "runID": get_absolute_test_id(
-                        "tests/test_a.py::test_a_function", tests_a_path
-                    ),
+                    "id_": get_absolute_test_id("tests/test_a.py::test_a_function", tests_a_path),
+                    "runID": get_absolute_test_id("tests/test_a.py::test_a_function", tests_a_path),
                 }
             ],
         },
@@ -874,12 +863,8 @@ root_with_config_expected_output = {
                         os.path.join(tests_path, "test_b.py"),
                     ),
                     "type_": "test",
-                    "id_": get_absolute_test_id(
-                        "tests/test_b.py::test_b_function", tests_b_path
-                    ),
-                    "runID": get_absolute_test_id(
-                        "tests/test_b.py::test_b_function", tests_b_path
-                    ),
+                    "id_": get_absolute_test_id("tests/test_b.py::test_b_function", tests_b_path),
+                    "runID": get_absolute_test_id("tests/test_b.py::test_b_function", tests_b_path),
                 }
             ],
         },
@@ -996,12 +981,8 @@ nested_classes_expected_test_output = {
 }
 SYMLINK_FOLDER_PATH = TEST_DATA_PATH / "symlink_folder"
 SYMLINK_FOLDER_PATH_TESTS = TEST_DATA_PATH / "symlink_folder" / "tests"
-SYMLINK_FOLDER_PATH_TESTS_TEST_A = (
-    TEST_DATA_PATH / "symlink_folder" / "tests" / "test_a.py"
-)
-SYMLINK_FOLDER_PATH_TESTS_TEST_B = (
-    TEST_DATA_PATH / "symlink_folder" / "tests" / "test_b.py"
-)
+SYMLINK_FOLDER_PATH_TESTS_TEST_A = TEST_DATA_PATH / "symlink_folder" / "tests" / "test_a.py"
+SYMLINK_FOLDER_PATH_TESTS_TEST_B = TEST_DATA_PATH / "symlink_folder" / "tests" / "test_b.py"
 
 symlink_expected_discovery_output = {
     "name": "symlink_folder",

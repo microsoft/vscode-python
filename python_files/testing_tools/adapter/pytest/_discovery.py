@@ -17,7 +17,7 @@ def discover(
     # *,
     _pytest_main=pytest.main,
     _plugin=None,
-    **_ignored
+    **_ignored,
 ):
     """Return the results of test discovery."""
     if _plugin is None:

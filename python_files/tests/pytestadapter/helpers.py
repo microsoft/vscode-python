@@ -48,9 +48,7 @@ class PipeManager:
             (
                 _sock,
                 _,
-            ) = (
-                server.accept()
-            )  # occurs when client connects, returns a socket (_sock) which will be used for this specific
+            ) = server.accept()  # occurs when client connects, returns a socket (_sock) which will be used for this specific
             # client and server connection
             self._socket = _sock
         return self
@@ -140,9 +138,7 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
         json_data, remaining = parse_rpc_message(remaining)
         # here json_data is a single rpc payload, now check its jsonrpc 2 and save the param data
         if "params" not in json_data or "jsonrpc" not in json_data:
-            raise ValueError(
-                "Invalid JSON-RPC message received, missing params or jsonrpc key"
-            )
+            raise ValueError("Invalid JSON-RPC message received, missing params or jsonrpc key")
         elif json_data["jsonrpc"] != "2.0":
             raise ValueError("Invalid JSON-RPC version received, not version 2.0")
         else:
@@ -150,10 +146,10 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
 
     last_json = json_messages.pop(-1)
     if "eot" not in last_json:
-        raise ValueError(
-            "Last JSON messages does not contain 'eot' as its last payload."
-        )
-    return json_messages  # return the list of json messages, only the params part with the EOT token
+        raise ValueError("Last JSON messages does not contain 'eot' as its last payload.")
+    return (
+        json_messages  # return the list of json messages, only the params part with the EOT token
+    )
 
 
 def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
@@ -178,9 +174,7 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 
             line = str_stream.readline()
             if line not in ["\r\n", "\n"]:
-                raise ValueError(
-                    "Header does not contain space to separate header and body"
-                )
+                raise ValueError("Header does not contain space to separate header and body")
             # if it passes all these checks then it has the right headers
             break
 
@@ -260,9 +254,7 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
         result.append("".join(all_data))
 
 
-def _run_test_code(
-    proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event
-):
+def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
     result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
     completed.set()
     return result
@@ -273,9 +265,7 @@ def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     return runner_with_cwd(args, TEST_DATA_PATH)
 
 
-def runner_with_cwd(
-    args: List[str], path: pathlib.Path
-) -> Optional[List[Dict[str, Any]]]:
+def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
     process_args: List[str] = [
         sys.executable,
@@ -299,9 +289,7 @@ def runner_with_cwd(
             env.update(
                 {
                     "TEST_RUN_PIPE": pipe.path,
-                    "PYTHONPATH": os.fspath(
-                        pathlib.Path(__file__).parent.parent.parent
-                    ),
+                    "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
                 }
             )
             completed = threading.Event()
