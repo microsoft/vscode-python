@@ -1,0 +1,98 @@
+import subprocess
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from datetime import datetime
+import time
+
+# Function to prompt the user for configuration values
+def prompt_configuration():
+    print("Please configure the system monitoring settings:")
+    CPU_THRESHOLD = input("Enter CPU usage threshold (%): ")
+    MEMORY_THRESHOLD = input("Enter Memory usage threshold (%): ")
+    DISK_THRESHOLD = input("Enter Disk usage threshold (%): ")
+    ALERT_EMAIL = input("Enter email address for alerts: ")
+    return CPU_THRESHOLD, MEMORY_THRESHOLD, DISK_THRESHOLD, ALERT_EMAIL
+
+# Function to monitor CPU usage
+def monitor_cpu(CPU_THRESHOLD):
+    cpu_usage = float(subprocess.check_output("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d '.' -f1", shell=True))
+    if cpu_usage > float(CPU_THRESHOLD):
+        alert_manager("CPU Usage is high! Current Usage: {}%".format(cpu_usage))
+
+# Function to monitor Memory usage
+def monitor_memory(MEMORY_THRESHOLD):
+    mem_usage = float(subprocess.check_output("free | awk '/Mem/{printf(\"%.2f\", $3/$2*100)}'", shell=True))
+    if mem_usage > float(MEMORY_THRESHOLD):
+        alert_manager("Memory Usage is high! Current Usage: {}%".format(mem_usage))
+
+# Function to monitor Disk usage
+def monitor_disk(DISK_THRESHOLD):
+    disk_usage = float(subprocess.check_output("df -h / | awk '/\// {print $(NF-1)}' | sed 's/%//'", shell=True))
+    if disk_usage > float(DISK_THRESHOLD):
+        alert_manager("Disk Usage is high! Current Usage: {}%".format(disk_usage))
+
+# Function to monitor running processes
+def monitor_processes():
+    processes = subprocess.check_output("ps aux --no-heading | wc -l", shell=True)
+    print("Number of Running Processes: {}".format(processes))
+
+# Function to alert the user
+def alert_manager(message, ALERT_EMAIL):
+    print("Alert: {}".format(message))
+    # Sending an email alert to the specified recipient
+    sender_email = "your_email@example.com"  # Update with your email
+    password = "your_password"  # Update with your email password
+    subject = "System Alert"
+    body = message
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = ALERT_EMAIL
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+    server = smtplib.SMTP('smtp.example.com', 587)  # Update with your SMTP server details
+    server.starttls()
+    server.login(sender_email, password)
+    text = msg.as_string()
+    server.sendmail(sender_email, ALERT_EMAIL, text)
+    server.quit()
+
+# Function to generate system health report
+def generate_report():
+    REPORT_FILE = "system_health_report.txt"
+    with open(REPORT_FILE, "w") as report:
+        report.write("System Health Report\n")
+        report.write("---------------------\n")
+        report.write("Date: {}\n".format(datetime.now()))
+        cpu_usage = subprocess.check_output("top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d '.' -f1", shell=True)
+        report.write("CPU Usage: {}%\n".format(cpu_usage.decode().strip()))
+        mem_usage = subprocess.check_output("free | awk '/Mem/{printf(\"%.2f%%\", $3/$2*100)}'", shell=True)
+        report.write("Memory Usage: {}\n".format(mem_usage.decode().strip()))
+        disk_usage = subprocess.check_output("df -h / | awk '/\// {print $(NF-1)}'", shell=True)
+        report.write("Disk Usage: {}\n".format(disk_usage.decode().strip()))
+        processes = subprocess.check_output("ps aux --no-heading | wc -l", shell=True)
+        report.write("Number of Running Processes: {}\n".format(processes.decode().strip()))
+
+# Main function to monitor system health
+def main():
+    # Prompt the user for configuration values
+    CPU_THRESHOLD, MEMORY_THRESHOLD, DISK_THRESHOLD, ALERT_EMAIL = prompt_configuration()
+
+    # Initialize log file
+    LOG_FILE = "system_monitor.log"
+    with open(LOG_FILE, "w") as log:
+        log.write("System Monitoring Started {}\n".format(datetime.now()))
+
+    # Continuously monitor system health
+    while True:
+        monitor_cpu(CPU_THRESHOLD)
+        monitor_memory(MEMORY_THRESHOLD)
+        monitor_disk(DISK_THRESHOLD)
+        monitor_processes()
+        generate_report()
+        print("System report generated")
+        time.sleep(300)  # Adjust the sleep duration as needed (in seconds)
+
+# Execute the main function
+if __name__ == "__main__":
+    main()
