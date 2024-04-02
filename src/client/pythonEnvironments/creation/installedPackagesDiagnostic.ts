@@ -2,7 +2,7 @@
 // Licensed under the MIT License
 
 import { Diagnostic, DiagnosticCollection, TextDocument, Uri } from 'vscode';
-import { IDisposableRegistry, IInterpreterPathService } from '../../common/types';
+import { IDisposableRegistry } from '../../common/types';
 import { executeCommand } from '../../common/vscodeApis/commandApis';
 import { createDiagnosticCollection, onDidChangeDiagnostics } from '../../common/vscodeApis/languageApis';
 import { getActiveTextEditor, onDidChangeActiveTextEditor } from '../../common/vscodeApis/windowApis';
@@ -14,6 +14,7 @@ import {
 } from '../../common/vscodeApis/workspaceApis';
 import { traceVerbose } from '../../logging';
 import { getInstalledPackagesDiagnostics, INSTALL_CHECKER_SOURCE } from './common/installCheckUtils';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 export const DEPS_NOT_INSTALLED_KEY = 'pythonDepsNotInstalled';
 
@@ -34,7 +35,7 @@ async function setContextForActiveEditor(diagnosticCollection: DiagnosticCollect
 
 export function registerInstalledPackagesDiagnosticsProvider(
     disposables: IDisposableRegistry,
-    interpreterPathService: IInterpreterPathService,
+    interpreterService: IInterpreterService,
 ): void {
     const diagnosticCollection = createDiagnosticCollection(INSTALL_CHECKER_SOURCE);
     const updateDiagnostics = (uri: Uri, diagnostics: Diagnostic[]) => {
@@ -49,13 +50,13 @@ export function registerInstalledPackagesDiagnosticsProvider(
     disposables.push(
         onDidOpenTextDocument(async (doc: TextDocument) => {
             if (doc.languageId === 'pip-requirements' || doc.fileName.endsWith('pyproject.toml')) {
-                const diagnostics = await getInstalledPackagesDiagnostics(interpreterPathService, doc);
+                const diagnostics = await getInstalledPackagesDiagnostics(interpreterService, doc);
                 updateDiagnostics(doc.uri, diagnostics);
             }
         }),
         onDidSaveTextDocument(async (doc: TextDocument) => {
             if (doc.languageId === 'pip-requirements' || doc.fileName.endsWith('pyproject.toml')) {
-                const diagnostics = await getInstalledPackagesDiagnostics(interpreterPathService, doc);
+                const diagnostics = await getInstalledPackagesDiagnostics(interpreterService, doc);
                 updateDiagnostics(doc.uri, diagnostics);
             }
         }),
@@ -68,10 +69,10 @@ export function registerInstalledPackagesDiagnosticsProvider(
         onDidChangeActiveTextEditor(async () => {
             await setContextForActiveEditor(diagnosticCollection);
         }),
-        interpreterPathService.onDidChange(() => {
+        interpreterService.onDidChangeInterpreter(() => {
             getOpenTextDocuments().forEach(async (doc: TextDocument) => {
                 if (doc.languageId === 'pip-requirements' || doc.fileName.endsWith('pyproject.toml')) {
-                    const diagnostics = await getInstalledPackagesDiagnostics(interpreterPathService, doc);
+                    const diagnostics = await getInstalledPackagesDiagnostics(interpreterService, doc);
                     updateDiagnostics(doc.uri, diagnostics);
                 }
             });
@@ -80,7 +81,7 @@ export function registerInstalledPackagesDiagnosticsProvider(
 
     getOpenTextDocuments().forEach(async (doc: TextDocument) => {
         if (doc.languageId === 'pip-requirements' || doc.fileName.endsWith('pyproject.toml')) {
-            const diagnostics = await getInstalledPackagesDiagnostics(interpreterPathService, doc);
+            const diagnostics = await getInstalledPackagesDiagnostics(interpreterService, doc);
             updateDiagnostics(doc.uri, diagnostics);
         }
     });

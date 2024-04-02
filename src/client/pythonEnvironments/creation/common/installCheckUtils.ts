@@ -4,9 +4,9 @@
 import { Diagnostic, DiagnosticSeverity, l10n, Range, TextDocument, Uri } from 'vscode';
 import { installedCheckScript } from '../../../common/process/internal/scripts';
 import { plainExec } from '../../../common/process/rawProcessApis';
-import { IInterpreterPathService } from '../../../common/types';
 import { traceInfo, traceVerbose, traceError } from '../../../logging';
 import { getConfiguration } from '../../../common/vscodeApis/workspaceApis';
+import { IInterpreterService } from '../../../interpreter/contracts';
 
 interface PackageDiagnostic {
     package: string;
@@ -56,14 +56,17 @@ function getMissingPackageSeverity(doc: TextDocument): number {
 }
 
 export async function getInstalledPackagesDiagnostics(
-    interpreterPathService: IInterpreterPathService,
+    interpreterService: IInterpreterService,
     doc: TextDocument,
 ): Promise<Diagnostic[]> {
-    const interpreter = interpreterPathService.get(doc.uri);
+    const interpreter = await interpreterService.getActiveInterpreter(doc.uri);
+    if (!interpreter) {
+        return [];
+    }
     const scriptPath = installedCheckScript();
     try {
         traceInfo('Running installed packages checker: ', interpreter, scriptPath, doc.uri.fsPath);
-        const result = await plainExec(interpreter, [scriptPath, doc.uri.fsPath], {
+        const result = await plainExec(interpreter.path, [scriptPath, doc.uri.fsPath], {
             env: {
                 VSCODE_MISSING_PGK_SEVERITY: `${getMissingPackageSeverity(doc)}`,
             },
