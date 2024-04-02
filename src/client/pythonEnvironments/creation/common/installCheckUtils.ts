@@ -66,10 +66,9 @@ export async function getInstalledPackagesDiagnostics(
     const scriptPath = installedCheckScript();
     try {
         traceInfo('Running installed packages checker: ', interpreter, scriptPath, doc.uri.fsPath);
+        const envCopy = { ...process.env, VSCODE_MISSING_PGK_SEVERITY: `${getMissingPackageSeverity(doc)}` };
         const result = await plainExec(interpreter.path, [scriptPath, doc.uri.fsPath], {
-            env: {
-                VSCODE_MISSING_PGK_SEVERITY: `${getMissingPackageSeverity(doc)}`,
-            },
+            env: envCopy,
         });
         traceVerbose('Installed packages check result:\n', result.stdout);
         if (result.stderr) {
