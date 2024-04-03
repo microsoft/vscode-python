@@ -276,7 +276,11 @@ suite('Conda and its environments are located correctly', () => {
                                     opt: {},
                                 },
                             },
-                            opt: {},
+                            opt: {
+                                homebrew: {
+                                    bin: {},
+                                },
+                            },
                             usr: {
                                 share: {
                                     doc: {},
