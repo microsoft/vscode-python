@@ -290,7 +290,14 @@ suite('Conda and its environments are located correctly', () => {
                         };
                     });
 
-                    ['/usr/share', '/usr/local/share', '/opt', '/home/user', '/home/user/opt'].forEach((prefix) => {
+                    [
+                        '/usr/share',
+                        '/usr/local/share',
+                        '/opt',
+                        '/opt/homebrew/bin',
+                        '/home/user',
+                        '/home/user/opt',
+                    ].forEach((prefix) => {
                         const condaPath = `${prefix}/${condaDirName}`;
 
                         test(`Must find conda in ${condaPath}`, async () => {

@@ -342,7 +342,7 @@ export class Conda {
                     prefixes.push(home, path.join(localAppData, 'Continuum'));
                 }
             } else {
-                prefixes.push('/usr/share', '/usr/local/share', '/opt');
+                prefixes.push('/usr/share', '/usr/local/share', '/opt', '/opt/homebrew/bin');
                 if (home) {
                     prefixes.push(home, path.join(home, 'opt'));
                 }
