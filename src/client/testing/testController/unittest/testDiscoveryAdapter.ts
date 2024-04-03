@@ -107,6 +107,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             resource: options.workspaceFolder,
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+
         const args = [options.command.script].concat(options.command.args);
 
         if (options.outChannel) {

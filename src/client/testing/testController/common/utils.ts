@@ -4,7 +4,7 @@ import * as net from 'net';
 import * as path from 'path';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
 import { IExperimentService } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';

@@ -155,15 +155,15 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                "./out/test/**/*.unit.test.js",
-                "--require=out/test/unittests.js",
-                "--ui=tdd",
-                "--recursive",
-                "--colors",
-                // "--grep",
-                // "EOT tests",
-                "--timeout=300000"
-            ],
+                        "./out/test/**/*.unit.test.js",
+                        "--require=out/test/unittests.js",
+                        "--ui=tdd",
+                        "--recursive",
+                        "--colors",
+                        "--grep",
+                        "Unittest test discovery",
+                        "--timeout=30000"
+                    ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"]

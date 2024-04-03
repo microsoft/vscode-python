@@ -28,6 +28,7 @@ suite('Workspace test adapter', () => {
         let outputChannel: typemoq.IMock<ITestOutputChannel>;
 
         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
+        let execFactory: typemoq.IMock<IPythonExecutionFactory>;
 
         // Stubbed test controller (see comment around L.40)
         let testController: TestController;
@@ -147,7 +148,7 @@ suite('Workspace test adapter', () => {
             const buildErrorNodeOptionsStub = sinon.stub(util, 'buildErrorNodeOptions').returns(errorTestItemOptions);
             const testProvider = 'unittest';
 
-            const execFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
             await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
 
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
@@ -167,9 +168,9 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            await workspaceTestAdapter.discoverTests(testController);
+            await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
 
-            sinon.assert.calledTwice(discoverTestsStub);
+            sinon.assert.calledOnce(discoverTestsStub);
         });
 
         test('If discovery is already running, do not call discoveryAdapter.discoverTests again', async () => {
@@ -216,7 +217,7 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            await workspaceTestAdapter.discoverTests(testController);
+            await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
 
             sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE);
             assert.strictEqual(telemetryEvent.length, 2);
