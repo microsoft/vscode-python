@@ -10,7 +10,6 @@ import { Observable } from 'rxjs';
 import * as sinon from 'sinon';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
-import { TestCommandOptions } from '../../../../client/testing/testController/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { Deferred, createDeferred } from '../../../../client/common/utils/async';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
@@ -19,7 +18,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
     Output,
-    // SpawnOptions,
+    SpawnOptions,
 } from '../../../../client/common/process/types';
 
 suite('Unittest test discovery adapter', () => {
@@ -29,12 +28,13 @@ suite('Unittest test discovery adapter', () => {
     let execService: typemoq.IMock<IPythonExecutionService>;
     let execFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
     let deferred: Deferred<void>;
-    // let expectedExtraVariables: Record<string, string>;
+    let expectedExtraVariables: Record<string, string>;
     let expectedPath: string;
     let uri: Uri;
     let utilsStartDiscoveryNamedPipeStub: sinon.SinonStub;
 
     setup(() => {
+        expectedPath = path.join('/', 'new', 'cwd');
         stubConfigSettings = ({
             getSettings: () => ({
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
@@ -51,6 +51,7 @@ suite('Unittest test discovery adapter', () => {
         execService
             .setup((x) => x.execObservable(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => {
+                deferred.resolve();
                 console.log('execObservable is returning');
                 return {
                     proc: mockProc,
@@ -64,19 +65,16 @@ suite('Unittest test discovery adapter', () => {
         deferred = createDeferred();
         execFactory
             .setup((x) => x.createActivatedEnvironment(typemoq.It.isAny()))
-            .returns(() => {
-                deferred.resolve();
-                return Promise.resolve(execService.object);
-            });
+            .returns(() => Promise.resolve(execService.object));
         execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
 
         // constants
         expectedPath = path.join('/', 'my', 'test', 'path');
         uri = Uri.file(expectedPath);
-        // expectedExtraVariables = {
-        //     TEST_RUN_PIPE: 'discoveryResultPipe-mockName',
-        // };
+        expectedExtraVariables = {
+            TEST_RUN_PIPE: 'discoveryResultPipe-mockName',
+        };
 
         utilsStartDiscoveryNamedPipeStub = sinon.stub(util, 'startDiscoveryNamedPipe');
         utilsStartDiscoveryNamedPipeStub.callsFake(() =>
@@ -93,66 +91,83 @@ suite('Unittest test discovery adapter', () => {
     });
 
     test('DiscoverTests should send the discovery command to the test server with the correct args', async () => {
-        // let options: TestCommandOptions | undefined;
-
-        // const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-
         const adapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
-        // const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
+        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
 
+        // must await until the execObservable is called in order to verify it
         await deferred.promise;
+
         execService.verify(
-            (x) => x.execObservable(typemoq.It.isAny(), typemoq.It.isAny()),
-            typemoq.Times.atLeastOnce(),
+            (x) =>
+                x.execObservable(
+                    typemoq.It.is<Array<string>>((argsActual) => {
+                        try {
+                            assert.equal(argsActual.length, argsExpected.length);
+                            assert.deepEqual(argsActual, argsExpected);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                    typemoq.It.is<SpawnOptions>((options) => {
+                        try {
+                            assert.deepEqual(options.env, expectedExtraVariables);
+                            assert.equal(options.cwd, expectedPath);
+                            assert.equal(options.throwOnStdErr, true);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                ),
+            typemoq.Times.once(),
         );
-        // execService.verify((x) => x.execObservable(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.once());
-        // execService.verify(
-        //     (x) =>
-        //         x.execObservable(
-        //             typemoq.It.is<Array<string>>((argsActual) => {
-        //                 try {
-        //                     assert.equal(argsActual.length, argsExpected.length);
-        //                     assert.deepEqual(argsActual, argsExpected);
-        //                     return true;
-        //                 } catch (e) {
-        //                     console.error(e);
-        //                     throw e;
-        //                 }
-        //             }),
-        //             typemoq.It.is<SpawnOptions>((options) => {
-        //                 try {
-        //                     assert.deepEqual(options.env, expectedExtraVariables);
-        //                     assert.equal(options.cwd, expectedPath);
-        //                     assert.equal(options.throwOnStdErr, true);
-        //                     return true;
-        //                 } catch (e) {
-        //                     console.error(e);
-        //                     throw e;
-        //                 }
-        //             }),
-        //         ),
-        //     typemoq.Times.once(),
-        // );
     });
     test('DiscoverTests should respect settings.testings.cwd when present', async () => {
-        let options: TestCommandOptions | undefined;
+        const expectedNewPath = path.join('/', 'new', 'cwd');
         stubConfigSettings = ({
             getSettings: () => ({
-                testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'], cwd: '/foo' },
+                testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'], cwd: expectedNewPath.toString() },
             }),
         } as unknown) as IConfigurationService;
-
-        // const uri = Uri.file('/foo/bar');
-        const newCwd = '/foo';
-        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
-
         const adapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
+        const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
+        const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
+
+        // must await until the execObservable is called in order to verify it
         await deferred.promise;
-        assert.deepStrictEqual(options?.command?.args, ['--udiscovery', '-v', '-s', '.', '-p', 'test*']);
-        assert.deepStrictEqual(options.workspaceFolder, uri);
-        assert.deepStrictEqual(options.cwd, newCwd);
-        assert.deepStrictEqual(options.command.script, script);
+
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    typemoq.It.is<Array<string>>((argsActual) => {
+                        try {
+                            assert.equal(argsActual.length, argsExpected.length);
+                            assert.deepEqual(argsActual, argsExpected);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                    typemoq.It.is<SpawnOptions>((options) => {
+                        try {
+                            assert.deepEqual(options.env, expectedExtraVariables);
+                            assert.equal(options.cwd, expectedNewPath);
+                            assert.equal(options.throwOnStdErr, true);
+                            return true;
+                        } catch (e) {
+                            console.error(e);
+                            throw e;
+                        }
+                    }),
+                ),
+            typemoq.Times.once(),
+        );
     });
 });
