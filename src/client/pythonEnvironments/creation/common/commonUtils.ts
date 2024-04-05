@@ -23,7 +23,7 @@ export function getVenvPath(workspaceFolder: WorkspaceFolder): string {
 }
 
 export async function hasVenv(workspaceFolder: WorkspaceFolder): Promise<boolean> {
-    return fs.pathExists(getVenvPath(workspaceFolder));
+    return fs.pathExists(path.join(getVenvPath(workspaceFolder), 'pyvenv.cfg'));
 }
 
 export function getVenvExecutable(workspaceFolder: WorkspaceFolder): string {
