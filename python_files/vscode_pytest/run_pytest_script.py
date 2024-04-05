@@ -14,11 +14,6 @@ sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import process_json_util  # noqa: E402
 from testing_tools import socket_manager  # noqa: E402
 
-# sys.path.append("/Users/eleanorboyd/vscode-python/python_files/lib/python")
-# import debugpy  # noqa
-
-# debugpy.connect(5678)
-# debugpy.breakpoint()
 
 # This script handles running pytest via pytest.main(). It is called via run in the
 # pytest execution adapter and gets the test_ids to run via stdin and the rest of the
@@ -32,7 +27,6 @@ if __name__ == "__main__":
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
-    print("HELLO!", run_test_ids_pipe)
     if not run_test_ids_pipe:
         print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
     raw_json = {}
@@ -43,7 +37,6 @@ if __name__ == "__main__":
             while True:
                 # Receive the data from the client as a string
                 data = sock.read(3000)
-                print("Data: ", data, "\n-\n--")
                 if not data:
                     break
 
@@ -52,7 +45,6 @@ if __name__ == "__main__":
 
                 try:
                     # Try to parse the buffer as JSON
-                    print("Buffer: ", buffer, "\n\n")
                     raw_json = process_json_util.process_rpc_json(buffer)
                     # Clear the buffer as complete JSON object is received
                     buffer = ""
@@ -67,7 +59,6 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
     try:
-        print("RAW JSON BUFFER ---------------", raw_json)
         test_ids_from_buffer = raw_json["params"]
         if test_ids_from_buffer:
             arg_array = ["-p", "vscode_pytest"] + args + test_ids_from_buffer

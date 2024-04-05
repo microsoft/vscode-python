@@ -54,10 +54,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             runInstance?.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
-            console.log(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
+            traceInfo(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
             // if canceled, stop listening for results
             deferredTillEOT.resolve();
             serverDispose(); // this will resolve deferredTillServerClose
+
+            const executionPayload: ExecutionTestPayload = {
+                cwd: uri.fsPath,
+                status: 'success',
+                error: '',
+            };
+            return executionPayload;
         });
 
         try {
@@ -75,9 +82,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         } finally {
             // wait for to send EOT
             await deferredTillEOT.promise;
-            console.log('deferredTill EOT resolved');
             await deferredTillServerClose.promise;
-            console.log('Server closed await now resolved');
         }
 
         // placeholder until after the rewrite is adopted
@@ -148,13 +153,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 outputChannel: this.outputChannel,
                 stdinStr: testIds.toString(),
                 env: mutableEnv,
+                token: runInstance?.token,
             };
 
             if (debugBool) {
                 const launchOptions: LaunchOptions = {
                     cwd,
                     args: testArgs,
-                    token: spawnOptions.token,
+                    token: runInstance?.token,
                     testProvider: PYTEST_PROVIDER,
                     runTestIdsPort: testIdsPipeName,
                     pytestPort: resultNamedPipeName,
@@ -175,7 +181,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 let resultProc: ChildProcess | undefined;
 
                 runInstance?.token.onCancellationRequested(() => {
-                    console.log(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
+                    traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
                         resultProc?.kill();
@@ -201,7 +207,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     this.outputChannel?.append(out);
                 });
                 result?.proc?.on('exit', (code, signal) => {
-                    console.log('exit occurred');
                     this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0 && testIds) {
                         traceError(
@@ -211,7 +216,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 result?.proc?.on('close', (code, signal) => {
-                    console.log('close occurred');
                     traceVerbose('Test run finished, subprocess closed.');
                     // if the child has testIds then this is a run request
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
@@ -239,7 +243,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
                     // due to the sync reading of the output.
                     deferredTillExecClose.resolve();
-                    console.log('closing deferredTillExecClose');
                 });
                 await deferredTillExecClose.promise;
             }

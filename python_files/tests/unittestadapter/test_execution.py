@@ -11,6 +11,7 @@ import pytest
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
+from python_files.unittestadapter.pvsc_utils import ExecutionPayloadDict, TestResultTypeAlias
 from unittestadapter.execution import run_tests  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
@@ -48,7 +49,7 @@ def test_single_ids_run(mock_send_run_data):
     """
     id = "discovery_simple.DiscoverySimple.test_one"
     os.environ["TEST_RUN_PIPE"] = "fake"
-    actual = run_tests(
+    actual: ExecutionPayloadDict = run_tests(
         os.fspath(TEST_DATA_PATH),
         [id],
         "discovery_simple*",
@@ -59,10 +60,11 @@ def test_single_ids_run(mock_send_run_data):
 
     # Access the arguments
     args, _ = mock_send_run_data.call_args
-    actual_result = args[0]  # first argument is the result
+    test_actual = args[0]  # first argument is the result
 
+    assert test_actual
+    actual_result: TestResultTypeAlias = actual["result"]
     assert actual_result
-    actual_result = actual["result"]
     assert len(actual_result) == 1
     assert id in actual_result
     id_result = actual_result[id]
@@ -169,9 +171,7 @@ def test_subtest_run(mock_send_run_data) -> None:
         ),
     ],
 )
-def test_multiple_ids_run(
-    mock_send_run_data, test_ids, pattern, cwd, expected_outcome
-) -> None:
+def test_multiple_ids_run(mock_send_run_data, test_ids, pattern, cwd, expected_outcome) -> None:
     """
     The following are all successful tests of different formats.
 

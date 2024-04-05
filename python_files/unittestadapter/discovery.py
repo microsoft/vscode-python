@@ -10,13 +10,6 @@ from typing import List, Optional
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
-sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
-
-print("EJFB yellow")
-# import debugpy
-
-# debugpy.listen(5670)
-# debugpy.breakpoint()
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402

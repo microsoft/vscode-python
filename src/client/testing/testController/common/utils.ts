@@ -184,8 +184,6 @@ export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> 
             .catch((ex) => {
                 traceError('Failed to write test ids to named pipe', ex);
             });
-        // traceVerbose(`Test Ids named pipe wrote ${num} test ids`);
-        // writer.end();
     });
     return pipeName;
 }

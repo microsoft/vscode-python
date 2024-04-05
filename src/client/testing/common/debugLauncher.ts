@@ -33,8 +33,11 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
 
     public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
+        const deferred = createDeferred<void>();
         if (options.token && options.token.isCancellationRequested) {
             return undefined;
+            deferred.resolve();
+            callback?.();
         }
 
         const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
@@ -45,12 +48,19 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        const deferred = createDeferred<void>();
         debugManager.onDidTerminateDebugSession(() => {
             deferred.resolve();
             callback?.();
         });
         debugManager.startDebugging(workspaceFolder, launchArgs);
+
+        if (options.token) {
+            options?.token.onCancellationRequested(() => {
+                // debugManager.stopDebugging();
+                deferred.resolve();
+                callback?.();
+            });
+        }
         return deferred.promise;
     }
 
