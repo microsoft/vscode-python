@@ -12,9 +12,9 @@ import pytest
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
-from tests.pytestadapter import expected_execution_test_output
+from tests.pytestadapter import expected_execution_test_output  # noqa: E402
 
-from .helpers import (
+from .helpers import (  # noqa: E402
     TEST_DATA_PATH,
     create_symlink,
     get_absolute_test_id,

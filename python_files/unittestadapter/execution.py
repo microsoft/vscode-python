@@ -17,8 +17,8 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import process_json_util, socket_manager
-from unittestadapter.pvsc_utils import (
+from testing_tools import process_json_util, socket_manager  # noqa: E402
+from unittestadapter.pvsc_utils import (  # noqa: E402
     VSCodeUnittestError,
     parse_unittest_args,
     send_post_request,

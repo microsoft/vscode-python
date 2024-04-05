@@ -14,6 +14,7 @@ import threading
 from typing import Any, Dict, List, Optional, Tuple
 import uuid
 
+# CHECK THIS
 if os.name == "nt":
     from namedpipe import NPopen
 
@@ -424,6 +425,7 @@ class SingleConnectionPipeServer:
 
     def handle_single_connection(self):
         """Accept and handle a single connection."""
+        connection = None
         try:
             # Accept a connection.
             connection, client_address = self.socket.accept()

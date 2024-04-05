@@ -17,8 +17,8 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import socket_manager
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict
+from testing_tools import socket_manager  # noqa: E402
+from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa: E402
 
 # Types
 

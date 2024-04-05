@@ -19,7 +19,7 @@ print("EJFB yellow")
 # debugpy.breakpoint()
 
 # If I use from utils then there will be an import error in test_discovery.py.
-from unittestadapter.pvsc_utils import (
+from unittestadapter.pvsc_utils import (  # noqa: E402
     VSCodeUnittestError,
     build_test_tree,
     parse_unittest_args,

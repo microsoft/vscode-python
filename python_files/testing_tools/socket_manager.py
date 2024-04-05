@@ -55,7 +55,6 @@ class PipeManager:
                 f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
             )
             self._socket.send(request.encode("utf-8"))
-            # does this also need a flush on the socket?
 
     def read(self, bufsize=1024) -> str:
         """Read data from the socket.
@@ -74,9 +73,6 @@ class PipeManager:
             while True:
                 part: bytes = self._socket.recv(bufsize)
                 data: str = part.decode("utf-8")
-                # if len(part) < bufsize:  # is this necessary ?
-                #     # No more data, or less than bufsize data received
-                #     break
                 return data
 
 
