@@ -263,6 +263,8 @@ def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: thr
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
+    print("\n TEST_DATA_PATH::: ", TEST_DATA_PATH)
+    print("args to run with::: ", args)
     return runner_with_cwd(args, TEST_DATA_PATH)
 
 
@@ -444,7 +446,8 @@ class SingleConnectionPipeServer:
                     break
         finally:
             # Clean up the connection.
-            connection.close()
+            if connection:
+                connection.close()
             print("Client disconnected.")
 
             # After handling the single connection, the server stops listening.

@@ -5,6 +5,7 @@ import os
 import pathlib
 import sys
 from unittest.mock import patch
+from typing import Dict
 
 import pytest
 
@@ -64,13 +65,17 @@ def test_single_ids_run(mock_send_run_data):
 
     assert test_actual
     actual_result: TestResultTypeAlias = actual["result"]
-    assert actual_result
-    assert len(actual_result) == 1
-    assert id in actual_result
-    id_result = actual_result[id]
-    assert id_result is not None
-    assert "outcome" in id_result
-    assert id_result["outcome"] == "success"
+    if actual_result is None:
+        raise AssertionError("actual_result is None")
+    else:
+        if not isinstance(actual_result, Dict):
+            raise AssertionError("actual_result is not a Dict")
+        assert len(actual_result) == 1
+        assert id in actual_result
+        id_result = actual_result[id]
+        assert id_result is not None
+        assert "outcome" in id_result
+        assert id_result["outcome"] == "success"
 
 
 def test_subtest_run(mock_send_run_data) -> None:

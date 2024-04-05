@@ -182,10 +182,11 @@ def test_pytest_collect(file, expected_const):
     file -- a string with the file or folder to run pytest discovery on.
     expected_const -- the expected output from running pytest discovery on the file.
     """
+    print("CURRENT CWD, ", os.getcwd())
     actual = helpers.runner(
         [
-            "--collect-only",
             os.fspath(helpers.TEST_DATA_PATH / file),
+            "--collect-only",
         ]
     )
 
