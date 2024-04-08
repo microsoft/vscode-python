@@ -468,7 +468,7 @@ function getPromptForEnv(interpreter: PythonEnvironment | undefined, env: Enviro
             return undefined;
         }
         if (interpreter.type === PythonEnvType.Virtual && env.VIRTUAL_ENV_PROMPT) {
-            return `(${env.VIRTUAL_ENV_PROMPT}) `;
+            return `${env.VIRTUAL_ENV_PROMPT}`;
         }
         return `(${interpreter.envName}) `;
     }
