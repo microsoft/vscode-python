@@ -16,7 +16,6 @@ def process_rpc_json(data: str) -> Dict[str, List[str]]:
     while True:
         line: str = str_stream.readline()
         if CONTENT_LENGTH.lower() in line.lower():
-            print("content length found in line", length)
             length = int(line[len(CONTENT_LENGTH) :])
             break
 
@@ -25,7 +24,6 @@ def process_rpc_json(data: str) -> Dict[str, List[str]]:
 
     while True:  # keep reading until the number of bytes is the CONTENT_LENGTH
         line: str = str_stream.readline()
-        print("reading line")
         if not line or line.isspace():
             break
 
