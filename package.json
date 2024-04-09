@@ -85,93 +85,6 @@
                 "when": "workspacePlatform != webworker",
                 "steps": [
                     {
-                        "id": "python.createPythonFile",
-                        "title": "%walkthrough.step.python.createPythonFile.title%",
-                        "description": "%walkthrough.step.python.createPythonFile.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "%walkthrough.step.python.createPythonFile.altText%"
-                        },
-                        "when": ""
-                    },
-                    {
-                        "id": "python.installPythonWin8",
-                        "title": "%walkthrough.step.python.installPythonWin8.title%",
-                        "description": "%walkthrough.step.python.installPythonWin8.description%",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-windows-8.md"
-                        },
-                        "when": "workspacePlatform == windows && showInstallPythonTile"
-                    },
-                    {
-                        "id": "python.installPythonMac",
-                        "title": "%walkthrough.step.python.installPythonMac.title%",
-                        "description": "%walkthrough.step.python.installPythonMac.description%",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-macos.md"
-                        },
-                        "when": "workspacePlatform == mac && showInstallPythonTile",
-                        "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.installPythonLinux",
-                        "title": "%walkthrough.step.python.installPythonLinux.title%",
-                        "description": "%walkthrough.step.python.installPythonLinux.description%",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-linux.md"
-                        },
-                        "when": "workspacePlatform == linux && showInstallPythonTile",
-                        "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.selectInterpreter",
-                        "title": "%walkthrough.step.python.selectInterpreter.title%",
-                        "description": "%walkthrough.step.python.selectInterpreter.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/python-interpreter.svg",
-                            "altText": "%walkthrough.step.python.selectInterpreter.altText%"
-                        },
-                        "when": "workspaceFolderCount == 0"
-                    },
-                    {
-                        "id": "python.createEnvironment",
-                        "title": "%walkthrough.step.python.createEnvironment.title%",
-                        "description": "%walkthrough.step.python.createEnvironment.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/create-environment.svg",
-                            "altText": "%walkthrough.step.python.createEnvironment.altText%"
-                        },
-                        "when": "workspaceFolderCount > 0"
-                    },
-                    {
-                        "id": "python.runAndDebug",
-                        "title": "%walkthrough.step.python.runAndDebug.title%",
-                        "description": "%walkthrough.step.python.runAndDebug.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/rundebug2.svg",
-                            "altText": "%walkthrough.step.python.runAndDebug.altText%"
-                        },
-                        "when": ""
-                    },
-                    {
-                        "id": "python.learnMoreWithDS",
-                        "title": "%walkthrough.step.python.learnMoreWithDS.title%",
-                        "description": "%walkthrough.step.python.learnMoreWithDS.description%",
-                        "media": {
-                            "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
-                            "svg": "resources/walkthrough/learnmore.svg"
-                        },
-                        "when": ""
-                    }
-                ]
-            },
-            {
-                "id": "pythonWelcome2",
-                "title": "%walkthrough.pythonWelcome.title%",
-                "description": "%walkthrough.pythonWelcome.description%",
-                "when": "false",
-                "steps": [
-                    {
                         "id": "python.createPythonFolder",
                         "title": "%walkthrough.step.python.createPythonFolder.title%",
                         "description": "%walkthrough.step.python.createPythonFolder.description%",
@@ -221,9 +134,9 @@
                         "command": "workbench.action.terminal.new"
                     },
                     {
-                        "id": "python.createEnvironment2",
-                        "title": "%walkthrough.step.python.createEnvironment.title2%",
-                        "description": "%walkthrough.step.python.createEnvironment.description2%",
+                        "id": "python.createEnvironment",
+                        "title": "%walkthrough.step.python.createEnvironment.title%",
+                        "description": "%walkthrough.step.python.createEnvironment.description%",
                         "media": {
                             "markdown": "resources/walkthrough/environments-info.md"
                         },
@@ -240,9 +153,9 @@
                         "when": ""
                     },
                     {
-                        "id": "python.learnMoreWithDS2",
+                        "id": "python.learnMoreWithDS",
                         "title": "%walkthrough.step.python.learnMoreWithDS.title%",
-                        "description": "%walkthrough.step.python.learnMoreWithDS.description2%",
+                        "description": "%walkthrough.step.python.learnMoreWithDS.description%",
                         "media": {
                             "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
                             "svg": "resources/walkthrough/learnmore.svg"
