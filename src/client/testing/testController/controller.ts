@@ -479,7 +479,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
         } finally {
             traceVerbose('Finished running tests, ending runInstance.');
-            console.log('Finished running tests, ending runInstance.');
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
             dispose.dispose();

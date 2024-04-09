@@ -12,7 +12,7 @@ import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { traceLog } from '../../../client/logging';
+import { traceError, traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
@@ -71,13 +71,13 @@ suite('End to End Tests: test adapters', () => {
         try {
             fs.symlink(target, dest, 'dir', (err) => {
                 if (err) {
-                    console.error(err);
+                    traceError(err);
                 } else {
-                    console.log('Symlink created successfully for end to end tests.');
+                    traceLog('Symlink created successfully for end to end tests.');
                 }
             });
         } catch (err) {
-            console.error(err);
+            traceError(err);
         }
     });
 
@@ -114,13 +114,13 @@ suite('End to End Tests: test adapters', () => {
         if (fs.existsSync(dest)) {
             fs.unlink(dest, (err) => {
                 if (err) {
-                    console.error(err);
+                    traceError(err);
                 } else {
-                    console.log('Symlink removed successfully after tests.');
+                    traceLog('Symlink removed successfully after tests.');
                 }
             });
         } else {
-            console.log('Symlink was not found to remove after tests, exiting successfully');
+            traceLog('Symlink was not found to remove after tests, exiting successfully');
         }
     });
     test('unittest discovery adapter small workspace', async () => {
@@ -228,7 +228,6 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            console.log(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
