@@ -28,77 +28,77 @@ print("sys add path", script_dir)
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
-class PipeManager:
-    def __init__(self, name):
-        self.name = name
+# class PipeManager:
+#     def __init__(self, name):
+#         self.name = name
 
-    def __enter__(self):
-        return self.listen()
+#     def __enter__(self):
+#         return self.listen()
 
-    def __exit__(self, *_):
-        self.close()
+#     def __exit__(self, *_):
+#         self.close()
 
-    def listen(self):
-        # find library that creates named pipes for windows
-        if sys.platform == "win32":
-            print("current not enabled for windows")
+#     def listen(self):
+#         # find library that creates named pipes for windows
+#         if sys.platform == "win32":
+#             print("current not enabled for windows")
 
-        else:
-            server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-            server.listen(self.name)  # self.name = named pipe
-            (
-                _sock,
-                _,
-            ) = server.accept()  # occurs when client connects, returns a socket (_sock) which will be used for this specific
-            # client and server connection
-            self._socket = _sock
-        return self
+#         else:
+#             server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+#             server.listen(self.name)  # self.name = named pipe
+#             (
+#                 _sock,
+#                 _,
+#             ) = server.accept()  # occurs when client connects, returns a socket (_sock) which will be used for this specific
+#             # client and server connection
+#             self._socket = _sock
+#         return self
 
-    def close(self):
-        if sys.platform == "win32":
-            self._writer.close()
-            # close the streams and the pipe
-        else:
-            # add exception catch
-            self._socket.close()
+#     def close(self):
+#         if sys.platform == "win32":
+#             self._writer.close()
+#             # close the streams and the pipe
+#         else:
+#             # add exception catch
+#             self._socket.close()
 
-    def write(self, data: str):
-        # must include the carriage-return defined (as \r\n) for unix systems
-        request = f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
-        if sys.platform == "win32":
-            # this should work
-            self._writer.write(request)
-            self._writer.flush()
-        else:
-            self._socket.send(request.encode("utf-8"))
-            # does this also need a flush on the socket?
+#     def write(self, data: str):
+#         # must include the carriage-return defined (as \r\n) for unix systems
+#         request = f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+#         if sys.platform == "win32":
+#             # this should work
+#             self._writer.write(request)
+#             self._writer.flush()
+#         else:
+#             self._socket.send(request.encode("utf-8"))
+#             # does this also need a flush on the socket?
 
-    def read(self, bufsize=1024):
-        """Read data from the socket.
+#     def read(self, bufsize=1024):
+#         """Read data from the socket.
 
-        Args:
-            bufsize (int): Number of bytes to read from the socket.
+#         Args:
+#             bufsize (int): Number of bytes to read from the socket.
 
-        Returns:
-            data (bytes): Data received from the socket.
-        """
-        if sys.platform == "win32":
-            # this should work
-            return self._reader.read(bufsize)
-        else:
-            data = b""
-            while True:
-                part = self._socket.recv(bufsize)
-                data += part
-                if len(part) < bufsize:
-                    # No more data, or less than bufsize data received
-                    break
-            return data
+#         Returns:
+#             data (bytes): Data received from the socket.
+#         """
+#         if sys.platform == "win32":
+#             # this should work
+#             return self._reader.read(bufsize)
+#         else:
+#             data = b""
+#             while True:
+#                 part = self._socket.recv(bufsize)
+#                 data += part
+#                 if len(part) < bufsize:
+#                     # No more data, or less than bufsize data received
+#                     break
+#             return data
 
 
-async def create_pipe(test_run_pipe: str) -> PipeManager:
-    __pipe = PipeManager(test_run_pipe)
-    return __pipe
+# async def create_pipe(test_run_pipe: str) -> PipeManager:
+#     __pipe = PipeManager(test_run_pipe)
+#     return __pipe
 
 
 CONTENT_LENGTH: str = "Content-Length:"
@@ -315,7 +315,7 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
             return process_data_received(result[0]) if result else None
     else:
         # unix etc
-        server = SingleConnectionPipeServer(pipe_name)
+        server = UnixPipeServer(pipe_name)
         server.start()
 
         #
@@ -392,15 +392,13 @@ def generate_random_pipe_name(prefix=""):
 
 
 # Create a server socket for the given pipe name.
-class SingleConnectionPipeServer:
+class UnixPipeServer:
     def __init__(self, name):
         self.name = name
         self.is_windows = sys.platform == "win32"
         if self.is_windows:
-            # Windows-specific setup for named pipe not shown here;
-            # Named pipes in Python on Windows might require win32pipe or similar.
             raise NotImplementedError(
-                "Windows named pipe server functionality is not implemented in this example."
+                "This class is only intended for Unix-like systems, not Windows."
             )
         else:
             # For Unix-like systems, use a Unix domain socket.
@@ -414,8 +412,9 @@ class SingleConnectionPipeServer:
 
     def start(self):
         if self.is_windows:
-            # Windows-specific named pipe server setup would go here.
-            pass
+            raise NotImplementedError(
+                "This class is only intended for Unix-like systems, not Windows."
+            )
         else:
             # Bind the socket to the address and listen for incoming connections.
             self.socket.bind(self.name)
@@ -425,33 +424,33 @@ class SingleConnectionPipeServer:
             # Accept a single connection. remove for now to use the listener
             # self.handle_single_connection()
 
-    def handle_single_connection(self):
-        """Accept and handle a single connection."""
-        connection = None
-        try:
-            # Accept a connection.
-            connection, client_address = self.socket.accept()
-            print(f"Client connected from {client_address}")
+    # def handle_single_connection(self):
+    #     """Accept and handle a single connection."""
+    #     connection = None
+    #     try:
+    #         # Accept a connection.
+    #         connection, client_address = self.socket.accept()
+    #         print(f"Client connected from {client_address}")
 
-            # Enter a loop to read and respond to messages from the client.
-            while True:
-                data = connection.recv(1024)
-                if data:
-                    message = data.decode("utf-8")
-                    print(f"Received: {message}")
-                    # Echo the received data back to the client as an example response.
-                    connection.sendall(data)
-                else:
-                    # No more data from the client, break the loop.
-                    break
-        finally:
-            # Clean up the connection.
-            if connection:
-                connection.close()
-            print("Client disconnected.")
+    #         # Enter a loop to read and respond to messages from the client.
+    #         while True:
+    #             data = connection.recv(1024)
+    #             if data:
+    #                 message = data.decode("utf-8")
+    #                 print(f"Received: {message}")
+    #                 # Echo the received data back to the client as an example response.
+    #                 connection.sendall(data)
+    #             else:
+    #                 # No more data from the client, break the loop.
+    #                 break
+    #     finally:
+    #         # Clean up the connection.
+    #         if connection:
+    #             connection.close()
+    #         print("Client disconnected.")
 
-            # After handling the single connection, the server stops listening.
-            self.stop()
+    #         # After handling the single connection, the server stops listening.
+    #         self.stop()
 
     def stop(self):
         # Clean up the server socket.

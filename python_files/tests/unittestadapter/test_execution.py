@@ -64,7 +64,7 @@ def test_single_ids_run(mock_send_run_data):
     test_actual = args[0]  # first argument is the result
 
     assert test_actual
-    actual_result: TestResultTypeAlias = actual["result"]
+    actual_result: TestResultTypeAlias | None = actual["result"]
     if actual_result is None:
         raise AssertionError("actual_result is None")
     else:
