@@ -3,9 +3,9 @@
 
 use crate::known;
 use crate::messaging;
+use regex::Regex;
 use std::env;
 use std::path::{Path, PathBuf};
-use regex::Regex;
 
 /// relative to the interpreter. This layout is common on linux/Mac.
 ///
@@ -69,23 +69,19 @@ pub fn is_conda_environment(any_path: &Path) -> bool {
 /// from the 'conda-meta' directory in a platform agnostic way.
 fn get_version_from_meta_json(json_file: &Path) -> Option<String> {
     match Regex::new(r"(?m)([\d\w\-]*)-([\d\.]*)-.*\.json") {
-        Ok(re) => {
-            match json_file.file_name() {
-                Some(file_name) => {
-                    let file_name = file_name.to_string_lossy();
-                    match re.captures(&file_name) {
-                        Some(captures) => {
-                            match captures.get(2) {
-                                Some(version) => Some(version.as_str().to_string()),
-                                None => None,
-                            }
-                        }
+        Ok(re) => match json_file.file_name() {
+            Some(file_name) => {
+                let file_name = file_name.to_string_lossy();
+                match re.captures(&file_name) {
+                    Some(captures) => match captures.get(2) {
+                        Some(version) => Some(version.as_str().to_string()),
                         None => None,
-                    }
+                    },
+                    None => None,
                 }
-                None => None,
             }
-        }
+            None => None,
+        },
         Err(_) => None,
     }
 }
@@ -287,7 +283,7 @@ fn get_conda_envs_from_environment_txt() -> Vec<String> {
     match home {
         Some(home) => {
             let home = Path::new(&home);
-            let environment_txt = home.join(".conda/environments.txt");
+            let environment_txt = home.join(".conda").join("environments.txt");
             match std::fs::read_to_string(environment_txt) {
                 Ok(reader) => {
                     for line in reader.lines() {
@@ -308,7 +304,7 @@ fn get_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
     match home {
         Some(home) => {
             let home = Path::new(&home);
-            let conda_envs = home.join(".conda/envs");
+            let conda_envs = home.join(".conda").join("envs");
             paths.push(conda_envs.to_string_lossy().to_string());
         }
         None => (),
@@ -316,10 +312,12 @@ fn get_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
 
     match conda_bin.parent() {
         Some(parent) => {
+            paths.push(parent.to_string_lossy().to_string());
             let conda_envs = parent.join("envs");
             paths.push(conda_envs.to_string_lossy().to_string());
             match parent.parent() {
                 Some(parent) => {
+                    paths.push(parent.to_string_lossy().to_string());
                     let conda_envs = parent.join("envs");
                     paths.push(conda_envs.to_string_lossy().to_string());
                 }
@@ -335,14 +333,25 @@ fn get_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
 fn get_conda_envs_from_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
     let mut envs = vec![];
     for location in get_known_env_locations(conda_bin) {
+        if is_conda_environment(&Path::new(&location)) {
+            envs.push(location.to_string());
+        }
         match std::fs::read_dir(location) {
             Ok(reader) => {
                 for entry in reader {
                     match entry {
                         Ok(entry) => {
-                            let path = entry.path();
-                            if is_conda_environment(&path) {
-                                envs.push(path.to_string_lossy().to_string());
+                            let metadata = entry.metadata();
+                            match metadata {
+                                Ok(metadata) => {
+                                    if metadata.is_dir() {
+                                        let path = entry.path();
+                                        if is_conda_environment(&path) {
+                                            envs.push(path.to_string_lossy().to_string());
+                                        }
+                                    }
+                                }
+                                Err(_) => (),
                             }
                         }
                         Err(_) => (),
@@ -361,7 +370,6 @@ struct CondaEnv {
     path: PathBuf,
 }
 
-
 fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
     let mut envs = get_conda_envs_from_environment_txt();
     let mut known_envs = get_conda_envs_from_known_env_locations(conda_bin.to_path_buf());
@@ -372,11 +380,11 @@ fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
     let locations = get_known_env_locations(conda_bin);
     let mut conda_envs = vec![];
     for env in envs.clone() {
+        let env = Path::new(&env);
         let mut named = false;
         let mut name = "".to_string();
         for location in &locations {
             let location = Path::new(location);
-            let env = Path::new(&env);
             match env.strip_prefix(location) {
                 Ok(prefix) => {
                     named = true;
