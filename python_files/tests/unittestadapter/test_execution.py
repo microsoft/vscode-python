@@ -9,10 +9,10 @@ from typing import Dict
 
 import pytest
 
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from python_files.unittestadapter.pvsc_utils import ExecutionPayloadDict, TestResultTypeAlias
+from python_files.unittestadapter.pvsc_utils import ExecutionPayloadDict, TestResultTypeAlias  # noqa: E402
 from unittestadapter.execution import run_tests  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
