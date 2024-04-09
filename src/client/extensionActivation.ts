@@ -94,8 +94,17 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
         IInterpreterPathService,
     );
+    const interpreterService: IInterpreterService = ext.legacyIOC.serviceContainer.get<IInterpreterService>(
+        IInterpreterService,
+    );
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
-    registerAllCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
+    registerAllCreateEnvironmentFeatures(
+        ext.disposables,
+        interpreterQuickPick,
+        interpreterPathService,
+        interpreterService,
+        pathUtils,
+    );
 }
 
 /// //////////////////////////

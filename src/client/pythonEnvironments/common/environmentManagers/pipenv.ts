@@ -70,7 +70,7 @@ async function getPipfileIfLocal(interpreterPath: string): Promise<string | unde
  * Returns the project directory for pipenv environments given the environment folder
  * @param envFolder Path to the environment folder
  */
-async function getProjectDir(envFolder: string): Promise<string | undefined> {
+export async function getProjectDir(envFolder: string): Promise<string | undefined> {
     // Global pipenv environments have a .project file with the absolute path to the project
     // See https://github.com/pypa/pipenv/blob/v2018.6.25/CHANGELOG.rst#features--improvements
     // This is the layout we expect

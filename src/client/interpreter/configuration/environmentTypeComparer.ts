@@ -6,7 +6,12 @@ import { Resource } from '../../common/types';
 import { Architecture } from '../../common/utils/platform';
 import { isActiveStateEnvironmentForWorkspace } from '../../pythonEnvironments/common/environmentManagers/activestate';
 import { isParentPath } from '../../pythonEnvironments/common/externalDependencies';
-import { EnvironmentType, PythonEnvironment, virtualEnvTypes } from '../../pythonEnvironments/info';
+import {
+    EnvironmentType,
+    PythonEnvironment,
+    virtualEnvTypes,
+    workspaceVirtualEnvTypes,
+} from '../../pythonEnvironments/info';
 import { PythonVersion } from '../../pythonEnvironments/info/pythonVersion';
 import { IInterpreterHelper } from '../contracts';
 import { IInterpreterComparer } from './types';
@@ -131,8 +136,8 @@ export class EnvironmentTypeComparer implements IInterpreterComparer {
             if (getEnvLocationHeuristic(i, workspaceUri?.folderUri.fsPath || '') === EnvLocationHeuristic.Local) {
                 return true;
             }
-            if (virtualEnvTypes.includes(i.envType)) {
-                // We're not sure if these envs were created for the workspace, so do not recommend them.
+            if (!workspaceVirtualEnvTypes.includes(i.envType) && virtualEnvTypes.includes(i.envType)) {
+                // These are global virtual envs so we're not sure if these envs were created for the workspace, skip them.
                 return false;
             }
             if (i.version?.major === 2) {
