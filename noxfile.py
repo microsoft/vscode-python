@@ -4,6 +4,7 @@
 import pathlib
 import nox
 import shutil
+import sys
 
 
 @nox.session()
@@ -41,3 +42,31 @@ def install_python_libs(session: nox.Session):
 
     if pathlib.Path("./python_files/lib/temp").exists():
         shutil.rmtree("./python_files/lib/temp")
+
+
+@nox.session()
+def native_build(session:nox.Session):
+    with session.cd("./native_locator"):
+        session.run("cargo", "build", "--release", "--package", "python-finder", external=True)
+        if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
+            pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
+
+        if not pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").exists():
+            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text("*\n", encoding="utf-8")
+
+        if sys.platform == "win32":
+            shutil.copy(
+                "./target/release/python-finder.exe",
+                "./bin/python-finder.exe",
+            )
+        else:
+            shutil.copy(
+                "./target/release/python-finder",
+                "./bin/python-finder",
+            )
+
+
+@nox.session()
+def setup_repo(session: nox.Session):
+    install_python_libs(session)
+    native_build(session)
