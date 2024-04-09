@@ -148,20 +148,20 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
     last_json = json_messages.pop(-1)
     if "eot" not in last_json:
         raise ValueError("Last JSON messages does not contain 'eot' as its last payload.")
-    return (
-        json_messages  # return the list of json messages, only the params part with the EOT token
-    )
+    return json_messages  # return the list of json messages, only the params part without the EOT token
 
 
 def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
     """Process the JSON data which comes from the server.
+
+    A single rpc payload is in the format:
+    content-length: #LEN# \r\ncontent-type: application/json\r\n\r\n{"jsonrpc": "2.0", "params": ENTIRE_DATA}
+    with EOT params: "params": {"command_type": "discovery", "eot": true}
+
     returns:
     json_data: A single rpc payload of JSON data from the server.
     remaining: The remaining data after the JSON data."""
     str_stream: io.StringIO = io.StringIO(data)
-
-    # 'content-length: 1944\r\ncontent-type: application/json\r\n\r\n{"jsonrpc": "2.0", "params": {"command_type": "discovery",
-    # ...]}}content-length: 72\r\ncontent-type: application/json\r\n\r\n{"jsonrpc": "2.0", "params": {"command_type": "discovery", "eot": true}}'
 
     length: int = 0
     while True:
@@ -192,20 +192,13 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
             print("json decode error")
 
 
-# def listen_on_pipe_manager():
-
-
 def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event):
     """Listen on the named pipe or Unix domain socket for JSON data from the server.
     Created as a separate function for clarity in threading context.
     """
-    # Accept a connection. Note: For named pipes, the accept method might be different.
+    # Windows design
     if os.name == "nt":
         # windows design
-        print("listen on pipe new for windows")
-        # accept a connection
-        # set a timeout
-        # create a data array
         all_data: list = []
         stream = listener.wait()
         while True:
@@ -229,16 +222,13 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
             all_data.append(data_decoded)
         # Append all collected data to result array
         result.append("".join(all_data))
-        #
-    else:
+    else:  # Unix design
         connection, _ = listener.socket.accept()
         listener.socket.settimeout(1)
         all_data: list = []
         while True:
             # Reading from connection
-            data: bytes = connection.recv(
-                1024 * 1024
-            )  # You might replace this with connection.read() based on your abstraction
+            data: bytes = connection.recv(1024 * 1024)
             if not data:
                 if completed.is_set():
                     break  # Exit loop if completed event is set
@@ -263,8 +253,7 @@ def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: thr
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
-    print("\n TEST_DATA_PATH::: ", TEST_DATA_PATH)
-    print("args to run with::: ", args)
+    print("\n Running python test subprocess with cwd set to: ", TEST_DATA_PATH)
     return runner_with_cwd(args, TEST_DATA_PATH)
 
 
@@ -279,22 +268,21 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
         "-s",
     ] + args
 
-    # already windows compatible name
+    # Generate pipe name, pipe name specific per OS type.
     pipe_name = generate_random_pipe_name("pytest-discovery-test")
-    print("pipe name generated", pipe_name)
 
-    # unix
+    # Update the environment with the pipe name and PYTHONPATH.
+    env = os.environ.copy()
+    env.update(
+        {
+            "TEST_RUN_PIPE": pipe_name,
+            "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+        }
+    )
+
+    # Windows design
     if os.name == "nt":
-        #     # TODO: for windows
-        #     print("windows machine detected")
-        with NPopen("rt", name=pipe_name) as pipe:  # Added a `name` parameter
-            env = os.environ.copy()
-            env.update(
-                {
-                    "TEST_RUN_PIPE": pipe.path,
-                    "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-                }
-            )
+        with NPopen("rt", name=pipe_name) as pipe:
             completed = threading.Event()
 
             result = []  # result is a string array to store the data during threading
@@ -313,20 +301,10 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
             t2.join()
 
             return process_data_received(result[0]) if result else None
-    else:
-        # unix etc
+    else:  # Unix design
         server = UnixPipeServer(pipe_name)
         server.start()
 
-        #
-
-        env = os.environ.copy()
-        env.update(
-            {
-                "TEST_RUN_PIPE": pipe_name,
-                "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-            }
-        )
         completed = threading.Event()
 
         result = []  # result is a string array to store the data during threading
@@ -366,9 +344,9 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
 
 
 def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
+    """Get the absolute test id by joining the testPath with the test_id."""
     split_id = test_id.split("::")[1:]
     absolute_test_id = "::".join([str(testPath), *split_id])
-    print("absolute path", absolute_test_id)
     return absolute_test_id
 
 
@@ -391,7 +369,6 @@ def generate_random_pipe_name(prefix=""):
         return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}.sock")
 
 
-# Create a server socket for the given pipe name.
 class UnixPipeServer:
     def __init__(self, name):
         self.name = name
