@@ -21,7 +21,13 @@ class PipeManager:
     def connect(self):
         if sys.platform == "win32":
             self._writer = open(self.name, "wt", encoding="utf-8")
-
+            try:
+                self._reader = open(self.name, "rt", encoding="utf-8")
+            except Exception as e:
+                print(
+                    "unable to open reader, not required for python tests but is required for  single workspace tests",
+                    e,
+                )
         else:
             self._socket = _SOCKET(socket.AF_UNIX, socket.SOCK_STREAM)
             self._socket.connect(self.name)
@@ -66,6 +72,8 @@ class PipeManager:
         """
         if sys.platform == "win32":
             # returns a string automatically from read
+            if not hasattr(self, "_reader"):
+                self._reader = open(self.name, "rt", encoding="utf-8")
             return self._reader.read(bufsize)
         else:
             # receive bytes and convert to string
