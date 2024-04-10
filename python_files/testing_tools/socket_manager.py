@@ -21,7 +21,6 @@ class PipeManager:
     def connect(self):
         if sys.platform == "win32":
             self._writer = open(self.name, "wt", encoding="utf-8")
-            self._reader = open(self.name, "rt", encoding="utf-8")
 
         else:
             self._socket = _SOCKET(socket.AF_UNIX, socket.SOCK_STREAM)
