@@ -44,15 +44,13 @@ class PipeManager:
         if sys.platform == "win32":
             try:
                 # for windows, is should only use \n\n
-                print("platform is windows, writing now", self.name)
                 request = (
                     f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
                 )
-                a = self._writer.write(request)
-                print("num written? ", a)
+                self._writer.write(request)
                 self._writer.flush()
             except Exception as e:
-                print("THERE WAS AN ERROR ALERT!!!!", e)
+                print("error attempting to write to pipe", e)
                 raise (e)
         else:
             # must include the carriage-return defined (as \r\n) for unix systems
