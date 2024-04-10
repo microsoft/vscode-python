@@ -278,6 +278,7 @@ suite('pytest test execution adapter', () => {
                         assert.equal(launchOptions.testProvider, 'pytest');
                         assert.equal(launchOptions.pytestPort, 'runResultPipe-mockName');
                         assert.strictEqual(launchOptions.runTestIdsPort, 'testIdPipe-mockName');
+                        assert.notEqual(launchOptions.token, undefined);
                         return true;
                     }),
                     typeMoq.It.isAny(),

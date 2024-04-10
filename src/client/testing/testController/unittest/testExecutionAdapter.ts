@@ -134,6 +134,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             debugBool,
             testIds,
             outChannel: this.outputChannel,
+            token: runInstance?.token,
         };
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
@@ -168,12 +169,16 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     args,
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
-                    runTestIdsPort: resultNamedPipeName,
+                    runTestIdsPort: testIdsPipeName,
                     pytestPort: resultNamedPipeName, // change this from pytest
                 };
                 traceInfo(`Running DEBUG unittest for workspace ${options.cwd} with arguments: ${args}\r\n`);
 
-                await debugLauncher!.launchDebugger(launchOptions, () => {
+                if (debugLauncher === undefined) {
+                    traceError('Debug launcher is not defined');
+                    throw new Error('Debug launcher is not defined');
+                }
+                await debugLauncher.launchDebugger(launchOptions, () => {
                     serverDispose(); // this will resolve the deferredTillAllServerClose
                     deferredTillEOT?.resolve();
                 });

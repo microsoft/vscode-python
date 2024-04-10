@@ -195,18 +195,18 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
     # Generate pipe name, pipe name specific per OS type.
     pipe_name = generate_random_pipe_name("pytest-discovery-test")
 
-    # Update the environment with the pipe name and PYTHONPATH.
-    env = os.environ.copy()
-    env.update(
-        {
-            "TEST_RUN_PIPE": pipe_name,
-            "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
-        }
-    )
-
     # Windows design
     if sys.platform == "win32":
         with NPopen("rt", name=pipe_name) as pipe:
+            # Update the environment with the pipe name and PYTHONPATH.
+            env = os.environ.copy()
+            env.update(
+                {
+                    "TEST_RUN_PIPE": pipe.path,
+                    "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+                }
+            )
+
             completed = threading.Event()
 
             result = []  # result is a string array to store the data during threading
@@ -226,6 +226,14 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
 
             return process_data_received(result[0]) if result else None
     else:  # Unix design
+        # Update the environment with the pipe name and PYTHONPATH.
+        env = os.environ.copy()
+        env.update(
+            {
+                "TEST_RUN_PIPE": pipe_name,
+                "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
+            }
+        )
         server = UnixPipeServer(pipe_name)
         server.start()
 

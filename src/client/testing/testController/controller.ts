@@ -455,6 +455,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     token,
                                     request.profile?.kind === TestRunProfileKind.Debug,
                                     this.pythonExecFactory,
+                                    this.debugLauncher,
                                 );
                             }
                             // below is old way of running unittest execution
