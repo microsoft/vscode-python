@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { debug, DebugConfiguration, l10n, Uri, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -53,24 +53,6 @@ export class DebugLauncher implements ITestDebugLauncher {
             callback?.();
         });
         debugManager.startDebugging(workspaceFolder, launchArgs);
-
-        debugManager.onDidStartDebugSession((session) => {
-            if (options.token) {
-                options?.token.onCancellationRequested(() => {
-                    deferred.resolve();
-                    callback?.();
-                    debug.stopDebugging(session);
-                });
-            }
-        });
-
-        if (options.token) {
-            options?.token.onCancellationRequested(() => {
-                // debugManager.stopDebugging();
-                deferred.resolve();
-                callback?.();
-            });
-        }
         return deferred.promise;
     }
 
