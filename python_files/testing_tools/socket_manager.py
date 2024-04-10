@@ -21,13 +21,7 @@ class PipeManager:
     def connect(self):
         if sys.platform == "win32":
             self._writer = open(self.name, "wt", encoding="utf-8")
-            try:
-                self._reader = open(self.name, "rt", encoding="utf-8")
-            except Exception as e:
-                print(
-                    "unable to open reader, not required for python tests but is required for  single workspace tests",
-                    e,
-                )
+            # reader created in read method
         else:
             self._socket = _SOCKET(socket.AF_UNIX, socket.SOCK_STREAM)
             self._socket.connect(self.name)
