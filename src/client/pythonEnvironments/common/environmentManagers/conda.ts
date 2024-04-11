@@ -287,6 +287,10 @@ export class Conda {
         return Conda.condaPromise.get(shellPath);
     }
 
+    public static setConda(condaPath: string): void {
+        Conda.condaPromise.set(undefined, Promise.resolve(new Conda(condaPath)));
+    }
+
     /**
      * Locates the preferred "conda" utility on this system by considering user settings,
      * binaries on PATH, Python interpreters in the registry, and known install locations.

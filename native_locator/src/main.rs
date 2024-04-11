@@ -11,4 +11,5 @@ mod messaging;
 
 fn main() {
     conda::find_and_report_conda_envs();
+    messaging::send_message(messaging::ExitMessage::new());
 }

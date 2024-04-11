@@ -19,7 +19,7 @@ import {
 } from './common/externalDependencies';
 import { ExtensionLocators, WatchRootsArgs, WorkspaceLocators } from './base/locators/wrappers';
 import { CustomVirtualEnvironmentLocator } from './base/locators/lowLevel/customVirtualEnvLocator';
-import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
+// import { CondaEnvironmentLocator } from './base/locators/lowLevel/condaLocator';
 import { GlobalVirtualEnvironmentLocator } from './base/locators/lowLevel/globalVirtualEnvronmentLocator';
 import { PosixKnownPathsLocator } from './base/locators/lowLevel/posixKnownPathsLocator';
 import { PyenvLocator } from './base/locators/lowLevel/pyenvLocator';
@@ -39,6 +39,7 @@ import { IDisposable } from '../common/types';
 import { traceError } from '../logging';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 import { CustomWorkspaceLocator } from './base/locators/lowLevel/customWorkspaceLocator';
+import { NativeLocator } from './base/locators/lowLevel/nativeLocator';
 
 const PYTHON_ENV_INFO_CACHE_KEY = 'PYTHON_ENV_INFO_CACHEv2';
 
@@ -141,10 +142,11 @@ function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>
     locators.push(
         // OS-independent locators go here.
         new PyenvLocator(),
-        new CondaEnvironmentLocator(),
+        // new CondaEnvironmentLocator(),
         new ActiveStateLocator(),
         new GlobalVirtualEnvironmentLocator(),
         new CustomVirtualEnvironmentLocator(),
+        new NativeLocator(),
     );
 
     if (getOSType() === OSType.Windows) {

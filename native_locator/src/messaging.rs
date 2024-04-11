@@ -5,9 +5,10 @@ use serde::{Deserialize, Serialize};
 
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EnvManager {
-    executable_path: Vec<String>,
-    version: Option<String>,
+    pub executable_path: Vec<String>,
+    pub version: Option<String>,
 }
 
 impl EnvManager {
@@ -20,10 +21,11 @@ impl EnvManager {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct EnvManagerMessage {
-    jsonrpc: String,
-    method: String,
-    params: EnvManager,
+    pub jsonrpc: String,
+    pub method: String,
+    pub params: EnvManager,
 }
 
 impl EnvManagerMessage {
@@ -37,12 +39,14 @@ impl EnvManagerMessage {
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
-    name: String,
-    python_executable_path: Vec<String>,
-    category: String,
-    version: Option<String>,
-    activated_run: Option<Vec<String>>,
+    pub name: String,
+    pub python_executable_path: Vec<String>,
+    pub category: String,
+    pub version: Option<String>,
+    pub activated_run: Option<Vec<String>>,
+    pub env_path: Option<String>,
 }
 
 impl PythonEnvironment {
@@ -52,6 +56,7 @@ impl PythonEnvironment {
         category: String,
         version: Option<String>,
         activated_run: Option<Vec<String>>,
+        env_path: Option<String>,
     ) -> Self {
         Self {
             name,
@@ -59,15 +64,17 @@ impl PythonEnvironment {
             category,
             version,
             activated_run,
+            env_path,
         }
     }
 }
 
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PythonEnvironmentMessage {
-    jsonrpc: String,
-    method: String,
-    params: PythonEnvironment,
+    pub jsonrpc: String,
+    pub method: String,
+    pub params: PythonEnvironment,
 }
 
 impl PythonEnvironmentMessage {
@@ -80,8 +87,26 @@ impl PythonEnvironmentMessage {
     }
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ExitMessage {
+    pub jsonrpc: String,
+    pub method: String,
+    pub params: Option<()>,
+}
+
+impl ExitMessage {
+    pub fn new() -> Self {
+        Self {
+            jsonrpc: "2.0".to_string(),
+            method: "exit".to_string(),
+            params: None,
+        }
+    }
+}
+
 fn send_rpc_message(message: String) -> () {
-    println!(
+    print!(
         "Content-Length: {}\r\nContent-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n{}",
         message.len(),
         message

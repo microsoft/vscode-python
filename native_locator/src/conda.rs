@@ -450,6 +450,7 @@ pub fn find_and_report_conda_envs() {
                             "python".to_string(),
                         ])
                     },
+                    Some(env.path.to_string_lossy().to_string()),
                 );
                 let message = messaging::PythonEnvironmentMessage::new(params);
                 messaging::send_message(message);

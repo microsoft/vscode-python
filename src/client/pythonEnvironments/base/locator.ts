@@ -5,7 +5,7 @@
 
 import { Event, Uri } from 'vscode';
 import { IAsyncIterableIterator, iterEmpty } from '../../common/utils/async';
-import { PythonEnvInfo, PythonEnvKind, PythonEnvSource } from './info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvSource, PythonVersion } from './info';
 import {
     IPythonEnvsWatcher,
     PythonEnvCollectionChangedEvent,
@@ -145,6 +145,8 @@ export type BasicEnvInfo = {
     source?: PythonEnvSource[];
     envPath?: string;
     searchLocation?: Uri;
+    version?: PythonVersion;
+    name?: string;
 };
 
 /**

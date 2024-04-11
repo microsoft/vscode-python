@@ -186,19 +186,18 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     } else {
         executable = await conda.getInterpreterPathForEnvironment({ prefix: envPath });
     }
+    const version = env.version ?? (executable ? await getPythonVersionFromPath(executable) : undefined);
     const info = buildEnvInfo({
         executable,
         kind: PythonEnvKind.Conda,
         org: AnacondaCompanyName,
         location: envPath,
         source: [],
-        version: executable ? await getPythonVersionFromPath(executable) : undefined,
+        version,
         type: PythonEnvType.Conda,
+        name: env.name ?? (await conda?.getName(envPath)),
     });
-    const name = await conda?.getName(envPath);
-    if (name) {
-        info.name = name;
-    }
+
     if (env.envPath && path.basename(executable) === executable) {
         // For environments without python, set ID using the predicted executable path after python is installed.
         // Another alternative could've been to set ID of all conda environments to the environment path, as that
