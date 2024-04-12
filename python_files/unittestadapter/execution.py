@@ -155,6 +155,17 @@ class EOTPayloadDict(TypedDict):
     eot: bool
 
 
+def filter_tests(suite: unittest.TestSuite, test_ids:List[str]) -> unittest.TestSuite:
+    """Filter the tests in the suite to only run the ones with the given ids."""
+    filtered_suite = unittest.TestSuite()
+    for test in suite:
+        if isinstance(test, unittest.TestCase):
+            if test.id() in test_ids:
+                filtered_suite.addTest(test)
+        else:
+            filtered_suite.addTest(filter_tests(test, test_ids))
+    return filtered_suite
+
 # Args: start_path path to a directory or a file, list of ids that may be empty.
 # Edge cases:
 # - if tests got deleted since the VS Code side last ran discovery and the current test run,
@@ -187,16 +198,6 @@ def run_tests(
             start_dir = os.path.dirname(cwd)
             pattern = os.path.basename(cwd)
 
-        # Discover tests at path with the file name as a pattern (if any).
-        loader = unittest.TestLoader()
-
-        args = {  # noqa: F841
-            "start_dir": start_dir,
-            "pattern": pattern,
-            "top_level_dir": top_level_dir,
-        }
-        suite = loader.discover(start_dir, pattern, top_level_dir)  # noqa: F841
-
         if failfast is None:
             failfast = False
         if locals is None:
@@ -209,9 +210,13 @@ def run_tests(
             failfast=failfast,
             verbosity=verbosity,
         )
-        # lets try to tailer our own suite so we can figure out running only the ones we want
+
+        # Discover tests at path with the file name as a pattern (if any).
         loader = unittest.TestLoader()
-        tailor: unittest.TestSuite = loader.loadTestsFromNames(test_ids)
+        suite = loader.discover(start_dir, pattern, top_level_dir)
+
+        # lets try to tailer our own suite so we can figure out running only the ones we want
+        tailor: unittest.TestSuite = filter_tests(suite, test_ids)
         result: UnittestTestResult = runner.run(tailor)  # type: ignore
 
         payload["result"] = result.formatted
