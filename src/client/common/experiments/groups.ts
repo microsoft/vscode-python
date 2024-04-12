@@ -24,3 +24,9 @@ export enum EnableTestAdapterRewrite {
 export enum RecommendTensobardExtension {
     experiment = 'pythonRecommendTensorboardExt',
 }
+
+// Experiment to enable triggering venv creation when users install with `pip`
+// in a global environment
+export enum CreateEnvOnPipInstallTrigger {
+    experiment = 'pythonCreateEnvOnPipInstall',
+}
