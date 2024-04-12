@@ -155,7 +155,7 @@ class EOTPayloadDict(TypedDict):
     eot: bool
 
 
-def filter_tests(suite: unittest.TestSuite, test_ids:List[str]) -> unittest.TestSuite:
+def filter_tests(suite: unittest.TestSuite, test_ids: List[str]) -> unittest.TestSuite:
     """Filter the tests in the suite to only run the ones with the given ids."""
     filtered_suite = unittest.TestSuite()
     for test in suite:
@@ -165,6 +165,21 @@ def filter_tests(suite: unittest.TestSuite, test_ids:List[str]) -> unittest.Test
         else:
             filtered_suite.addTest(filter_tests(test, test_ids))
     return filtered_suite
+
+def get_all_test_ids(suite: unittest.TestSuite) -> List[str]:
+    """Return a list of all test ids in the suite."""
+    test_ids = []
+    for test in suite:
+        if isinstance(test, unittest.TestCase):
+            test_ids.append(test.id())
+        else:
+            test_ids.extend(get_all_test_ids(test))
+    return test_ids
+
+def find_missing_tests(test_ids: List[str], suite: unittest.TestSuite) -> List[str]:
+    """Return a list of test ids that are not in the suite."""
+    all_test_ids = get_all_test_ids(suite)
+    return [test_id for test_id in test_ids if test_id not in all_test_ids]
 
 # Args: start_path path to a directory or a file, list of ids that may be empty.
 # Edge cases:
@@ -217,6 +232,13 @@ def run_tests(
 
         # lets try to tailer our own suite so we can figure out running only the ones we want
         tailor: unittest.TestSuite = filter_tests(suite, test_ids)
+
+        # If any tests are missing, add them to the payload.
+        not_found = find_missing_tests(test_ids, tailor)
+        if not_found:
+            missing_suite = loader.loadTestsFromNames(not_found)
+            tailor.addTests(missing_suite)
+
         result: UnittestTestResult = runner.run(tailor)  # type: ignore
 
         payload["result"] = result.formatted

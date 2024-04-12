@@ -126,7 +126,7 @@ def test_subtest_run() -> None:
                 "pattern_a_test.DiscoveryA.test_one_a",
                 "pattern_a_test.DiscoveryA.test_two_a",
             ],
-            "*test",
+            "*test.py",
             os.fspath(TEST_DATA_PATH / "two_patterns"),
             "success",
         ),
