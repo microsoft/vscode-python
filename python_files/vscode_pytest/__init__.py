@@ -413,6 +413,35 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
+        if hasattr(test_case, "callspec"):  # This means it is a parameterized test.
+            function_name: str = ""
+            # parameterized test cases cut the repetitive part of the name off.
+            parent_part, parameterized_section = test_node["name"].split("[", 1)
+            test_node["name"] = "[" + parameterized_section
+            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
+            try:
+                function_name = test_case.originalname  # type: ignore
+                function_test_node = function_nodes_dict[parent_path]
+            except AttributeError:  # actual error has occurred
+                ERRORS.append(
+                    f"unable to find original name for {test_case.name} with parameterization detected."
+                )
+                raise VSCodePytestError("Unable to find original name for parameterized test case")
+            except KeyError:
+                function_test_node: TestNode = create_parameterized_function_node(
+                    function_name, get_node_path(test_case), test_case.nodeid
+                )
+                function_nodes_dict[parent_path] = function_test_node
+            function_test_node["children"].append(test_node)
+            # Now, add the function node to file node.
+            try:
+                parent_test_case = file_nodes_dict[test_case.parent]
+            except KeyError:
+                parent_test_case = create_file_node(test_case.parent)
+                file_nodes_dict[test_case.parent] = parent_test_case
+            if function_test_node not in parent_test_case["children"]:
+                parent_test_case["children"].append(function_test_node)
+            test_node = function_test_node
         if isinstance(test_case.parent, pytest.Class):
             case_iter = test_case.parent
             node_child_iter = test_node
@@ -424,7 +453,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 except KeyError:
                     test_class_node = create_class_node(case_iter)
                     class_nodes_dict[case_iter.nodeid] = test_class_node
-                test_class_node["children"].append(node_child_iter)
+                # Check if the class already has the child node. This will occur if the test is parameterized.
+                if node_child_iter not in test_class_node["children"]:
+                    test_class_node["children"].append(node_child_iter)
                 # Iterate up.
                 node_child_iter = test_class_node
                 case_iter = case_iter.parent
@@ -443,35 +474,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
-        elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
-            function_name: str = ""
-            # parameterized test cases cut the repetitive part of the name off.
-            parent_part, parameterized_section = test_node["name"].split("[", 1)
-            test_node["name"] = "[" + parameterized_section
-            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
-            try:
-                function_name = test_case.originalname  # type: ignore
-                function_test_case = function_nodes_dict[parent_path]
-            except AttributeError:  # actual error has occurred
-                ERRORS.append(
-                    f"unable to find original name for {test_case.name} with parameterization detected."
-                )
-                raise VSCodePytestError("Unable to find original name for parameterized test case")
-            except KeyError:
-                function_test_case: TestNode = create_parameterized_function_node(
-                    function_name, get_node_path(test_case), test_case.nodeid
-                )
-                function_nodes_dict[parent_path] = function_test_case
-            function_test_case["children"].append(test_node)
-            # Now, add the function node to file node.
-            try:
-                parent_test_case = file_nodes_dict[test_case.parent]
-            except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
-            if function_test_case not in parent_test_case["children"]:
-                parent_test_case["children"].append(function_test_case)
-        else:  # This includes test cases that are pytest functions or a doctests.
+        if not hasattr(test_case, "callspec"):
+            # This includes test cases that are pytest functions or a doctests.
             try:
                 parent_test_case = file_nodes_dict[test_case.parent]
             except KeyError:
