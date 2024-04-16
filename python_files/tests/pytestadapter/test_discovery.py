@@ -12,7 +12,8 @@ from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output, helpers  # noqa: E402
 
-def test_import_error(tmp_path):
+
+def test_import_error():
     """Test pytest discovery on a file that has a pytest marker but does not import pytest.
 
     Copies the contents of a .txt file to a .py file in the temporary directory
@@ -23,15 +24,10 @@ def test_import_error(tmp_path):
     Keyword arguments:
     tmp_path -- pytest fixture that creates a temporary directory.
     """
-    # Saving some files as .txt to avoid that file displaying a syntax error for
-    # the extension as a whole. Instead, rename it before running this test
-    # in order to test the error handling.
     file_path = helpers.TEST_DATA_PATH / "error_pytest_import.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_pytest_import.py"
-    shutil.copyfile(file_path, p)
-    actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
+    with helpers.text_to_python_file(file_path) as p:
+        actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
+
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
@@ -65,11 +61,9 @@ def test_syntax_error(tmp_path):
     # the extension as a whole. Instead, rename it before running this test
     # in order to test the error handling.
     file_path = helpers.TEST_DATA_PATH / "error_syntax_discovery.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_syntax_discovery.py"
-    shutil.copyfile(file_path, p)
-    actual = helpers.runner(["--collect-only", os.fspath(p)])
+    with helpers.text_to_python_file(file_path) as p:
+        actual = helpers.runner(["--collect-only", os.fspath(p)])
+
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:

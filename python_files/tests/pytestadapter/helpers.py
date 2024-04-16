@@ -31,6 +31,17 @@ CONTENT_TYPE: str = "Content-Type:"
 
 
 @contextlib.contextmanager
+def text_to_python_file(text_file_path: pathlib.Path):
+    try:
+        contents = text_file_path.read_text(encoding="utf-8")
+        python_file = text_file_path.with_suffix(".py")
+        python_file.write_text(contents, encoding="utf-8")
+        yield python_file
+    finally:
+        os.unlink(os.fspath(python_file))
+
+
+@contextlib.contextmanager
 def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
     destination = None
     try:
