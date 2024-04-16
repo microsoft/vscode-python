@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { DebugConfiguration, l10n, Uri, WorkspaceFolder } from 'vscode';
+import { debug, DebugConfiguration, Disposable, l10n, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -48,7 +48,29 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
+        let disposeOfDebugger: Disposable | undefined;
+        debugManager.onDidStartDebugSession((session) => {
+            if (options.token) {
+                disposeOfDebugger = options?.token.onCancellationRequested(() => {
+                    debug.stopDebugging(session);
+                    deferred.resolve();
+                    callback?.();
+                });
+            }
+        });
+
+        // if (options.token) {
+        //     options?.token.onCancellationRequested(() => {
+        //         // debugManager.stopDebugging();
+        //         deferred.resolve();
+        //         callback?.();
+        //     });
+        // }
+
         debugManager.onDidTerminateDebugSession(() => {
+            if (disposeOfDebugger !== undefined) {
+                disposeOfDebugger.dispose();
+            }
             deferred.resolve();
             callback?.();
         });
