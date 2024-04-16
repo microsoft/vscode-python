@@ -533,7 +533,7 @@ parametrize_tests_expected_output = {
             "children": [
                 {
                     "name": "TestClass",
-                    "path": os.fspath(test_add_path),
+                    "path": os.fspath(parameterize_tests_path),
                     "type_": "class",
                     "id_": "parametrize_tests.py::TestClass",
                     "children": [
@@ -541,7 +541,7 @@ parametrize_tests_expected_output = {
                             "name": "test_adding",
                             "path": os.fspath(parameterize_tests_path),
                             "type_": "function",
-                            "id_": "parametrize_tests.py::test_adding",
+                            "id_": "parametrize_tests.py::TestClass::test_adding",
                             "children": [
                                 {
                                     "name": "[3+5-8]",
@@ -552,11 +552,11 @@ parametrize_tests_expected_output = {
                                     ),
                                     "type_": "test",
                                     "id_": get_absolute_test_id(
-                                        "parametrize_tests.py::test_adding[3+5-8]",
+                                        "parametrize_tests.py::TestClass::test_adding[3+5-8]",
                                         parameterize_tests_path,
                                     ),
                                     "runID": get_absolute_test_id(
-                                        "parametrize_tests.py::test_adding[3+5-8]",
+                                        "parametrize_tests.py::TestClass::test_adding[3+5-8]",
                                         parameterize_tests_path,
                                     ),
                                 },
@@ -569,11 +569,11 @@ parametrize_tests_expected_output = {
                                     ),
                                     "type_": "test",
                                     "id_": get_absolute_test_id(
-                                        "parametrize_tests.py::test_adding[2+4-6]",
+                                        "parametrize_tests.py::TestClass::test_adding[2+4-6]",
                                         parameterize_tests_path,
                                     ),
                                     "runID": get_absolute_test_id(
-                                        "parametrize_tests.py::test_adding[2+4-6]",
+                                        "parametrize_tests.py::TestClass::test_adding[2+4-6]",
                                         parameterize_tests_path,
                                     ),
                                 },
@@ -586,11 +586,11 @@ parametrize_tests_expected_output = {
                                     ),
                                     "type_": "test",
                                     "id_": get_absolute_test_id(
-                                        "parametrize_tests.py::test_adding[6+9-16]",
+                                        "parametrize_tests.py::TestClass::test_adding[6+9-16]",
                                         parameterize_tests_path,
                                     ),
                                     "runID": get_absolute_test_id(
-                                        "parametrize_tests.py::test_adding[6+9-16]",
+                                        "parametrize_tests.py::TestClass::test_adding[6+9-16]",
                                         parameterize_tests_path,
                                     ),
                                 },

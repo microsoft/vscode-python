@@ -432,14 +432,16 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 )
                 function_nodes_dict[parent_path] = function_test_node
             function_test_node["children"].append(test_node)
-            # Now, add the function node to file node.
-            try:
-                parent_test_case = file_nodes_dict[test_case.parent]
-            except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
-            if function_test_node not in parent_test_case["children"]:
-                parent_test_case["children"].append(function_test_node)
+            # Check if the parent node of the function is file, if so create/add to this file node.
+            if isinstance(test_case.parent, pytest.File):
+                try:
+                    parent_test_case = file_nodes_dict[test_case.parent]
+                except KeyError:
+                    parent_test_case = create_file_node(test_case.parent)
+                    file_nodes_dict[test_case.parent] = parent_test_case
+                if function_test_node not in parent_test_case["children"]:
+                    parent_test_case["children"].append(function_test_node)
+            # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
             test_node = function_test_node
         if isinstance(test_case.parent, pytest.Class):
             case_iter = test_case.parent
@@ -473,7 +475,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
-        if not hasattr(test_case, "callspec"):
+        elif not hasattr(test_case, "callspec"):
             # This includes test cases that are pytest functions or a doctests.
             try:
                 parent_test_case = file_nodes_dict[test_case.parent]
