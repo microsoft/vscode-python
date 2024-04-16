@@ -38,7 +38,8 @@ def text_to_python_file(text_file_path: pathlib.Path):
         python_file.write_text(contents, encoding="utf-8")
         yield python_file
     finally:
-        os.unlink(os.fspath(python_file))
+        if python_file:
+            os.unlink(os.fspath(python_file))
 
 
 @contextlib.contextmanager
