@@ -32,6 +32,8 @@ CONTENT_TYPE: str = "Content-Type:"
 
 @contextlib.contextmanager
 def text_to_python_file(text_file_path: pathlib.Path):
+    """Convert a text file to a python file and yield the python file path."""
+    python_file = None
     try:
         contents = text_file_path.read_text(encoding="utf-8")
         python_file = text_file_path.with_suffix(".py")
