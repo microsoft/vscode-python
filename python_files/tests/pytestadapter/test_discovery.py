@@ -12,11 +12,6 @@ from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output, helpers  # noqa: E402
 
-
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="See https://github.com/microsoft/vscode-python/issues/22965",
-)
 def test_import_error(tmp_path):
     """Test pytest discovery on a file that has a pytest marker but does not import pytest.
 
@@ -55,10 +50,6 @@ def test_import_error(tmp_path):
                 assert False
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="See https://github.com/microsoft/vscode-python/issues/22965",
-)
 def test_syntax_error(tmp_path):
     """Test pytest discovery on a file that has a syntax error.
 
@@ -201,6 +192,10 @@ def test_pytest_collect(file, expected_const):
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="See https://stackoverflow.com/questions/32877260/privlege-error-trying-to-create-symlink-using-python-on-windows-10",
+)
 def test_symlink_root_dir():
     """
     Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.

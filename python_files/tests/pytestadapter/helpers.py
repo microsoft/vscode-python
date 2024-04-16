@@ -197,7 +197,7 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
 
     # Windows design
     if sys.platform == "win32":
-        with NPopen("rt", name=pipe_name) as pipe:
+        with NPopen("r+t", name=pipe_name, bufsize=0) as pipe:
             # Update the environment with the pipe name and PYTHONPATH.
             env = os.environ.copy()
             env.update(
