@@ -101,8 +101,7 @@
                         "media": {
                             "svg": "resources/walkthrough/open-folder.svg",
                             "altText": "%walkthrough.step.python.createPythonFile.altText%"
-                        },
-                        "when": ""
+                        }
                     },
                     {
                         "id": "python.installPythonWin8",
@@ -140,8 +139,7 @@
                         "media": {
                             "svg": "resources/walkthrough/create-environment.svg",
                             "altText": "%walkthrough.step.python.createEnvironment.altText%"
-                        },
-                        "when": ""
+                        }
                     },
                     {
                         "id": "python.runAndDebug",
@@ -150,8 +148,7 @@
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
                             "altText": "%walkthrough.step.python.runAndDebug.altText%"
-                        },
-                        "when": ""
+                        }
                     },
                     {
                         "id": "python.learnMoreWithDS",
@@ -160,8 +157,7 @@
                         "media": {
                             "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
                             "svg": "resources/walkthrough/learnmore.svg"
-                        },
-                        "when": ""
+                        }
                     }
                 ]
             },
