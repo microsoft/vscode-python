@@ -33,8 +33,11 @@ export class DebugLauncher implements ITestDebugLauncher {
     }
 
     public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
+        const deferred = createDeferred<void>();
         if (options.token && options.token.isCancellationRequested) {
             return undefined;
+            deferred.resolve();
+            callback?.();
         }
 
         const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
@@ -45,7 +48,6 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        const deferred = createDeferred<void>();
         debugManager.onDidTerminateDebugSession(() => {
             deferred.resolve();
             callback?.();
@@ -206,12 +208,11 @@ export class DebugLauncher implements ITestDebugLauncher {
         launchArgs.request = 'launch';
 
         if (pythonTestAdapterRewriteExperiment) {
-            if (options.pytestPort && options.pytestUUID && options.runTestIdsPort) {
+            if (options.pytestPort && options.runTestIdsPort) {
                 launchArgs.env = {
                     ...launchArgs.env,
-                    TEST_PORT: options.pytestPort,
-                    TEST_UUID: options.pytestUUID,
-                    RUN_TEST_IDS_PORT: options.runTestIdsPort,
+                    TEST_RUN_PIPE: options.pytestPort,
+                    RUN_TEST_IDS_PIPE: options.runTestIdsPort,
                 };
             } else {
                 throw Error(

@@ -12,6 +12,8 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import process_json_util  # noqa: E402
+from testing_tools import socket_manager  # noqa: E402
+
 
 # This script handles running pytest via pytest.main(). It is called via run in the
 # pytest execution adapter and gets the test_ids to run via stdin and the rest of the
@@ -24,42 +26,40 @@ if __name__ == "__main__":
     sys.path.insert(0, os.getcwd())
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
-    run_test_ids_port = os.environ.get("RUN_TEST_IDS_PORT")
-    run_test_ids_port_int = int(run_test_ids_port) if run_test_ids_port is not None else 0
-    if run_test_ids_port_int == 0:
-        print("Error[vscode-pytest]: RUN_TEST_IDS_PORT env var is not set.")
-    test_ids_from_buffer = []
+    run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
+    if not run_test_ids_pipe:
+        print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
+    raw_json = {}
     try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect(("localhost", run_test_ids_port_int))
-        print(f"CLIENT: Server listening on port {run_test_ids_port_int}...")
-        buffer = b""
+        socket_name = os.environ.get("RUN_TEST_IDS_PIPE")
+        with socket_manager.PipeManager(socket_name) as sock:
+            buffer = ""
+            while True:
+                # Receive the data from the client as a string
+                data = sock.read(3000)
+                if not data:
+                    break
 
-        while True:
-            # Receive the data from the client
-            data = client_socket.recv(1024 * 1024)
-            if not data:
-                break
+                # Append the received data to the buffer
+                buffer += data
 
-            # Append the received data to the buffer
-            buffer += data
-
-            try:
-                # Try to parse the buffer as JSON
-                test_ids_from_buffer = process_json_util.process_rpc_json(buffer.decode("utf-8"))
-                # Clear the buffer as complete JSON object is received
-                buffer = b""
-                print("Received JSON data in run script")
-                break
-            except json.JSONDecodeError:
-                # JSON decoding error, the complete JSON object is not yet received
-                continue
-            except UnicodeDecodeError:
-                continue
+                try:
+                    # Try to parse the buffer as JSON
+                    raw_json = process_json_util.process_rpc_json(buffer)
+                    # Clear the buffer as complete JSON object is received
+                    buffer = ""
+                    print("Received JSON data in run script")
+                    break
+                except json.JSONDecodeError:
+                    # JSON decoding error, the complete JSON object is not yet received
+                    continue
+                except UnicodeDecodeError:
+                    continue
     except socket.error as e:
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
     try:
+        test_ids_from_buffer = raw_json["params"]
         if test_ids_from_buffer:
             arg_array = ["-p", "vscode_pytest"] + args + test_ids_from_buffer
             print("Running pytest with args: " + str(arg_array))
@@ -72,4 +72,7 @@ if __name__ == "__main__":
             arg_array = ["-p", "vscode_pytest"] + args
             pytest.main(arg_array)
     except json.JSONDecodeError:
-        print("Error: Could not parse test ids from stdin")
+        print(
+            "Error: Could not parse test ids from stdin. Raw json received from socket: \n",
+            raw_json,
+        )

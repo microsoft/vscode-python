@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import json
 import os
-import shutil
 import sys
 from typing import Any, Dict, List, Optional
 
@@ -13,11 +12,7 @@ from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 from . import expected_discovery_test_output, helpers  # noqa: E402
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="See https://github.com/microsoft/vscode-python/issues/22965",
-)
-def test_import_error(tmp_path):
+def test_import_error():
     """Test pytest discovery on a file that has a pytest marker but does not import pytest.
 
     Copies the contents of a .txt file to a .py file in the temporary directory
@@ -28,19 +23,13 @@ def test_import_error(tmp_path):
     Keyword arguments:
     tmp_path -- pytest fixture that creates a temporary directory.
     """
-    # Saving some files as .txt to avoid that file displaying a syntax error for
-    # the extension as a whole. Instead, rename it before running this test
-    # in order to test the error handling.
     file_path = helpers.TEST_DATA_PATH / "error_pytest_import.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_pytest_import.py"
-    shutil.copyfile(file_path, p)
-    actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
+    with helpers.text_to_python_file(file_path) as p:
+        actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
+
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
@@ -56,10 +45,6 @@ def test_import_error(tmp_path):
                 assert False
 
 
-@pytest.mark.skipif(
-    sys.platform == "win32",
-    reason="See https://github.com/microsoft/vscode-python/issues/22965",
-)
 def test_syntax_error(tmp_path):
     """Test pytest discovery on a file that has a syntax error.
 
@@ -75,15 +60,12 @@ def test_syntax_error(tmp_path):
     # the extension as a whole. Instead, rename it before running this test
     # in order to test the error handling.
     file_path = helpers.TEST_DATA_PATH / "error_syntax_discovery.txt"
-    temp_dir = tmp_path / "temp_data"
-    temp_dir.mkdir()
-    p = temp_dir / "error_syntax_discovery.py"
-    shutil.copyfile(file_path, p)
-    actual = helpers.runner(["--collect-only", os.fspath(p)])
+    with helpers.text_to_python_file(file_path) as p:
+        actual = helpers.runner(["--collect-only", os.fspath(p)])
+
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
@@ -109,7 +91,6 @@ def test_parameterized_error_collect():
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
@@ -187,24 +168,27 @@ def test_pytest_collect(file, expected_const):
     """
     actual = helpers.runner(
         [
-            "--collect-only",
             os.fspath(helpers.TEST_DATA_PATH / file),
+            "--collect-only",
         ]
     )
 
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
         actual_item = actual_list.pop(0)
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
-        assert not is_same_tree(
+        assert is_same_tree(
             actual_item.get("tests"), expected_const
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 
 
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="See https://stackoverflow.com/questions/32877260/privlege-error-trying-to-create-symlink-using-python-on-windows-10",
+)
 def test_symlink_root_dir():
     """
     Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
@@ -224,7 +208,6 @@ def test_symlink_root_dir():
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
-            assert actual_list.pop(-1).get("eot")
             actual_item = actual_list.pop(0)
             try:
                 # Check if all requirements
@@ -258,8 +241,8 @@ def test_pytest_root_dir():
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
         actual_item = actual_list.pop(0)
+
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "root")
@@ -284,8 +267,8 @@ def test_pytest_config_file():
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
-        assert actual_list.pop(-1).get("eot")
         actual_item = actual_list.pop(0)
+
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "root")

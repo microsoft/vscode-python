@@ -10,7 +10,6 @@ import * as fs from 'fs';
 import * as sinon from 'sinon';
 import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { ITestServer } from '../../../../client/testing/testController/common/types';
 import {
     IPythonExecutionFactory,
     IPythonExecutionService,
@@ -20,51 +19,45 @@ import {
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { Deferred, createDeferred } from '../../../../client/common/utils/async';
+import * as util from '../../../../client/testing/testController/common/utils';
 
 suite('pytest test discovery adapter', () => {
-    let testServer: typeMoq.IMock<ITestServer>;
     let configService: IConfigurationService;
     let execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
     let adapter: PytestTestDiscoveryAdapter;
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let deferred: Deferred<void>;
     let outputChannel: typeMoq.IMock<ITestOutputChannel>;
-    let portNum: number;
-    let uuid: string;
     let expectedPath: string;
     let uri: Uri;
     let expectedExtraVariables: Record<string, string>;
     let mockProc: MockChildProcess;
     let deferred2: Deferred<void>;
+    let utilsStartDiscoveryNamedPipeStub: sinon.SinonStub;
 
     setup(() => {
         const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
         mockExtensionRootDir.setup((m) => m.toString()).returns(() => '/mocked/extension/root/dir');
 
+        utilsStartDiscoveryNamedPipeStub = sinon.stub(util, 'startDiscoveryNamedPipe');
+        utilsStartDiscoveryNamedPipeStub.callsFake(() =>
+            Promise.resolve({
+                name: 'discoveryResultPipe-mockName',
+                dispose: () => {
+                    /* no-op */
+                },
+            }),
+        );
+
         // constants
-        portNum = 12345;
-        uuid = 'uuid123';
         expectedPath = path.join('/', 'my', 'test', 'path');
         uri = Uri.file(expectedPath);
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         expectedExtraVariables = {
             PYTHONPATH: fullPluginPath,
-            TEST_UUID: uuid,
-            TEST_PORT: portNum.toString(),
+            TEST_RUN_PIPE: 'discoveryResultPipe-mockName',
         };
-
-        // set up test server
-        testServer = typeMoq.Mock.ofType<ITestServer>();
-        testServer.setup((t) => t.getPort()).returns(() => portNum);
-        testServer.setup((t) => t.createUUID(typeMoq.It.isAny())).returns(() => uuid);
-        testServer
-            .setup((t) => t.onDiscoveryDataReceived(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
 
         // set up config service
         configService = ({
@@ -109,8 +102,9 @@ suite('pytest test discovery adapter', () => {
                 deferred.resolve();
                 return Promise.resolve(execService.object);
             });
+
         sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
-        adapter = new PytestTestDiscoveryAdapter(testServer.object, configService, outputChannel.object);
+        adapter = new PytestTestDiscoveryAdapter(configService, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
         await deferred.promise;
@@ -161,7 +155,7 @@ suite('pytest test discovery adapter', () => {
                 return Promise.resolve(execService.object);
             });
 
-        adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
+        adapter = new PytestTestDiscoveryAdapter(configServiceNew, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
         await deferred.promise;
@@ -211,7 +205,7 @@ suite('pytest test discovery adapter', () => {
                 return Promise.resolve(execService.object);
             });
 
-        adapter = new PytestTestDiscoveryAdapter(testServer.object, configServiceNew, outputChannel.object);
+        adapter = new PytestTestDiscoveryAdapter(configServiceNew, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
         await deferred.promise;

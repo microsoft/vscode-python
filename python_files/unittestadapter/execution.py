@@ -17,16 +17,19 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa: E402
-
 from testing_tools import process_json_util, socket_manager  # noqa: E402
-from unittestadapter.pvsc_utils import parse_unittest_args  # noqa: E402
+from unittestadapter.pvsc_utils import (  # noqa: E402
+    VSCodeUnittestError,
+    parse_unittest_args,
+    send_post_request,
+    ExecutionPayloadDict,
+    EOTPayloadDict,
+    TestExecutionStatus,
+)
 
 ErrorType = Union[Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]]
-testPort = 0
-testUuid = 0
+test_run_pipe = ""
 START_DIR = ""
-DEFAULT_PORT = 45454
 
 
 class TestOutcomeEnum(str, enum.Enum):
@@ -127,32 +130,17 @@ class UnittestTestResult(unittest.TextTestResult):
             "subtest": subtest.id() if subtest else None,
         }
         self.formatted[test_id] = result
-        if testPort == 0 or testUuid == 0:
-            print("Error sending response, port or uuid unknown to python server.")
-        send_run_data(result, testPort, testUuid)
-
-
-class TestExecutionStatus(str, enum.Enum):
-    error = "error"
-    success = "success"
-
-
-TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, Union[str, None]]]
-
-
-class PayloadDict(TypedDict):
-    cwd: str
-    status: TestExecutionStatus
-    result: Optional[TestResultTypeAlias]
-    not_found: NotRequired[List[str]]
-    error: NotRequired[str]
-
-
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
-
-    command_type: Union[Literal["discovery"], Literal["execution"]]
-    eot: bool
+        test_run_pipe = os.getenv("TEST_RUN_PIPE")
+        if not test_run_pipe:
+            print(
+                "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
+                f"TEST_RUN_PIPE = {test_run_pipe}\n",
+                file=sys.stderr,
+            )
+            raise VSCodeUnittestError(
+                "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
+            )
+        send_run_data(result, test_run_pipe)
 
 
 # Args: start_path path to a directory or a file, list of ids that may be empty.
@@ -165,20 +153,14 @@ def run_tests(
     test_ids: List[str],
     pattern: str,
     top_level_dir: Optional[str],
-    uuid: Optional[str],
     verbosity: int,
     failfast: Optional[bool],
     locals: Optional[bool] = None,
-) -> PayloadDict:
+) -> ExecutionPayloadDict:
     cwd = os.path.abspath(start_dir)
-    if "/" in start_dir:  #  is a subdir
-        parent_dir = os.path.dirname(start_dir)
-        sys.path.insert(0, parent_dir)
-    else:
-        sys.path.insert(0, cwd)
     status = TestExecutionStatus.error
     error = None
-    payload: PayloadDict = {"cwd": cwd, "status": status, "result": None}
+    payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": None}
 
     try:
         # If it's a file, split path and file name.
@@ -234,7 +216,7 @@ __socket = None
 atexit.register(lambda: __socket.close() if __socket else None)
 
 
-def send_run_data(raw_data, port, uuid):
+def send_run_data(raw_data, test_run_pipe):
     status = raw_data["outcome"]
     cwd = os.path.abspath(START_DIR)
     if raw_data["subtest"]:
@@ -243,33 +225,8 @@ def send_run_data(raw_data, port, uuid):
         test_id = raw_data["test"]
     test_dict = {}
     test_dict[test_id] = raw_data
-    payload: PayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
-    post_response(payload, port, uuid)
-
-
-def post_response(payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str) -> None:
-    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
-    addr = ("localhost", port)
-    global __socket
-    if __socket is None:
-        try:
-            __socket = socket_manager.SocketManager(addr)
-            __socket.connect()
-        except Exception as error:
-            print(f"Plugin error connection error[vscode-pytest]: {error}")
-            __socket = None
-    data = json.dumps(payload)
-    request = f"""Content-Length: {len(data)}
-Content-Type: application/json
-Request-uuid: {uuid}
-
-{data}"""
-    try:
-        if __socket is not None and __socket.socket is not None:
-            __socket.socket.sendall(request.encode("utf-8"))
-    except Exception as ex:
-        print(f"Error sending response: {ex}")
-        print(f"Request data: {request}")
+    payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
+    send_post_request(payload, test_run_pipe)
 
 
 if __name__ == "__main__":
@@ -286,78 +243,72 @@ if __name__ == "__main__":
         locals,
     ) = parse_unittest_args(argv[index + 1 :])
 
-    run_test_ids_port = os.environ.get("RUN_TEST_IDS_PORT")
-    run_test_ids_port_int = int(run_test_ids_port) if run_test_ids_port is not None else 0
-    if run_test_ids_port_int == 0:
-        print("Error[vscode-unittest]: RUN_TEST_IDS_PORT env var is not set.")
-    # get data from socket
+    run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
+    test_run_pipe = os.getenv("TEST_RUN_PIPE")
+
+    if not run_test_ids_pipe:
+        print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
+        raise VSCodeUnittestError("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
+    if not test_run_pipe:
+        print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
+        raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
     test_ids_from_buffer = []
+    raw_json = None
     try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect(("localhost", run_test_ids_port_int))
-        buffer = b""
+        with socket_manager.PipeManager(run_test_ids_pipe) as sock:
+            buffer: str = ""
+            while True:
+                # Receive the data from the client
+                data: str = sock.read()
+                if not data:
+                    break
 
-        while True:
-            # Receive the data from the client
-            data = client_socket.recv(1024 * 1024)
-            if not data:
-                break
+                # Append the received data to the buffer
+                buffer += data
 
-            # Append the received data to the buffer
-            buffer += data
-
-            try:
-                # Try to parse the buffer as JSON
-                test_ids_from_buffer = process_json_util.process_rpc_json(buffer.decode("utf-8"))
-                # Clear the buffer as complete JSON object is received
-                buffer = b""
-                break
-            except json.JSONDecodeError:
-                # JSON decoding error, the complete JSON object is not yet received
-                continue
+                try:
+                    # Try to parse the buffer as JSON
+                    raw_json = process_json_util.process_rpc_json(buffer)
+                    # Clear the buffer as complete JSON object is received
+                    buffer = ""
+                    print("Received JSON data in run")
+                    break
+                except json.JSONDecodeError:
+                    # JSON decoding error, the complete JSON object is not yet received
+                    continue
     except socket.error as e:
-        print(f"Error: Could not connect to runTestIdsPort: {e}")
-        print("Error: Could not connect to runTestIdsPort")
+        msg = f"Error: Could not connect to RUN_TEST_IDS_PIPE: {e}"
+        print(msg)
+        raise VSCodeUnittestError(msg)
 
-    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
-    testUuid = os.environ.get("TEST_UUID")
-    if testPort is DEFAULT_PORT:
-        print(
-            "Error[vscode-unittest]: TEST_PORT is not set.",
-            " TEST_UUID = ",
-            testUuid,
-        )
-    if testUuid is None:
-        print(
-            "Error[vscode-unittest]: TEST_UUID is not set.",
-            " TEST_PORT = ",
-            testPort,
-        )
-        testUuid = "unknown"
-    if test_ids_from_buffer:
-        # Perform test execution.
-        payload = run_tests(
-            start_dir,
-            test_ids_from_buffer,
-            pattern,
-            top_level_dir,
-            testUuid,
-            verbosity,
-            failfast,
-            locals,
-        )
-    else:
-        cwd = os.path.abspath(start_dir)
-        status = TestExecutionStatus.error
-        payload: PayloadDict = {
-            "cwd": cwd,
-            "status": status,
-            "error": "No test ids received from buffer",
-            "result": None,
-        }
+    try:
+        if raw_json and "params" in raw_json:
+            test_ids_from_buffer = raw_json["params"]
+            if test_ids_from_buffer:
+                # Perform test execution.
+                payload = run_tests(
+                    start_dir,
+                    test_ids_from_buffer,
+                    pattern,
+                    top_level_dir,
+                    verbosity,
+                    failfast,
+                    locals,
+                )
+        else:
+            # No test ids received from buffer
+            cwd = os.path.abspath(start_dir)
+            status = TestExecutionStatus.error
+            payload: ExecutionPayloadDict = {
+                "cwd": cwd,
+                "status": status,
+                "error": "No test ids received from buffer",
+                "result": None,
+            }
+            send_post_request(payload, test_run_pipe)
+    except json.JSONDecodeError:
+        msg = "Error: Could not parse test ids from stdin"
+        print(msg)
+        raise VSCodeUnittestError(msg)
     eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    if testUuid is None:
-        print("Error sending response, uuid unknown to python server.")
-        post_response(eot_payload, testPort, "unknown")
-    else:
-        post_response(eot_payload, testPort, testUuid)
+    send_post_request(eot_payload, test_run_pipe)
