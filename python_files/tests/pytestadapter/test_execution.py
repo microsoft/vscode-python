@@ -227,6 +227,10 @@ def test_bad_id_error_execution():
             ["test_logging.py::test_logging2", "test_logging.py::test_logging"],
             expected_execution_test_output.logging_test_expected_execution_output,
         ),
+        (
+            ["test_mock_cwd.py::test_getcwd_mocked"],
+            expected_execution_test_output.mock_cwd_expected_execution_output,
+        ),
     ],
 )
 def test_pytest_execution(test_ids, expected_const):
@@ -247,6 +251,7 @@ def test_pytest_execution(test_ids, expected_const):
     11. single_parametrize_tests_expected_execution_output: test run on single parametrize test.
     12. doctest_pytest_expected_execution_output: test run on doctest file.
     13. logging_test_expected_execution_output: test run on a file with logging.
+    13. mock_cwd_expected_execution_output: test run on a file with a mocked cwd, make sure the test passes and the cwd can be used throughout the test.
 
 
     Keyword arguments:

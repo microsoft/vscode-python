@@ -636,3 +636,17 @@ symlink_run_expected_execution_output = {
         "subtest": None,
     }
 }
+
+mock_cwd_expected_execution_output = {
+    get_absolute_test_id(
+        "test_mock_cwd.py::test_getcwd_mocked", TEST_DATA_PATH / "test_mock_cwd.py"
+    ): {
+        "test": get_absolute_test_id(
+            "test_mock_cwd.py::test_getcwd_mocked", TEST_DATA_PATH / "test_mock_cwd.py"
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}
