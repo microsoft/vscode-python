@@ -174,6 +174,16 @@ def test_subtest_run(mock_send_run_data) -> None:
             os.fspath(TEST_DATA_PATH),
             "success",
         ),
+        (
+            [
+                "test_scene.TestMathOperations.test_operations(add)",
+                "test_scene.TestMathOperations.test_operations(subtract)",
+                "test_scene.TestMathOperations.test_operations(multiply)",
+            ],
+            "*",
+            os.fspath(TEST_DATA_PATH / "test_scenarios" / "tests"),
+            "success",
+        ),
     ],
 )
 def test_multiple_ids_run(mock_send_run_data, test_ids, pattern, cwd, expected_outcome) -> None:
