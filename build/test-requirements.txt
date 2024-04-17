@@ -19,3 +19,6 @@ torch-tb-profiler
 
 # extension build tests
 freezegun
+
+# testing custom pytest plugin require the use of named pipes
+namedpipe; platform_system == "Windows"

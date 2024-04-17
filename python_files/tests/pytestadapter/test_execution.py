@@ -2,15 +2,19 @@
 # Licensed under the MIT License.
 import json
 import os
+import pathlib
 import shutil
+import sys
 from typing import Any, Dict, List
 
 import pytest
-import sys
 
-from tests.pytestadapter import expected_execution_test_output
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
 
-from .helpers import (
+from tests.pytestadapter import expected_execution_test_output  # noqa: E402
+
+from .helpers import (  # noqa: E402
     TEST_DATA_PATH,
     create_symlink,
     get_absolute_test_id,
@@ -31,7 +35,6 @@ def test_config_file():
     expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
     actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
     assert len(actual_list) == len(expected_const)
     actual_result_dict = dict()
     if actual_list is not None:
@@ -51,8 +54,7 @@ def test_rootdir_specified():
     actual = runner_with_cwd(args, new_cwd)
     expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
     actual_result_dict = dict()
     if actual_list is not None:
@@ -89,8 +91,8 @@ def test_syntax_error_execution(tmp_path):
     shutil.copyfile(file_path, p)
     actual = runner(["error_syntax_discover.py::test_function"])
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
@@ -112,8 +114,7 @@ def test_bad_id_error_execution():
     """
     actual = runner(["not/a/real::test_id"])
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
@@ -255,8 +256,7 @@ def test_pytest_execution(test_ids, expected_const):
     args = test_ids
     actual = runner(args)
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
     actual_result_dict = dict()
     if actual_list is not None:
@@ -299,7 +299,6 @@ def test_symlink_run():
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
-            assert actual_list.pop(-1).get("eot")
             actual_item = actual_list.pop(0)
             try:
                 # Check if all requirements

@@ -49,22 +49,12 @@ extends:
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
-      - script: python -m pip install wheel
-        displayName: Install wheel
+      - script: python -m pip install wheel nox
+        displayName: Install wheel and nox
 
       - script: |
-          python -m pip --disable-pip-version-check install -r build/build-install-requirements.txt
-          python ./python_files/install_debugpy.py
-          python ./python_files/download_get_pip.py
-        displayName: Install debugpy and get-pip.py
-
-      - script: |
-          python -m pip install --no-deps --require-hashes --only-binary :all: -t ./python_files/lib/python --implementation py -r ./requirements.txt
-        displayName: Install Python dependencies
-
-      - script: |
-          python -m pip install --no-deps --require-hashes --only-binary :all: -t ./python_files/lib/jedilsp --implementation py --platform any --abi none -r ./python_files/jedilsp_requirements/requirements.txt
-        displayName: Install Jedi Language Server
+          nox --session install_python_libs
+        displayName: Install debugpy, Jedi, get-pip, etc
 
       - script: |
           python ./build/update_ext_version.py --for-publishing

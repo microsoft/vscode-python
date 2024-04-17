@@ -8,14 +8,15 @@ import pathlib
 import sys
 import traceback
 
+
 import pytest
 
-from typing import Any, Dict, List, Optional, Union, Literal, TypedDict  # noqa: E402
-
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import socket_manager  # noqa: E402
-
-DEFAULT_PORT = 45454
+from typing import Any, Dict, List, Optional, Union, TypedDict, Literal  # noqa: E402
 
 
 class TestData(TypedDict):
@@ -51,22 +52,20 @@ ERRORS = []
 IS_DISCOVERY = False
 map_id_to_path = dict()
 collected_tests_so_far = list()
-TEST_PORT = os.getenv("TEST_PORT")
-TEST_UUID = os.getenv("TEST_UUID")
+TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
-    global TEST_PORT
-    global TEST_UUID
-    TEST_PORT = os.getenv("TEST_PORT")
-    TEST_UUID = os.getenv("TEST_UUID")
-    if TEST_UUID is None or TEST_PORT is None:
-        error_string = (
-            "PYTEST ERROR: TEST_UUID and/or TEST_PORT are not set at the time of pytest starting. Please confirm these environment variables are not being"
-            " changed or removed as they are required for successful test discovery and execution."
-            f" \nTEST_UUID = {TEST_UUID}\nTEST_PORT = {TEST_PORT}\n"
-        )
+    global TEST_RUN_PIPE
+    TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
+    error_string = (
+        "PYTEST ERROR: TEST_RUN_PIPE is not set at the time of pytest starting. "
+        "Please confirm this environment variable is not being changed or removed "
+        "as it is required for successful test discovery and execution."
+        f"TEST_RUN_PIPE = {TEST_RUN_PIPE}\n"
+    )
+    if not TEST_RUN_PIPE:
         print(error_string, file=sys.stderr)
     if "--collect-only" in args:
         global IS_DISCOVERY
@@ -694,8 +693,8 @@ def get_node_path(node: Any) -> pathlib.Path:
     return node_path
 
 
-__socket = None
-atexit.register(lambda: __socket.close() if __socket else None)
+__writer = None
+atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def execution_post(
@@ -757,27 +756,24 @@ def send_post_request(
     payload -- the payload data to be sent.
     cls_encoder -- a custom encoder if needed.
     """
-    global TEST_PORT
-    global TEST_UUID
-    if TEST_UUID is None or TEST_PORT is None:
-        # if TEST_UUID or TEST_PORT is None, print an error and fail as these are both critical errors
+    if not TEST_RUN_PIPE:
         error_msg = (
-            "PYTEST ERROR: TEST_UUID and/or TEST_PORT are not set at the time of pytest starting. Please confirm these environment variables are not being"
-            " changed or removed as they are required for successful pytest discovery and execution."
-            f" \nTEST_UUID = {TEST_UUID}\nTEST_PORT = {TEST_PORT}\n"
+            "PYTEST ERROR: TEST_RUN_PIPE is not set at the time of pytest starting. "
+            "Please confirm this environment variable is not being changed or removed "
+            "as it is required for successful test discovery and execution."
+            f"TEST_RUN_PIPE = {TEST_RUN_PIPE}\n"
         )
         print(error_msg, file=sys.stderr)
         raise VSCodePytestError(error_msg)
 
-    addr = ("localhost", int(TEST_PORT))
-    global __socket
+    global __writer
 
-    if __socket is None:
+    if __writer is None:
         try:
-            __socket = socket_manager.SocketManager(addr)
-            __socket.connect()
+            __writer = socket_manager.PipeManager(TEST_RUN_PIPE)
+            __writer.connect()
         except Exception as error:
-            error_msg = f"Error attempting to connect to extension communication socket[vscode-pytest]: {error}"
+            error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
             print(
                 "If you are on a Windows machine, this error may be occurring if any of your tests clear environment variables"
@@ -785,26 +781,25 @@ def send_post_request(
                 "for the correct way to clear environment variables during testing.\n",
                 file=sys.stderr,
             )
-            __socket = None
+            __writer = None
             raise VSCodePytestError(error_msg)
 
-    data = json.dumps(payload, cls=cls_encoder)
-    request = f"""Content-Length: {len(data)}
-Content-Type: application/json
-Request-uuid: {TEST_UUID}
-
-{data}"""
+    rpc = {
+        "jsonrpc": "2.0",
+        "params": payload,
+    }
+    data = json.dumps(rpc, cls=cls_encoder)
 
     try:
-        if __socket is not None and __socket.socket is not None:
-            __socket.socket.sendall(request.encode("utf-8"))
+        if __writer:
+            __writer.write(data)
         else:
             print(
-                f"Plugin error connection error[vscode-pytest], socket is None \n[vscode-pytest] data: \n{request} \n",
+                f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",
                 file=sys.stderr,
             )
     except Exception as error:
         print(
-            f"Plugin error, exception thrown while attempting to send data[vscode-pytest]: {error} \n[vscode-pytest] data: \n{request}\n",
+            f"Plugin error, exception thrown while attempting to send data[vscode-pytest]: {error} \n[vscode-pytest] data: \n{data}\n",
             file=sys.stderr,
         )

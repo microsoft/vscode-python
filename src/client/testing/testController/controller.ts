@@ -30,7 +30,6 @@ import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
-import { PythonTestServer } from './common/server';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { pythonTestAdapterRewriteEnabled } from './common/utils';
 import {
@@ -78,8 +77,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     private readonly runWithoutConfigurationEvent: EventEmitter<WorkspaceFolder[]> = new EventEmitter<
         WorkspaceFolder[]
     >();
-
-    private pythonTestServer: PythonTestServer;
 
     public readonly onRefreshingCompleted = this.refreshingCompletedEvent.event;
 
@@ -153,13 +150,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             return this.refreshTestData(undefined, { forceRefresh: true });
         };
-        this.pythonTestServer = new PythonTestServer(this.pythonExecFactory, this.debugLauncher);
     }
 
     public async activate(): Promise<void> {
-        traceVerbose('Waiting for test server to start...');
-        await this.pythonTestServer.serverReady();
-        traceVerbose('Test server started.');
         const workspaces: readonly WorkspaceFolder[] = this.workspaceService.workspaceFolders || [];
         workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
@@ -172,14 +165,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 testProvider = UNITTEST_PROVIDER;
                 resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(
-                    this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
                     resultResolver,
                     this.envVarsService,
                 );
                 executionAdapter = new UnittestTestExecutionAdapter(
-                    this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
                     resultResolver,
@@ -189,14 +180,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 testProvider = PYTEST_PROVIDER;
                 resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
                 discoveryAdapter = new PytestTestDiscoveryAdapter(
-                    this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
                     resultResolver,
                     this.envVarsService,
                 );
                 executionAdapter = new PytestTestExecutionAdapter(
-                    this.pythonTestServer,
                     this.configSettings,
                     this.testOutputChannel,
                     resultResolver,
@@ -391,7 +380,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
 
         const dispose = token.onCancellationRequested(() => {
-            runInstance.appendOutput(`Run instance cancelled.\r\n`);
+            runInstance.appendOutput(`\nRun instance cancelled.\r\n`);
             runInstance.end();
         });
 
@@ -466,6 +455,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     token,
                                     request.profile?.kind === TestRunProfileKind.Debug,
                                     this.pythonExecFactory,
+                                    this.debugLauncher,
                                 );
                             }
                             // below is old way of running unittest execution
@@ -489,6 +479,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         } finally {
+            traceVerbose('Finished running tests, ending runInstance.');
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
             dispose.dispose();
