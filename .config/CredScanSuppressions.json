@@ -3,7 +3,7 @@
     "suppressions": [
       {
         "file": [
-          ".nox/install_python_libs/lib/python3.8/site-packages/setuptools/_distutils/command/register.py"
+          ".nox/install_python_libs/lib/python3.8/site-packages/setuptools/_distutils/command%5Cregister.py"
         ],
         "_justification": "These are not real passwords. For documentation purposes only."
       }
