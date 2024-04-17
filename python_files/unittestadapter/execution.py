@@ -154,6 +154,7 @@ def filter_tests(suite: unittest.TestSuite, test_ids: List[str]) -> unittest.Tes
             filtered_suite.addTest(filter_tests(test, test_ids))
     return filtered_suite
 
+
 def get_all_test_ids(suite: unittest.TestSuite) -> List[str]:
     """Return a list of all test ids in the suite."""
     test_ids = []
@@ -164,10 +165,12 @@ def get_all_test_ids(suite: unittest.TestSuite) -> List[str]:
             test_ids.extend(get_all_test_ids(test))
     return test_ids
 
+
 def find_missing_tests(test_ids: List[str], suite: unittest.TestSuite) -> List[str]:
     """Return a list of test ids that are not in the suite."""
     all_test_ids = get_all_test_ids(suite)
     return [test_id for test_id in test_ids if test_id not in all_test_ids]
+
 
 # Args: start_path path to a directory or a file, list of ids that may be empty.
 # Edge cases:
