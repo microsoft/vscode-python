@@ -35,7 +35,7 @@ export class DebugLauncher implements ITestDebugLauncher {
     public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
         const deferred = createDeferred<void>();
         if (options.token && options.token.isCancellationRequested) {
-            n  nreturn undefined;
+            return undefined;
             deferred.resolve();
             callback?.();
         }
