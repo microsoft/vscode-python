@@ -284,11 +284,10 @@ suite('End to End Tests: test adapters', () => {
         });
     });
     test('pytest discovery adapter nested symlink', async () => {
-        before(function () {
-            if (os.platform() === 'win32') {
-                this.skip();
-            }
-        });
+        if (os.platform() === 'win32') {
+            console.log('Skipping test for windows');
+            return;
+        }
 
         // result resolver and saved data for assertions
         let actualData: {
@@ -376,11 +375,10 @@ suite('End to End Tests: test adapters', () => {
         });
     });
     test('pytest discovery adapter small workspace with symlink', async () => {
-        before(function () {
-            if (os.platform() === 'win32') {
-                this.skip();
-            }
-        });
+        if (os.platform() === 'win32') {
+            console.log('Skipping test for windows');
+            return;
+        }
 
         // result resolver and saved data for assertions
         let actualData: {
