@@ -20,7 +20,7 @@ import * as commandApis from '../../../client/common/vscodeApis/commandApis';
 import * as extDepApi from '../../../client/pythonEnvironments/common/externalDependencies';
 import { registerTriggerForPipInTerminal } from '../../../client/pythonEnvironments/creation/globalPipInTerminalTrigger';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
-import { CreateEnv } from '../../../client/common/utils/localize';
+import { Common, CreateEnv } from '../../../client/common/utils/localize';
 
 suite('Global Pip in Terminal Trigger', () => {
     let shouldPromptToCreateEnvStub: sinon.SinonStub;
@@ -31,7 +31,6 @@ suite('Global Pip in Terminal Trigger', () => {
     let showWarningMessageStub: sinon.SinonStub;
     let executeCommandStub: sinon.SinonStub;
     let disableCreateEnvironmentTriggerStub: sinon.SinonStub;
-    let disableWorkspaceCreateEnvironmentTriggerStub: sinon.SinonStub;
     let onDidStartTerminalShellExecutionStub: sinon.SinonStub;
     let handler: undefined | ((e: TerminalShellExecutionStartEvent) => Promise<void>);
     let execEvent: typemoq.IMock<TerminalShellExecutionStartEvent>;
@@ -64,10 +63,6 @@ suite('Global Pip in Terminal Trigger', () => {
         executeCommandStub.resolves({ path: 'some/python' });
 
         disableCreateEnvironmentTriggerStub = sinon.stub(triggerUtils, 'disableCreateEnvironmentTrigger');
-        disableWorkspaceCreateEnvironmentTriggerStub = sinon.stub(
-            triggerUtils,
-            'disableWorkspaceCreateEnvironmentTrigger',
-        );
 
         onDidStartTerminalShellExecutionStub = sinon.stub(windowApis, 'onDidStartTerminalShellExecution');
         onDidStartTerminalShellExecutionStub.callsFake((cb) => {
@@ -270,16 +265,15 @@ suite('Global Pip in Terminal Trigger', () => {
 
         sinon.assert.calledOnce(executeCommandStub);
         sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
-        sinon.assert.notCalled(disableWorkspaceCreateEnvironmentTriggerStub);
 
         shellIntegration.verify((s) => s.executeCommand(typemoq.It.isAnyString()), typemoq.Times.once());
     });
 
-    test('Should disable create environment trigger if user selects to disable', async () => {
+    test("Should disable create environment trigger if user selects don't show again", async () => {
         shouldPromptToCreateEnvStub.returns(true);
         inExperimentStub.returns(true);
         isGlobalPythonSelectedStub.returns(true);
-        showWarningMessageStub.resolves(CreateEnv.Trigger.disableCheck);
+        showWarningMessageStub.resolves(Common.doNotShowAgain);
 
         const disposables: Disposable[] = [];
         registerTriggerForPipInTerminal(disposables);
@@ -310,44 +304,5 @@ suite('Global Pip in Terminal Trigger', () => {
 
         sinon.assert.notCalled(executeCommandStub);
         sinon.assert.calledOnce(disableCreateEnvironmentTriggerStub);
-        sinon.assert.notCalled(disableWorkspaceCreateEnvironmentTriggerStub);
-    });
-
-    test('Should disable workspace create environment trigger if user selects to disable', async () => {
-        shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
-        isGlobalPythonSelectedStub.returns(true);
-        showWarningMessageStub.resolves(CreateEnv.Trigger.disableCheckWorkspace);
-
-        const disposables: Disposable[] = [];
-        registerTriggerForPipInTerminal(disposables);
-
-        await handler?.({
-            terminal: ({} as unknown) as Terminal,
-            shellIntegration: shellIntegration.object,
-            execution: {
-                cwd: workspace1.uri,
-                commandLine: {
-                    isTrusted: true,
-                    value: 'pip install',
-                    confidence: 0,
-                },
-                read: () =>
-                    (async function* () {
-                        yield Promise.resolve('pip install');
-                    })(),
-            },
-        });
-
-        assert.strictEqual(disposables.length, 1);
-        sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
-        sinon.assert.calledOnce(getWorkspaceFolderStub);
-        sinon.assert.calledOnce(isGlobalPythonSelectedStub);
-        sinon.assert.calledOnce(showWarningMessageStub);
-
-        sinon.assert.notCalled(executeCommandStub);
-        sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
-        sinon.assert.calledOnce(disableWorkspaceCreateEnvironmentTriggerStub);
     });
 });

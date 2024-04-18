@@ -10,13 +10,12 @@ import {
     shouldPromptToCreateEnv,
     isCreateEnvWorkspaceCheckNotRun,
     disableCreateEnvironmentTrigger,
-    disableWorkspaceCreateEnvironmentTrigger,
 } from './common/createEnvTriggerUtils';
 import { getWorkspaceFolder } from '../../common/vscodeApis/workspaceApis';
 import { traceError, traceInfo, traceVerbose } from '../../logging';
 import { hasPrefixCondaEnv, hasVenv } from './common/commonUtils';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
-import { CreateEnv } from '../../common/utils/localize';
+import { Common, CreateEnv } from '../../common/utils/localize';
 import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
 import { Commands } from '../../common/constants';
 import { Resource } from '../../common/types';
@@ -77,8 +76,7 @@ async function createEnvironmentCheckForWorkspace(uri: Uri): Promise<void> {
     const selection = await showInformationMessage(
         CreateEnv.Trigger.workspaceTriggerMessage,
         CreateEnv.Trigger.createEnvironment,
-        CreateEnv.Trigger.disableCheckWorkspace,
-        CreateEnv.Trigger.disableCheck,
+        Common.doNotShowAgain,
     );
 
     if (selection === CreateEnv.Trigger.createEnvironment) {
@@ -87,10 +85,8 @@ async function createEnvironmentCheckForWorkspace(uri: Uri): Promise<void> {
         } catch (error) {
             traceError('CreateEnv Trigger - Error while creating environment: ', error);
         }
-    } else if (selection === CreateEnv.Trigger.disableCheck) {
+    } else if (selection === Common.doNotShowAgain) {
         disableCreateEnvironmentTrigger();
-    } else if (selection === CreateEnv.Trigger.disableCheckWorkspace) {
-        disableWorkspaceCreateEnvironmentTrigger();
     }
 }
 

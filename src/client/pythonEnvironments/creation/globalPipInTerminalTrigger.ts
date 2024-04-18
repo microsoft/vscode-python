@@ -3,12 +3,11 @@ import { CreateEnvOnPipInstallTrigger } from '../../common/experiments/groups';
 import { inExperiment } from '../common/externalDependencies';
 import {
     disableCreateEnvironmentTrigger,
-    disableWorkspaceCreateEnvironmentTrigger,
     isGlobalPythonSelected,
     shouldPromptToCreateEnv,
 } from './common/createEnvTriggerUtils';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
-import { CreateEnv } from '../../common/utils/localize';
+import { Common, CreateEnv } from '../../common/utils/localize';
 import { traceError, traceInfo } from '../../logging';
 import { executeCommand } from '../../common/vscodeApis/commandApis';
 import { Commands, PVSC_EXTENSION_ID } from '../../common/constants';
@@ -46,8 +45,7 @@ export function registerTriggerForPipInTerminal(disposables: Disposable[]): void
                     const selection = await showWarningMessage(
                         CreateEnv.Trigger.globalPipInstallTriggerMessage,
                         CreateEnv.Trigger.createEnvironment,
-                        CreateEnv.Trigger.disableCheckWorkspace,
-                        CreateEnv.Trigger.disableCheck,
+                        Common.doNotShowAgain,
                     );
                     if (selection === CreateEnv.Trigger.createEnvironment) {
                         try {
@@ -69,10 +67,8 @@ export function registerTriggerForPipInTerminal(disposables: Disposable[]): void
                         } catch (error) {
                             traceError('CreateEnv Trigger - Error while creating environment: ', error);
                         }
-                    } else if (selection === CreateEnv.Trigger.disableCheck) {
+                    } else if (selection === Common.doNotShowAgain) {
                         disableCreateEnvironmentTrigger();
-                    } else if (selection === CreateEnv.Trigger.disableCheckWorkspace) {
-                        disableWorkspaceCreateEnvironmentTrigger();
                     }
                 }
             }
