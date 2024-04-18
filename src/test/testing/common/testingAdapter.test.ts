@@ -6,6 +6,7 @@ import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import * as fs from 'fs';
+import * as os from 'os';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
@@ -283,6 +284,12 @@ suite('End to End Tests: test adapters', () => {
         });
     });
     test('pytest discovery adapter nested symlink', async () => {
+        before(function () {
+            if (os.platform() === 'win32') {
+                this.skip();
+            }
+        });
+
         // result resolver and saved data for assertions
         let actualData: {
             cwd: string;
@@ -369,6 +376,12 @@ suite('End to End Tests: test adapters', () => {
         });
     });
     test('pytest discovery adapter small workspace with symlink', async () => {
+        before(function () {
+            if (os.platform() === 'win32') {
+                this.skip();
+            }
+        });
+
         // result resolver and saved data for assertions
         let actualData: {
             cwd: string;
