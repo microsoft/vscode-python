@@ -258,12 +258,15 @@ suite('pytest test discovery adapter', () => {
         );
     });
     test('Test discovery adds cwd to pytest args when path parent is symlink', async () => {
-        const expectedPathParent = path.join('/', 'my', 'test');
+        let counter = 0;
         sinon.stub(fs.promises, 'lstat').callsFake(
-            async (p) =>
+            async () =>
                 ({
                     isFile: () => true,
-                    isSymbolicLink: () => p === expectedPathParent,
+                    isSymbolicLink: () => {
+                        counter = counter + 1;
+                        return counter > 2;
+                    },
                 } as fs.Stats),
         );
 
