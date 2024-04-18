@@ -90,9 +90,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } finally {
             // wait for EOT
             await deferredTillEOT.promise;
-            console.log('deferredTill EOT resolved');
             await deferredTillServerClose.promise;
-            console.log('Server closed await now resolved');
         }
         const executionPayload: ExecutionTestPayload = {
             cwd: uri.fsPath,

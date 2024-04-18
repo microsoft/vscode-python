@@ -79,13 +79,21 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 raise VSCodePytestError(
                     f"The path set in the argument --rootdir={rootdir} does not exist."
                 )
-            if (
-                os.path.islink(rootdir)
-                and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
-            ):
+
+            # Check if the rootdir is a symlink or a child of a symlink to the current cwd.
+            isSymlink = False
+
+            if os.path.islink(rootdir):
+                isSymlink = True
                 print(
-                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
-                    "Therefore setting symlink path to rootdir argument.",
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink."
+                )
+            elif pathlib.Path(os.path.realpath(rootdir)) != rootdir:
+                print("Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink.")
+                isSymlink = has_symlink_parent(rootdir)
+            if isSymlink:
+                print(
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink or child of a symlink, adjusting pytest paths accordingly.",
                 )
                 global SYMLINK_PATH
                 SYMLINK_PATH = pathlib.Path(rootdir)
@@ -142,6 +150,21 @@ def pytest_exception_interact(node, call, report):
                 "success",
                 collected_test if collected_test else None,
             )
+
+
+def has_symlink_parent(current_path):
+    """Recursively checks if any parent directories of the given path are symbolic links."""
+    # Convert the current path to an absolute Path object
+    curr_path = pathlib.Path(current_path)
+    print("Checking for symlink parent starting at current path: ", curr_path)
+
+    # Iterate over all parent directories
+    for parent in curr_path.parents:
+        # Check if the parent directory is a symlink
+        if os.path.islink(parent):
+            print(f"Symlink found at: {parent}")
+            return True
+    return False
 
 
 def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:

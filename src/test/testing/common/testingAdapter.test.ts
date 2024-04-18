@@ -62,6 +62,13 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'symlinkWorkspace',
     );
+    const nestedTarget = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testTestingRootWkspc', 'target workspace');
+    const nestedSymlink = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'symlink_parent-folder',
+    );
     suiteSetup(async () => {
         serviceContainer = (await initialize()).serviceContainer;
 
@@ -73,7 +80,14 @@ suite('End to End Tests: test adapters', () => {
                 if (err) {
                     traceError(err);
                 } else {
-                    traceLog('Symlink created successfully for end to end tests.');
+                    traceLog('Symlink created successfully for regular symlink end to end tests.');
+                }
+            });
+            fs.symlink(nestedTarget, nestedSymlink, 'dir', (err) => {
+                if (err) {
+                    traceError(err);
+                } else {
+                    traceLog('Symlink created successfully for nested symlink end to end tests.');
                 }
             });
         } catch (err) {
@@ -116,11 +130,23 @@ suite('End to End Tests: test adapters', () => {
                 if (err) {
                     traceError(err);
                 } else {
-                    traceLog('Symlink removed successfully after tests.');
+                    traceLog('Symlink removed successfully after tests, rootPathDiscoverySymlink.');
                 }
             });
         } else {
-            traceLog('Symlink was not found to remove after tests, exiting successfully');
+            traceLog('Symlink was not found to remove after tests, exiting successfully, rootPathDiscoverySymlink.');
+        }
+
+        if (fs.existsSync(nestedSymlink)) {
+            fs.unlink(nestedSymlink, (err) => {
+                if (err) {
+                    traceError(err);
+                } else {
+                    traceLog('Symlink removed successfully after tests, nestedSymlink.');
+                }
+            });
+        } else {
+            traceLog('Symlink was not found to remove after tests, exiting successfully, nestedSymlink.');
         }
     });
     test('unittest discovery adapter small workspace', async () => {
@@ -253,6 +279,92 @@ suite('End to End Tests: test adapters', () => {
             // 3. Confirm tests are found
             assert.ok(actualData.tests, 'Expected tests to be present');
 
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+        });
+    });
+    test('pytest discovery adapter nested symlink', async () => {
+        // result resolver and saved data for assertions
+        let actualData: {
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
+        };
+        // set workspace to test workspace folder
+        const workspacePath = path.join(nestedSymlink, 'custom_sub_folder');
+        const workspacePathParent = nestedSymlink;
+        workspaceUri = Uri.parse(workspacePath);
+        const filePath = path.join(workspacePath, 'test_simple.py');
+        const stats = fs.lstatSync(workspacePathParent);
+
+        // confirm that the path is a symbolic link
+        assert.ok(stats.isSymbolicLink(), 'The PARENT path is not a symbolic link but must be for this test.');
+
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
+        // run pytest discovery
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+            // verification after discovery is complete
+
+            // 1. Check the status is "success"
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            ); // 2. Confirm no errors
+            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+            // 4. Confirm that the cwd returned is the symlink path and the test's path is also using the symlink as the root
+            if (process.platform === 'win32') {
+                // covert string to lowercase for windows as the path is case insensitive
+                traceLog('windows machine detected, converting path to lowercase for comparison');
+                const a = actualData.cwd.toLowerCase();
+                const b = filePath.toLowerCase();
+                const testSimpleActual = (actualData.tests as {
+                    children: {
+                        path: string;
+                    }[];
+                }).children[0].path.toLowerCase();
+                const testSimpleExpected = filePath.toLowerCase();
+                assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
+                assert.strictEqual(
+                    testSimpleActual,
+                    testSimpleExpected,
+                    `Expected test path to be the symlink path actual: ${testSimpleActual} expected: ${testSimpleExpected}`,
+                );
+            } else {
+                assert.strictEqual(
+                    path.join(actualData.cwd),
+                    path.join(workspacePath),
+                    'Expected cwd to be the symlink path, check for non-windows machines',
+                );
+                assert.strictEqual(
+                    (actualData.tests as {
+                        children: {
+                            path: string;
+                        }[];
+                    }).children[0].path,
+                    filePath,
+                    'Expected test path to be the symlink path, check for non windows machines',
+                );
+            }
+
+            // 5. Confirm that resolveDiscovery was called once
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
