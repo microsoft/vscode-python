@@ -35,7 +35,7 @@ export class DebugLauncher implements ITestDebugLauncher {
     public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
         const deferred = createDeferred<void>();
         if (options.token && options.token.isCancellationRequested) {
-            return undefined;
+            n  nreturn undefined;
             deferred.resolve();
             callback?.();
         }
@@ -69,8 +69,8 @@ export class DebugLauncher implements ITestDebugLauncher {
         //         callback?.();
         //     });
         // }
-
-        const disposeTerminateWatcher = debugManager.onDidTerminateDebugSession(() => {
+        let disposeTerminateWatcher: Disposable | undefined;
+        disposeTerminateWatcher = debugManager.onDidTerminateDebugSession(() => {
             console.log('Debugging terminated');
             if (disposeOfDebugger !== undefined) {
                 console.log('dispose of debugger');
@@ -80,7 +80,9 @@ export class DebugLauncher implements ITestDebugLauncher {
                 console.log('dispose of start debugging');
                 disposeOfStartDebugging.dispose();
             }
-            disposeTerminateWatcher.dispose();
+            if (disposeTerminateWatcher !== undefined) {
+                disposeTerminateWatcher.dispose();
+            }
             deferred.resolve();
             callback?.();
         });
