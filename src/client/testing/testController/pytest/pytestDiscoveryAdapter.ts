@@ -68,8 +68,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         // check for symbolic path
-        const stats = fs.lstatSync(cwd);
-        const resolvedPath = fs.realpathSync(cwd);
+        const stats = await fs.promises.lstat(cwd);
+        const resolvedPath = await fs.promises.realpath(cwd);
         let isSymbolicLink = false;
         if (stats.isSymbolicLink()) {
             isSymbolicLink = true;
