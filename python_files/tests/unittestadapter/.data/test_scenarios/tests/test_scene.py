@@ -9,6 +9,10 @@ class TestMathOperations(TestWithScenarios):
         ('subtract', {'test_id': 'test_subtract', 'a': 5, 'b': 3, 'expected': 2}),
         ('multiply', {'test_id': 'test_multiply', 'a': 5, 'b': 3, 'expected': 15})
     ]
+    a = None
+    b = None
+    expected = None
+    test_id = None
 
     def test_operations(self):
         result = None
