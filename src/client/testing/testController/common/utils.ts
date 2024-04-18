@@ -233,6 +233,7 @@ export async function startRunResultNamedPipe(
             // this is called once the server close, once per run instance
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
             // dispose of all data listeners and cancelation listeners
+            console.log(`Test Result named pipe on server close`);
             disposeOfServer();
         });
     });

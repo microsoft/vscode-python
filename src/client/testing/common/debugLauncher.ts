@@ -49,12 +49,15 @@ export class DebugLauncher implements ITestDebugLauncher {
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
         let disposeOfDebugger: Disposable | undefined;
-        debugManager.onDidStartDebugSession((session) => {
+        console.log('reset count to 0');
+        let count = 0;
+        const disposeOfStartDebugging = debugManager.onDidStartDebugSession((session) => {
+            console.log('start session');
             if (options.token) {
                 disposeOfDebugger = options?.token.onCancellationRequested(() => {
+                    count += 1;
+                    console.log('Canceling debugger, count: ', count);
                     debug.stopDebugging(session);
-                    deferred.resolve();
-                    callback?.();
                 });
             }
         });
@@ -67,14 +70,22 @@ export class DebugLauncher implements ITestDebugLauncher {
         //     });
         // }
 
-        debugManager.onDidTerminateDebugSession(() => {
+        const disposeTerminateWatcher = debugManager.onDidTerminateDebugSession(() => {
+            console.log('Debugging terminated');
             if (disposeOfDebugger !== undefined) {
+                console.log('dispose of debugger');
                 disposeOfDebugger.dispose();
             }
+            if (disposeOfStartDebugging !== undefined) {
+                console.log('dispose of start debugging');
+                disposeOfStartDebugging.dispose();
+            }
+            disposeTerminateWatcher.dispose();
             deferred.resolve();
             callback?.();
         });
         debugManager.startDebugging(workspaceFolder, launchArgs);
+        console.log('Debugging started');
         return deferred.promise;
     }
 

@@ -167,9 +167,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
+                    console.log('debug callback');
                     serverDispose(); // this will resolve deferredTillServerClose
                     deferredTillEOT?.resolve();
                 });
+                console.log('after debugging');
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read
                 const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
