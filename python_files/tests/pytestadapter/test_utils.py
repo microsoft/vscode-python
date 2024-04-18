@@ -1,13 +1,18 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from python_files.vscode_pytest import has_symlink_parent
 import pathlib
 import tempfile
+import os
+import sys
 
 from .helpers import (  # noqa: E402
     TEST_DATA_PATH,
 )
+
+script_dir = pathlib.Path(__file__).parent.parent.parent
+sys.path.append(os.fspath(script_dir))
+from python_files.vscode_pytest import has_symlink_parent  # noqa: E402
 
 
 def test_has_symlink_parent_with_symlink():
