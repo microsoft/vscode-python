@@ -2030,6 +2030,13 @@ export interface IEventNamePropertyMapping {
     [EventName.ENVIRONMENT_CHECK_RESULT]: {
         result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
     };
+    /**
+     * Telemetry event sent when `pip install` was called from a global env in a shell where shell inegration is supported.
+     */
+    /* __GDPR__
+       "environment.terminal.global_pip" : { "owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_TERMINAL_GLOBAL_PIP]: never | undefined;
     /* __GDPR__
             "query-expfeature" : {
                 "owner": "luabud",

@@ -18,6 +18,7 @@ import {
     Disposable,
     QuickPickItemButtonEvent,
     Uri,
+    TerminalShellExecutionStartEvent,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
 
@@ -102,6 +103,10 @@ export function getActiveTextEditor(): TextEditor | undefined {
 
 export function onDidChangeActiveTextEditor(handler: (e: TextEditor | undefined) => void): Disposable {
     return window.onDidChangeActiveTextEditor(handler);
+}
+
+export function onDidStartTerminalShellExecution(handler: (e: TerminalShellExecutionStartEvent) => void): Disposable {
+    return window.onDidStartTerminalShellExecution(handler);
 }
 
 export enum MultiStepAction {

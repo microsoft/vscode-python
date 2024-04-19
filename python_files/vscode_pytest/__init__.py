@@ -79,13 +79,21 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 raise VSCodePytestError(
                     f"The path set in the argument --rootdir={rootdir} does not exist."
                 )
-            if (
-                os.path.islink(rootdir)
-                and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
-            ):
+
+            # Check if the rootdir is a symlink or a child of a symlink to the current cwd.
+            isSymlink = False
+
+            if os.path.islink(rootdir):
+                isSymlink = True
                 print(
-                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
-                    "Therefore setting symlink path to rootdir argument.",
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink."
+                )
+            elif pathlib.Path(os.path.realpath(rootdir)) != rootdir:
+                print("Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink.")
+                isSymlink = has_symlink_parent(rootdir)
+            if isSymlink:
+                print(
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink or child of a symlink, adjusting pytest paths accordingly.",
                 )
                 global SYMLINK_PATH
                 SYMLINK_PATH = pathlib.Path(rootdir)
@@ -142,6 +150,21 @@ def pytest_exception_interact(node, call, report):
                 "success",
                 collected_test if collected_test else None,
             )
+
+
+def has_symlink_parent(current_path):
+    """Recursively checks if any parent directories of the given path are symbolic links."""
+    # Convert the current path to an absolute Path object
+    curr_path = pathlib.Path(current_path)
+    print("Checking for symlink parent starting at current path: ", curr_path)
+
+    # Iterate over all parent directories
+    for parent in curr_path.parents:
+        # Check if the parent directory is a symlink
+        if os.path.islink(parent):
+            print(f"Symlink found at: {parent}")
+            return True
+    return False
 
 
 def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
@@ -412,6 +435,37 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
+        if hasattr(test_case, "callspec"):  # This means it is a parameterized test.
+            function_name: str = ""
+            # parameterized test cases cut the repetitive part of the name off.
+            parent_part, parameterized_section = test_node["name"].split("[", 1)
+            test_node["name"] = "[" + parameterized_section
+            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
+            try:
+                function_name = test_case.originalname  # type: ignore
+                function_test_node = function_nodes_dict[parent_path]
+            except AttributeError:  # actual error has occurred
+                ERRORS.append(
+                    f"unable to find original name for {test_case.name} with parameterization detected."
+                )
+                raise VSCodePytestError("Unable to find original name for parameterized test case")
+            except KeyError:
+                function_test_node: TestNode = create_parameterized_function_node(
+                    function_name, get_node_path(test_case), test_case.nodeid
+                )
+                function_nodes_dict[parent_path] = function_test_node
+            function_test_node["children"].append(test_node)
+            # Check if the parent node of the function is file, if so create/add to this file node.
+            if isinstance(test_case.parent, pytest.File):
+                try:
+                    parent_test_case = file_nodes_dict[test_case.parent]
+                except KeyError:
+                    parent_test_case = create_file_node(test_case.parent)
+                    file_nodes_dict[test_case.parent] = parent_test_case
+                if function_test_node not in parent_test_case["children"]:
+                    parent_test_case["children"].append(function_test_node)
+            # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
+            test_node = function_test_node
         if isinstance(test_case.parent, pytest.Class):
             case_iter = test_case.parent
             node_child_iter = test_node
@@ -423,7 +477,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 except KeyError:
                     test_class_node = create_class_node(case_iter)
                     class_nodes_dict[case_iter.nodeid] = test_class_node
-                test_class_node["children"].append(node_child_iter)
+                # Check if the class already has the child node. This will occur if the test is parameterized.
+                if node_child_iter not in test_class_node["children"]:
+                    test_class_node["children"].append(node_child_iter)
                 # Iterate up.
                 node_child_iter = test_class_node
                 case_iter = case_iter.parent
@@ -442,35 +498,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
-        elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
-            function_name: str = ""
-            # parameterized test cases cut the repetitive part of the name off.
-            parent_part, parameterized_section = test_node["name"].split("[", 1)
-            test_node["name"] = "[" + parameterized_section
-            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
-            try:
-                function_name = test_case.originalname  # type: ignore
-                function_test_case = function_nodes_dict[parent_path]
-            except AttributeError:  # actual error has occurred
-                ERRORS.append(
-                    f"unable to find original name for {test_case.name} with parameterization detected."
-                )
-                raise VSCodePytestError("Unable to find original name for parameterized test case")
-            except KeyError:
-                function_test_case: TestNode = create_parameterized_function_node(
-                    function_name, get_node_path(test_case), test_case.nodeid
-                )
-                function_nodes_dict[parent_path] = function_test_case
-            function_test_case["children"].append(test_node)
-            # Now, add the function node to file node.
-            try:
-                parent_test_case = file_nodes_dict[test_case.parent]
-            except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
-            if function_test_case not in parent_test_case["children"]:
-                parent_test_case["children"].append(function_test_case)
-        else:  # This includes test cases that are pytest functions or a doctests.
+        elif not hasattr(test_case, "callspec"):
+            # This includes test cases that are pytest functions or a doctests.
             try:
                 parent_test_case = file_nodes_dict[test_case.parent]
             except KeyError:

@@ -15,7 +15,7 @@ import {
 } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
@@ -26,6 +26,7 @@ import { Common, Interpreters } from '../../../common/utils/localize';
 import { IPersistentStateFactory } from '../../../common/types';
 import { Commands } from '../../../common/constants';
 import { ICommandManager } from '../../../common/application/types';
+import { getDebugpyPath } from '../../pythonDebugger';
 
 // persistent state names, exported to make use of in testing
 export enum debugStateKeys {
@@ -90,15 +91,12 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
                 return new DebugAdapterExecutable(executable, args);
             }
-
-            const debuggerAdapterPathToUse = path.join(
-                EXTENSION_ROOT_DIR,
-                'python_files',
-                'lib',
-                'python',
-                'debugpy',
-                'adapter',
-            );
+            const debugpyPath = await getDebugpyPath();
+            if (!debugpyPath) {
+                traceError('Could not find debugpy path.');
+                throw new Error('Could not find debugpy path.');
+            }
+            const debuggerAdapterPathToUse = path.join(debugpyPath, 'adapter');
 
             const args = command.concat([debuggerAdapterPathToUse, ...logArgs]);
             traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);

@@ -103,7 +103,15 @@ suite('pytest test discovery adapter', () => {
                 return Promise.resolve(execService.object);
             });
 
-        sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
+        sinon.stub(fs.promises, 'lstat').callsFake(
+            async () =>
+                ({
+                    isFile: () => true,
+                    isSymbolicLink: () => false,
+                } as fs.Stats),
+        );
+        sinon.stub(fs.promises, 'realpath').callsFake(async (pathEntered) => pathEntered.toString());
+
         adapter = new PytestTestDiscoveryAdapter(configService, outputChannel.object);
         adapter.discoverTests(uri, execFactory.object);
         // add in await and trigger
@@ -143,7 +151,14 @@ suite('pytest test discovery adapter', () => {
             }),
         } as unknown) as IConfigurationService;
 
-        sinon.stub(fs, 'lstatSync').returns({ isFile: () => true, isSymbolicLink: () => false } as fs.Stats);
+        sinon.stub(fs.promises, 'lstat').callsFake(
+            async () =>
+                ({
+                    isFile: () => true,
+                    isSymbolicLink: () => false,
+                } as fs.Stats),
+        );
+        sinon.stub(fs.promises, 'realpath').callsFake(async (pathEntered) => pathEntered.toString());
 
         // set up exec mock
         deferred = createDeferred();
@@ -180,10 +195,82 @@ suite('pytest test discovery adapter', () => {
         );
     });
     test('Test discovery adds cwd to pytest args when path is symlink', async () => {
-        sinon.stub(fs, 'lstatSync').returns({
-            isFile: () => true,
-            isSymbolicLink: () => true,
-        } as fs.Stats);
+        sinon.stub(fs.promises, 'lstat').callsFake(
+            async () =>
+                ({
+                    isFile: () => true,
+                    isSymbolicLink: () => true,
+                } as fs.Stats),
+        );
+        sinon.stub(fs.promises, 'realpath').callsFake(async (pathEntered) => pathEntered.toString());
+
+        // set up a config service with different pytest args
+        const configServiceNew: IConfigurationService = ({
+            getSettings: () => ({
+                testing: {
+                    pytestArgs: ['.', 'abc', 'xyz'],
+                    cwd: expectedPath,
+                },
+            }),
+        } as unknown) as IConfigurationService;
+
+        // set up exec mock
+        deferred = createDeferred();
+        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => {
+                deferred.resolve();
+                return Promise.resolve(execService.object);
+            });
+
+        adapter = new PytestTestDiscoveryAdapter(configServiceNew, outputChannel.object);
+        adapter.discoverTests(uri, execFactory.object);
+        // add in await and trigger
+        await deferred.promise;
+        await deferred2.promise;
+        mockProc.trigger('close');
+
+        // verification
+        const expectedArgs = [
+            '-m',
+            'pytest',
+            '-p',
+            'vscode_pytest',
+            '--collect-only',
+            '.',
+            'abc',
+            'xyz',
+            `--rootdir=${expectedPath}`,
+        ];
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        assert.deepEqual(options.env, expectedExtraVariables);
+                        assert.equal(options.cwd, expectedPath);
+                        assert.equal(options.throwOnStdErr, true);
+                        return true;
+                    }),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+    test('Test discovery adds cwd to pytest args when path parent is symlink', async () => {
+        let counter = 0;
+        sinon.stub(fs.promises, 'lstat').callsFake(
+            async () =>
+                ({
+                    isFile: () => true,
+                    isSymbolicLink: () => {
+                        counter = counter + 1;
+                        return counter > 2;
+                    },
+                } as fs.Stats),
+        );
+
+        sinon.stub(fs.promises, 'realpath').callsFake(async () => 'diff value');
 
         // set up a config service with different pytest args
         const configServiceNew: IConfigurationService = ({

@@ -32,13 +32,6 @@ def install_python_libs(session: nox.Session):
 
     session.install("packaging")
 
-    # Install debugger
-    session.run(
-        "python",
-        "./python_files/install_debugpy.py",
-        env={"PYTHONPATH": "./python_files/lib/temp"},
-    )
-
     # Download get-pip script
     session.run(
         "python",

@@ -21,6 +21,7 @@ import {
     fixLogLinesNoTrailing,
     startDiscoveryNamedPipe,
     addValueIfKeyNotExist,
+    hasSymlinkParent,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
@@ -67,9 +68,20 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         // check for symbolic path
-        const stats = fs.lstatSync(cwd);
+        const stats = await fs.promises.lstat(cwd);
+        const resolvedPath = await fs.promises.realpath(cwd);
+        let isSymbolicLink = false;
         if (stats.isSymbolicLink()) {
-            traceWarn("The cwd is a symbolic link, adding '--rootdir' to pytestArgs only if it doesn't already exist.");
+            isSymbolicLink = true;
+            traceWarn('The cwd is a symbolic link.');
+        } else if (resolvedPath !== cwd) {
+            traceWarn(
+                'The cwd resolves to a different path, checking if it has a symbolic link somewhere in its path.',
+            );
+            isSymbolicLink = await hasSymlinkParent(cwd);
+        }
+        if (isSymbolicLink) {
+            traceWarn("Symlink found, adding '--rootdir' to pytestArgs only if it doesn't already exist. cwd: ", cwd);
             pytestArgs = addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
         }
 

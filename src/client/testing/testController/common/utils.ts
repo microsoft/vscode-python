@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import * as net from 'net';
 import * as path from 'path';
+import * as fs from 'fs';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
@@ -501,4 +502,33 @@ export function argKeyExists(args: string[], key: string): boolean {
         }
     }
     return false;
+}
+
+/**
+ * Checks recursively if any parent directories of the given path are symbolic links.
+ * @param {string} currentPath - The path to start checking from.
+ * @returns {Promise<boolean>} - Returns true if any parent directory is a symlink, otherwise false.
+ */
+export async function hasSymlinkParent(currentPath: string): Promise<boolean> {
+    try {
+        // Resolve the path to an absolute path
+        const absolutePath = path.resolve(currentPath);
+        // Get the parent directory
+        const parentDirectory = path.dirname(absolutePath);
+        // Check if the current directory is the root directory
+        if (parentDirectory === absolutePath) {
+            return false;
+        }
+        // Check if the parent directory is a symlink
+        const stats = await fs.promises.lstat(parentDirectory);
+        if (stats.isSymbolicLink()) {
+            traceLog(`Symlink found at: ${parentDirectory}`);
+            return true;
+        }
+        // Recurse up the directory tree
+        return await hasSymlinkParent(parentDirectory);
+    } catch (error) {
+        console.error('Error checking symlinks:', error);
+        return false;
+    }
 }

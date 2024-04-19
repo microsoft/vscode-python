@@ -277,12 +277,12 @@ class DebuggerSession {
 }
 
 export class DebuggerFixture extends PythonFixture {
-    public resolveDebugger(
+    public async resolveDebugger(
         configName: string,
         file: string,
         scriptArgs: string[],
         wsRoot?: vscode.WorkspaceFolder,
-    ): DebuggerSession {
+    ): Promise<DebuggerSession> {
         const config = getConfig(configName);
         let proc: Proc | undefined;
         if (config.request === 'launch') {
@@ -292,7 +292,7 @@ export class DebuggerFixture extends PythonFixture {
             // XXX set the file in the current vscode editor?
         } else if (config.request === 'attach') {
             if (config.port) {
-                proc = this.runDebugger(config.port, file, ...scriptArgs);
+                proc = await this.runDebugger(config.port, file, ...scriptArgs);
                 if (wsRoot && config.name === 'attach to a local port') {
                     config.pathMappings.localRoot = wsRoot.uri.fsPath;
                 }
@@ -352,8 +352,8 @@ export class DebuggerFixture extends PythonFixture {
         }
     }
 
-    public runDebugger(port: number, filename: string, ...scriptArgs: string[]) {
-        const args = getDebugpyLauncherArgs({
+    public async runDebugger(port: number, filename: string, ...scriptArgs: string[]) {
+        const args = await getDebugpyLauncherArgs({
             host: 'localhost',
             port: port,
             // This causes problems if we set it to true.

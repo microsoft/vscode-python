@@ -511,10 +511,14 @@ double_nested_folder_expected_output = {
 
 # This is the expected output for the nested_folder tests.
 # └── parametrize_tests.py
-#    └── test_adding
-#       └── [3+5-8]
-#       └── [2+4-6]
-#       └── [6+9-16]
+#    └── TestClass
+#       └── test_adding
+#        └── [3+5-8]
+#        └── [2+4-6]
+#        └── [6+9-16]
+#    └── test_string
+#       └── [hello]
+#       └── [complicated split [] ()]
 parameterize_tests_path = TEST_DATA_PATH / "parametrize_tests.py"
 parametrize_tests_expected_output = {
     "name": ".data",
@@ -528,61 +532,69 @@ parametrize_tests_expected_output = {
             "id_": os.fspath(parameterize_tests_path),
             "children": [
                 {
-                    "name": "test_adding",
+                    "name": "TestClass",
                     "path": os.fspath(parameterize_tests_path),
-                    "type_": "function",
-                    "id_": "parametrize_tests.py::test_adding",
+                    "type_": "class",
+                    "id_": "parametrize_tests.py::TestClass",
                     "children": [
                         {
-                            "name": "[3+5-8]",
+                            "name": "test_adding",
                             "path": os.fspath(parameterize_tests_path),
-                            "lineno": find_test_line_number(
-                                "test_adding[3+5-8]",
-                                parameterize_tests_path,
-                            ),
-                            "type_": "test",
-                            "id_": get_absolute_test_id(
-                                "parametrize_tests.py::test_adding[3+5-8]",
-                                parameterize_tests_path,
-                            ),
-                            "runID": get_absolute_test_id(
-                                "parametrize_tests.py::test_adding[3+5-8]",
-                                parameterize_tests_path,
-                            ),
-                        },
-                        {
-                            "name": "[2+4-6]",
-                            "path": os.fspath(parameterize_tests_path),
-                            "lineno": find_test_line_number(
-                                "test_adding[2+4-6]",
-                                parameterize_tests_path,
-                            ),
-                            "type_": "test",
-                            "id_": get_absolute_test_id(
-                                "parametrize_tests.py::test_adding[2+4-6]",
-                                parameterize_tests_path,
-                            ),
-                            "runID": get_absolute_test_id(
-                                "parametrize_tests.py::test_adding[2+4-6]",
-                                parameterize_tests_path,
-                            ),
-                        },
-                        {
-                            "name": "[6+9-16]",
-                            "path": os.fspath(parameterize_tests_path),
-                            "lineno": find_test_line_number(
-                                "test_adding[6+9-16]",
-                                parameterize_tests_path,
-                            ),
-                            "type_": "test",
-                            "id_": get_absolute_test_id(
-                                "parametrize_tests.py::test_adding[6+9-16]",
-                                parameterize_tests_path,
-                            ),
-                            "runID": get_absolute_test_id(
-                                "parametrize_tests.py::test_adding[6+9-16]",
-                                parameterize_tests_path,
-                            ),
+                            "type_": "function",
+                            "id_": "parametrize_tests.py::TestClass::test_adding",
+                            "children": [
+                                {
+                                    "name": "[3+5-8]",
+                                    "path": os.fspath(parameterize_tests_path),
+                                    "lineno": find_test_line_number(
+                                        "test_adding[3+5-8]",
+                                        parameterize_tests_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "parametrize_tests.py::TestClass::test_adding[3+5-8]",
+                                        parameterize_tests_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "parametrize_tests.py::TestClass::test_adding[3+5-8]",
+                                        parameterize_tests_path,
+                                    ),
+                                },
+                                {
+                                    "name": "[2+4-6]",
+                                    "path": os.fspath(parameterize_tests_path),
+                                    "lineno": find_test_line_number(
+                                        "test_adding[2+4-6]",
+                                        parameterize_tests_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "parametrize_tests.py::TestClass::test_adding[2+4-6]",
+                                        parameterize_tests_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "parametrize_tests.py::TestClass::test_adding[2+4-6]",
+                                        parameterize_tests_path,
+                                    ),
+                                },
+                                {
+                                    "name": "[6+9-16]",
+                                    "path": os.fspath(parameterize_tests_path),
+                                    "lineno": find_test_line_number(
+                                        "test_adding[6+9-16]",
+                                        parameterize_tests_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "parametrize_tests.py::TestClass::test_adding[6+9-16]",
+                                        parameterize_tests_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "parametrize_tests.py::TestClass::test_adding[6+9-16]",
+                                        parameterize_tests_path,
+                                    ),
+                                },
+                            ],
                         },
                     ],
                 },
@@ -872,7 +884,15 @@ root_with_config_expected_output = {
     "id_": os.fspath(tests_path),
 }
 TEST_MULTI_CLASS_NEST_PATH = TEST_DATA_PATH / "test_multi_class_nest.py"
-
+# This is the expected output for the nested_classes tests.
+# └── test_multi_class_nest.py
+#    └── TestFirstClass
+#       └── TestSecondClass
+#          └── test_second
+#       └── test_first
+#       └── TestSecondClass2
+#          └── test_second2
+#    └── test_independent
 nested_classes_expected_test_output = {
     "name": ".data",
     "path": TEST_DATA_PATH_STR,
@@ -984,6 +1004,13 @@ SYMLINK_FOLDER_PATH_TESTS = TEST_DATA_PATH / "symlink_folder" / "tests"
 SYMLINK_FOLDER_PATH_TESTS_TEST_A = TEST_DATA_PATH / "symlink_folder" / "tests" / "test_a.py"
 SYMLINK_FOLDER_PATH_TESTS_TEST_B = TEST_DATA_PATH / "symlink_folder" / "tests" / "test_b.py"
 
+# This is the expected output for the symlink_folder tests.
+# └── symlink_folder
+#    └── tests
+#       └── test_a.py
+#          └── test_a_function
+#       └── test_b.py
+#          └── test_b_function
 symlink_expected_discovery_output = {
     "name": "symlink_folder",
     "path": str(SYMLINK_FOLDER_PATH),

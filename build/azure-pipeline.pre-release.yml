@@ -54,7 +54,7 @@ extends:
 
       - script: |
           nox --session install_python_libs
-        displayName: Install debugpy, Jedi, get-pip, etc
+        displayName: Install Jedi, get-pip, etc
 
       - script: |
           python ./build/update_ext_version.py --for-publishing

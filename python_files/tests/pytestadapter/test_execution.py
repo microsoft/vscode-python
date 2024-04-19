@@ -200,20 +200,20 @@ def test_bad_id_error_execution():
             expected_execution_test_output.dual_level_nested_folder_execution_expected_output,
         ),
         (
-            ["folder_a/folder_b/folder_a/test_nest.py::test_function"],
+            ["folder_a/folder_b/folder_a/test_nest.py::test_function"],  ##
             expected_execution_test_output.double_nested_folder_expected_execution_output,
         ),
         (
             [
-                "parametrize_tests.py::test_adding[3+5-8]",
-                "parametrize_tests.py::test_adding[2+4-6]",
-                "parametrize_tests.py::test_adding[6+9-16]",
+                "parametrize_tests.py::TestClass::test_adding[3+5-8]",  ##
+                "parametrize_tests.py::TestClass::test_adding[2+4-6]",
+                "parametrize_tests.py::TestClass::test_adding[6+9-16]",
             ],
             expected_execution_test_output.parametrize_tests_expected_execution_output,
         ),
         (
             [
-                "parametrize_tests.py::test_adding[3+5-8]",
+                "parametrize_tests.py::TestClass::test_adding[3+5-8]",
             ],
             expected_execution_test_output.single_parametrize_tests_expected_execution_output,
         ),

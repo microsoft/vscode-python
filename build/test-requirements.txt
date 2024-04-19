@@ -12,6 +12,8 @@ flask
 fastapi
 uvicorn
 django
+testresources
+testscenarios
 
 # Integrated TensorBoard tests
 tensorboard
