@@ -9,7 +9,7 @@ import { DebuggerTypeName, PythonDebuggerTypeName } from '../../debugger/constan
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError } from '../../logging';
+import { traceError, traceLog } from '../../logging';
 import { TestProvider } from '../types';
 import { ITestDebugLauncher, LaunchOptions } from './types';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
@@ -49,35 +49,21 @@ export class DebugLauncher implements ITestDebugLauncher {
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
         let disposeOfDebugger: Disposable | undefined;
-        console.log('reset count to 0');
-        let count = 0;
         const disposeOfStartDebugging = debugManager.onDidStartDebugSession((session) => {
-            console.log('start session');
             if (options.token) {
                 disposeOfDebugger = options?.token.onCancellationRequested(() => {
-                    count += 1;
-                    console.log('Canceling debugger, count: ', count);
+                    console.log('Canceling debugger, due to cancelation token called.');
                     debug.stopDebugging(session);
                 });
             }
         });
 
-        // if (options.token) {
-        //     options?.token.onCancellationRequested(() => {
-        //         // debugManager.stopDebugging();
-        //         deferred.resolve();
-        //         callback?.();
-        //     });
-        // }
-        let disposeTerminateWatcher: Disposable | undefined;
-        disposeTerminateWatcher = debugManager.onDidTerminateDebugSession(() => {
-            console.log('Debugging terminated');
+        const disposeTerminateWatcher: Disposable | undefined = debugManager.onDidTerminateDebugSession(() => {
+            traceLog('Terminating the debugging session and disposing of debugger listeners.');
             if (disposeOfDebugger !== undefined) {
-                console.log('dispose of debugger');
                 disposeOfDebugger.dispose();
             }
             if (disposeOfStartDebugging !== undefined) {
-                console.log('dispose of start debugging');
                 disposeOfStartDebugging.dispose();
             }
             if (disposeTerminateWatcher !== undefined) {
@@ -87,7 +73,6 @@ export class DebugLauncher implements ITestDebugLauncher {
             callback?.();
         });
         debugManager.startDebugging(workspaceFolder, launchArgs);
-        console.log('Debugging started');
         return deferred.promise;
     }
 

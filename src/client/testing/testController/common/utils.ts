@@ -219,7 +219,7 @@ export async function startRunResultNamedPipe(
         perConnectionDisposables.push(
             // per connection, add a listener for the cancellation token and the data
             cancellationToken?.onCancellationRequested(() => {
-                console.log(`Test Result named pipe ${pipeName}  cancelled`);
+                traceVerbose(`Test Result named pipe ${pipeName}  cancelled`);
                 // if cancel is called on one connection, dispose of all connections
                 disposeOfServer();
             }),
@@ -233,7 +233,6 @@ export async function startRunResultNamedPipe(
             // this is called once the server close, once per run instance
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
             // dispose of all data listeners and cancelation listeners
-            console.log(`Test Result named pipe on server close`);
             disposeOfServer();
         });
     });
