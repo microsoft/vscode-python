@@ -58,7 +58,9 @@ export class DebugLauncher implements ITestDebugLauncher {
             }
         });
 
-        const disposeTerminateWatcher: Disposable | undefined = debugManager.onDidTerminateDebugSession(() => {
+        let disposeTerminateWatcher: Disposable | undefined;
+        // eslint-disable-next-line prefer-const
+        disposeTerminateWatcher = debugManager.onDidTerminateDebugSession(() => {
             traceLog('Terminating the debugging session and disposing of debugger listeners.');
             if (disposeOfDebugger !== undefined) {
                 disposeOfDebugger.dispose();
