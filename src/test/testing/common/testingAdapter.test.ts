@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { CancellationTokenSource, DebugSession, Disposable, TestController, TestRun, Uri, debug } from 'vscode';
+import { CancellationTokenSource, DebugSession, TestController, TestRun, Uri, debug } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
@@ -25,7 +25,6 @@ import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/comm
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
-import { IDebugService } from '../../../client/common/application/types';
 import { createDeferred } from '../../../client/common/utils/async';
 
 suite('End to End Tests: test adapters', () => {
