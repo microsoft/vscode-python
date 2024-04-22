@@ -12,8 +12,9 @@ import { createErrorTestItem, getTestCaseNodes } from './common/testItemUtilitie
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
 import { buildErrorNodeOptions } from './common/utils';
-import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } from './common/types';
+import { ITestDiscoveryAdapter, ITestExecutionAdapter } from './common/types';
 import { TestProvider } from '../types';
+import { PythonResultResolver } from './common/resultResolver';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -29,7 +30,7 @@ export class WorkspaceTestAdapter {
 
     private executing: Deferred<void> | undefined;
 
-    constructor(private workspaceUri: Uri) {}
+    constructor(private workspaceUri: Uri, public resultResolver: PythonResultResolver) {}
 
     public async executeTests(
         testController: TestController,
@@ -37,7 +38,6 @@ export class WorkspaceTestAdapter {
         testProvider: TestProvider,
         runInstance: TestRun,
         includes: TestItem[],
-        resultResolver: ITestResultResolver,
         token?: CancellationToken,
         debugBool?: boolean,
         executionFactory?: IPythonExecutionFactory,
@@ -62,7 +62,7 @@ export class WorkspaceTestAdapter {
             // iterate through testItems nodes and fetch their unittest runID to pass in as argument
             testCaseNodes.forEach((node) => {
                 runInstance.started(node); // do the vscode ui test item start here before runtest
-                const runId = resultResolver.vsIdToRunId.get(node.id);
+                const runId = this.resultResolver.vsIdToRunId.get(node.id);
                 if (runId) {
                     testCaseIdsSet.add(runId);
                 }
@@ -135,7 +135,10 @@ export class WorkspaceTestAdapter {
             }
             deferred.resolve();
         } catch (ex) {
-            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: testProvider, failed: true });
+            sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, {
+                tool: testProvider,
+                failed: true,
+            });
 
             let cancel = token?.isCancellationRequested
                 ? Testing.cancelUnittestDiscovery
