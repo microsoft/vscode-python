@@ -69,6 +69,10 @@ extends:
 
       - script: gulp prePublishBundle
         displayName: Build
+
+      - displayName: Clean up Nox
+        script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
+        continueOnError: true
     tsa:
         config:
             areaPath: 'Visual Studio Code Python Extensions'
