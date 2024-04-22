@@ -22,6 +22,7 @@ import { UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 suite('Workspace test adapter', () => {
     suite('Test discovery', () => {
         let stubConfigSettings: IConfigurationService;
+        let stubResultResolver: ResultResolver.PythonResultResolver;
 
         let discoverTestsStub: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
@@ -83,6 +84,14 @@ suite('Workspace test adapter', () => {
             } as unknown) as TestController;
 
             // testController = tests.createTestController('mock-python-tests', 'Mock Python Tests');
+            stubResultResolver = ({
+                resolveDiscovery: () => {
+                    // no body
+                },
+                resolveExecution: () => {
+                    // no body
+                },
+            } as unknown) as ResultResolver.PythonResultResolver;
 
             const mockSendTelemetryEvent = (
                 eventName: EventName,
@@ -112,7 +121,7 @@ suite('Workspace test adapter', () => {
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
             const uriFoo = Uri.parse('foo');
-            const workspaceTestAdapter = new WorkspaceTestAdapter(uriFoo);
+            const workspaceTestAdapter = new WorkspaceTestAdapter(uriFoo, stubResultResolver);
 
             const blankTestItem = ({
                 canResolveChildren: false,
@@ -149,7 +158,7 @@ suite('Workspace test adapter', () => {
             discoverTestsStub.resolves();
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), stubResultResolver);
 
             await workspaceTestAdapter.discoverTests(
                 testController,
@@ -174,7 +183,7 @@ suite('Workspace test adapter', () => {
             );
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), stubResultResolver);
 
             // Try running discovery twice
             const one = workspaceTestAdapter.discoverTests(testController, testDiscoveryAdapter, UNITTEST_PROVIDER);
@@ -190,7 +199,7 @@ suite('Workspace test adapter', () => {
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), stubResultResolver);
 
             await workspaceTestAdapter.discoverTests(
                 testController,
@@ -212,7 +221,7 @@ suite('Workspace test adapter', () => {
 
             const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), stubResultResolver);
 
             await workspaceTestAdapter.discoverTests(testController, testDiscoveryAdapter, UNITTEST_PROVIDER);
 
@@ -225,7 +234,7 @@ suite('Workspace test adapter', () => {
     });
     suite('Test execution workspace test adapter', () => {
         let stubConfigSettings: IConfigurationService;
-        let stubResultResolver: ITestResultResolver;
+        let stubResultResolver: ResultResolver.PythonResultResolver;
         let executionTestsStub: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
         let outputChannel: typemoq.IMock<ITestOutputChannel>;
@@ -257,7 +266,7 @@ suite('Workspace test adapter', () => {
                 vsIdToRunId: {
                     get: sinon.stub().returns('expectedRunId'),
                 },
-            } as unknown) as ITestResultResolver;
+            } as unknown) as ResultResolver.PythonResultResolver;
             const testItem = ({
                 canResolveChildren: false,
                 tags: [],
@@ -321,7 +330,7 @@ suite('Workspace test adapter', () => {
         });
         test('When executing tests, the right tests should be sent to be executed', async () => {
             const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), resultResolver);
             resultResolver.runIdToVSid.set('mockTestItem1', 'mockTestItem1');
 
             sinon.stub(testItemUtilities, 'getTestCaseNodes').callsFake((testNode: TestItem) =>
@@ -361,7 +370,6 @@ suite('Workspace test adapter', () => {
                 UNITTEST_PROVIDER,
                 runInstance.object,
                 [mockTestItem1, mockTestItem2],
-                resultResolver,
             );
 
             runInstance.verify((r) => r.started(typemoq.It.isAny()), typemoq.Times.exactly(2));
@@ -369,7 +377,7 @@ suite('Workspace test adapter', () => {
 
         test("When executing tests, the workspace test adapter should call the test execute adapter's executionTest method", async () => {
             const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), resultResolver);
 
             await workspaceTestAdapter.executeTests(
                 testController,
@@ -377,7 +385,6 @@ suite('Workspace test adapter', () => {
                 UNITTEST_PROVIDER,
                 runInstance.object,
                 [],
-                stubResultResolver,
             );
 
             sinon.assert.calledOnce(executionTestsStub);
@@ -395,7 +402,7 @@ suite('Workspace test adapter', () => {
             );
 
             const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), stubResultResolver);
 
             // Try running discovery twice
             const one = workspaceTestAdapter.executeTests(
@@ -404,7 +411,6 @@ suite('Workspace test adapter', () => {
                 UNITTEST_PROVIDER,
                 runInstance.object,
                 [],
-                stubResultResolver,
             );
             const two = workspaceTestAdapter.executeTests(
                 testController,
@@ -412,7 +418,6 @@ suite('Workspace test adapter', () => {
                 UNITTEST_PROVIDER,
                 runInstance.object,
                 [],
-                stubResultResolver,
             );
 
             Promise.all([one, two]);
@@ -425,7 +430,7 @@ suite('Workspace test adapter', () => {
 
             const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), resultResolver);
 
             const blankTestItem = ({
                 canResolveChildren: false,
@@ -451,7 +456,6 @@ suite('Workspace test adapter', () => {
                 UNITTEST_PROVIDER,
                 runInstance.object,
                 [],
-                stubResultResolver,
             );
 
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
@@ -463,7 +467,7 @@ suite('Workspace test adapter', () => {
 
             const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
 
-            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'));
+            const workspaceTestAdapter = new WorkspaceTestAdapter(Uri.parse('foo'), resultResolver);
 
             await workspaceTestAdapter.executeTests(
                 testController,
@@ -471,7 +475,6 @@ suite('Workspace test adapter', () => {
                 UNITTEST_PROVIDER,
                 runInstance.object,
                 [],
-                stubResultResolver,
             );
 
             sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_RUN_ALL_FAILED);
