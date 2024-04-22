@@ -16,6 +16,16 @@ import { onDidStartTerminalShellExecution, showWarningMessage } from '../../comm
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 
+function checkCommand(command: string): boolean {
+    const lower = command.toLowerCase();
+    return (
+        lower.startsWith('pip install') ||
+        lower.startsWith('pip3 install') ||
+        lower.startsWith('python -m pip install') ||
+        lower.startsWith('python3 -m pip install')
+    );
+}
+
 export function registerTriggerForPipInTerminal(disposables: Disposable[]): void {
     if (!shouldPromptToCreateEnv() || !inExperiment(CreateEnvOnPipInstallTrigger.experiment)) {
         return;
@@ -39,7 +49,7 @@ export function registerTriggerForPipInTerminal(disposables: Disposable[]): void
                 !createEnvironmentTriggered.get(workspaceFolder.uri.fsPath) &&
                 (await isGlobalPythonSelected(workspaceFolder))
             ) {
-                if (e.execution.commandLine.isTrusted && e.execution.commandLine.value.startsWith('pip install')) {
+                if (e.execution.commandLine.isTrusted && checkCommand(e.execution.commandLine.value)) {
                     createEnvironmentTriggered.set(workspaceFolder.uri.fsPath, true);
                     sendTelemetryEvent(EventName.ENVIRONMENT_TERMINAL_GLOBAL_PIP);
                     const selection = await showWarningMessage(

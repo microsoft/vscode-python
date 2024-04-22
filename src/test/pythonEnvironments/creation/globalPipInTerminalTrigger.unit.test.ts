@@ -230,43 +230,45 @@ suite('Global Pip in Terminal Trigger', () => {
         sinon.assert.notCalled(showWarningMessageStub);
     });
 
-    test('Should prompt to create environment if all conditions are met', async () => {
-        shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
-        isGlobalPythonSelectedStub.returns(true);
-        showWarningMessageStub.resolves(CreateEnv.Trigger.createEnvironment);
+    ['pip install', 'pip3 install', 'python -m pip install', 'python3 -m pip install'].forEach((command) => {
+        test(`Should prompt to create environment if all conditions are met: ${command}`, async () => {
+            shouldPromptToCreateEnvStub.returns(true);
+            inExperimentStub.returns(true);
+            isGlobalPythonSelectedStub.returns(true);
+            showWarningMessageStub.resolves(CreateEnv.Trigger.createEnvironment);
 
-        const disposables: Disposable[] = [];
-        registerTriggerForPipInTerminal(disposables);
+            const disposables: Disposable[] = [];
+            registerTriggerForPipInTerminal(disposables);
 
-        await handler?.({
-            terminal: ({} as unknown) as Terminal,
-            shellIntegration: shellIntegration.object,
-            execution: {
-                cwd: workspace1.uri,
-                commandLine: {
-                    isTrusted: true,
-                    value: 'pip install',
-                    confidence: 0,
+            await handler?.({
+                terminal: ({} as unknown) as Terminal,
+                shellIntegration: shellIntegration.object,
+                execution: {
+                    cwd: workspace1.uri,
+                    commandLine: {
+                        isTrusted: true,
+                        value: command,
+                        confidence: 0,
+                    },
+                    read: () =>
+                        (async function* () {
+                            yield Promise.resolve(command);
+                        })(),
                 },
-                read: () =>
-                    (async function* () {
-                        yield Promise.resolve('pip install');
-                    })(),
-            },
+            });
+
+            assert.strictEqual(disposables.length, 1);
+            sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
+            sinon.assert.calledOnce(inExperimentStub);
+            sinon.assert.calledOnce(getWorkspaceFolderStub);
+            sinon.assert.calledOnce(isGlobalPythonSelectedStub);
+            sinon.assert.calledOnce(showWarningMessageStub);
+
+            sinon.assert.calledOnce(executeCommandStub);
+            sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
+
+            shellIntegration.verify((s) => s.executeCommand(typemoq.It.isAnyString()), typemoq.Times.once());
         });
-
-        assert.strictEqual(disposables.length, 1);
-        sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
-        sinon.assert.calledOnce(getWorkspaceFolderStub);
-        sinon.assert.calledOnce(isGlobalPythonSelectedStub);
-        sinon.assert.calledOnce(showWarningMessageStub);
-
-        sinon.assert.calledOnce(executeCommandStub);
-        sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
-
-        shellIntegration.verify((s) => s.executeCommand(typemoq.It.isAnyString()), typemoq.Times.once());
     });
 
     test("Should disable create environment trigger if user selects don't show again", async () => {
