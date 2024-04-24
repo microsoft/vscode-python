@@ -23,8 +23,7 @@ http://wxpython.org/Phoenix/snapshot-builds/wxPython_Phoenix-3.0.3.dev1820+49a88
  */
 
 suite('Link to PyPi in requiements test', () => {
-    test('Check if all possible project name are matched', () => {
-        const rows = [
+    [
             ['pytest', 'pytest'],
             ['pytest-cov', 'pytest-cov'],
             ['pytest_cov', 'pytest_cov'],
@@ -34,10 +33,9 @@ suite('Link to PyPi in requiements test', () => {
             ['requests [security] >= 2.8.1, == 2.8.* ; python_version < "2.7"', 'requests'],
             ['# a comment', null],
             ['', null],
-        ];
-
-        rows.forEach(([input, expected]) => {
-            expect(RequirementsTxtLinkActivator.generatePyPiLink(input)).equal(expected ? `https://pypi.org/project/${expected}/`: null);
+    ].forEach(([input, expected])=> {
+        test(`PyPI link case: "${input}"`, () => {
+            expect(generatePyPiLink(input)).equal(expected ? `https://pypi.org/project/${expected}/`: null);
         });
     });
 });
