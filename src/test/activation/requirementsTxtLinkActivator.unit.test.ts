@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
-import { RequirementsTxtLinkActivator } from '../../client/activation/requirementsTxtLinkActivator';
+import { generatePyPiLink } from '../../client/activation/requirementsTxtLinkActivator';
 
 /** *
 requests [security] >= 2.8.1, == 2.8.* ; python_version < "2.7"
