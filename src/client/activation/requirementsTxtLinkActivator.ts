@@ -4,12 +4,12 @@ import { IExtensionSingleActivationService } from './types';
 
 const PYPI_PROJECT_URL = 'https://pypi.org/project';
 
-export function generatePyPiLink(name: string): string | undefined {
+export function generatePyPiLink(name: string): string | null {
     // Regex to allow to find every possible pypi package (base regex from https://peps.python.org/pep-0508/#names)
     const projectName = name.match(/^([A-Z0-9]|[A-Z0-9][A-Z0-9._-]*)($|=| |;|\[)/i);
     return projectName ? `${PYPI_PROJECT_URL}/${projectName[1]}/` : null;
 }
-    
+
 @injectable()
 export class RequirementsTxtLinkActivator implements IExtensionSingleActivationService {
     // eslint-disable-next-line class-methods-use-this
