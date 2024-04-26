@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { debug, DebugConfiguration, Disposable, l10n, Uri, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -9,7 +9,7 @@ import { DebuggerTypeName, PythonDebuggerTypeName } from '../../debugger/constan
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError, traceLog } from '../../logging';
+import { traceError } from '../../logging';
 import { TestProvider } from '../types';
 import { ITestDebugLauncher, LaunchOptions } from './types';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
@@ -48,29 +48,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        let disposeOfDebugger: Disposable | undefined;
-        const disposeOfStartDebugging = debugManager.onDidStartDebugSession((session) => {
-            if (options.token) {
-                disposeOfDebugger = options?.token.onCancellationRequested(() => {
-                    console.log('Canceling debugger, due to cancelation token called.');
-                    debug.stopDebugging(session);
-                });
-            }
-        });
-
-        let disposeTerminateWatcher: Disposable | undefined;
-        // eslint-disable-next-line prefer-const
-        disposeTerminateWatcher = debugManager.onDidTerminateDebugSession(() => {
-            traceLog('Terminating the debugging session and disposing of debugger listeners.');
-            if (disposeOfDebugger !== undefined) {
-                disposeOfDebugger.dispose();
-            }
-            if (disposeOfStartDebugging !== undefined) {
-                disposeOfStartDebugging.dispose();
-            }
-            if (disposeTerminateWatcher !== undefined) {
-                disposeTerminateWatcher.dispose();
-            }
+        debugManager.onDidTerminateDebugSession(() => {
             deferred.resolve();
             callback?.();
         });

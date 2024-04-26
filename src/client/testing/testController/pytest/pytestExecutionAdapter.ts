@@ -167,7 +167,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
-                    traceInfo("Debugger callback called, resolving 'till EOT' deferred for the workspace.");
                     serverDispose(); // this will resolve deferredTillServerClose
                     deferredTillEOT?.resolve();
                 });
