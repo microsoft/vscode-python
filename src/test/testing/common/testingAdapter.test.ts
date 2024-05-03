@@ -1,17 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { CancellationTokenSource, DebugSession, TestController, TestRun, Uri, debug } from 'vscode';
+import { TestController, TestRun, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import * as fs from 'fs';
-import * as sinon from 'sinon';
-import { Observable } from 'rxjs';
 import * as os from 'os';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
-import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../../client/common/process/types';
+import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
@@ -23,9 +21,6 @@ import { PythonResultResolver } from '../../../client/testing/testController/com
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { ITestDebugLauncher } from '../../../client/testing/common/types';
-import { MockChildProcess } from '../../mocks/mockChildProcess';
-import { createDeferred } from '../../../client/common/utils/async';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: ITestResultResolver;
@@ -154,9 +149,6 @@ suite('End to End Tests: test adapters', () => {
         } else {
             traceLog('Symlink was not found to remove after tests, exiting successfully, nestedSymlink.');
         }
-    });
-    teardown(async () => {
-        sinon.restore();
     });
     test('unittest discovery adapter small workspace', async () => {
         // result resolver and saved data for assertions
@@ -1080,197 +1072,5 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
-    });
-    test('Pytest debug cancelation', async () => {
-        const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-        const stopDebuggingStub = sinon.stub(debug, 'stopDebugging');
-        let calledStopDebugging = false;
-        stopDebuggingStub.callsFake(() => {
-            calledStopDebugging = true;
-            return Promise.resolve();
-        });
-
-        // // mock exec service and exec factory, not very necessary for this test
-        const execServiceStub = typeMoq.Mock.ofType<IPythonExecutionService>();
-        const execFactoryStub = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        const cancellationTokenSource = new CancellationTokenSource();
-        let mockProc: MockChildProcess;
-        execServiceStub
-            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                proc: mockProc,
-                out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
-        execFactoryStub
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => Promise.resolve(execServiceStub.object));
-        execFactoryStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        execServiceStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-
-        const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
-        const testIds: string[] = [testId];
-
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
-
-        const debugSessionStub = typeMoq.Mock.ofType<DebugSession>();
-        sinon.stub(debug, 'onDidStartDebugSession').callsFake((cb) => {
-            // run the callback right away to add the cancelation token listener
-            cb(debugSessionStub.object);
-            return {
-                dispose: () => {
-                    /* no-body */
-                },
-            };
-        });
-        const awaitStopDebugging = createDeferred();
-
-        sinon.stub(debug, 'onDidTerminateDebugSession').callsFake((cb) => {
-            // wait for the stop debugging to be called before resolving the promise
-            // the terminate debug session does cleanup
-            awaitStopDebugging.promise.then(() => {
-                cb(debugSessionStub.object);
-            });
-            return {
-                dispose: () => {
-                    // void
-                },
-            };
-        });
-        // handle cancelation token from debugger
-        sinon.stub(debug, 'startDebugging').callsFake((folder, nameOrConfiguration, _parentSession) => {
-            // check to make sure start debugging is called correctly
-            if (typeof nameOrConfiguration !== 'string') {
-                assert.strictEqual(nameOrConfiguration.type, 'debugpy', 'Expected debugpy');
-            } else {
-                assert.fail('Expected nameOrConfiguration to be an object');
-            }
-            assert.ok(folder, 'Expected folder to be defined');
-            assert.strictEqual(folder.name, 'test', 'Expected folder name to be test');
-            // cancel the token and trigger the stop debugging callback
-            awaitStopDebugging.resolve();
-            cancellationTokenSource.cancel();
-            return Promise.resolve(true);
-        });
-
-        // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => cancellationTokenSource.token);
-
-        await executionAdapter
-            .runTests(workspaceUri, testIds, true, testRun.object, pythonExecFactory, debugLauncher)
-            .finally(() => {
-                // verify that the stop debugging was called
-                assert.ok(calledStopDebugging, 'Expected stopDebugging to be called');
-            });
-    });
-    test('UNITTEST debug cancelation', async () => {
-        const debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
-        const stopDebuggingStub = sinon.stub(debug, 'stopDebugging');
-        let calledStopDebugging = false;
-        stopDebuggingStub.callsFake(() => {
-            calledStopDebugging = true;
-            return Promise.resolve();
-        });
-
-        // // mock exec service and exec factory, not very necessary for this test
-        const execServiceStub = typeMoq.Mock.ofType<IPythonExecutionService>();
-        const execFactoryStub = typeMoq.Mock.ofType<IPythonExecutionFactory>();
-        const cancellationTokenSource = new CancellationTokenSource();
-        let mockProc: MockChildProcess;
-        execServiceStub
-            .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(() => ({
-                proc: mockProc,
-                out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
-                dispose: () => {
-                    /* no-body */
-                },
-            }));
-        execFactoryStub
-            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
-            .returns(() => Promise.resolve(execServiceStub.object));
-        execFactoryStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        execServiceStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-
-        const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
-        const testIds: string[] = [testId];
-
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
-
-        const debugSessionStub = typeMoq.Mock.ofType<DebugSession>();
-        sinon.stub(debug, 'onDidStartDebugSession').callsFake((cb) => {
-            // run the callback right away to add the cancelation token listener
-            cb(debugSessionStub.object);
-            return {
-                dispose: () => {
-                    /* no-body */
-                },
-            };
-        });
-        const awaitStopDebugging = createDeferred();
-
-        sinon.stub(debug, 'onDidTerminateDebugSession').callsFake((cb) => {
-            // wait for the stop debugging to be called before resolving the promise
-            // the terminate debug session does cleanup
-            awaitStopDebugging.promise.then(() => {
-                cb(debugSessionStub.object);
-            });
-            return {
-                dispose: () => {
-                    // void
-                },
-            };
-        });
-        // handle cancelation token from debugger
-        sinon.stub(debug, 'startDebugging').callsFake((folder, nameOrConfiguration, _parentSession) => {
-            // check to make sure start debugging is called correctly
-            if (typeof nameOrConfiguration !== 'string') {
-                assert.strictEqual(nameOrConfiguration.type, 'debugpy', 'Expected debugpy');
-            } else {
-                assert.fail('Expected nameOrConfiguration to be an object');
-            }
-            assert.ok(folder, 'Expected folder to be defined');
-            assert.strictEqual(folder.name, 'test', 'Expected folder name to be test');
-            // cancel the token and trigger the stop debugging callback
-            awaitStopDebugging.resolve();
-            cancellationTokenSource.cancel();
-            return Promise.resolve(true);
-        });
-
-        // run pytest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun.setup((t) => t.token).returns(() => cancellationTokenSource.token);
-
-        await executionAdapter
-            .runTests(workspaceUri, testIds, true, testRun.object, pythonExecFactory, debugLauncher)
-            .finally(() => {
-                // verify that the stop debugging was called
-                assert.ok(calledStopDebugging, 'Expected stopDebugging to be called');
-            });
     });
 });

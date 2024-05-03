@@ -2006,7 +2006,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation conditions is triggered.
      */
     /* __GDPR__
-       "environemt.check.trigger" : {
+       "environment.check.trigger" : {
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
@@ -2023,7 +2023,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation condition is computed.
      */
     /* __GDPR__
-       "environemt.check.result" : {
+       "environment.check.result" : {
           "result" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */

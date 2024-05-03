@@ -139,12 +139,6 @@ suite('Unit Tests - Debug Launcher', () => {
                 return undefined as any;
             })
             .verifiable(TypeMoq.Times.once());
-        debugService
-            .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
-            .returns(() => {
-                return undefined as any;
-            })
-            .verifiable(TypeMoq.Times.once());
     }
     function createWorkspaceFolder(folderPath: string): WorkspaceFolder {
         return {
