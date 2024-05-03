@@ -89,39 +89,17 @@ fn get_version_from_meta_json(json_file: &Path) -> Option<String> {
 /// Get the path to the json file of a package in the conda environment from the 'conda-meta' directory.
 fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<PathBuf> {
     let package_name = format!("{}-", package);
-    let conda_meta_path = get_conda_meta_path(any_path);
-    match conda_meta_path {
-        Some(path) => {
-            let reader = std::fs::read_dir(path);
-            match reader {
-                Ok(reader) => {
-                    for entry in reader {
-                        match entry {
-                            Ok(entry) => {
-                                let path = entry.path();
-                                let file_name = path.file_name();
-                                match file_name {
-                                    Some(file_name) => {
-                                        let file_name = file_name.to_string_lossy();
-                                        if file_name.starts_with(&package_name)
-                                            && file_name.ends_with(".json")
-                                        {
-                                            return Some(path);
-                                        }
-                                    }
-                                    None => (),
-                                }
-                            }
-                            Err(_) => (),
-                        }
-                    }
-                    None
-                }
-                Err(_) => None,
-            }
+    let conda_meta_path = get_conda_meta_path(any_path)?;
+
+    std::fs::read_dir(conda_meta_path).ok()?.find_map(|entry| {
+        let path = entry.ok()?.path();
+        let file_name = path.file_name()?.to_string_lossy();
+        if file_name.starts_with(&package_name) && file_name.ends_with(".json") {
+            Some(path)
+        } else {
+            None
         }
-        None => None,
-    }
+    })
 }
 
 /// Checks if the `python` package is installed in the conda environment
