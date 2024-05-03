@@ -68,21 +68,15 @@ pub fn is_conda_environment(any_path: &Path) -> bool {
 /// Get the version of a package in a conda environment. This will find the version
 /// from the 'conda-meta' directory in a platform agnostic way.
 fn get_version_from_meta_json(json_file: &Path) -> Option<String> {
-    match Regex::new(r"(?m)([\d\w\-]*)-([\d\.]*)-.*\.json") {
-        Ok(re) => match json_file.file_name() {
-            Some(file_name) => {
-                let file_name = file_name.to_string_lossy();
-                match re.captures(&file_name) {
-                    Some(captures) => match captures.get(2) {
-                        Some(version) => Some(version.as_str().to_string()),
-                        None => None,
-                    },
-                    None => None,
-                }
-            }
-            None => None,
-        },
-        Err(_) => None,
+    let file_name = json_file.file_name()?.to_string_lossy();
+
+    match Regex::new(r"(?m)([\d\w\-]*)-([\d\.]*)-.*\.json")
+        .ok()?
+        .captures(&file_name)?
+        .get(2)
+    {
+        Some(version) => Some(version.as_str().to_string()),
+        None => None,
     }
 }
 
@@ -134,29 +128,23 @@ fn get_conda_bin_names() -> Vec<&'static str> {
 
 /// Find the conda binary on the PATH environment variable
 fn find_conda_binary_on_path() -> Option<PathBuf> {
-    let paths = env::var("PATH");
-    match paths {
-        Ok(paths) => {
-            let paths = env::split_paths(&paths);
-            for path in paths {
-                let path = Path::new(&path);
-                for bin in get_conda_bin_names() {
-                    let conda_path = path.join(bin);
-                    let metadata = std::fs::metadata(&conda_path);
-                    match metadata {
-                        Ok(metadata) => {
-                            if metadata.is_file() || metadata.is_symlink() {
-                                return Some(conda_path);
-                            }
-                        }
-                        Err(_) => (),
+    let paths = env::var("PATH").ok()?;
+    let paths = env::split_paths(&paths);
+    for path in paths {
+        let path = Path::new(&path);
+        for bin in get_conda_bin_names() {
+            let conda_path = path.join(bin);
+            match std::fs::metadata(&conda_path) {
+                Ok(metadata) => {
+                    if metadata.is_file() || metadata.is_symlink() {
+                        return Some(conda_path);
                     }
                 }
+                Err(_) => (),
             }
-            None
         }
-        Err(_) => None,
     }
+    None
 }
 
 fn find_python_binary_path(env_path: &Path) -> Option<PathBuf> {
@@ -168,15 +156,8 @@ fn find_python_binary_path(env_path: &Path) -> Option<PathBuf> {
     let path_1 = env_path.join("bin").join(python_bin_name);
     let path_2 = env_path.join("Scripts").join(python_bin_name);
     let path_3 = env_path.join(python_bin_name);
-    if path_1.exists() {
-        Some(path_1)
-    } else if path_2.exists() {
-        Some(path_2)
-    } else if path_3.exists() {
-        Some(path_3)
-    } else {
-        None
-    }
+    let paths = vec![path_1, path_2, path_3];
+    paths.into_iter().find(|path| path.exists())
 }
 
 #[cfg(windows)]
@@ -232,14 +213,9 @@ fn find_conda_binary_in_known_locations() -> Option<PathBuf> {
     for location in known_locations {
         for bin in &conda_bin_names {
             let conda_path = location.join(bin);
-            let metadata = std::fs::metadata(&conda_path);
-            match metadata {
-                Ok(metadata) => {
-                    if metadata.is_file() || metadata.is_symlink() {
-                        return Some(conda_path);
-                    }
-                }
-                Err(_) => (),
+            let metadata = std::fs::metadata(&conda_path).ok()?;
+            if metadata.is_file() || metadata.is_symlink() {
+                return Some(conda_path);
             }
         }
     }
@@ -391,7 +367,7 @@ fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
     conda_envs
 }
 
-pub fn find_and_report_conda_envs() {
+pub fn find_and_report() {
     let conda_binary = find_conda_binary();
     match conda_binary {
         Some(conda_binary) => {
