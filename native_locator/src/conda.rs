@@ -134,9 +134,13 @@ fn find_conda_binary_on_path() -> Option<PathBuf> {
         let path = Path::new(&path);
         for bin in get_conda_bin_names() {
             let conda_path = path.join(bin);
-            let metadata = std::fs::metadata(&conda_path).ok()?;
-            if metadata.is_file() || metadata.is_symlink() {
-                return Some(conda_path);
+            match std::fs::metadata(&conda_path) {
+                Ok(metadata) => {
+                    if metadata.is_file() || metadata.is_symlink() {
+                        return Some(conda_path);
+                    }
+                }
+                Err(_) => (),
             }
         }
     }
@@ -363,7 +367,7 @@ fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
     conda_envs
 }
 
-pub fn find_and_report_conda_envs() {
+pub fn find_and_report() {
     let conda_binary = find_conda_binary();
     match conda_binary {
         Some(conda_binary) => {
