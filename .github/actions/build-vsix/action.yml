@@ -21,6 +21,9 @@ runs:
         node-version: ${{ inputs.node_version }}
         cache: 'npm'
 
+    - name: Rust Tool Chain setup
+      uses: dtolnay/rust-toolchain@stable
+
     # Jedi LS depends on dataclasses which is not in the stdlib in Python 3.7.
     - name: Use Python 3.8 for JediLSP
       uses: actions/setup-python@v5
@@ -42,6 +45,10 @@ runs:
 
     - name: Install Python Extension dependencies (jedi, etc.)
       run: nox --session install_python_libs
+      shell: bash
+
+    - name: Build Native Binaries
+      run: nox --session native_build
       shell: bash
 
     - name: Run npm ci

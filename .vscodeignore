@@ -67,3 +67,6 @@ test/**
 tmp/**
 typings/**
 types/**
+native_locator/src/**
+native_locator/target/**
+native_locator/Cargo.*
