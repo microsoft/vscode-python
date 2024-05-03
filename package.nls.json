@@ -57,6 +57,7 @@
     "python.logging.level.description": "The logging level the extension logs at, defaults to 'error'",
     "python.logging.level.deprecation": "This setting is deprecated. Please use command `Developer: Set Log Level...` to set logging level.",
     "python.missingPackage.severity.description": "Set severity of missing packages in requirements.txt or pyproject.toml",
+    "python.nativeLocator.description": "[Experimental] Select implementation of environment locators. This is an experimental setting while we test native environment location.",
     "python.pipenvPath.description": "Path to the pipenv executable to use for activation.",
     "python.poetryPath.description": "Path to the poetry executable.",
     "python.EnableREPLSmartSend.description": "Toggle Smart Send for the Python REPL. Smart Send enables sending the smallest runnable block of code to the REPL on Shift+Enter and moves the cursor accordingly.",

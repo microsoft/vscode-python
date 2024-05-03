@@ -550,6 +550,19 @@
                         "experimental"
                     ]
                 },
+                "python.nativeLocator": {
+                    "default": "js",
+                    "description": "%python.nativeLocator.description%",
+                    "enum": [
+                        "js",
+                        "native"
+                    ],
+                    "tags": [
+                        "experimental"
+                    ],
+                    "scope": "machine",
+                    "type": "string"
+                },
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "%python.pipenvPath.description%",
