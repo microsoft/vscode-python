@@ -34,26 +34,16 @@ fn report_path_python(path: &str) {
 }
 
 fn report_python_on_path() {
-    let paths = env::var("PATH");
     let bin = if cfg!(windows) {
         "python.exe"
     } else {
         "python"
     };
-    match paths {
-        Ok(paths) => {
-            let paths = env::split_paths(&paths);
-            for path in paths {
-                let full_path = path.join(bin);
-                if full_path.exists() {
-                    match full_path.to_str() {
-                        Some(full_path) => report_path_python(full_path),
-                        None => (),
-                    }
-                }
-            }
-        }
-        Err(_) => (),
+    if let Ok(paths) = env::var("PATH") {
+        env::split_paths(&paths)
+            .map(|p| p.join(bin))
+            .filter(|p| p.exists())
+            .for_each(|full_path| report_path_python(full_path.to_str().unwrap()));
     }
 }
 
