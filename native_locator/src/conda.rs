@@ -183,24 +183,24 @@ fn get_known_conda_locations() -> Vec<PathBuf> {
 #[cfg(unix)]
 fn get_known_conda_locations() -> Vec<PathBuf> {
     let mut known_paths = vec![
-        Path::new("/opt/anaconda3/bin").to_path_buf(),
-        Path::new("/opt/miniconda3/bin").to_path_buf(),
-        Path::new("/usr/local/anaconda3/bin").to_path_buf(),
-        Path::new("/usr/local/miniconda3/bin").to_path_buf(),
-        Path::new("/usr/anaconda3/bin").to_path_buf(),
-        Path::new("/usr/miniconda3/bin").to_path_buf(),
-        Path::new("/home/anaconda3/bin").to_path_buf(),
-        Path::new("/home/miniconda3/bin").to_path_buf(),
-        Path::new("/anaconda3/bin").to_path_buf(),
-        Path::new("/miniconda3/bin").to_path_buf(),
-        Path::new("/usr/local/anaconda3/bin").to_path_buf(),
-        Path::new("/usr/local/miniconda3/bin").to_path_buf(),
-        Path::new("/usr/anaconda3/bin").to_path_buf(),
-        Path::new("/usr/miniconda3/bin").to_path_buf(),
-        Path::new("/home/anaconda3/bin").to_path_buf(),
-        Path::new("/home/miniconda3/bin").to_path_buf(),
-        Path::new("/anaconda3/bin").to_path_buf(),
-        Path::new("/miniconda3/bin").to_path_buf(),
+        PathBuf::from("/opt/anaconda3/bin"),
+        PathBuf::from("/opt/miniconda3/bin"),
+        PathBuf::from("/usr/local/anaconda3/bin"),
+        PathBuf::from("/usr/local/miniconda3/bin"),
+        PathBuf::from("/usr/anaconda3/bin"),
+        PathBuf::from("/usr/miniconda3/bin"),
+        PathBuf::from("/home/anaconda3/bin"),
+        PathBuf::from("/home/miniconda3/bin"),
+        PathBuf::from("/anaconda3/bin"),
+        PathBuf::from("/miniconda3/bin"),
+        PathBuf::from("/usr/local/anaconda3/bin"),
+        PathBuf::from("/usr/local/miniconda3/bin"),
+        PathBuf::from("/usr/anaconda3/bin"),
+        PathBuf::from("/usr/miniconda3/bin"),
+        PathBuf::from("/home/anaconda3/bin"),
+        PathBuf::from("/home/miniconda3/bin"),
+        PathBuf::from("/anaconda3/bin"),
+        PathBuf::from("/miniconda3/bin"),
     ];
     known_paths.append(&mut known::get_know_global_search_locations());
     known_paths
@@ -333,7 +333,7 @@ fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
 
     let locations = get_known_env_locations(conda_bin);
     let mut conda_envs = vec![];
-    for env in envs.clone() {
+    for env in envs {
         let env = Path::new(&env);
         let mut named = false;
         let mut name = "".to_string();
