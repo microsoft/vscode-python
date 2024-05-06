@@ -15,7 +15,7 @@ impl KnownPaths for KnownPathsImpl {
     fn get_user_home(&self) -> Option<String> {
         get_user_home()
     }
-    fn get_env_var(&self, key: string) -> Option<String> {
+    fn get_env_var(&self, key: String) -> Option<String> {
         get_env_var(key)
     }
     fn get_know_global_search_locations(&self) -> Vec<PathBuf> {
