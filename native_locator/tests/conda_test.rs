@@ -6,12 +6,12 @@ mod common;
 #[test]
 #[cfg(unix)]
 fn does_not_find_any_conda_envs() {
-    use crate::common::{create_test_dispatcher, create_test_known};
+    use crate::common::{create_test_dispatcher, create_test_environment};
     use python_finder::conda;
     use std::collections::HashMap;
 
     let mut dispatcher = create_test_dispatcher();
-    let known = create_test_known(
+    let known = create_test_environment(
         HashMap::from([("PATH".to_string(), "".to_string())]),
         Some("SOME_BOGUS_HOME_DIR".to_string()),
         Vec::new(),
@@ -26,7 +26,8 @@ fn does_not_find_any_conda_envs() {
 #[cfg(unix)]
 fn find_conda_exe_and_empty_envs() {
     use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
+        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
+        test_file_path,
     };
     use python_finder::conda;
     use serde_json::json;
@@ -34,7 +35,7 @@ fn find_conda_exe_and_empty_envs() {
     let conda_dir = test_file_path(&["tests/unix/conda_without_envs"]);
 
     let mut dispatcher = create_test_dispatcher();
-    let known = create_test_known(
+    let known = create_test_environment(
         HashMap::from([("PATH".to_string(), conda_dir.clone())]),
         Some("SOME_BOGUS_HOME_DIR".to_string()),
         Vec::new(),
@@ -50,7 +51,8 @@ fn find_conda_exe_and_empty_envs() {
 #[cfg(unix)]
 fn finds_two_conda_envs_from_txt() {
     use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
+        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
+        test_file_path,
     };
     use python_finder::conda;
     use serde_json::json;
@@ -66,7 +68,7 @@ fn finds_two_conda_envs_from_txt() {
     );
 
     let mut dispatcher = create_test_dispatcher();
-    let known = create_test_known(
+    let known = create_test_environment(
         HashMap::from([("PATH".to_string(), conda_dir.clone())]),
         Some(conda_dir.clone()),
         Vec::new(),

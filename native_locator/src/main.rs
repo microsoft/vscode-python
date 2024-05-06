@@ -3,7 +3,7 @@
 
 use std::time::SystemTime;
 
-use known::KnownPathsImpl;
+use known::EnvironmentApi;
 use messaging::{create_dispatcher, MessageDispatcher};
 
 mod common_python;
@@ -16,17 +16,16 @@ mod windows_python;
 
 fn main() {
     let mut dispatcher = create_dispatcher();
-    // let dispatcher = JsonRpcDispatcher {};
-    let known_paths = KnownPathsImpl {};
+    let environment = EnvironmentApi {};
 
     dispatcher.log_info("Starting Native Locator");
     let now = SystemTime::now();
 
     // Finds python on PATH
-    common_python::find_and_report(&mut dispatcher, &known_paths);
+    common_python::find_and_report(&mut dispatcher, &environment);
 
     // Finds conda binary and conda environments
-    conda::find_and_report(&mut dispatcher, &known_paths);
+    conda::find_and_report(&mut dispatcher, &environment);
 
     // Finds Windows Store, Known Path, and Registry pythons
     #[cfg(windows)]

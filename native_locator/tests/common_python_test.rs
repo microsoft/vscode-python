@@ -7,7 +7,8 @@ mod common;
 #[cfg(unix)]
 fn find_python_in_path_this() {
     use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
+        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
+        test_file_path,
     };
     use python_finder::common_python;
     use serde_json::json;
@@ -17,7 +18,7 @@ fn find_python_in_path_this() {
     let unix_python_exe = join_test_paths(&[unix_python.as_str(), "python"]);
 
     let mut dispatcher = create_test_dispatcher();
-    let known = create_test_known(
+    let known = create_test_environment(
         HashMap::from([("PATH".to_string(), unix_python.clone())]),
         Some(unix_python.clone()),
         Vec::new(),

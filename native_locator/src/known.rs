@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 use std::{env, path::PathBuf};
 
-pub trait KnownPaths {
+pub trait Environment {
     fn get_user_home(&self) -> Option<String>;
     fn get_env_var(&self, key: String) -> Option<String>;
     fn get_know_global_search_locations(&self) -> Vec<PathBuf>;
 }
 
-pub struct KnownPathsImpl {}
+pub struct EnvironmentApi {}
 
 #[cfg(windows)]
-impl KnownPaths for KnownPathsImpl {
+impl Environment for EnvironmentApi {
     fn get_user_home(&self) -> Option<String> {
         get_user_home()
     }
@@ -24,7 +24,7 @@ impl KnownPaths for KnownPathsImpl {
 }
 
 #[cfg(unix)]
-impl KnownPaths for KnownPathsImpl {
+impl Environment for EnvironmentApi {
     fn get_user_home(&self) -> Option<String> {
         get_user_home()
     }

@@ -36,9 +36,9 @@ fn report_path_python(dispatcher: &mut impl messaging::MessageDispatcher, path: 
 
 fn report_python_on_path(
     dispatcher: &mut impl messaging::MessageDispatcher,
-    known_paths: &impl known::KnownPaths,
+    environment: &impl known::Environment,
 ) {
-    if let Some(paths) = known_paths.get_env_var("PATH".to_string()) {
+    if let Some(paths) = environment.get_env_var("PATH".to_string()) {
         let bin = if cfg!(windows) {
             "python.exe"
         } else {
@@ -53,7 +53,7 @@ fn report_python_on_path(
 
 pub fn find_and_report(
     dispatcher: &mut impl messaging::MessageDispatcher,
-    known_paths: &impl known::KnownPaths,
+    environment: &impl known::Environment,
 ) {
-    report_python_on_path(dispatcher, known_paths);
+    report_python_on_path(dispatcher, environment);
 }
