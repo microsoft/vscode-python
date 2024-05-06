@@ -12,9 +12,10 @@ export function generatePyPiLink(name: string): string | null {
 
 @injectable()
 export class RequirementsTxtLinkActivator implements IExtensionSingleActivationService {
-    // eslint-disable-next-line class-methods-use-this
+
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
+    // eslint-disable-next-line class-methods-use-this
     public async activate(): Promise<void> {
         languages.registerHoverProvider([{ pattern: '**/*requirement*.txt' }, { pattern: '**/requirements/*.txt' }], {
             provideHover(document: TextDocument, position: Position) {
