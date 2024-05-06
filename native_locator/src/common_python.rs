@@ -25,7 +25,7 @@ fn report_path_python(path: &str) {
     let env_path = get_env_path(path);
     messaging::send_message(messaging::PythonEnvironment::new(
         "Python".to_string(),
-        vec![path.to_string()],
+        path.to_string(),
         "System".to_string(),
         version,
         None,

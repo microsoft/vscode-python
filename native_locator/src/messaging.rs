@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvManager {
-    pub executable_path: Vec<String>,
+    pub executable_path: String,
     pub version: Option<String>,
 }
 
 impl EnvManager {
-    pub fn new(executable_path: Vec<String>, version: Option<String>) -> Self {
+    pub fn new(executable_path: String, version: Option<String>) -> Self {
         Self {
             executable_path,
             version,
@@ -41,7 +41,7 @@ impl EnvManagerMessage {
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: String,
-    pub python_executable_path: Vec<String>,
+    pub python_executable_path: String,
     pub category: String,
     pub version: Option<String>,
     pub activated_run: Option<Vec<String>>,
@@ -51,7 +51,7 @@ pub struct PythonEnvironment {
 impl PythonEnvironment {
     pub fn new(
         name: String,
-        python_executable_path: Vec<String>,
+        python_executable_path: String,
         category: String,
         version: Option<String>,
         activated_run: Option<Vec<String>>,
