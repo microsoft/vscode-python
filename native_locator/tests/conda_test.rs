@@ -1,20 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use serde_json::json;
-use std::collections::HashMap;
 mod common;
-use crate::common::{
-    assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
-};
-
-use python_finder::conda;
-// use serde::{Deserialize, Serialize};
-// use std::{env, path::PathBuf};
 
 #[test]
 #[cfg(unix)]
 fn does_not_find_any_conda_envs() {
+    use crate::common::{create_test_dispatcher, create_test_known};
+    use python_finder::conda;
+    use std::collections::HashMap;
+
     let mut dispatcher = create_test_dispatcher();
     let known = create_test_known(
         HashMap::from([("PATH".to_string(), "".to_string())]),
@@ -30,6 +25,12 @@ fn does_not_find_any_conda_envs() {
 #[test]
 #[cfg(unix)]
 fn find_conda_exe_and_empty_envs() {
+    use crate::common::{
+        assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
+    };
+    use python_finder::conda;
+    use serde_json::json;
+    use std::collections::HashMap;
     let conda_dir = test_file_path(&["tests/unix/conda_without_envs"]);
 
     let mut dispatcher = create_test_dispatcher();
@@ -48,6 +49,12 @@ fn find_conda_exe_and_empty_envs() {
 #[test]
 #[cfg(unix)]
 fn finds_two_conda_envs_from_txt() {
+    use crate::common::{
+        assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
+    };
+    use python_finder::conda;
+    use serde_json::json;
+    use std::collections::HashMap;
     use std::fs;
 
     let conda_dir = test_file_path(&["tests/unix/conda"]);

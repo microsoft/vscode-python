@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use python_finder::common_python;
-use serde_json::json;
-use std::collections::HashMap;
 mod common;
-use crate::common::{
-    assert_messages, join_test_paths, create_test_dispatcher, create_test_known, test_file_path,
-};
 
 #[test]
 #[cfg(unix)]
 fn find_python_in_path_this() {
+    use crate::common::{
+        assert_messages, create_test_dispatcher, create_test_known, join_test_paths, test_file_path,
+    };
+    use python_finder::common_python;
+    use serde_json::json;
+    use std::collections::HashMap;
+
     let unix_python = test_file_path(&["tests/unix/known"]);
     let unix_python_exe = join_test_paths(&[unix_python.as_str(), "python"]);
 
