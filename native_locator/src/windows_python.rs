@@ -20,9 +20,9 @@ fn report_path_python(path: &str, dispatcher: &mut impl messaging::MessageDispat
 
 fn report_windows_store_python(
     dispatcher: &mut impl messaging::MessageDispatcher,
-    known_paths_provider: &impl known::KnownPaths,
+    environment: &impl known::Environment,
 ) {
-    let home = known_paths_provider.get_user_home();
+    let home = environment.get_user_home();
     match home {
         Some(home) => {
             let apps_path = Path::new(&home)
@@ -63,8 +63,8 @@ fn report_registry_pythons() {}
 #[allow(dead_code)]
 pub fn find_and_report(
     dispatcher: &mut impl messaging::MessageDispatcher,
-    known_paths_provider: &impl known::KnownPaths,
+    environment: &impl known::Environment,
 ) {
-    report_windows_store_python(dispatcher, known_paths_provider);
+    report_windows_store_python(dispatcher, environment);
     report_registry_pythons();
 }
