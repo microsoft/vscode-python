@@ -30,7 +30,7 @@ fn main() {
 
     // Finds Windows Store, Known Path, and Registry pythons
     #[cfg(windows)]
-    windows_python::find_and_report(&dispatcher, &known_paths);
+    windows_python::find_and_report(&mut dispatcher, &known_paths);
 
     match now.elapsed() {
         Ok(elapsed) => {
