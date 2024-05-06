@@ -10,7 +10,7 @@ fn report_path_python(path: &str) {
     let version = utils::get_version(path);
     messaging::send_message(messaging::PythonEnvironment::new(
         "Python".to_string(),
-        path.to_string(),
+        Some(path.to_string()),
         "WindowsStore".to_string(),
         version,
         None,

@@ -382,8 +382,8 @@ pub fn find_and_report() {
                 let params = messaging::PythonEnvironment::new(
                     env.name.to_string(),
                     match executable {
-                        Some(executable) => executable.to_string_lossy().to_string(),
-                        None => "".to_string(),
+                        Some(executable) => Some(executable.to_string_lossy().to_string()),
+                        None => None,
                     },
                     "conda".to_string(),
                     get_conda_python_version(&env.path),

@@ -41,7 +41,7 @@ impl EnvManagerMessage {
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: String,
-    pub python_executable_path: String,
+    pub python_executable_path: Option<String>,
     pub category: String,
     pub version: Option<String>,
     pub activated_run: Option<Vec<String>>,
@@ -51,7 +51,7 @@ pub struct PythonEnvironment {
 impl PythonEnvironment {
     pub fn new(
         name: String,
-        python_executable_path: String,
+        python_executable_path: Option<String>,
         category: String,
         version: Option<String>,
         activated_run: Option<Vec<String>>,
