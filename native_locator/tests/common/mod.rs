@@ -3,7 +3,7 @@
 
 use std::{collections::HashMap, path::PathBuf};
 
-use python_finder::{known::KnownPaths, messaging::MessageDispatcher};
+use python_finder::{known::Environment, messaging::MessageDispatcher};
 use serde_json::Value;
 
 #[allow(dead_code)]
@@ -49,18 +49,18 @@ pub fn create_test_dispatcher() -> TestDispatcher {
         messages: Vec::new(),
     }
 }
-pub struct TestKnown {
+pub struct TestEnvironment {
     vars: HashMap<String, String>,
     home: Option<String>,
     globals_locations: Vec<PathBuf>,
 }
 #[allow(dead_code)]
-pub fn create_test_known(
+pub fn create_test_environment(
     vars: HashMap<String, String>,
     home: Option<String>,
     globals_locations: Vec<PathBuf>,
-) -> TestKnown {
-    impl KnownPaths for TestKnown {
+) -> TestEnvironment {
+    impl Environment for TestEnvironment {
         fn get_env_var(&self, key: String) -> Option<String> {
             self.vars.get(&key).cloned()
         }
@@ -71,7 +71,7 @@ pub fn create_test_known(
             self.globals_locations.clone()
         }
     }
-    TestKnown {
+    TestEnvironment {
         vars,
         home,
         globals_locations,
