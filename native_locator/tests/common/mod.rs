@@ -29,6 +29,7 @@ pub trait TestMessages {
     fn get_messages(&self) -> Vec<String>;
 }
 
+#[allow(dead_code)]
 pub fn create_test_dispatcher() -> TestDispatcher {
     impl MessageDispatcher for TestDispatcher {
         fn send_message<T: serde::Serialize>(&mut self, message: T) -> () {
@@ -53,6 +54,7 @@ pub struct TestKnown {
     home: Option<String>,
     globals_locations: Vec<PathBuf>,
 }
+#[allow(dead_code)]
 pub fn create_test_known(
     vars: HashMap<String, String>,
     home: Option<String>,
@@ -76,6 +78,7 @@ pub fn create_test_known(
     }
 }
 
+#[allow(dead_code)]
 pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
     assert_eq!(
         expected_json.len(),
