@@ -177,7 +177,6 @@ jobs:
 
       - name: Upgrade Pip
         run: python -m pip install -U pip
-
       # For faster/better builds of sdists.
       - name: Install build pre-requisite
         run: python -m pip install wheel nox
@@ -187,6 +186,9 @@ jobs:
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
+
+    #   - name: Native Locator (Rust) tests
+    #     run: nox --session native_test
 
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt

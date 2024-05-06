@@ -67,6 +67,12 @@ def native_build(session:nox.Session):
 
 
 @nox.session()
+def native_test(session:nox.Session):
+    with session.cd("./native_locator"):
+        session.run("cargo", "test")
+
+
+@nox.session()
 def setup_repo(session: nox.Session):
     install_python_libs(session)
     native_build(session)

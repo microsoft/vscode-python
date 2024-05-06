@@ -2,16 +2,17 @@
 // Licensed under the MIT License.
 
 use serde::{Deserialize, Serialize};
+use std::sync::{Mutex, OnceLock};
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvManager {
-    pub executable_path: Vec<String>,
+    pub executable_path: String,
     pub version: Option<String>,
 }
 
 impl EnvManager {
-    pub fn new(executable_path: Vec<String>, version: Option<String>) -> Self {
+    pub fn new(executable_path: String, version: Option<String>) -> Self {
         Self {
             executable_path,
             version,
@@ -41,7 +42,7 @@ impl EnvManagerMessage {
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: String,
-    pub python_executable_path: Vec<String>,
+    pub python_executable_path: String,
     pub category: String,
     pub version: Option<String>,
     pub activated_run: Option<Vec<String>>,
@@ -51,7 +52,7 @@ pub struct PythonEnvironment {
 impl PythonEnvironment {
     pub fn new(
         name: String,
-        python_executable_path: Vec<String>,
+        python_executable_path: String,
         category: String,
         version: Option<String>,
         activated_run: Option<Vec<String>>,
@@ -104,12 +105,35 @@ impl ExitMessage {
     }
 }
 
+#[cfg(not(feature = "test"))]
 fn send_rpc_message(message: String) -> () {
     print!(
         "Content-Length: {}\r\nContent-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n{}",
         message.len(),
         message
     );
+}
+
+// Tests
+
+fn messages_sent() -> &'static Mutex<Vec<String>> {
+    static ARRAY: OnceLock<Mutex<Vec<String>>> = OnceLock::new();
+    ARRAY.get_or_init(|| Mutex::new(vec![]))
+}
+
+#[cfg(feature = "test")]
+fn send_rpc_message(message: String) -> () {
+    messages_sent().lock().unwrap().push(message);
+}
+
+#[allow(dead_code)]
+pub fn clear_rpc_messages() -> () {
+    messages_sent().lock().unwrap().clear();
+}
+
+#[allow(dead_code)]
+pub fn get_rpc_messages() -> Vec<String> {
+    return messages_sent().lock().unwrap().clone();
 }
 
 pub fn send_message<T: serde::Serialize>(message: T) -> () {

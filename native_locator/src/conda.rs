@@ -84,7 +84,6 @@ fn get_version_from_meta_json(json_file: &Path) -> Option<String> {
 fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<PathBuf> {
     let package_name = format!("{}-", package);
     let conda_meta_path = get_conda_meta_path(any_path)?;
-
     std::fs::read_dir(conda_meta_path).ok()?.find_map(|entry| {
         let path = entry.ok()?.path();
         let file_name = path.file_name()?.to_string_lossy();
@@ -128,7 +127,7 @@ fn get_conda_bin_names() -> Vec<&'static str> {
 
 /// Find the conda binary on the PATH environment variable
 fn find_conda_binary_on_path() -> Option<PathBuf> {
-    let paths = env::var("PATH").ok()?;
+    let paths = known::get_env_path().ok()?;
     let paths = env::split_paths(&paths);
     for path in paths {
         let path = Path::new(&path);
@@ -372,7 +371,7 @@ pub fn find_and_report() {
     match conda_binary {
         Some(conda_binary) => {
             let params =
-                messaging::EnvManager::new(vec![conda_binary.to_string_lossy().to_string()], None);
+                messaging::EnvManager::new(conda_binary.to_string_lossy().to_string(), None);
             let message = messaging::EnvManagerMessage::new(params);
             messaging::send_message(message);
 
@@ -382,8 +381,8 @@ pub fn find_and_report() {
                 let params = messaging::PythonEnvironment::new(
                     env.name.to_string(),
                     match executable {
-                        Some(executable) => vec![executable.to_string_lossy().to_string()],
-                        None => vec![],
+                        Some(executable) => executable.to_string_lossy().to_string(),
+                        None => "".to_string(),
                     },
                     "conda".to_string(),
                     get_conda_python_version(&env.path),
