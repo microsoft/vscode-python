@@ -7,7 +7,13 @@ edition = "2021"
 winreg = "0.52.0"
 
 [dependencies]
-serde = {version ="1.0.152", features = ["derive"]}
+serde = { version = "1.0.152", features = ["derive"] }
 serde_json = "1.0.93"
 serde_repr = "0.1.10"
 regex = "1.10.4"
+
+[features]
+test = []
+
+[lib]
+doctest = false

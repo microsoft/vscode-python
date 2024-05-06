@@ -1,7 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+use crate::logging::{LogLevel, LogMessage};
 use serde::{Deserialize, Serialize};
+
+pub trait MessageDispatcher {
+    fn send_message<T: serde::Serialize>(&mut self, message: T) -> ();
+    fn log_debug(&mut self, message: &str) -> ();
+    fn log_info(&mut self, message: &str) -> ();
+    fn log_warning(&mut self, message: &str) -> ();
+    fn log_error(&mut self, message: &str) -> ();
+}
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -59,7 +68,7 @@ impl PythonEnvironment {
     ) -> Self {
         Self {
             name,
-            python_executable_path: python_executable_path,
+            python_executable_path,
             category,
             version,
             activated_run,
@@ -104,15 +113,30 @@ impl ExitMessage {
     }
 }
 
-fn send_rpc_message(message: String) -> () {
-    print!(
-        "Content-Length: {}\r\nContent-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n{}",
-        message.len(),
-        message
-    );
+pub struct JsonRpcDispatcher {}
+impl MessageDispatcher for JsonRpcDispatcher {
+    fn send_message<T: serde::Serialize>(&mut self, message: T) -> () {
+        let message = serde_json::to_string(&message).unwrap();
+        print!(
+            "Content-Length: {}\r\nContent-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n{}",
+            message.len(),
+            message
+        );
+    }
+    fn log_debug(&mut self, message: &str) -> () {
+        self.send_message(LogMessage::new(message.to_string(), LogLevel::Debug));
+    }
+    fn log_error(&mut self, message: &str) -> () {
+        self.send_message(LogMessage::new(message.to_string(), LogLevel::Error));
+    }
+    fn log_info(&mut self, message: &str) -> () {
+        self.send_message(LogMessage::new(message.to_string(), LogLevel::Info));
+    }
+    fn log_warning(&mut self, message: &str) -> () {
+        self.send_message(LogMessage::new(message.to_string(), LogLevel::Warning));
+    }
 }
 
-pub fn send_message<T: serde::Serialize>(message: T) -> () {
-    let message = serde_json::to_string(&message).unwrap();
-    send_rpc_message(message);
+pub fn create_dispatcher() -> JsonRpcDispatcher {
+    JsonRpcDispatcher {}
 }
