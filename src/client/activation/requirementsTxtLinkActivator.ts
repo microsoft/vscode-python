@@ -12,7 +12,6 @@ export function generatePyPiLink(name: string): string | null {
 
 @injectable()
 export class RequirementsTxtLinkActivator implements IExtensionSingleActivationService {
-
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: true, virtualWorkspace: true };
 
     // eslint-disable-next-line class-methods-use-this
