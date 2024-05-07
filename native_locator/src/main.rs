@@ -3,6 +3,9 @@
 
 use std::time::SystemTime;
 
+use known::EnvironmentApi;
+use messaging::{create_dispatcher, MessageDispatcher};
+
 mod common_python;
 mod conda;
 mod known;
@@ -12,30 +15,33 @@ mod utils;
 mod windows_python;
 
 fn main() {
+    let mut dispatcher = create_dispatcher();
+    let environment = EnvironmentApi {};
+
+    dispatcher.log_info("Starting Native Locator");
     let now = SystemTime::now();
-    logging::log_info("Starting Native Locator");
 
     // Finds python on PATH
-    common_python::find_and_report();
+    common_python::find_and_report(&mut dispatcher, &environment);
 
     // Finds conda binary and conda environments
-    conda::find_and_report();
+    conda::find_and_report(&mut dispatcher, &environment);
 
     // Finds Windows Store, Known Path, and Registry pythons
     #[cfg(windows)]
-    windows_python::find_and_report();
+    windows_python::find_and_report(&mut dispatcher, &known_paths);
 
     match now.elapsed() {
         Ok(elapsed) => {
-            logging::log_info(&format!(
+            dispatcher.log_info(&format!(
                 "Native Locator took {} milliseconds.",
                 elapsed.as_millis()
             ));
         }
         Err(e) => {
-            logging::log_error(&format!("Error getting elapsed time: {:?}", e));
+            dispatcher.log_error(&format!("Error getting elapsed time: {:?}", e));
         }
     }
 
-    messaging::send_message(messaging::ExitMessage::new());
+    dispatcher.send_message(messaging::ExitMessage::new());
 }

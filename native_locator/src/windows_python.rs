@@ -6,9 +6,9 @@ use crate::messaging;
 use crate::utils;
 use std::path::Path;
 
-fn report_path_python(path: &str) {
+fn report_path_python(path: &str, dispatcher: &mut impl messaging::MessageDispatcher) {
     let version = utils::get_version(path);
-    messaging::send_message(messaging::PythonEnvironment::new(
+    dispatcher.send_message(messaging::PythonEnvironment::new(
         "Python".to_string(),
         vec![path.to_string()],
         "WindowsStore".to_string(),
@@ -18,8 +18,11 @@ fn report_path_python(path: &str) {
     ));
 }
 
-fn report_windows_store_python() {
-    let home = known::get_user_home();
+fn report_windows_store_python(
+    dispatcher: &mut impl messaging::MessageDispatcher,
+    environment: &impl known::Environment,
+) {
+    let home = environment.get_user_home();
     match home {
         Some(home) => {
             let apps_path = Path::new(&home)
@@ -38,7 +41,7 @@ fn report_windows_store_python() {
                                     Some(name) => {
                                         let name = name.to_string_lossy().to_lowercase();
                                         if name.starts_with("python3.") && name.ends_with(".exe") {
-                                            report_path_python(&path.to_string_lossy());
+                                            report_path_python(&path.to_string_lossy(), dispatcher);
                                         }
                                     }
                                     None => {}
@@ -57,7 +60,11 @@ fn report_windows_store_python() {
 
 fn report_registry_pythons() {}
 
-pub fn find_and_report() {
-    report_windows_store_python();
+#[allow(dead_code)]
+pub fn find_and_report(
+    dispatcher: &mut impl messaging::MessageDispatcher,
+    environment: &impl known::Environment,
+) {
+    report_windows_store_python(dispatcher, environment);
     report_registry_pythons();
 }

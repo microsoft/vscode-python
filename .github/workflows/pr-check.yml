@@ -311,6 +311,30 @@ jobs:
         run: npm run test:functional
         if: matrix.test-suite == 'functional'
 
+  native-tests:
+    name: Native Tests
+    # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ${{ env.special-working-directory }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
+        # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: ${{ env.special-working-directory-relative }}
+
+      - name: Native Locator tests
+        run: cargo test
+        working-directory: ${{ env.special-working-directory }}/native_locator
+
   smoke-tests:
     name: Smoke tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.

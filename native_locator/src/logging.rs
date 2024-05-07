@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use crate::messaging;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Eq, Clone)]
@@ -39,24 +38,4 @@ impl LogMessage {
             params: Log { message, level },
         }
     }
-}
-
-pub fn log_debug(message: &str) {
-    messaging::send_message(LogMessage::new(message.to_string(), LogLevel::Debug));
-}
-
-pub fn log_info(message: &str) {
-    messaging::send_message(LogMessage::new(message.to_string(), LogLevel::Info));
-}
-
-pub fn log_warning(message: &str) {
-    messaging::send_message(LogMessage::new(message.to_string(), LogLevel::Warning));
-}
-
-pub fn log_error(message: &str) {
-    messaging::send_message(LogMessage::new(message.to_string(), LogLevel::Error));
-}
-
-pub fn log_msg(message: &str, level: LogLevel) {
-    messaging::send_message(LogMessage::new(message.to_string(), level));
 }

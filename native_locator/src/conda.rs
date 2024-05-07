@@ -84,7 +84,6 @@ fn get_version_from_meta_json(json_file: &Path) -> Option<String> {
 fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<PathBuf> {
     let package_name = format!("{}-", package);
     let conda_meta_path = get_conda_meta_path(any_path)?;
-
     std::fs::read_dir(conda_meta_path).ok()?.find_map(|entry| {
         let path = entry.ok()?.path();
         let file_name = path.file_name()?.to_string_lossy();
@@ -97,6 +96,7 @@ fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<PathBuf
 }
 
 /// Checks if the `python` package is installed in the conda environment
+#[allow(dead_code)]
 pub fn is_python_conda_env(any_path: &Path) -> bool {
     let conda_python_json_path = get_conda_package_json_path(any_path, "python");
     match conda_python_json_path {
@@ -127,11 +127,9 @@ fn get_conda_bin_names() -> Vec<&'static str> {
 }
 
 /// Find the conda binary on the PATH environment variable
-fn find_conda_binary_on_path() -> Option<PathBuf> {
-    let paths = env::var("PATH").ok()?;
-    let paths = env::split_paths(&paths);
-    for path in paths {
-        let path = Path::new(&path);
+fn find_conda_binary_on_path(environment: &impl known::Environment) -> Option<PathBuf> {
+    let paths = environment.get_env_var("PATH".to_string())?;
+    for path in env::split_paths(&paths) {
         for bin in get_conda_bin_names() {
             let conda_path = path.join(bin);
             match std::fs::metadata(&conda_path) {
@@ -161,11 +159,13 @@ fn find_python_binary_path(env_path: &Path) -> Option<PathBuf> {
 }
 
 #[cfg(windows)]
-fn get_known_conda_locations() -> Vec<PathBuf> {
-    let user_profile = env::var("USERPROFILE").unwrap();
-    let program_data = env::var("PROGRAMDATA").unwrap();
-    let all_user_profile = env::var("ALLUSERSPROFILE").unwrap();
-    let home_drive = env::var("HOMEDRIVE").unwrap();
+fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathBuf> {
+    let user_profile = environment.get_env_var("USERPROFILE".to_string()).unwrap();
+    let program_data = environment.get_env_var("PROGRAMDATA".to_string()).unwrap();
+    let all_user_profile = environment
+        .get_env_var("ALLUSERSPROFILE".to_string())
+        .unwrap();
+    let home_drive = environment.get_env_var("HOMEDRIVE".to_string()).unwrap();
     let mut known_paths = vec![
         Path::new(&user_profile).join("Anaconda3\\Scripts"),
         Path::new(&program_data).join("Anaconda3\\Scripts"),
@@ -176,12 +176,12 @@ fn get_known_conda_locations() -> Vec<PathBuf> {
         Path::new(&all_user_profile).join("Miniconda3\\Scripts"),
         Path::new(&home_drive).join("Miniconda3\\Scripts"),
     ];
-    known_paths.append(&mut known::get_know_global_search_locations());
+    known_paths.append(&mut environment.get_know_global_search_locations());
     known_paths
 }
 
 #[cfg(unix)]
-fn get_known_conda_locations() -> Vec<PathBuf> {
+fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathBuf> {
     let mut known_paths = vec![
         PathBuf::from("/opt/anaconda3/bin"),
         PathBuf::from("/opt/miniconda3/bin"),
@@ -202,14 +202,14 @@ fn get_known_conda_locations() -> Vec<PathBuf> {
         PathBuf::from("/anaconda3/bin"),
         PathBuf::from("/miniconda3/bin"),
     ];
-    known_paths.append(&mut known::get_know_global_search_locations());
+    known_paths.append(&mut environment.get_know_global_search_locations());
     known_paths
 }
 
 /// Find conda binary in known locations
-fn find_conda_binary_in_known_locations() -> Option<PathBuf> {
+fn find_conda_binary_in_known_locations(environment: &impl known::Environment) -> Option<PathBuf> {
     let conda_bin_names = get_conda_bin_names();
-    let known_locations = get_known_conda_locations();
+    let known_locations = get_known_conda_locations(environment);
     for location in known_locations {
         for bin in &conda_bin_names {
             let conda_path = location.join(bin);
@@ -223,17 +223,17 @@ fn find_conda_binary_in_known_locations() -> Option<PathBuf> {
 }
 
 /// Find the conda binary on the system
-pub fn find_conda_binary() -> Option<PathBuf> {
-    let conda_binary_on_path = find_conda_binary_on_path();
+pub fn find_conda_binary(environment: &impl known::Environment) -> Option<PathBuf> {
+    let conda_binary_on_path = find_conda_binary_on_path(environment);
     match conda_binary_on_path {
         Some(conda_binary_on_path) => Some(conda_binary_on_path),
-        None => find_conda_binary_in_known_locations(),
+        None => find_conda_binary_in_known_locations(environment),
     }
 }
 
-fn get_conda_envs_from_environment_txt() -> Vec<String> {
+fn get_conda_envs_from_environment_txt(environment: &impl known::Environment) -> Vec<String> {
     let mut envs = vec![];
-    let home = known::get_user_home();
+    let home = environment.get_user_home();
     match home {
         Some(home) => {
             let home = Path::new(&home);
@@ -252,9 +252,12 @@ fn get_conda_envs_from_environment_txt() -> Vec<String> {
     envs
 }
 
-fn get_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
+fn get_known_env_locations(
+    conda_bin: PathBuf,
+    environment: &impl known::Environment,
+) -> Vec<String> {
     let mut paths = vec![];
-    let home = known::get_user_home();
+    let home = environment.get_user_home();
     match home {
         Some(home) => {
             let home = Path::new(&home);
@@ -284,9 +287,12 @@ fn get_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
     paths
 }
 
-fn get_conda_envs_from_known_env_locations(conda_bin: PathBuf) -> Vec<String> {
+fn get_conda_envs_from_known_env_locations(
+    conda_bin: PathBuf,
+    environment: &impl known::Environment,
+) -> Vec<String> {
     let mut envs = vec![];
-    for location in get_known_env_locations(conda_bin) {
+    for location in get_known_env_locations(conda_bin, environment) {
         if is_conda_environment(&Path::new(&location)) {
             envs.push(location.to_string());
         }
@@ -324,14 +330,18 @@ struct CondaEnv {
     path: PathBuf,
 }
 
-fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
-    let mut envs = get_conda_envs_from_environment_txt();
-    let mut known_envs = get_conda_envs_from_known_env_locations(conda_bin.to_path_buf());
+fn get_distinct_conda_envs(
+    conda_bin: PathBuf,
+    environment: &impl known::Environment,
+) -> Vec<CondaEnv> {
+    let mut envs = get_conda_envs_from_environment_txt(environment);
+    let mut known_envs =
+        get_conda_envs_from_known_env_locations(conda_bin.to_path_buf(), environment);
     envs.append(&mut known_envs);
     envs.sort();
     envs.dedup();
 
-    let locations = get_known_env_locations(conda_bin);
+    let locations = get_known_env_locations(conda_bin, environment);
     let mut conda_envs = vec![];
     for env in envs {
         let env = Path::new(&env);
@@ -367,16 +377,19 @@ fn get_distinct_conda_envs(conda_bin: PathBuf) -> Vec<CondaEnv> {
     conda_envs
 }
 
-pub fn find_and_report() {
-    let conda_binary = find_conda_binary();
+pub fn find_and_report(
+    dispatcher: &mut impl messaging::MessageDispatcher,
+    environment: &impl known::Environment,
+) {
+    let conda_binary = find_conda_binary(environment);
     match conda_binary {
         Some(conda_binary) => {
             let params =
                 messaging::EnvManager::new(vec![conda_binary.to_string_lossy().to_string()], None);
             let message = messaging::EnvManagerMessage::new(params);
-            messaging::send_message(message);
+            dispatcher.send_message(message);
 
-            let envs = get_distinct_conda_envs(conda_binary.to_path_buf());
+            let envs = get_distinct_conda_envs(conda_binary.to_path_buf(), environment);
             for env in envs {
                 let executable = find_python_binary_path(Path::new(&env.path));
                 let params = messaging::PythonEnvironment::new(
@@ -407,7 +420,7 @@ pub fn find_and_report() {
                     Some(env.path.to_string_lossy().to_string()),
                 );
                 let message = messaging::PythonEnvironmentMessage::new(params);
-                messaging::send_message(message);
+                dispatcher.send_message(message);
             }
         }
         None => (),
