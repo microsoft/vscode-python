@@ -14,7 +14,6 @@ export function createReplController(interpreterPath: string): vscode.NotebookCo
         server.interrupt();
     };
 
-
     controller.executeHandler = async (cells) => {
         for (const cell of cells) {
             const exec = controller.createNotebookCellExecution(cell);
