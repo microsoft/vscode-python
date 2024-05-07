@@ -35,6 +35,7 @@ fn main() {
 
     pyenv::find_and_report(&mut dispatcher, &environment);
 
+    #[cfg(unix)]
     homebrew::find_and_report(&mut dispatcher, &environment);
 
     match now.elapsed() {
