@@ -9,7 +9,7 @@ use regex::Regex;
 fn is_symlinked_python_executable(path: Result<DirEntry, Error>) -> Option<PathBuf> {
     let path = path.ok()?.path();
     let name = path.file_name()?.to_string_lossy();
-    if !name.starts_with("python3") || name.ends_with("-config") {
+    if !name.starts_with("python") || name.ends_with("-config") {
         return None;
     }
     let metadata = std::fs::symlink_metadata(&path).ok()?;
