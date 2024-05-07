@@ -100,6 +100,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             throwOnStdErr: true,
             outputChannel: options.outChannel,
             env: mutableEnv,
+            shell: true,
         };
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {

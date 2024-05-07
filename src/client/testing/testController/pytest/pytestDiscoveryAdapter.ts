@@ -100,6 +100,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             throwOnStdErr: true,
             outputChannel: this.outputChannel,
             env: mutableEnv,
+            shell: true,
         };
 
         // Create the Python environment in which to execute the command.
