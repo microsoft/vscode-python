@@ -84,6 +84,10 @@ pub fn find_and_report(
         .into_string()
         .ok()?;
 
+    let pyenv_binary_for_activation = match get_pyenv_binary(environment) {
+        Some(binary) => binary,
+        None => "pyenv".to_string(),
+    };
     for entry in fs::read_dir(&versions_dir).ok()? {
         if let Ok(path) = entry {
             let path = path.path();
@@ -95,7 +99,11 @@ pub fn find_and_report(
                         vec![executable.into_os_string().into_string().unwrap()],
                         "Pyenv".to_string(),
                         Some(version.clone()),
-                        Some(vec!["pyenv".to_string(), "shell".to_string(), version]),
+                        Some(vec![
+                            pyenv_binary_for_activation.clone(),
+                            "shell".to_string(),
+                            version,
+                        ]),
                         None,
                     ));
                 }
