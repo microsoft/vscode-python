@@ -25,6 +25,7 @@ interface NativeEnvInfo {
     version?: string;
     activatedRun?: string[];
     envPath?: string;
+    sysPrefixPath?: string;
 }
 
 interface EnvManager {

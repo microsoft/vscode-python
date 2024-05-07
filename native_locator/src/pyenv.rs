@@ -94,6 +94,7 @@ pub fn find_and_report(
             if path.is_dir() {
                 if let Some(executable) = find_python_binary_path(&path) {
                     let version = path.file_name().unwrap().to_string_lossy().to_string();
+                    let env_path = path.to_string_lossy().to_string();
                     dispatcher.send_message(messaging::PythonEnvironment::new(
                         "Python".to_string(),
                         vec![executable.into_os_string().into_string().unwrap()],
@@ -104,7 +105,8 @@ pub fn find_and_report(
                             "shell".to_string(),
                             version,
                         ]),
-                        Some(path.into_os_string().into_string().unwrap()),
+                        Some(env_path.clone()),
+                        Some(env_path),
                     ));
                 }
             }

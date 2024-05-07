@@ -30,6 +30,7 @@ fn report_path_python(dispatcher: &mut impl messaging::MessageDispatcher, path: 
         messaging::PythonEnvironmentCategory::System,
         version,
         None,
+        env_path.clone(),
         env_path,
     ));
 }

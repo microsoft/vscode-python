@@ -380,6 +380,7 @@ pub fn find_and_report(
             let envs = get_distinct_conda_envs(conda_binary.to_path_buf(), environment);
             for env in envs {
                 let executable = find_python_binary_path(Path::new(&env.path));
+                let env_path = env.path.to_string_lossy().to_string();
                 let params = messaging::PythonEnvironment::new(
                     env.name.to_string(),
                     match executable {
@@ -405,7 +406,8 @@ pub fn find_and_report(
                             "python".to_string(),
                         ])
                     },
-                    Some(env.path.to_string_lossy().to_string()),
+                    Some(env_path.clone()),
+                    Some(env_path),
                 );
                 let message = messaging::PythonEnvironmentMessage::new(params);
                 dispatcher.send_message(message);

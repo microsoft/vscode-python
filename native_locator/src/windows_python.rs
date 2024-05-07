@@ -15,6 +15,7 @@ fn report_path_python(path: &str, dispatcher: &mut impl messaging::MessageDispat
         version,
         None,
         None,
+        None,
     ));
 }
 

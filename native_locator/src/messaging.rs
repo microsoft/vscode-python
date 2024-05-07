@@ -64,6 +64,7 @@ pub struct PythonEnvironment {
     pub version: Option<String>,
     pub activated_run: Option<Vec<String>>,
     pub env_path: Option<String>,
+    pub sys_prefix_path: Option<String>,
 }
 
 impl PythonEnvironment {
@@ -74,6 +75,7 @@ impl PythonEnvironment {
         version: Option<String>,
         activated_run: Option<Vec<String>>,
         env_path: Option<String>,
+        sys_prefix_path: Option<String>,
     ) -> Self {
         Self {
             name,
@@ -82,6 +84,7 @@ impl PythonEnvironment {
             version,
             activated_run,
             env_path,
+            sys_prefix_path
         }
     }
 }
