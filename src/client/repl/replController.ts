@@ -6,7 +6,14 @@ export function createReplController(interpreterPath: string): vscode.NotebookCo
     const controller = vscode.notebooks.createNotebookController('pythonREPL', 'interactive', 'Python REPL');
     controller.supportedLanguages = ['python'];
     controller.supportsExecutionOrder = true;
+
     controller.description = 'Python REPL';
+    // let isInterrupted = false;
+    controller.interruptHandler = async () => {
+        // isInterrupted = true;
+        server.interrupt();
+    };
+
 
     controller.executeHandler = async (cells) => {
         for (const cell of cells) {
@@ -14,6 +21,7 @@ export function createReplController(interpreterPath: string): vscode.NotebookCo
             exec.start(Date.now());
             try {
                 const result = await server.execute(cell.document.getText());
+
                 exec.replaceOutput([
                     new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result, 'text/plain')]),
                 ]);

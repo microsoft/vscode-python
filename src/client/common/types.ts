@@ -200,6 +200,7 @@ export interface ITerminalSettings {
 
 export interface IREPLSettings {
     readonly enableREPLSmartSend: boolean;
+    readonly enableIWREPL: boolean;
 }
 
 export interface IExperiments {

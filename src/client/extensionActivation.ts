@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugConfigurationProvider, debug, languages, window } from 'vscode';
+import { DebugConfigurationProvider, debug, languages, window, workspace } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -20,6 +20,7 @@ import {
     IInterpreterPathService,
     ILogOutputChannel,
     IPathUtils,
+    IREPLSettings,
 } from './common/types';
 import { noop } from './common/utils/misc';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
@@ -106,6 +107,14 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         interpreterService,
         pathUtils,
     );
+    // uncomment
+    // const config = workspace.getConfiguration();
+    // const replSettings: IREPLSettings | undefined = config.get('python.REPL');
+
+    // if (replSettings && replSettings.enableIWREPL) {
+    //     registerReplCommands(ext.disposables, interpreterService);
+    // }
+    // uncomment
     registerReplCommands(ext.disposables, interpreterService);
 }
 

@@ -11,6 +11,7 @@ const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server
 
 export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
+    interrupt(): Promise<void>;
 }
 
 class PythonServerImpl implements Disposable {
@@ -29,6 +30,12 @@ class PythonServerImpl implements Disposable {
         return this.connection.sendRequest('execute', code);
     }
 
+    public interrupt(): Promise<void> {
+        // return this.connection.sendRequest('interrupt', 'interrupt');
+        // pythonServer.kill('SIGINT');
+        return this.connection.sendRequest('interrupt', 'blah');
+    }
+
     public dispose(): void {
         this.connection.sendNotification('exit');
         this.connection.dispose();
@@ -37,6 +44,7 @@ class PythonServerImpl implements Disposable {
 
 export function createPythonServer(interpreter: string[]): PythonServer {
     const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH]);
+
     pythonServer.stderr.on('data', (data) => {
         console.error(data.toString());
     });

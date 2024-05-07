@@ -1,18 +1,24 @@
-# import debugpy
-# debugpy.connect(5678)
+import debugpy
+debugpy.connect(5678)
 import sys
 import json
 import contextlib
 import io
+from threading import Thread
 import traceback
 
+is_interrupted = False
+EXECUTE_QUEUE = []
+STDIN = sys.stdin
+STDOUT = sys.stdout
+STDERR = sys.stderr
 
 def send_message(msg: str):
     length_msg = len(msg)
-    sys.stdout.buffer.write(
+    STDOUT.buffer.write(
         f"Content-Length: {length_msg}\r\n\r\n{msg}".encode(encoding="utf-8")
     )
-    sys.stdout.buffer.flush()
+    STDOUT.buffer.flush()
 
 
 def print_log(msg: str):
@@ -24,29 +30,38 @@ def send_response(response: dict, response_id: int):
 
 
 def exec_function(user_input):
+
     try:
         compile(user_input, "<stdin>", "eval")
     except SyntaxError:
         return exec
     return eval
 
+# have to run execute in different thread
+# interrupt will kill the thread.
 
-def execute(user_globals, request):
-    str_output = CustomIO("<stdout>", encoding="utf-8")
-    str_error = CustomIO("<stderr>", encoding="utf-8")
+def execute():
 
-    with redirect_io("stdout", str_output):
-        with redirect_io("stderr", str_error):
-            str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
-            with redirect_io("stdin", str_input):
-                user_output_globals = exec_user_input(
-                    request["id"], request["params"], user_globals
-                )
-    send_response(str_output.get_value(), request["id"])
-    return user_output_globals
+    while EXECUTE_QUEUE:
+        request = EXECUTE_QUEUE.pop(0)
+
+        str_output = CustomIO("<stdout>", encoding="utf-8")
+        str_error = CustomIO("<stderr>", encoding="utf-8")
+
+        with redirect_io("stdout", str_output):
+            with redirect_io("stderr", str_error):
+                str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+                with redirect_io("stdin", str_input):
+                    user_output_globals = exec_user_input(
+                        request["id"], request["params"], user_globals
+                    )
+        send_response(str_output.get_value(), request["id"])
+        user_globals.update(user_output_globals)
 
 
 def exec_user_input(request_id, user_input, user_globals):
+
+
     # have to do redirection
     user_input = user_input[0] if isinstance(user_input, list) else user_input
     user_globals = user_globals.copy()
@@ -92,25 +107,49 @@ def redirect_io(stream: str, new_stream):
 
 def get_headers():
     headers = {}
-    while line := sys.stdin.readline().strip():
+    while line := STDIN.readline().strip():
         name, value = line.split(":", 1)
         headers[name] = value.strip()
     return headers
 
 
+# execute_queue.append({"id": 1, "params": "print('hello')"})
+
 if __name__ == "__main__":
     user_globals = {}
-    while not sys.stdin.closed:
+    thread = None
+
+    while not STDIN.closed:
         try:
             headers = get_headers()
             content_length = int(headers.get("Content-Length", 0))
-
+# just one execute thread
+# queue execute items on that thread
             if content_length:
-                request_json = json.loads(sys.stdin.read(content_length))
+                request_text = STDIN.read(content_length) # make sure Im getting right content
+                request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
-                    user_globals = execute(user_globals, request_json)
+                    EXECUTE_QUEUE.append(request_json)
+                    if thread is None or not thread.is_alive():
+                        thread = Thread(target=execute)
+                        thread.start()
+                    # execute_queue.append(request_json) # instead of directly calling execute, create another thread and run execute inside that thread
+                elif request_json["method"] == "interrupt":
+
+                    # kill 'thread'
+                    thread._stop() # THIS IS NOT WORKING
+
+
+                    # set thread as empty
+                    thread = None
+                    # clear execute queue
+                    EXECUTE_QUEUE.clear()
+
                 elif request_json["method"] == "exit":
                     sys.exit(0)
 
         except Exception as e:
             print_log(str(e))
+            dummy_var = 'I want to see previous'
+
+# problem is not able to send interrupt to right thread or kill the thread directly.
