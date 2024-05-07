@@ -104,7 +104,7 @@ pub fn find_and_report(
                             "shell".to_string(),
                             version,
                         ]),
-                        None,
+                        Some(path.into_os_string().into_string().unwrap()),
                     ));
                 }
             }
