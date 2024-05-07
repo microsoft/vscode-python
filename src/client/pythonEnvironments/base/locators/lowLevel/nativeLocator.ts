@@ -10,6 +10,9 @@ import { PythonEnvsChangedEvent } from '../../watcher';
 import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvKind, PythonVersion } from '../../info';
 import { Conda } from '../../../common/environmentManagers/conda';
+import { traceError } from '../../../../logging';
+import type { KnownEnvironmentTools } from '../../../../api/types';
+import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
 
 const NATIVE_LOCATOR = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder.exe')
@@ -25,15 +28,38 @@ interface NativeEnvInfo {
 }
 
 interface EnvManager {
+    tool: string;
     executablePath: string[];
     version?: string;
 }
 
 function categoryToKind(category: string): PythonEnvKind {
-    if (category === 'conda') {
-        return PythonEnvKind.Conda;
+    switch (category.toLowerCase()) {
+        case 'conda':
+            return PythonEnvKind.Conda;
+        case 'system':
+            return PythonEnvKind.System;
+        case 'pyenv':
+            return PythonEnvKind.Pyenv;
+        case 'windowsstore':
+            return PythonEnvKind.MicrosoftStore;
+        default: {
+            traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
+            return PythonEnvKind.Unknown;
+        }
     }
-    return PythonEnvKind.Unknown;
+}
+function toolToKnownEnvironmentTool(tool: string): KnownEnvironmentTools {
+    switch (tool.toLowerCase()) {
+        case 'conda':
+            return 'Conda';
+        case 'pyenv':
+            return 'Pyenv';
+        default: {
+            traceError(`Unknown Python Tool '${tool}' from Native Locator.`);
+            return 'Unknown';
+        }
+    }
 }
 
 function parseVersion(version?: string): PythonVersion | undefined {
@@ -92,7 +118,19 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
             });
         });
         connection.onNotification('envManager', (data: EnvManager) => {
-            Conda.setConda(data.executablePath[0]);
+            switch (toolToKnownEnvironmentTool(data.tool)) {
+                case 'Conda': {
+                    Conda.setConda(data.executablePath[0]);
+                    break;
+                }
+                case 'Pyenv': {
+                    setPyEnvBinary(data.executablePath[0]);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
         });
         connection.onNotification('exit', () => {
             deferred.resolve();

@@ -21,7 +21,17 @@ export function getPyenvDir(): string {
     return pyenvDir;
 }
 
+let pyenvBinary: string | undefined;
+
+export function setPyEnvBinary(pyenvBin: string): void {
+    pyenvBinary = pyenvBin;
+}
+
 async function getPyenvBinary(): Promise<string> {
+    if (pyenvBinary && (await pathExists(pyenvBinary))) {
+        return pyenvBinary;
+    }
+
     const pyenvDir = getPyenvDir();
     const pyenvBin = path.join(pyenvDir, 'bin', 'pyenv');
     if (await pathExists(pyenvBin)) {
