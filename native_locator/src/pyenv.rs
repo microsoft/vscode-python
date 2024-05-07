@@ -31,7 +31,7 @@ fn get_home_pyenv_dir(environment: &impl known::Environment) -> Option<String> {
 
 fn get_binary_from_known_paths(environment: &impl known::Environment) -> Option<String> {
     for known_path in environment.get_know_global_search_locations() {
-        let bin = known_path.join("python");
+        let bin = known_path.join("pyenv");
         if bin.exists() {
             return bin.into_os_string().into_string().ok();
         }
@@ -73,7 +73,6 @@ pub fn find_and_report(
     let pyenv_dir = get_pyenv_dir(environment)?;
 
     if let Some(pyenv_binary) = get_pyenv_binary(environment) {
-        println!("Found pyenv binary: {}", pyenv_binary);
         let params = messaging::EnvManager::new(vec![pyenv_binary], None);
         let message = messaging::EnvManagerMessage::new(params);
         dispatcher.send_message(message);

@@ -32,9 +32,7 @@ fn main() {
     #[cfg(windows)]
     windows_python::find_and_report(&mut dispatcher, &environment);
 
-    println!("Hello");
     pyenv::find_and_report(&mut dispatcher, &environment);
-    println!("Hello2");
 
     match now.elapsed() {
         Ok(elapsed) => {
