@@ -27,7 +27,7 @@ fn report_path_python(dispatcher: &mut impl messaging::MessageDispatcher, path: 
     dispatcher.send_message(messaging::PythonEnvironment::new(
         "Python".to_string(),
         vec![path.to_string()],
-        "System".to_string(),
+        messaging::PythonEnvironmentCategory::System,
         version,
         None,
         env_path,

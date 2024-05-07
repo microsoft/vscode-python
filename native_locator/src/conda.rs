@@ -386,7 +386,7 @@ pub fn find_and_report(
                         Some(executable) => vec![executable.to_string_lossy().to_string()],
                         None => vec![],
                     },
-                    "conda".to_string(),
+                    messaging::PythonEnvironmentCategory::Conda,
                     get_conda_python_version(&env.path),
                     if env.named {
                         Some(vec![

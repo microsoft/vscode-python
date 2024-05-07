@@ -11,7 +11,7 @@ fn report_path_python(path: &str, dispatcher: &mut impl messaging::MessageDispat
     dispatcher.send_message(messaging::PythonEnvironment::new(
         "Python".to_string(),
         vec![path.to_string()],
-        "WindowsStore".to_string(),
+        messaging::PythonEnvironmentCategory::WindowsStore,
         version,
         None,
         None,
