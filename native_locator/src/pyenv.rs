@@ -9,7 +9,7 @@ use crate::messaging;
 use crate::utils::find_python_binary_path;
 
 #[cfg(windows)]
-fn get_home_pyenv_dir() {
+fn get_home_pyenv_dir() -> Option<String> {
     let home = environment.get_user_home()?;
     PathBuf::from(home)
         .join(".pyenv")
@@ -89,12 +89,13 @@ pub fn find_and_report(
             let path = path.path();
             if path.is_dir() {
                 if let Some(executable) = find_python_binary_path(&path) {
+                    let version = path.file_name().unwrap().to_string_lossy().to_string();
                     dispatcher.send_message(messaging::PythonEnvironment::new(
                         "Python".to_string(),
                         vec![executable.into_os_string().into_string().unwrap()],
                         "Pyenv".to_string(),
-                        Some(path.file_name().unwrap().to_string_lossy().to_string()),
-                        None,
+                        Some(version.clone()),
+                        Some(vec!["pyenv".to_string(), "shell".to_string(), version]),
                         None,
                     ));
                 }
