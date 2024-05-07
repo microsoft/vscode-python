@@ -66,12 +66,8 @@ def exec_user_input(user_input, user_globals):
 class CustomIO(io.TextIOWrapper):
     """Custom stream object to replace stdio."""
 
-    # BytesIO does not contain a "name" field. Setting to None gives Pyright warning.
-    name = ""
-
     def __init__(self, name, encoding="utf-8", newline=None):
         self._buffer = io.BytesIO()
-        self._buffer.name = name
         super().__init__(self._buffer, encoding=encoding, newline=newline)
 
     def close(self):
