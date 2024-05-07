@@ -8,12 +8,13 @@ use messaging::{create_dispatcher, MessageDispatcher};
 
 mod common_python;
 mod conda;
+mod homebrew;
 mod known;
 mod logging;
 mod messaging;
+mod pyenv;
 mod utils;
 mod windows_python;
-mod pyenv;
 
 fn main() {
     let mut dispatcher = create_dispatcher();
@@ -33,6 +34,8 @@ fn main() {
     windows_python::find_and_report(&mut dispatcher, &environment);
 
     pyenv::find_and_report(&mut dispatcher, &environment);
+
+    homebrew::find_and_report(&mut dispatcher, &environment);
 
     match now.elapsed() {
         Ok(elapsed) => {
