@@ -3,7 +3,7 @@
 
 use std::{collections::HashMap, path::PathBuf};
 
-use python_finder::{known::Environment, messaging::MessageDispatcher};
+use python_finder::{known::Environment, messaging::{EnvManager, MessageDispatcher, PythonEnvironment}};
 use serde_json::Value;
 
 #[allow(dead_code)]
@@ -32,8 +32,14 @@ pub trait TestMessages {
 #[allow(dead_code)]
 pub fn create_test_dispatcher() -> TestDispatcher {
     impl MessageDispatcher for TestDispatcher {
-        fn send_message<T: serde::Serialize>(&mut self, message: T) -> () {
-            self.messages.push(serde_json::to_string(&message).unwrap());
+        fn report_environment_manager(&mut self, env: EnvManager) -> () {
+            self.messages.push(serde_json::to_string(&env).unwrap());
+        }
+        fn report_environment(&mut self, env: PythonEnvironment) -> () {
+            self.messages.push(serde_json::to_string(&env).unwrap());
+        }
+        fn exit(&mut self) -> () {
+            //
         }
         fn log_debug(&mut self, _message: &str) -> () {}
         fn log_error(&mut self, _message: &str) -> () {}

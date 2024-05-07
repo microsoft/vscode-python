@@ -5,7 +5,9 @@ use crate::logging::{LogLevel, LogMessage};
 use serde::{Deserialize, Serialize};
 
 pub trait MessageDispatcher {
-    fn send_message<T: serde::Serialize>(&mut self, message: T) -> ();
+    fn report_environment_manager(&mut self, env: EnvManager) -> ();
+    fn report_environment(&mut self, env: PythonEnvironment) -> ();
+    fn exit(&mut self) -> ();
     fn log_debug(&mut self, message: &str) -> ();
     fn log_info(&mut self, message: &str) -> ();
     fn log_warning(&mut self, message: &str) -> ();
@@ -84,7 +86,7 @@ impl PythonEnvironment {
             version,
             activated_run,
             env_path,
-            sys_prefix_path
+            sys_prefix_path,
         }
     }
 }
@@ -126,26 +128,35 @@ impl ExitMessage {
 }
 
 pub struct JsonRpcDispatcher {}
+fn send_message<T: serde::Serialize>(message: T) -> () {
+    let message = serde_json::to_string(&message).unwrap();
+    print!(
+        "Content-Length: {}\r\nContent-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n{}",
+        message.len(),
+        message
+    );
+}
 impl MessageDispatcher for JsonRpcDispatcher {
-    fn send_message<T: serde::Serialize>(&mut self, message: T) -> () {
-        let message = serde_json::to_string(&message).unwrap();
-        print!(
-            "Content-Length: {}\r\nContent-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n{}",
-            message.len(),
-            message
-        );
+    fn report_environment_manager(&mut self, env: EnvManager) -> () {
+        send_message(EnvManagerMessage::new(env));
+    }
+    fn report_environment(&mut self, env: PythonEnvironment) -> () {
+        send_message(PythonEnvironmentMessage::new(env));
+    }
+    fn exit(&mut self) -> () {
+        send_message(ExitMessage::new());
     }
     fn log_debug(&mut self, message: &str) -> () {
-        self.send_message(LogMessage::new(message.to_string(), LogLevel::Debug));
+        send_message(LogMessage::new(message.to_string(), LogLevel::Debug));
     }
     fn log_error(&mut self, message: &str) -> () {
-        self.send_message(LogMessage::new(message.to_string(), LogLevel::Error));
+        send_message(LogMessage::new(message.to_string(), LogLevel::Error));
     }
     fn log_info(&mut self, message: &str) -> () {
-        self.send_message(LogMessage::new(message.to_string(), LogLevel::Info));
+        send_message(LogMessage::new(message.to_string(), LogLevel::Info));
     }
     fn log_warning(&mut self, message: &str) -> () {
-        self.send_message(LogMessage::new(message.to_string(), LogLevel::Warning));
+        send_message(LogMessage::new(message.to_string(), LogLevel::Warning));
     }
 }
 
