@@ -521,8 +521,6 @@ export namespace CreateEnv {
             'A virtual environment is not currently selected for your Python interpreter. Would you like to create a virtual environment?',
         );
         export const createEnvironment = l10n.t('Create');
-        export const disableCheck = l10n.t('Disable');
-        export const disableCheckWorkspace = l10n.t('Disable (Workspace)');
 
         export const globalPipInstallTriggerMessage = l10n.t(
             'You may have installed Python packages into your global environment, which can cause conflicts between package versions. Would you like to create a virtual environment to isolate your dependencies?',

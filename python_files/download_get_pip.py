@@ -35,11 +35,24 @@ def main(root):
     data = _get_package_data()
 
     if PIP_VERSION == "latest":
-        use_version = max(data["releases"].keys(), key=version_parser)
+        # Pick latest 5 versions to try and get-pip
+        sorted_versions = sorted(data["releases"].keys(), key=version_parser, reverse=True)[:5]
+        downloaded = False
+        while sorted_versions:
+            use_version = sorted_versions.pop(0)
+            try:
+                print(f"Trying version: get-pip == {use_version}")
+                _download_and_save(root, use_version)
+                downloaded = True
+                break
+            except Exception as e:
+                print(f"Failed to download get-pip == {use_version}: {e}")
+                print(f"NExt attempt(s) with versions: {sorted_versions}")
+        if not downloaded:
+            raise Exception("Failed to download get-pip.py")
     else:
         use_version = PIP_VERSION
-
-    _download_and_save(root, use_version)
+        _download_and_save(root, use_version)
 
 
 if __name__ == "__main__":

@@ -3,12 +3,11 @@ import { CreateEnvOnPipInstallTrigger } from '../../common/experiments/groups';
 import { inExperiment } from '../common/externalDependencies';
 import {
     disableCreateEnvironmentTrigger,
-    disableWorkspaceCreateEnvironmentTrigger,
     isGlobalPythonSelected,
     shouldPromptToCreateEnv,
 } from './common/createEnvTriggerUtils';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../../common/vscodeApis/workspaceApis';
-import { CreateEnv } from '../../common/utils/localize';
+import { Common, CreateEnv } from '../../common/utils/localize';
 import { traceError, traceInfo } from '../../logging';
 import { executeCommand } from '../../common/vscodeApis/commandApis';
 import { Commands, PVSC_EXTENSION_ID } from '../../common/constants';
@@ -16,6 +15,16 @@ import { CreateEnvironmentResult } from './proposed.createEnvApis';
 import { onDidStartTerminalShellExecution, showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+
+function checkCommand(command: string): boolean {
+    const lower = command.toLowerCase();
+    return (
+        lower.startsWith('pip install') ||
+        lower.startsWith('pip3 install') ||
+        lower.startsWith('python -m pip install') ||
+        lower.startsWith('python3 -m pip install')
+    );
+}
 
 export function registerTriggerForPipInTerminal(disposables: Disposable[]): void {
     if (!shouldPromptToCreateEnv() || !inExperiment(CreateEnvOnPipInstallTrigger.experiment)) {
@@ -40,14 +49,13 @@ export function registerTriggerForPipInTerminal(disposables: Disposable[]): void
                 !createEnvironmentTriggered.get(workspaceFolder.uri.fsPath) &&
                 (await isGlobalPythonSelected(workspaceFolder))
             ) {
-                if (e.execution.commandLine.isTrusted && e.execution.commandLine.value.startsWith('pip install')) {
+                if (e.execution.commandLine.isTrusted && checkCommand(e.execution.commandLine.value)) {
                     createEnvironmentTriggered.set(workspaceFolder.uri.fsPath, true);
                     sendTelemetryEvent(EventName.ENVIRONMENT_TERMINAL_GLOBAL_PIP);
                     const selection = await showWarningMessage(
                         CreateEnv.Trigger.globalPipInstallTriggerMessage,
                         CreateEnv.Trigger.createEnvironment,
-                        CreateEnv.Trigger.disableCheckWorkspace,
-                        CreateEnv.Trigger.disableCheck,
+                        Common.doNotShowAgain,
                     );
                     if (selection === CreateEnv.Trigger.createEnvironment) {
                         try {
@@ -69,10 +77,8 @@ export function registerTriggerForPipInTerminal(disposables: Disposable[]): void
                         } catch (error) {
                             traceError('CreateEnv Trigger - Error while creating environment: ', error);
                         }
-                    } else if (selection === CreateEnv.Trigger.disableCheck) {
+                    } else if (selection === Common.doNotShowAgain) {
                         disableCreateEnvironmentTrigger();
-                    } else if (selection === CreateEnv.Trigger.disableCheckWorkspace) {
-                        disableWorkspaceCreateEnvironmentTrigger();
                     }
                 }
             }

@@ -10,7 +10,7 @@ import { PVSC_EXTENSION_ID } from '../../../common/constants';
 import { PythonExtension } from '../../../api/types';
 import { traceVerbose } from '../../../logging';
 import { getConfiguration } from '../../../common/vscodeApis/workspaceApis';
-import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../../common/persistentState';
+import { getWorkspaceStateValue } from '../../../common/persistentState';
 
 export const CREATE_ENV_TRIGGER_SETTING_PART = 'createEnvironment.trigger';
 export const CREATE_ENV_TRIGGER_SETTING = `python.${CREATE_ENV_TRIGGER_SETTING_PART}`;
@@ -88,15 +88,6 @@ export function disableCreateEnvironmentTrigger(): void {
     if (config) {
         config.update('createEnvironment.trigger', 'off', ConfigurationTarget.Global);
     }
-}
-
-/**
- * Sets trigger to 'off' in workspace persistent state. This disables trigger check
- * for the current workspace only. In multi root case, it is disabled for all folders
- * in the multi root workspace.
- */
-export async function disableWorkspaceCreateEnvironmentTrigger(): Promise<void> {
-    await updateWorkspaceStateValue(CREATE_ENV_TRIGGER_SETTING, 'off');
 }
 
 let _alreadyCreateEnvCriteriaCheck = false;
