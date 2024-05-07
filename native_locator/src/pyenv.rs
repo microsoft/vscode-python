@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use regex::Regex;
 use std::fs;
 use std::path::PathBuf;
 
@@ -66,6 +67,38 @@ fn get_pyenv_binary(environment: &impl known::Environment) -> Option<String> {
     }
 }
 
+fn get_pyenv_version(folder_name: String) -> Option<String> {
+    // Stable Versions = like 3.10.10
+    let python_regex = Regex::new(r"^(\d+\.\d+\.\d+)$").unwrap();
+    match python_regex.captures(&folder_name) {
+        Some(captures) => match captures.get(1) {
+            Some(version) => Some(version.as_str().to_string()),
+            None => None,
+        },
+        None => {
+            // Dev Versions = like 3.10-dev
+            let python_regex = Regex::new(r"^(\d+\.\d+-dev)$").unwrap();
+            match python_regex.captures(&folder_name) {
+                Some(captures) => match captures.get(1) {
+                    Some(version) => Some(version.as_str().to_string()),
+                    None => None,
+                },
+                None => {
+                    // Alpha Versions = like 3.10.0a3
+                    let python_regex = Regex::new(r"^(\d+\.\d+.\d+a\d+)").unwrap();
+                    match python_regex.captures(&folder_name) {
+                        Some(captures) => match captures.get(1) {
+                            Some(version) => Some(version.as_str().to_string()),
+                            None => None,
+                        },
+                        None => None,
+                    }
+                }
+            }
+        }
+    }
+}
+
 pub fn find_and_report(
     dispatcher: &mut impl messaging::MessageDispatcher,
     environment: &impl known::Environment,
@@ -91,18 +124,29 @@ pub fn find_and_report(
             let path = path.path();
             if path.is_dir() {
                 if let Some(executable) = find_python_binary_path(&path) {
-                    let version = path.file_name().unwrap().to_string_lossy().to_string();
+                    let version =
+                        get_pyenv_version(path.file_name().unwrap().to_string_lossy().to_string());
+
+                    // If we cannot extract version, this isn't a valid pyenv environment.
+                    // Or its one that we're not interested in.
+                    if version.is_none() {
+                        continue;
+                    }
                     let env_path = path.to_string_lossy().to_string();
+                    let activated_run = match version.clone() {
+                        Some(version) => Some(vec![
+                            pyenv_binary_for_activation.clone(),
+                            "local".to_string(),
+                            version.clone(),
+                        ]),
+                        None => None,
+                    };
                     dispatcher.report_environment(messaging::PythonEnvironment::new(
                         "Python".to_string(),
                         vec![executable.into_os_string().into_string().unwrap()],
                         messaging::PythonEnvironmentCategory::Pyenv,
-                        Some(version.clone()),
-                        Some(vec![
-                            pyenv_binary_for_activation.clone(),
-                            "shell".to_string(),
-                            version,
-                        ]),
+                        version,
+                        activated_run,
                         Some(env_path.clone()),
                         Some(env_path),
                     ));

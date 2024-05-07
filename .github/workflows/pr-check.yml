@@ -332,7 +332,7 @@ jobs:
           path: ${{ env.special-working-directory-relative }}
 
       - name: Native Locator tests
-        run: cargo test
+        run: cargo test -- --nocapture
         working-directory: ${{ env.special-working-directory }}/native_locator
 
   smoke-tests:

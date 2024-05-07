@@ -7,3 +7,4 @@ pub mod common_python;
 pub mod logging;
 pub mod conda;
 pub mod known;
+pub mod pyenv;
