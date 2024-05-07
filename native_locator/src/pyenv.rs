@@ -126,6 +126,12 @@ pub fn find_and_report(
                 if let Some(executable) = find_python_binary_path(&path) {
                     let version =
                         get_pyenv_version(path.file_name().unwrap().to_string_lossy().to_string());
+
+                    // If we cannot extract version, this isn't a valid pyenv environment.
+                    // Or its one that we're not interested in.
+                    if version.is_none() {
+                        continue;
+                    }
                     let env_path = path.to_string_lossy().to_string();
                     let activated_run = match version.clone() {
                         Some(version) => Some(vec![
