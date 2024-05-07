@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugConfigurationProvider, debug, languages, window, workspace } from 'vscode';
+import { DebugConfigurationProvider, debug, languages, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';

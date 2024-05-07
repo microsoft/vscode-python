@@ -21,8 +21,8 @@ import { createReplController } from './replController';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
-let allNotebookEditors: [NotebookEditor] | undefined;
-let mapUriToNotebookEditor: Map<Uri, NotebookEditor> | undefined;
+// let allNotebookEditors: [NotebookEditor] | undefined;
+// let mapUriToNotebookEditor: Map<Uri, NotebookEditor> | undefined;
 
 // TODO: Need to figure out making separate REPL for each file:
 // a.py in REPL.

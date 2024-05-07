@@ -110,7 +110,9 @@ suite('Terminal - Code Execution Helper', () => {
             .setup((c) => c.get(TypeMoq.It.isValue(IActiveResourceService)))
             .returns(() => activeResourceService.object);
         activeResourceService.setup((a) => a.getActiveResource()).returns(() => resource);
-        pythonSettings.setup((s) => s.REPL).returns(() => ({ enableREPLSmartSend: false, REPLSmartSend: false }));
+        pythonSettings
+            .setup((s) => s.REPL)
+            .returns(() => ({ enableREPLSmartSend: false, REPLSmartSend: false, enableIWREPL: false }));
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         configurationService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
