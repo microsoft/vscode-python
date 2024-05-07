@@ -13,6 +13,7 @@ mod logging;
 mod messaging;
 mod utils;
 mod windows_python;
+mod pyenv;
 
 fn main() {
     let mut dispatcher = create_dispatcher();
@@ -30,6 +31,10 @@ fn main() {
     // Finds Windows Store, Known Path, and Registry pythons
     #[cfg(windows)]
     windows_python::find_and_report(&mut dispatcher, &environment);
+
+    println!("Hello");
+    pyenv::find_and_report(&mut dispatcher, &environment);
+    println!("Hello2");
 
     match now.elapsed() {
         Ok(elapsed) => {
