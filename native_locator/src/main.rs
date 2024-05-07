@@ -46,5 +46,5 @@ fn main() {
         }
     }
 
-    dispatcher.send_message(messaging::ExitMessage::new());
+    dispatcher.exit();
 }

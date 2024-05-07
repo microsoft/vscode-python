@@ -44,7 +44,7 @@ fn find_conda_exe_and_empty_envs() {
     conda::find_and_report(&mut dispatcher, &known);
 
     let conda_exe = join_test_paths(&[conda_dir.clone().as_str(), "conda"]);
-    let expected_json = json!({"jsonrpc":"2.0","method":"envManager","params":{"executablePath":[conda_exe.clone()],"version":null}});
+    let expected_json = json!({"executablePath":[conda_exe.clone()],"version":null});
     assert_messages(&[expected_json], &dispatcher)
 }
 #[test]
@@ -80,9 +80,9 @@ fn finds_two_conda_envs_from_txt() {
     let conda_1_exe = join_test_paths(&[conda_1.clone().as_str(), "python"]);
     let conda_2_exe = join_test_paths(&[conda_2.clone().as_str(), "python"]);
 
-    let expected_conda_env = json!({"jsonrpc":"2.0","method":"envManager","params":{"executablePath":[conda_exe.clone()],"version":null}});
-    let expected_conda_1 = json!({"jsonrpc":"2.0","method":"pythonEnvironment","params":{"name":"envs/one","pythonExecutablePath":[conda_1_exe.clone()],"category":"conda","version":"10.0.1","activatedRun":[conda_exe.clone(),"run","-n","envs/one","python"],"envPath":conda_1.clone()}});
-    let expected_conda_2 = json!({"jsonrpc":"2.0","method":"pythonEnvironment","params":{"name":"envs/two","pythonExecutablePath":[conda_2_exe.clone()],"category":"conda","version":null,"activatedRun":[conda_exe.clone(),"run","-n","envs/two","python"],"envPath":conda_2.clone()}});
+    let expected_conda_env = json!({"executablePath":[conda_exe.clone()],"version":null});
+    let expected_conda_1 = json!({"name":"envs/one","pythonExecutablePath":[conda_1_exe.clone()],"category":"conda","version":"10.0.1","activatedRun":[conda_exe.clone(),"run","-n","envs/one","python"],"envPath":conda_1.clone()});
+    let expected_conda_2 = json!({"name":"envs/two","pythonExecutablePath":[conda_2_exe.clone()],"category":"conda","version":null,"activatedRun":[conda_exe.clone(),"run","-n","envs/two","python"],"envPath":conda_2.clone()});
     assert_messages(
         &[expected_conda_env, expected_conda_1, expected_conda_2],
         &dispatcher,

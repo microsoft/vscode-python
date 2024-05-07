@@ -24,7 +24,7 @@ fn get_env_path(path: &str) -> Option<String> {
 fn report_path_python(dispatcher: &mut impl messaging::MessageDispatcher, path: &str) {
     let version = utils::get_version(path);
     let env_path = get_env_path(path);
-    dispatcher.send_message(messaging::PythonEnvironment::new(
+    dispatcher.report_environment(messaging::PythonEnvironment::new(
         "Python".to_string(),
         vec![path.to_string()],
         messaging::PythonEnvironmentCategory::System,

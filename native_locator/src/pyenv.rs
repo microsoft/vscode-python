@@ -73,9 +73,7 @@ pub fn find_and_report(
     let pyenv_dir = get_pyenv_dir(environment)?;
 
     if let Some(pyenv_binary) = get_pyenv_binary(environment) {
-        let params = messaging::EnvManager::new(vec![pyenv_binary], None);
-        let message = messaging::EnvManagerMessage::new(params);
-        dispatcher.send_message(message);
+        dispatcher.report_environment_manager(messaging::EnvManager::new(vec![pyenv_binary], None));
     }
 
     let versions_dir = PathBuf::from(&pyenv_dir)
@@ -95,7 +93,7 @@ pub fn find_and_report(
                 if let Some(executable) = find_python_binary_path(&path) {
                     let version = path.file_name().unwrap().to_string_lossy().to_string();
                     let env_path = path.to_string_lossy().to_string();
-                    dispatcher.send_message(messaging::PythonEnvironment::new(
+                    dispatcher.report_environment(messaging::PythonEnvironment::new(
                         "Python".to_string(),
                         vec![executable.into_os_string().into_string().unwrap()],
                         messaging::PythonEnvironmentCategory::Pyenv,

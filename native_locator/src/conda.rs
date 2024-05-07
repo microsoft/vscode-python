@@ -371,8 +371,7 @@ pub fn find_and_report(
         Some(conda_binary) => {
             let params =
                 messaging::EnvManager::new(vec![conda_binary.to_string_lossy().to_string()], None);
-            let message = messaging::EnvManagerMessage::new(params);
-            dispatcher.send_message(message);
+            dispatcher.report_environment_manager(params);
 
             let envs = get_distinct_conda_envs(conda_binary.to_path_buf(), environment);
             for env in envs {
@@ -406,8 +405,7 @@ pub fn find_and_report(
                     Some(env_path.clone()),
                     Some(env_path),
                 );
-                let message = messaging::PythonEnvironmentMessage::new(params);
-                dispatcher.send_message(message);
+                dispatcher.report_environment(params);
             }
         }
         None => (),
