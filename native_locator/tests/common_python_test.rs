@@ -27,6 +27,6 @@ fn find_python_in_path_this() {
     common_python::find_and_report(&mut dispatcher, &known);
 
     assert_eq!(dispatcher.messages.len(), 1);
-    let expected_json = json!({"name":"Python","pythonExecutablePath":[unix_python_exe.clone()],"category":"System","version":null,"activatedRun":null,"envPath":unix_python.clone()});
+    let expected_json = json!({"name":"Python","pythonExecutablePath":[unix_python_exe.clone()],"category":"system","version":null,"activatedRun":null,"envPath":unix_python.clone()});
     assert_messages(&[expected_json], &dispatcher);
 }
