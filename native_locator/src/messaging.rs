@@ -48,10 +48,19 @@ impl EnvManagerMessage {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub enum PythonEnvironmentCategory {
+    System,
+    Conda,
+    Pyenv,
+    WindowsStore,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: String,
     pub python_executable_path: Vec<String>,
-    pub category: String,
+    pub category: PythonEnvironmentCategory,
     pub version: Option<String>,
     pub activated_run: Option<Vec<String>>,
     pub env_path: Option<String>,
@@ -61,7 +70,7 @@ impl PythonEnvironment {
     pub fn new(
         name: String,
         python_executable_path: Vec<String>,
-        category: String,
+        category: PythonEnvironmentCategory,
         version: Option<String>,
         activated_run: Option<Vec<String>>,
         env_path: Option<String>,

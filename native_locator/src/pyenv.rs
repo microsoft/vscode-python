@@ -97,7 +97,7 @@ pub fn find_and_report(
                     dispatcher.send_message(messaging::PythonEnvironment::new(
                         "Python".to_string(),
                         vec![executable.into_os_string().into_string().unwrap()],
-                        "Pyenv".to_string(),
+                        messaging::PythonEnvironmentCategory::Pyenv,
                         Some(version.clone()),
                         Some(vec![
                             pyenv_binary_for_activation.clone(),
