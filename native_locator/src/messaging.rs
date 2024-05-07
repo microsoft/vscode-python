@@ -51,7 +51,7 @@ impl EnvManagerMessage {
 pub enum PythonEnvironmentCategory {
     System,
     Conda,
-    PyEnv,
+    Pyenv,
     WindowsStore,
 }
 
