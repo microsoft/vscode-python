@@ -3,19 +3,17 @@ import * as ch from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
 import { Disposable } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../constants';
+import { traceError, traceLog } from '../logging';
 
-// const SERVER_PATH = path.join(__dirname, '...', 'python_files', 'python_server.py');
 const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server.py');
-
-// const SERVER_PATH = path.join(__dirname, '..', '..', '..', 'pythonFiles', 'python_server.py');
 
 export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
-    interrupt(): Promise<void>;
+    interrupt(): void;
 }
 
 class PythonServerImpl implements Disposable {
-    constructor(private connection: rpc.MessageConnection) {
+    constructor(private connection: rpc.MessageConnection, private pythonServer: ch.ChildProcess) {
         this.initialize();
     }
 
@@ -30,10 +28,10 @@ class PythonServerImpl implements Disposable {
         return this.connection.sendRequest('execute', code);
     }
 
-    public interrupt(): Promise<void> {
-        // return this.connection.sendRequest('interrupt', 'interrupt');
-        // pythonServer.kill('SIGINT');
-        return this.connection.sendRequest('interrupt', 'blah');
+    public interrupt(): void {
+        if (this.pythonServer.kill('SIGINT')) {
+            traceLog('Python server interrupted');
+        }
     }
 
     public dispose(): void {
@@ -46,17 +44,18 @@ export function createPythonServer(interpreter: string[]): PythonServer {
     const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH]);
 
     pythonServer.stderr.on('data', (data) => {
-        console.error(data.toString());
+        traceError(data.toString());
     });
     pythonServer.on('exit', (code) => {
-        console.error(`Python server exited with code ${code}`);
+        traceError(`Python server exited with code ${code}`);
     });
     pythonServer.on('error', (err) => {
-        console.error(err);
+        traceError(err);
     });
     const connection = rpc.createMessageConnection(
         new rpc.StreamMessageReader(pythonServer.stdout),
         new rpc.StreamMessageWriter(pythonServer.stdin),
     );
-    return new PythonServerImpl(connection);
+
+    return new PythonServerImpl(connection, pythonServer);
 }

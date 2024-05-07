@@ -4,11 +4,8 @@ import sys
 import json
 import contextlib
 import io
-from threading import Thread
 import traceback
 
-is_interrupted = False
-EXECUTE_QUEUE = []
 STDIN = sys.stdin
 STDOUT = sys.stdout
 STDERR = sys.stderr
@@ -36,29 +33,20 @@ def exec_function(user_input):
     return eval
 
 
-# have to run execute in different thread
-# interrupt will kill the thread.
+def execute(request, user_globals):
+    str_output = CustomIO("<stdout>", encoding="utf-8")
+    str_error = CustomIO("<stderr>", encoding="utf-8")
+
+    with redirect_io("stdout", str_output):
+        with redirect_io("stderr", str_error):
+            str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+            with redirect_io("stdin", str_input):
+                user_output_globals = exec_user_input(request["params"], user_globals)
+    send_response(str_output.get_value(), request["id"])
+    user_globals.update(user_output_globals)
 
 
-def execute():
-    while EXECUTE_QUEUE:
-        request = EXECUTE_QUEUE.pop(0)
-
-        str_output = CustomIO("<stdout>", encoding="utf-8")
-        str_error = CustomIO("<stderr>", encoding="utf-8")
-
-        with redirect_io("stdout", str_output):
-            with redirect_io("stderr", str_error):
-                str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
-                with redirect_io("stdin", str_input):
-                    user_output_globals = exec_user_input(
-                        request["id"], request["params"], user_globals
-                    )
-        send_response(str_output.get_value(), request["id"])
-        user_globals.update(user_output_globals)
-
-
-def exec_user_input(request_id, user_input, user_globals):
+def exec_user_input(user_input, user_globals):
     # have to do redirection
     user_input = user_input[0] if isinstance(user_input, list) else user_input
     user_globals = user_globals.copy()
@@ -68,6 +56,8 @@ def exec_user_input(request_id, user_input, user_globals):
         retval = callable(user_input, user_globals)
         if retval is not None:
             print(retval)
+    except KeyboardInterrupt:
+        print(traceback.format_exc())
     except Exception:
         print(traceback.format_exc())
     return user_globals
@@ -111,41 +101,22 @@ def get_headers():
     return headers
 
 
-# execute_queue.append({"id": 1, "params": "print('hello')"})
-
 if __name__ == "__main__":
     user_globals = {}
-    thread = None
 
     while not STDIN.closed:
         try:
             headers = get_headers()
             content_length = int(headers.get("Content-Length", 0))
-            # just one execute thread
-            # queue execute items on that thread
+
             if content_length:
                 request_text = STDIN.read(content_length)  # make sure Im getting right content
                 request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
-                    EXECUTE_QUEUE.append(request_json)
-                    if thread is None or not thread.is_alive():
-                        thread = Thread(target=execute)
-                        thread.start()
-                    # execute_queue.append(request_json) # instead of directly calling execute, create another thread and run execute inside that thread
-                elif request_json["method"] == "interrupt":
-                    # kill 'thread'
-                    # thread._stop() # THIS IS NOT WORKING
-
-                    # set thread as empty
-                    thread = None
-                    # clear execute queue
-                    EXECUTE_QUEUE.clear()
+                    execute(request_json, user_globals)
 
                 elif request_json["method"] == "exit":
                     sys.exit(0)
 
         except Exception as e:
             print_log(str(e))
-
-
-# problem is not able to send interrupt to right thread or kill the thread directly.

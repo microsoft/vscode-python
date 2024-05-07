@@ -8,9 +8,8 @@ export function createReplController(interpreterPath: string): vscode.NotebookCo
     controller.supportsExecutionOrder = true;
 
     controller.description = 'Python REPL';
-    // let isInterrupted = false;
+
     controller.interruptHandler = async () => {
-        // isInterrupted = true;
         server.interrupt();
     };
 
