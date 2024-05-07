@@ -116,6 +116,7 @@ pub fn find_and_report(
         dispatcher.report_environment_manager(messaging::EnvManager::new(vec![pyenv_binary], None));
     }
 
+    println!("\nfind_and_report for pyenv_dir {:?}", pyenv_dir);
     let versions_dir = PathBuf::from(&pyenv_dir)
         .join("versions")
         .into_os_string()
@@ -126,6 +127,7 @@ pub fn find_and_report(
         Some(binary) => binary,
         None => "pyenv".to_string(),
     };
+    println!("\nfind_and_report for versions {:?}", versions_dir);
     for entry in fs::read_dir(&versions_dir).ok()? {
         if let Ok(path) = entry {
             let path = path.path();
