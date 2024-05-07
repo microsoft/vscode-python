@@ -9,7 +9,7 @@ use crate::messaging;
 use crate::utils::find_python_binary_path;
 
 #[cfg(windows)]
-fn get_home_pyenv_dir() -> Option<String> {
+fn get_home_pyenv_dir(environment: &impl known::Environment) -> Option<String> {
     let home = environment.get_user_home()?;
     PathBuf::from(home)
         .join(".pyenv")
