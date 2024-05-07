@@ -39,6 +39,7 @@ function categoryToKind(category: string): PythonEnvKind {
         case 'conda':
             return PythonEnvKind.Conda;
         case 'system':
+        case 'homebrew':
             return PythonEnvKind.System;
         case 'pyenv':
             return PythonEnvKind.Pyenv;

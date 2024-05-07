@@ -52,6 +52,7 @@ impl EnvManagerMessage {
 #[serde(rename_all = "camelCase")]
 pub enum PythonEnvironmentCategory {
     System,
+    Homebrew,
     Conda,
     Pyenv,
     WindowsStore,
