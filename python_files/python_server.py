@@ -78,7 +78,7 @@ class CustomIO(io.TextIOWrapper):
 
     name = None
 
-    def __init__(self, name, encoding="utf-8", newline=None):
+    def __init__(self, name=None, encoding="utf-8", newline=None):
         self._buffer = io.BytesIO()
         self._buffer.name = name
         super().__init__(self._buffer, encoding=encoding, newline=newline)
