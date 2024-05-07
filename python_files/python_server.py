@@ -1,5 +1,5 @@
-# import debugpy
-# debugpy.connect(5678)
+import debugpy
+debugpy.connect(5678)
 import sys
 import json
 import contextlib
@@ -25,7 +25,7 @@ def print_log(msg: str):
     send_message(json.dumps({"jsonrpc": "2.0", "method": "log", "params": msg}))
 
 
-def send_response(response: dict, response_id: int):
+def send_response(response: str, response_id: int):
     send_message(json.dumps({"jsonrpc": "2.0", "id": response_id, "result": response}))
 
 
@@ -150,6 +150,6 @@ if __name__ == "__main__":
 
         except Exception as e:
             print_log(str(e))
-            dummy_var = 'I want to see previous'
+
 
 # problem is not able to send interrupt to right thread or kill the thread directly.
