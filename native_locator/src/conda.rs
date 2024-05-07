@@ -3,6 +3,7 @@
 
 use crate::known;
 use crate::messaging;
+use crate::utils::find_python_binary_path;
 use regex::Regex;
 use std::env;
 use std::path::{Path, PathBuf};
@@ -143,19 +144,6 @@ fn find_conda_binary_on_path(environment: &impl known::Environment) -> Option<Pa
         }
     }
     None
-}
-
-fn find_python_binary_path(env_path: &Path) -> Option<PathBuf> {
-    let python_bin_name = if cfg!(windows) {
-        "python.exe"
-    } else {
-        "python"
-    };
-    let path_1 = env_path.join("bin").join(python_bin_name);
-    let path_2 = env_path.join("Scripts").join(python_bin_name);
-    let path_3 = env_path.join(python_bin_name);
-    let paths = vec![path_1, path_2, path_3];
-    paths.into_iter().find(|path| path.exists())
 }
 
 #[cfg(windows)]
