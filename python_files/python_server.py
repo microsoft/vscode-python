@@ -1,5 +1,5 @@
-import debugpy
-debugpy.connect(5678)
+# import debugpy
+# debugpy.connect(5678)
 import sys
 import json
 import contextlib
@@ -137,7 +137,7 @@ if __name__ == "__main__":
                 elif request_json["method"] == "interrupt":
 
                     # kill 'thread'
-                    thread._stop() # THIS IS NOT WORKING
+                    # thread._stop() # THIS IS NOT WORKING
 
 
                     # set thread as empty
