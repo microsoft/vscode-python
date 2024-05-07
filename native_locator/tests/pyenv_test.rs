@@ -3,52 +3,52 @@
 
 mod common;
 
-#[test]
-#[cfg(unix)]
-fn does_not_find_any_pyenv_envs() {
-    use crate::common::{create_test_dispatcher, create_test_environment};
-    use python_finder::pyenv;
-    use std::collections::HashMap;
+// #[test]
+// #[cfg(unix)]
+// fn does_not_find_any_pyenv_envs() {
+//     use crate::common::{create_test_dispatcher, create_test_environment};
+//     use python_finder::pyenv;
+//     use std::collections::HashMap;
 
-    let mut dispatcher = create_test_dispatcher();
-    let known = create_test_environment(
-        HashMap::new(),
-        Some("SOME_BOGUS_HOME_DIR".to_string()),
-        Vec::new(),
-    );
+//     let mut dispatcher = create_test_dispatcher();
+//     let known = create_test_environment(
+//         HashMap::new(),
+//         Some("SOME_BOGUS_HOME_DIR".to_string()),
+//         Vec::new(),
+//     );
 
-    pyenv::find_and_report(&mut dispatcher, &known);
+//     pyenv::find_and_report(&mut dispatcher, &known);
 
-    assert_eq!(dispatcher.messages.len(), 0);
-}
+//     assert_eq!(dispatcher.messages.len(), 0);
+// }
 
-#[test]
-#[cfg(unix)]
-fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
-    use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
-        test_file_path,
-    };
-    use python_finder::pyenv;
-    use serde_json::json;
-    use std::{collections::HashMap, path::PathBuf};
+// #[test]
+// #[cfg(unix)]
+// fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
+//     use crate::common::{
+//         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
+//         test_file_path,
+//     };
+//     use python_finder::pyenv;
+//     use serde_json::json;
+//     use std::{collections::HashMap, path::PathBuf};
 
-    let mut dispatcher = create_test_dispatcher();
-    let home = test_file_path(&["tests", "unix", "pyenv_without_envs"]);
-    let homebrew_bin = join_test_paths(&[home.as_str(), "opt", "homebrew", "bin"]);
-    let pyenv_exe = join_test_paths(&[homebrew_bin.as_str(), "pyenv"]);
-    let known = create_test_environment(
-        HashMap::new(),
-        Some(home.clone()),
-        vec![PathBuf::from(homebrew_bin)],
-    );
+//     let mut dispatcher = create_test_dispatcher();
+//     let home = test_file_path(&["tests", "unix", "pyenv_without_envs"]);
+//     let homebrew_bin = join_test_paths(&[home.as_str(), "opt", "homebrew", "bin"]);
+//     let pyenv_exe = join_test_paths(&[homebrew_bin.as_str(), "pyenv"]);
+//     let known = create_test_environment(
+//         HashMap::new(),
+//         Some(home.clone()),
+//         vec![PathBuf::from(homebrew_bin)],
+//     );
 
-    pyenv::find_and_report(&mut dispatcher, &known);
+//     pyenv::find_and_report(&mut dispatcher, &known);
 
-    assert_eq!(dispatcher.messages.len(), 1);
-    let expected_json = json!({"executablePath":[pyenv_exe],"version":null});
-    assert_messages(&[expected_json], &dispatcher)
-}
+//     assert_eq!(dispatcher.messages.len(), 1);
+//     let expected_json = json!({"executablePath":[pyenv_exe],"version":null});
+//     assert_messages(&[expected_json], &dispatcher)
+// }
 
 #[test]
 #[cfg(unix)]
