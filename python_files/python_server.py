@@ -1,5 +1,5 @@
-import debugpy
-debugpy.connect(5678)
+# import debugpy
+# debugpy.connect(5678)
 import sys
 import json
 import contextlib
@@ -13,11 +13,10 @@ STDIN = sys.stdin
 STDOUT = sys.stdout
 STDERR = sys.stderr
 
+
 def send_message(msg: str):
     length_msg = len(msg)
-    STDOUT.buffer.write(
-        f"Content-Length: {length_msg}\r\n\r\n{msg}".encode(encoding="utf-8")
-    )
+    STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode(encoding="utf-8"))
     STDOUT.buffer.flush()
 
 
@@ -30,18 +29,18 @@ def send_response(response: str, response_id: int):
 
 
 def exec_function(user_input):
-
     try:
         compile(user_input, "<stdin>", "eval")
     except SyntaxError:
         return exec
     return eval
 
+
 # have to run execute in different thread
 # interrupt will kill the thread.
 
-def execute():
 
+def execute():
     while EXECUTE_QUEUE:
         request = EXECUTE_QUEUE.pop(0)
 
@@ -60,8 +59,6 @@ def execute():
 
 
 def exec_user_input(request_id, user_input, user_globals):
-
-
     # have to do redirection
     user_input = user_input[0] if isinstance(user_input, list) else user_input
     user_globals = user_globals.copy()
@@ -123,10 +120,10 @@ if __name__ == "__main__":
         try:
             headers = get_headers()
             content_length = int(headers.get("Content-Length", 0))
-# just one execute thread
-# queue execute items on that thread
+            # just one execute thread
+            # queue execute items on that thread
             if content_length:
-                request_text = STDIN.read(content_length) # make sure Im getting right content
+                request_text = STDIN.read(content_length)  # make sure Im getting right content
                 request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
                     EXECUTE_QUEUE.append(request_json)
@@ -135,10 +132,8 @@ if __name__ == "__main__":
                         thread.start()
                     # execute_queue.append(request_json) # instead of directly calling execute, create another thread and run execute inside that thread
                 elif request_json["method"] == "interrupt":
-
                     # kill 'thread'
                     # thread._stop() # THIS IS NOT WORKING
-
 
                     # set thread as empty
                     thread = None
