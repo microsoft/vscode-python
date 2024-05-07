@@ -181,15 +181,11 @@ fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathB
         PathBuf::from("/home/miniconda3/bin"),
         PathBuf::from("/anaconda3/bin"),
         PathBuf::from("/miniconda3/bin"),
-        PathBuf::from("/usr/local/anaconda3/bin"),
-        PathBuf::from("/usr/local/miniconda3/bin"),
-        PathBuf::from("/usr/anaconda3/bin"),
-        PathBuf::from("/usr/miniconda3/bin"),
-        PathBuf::from("/home/anaconda3/bin"),
-        PathBuf::from("/home/miniconda3/bin"),
-        PathBuf::from("/anaconda3/bin"),
-        PathBuf::from("/miniconda3/bin"),
     ];
+    if let Some(home) = environment.get_user_home() {
+        known_paths.push(PathBuf::from(home.clone()).join("anaconda3/bin"));
+        known_paths.push(PathBuf::from(home).join("miniconda3/bin"));
+    }
     known_paths.append(&mut environment.get_know_global_search_locations());
     known_paths
 }
@@ -201,9 +197,10 @@ fn find_conda_binary_in_known_locations(environment: &impl known::Environment) -
     for location in known_locations {
         for bin in &conda_bin_names {
             let conda_path = location.join(bin);
-            let metadata = std::fs::metadata(&conda_path).ok()?;
-            if metadata.is_file() || metadata.is_symlink() {
-                return Some(conda_path);
+            if let Some(metadata) = std::fs::metadata(&conda_path).ok() {
+                if metadata.is_file() || metadata.is_symlink() {
+                    return Some(conda_path);
+                }
             }
         }
     }
