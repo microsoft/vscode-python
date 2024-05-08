@@ -374,10 +374,9 @@ pub fn find_and_report(
     let conda_binary = find_conda_binary(environment);
     match conda_binary {
         Some(conda_binary) => {
-            let version = get_conda_version(&conda_binary);
             let params = messaging::EnvManager::new(
                 vec![conda_binary.to_string_lossy().to_string()],
-                version,
+                get_conda_version(&conda_binary),
             );
             dispatcher.report_environment_manager(params);
 
