@@ -9,6 +9,13 @@ use std::{
 };
 
 #[derive(Debug)]
+pub struct PythonEnv {
+    pub path: PathBuf,
+    pub executable: PathBuf,
+    pub version: Option<String>,
+}
+
+#[derive(Debug)]
 pub struct PyEnvCfg {
     pub version: String,
 }
