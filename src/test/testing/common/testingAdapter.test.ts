@@ -163,7 +163,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         // const deferredTillEOT = createTestingDeferred();
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -520,7 +520,9 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(
                     payload.status,
                     'success',
-                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${JSON.stringify(payload)}`,
+                    `Expected status to be 'success' instead status is ${payload.status}, error: ${
+                        payload.error
+                    }, payload: ${JSON.stringify(payload)}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
@@ -677,7 +679,9 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(
                     payload.status,
                     'success',
-                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${JSON.stringify(payload)}`,
+                    `Expected status to be 'success' instead status is ${payload.status}, error: ${
+                        payload.error
+                    }, payload: ${JSON.stringify(payload)}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
@@ -766,7 +770,9 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(
                     payload.status,
                     'success',
-                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${JSON.stringify(payload)}`,
+                    `Expected status to be 'success' instead status is ${payload.status}, error: ${
+                        payload.error
+                    }, payload: ${JSON.stringify(payload)}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
