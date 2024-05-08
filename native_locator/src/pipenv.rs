@@ -27,29 +27,23 @@ pub fn find_and_report(
 ) -> Option<()> {
     for env in list_global_virtualenvs(environment).iter() {
         if let Some(project_path) = get_project_folder(&env) {
+            let env_path = env
+                .path
+                .clone()
+                .into_os_string()
+                .to_string_lossy()
+                .to_string();
+            let executable = env
+                .executable
+                .clone()
+                .into_os_string()
+                .to_string_lossy()
+                .to_string();
             let env = PythonEnvironment::new_pipenv(
-                Some(
-                    env.executable
-                        .clone()
-                        .into_os_string()
-                        .to_string_lossy()
-                        .to_string(),
-                ),
+                Some(executable),
                 env.version.clone(),
-                Some(
-                    env.path
-                        .clone()
-                        .into_os_string()
-                        .to_string_lossy()
-                        .to_string(),
-                ),
-                Some(
-                    env.path
-                        .clone()
-                        .into_os_string()
-                        .to_string_lossy()
-                        .to_string(),
-                ),
+                Some(env_path.clone()),
+                Some(env_path),
                 None,
                 project_path,
             );
