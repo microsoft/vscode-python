@@ -46,7 +46,7 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
     pyenv::find_and_report(&mut dispatcher, &known);
 
     assert_eq!(dispatcher.messages.len(), 1);
-    let expected_json = json!({"executablePath":pyenv_exe,"version":null});
+    let expected_json = json!({"executablePath":pyenv_exe,"version":null, "tool": "pyenv"});
     assert_messages(&[expected_json], &dispatcher)
 }
 
@@ -74,7 +74,7 @@ fn find_pyenv_envs() {
     pyenv::find_and_report(&mut dispatcher, &known);
 
     assert_eq!(dispatcher.messages.len(), 6);
-    let expected_manager = json!({ "executablePath": pyenv_exe.clone(), "version": null });
+    let expected_manager = json!({ "executablePath": pyenv_exe.clone(), "version": null, "tool": "pyenv" });
     let expected_3_9_9 = json!({"projectPath": null, "name": null,"pythonExecutablePath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9/bin/python"]), "pythonRunCommand": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9/bin/python"])], "category": "pyenv","version": "3.9.9","envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9"]), "envManager": expected_manager});
     let expected_virtual_env = json!({"projectPath": null, "name": "my-virtual-env", "version": "3.10.13", "category": "pyenvVirtualEnv", "envPath": join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env"]), "pythonExecutablePath": join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env/bin/python"]), "sysPrefixPath": join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env"]), "pythonRunCommand": [join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env/bin/python"])], "envManager": expected_manager});
     let expected_3_12_1 = json!({"projectPath": null, "name": null,"pythonExecutablePath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1/bin/python"]), "pythonRunCommand": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1/bin/python"])], "category": "pyenv","version": "3.12.1","envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1"]), "envManager": expected_manager});

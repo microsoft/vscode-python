@@ -3,6 +3,7 @@
 
 use crate::known;
 use crate::messaging;
+use crate::messaging::EnvManagerType;
 use crate::utils::find_python_binary_path;
 use regex::Regex;
 use std::env;
@@ -218,15 +219,15 @@ pub fn find_conda_binary(environment: &impl known::Environment) -> Option<PathBu
 
 pub fn get_conda_version(conda_binary: &PathBuf) -> Option<String> {
     let mut parent = conda_binary.parent()?;
-    if parent.ends_with("bin"){
+    if parent.ends_with("bin") {
         parent = parent.parent()?;
     }
-    if parent.ends_with("Library"){
+    if parent.ends_with("Library") {
         parent = parent.parent()?;
     }
     let conda_python_json_path = match get_conda_package_json_path(&parent, "conda") {
         Some(exe) => Some(exe),
-        None => get_conda_package_json_path(&parent.parent()?, "conda")
+        None => get_conda_package_json_path(&parent.parent()?, "conda"),
     }?;
     get_version_from_meta_json(&conda_python_json_path)
 }
@@ -387,6 +388,7 @@ pub fn find_and_report(
             let params = messaging::EnvManager::new(
                 conda_binary.to_string_lossy().to_string(),
                 get_conda_version(&conda_binary),
+                EnvManagerType::Conda,
             );
             dispatcher.report_environment_manager(params);
 

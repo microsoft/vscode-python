@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use crate::known;
 use crate::messaging;
 use crate::messaging::EnvManager;
+use crate::messaging::EnvManagerType;
 use crate::utils::find_python_binary_path;
 use crate::utils::parse_pyenv_cfg;
 
@@ -156,7 +157,7 @@ pub fn find_and_report(
 
     let manager = match get_pyenv_binary(environment) {
         Some(pyenv_binary) => {
-            let manager = messaging::EnvManager::new(pyenv_binary, None);
+            let manager = messaging::EnvManager::new(pyenv_binary, None, EnvManagerType::Pyenv);
             dispatcher.report_environment_manager(manager.clone());
             Some(manager)
         }

@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use crate::pipenv;
+use crate::virtualenvwrapper;
 use crate::{
     known,
-    utils::{find_python_binary_path, get_version},
+    messaging::MessageDispatcher,
+    utils::{find_python_binary_path, get_version, PythonEnv},
 };
 use std::{fs, path::PathBuf};
 
@@ -43,12 +46,6 @@ fn get_global_virtualenv_dirs(environment: &impl known::Environment) -> Vec<Path
     venv_dirs
 }
 
-pub struct PythonEnv {
-    pub path: PathBuf,
-    pub executable: PathBuf,
-    pub version: Option<String>,
-}
-
 pub fn list_global_virtualenvs(environment: &impl known::Environment) -> Vec<PythonEnv> {
     let mut python_envs: Vec<PythonEnv> = vec![];
     for root_dir in get_global_virtualenv_dirs(environment).iter() {
@@ -72,4 +69,20 @@ pub fn list_global_virtualenvs(environment: &impl known::Environment) -> Vec<Pyt
     }
 
     python_envs
+}
+
+pub fn find_and_report(
+    dispatcher: &mut impl MessageDispatcher,
+    environment: &impl known::Environment,
+) -> Option<()> {
+    for env in list_global_virtualenvs(environment).iter() {
+        if pipenv::find_and_report(&env, dispatcher).is_some() {
+            continue;
+        }
+        if virtualenvwrapper::find_and_report(&env, dispatcher, environment).is_some() {
+            continue;
+        }
+    }
+
+    None
 }

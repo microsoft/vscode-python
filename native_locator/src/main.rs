@@ -16,6 +16,8 @@ mod messaging;
 mod pipenv;
 mod pyenv;
 mod utils;
+mod virtualenv;
+mod virtualenvwrapper;
 mod windows_python;
 
 fn main() {
@@ -24,6 +26,8 @@ fn main() {
 
     dispatcher.log_info("Starting Native Locator");
     let now = SystemTime::now();
+
+    global_virtualenvs::find_and_report(&mut dispatcher, &environment);
 
     // Finds python on PATH
     common_python::find_and_report(&mut dispatcher, &environment);
@@ -36,8 +40,6 @@ fn main() {
     windows_python::find_and_report(&mut dispatcher, &environment);
 
     pyenv::find_and_report(&mut dispatcher, &environment);
-
-    pipenv::find_and_report(&mut dispatcher, &environment);
 
     #[cfg(unix)]
     homebrew::find_and_report(&mut dispatcher, &environment);

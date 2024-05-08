@@ -14,18 +14,27 @@ pub trait MessageDispatcher {
     fn log_error(&mut self, message: &str) -> ();
 }
 
+#[derive(Serialize, Deserialize, Copy, Clone)]
+#[serde(rename_all = "camelCase")]
+pub enum EnvManagerType {
+    Conda,
+    Pyenv,
+}
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvManager {
     pub executable_path: String,
     pub version: Option<String>,
+    pub tool: EnvManagerType,
 }
 
 impl EnvManager {
-    pub fn new(executable_path: String, version: Option<String>) -> Self {
+    pub fn new(executable_path: String, version: Option<String>, tool: EnvManagerType) -> Self {
         Self {
             executable_path,
             version,
+            tool,
         }
     }
 }
@@ -35,6 +44,7 @@ impl Clone for EnvManager {
         Self {
             executable_path: self.executable_path.clone(),
             version: self.version.clone(),
+            tool: self.tool,
         }
     }
 }
@@ -67,6 +77,7 @@ pub enum PythonEnvironmentCategory {
     PyenvVirtualEnv,
     WindowsStore,
     Pipenv,
+    VirtualEnvWrapper,
 }
 
 #[derive(Serialize, Deserialize)]
