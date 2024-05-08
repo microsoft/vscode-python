@@ -8,10 +8,12 @@ use messaging::{create_dispatcher, MessageDispatcher};
 
 mod common_python;
 mod conda;
+mod global_virtualenvs;
 mod homebrew;
 mod known;
 mod logging;
 mod messaging;
+mod pipenv;
 mod pyenv;
 mod utils;
 mod windows_python;
@@ -34,6 +36,8 @@ fn main() {
     windows_python::find_and_report(&mut dispatcher, &environment);
 
     pyenv::find_and_report(&mut dispatcher, &environment);
+
+    pipenv::find_and_report(&mut dispatcher, &environment);
 
     #[cfg(unix)]
     homebrew::find_and_report(&mut dispatcher, &environment);

@@ -8,3 +8,4 @@ pub mod logging;
 pub mod conda;
 pub mod known;
 pub mod pyenv;
+pub mod global_virtualenvs;

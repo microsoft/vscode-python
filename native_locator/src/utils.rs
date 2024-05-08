@@ -1,12 +1,60 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+use regex::Regex;
 use std::{
+    fs,
     path::{Path, PathBuf},
     process::Command,
 };
 
+#[derive(Debug)]
+pub struct PyEnvCfg {
+    pub version: String,
+}
+
+pub fn parse_pyenv_cfg(path: &PathBuf) -> Option<PyEnvCfg> {
+    let cfg = path.join("pyvenv.cfg");
+    if !fs::metadata(&cfg).is_ok() {
+        return None;
+    }
+
+    let contents = fs::read_to_string(cfg).ok()?;
+    let version_regex = Regex::new(r"^version\s*=\s*(\d+\.\d+\.\d+)$").unwrap();
+    let version_info_regex = Regex::new(r"^version_info\s*=\s*(\d+\.\d+\.\d+.*)$").unwrap();
+    for line in contents.lines() {
+        if !line.contains("version") {
+            continue;
+        }
+        if let Some(captures) = version_regex.captures(line) {
+            if let Some(value) = captures.get(1) {
+                return Some(PyEnvCfg {
+                    version: value.as_str().to_string(),
+                });
+            }
+        }
+        if let Some(captures) = version_info_regex.captures(line) {
+            if let Some(value) = captures.get(1) {
+                return Some(PyEnvCfg {
+                    version: value.as_str().to_string(),
+                });
+            }
+        }
+    }
+    None
+}
+
 pub fn get_version(path: &str) -> Option<String> {
+    if let Some(parent_folder) = PathBuf::from(path).parent() {
+        if let Some(pyenv_cfg) = parse_pyenv_cfg(&parent_folder.to_path_buf()) {
+            return Some(pyenv_cfg.version);
+        }
+        if let Some(parent_folder) = parent_folder.parent() {
+            if let Some(pyenv_cfg) = parse_pyenv_cfg(&parent_folder.to_path_buf()) {
+                return Some(pyenv_cfg.version);
+            }
+        }
+    }
     let output = Command::new(path)
         .arg("-c")
         .arg("import sys; print(sys.version)")

@@ -66,6 +66,7 @@ pub enum PythonEnvironmentCategory {
     Pyenv,
     PyenvVirtualEnv,
     WindowsStore,
+    Pipenv,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -79,6 +80,10 @@ pub struct PythonEnvironment {
     pub sys_prefix_path: Option<String>,
     pub env_manager: Option<EnvManager>,
     pub python_run_command: Option<Vec<String>>,
+    /**
+     * The project path for the Pipenv environment.
+     */
+    pub project_path: Option<String>,
 }
 
 impl PythonEnvironment {
@@ -101,6 +106,30 @@ impl PythonEnvironment {
             sys_prefix_path,
             env_manager,
             python_run_command,
+            project_path: None,
+        }
+    }
+    pub fn new_pipenv(
+        python_executable_path: Option<String>,
+        version: Option<String>,
+        env_path: Option<String>,
+        sys_prefix_path: Option<String>,
+        env_manager: Option<EnvManager>,
+        project_path: String,
+    ) -> Self {
+        Self {
+            name: None,
+            python_executable_path: python_executable_path.clone(),
+            category: PythonEnvironmentCategory::Pipenv,
+            version,
+            env_path,
+            sys_prefix_path,
+            env_manager,
+            python_run_command: match python_executable_path {
+                Some(exe) => Some(vec![exe]),
+                None => None,
+            },
+            project_path: Some(project_path),
         }
     }
 }
