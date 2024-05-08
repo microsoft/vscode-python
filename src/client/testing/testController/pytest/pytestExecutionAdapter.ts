@@ -154,7 +154,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 stdinStr: testIds.toString(),
                 env: mutableEnv,
                 token: runInstance?.token,
-                shell: true,
             };
 
             if (debugBool) {

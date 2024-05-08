@@ -188,7 +188,9 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(
                 actualData.status,
                 'success',
-                `Expected status to be 'success' instead status is ${actualData.status}, error: ${actualData.error}, payload: ${actualData}`,
+                `Expected status to be 'success' instead status is ${actualData.status}, error: ${
+                    actualData.error
+                }, payload: ${JSON.stringify(actualData)}`,
             );
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
@@ -232,7 +234,9 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(
                 actualData.status,
                 'success',
-                `Expected status to be 'success' instead status is ${actualData.status}, error: ${actualData.error}, payload: ${actualData}`,
+                `Expected status to be 'success' instead status is ${actualData.status}, error: ${
+                    actualData.error
+                }, payload: ${JSON.stringify(actualData)}`,
             );
             // 2. Confirm no errors
             assert.strictEqual(actualData.error, undefined, "Expected no errors in 'error' field");
@@ -274,7 +278,9 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(
                 actualData.status,
                 'success',
-                `Expected status to be 'success' instead status is ${actualData.status}, error: ${actualData.error}, payload: ${actualData}`,
+                `Expected status to be 'success' instead status is ${actualData.status}, error: ${
+                    actualData.error
+                }, payload: ${JSON.stringify(actualData)}`,
             ); // 2. Confirm no errors
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
@@ -330,7 +336,9 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(
                 actualData.status,
                 'success',
-                `Expected status to be 'success' instead status is ${actualData.status}, error: ${actualData.error}, payload: ${actualData}`,
+                `Expected status to be 'success' instead status is ${actualData.status}, error: ${
+                    actualData.error
+                }, payload: ${JSON.stringify(actualData)}`,
             ); // 2. Confirm no errors
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
@@ -419,7 +427,9 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(
                 actualData.status,
                 'success',
-                `Expected status to be 'success' instead status is ${actualData.status}, error: ${actualData.error}, payload: ${actualData}`,
+                `Expected status to be 'success' instead status is ${actualData.status}, error: ${
+                    actualData.error
+                }, payload: ${JSON.stringify(actualData)}`,
             ); // 2. Confirm no errors
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
@@ -497,7 +507,9 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(
                 actualData.status,
                 'success',
-                `Expected status to be 'success' instead status is ${actualData.status}, error: ${actualData.error}, payload: ${actualData}`,
+                `Expected status to be 'success' instead status is ${actualData.status}, error: ${
+                    actualData.error
+                }, payload: ${JSON.stringify(actualData)}`,
             ); // 2. Confirm no errors
             assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
             // 3. Confirm tests are found
