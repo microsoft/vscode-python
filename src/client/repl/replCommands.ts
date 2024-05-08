@@ -15,6 +15,7 @@ import {
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
+import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
 import { createReplController } from './replController';
@@ -63,6 +64,10 @@ export async function registerReplCommands(
     disposables.push(
         commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
             const interpreter = await interpreterService.getActiveInterpreter(uri);
+            if (!interpreter) {
+                commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
+                return;
+            }
             if (interpreter) {
                 const interpreterPath = interpreter.path;
                 // How do we get instance of interactive window from Python extension?
