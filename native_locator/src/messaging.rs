@@ -44,7 +44,7 @@ impl Clone for EnvManager {
         Self {
             executable_path: self.executable_path.clone(),
             version: self.version.clone(),
-            tool: self.tool,
+            tool: self.tool.clone(),
         }
     }
 }
