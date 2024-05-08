@@ -9,10 +9,11 @@ use std::path::Path;
 fn report_path_python(path: &str, dispatcher: &mut impl messaging::MessageDispatcher) {
     let version = utils::get_version(path);
     dispatcher.report_environment(messaging::PythonEnvironment::new(
-        "Python".to_string(),
-        vec![path.to_string()],
+        None,
+        Some(path.to_string()),
         messaging::PythonEnvironmentCategory::WindowsStore,
         version,
+        None,
         None,
         None,
         None,

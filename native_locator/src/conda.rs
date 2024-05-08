@@ -375,7 +375,7 @@ pub fn find_and_report(
     match conda_binary {
         Some(conda_binary) => {
             let params = messaging::EnvManager::new(
-                vec![conda_binary.to_string_lossy().to_string()],
+                conda_binary.to_string_lossy().to_string(),
                 get_conda_version(&conda_binary),
             );
             dispatcher.report_environment_manager(params);
@@ -385,13 +385,16 @@ pub fn find_and_report(
                 let executable = find_python_binary_path(Path::new(&env.path));
                 let env_path = env.path.to_string_lossy().to_string();
                 let params = messaging::PythonEnvironment::new(
-                    env.name.to_string(),
+                    Some(env.name.to_string()),
                     match executable {
-                        Some(executable) => vec![executable.to_string_lossy().to_string()],
-                        None => vec![],
+                        Some(executable) => Some(executable.to_string_lossy().to_string()),
+                        None => None,
                     },
                     messaging::PythonEnvironmentCategory::Conda,
                     get_conda_python_version(&env.path),
+                    Some(env_path.clone()),
+                    Some(env_path),
+                    None,
                     if env.named {
                         Some(vec![
                             conda_binary.to_string_lossy().to_string(),
@@ -409,8 +412,6 @@ pub fn find_and_report(
                             "python".to_string(),
                         ])
                     },
-                    Some(env_path.clone()),
-                    Some(env_path),
                 );
                 dispatcher.report_environment(params);
             }

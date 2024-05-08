@@ -25,13 +25,14 @@ fn report_path_python(dispatcher: &mut impl messaging::MessageDispatcher, path: 
     let version = utils::get_version(path);
     let env_path = get_env_path(path);
     dispatcher.report_environment(messaging::PythonEnvironment::new(
-        "Python".to_string(),
-        vec![path.to_string()],
+        None,
+        Some(path.to_string()),
         messaging::PythonEnvironmentCategory::System,
         version,
-        None,
         env_path.clone(),
         env_path,
+        None,
+        Some(vec![path.to_string()]),
     ));
 }
 

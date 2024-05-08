@@ -17,15 +17,24 @@ pub trait MessageDispatcher {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvManager {
-    pub executable_path: Vec<String>,
+    pub executable_path: String,
     pub version: Option<String>,
 }
 
 impl EnvManager {
-    pub fn new(executable_path: Vec<String>, version: Option<String>) -> Self {
+    pub fn new(executable_path: String, version: Option<String>) -> Self {
         Self {
             executable_path,
             version,
+        }
+    }
+}
+
+impl Clone for EnvManager {
+    fn clone(&self) -> Self {
+        Self {
+            executable_path: self.executable_path.clone(),
+            version: self.version.clone(),
         }
     }
 }
@@ -62,33 +71,36 @@ pub enum PythonEnvironmentCategory {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
-    pub name: String,
-    pub python_executable_path: Vec<String>,
+    pub name: Option<String>,
+    pub python_executable_path: Option<String>,
     pub category: PythonEnvironmentCategory,
     pub version: Option<String>,
-    pub activated_run: Option<Vec<String>>,
     pub env_path: Option<String>,
     pub sys_prefix_path: Option<String>,
+    pub env_manager: Option<EnvManager>,
+    pub python_run_command: Option<Vec<String>>,
 }
 
 impl PythonEnvironment {
     pub fn new(
-        name: String,
-        python_executable_path: Vec<String>,
+        name: Option<String>,
+        python_executable_path: Option<String>,
         category: PythonEnvironmentCategory,
         version: Option<String>,
-        activated_run: Option<Vec<String>>,
         env_path: Option<String>,
         sys_prefix_path: Option<String>,
+        env_manager: Option<EnvManager>,
+        python_run_command: Option<Vec<String>>,
     ) -> Self {
         Self {
             name,
             python_executable_path,
             category,
             version,
-            activated_run,
             env_path,
             sys_prefix_path,
+            env_manager,
+            python_run_command,
         }
     }
 }

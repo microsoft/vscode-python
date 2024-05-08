@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 use crate::known;
 use crate::messaging;
+use crate::messaging::EnvManager;
 use crate::utils::find_python_binary_path;
 
 #[cfg(windows)]
@@ -102,25 +103,21 @@ fn get_pyenv_version(folder_name: String) -> Option<String> {
 fn report_if_pure_python_environment(
     executable: PathBuf,
     path: &PathBuf,
-    pyenv_binary_for_activation: String,
+    manager: Option<EnvManager>,
     dispatcher: &mut impl messaging::MessageDispatcher,
 ) -> Option<()> {
     let version = get_pyenv_version(path.file_name().unwrap().to_string_lossy().to_string())?;
-
+    let executable = executable.into_os_string().into_string().unwrap();
     let env_path = path.to_string_lossy().to_string();
-    let activated_run = Some(vec![
-        pyenv_binary_for_activation,
-        "shell".to_string(),
-        version.clone(),
-    ]);
     dispatcher.report_environment(messaging::PythonEnvironment::new(
-        version.clone(),
-        vec![executable.into_os_string().into_string().unwrap()],
+        None,
+        Some(executable.clone()),
         messaging::PythonEnvironmentCategory::Pyenv,
         Some(version),
-        activated_run,
         Some(env_path.clone()),
         Some(env_path),
+        manager,
+        Some(vec![executable]),
     ));
 
     Some(())
@@ -154,26 +151,22 @@ fn parse_pyenv_cfg(path: &PathBuf) -> Option<PyEnvCfg> {
 fn report_if_virtual_env_environment(
     executable: PathBuf,
     path: &PathBuf,
-    pyenv_binary_for_activation: String,
+    manager: Option<EnvManager>,
     dispatcher: &mut impl messaging::MessageDispatcher,
 ) -> Option<()> {
     let pyenv_cfg = parse_pyenv_cfg(path)?;
     let folder_name = path.file_name().unwrap().to_string_lossy().to_string();
-
+    let executable = executable.into_os_string().into_string().unwrap();
     let env_path = path.to_string_lossy().to_string();
-    let activated_run = Some(vec![
-        pyenv_binary_for_activation,
-        "activate".to_string(),
-        folder_name.clone(),
-    ]);
     dispatcher.report_environment(messaging::PythonEnvironment::new(
-        folder_name,
-        vec![executable.into_os_string().into_string().unwrap()],
+        Some(folder_name),
+        Some(executable.clone()),
         messaging::PythonEnvironmentCategory::PyenvVirtualEnv,
         Some(pyenv_cfg.version),
-        activated_run,
         Some(env_path.clone()),
         Some(env_path),
+        manager,
+        Some(vec![executable]),
     ));
 
     Some(())
@@ -185,9 +178,14 @@ pub fn find_and_report(
 ) -> Option<()> {
     let pyenv_dir = get_pyenv_dir(environment)?;
 
-    if let Some(pyenv_binary) = get_pyenv_binary(environment) {
-        dispatcher.report_environment_manager(messaging::EnvManager::new(vec![pyenv_binary], None));
-    }
+    let manager = match get_pyenv_binary(environment) {
+        Some(pyenv_binary) => {
+            let manager = messaging::EnvManager::new(pyenv_binary, None);
+            dispatcher.report_environment_manager(manager.clone());
+            Some(manager)
+        }
+        None => None,
+    };
 
     let versions_dir = PathBuf::from(&pyenv_dir)
         .join("versions")
@@ -195,10 +193,6 @@ pub fn find_and_report(
         .into_string()
         .ok()?;
 
-    let pyenv_binary_for_activation = match get_pyenv_binary(environment) {
-        Some(binary) => binary,
-        None => "pyenv".to_string(),
-    };
     for entry in fs::read_dir(&versions_dir).ok()? {
         if let Ok(path) = entry {
             let path = path.path();
@@ -209,7 +203,7 @@ pub fn find_and_report(
                 if report_if_pure_python_environment(
                     executable.clone(),
                     &path,
-                    pyenv_binary_for_activation.clone(),
+                    manager.clone(),
                     dispatcher,
                 )
                 .is_some()
@@ -220,7 +214,7 @@ pub fn find_and_report(
                 report_if_virtual_env_environment(
                     executable.clone(),
                     &path,
-                    pyenv_binary_for_activation.clone(),
+                    manager.clone(),
                     dispatcher,
                 );
             }
