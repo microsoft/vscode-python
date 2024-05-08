@@ -216,6 +216,11 @@ pub fn find_conda_binary(environment: &impl known::Environment) -> Option<PathBu
     }
 }
 
+pub fn get_conda_version(conda_binary: &PathBuf) -> Option<String> {
+    let conda_python_json_path = get_conda_package_json_path(&conda_binary.parent()?, "conda")?;
+    get_version_from_meta_json(&conda_python_json_path)
+}
+
 fn get_conda_envs_from_environment_txt(environment: &impl known::Environment) -> Vec<String> {
     let mut envs = vec![];
     let home = environment.get_user_home();
@@ -369,8 +374,10 @@ pub fn find_and_report(
     let conda_binary = find_conda_binary(environment);
     match conda_binary {
         Some(conda_binary) => {
-            let params =
-                messaging::EnvManager::new(vec![conda_binary.to_string_lossy().to_string()], None);
+            let params = messaging::EnvManager::new(
+                vec![conda_binary.to_string_lossy().to_string()],
+                get_conda_version(&conda_binary),
+            );
             dispatcher.report_environment_manager(params);
 
             let envs = get_distinct_conda_envs(conda_binary.to_path_buf(), environment);
