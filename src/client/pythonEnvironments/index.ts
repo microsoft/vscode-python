@@ -140,7 +140,7 @@ async function createLocator(
 
 function useNativeLocator(): boolean {
     const config = getConfiguration('python');
-    return config.get<string>('nativeLocator', 'js') === 'native';
+    return config.get<string>('locator', 'js') === 'native';
 }
 
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>[] {

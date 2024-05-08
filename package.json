@@ -550,9 +550,9 @@
                         "experimental"
                     ]
                 },
-                "python.nativeLocator": {
+                "python.locator": {
                     "default": "js",
-                    "description": "%python.nativeLocator.description%",
+                    "description": "%python.locator.description%",
                     "enum": [
                         "js",
                         "native"
