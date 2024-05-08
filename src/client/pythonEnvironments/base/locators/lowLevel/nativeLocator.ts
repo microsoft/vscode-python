@@ -26,6 +26,10 @@ interface NativeEnvInfo {
     pythonRunCommand?: string[];
     envPath?: string;
     sysPrefixPath?: string;
+    /**
+     * Path to the project directory when dealing with pipenv virtual environments.
+     */
+    projectPath?: string;
 }
 
 interface EnvManager {
