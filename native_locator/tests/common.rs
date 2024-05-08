@@ -86,9 +86,49 @@ pub fn create_test_environment(
     }
 }
 
+fn compare_json(expected: &Value, actual: &Value) -> bool {
+    if expected == actual {
+        return true;
+    }
+
+    if expected.is_object() {
+        let expected = expected.as_object().unwrap();
+        let actual = actual.as_object().unwrap();
+
+        for (key, value) in expected.iter() {
+            if !actual.contains_key(key) {
+                return false;
+            }
+
+            if !compare_json(value, actual.get(key).unwrap()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    if expected.is_array() {
+        let expected = expected.as_array().unwrap();
+        let actual = actual.as_array().unwrap();
+
+        if expected.len() != actual.len() {
+            return false;
+        }
+
+        for (i, value) in expected.iter().enumerate() {
+            if !compare_json(value, actual.get(i).unwrap()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    false
+}
+
 #[allow(dead_code)]
 pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
-    let expected_json = expected_json.to_vec();
+    let mut expected_json = expected_json.to_vec();
     assert_eq!(
         expected_json.len(),
         dispatcher.messages.len(),
@@ -99,8 +139,23 @@ pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
         return;
     }
 
+    // Ignore the order of the json items when comparing.
     for (i, actual) in dispatcher.messages.iter().enumerate() {
         let actual: serde_json::Value = serde_json::from_str(actual.as_str()).unwrap();
-        assert_eq!(expected_json[i], actual);
+
+        let mut valid_index: Option<usize> = None;
+        for (i, expected) in expected_json.iter().enumerate() {
+            if (compare_json(expected, &actual)) {
+                valid_index = Some(i);
+                assert_eq!(expected, &actual);
+            } else {
+                continue;
+            }
+        }
+        if let Some(index) = valid_index {
+            expected_json.remove(index);
+        } else {
+            assert_eq!(expected_json[0], actual);
+        }
     }
 }
