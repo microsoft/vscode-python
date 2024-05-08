@@ -32,6 +32,7 @@
     "python.menu.createNewFile.title": "Python File",
     "python.editor.context.submenu.runPython": "Run Python",
     "python.editor.context.submenu.runPythonInteractive": "Run in Interactive window",
+    "python.multiLineReplInput.description": "The enter key will create a new line in the REPL, rather than executing. Shift+Enter will execute by default when this is true.",
     "python.activeStateToolPath.description": "Path to the State Tool executable for ActiveState runtimes (version 0.36+).",
     "python.autoComplete.extraPaths.description": "List of paths to libraries and the like that need to be imported by auto complete engine. E.g. when using Google App SDK, the paths are not in system path, hence need to be added into this list.",
     "python.condaPath.description": "Path to the conda executable to use for activation (version 4.4+).",
