@@ -86,8 +86,8 @@ fn get_pyenv_version(folder_name: String) -> Option<String> {
                     None => None,
                 },
                 None => {
-                    // Alpha Versions = like 3.10.0a3
-                    let python_regex = Regex::new(r"^(\d+\.\d+.\d+a\d+)").unwrap();
+                    // Alpha, rc Versions = like 3.10.0a3
+                    let python_regex = Regex::new(r"^(\d+\.\d+.\d+\w\d+)").unwrap();
                     match python_regex.captures(&folder_name) {
                         Some(captures) => match captures.get(1) {
                             Some(version) => Some(version.as_str().to_string()),
