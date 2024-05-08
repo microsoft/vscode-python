@@ -1,42 +1,21 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import { Event, EventEmitter } from 'vscode';
-import * as ch from 'child_process';
-import * as path from 'path';
-import * as rpc from 'vscode-jsonrpc/node';
-import { EXTENSION_ROOT_DIR } from '../../../../constants';
-import { isWindows } from '../../../../common/platform/platformService';
 import { IDisposable } from '../../../../common/types';
 import { ILocator, BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
-import { createDeferred } from '../../../../common/utils/async';
 import { PythonEnvKind, PythonVersion } from '../../info';
 import { Conda } from '../../../common/environmentManagers/conda';
 import { traceError } from '../../../../logging';
 import type { KnownEnvironmentTools } from '../../../../api/types';
 import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
-
-const NATIVE_LOCATOR = isWindows()
-    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder');
-
-interface NativeEnvInfo {
-    name: string;
-    pythonExecutablePath?: string;
-    category: string;
-    version?: string;
-    pythonRunCommand?: string[];
-    envPath?: string;
-    sysPrefixPath?: string;
-    /**
-     * Path to the project directory when dealing with pipenv virtual environments.
-     */
-    projectPath?: string;
-}
-
-interface EnvManager {
-    tool: string;
-    executablePath: string;
-    version?: string;
-}
+import {
+    NativeEnvInfo,
+    NativeEnvManagerInfo,
+    NativeGlobalPythonFinder,
+    createNativeGlobalPythonFinder,
+} from '../common/nativePythonFinder';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -61,6 +40,7 @@ function categoryToKind(category: string): PythonEnvKind {
         }
     }
 }
+
 function toolToKnownEnvironmentTool(tool: string): KnownEnvironmentTools {
     switch (tool.toLowerCase()) {
         case 'conda':
@@ -99,9 +79,12 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
 
     private readonly disposables: IDisposable[] = [];
 
+    private readonly finder: NativeGlobalPythonFinder;
+
     constructor() {
         this.onChanged = this.onChangedEmitter.event;
-        this.disposables.push(this.onChangedEmitter);
+        this.finder = createNativeGlobalPythonFinder();
+        this.disposables.push(this.onChangedEmitter, this.finder);
     }
 
     public readonly onChanged: Event<PythonEnvsChangedEvent>;
@@ -112,46 +95,38 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
     }
 
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        const proc = ch.spawn(NATIVE_LOCATOR, [], { stdio: 'pipe' });
+        const promise = this.finder.startSearch();
         const envs: BasicEnvInfo[] = [];
-        const deferred = createDeferred<void>();
-        const connection = rpc.createMessageConnection(
-            new rpc.StreamMessageReader(proc.stdout),
-            new rpc.StreamMessageWriter(proc.stdin),
+        this.disposables.push(
+            this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
+                envs.push({
+                    kind: categoryToKind(data.category),
+                    // TODO: What if executable is undefined?
+                    executablePath: data.pythonExecutablePath!,
+                    envPath: data.envPath,
+                    version: parseVersion(data.version),
+                    name: data.name === '' ? undefined : data.name,
+                });
+            }),
+            this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
+                switch (toolToKnownEnvironmentTool(data.tool)) {
+                    case 'Conda': {
+                        Conda.setConda(data.executablePath);
+                        break;
+                    }
+                    case 'Pyenv': {
+                        setPyEnvBinary(data.executablePath);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }),
         );
-        this.disposables.push(connection);
-        connection.onNotification('pythonEnvironment', (data: NativeEnvInfo) => {
-            envs.push({
-                kind: categoryToKind(data.category),
-                // TODO: What if executable is undefined?
-                executablePath: data.pythonExecutablePath!,
-                envPath: data.envPath,
-                version: parseVersion(data.version),
-                name: data.name === '' ? undefined : data.name,
-            });
-        });
-        connection.onNotification('envManager', (data: EnvManager) => {
-            switch (toolToKnownEnvironmentTool(data.tool)) {
-                case 'Conda': {
-                    Conda.setConda(data.executablePath);
-                    break;
-                }
-                case 'Pyenv': {
-                    setPyEnvBinary(data.executablePath);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        });
-        connection.onNotification('exit', () => {
-            deferred.resolve();
-        });
-        connection.listen();
 
         const iterator = async function* (): IPythonEnvsIterator<BasicEnvInfo> {
-            await deferred.promise;
+            await promise;
             yield* envs;
         };
         return iterator();
