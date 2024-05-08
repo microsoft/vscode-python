@@ -43,6 +43,8 @@ function categoryToKind(category: string): PythonEnvKind {
             return PythonEnvKind.System;
         case 'pyenv':
             return PythonEnvKind.Pyenv;
+        case 'pyenvvirtualenv':
+            return PythonEnvKind.VirtualEnv;
         case 'windowsstore':
             return PythonEnvKind.MicrosoftStore;
         default: {

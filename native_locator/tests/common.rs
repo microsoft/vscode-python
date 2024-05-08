@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use std::{collections::HashMap, path::PathBuf};
-
-use python_finder::{known::Environment, messaging::{EnvManager, MessageDispatcher, PythonEnvironment}};
+use python_finder::{
+    known::Environment,
+    messaging::{EnvManager, MessageDispatcher, PythonEnvironment},
+};
 use serde_json::Value;
+use std::{collections::HashMap, path::PathBuf};
 
 #[allow(dead_code)]
 pub fn test_file_path(paths: &[&str]) -> String {
@@ -15,7 +17,6 @@ pub fn test_file_path(paths: &[&str]) -> String {
 
     root.to_string_lossy().to_string()
 }
-
 
 #[allow(dead_code)]
 pub fn join_test_paths(paths: &[&str]) -> String {
@@ -87,6 +88,7 @@ pub fn create_test_environment(
 
 #[allow(dead_code)]
 pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
+    let expected_json = expected_json.to_vec();
     assert_eq!(
         expected_json.len(),
         dispatcher.messages.len(),
@@ -97,6 +99,8 @@ pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
         return;
     }
 
-    let actual: serde_json::Value = serde_json::from_str(dispatcher.messages[0].as_str()).unwrap();
-    assert_eq!(expected_json[0], actual);
+    for (i, actual) in dispatcher.messages.iter().enumerate() {
+        let actual: serde_json::Value = serde_json::from_str(actual.as_str()).unwrap();
+        assert_eq!(expected_json[i], actual);
+    }
 }
