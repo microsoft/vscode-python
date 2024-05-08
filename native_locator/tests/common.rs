@@ -140,21 +140,24 @@ pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
     }
 
     // Ignore the order of the json items when comparing.
-    for (i, actual) in dispatcher.messages.iter().enumerate() {
+    for actual in dispatcher.messages.iter() {
         let actual: serde_json::Value = serde_json::from_str(actual.as_str()).unwrap();
 
         let mut valid_index: Option<usize> = None;
         for (i, expected) in expected_json.iter().enumerate() {
-            if (compare_json(expected, &actual)) {
-                valid_index = Some(i);
-                assert_eq!(expected, &actual);
-            } else {
+            if !compare_json(expected, &actual) {
                 continue;
             }
+
+            // Ensure we verify using standard assert_eq!, just in case the code is faulty..
+            valid_index = Some(i);
+            assert_eq!(expected, &actual);
         }
         if let Some(index) = valid_index {
+            // This is to ensure we don't compare the same item twice.
             expected_json.remove(index);
         } else {
+            // Use traditional assert so we can see the fully output in the test results.
             assert_eq!(expected_json[0], actual);
         }
     }
