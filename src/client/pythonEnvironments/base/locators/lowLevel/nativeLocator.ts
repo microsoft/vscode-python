@@ -20,17 +20,21 @@ const NATIVE_LOCATOR = isWindows()
 
 interface NativeEnvInfo {
     name: string;
-    pythonExecutablePath: string[];
+    pythonExecutablePath?: string;
     category: string;
     version?: string;
-    activatedRun?: string[];
+    pythonRunCommand?: string[];
     envPath?: string;
     sysPrefixPath?: string;
+    /**
+     * Path to the project directory when dealing with pipenv virtual environments.
+     */
+    projectPath?: string;
 }
 
 interface EnvManager {
     tool: string;
-    executablePath: string[];
+    executablePath: string;
     version?: string;
 }
 
@@ -43,6 +47,8 @@ function categoryToKind(category: string): PythonEnvKind {
             return PythonEnvKind.System;
         case 'pyenv':
             return PythonEnvKind.Pyenv;
+        case 'pipenv':
+            return PythonEnvKind.Pipenv;
         case 'pyenvvirtualenv':
             return PythonEnvKind.VirtualEnv;
         case 'windowsstore':
@@ -115,7 +121,8 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         connection.onNotification('pythonEnvironment', (data: NativeEnvInfo) => {
             envs.push({
                 kind: categoryToKind(data.category),
-                executablePath: data.pythonExecutablePath[0],
+                // TODO: What if executable is undefined?
+                executablePath: data.pythonExecutablePath!,
                 envPath: data.envPath,
                 version: parseVersion(data.version),
                 name: data.name === '' ? undefined : data.name,
@@ -124,11 +131,11 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         connection.onNotification('envManager', (data: EnvManager) => {
             switch (toolToKnownEnvironmentTool(data.tool)) {
                 case 'Conda': {
-                    Conda.setConda(data.executablePath[0]);
+                    Conda.setConda(data.executablePath);
                     break;
                 }
                 case 'Pyenv': {
-                    setPyEnvBinary(data.executablePath[0]);
+                    setPyEnvBinary(data.executablePath);
                     break;
                 }
                 default: {

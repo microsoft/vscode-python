@@ -9,6 +9,7 @@ use crate::known;
 use crate::messaging;
 use crate::messaging::EnvManager;
 use crate::utils::find_python_binary_path;
+use crate::utils::parse_pyenv_cfg;
 
 #[cfg(windows)]
 fn get_home_pyenv_dir(environment: &impl known::Environment) -> Option<String> {
@@ -121,31 +122,6 @@ fn report_if_pure_python_environment(
     ));
 
     Some(())
-}
-
-#[derive(Debug)]
-struct PyEnvCfg {
-    version: String,
-}
-
-fn parse_pyenv_cfg(path: &PathBuf) -> Option<PyEnvCfg> {
-    let cfg = path.join("pyvenv.cfg");
-    if !fs::metadata(&cfg).is_ok() {
-        return None;
-    }
-
-    let contents = fs::read_to_string(cfg).ok()?;
-    let version_regex = Regex::new(r"^version\s*=\s*(\d+\.\d+\.\d+)$").unwrap();
-    for line in contents.lines() {
-        if let Some(captures) = version_regex.captures(line) {
-            if let Some(value) = captures.get(1) {
-                return Some(PyEnvCfg {
-                    version: value.as_str().to_string(),
-                });
-            }
-        }
-    }
-    None
 }
 
 fn report_if_virtual_env_environment(
