@@ -30,9 +30,9 @@ pub fn find_and_report(
     let homebrew_prefix = environment.get_env_var("HOMEBREW_PREFIX".to_string())?;
     let homebrew_prefix_bin = PathBuf::from(homebrew_prefix).join("bin");
     let mut reported: HashSet<String> = HashSet::new();
+    let python_regex = Regex::new(r"/(\d+\.\d+\.\d+)/").unwrap();
     for file in std::fs::read_dir(homebrew_prefix_bin).ok()? {
         if let Some(exe) = is_symlinked_python_executable(file) {
-            let python_regex = Regex::new(r"/(\d+\.\d+\.\d+)/").unwrap();
             let python_version = exe.to_string_lossy().to_string();
             let version = match python_regex.captures(&python_version) {
                 Some(captures) => match captures.get(1) {
