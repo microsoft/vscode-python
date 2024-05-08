@@ -338,7 +338,7 @@ fn get_distinct_conda_envs(
         let mut named = false;
         let mut name = "".to_string();
         for location in &locations {
-            let location = Path::new(location);
+            let location = Path::new(location).join("envs");
             match env.strip_prefix(location) {
                 Ok(prefix) => {
                     named = true;
