@@ -73,16 +73,18 @@ fn find_pyenv_envs() {
 
     pyenv::find_and_report(&mut dispatcher, &known);
 
-    assert_eq!(dispatcher.messages.len(), 5);
+    assert_eq!(dispatcher.messages.len(), 6);
     let expected_manager = json!({ "executablePath": [pyenv_exe.clone()], "version": null });
-    let expected_3_9_9 = json!({"name": "Python","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9/bin/python"])],"category": "pyenv","version": "3.9.9","activatedRun": [pyenv_exe.clone(), "local", "3.9.9"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9/bin/python"])});
-    let expected_3_12_1 = json!({"name": "Python","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1/bin/python"])],"category": "pyenv","version": "3.12.1","activatedRun": [pyenv_exe.clone(), "local", "3.12.1"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1/bin/python"])});
-    let expected_3_13_dev = json!({"name": "Python","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.13-dev/bin/python"])],"category": "pyenv","version": "3.13-dev","activatedRun": [pyenv_exe.clone(), "local", "3.13-dev"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.13-dev"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.13-dev/bin/python"])});
-    let expected_3_12_1a3 = json!({"name": "Python","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1a3/bin/python"])],"category": "pyenv","version": "3.12.1a3","activatedRun": [pyenv_exe.clone(), "local", "3.12.1a3"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1a3"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1a3/bin/python"])});
+    let expected_3_9_9 = json!({"name": "3.9.9","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9/bin/python"])],"category": "pyenv","version": "3.9.9","activatedRun": [pyenv_exe.clone(), "shell", "3.9.9"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.9.9"])});
+    let expected_virtual_env = json!( {"name": "my-virtual-env", "version": "3.10.13", "activatedRun": [pyenv_exe.clone(), "activate", "my-virtual-env"], "category": "pyenvVirtualEnv", "envPath": join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env"]), "pythonExecutablePath": [join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env/bin/python"])], "sysPrefixPath": join_test_paths(&[home.as_str(),".pyenv/versions/my-virtual-env"])});
+    let expected_3_12_1 = json!({"name": "3.12.1","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1/bin/python"])],"category": "pyenv","version": "3.12.1","activatedRun": [pyenv_exe.clone(), "shell", "3.12.1"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1"])});
+    let expected_3_13_dev = json!({"name": "3.13-dev","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.13-dev/bin/python"])],"category": "pyenv","version": "3.13-dev","activatedRun": [pyenv_exe.clone(), "shell", "3.13-dev"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.13-dev"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.13-dev"])});
+    let expected_3_12_1a3 = json!({"name": "3.12.1a3","pythonExecutablePath": [join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1a3/bin/python"])],"category": "pyenv","version": "3.12.1a3","activatedRun": [pyenv_exe.clone(), "shell", "3.12.1a3"],"envPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1a3"]),"sysPrefixPath": join_test_paths(&[home.as_str(), ".pyenv/versions/3.12.1a3"])});
     assert_messages(
         &[
             expected_manager,
             expected_3_9_9,
+            expected_virtual_env,
             expected_3_12_1,
             expected_3_13_dev,
             expected_3_12_1a3,

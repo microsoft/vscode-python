@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use std::{collections::HashMap, path::PathBuf};
-
-use python_finder::{known::Environment, messaging::{EnvManager, MessageDispatcher, PythonEnvironment}};
+use python_finder::{
+    known::Environment,
+    messaging::{EnvManager, MessageDispatcher, PythonEnvironment},
+};
 use serde_json::Value;
+use std::{collections::HashMap, path::PathBuf};
 
 #[allow(dead_code)]
 pub fn test_file_path(paths: &[&str]) -> String {
@@ -15,7 +17,6 @@ pub fn test_file_path(paths: &[&str]) -> String {
 
     root.to_string_lossy().to_string()
 }
-
 
 #[allow(dead_code)]
 pub fn join_test_paths(paths: &[&str]) -> String {
@@ -85,8 +86,49 @@ pub fn create_test_environment(
     }
 }
 
+fn compare_json(expected: &Value, actual: &Value) -> bool {
+    if expected == actual {
+        return true;
+    }
+
+    if expected.is_object() {
+        let expected = expected.as_object().unwrap();
+        let actual = actual.as_object().unwrap();
+
+        for (key, value) in expected.iter() {
+            if !actual.contains_key(key) {
+                return false;
+            }
+
+            if !compare_json(value, actual.get(key).unwrap()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    if expected.is_array() {
+        let expected = expected.as_array().unwrap();
+        let actual = actual.as_array().unwrap();
+
+        if expected.len() != actual.len() {
+            return false;
+        }
+
+        for (i, value) in expected.iter().enumerate() {
+            if !compare_json(value, actual.get(i).unwrap()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    false
+}
+
 #[allow(dead_code)]
 pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
+    let mut expected_json = expected_json.to_vec();
     assert_eq!(
         expected_json.len(),
         dispatcher.messages.len(),
@@ -97,6 +139,26 @@ pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
         return;
     }
 
-    let actual: serde_json::Value = serde_json::from_str(dispatcher.messages[0].as_str()).unwrap();
-    assert_eq!(expected_json[0], actual);
+    // Ignore the order of the json items when comparing.
+    for actual in dispatcher.messages.iter() {
+        let actual: serde_json::Value = serde_json::from_str(actual.as_str()).unwrap();
+
+        let mut valid_index: Option<usize> = None;
+        for (i, expected) in expected_json.iter().enumerate() {
+            if !compare_json(expected, &actual) {
+                continue;
+            }
+
+            // Ensure we verify using standard assert_eq!, just in case the code is faulty..
+            valid_index = Some(i);
+            assert_eq!(expected, &actual);
+        }
+        if let Some(index) = valid_index {
+            // This is to ensure we don't compare the same item twice.
+            expected_json.remove(index);
+        } else {
+            // Use traditional assert so we can see the fully output in the test results.
+            assert_eq!(expected_json[0], actual);
+        }
+    }
 }

@@ -55,6 +55,7 @@ pub enum PythonEnvironmentCategory {
     Homebrew,
     Conda,
     Pyenv,
+    PyenvVirtualEnv,
     WindowsStore,
 }
 

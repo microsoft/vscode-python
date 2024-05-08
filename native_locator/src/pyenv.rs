@@ -99,6 +99,86 @@ fn get_pyenv_version(folder_name: String) -> Option<String> {
     }
 }
 
+fn report_if_pure_python_environment(
+    executable: PathBuf,
+    path: &PathBuf,
+    pyenv_binary_for_activation: String,
+    dispatcher: &mut impl messaging::MessageDispatcher,
+) -> Option<()> {
+    let version = get_pyenv_version(path.file_name().unwrap().to_string_lossy().to_string())?;
+
+    let env_path = path.to_string_lossy().to_string();
+    let activated_run = Some(vec![
+        pyenv_binary_for_activation,
+        "shell".to_string(),
+        version.clone(),
+    ]);
+    dispatcher.report_environment(messaging::PythonEnvironment::new(
+        version.clone(),
+        vec![executable.into_os_string().into_string().unwrap()],
+        messaging::PythonEnvironmentCategory::Pyenv,
+        Some(version),
+        activated_run,
+        Some(env_path.clone()),
+        Some(env_path),
+    ));
+
+    Some(())
+}
+
+#[derive(Debug)]
+struct PyEnvCfg {
+    version: String,
+}
+
+fn parse_pyenv_cfg(path: &PathBuf) -> Option<PyEnvCfg> {
+    let cfg = path.join("pyvenv.cfg");
+    if !fs::metadata(&cfg).is_ok() {
+        return None;
+    }
+
+    let contents = fs::read_to_string(cfg).ok()?;
+    let version_regex = Regex::new(r"^version\s*=\s*(\d+\.\d+\.\d+)$").unwrap();
+    for line in contents.lines() {
+        if let Some(captures) = version_regex.captures(line) {
+            if let Some(value) = captures.get(1) {
+                return Some(PyEnvCfg {
+                    version: value.as_str().to_string(),
+                });
+            }
+        }
+    }
+    None
+}
+
+fn report_if_virtual_env_environment(
+    executable: PathBuf,
+    path: &PathBuf,
+    pyenv_binary_for_activation: String,
+    dispatcher: &mut impl messaging::MessageDispatcher,
+) -> Option<()> {
+    let pyenv_cfg = parse_pyenv_cfg(path)?;
+    let folder_name = path.file_name().unwrap().to_string_lossy().to_string();
+
+    let env_path = path.to_string_lossy().to_string();
+    let activated_run = Some(vec![
+        pyenv_binary_for_activation,
+        "activate".to_string(),
+        folder_name.clone(),
+    ]);
+    dispatcher.report_environment(messaging::PythonEnvironment::new(
+        folder_name,
+        vec![executable.into_os_string().into_string().unwrap()],
+        messaging::PythonEnvironmentCategory::PyenvVirtualEnv,
+        Some(pyenv_cfg.version),
+        activated_run,
+        Some(env_path.clone()),
+        Some(env_path),
+    ));
+
+    Some(())
+}
+
 pub fn find_and_report(
     dispatcher: &mut impl messaging::MessageDispatcher,
     environment: &impl known::Environment,
@@ -122,35 +202,27 @@ pub fn find_and_report(
     for entry in fs::read_dir(&versions_dir).ok()? {
         if let Ok(path) = entry {
             let path = path.path();
-            if path.is_dir() {
-                if let Some(executable) = find_python_binary_path(&path) {
-                    let version =
-                        get_pyenv_version(path.file_name().unwrap().to_string_lossy().to_string());
-
-                    // If we cannot extract version, this isn't a valid pyenv environment.
-                    // Or its one that we're not interested in.
-                    if version.is_none() {
-                        continue;
-                    }
-                    let env_path = path.to_string_lossy().to_string();
-                    let activated_run = match version.clone() {
-                        Some(version) => Some(vec![
-                            pyenv_binary_for_activation.clone(),
-                            "local".to_string(),
-                            version.clone(),
-                        ]),
-                        None => None,
-                    };
-                    dispatcher.report_environment(messaging::PythonEnvironment::new(
-                        "Python".to_string(),
-                        vec![executable.into_os_string().into_string().unwrap()],
-                        messaging::PythonEnvironmentCategory::Pyenv,
-                        version,
-                        activated_run,
-                        Some(env_path.clone()),
-                        Some(env_path),
-                    ));
+            if !path.is_dir() {
+                continue;
+            }
+            if let Some(executable) = find_python_binary_path(&path) {
+                if report_if_pure_python_environment(
+                    executable.clone(),
+                    &path,
+                    pyenv_binary_for_activation.clone(),
+                    dispatcher,
+                )
+                .is_some()
+                {
+                    continue;
                 }
+
+                report_if_virtual_env_environment(
+                    executable.clone(),
+                    &path,
+                    pyenv_binary_for_activation.clone(),
+                    dispatcher,
+                );
             }
         }
     }
