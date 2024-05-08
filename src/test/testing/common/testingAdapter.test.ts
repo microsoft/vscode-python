@@ -163,7 +163,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         // const deferredTillEOT = createTestingDeferred();
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -210,7 +210,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -309,7 +309,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -398,7 +398,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -474,7 +474,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -513,14 +513,14 @@ suite('End to End Tests: test adapters', () => {
         let failureOccurred = false;
         let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
                 assert.strictEqual(
                     payload.status,
                     'success',
-                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${payload}`,
+                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${JSON.stringify(payload)}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
@@ -592,7 +592,7 @@ suite('End to End Tests: test adapters', () => {
         let failureOccurred = false;
         let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
@@ -670,14 +670,14 @@ suite('End to End Tests: test adapters', () => {
         let failureOccurred = false;
         let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
                 assert.strictEqual(
                     payload.status,
                     'success',
-                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${payload}`,
+                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${JSON.stringify(payload)}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
@@ -759,14 +759,14 @@ suite('End to End Tests: test adapters', () => {
         let failureOccurred = false;
         let failureMsg = '';
         resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
+            traceLog(`resolveDiscovery ${JSON.stringify(payload)}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
             try {
                 assert.strictEqual(
                     payload.status,
                     'success',
-                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${payload}`,
+                    `Expected status to be 'success' instead status is ${payload.status}, error: ${payload.error}, payload: ${JSON.stringify(payload)}`,
                 );
                 assert.ok(payload.result, 'Expected results to be present');
             } catch (err) {
