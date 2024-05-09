@@ -69,9 +69,7 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
         writable.pipe(proc.stdin, { end: false });
         const disposeStreams = new Disposable(() => {
             readable.end();
-            readable.destroy();
             writable.end();
-            writable.destroy();
         });
         const connection = rpc.createMessageConnection(
             new rpc.StreamMessageReader(readable),
