@@ -9,19 +9,19 @@ use serde_json::Value;
 use std::{collections::HashMap, path::PathBuf};
 
 #[allow(dead_code)]
-pub fn test_file_path(paths: &[&str]) -> String {
+pub fn test_file_path(paths: &[&str]) -> PathBuf {
     // let parts: Vec<String> = paths.iter().map(|p| p.to_string()).collect();
     let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     paths.iter().for_each(|p| root.push(p));
 
-    root.to_string_lossy().to_string()
+    root
 }
 
 #[allow(dead_code)]
-pub fn join_test_paths(paths: &[&str]) -> String {
+pub fn join_test_paths(paths: &[&str]) -> PathBuf {
     let path: PathBuf = paths.iter().map(|p| p.to_string()).collect();
-    path.to_string_lossy().to_string()
+    path
 }
 
 pub struct TestDispatcher {
@@ -59,20 +59,20 @@ pub fn create_test_dispatcher() -> TestDispatcher {
 }
 pub struct TestEnvironment {
     vars: HashMap<String, String>,
-    home: Option<String>,
+    home: Option<PathBuf>,
     globals_locations: Vec<PathBuf>,
 }
 #[allow(dead_code)]
 pub fn create_test_environment(
     vars: HashMap<String, String>,
-    home: Option<String>,
+    home: Option<PathBuf>,
     globals_locations: Vec<PathBuf>,
 ) -> TestEnvironment {
     impl Environment for TestEnvironment {
         fn get_env_var(&self, key: String) -> Option<String> {
             self.vars.get(&key).cloned()
         }
-        fn get_user_home(&self) -> Option<String> {
+        fn get_user_home(&self) -> Option<PathBuf> {
             self.home.clone()
         }
         fn get_know_global_search_locations(&self) -> Vec<PathBuf> {

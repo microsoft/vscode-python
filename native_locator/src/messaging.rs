@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+use std::path::PathBuf;
+
 use crate::logging::{LogLevel, LogMessage};
 use serde::{Deserialize, Serialize};
 
@@ -24,13 +26,13 @@ pub enum EnvManagerType {
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EnvManager {
-    pub executable_path: String,
+    pub executable_path: PathBuf,
     pub version: Option<String>,
     pub tool: EnvManagerType,
 }
 
 impl EnvManager {
-    pub fn new(executable_path: String, version: Option<String>, tool: EnvManagerType) -> Self {
+    pub fn new(executable_path: PathBuf, version: Option<String>, tool: EnvManagerType) -> Self {
         Self {
             executable_path,
             version,
@@ -84,27 +86,27 @@ pub enum PythonEnvironmentCategory {
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: Option<String>,
-    pub python_executable_path: Option<String>,
+    pub python_executable_path: Option<PathBuf>,
     pub category: PythonEnvironmentCategory,
     pub version: Option<String>,
-    pub env_path: Option<String>,
-    pub sys_prefix_path: Option<String>,
+    pub env_path: Option<PathBuf>,
+    pub sys_prefix_path: Option<PathBuf>,
     pub env_manager: Option<EnvManager>,
     pub python_run_command: Option<Vec<String>>,
     /**
      * The project path for the Pipenv environment.
      */
-    pub project_path: Option<String>,
+    pub project_path: Option<PathBuf>,
 }
 
 impl PythonEnvironment {
     pub fn new(
         name: Option<String>,
-        python_executable_path: Option<String>,
+        python_executable_path: Option<PathBuf>,
         category: PythonEnvironmentCategory,
         version: Option<String>,
-        env_path: Option<String>,
-        sys_prefix_path: Option<String>,
+        env_path: Option<PathBuf>,
+        sys_prefix_path: Option<PathBuf>,
         env_manager: Option<EnvManager>,
         python_run_command: Option<Vec<String>>,
     ) -> Self {
@@ -121,12 +123,12 @@ impl PythonEnvironment {
         }
     }
     pub fn new_pipenv(
-        python_executable_path: Option<String>,
+        python_executable_path: Option<PathBuf>,
         version: Option<String>,
-        env_path: Option<String>,
-        sys_prefix_path: Option<String>,
+        env_path: Option<PathBuf>,
+        sys_prefix_path: Option<PathBuf>,
         env_manager: Option<EnvManager>,
-        project_path: String,
+        project_path: PathBuf,
     ) -> Self {
         Self {
             name: None,
@@ -137,7 +139,7 @@ impl PythonEnvironment {
             sys_prefix_path,
             env_manager,
             python_run_command: match python_executable_path {
-                Some(exe) => Some(vec![exe]),
+                Some(exe) => Some(vec![exe.to_string_lossy().to_string()]),
                 None => None,
             },
             project_path: Some(project_path),

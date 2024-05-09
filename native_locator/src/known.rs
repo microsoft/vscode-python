@@ -3,7 +3,7 @@
 use std::{env, path::PathBuf};
 
 pub trait Environment {
-    fn get_user_home(&self) -> Option<String>;
+    fn get_user_home(&self) -> Option<PathBuf>;
     fn get_env_var(&self, key: String) -> Option<String>;
     fn get_know_global_search_locations(&self) -> Vec<PathBuf>;
 }
@@ -12,7 +12,7 @@ pub struct EnvironmentApi {}
 
 #[cfg(windows)]
 impl Environment for EnvironmentApi {
-    fn get_user_home(&self) -> Option<String> {
+    fn get_user_home(&self) -> Option<PathBuf> {
         get_user_home()
     }
     fn get_env_var(&self, key: String) -> Option<String> {
@@ -25,7 +25,7 @@ impl Environment for EnvironmentApi {
 
 #[cfg(unix)]
 impl Environment for EnvironmentApi {
-    fn get_user_home(&self) -> Option<String> {
+    fn get_user_home(&self) -> Option<PathBuf> {
         get_user_home()
     }
     fn get_env_var(&self, key: String) -> Option<String> {
@@ -49,10 +49,10 @@ impl Environment for EnvironmentApi {
     }
 }
 
-fn get_user_home() -> Option<String> {
+fn get_user_home() -> Option<PathBuf> {
     let home = env::var("HOME").or_else(|_| env::var("USERPROFILE"));
     match home {
-        Ok(home) => Some(home),
+        Ok(home) => Some(PathBuf::from(home)),
         Err(_) => None,
     }
 }

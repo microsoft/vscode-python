@@ -15,11 +15,11 @@ fn find_python_in_path_this() {
     use std::collections::HashMap;
 
     let unix_python = test_file_path(&["tests/unix/known"]);
-    let unix_python_exe = join_test_paths(&[unix_python.as_str(), "python"]);
+    let unix_python_exe = join_test_paths(&[unix_python.clone().to_str().unwrap(), "python"]);
 
     let mut dispatcher = create_test_dispatcher();
     let known = create_test_environment(
-        HashMap::from([("PATH".to_string(), unix_python.clone())]),
+        HashMap::from([("PATH".to_string(), unix_python.clone().to_str().unwrap().to_string())]),
         Some(unix_python.clone()),
         Vec::new(),
     );

@@ -45,16 +45,15 @@ pub fn find_and_report(
                 continue;
             }
             reported.insert(exe.to_string_lossy().to_string());
-            let executable = exe.to_string_lossy().to_string();
             let env = crate::messaging::PythonEnvironment::new(
                 None,
-                Some(executable.clone()),
+                Some(exe.clone()),
                 crate::messaging::PythonEnvironmentCategory::Homebrew,
                 version,
                 None,
                 None,
                 None,
-                Some(vec![executable]),
+                Some(vec![exe.to_string_lossy().to_string()]),
             );
             dispatcher.report_environment(env);
         }

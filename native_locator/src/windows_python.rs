@@ -5,12 +5,13 @@ use crate::known;
 use crate::messaging;
 use crate::utils;
 use std::path::Path;
+use std::path::PathBuf;
 
 fn report_path_python(path: &str, dispatcher: &mut impl messaging::MessageDispatcher) {
     let version = utils::get_version(path);
     dispatcher.report_environment(messaging::PythonEnvironment::new(
         None,
-        Some(path.to_string()),
+        Some(PathBuf::from(path)),
         messaging::PythonEnvironmentCategory::WindowsStore,
         version,
         None,

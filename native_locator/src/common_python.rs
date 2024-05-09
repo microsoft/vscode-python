@@ -6,15 +6,16 @@ use crate::messaging;
 use crate::utils;
 use std::env;
 use std::path::Path;
+use std::path::PathBuf;
 
-fn get_env_path(path: &str) -> Option<String> {
+fn get_env_path(path: &str) -> Option<PathBuf> {
     let path = Path::new(path);
     match path.parent() {
         Some(parent) => {
             if parent.file_name()? == "Scripts" {
-                return Some(parent.parent()?.to_string_lossy().to_string());
+                return Some(parent.parent()?.to_path_buf());
             } else {
-                return Some(parent.to_string_lossy().to_string());
+                return Some(parent.to_path_buf());
             }
         }
         None => None,
@@ -26,7 +27,7 @@ fn report_path_python(dispatcher: &mut impl messaging::MessageDispatcher, path: 
     let env_path = get_env_path(path);
     dispatcher.report_environment(messaging::PythonEnvironment::new(
         None,
-        Some(path.to_string()),
+        Some(PathBuf::from(path)),
         messaging::PythonEnvironmentCategory::System,
         version,
         env_path.clone(),

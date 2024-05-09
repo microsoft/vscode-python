@@ -7,41 +7,41 @@ use crate::{known::Environment, messaging::MessageDispatcher, utils::PythonEnv};
 use std::path::PathBuf;
 
 #[cfg(windows)]
-fn get_default_virtualenvwrapper_path(environment: &impl Environment) -> Option<String> {
+fn get_default_virtualenvwrapper_path(environment: &impl Environment) -> Option<PathBuf> {
     // In Windows, the default path for WORKON_HOME is %USERPROFILE%\Envs.
     // If 'Envs' is not available we should default to '.virtualenvs'. Since that
     // is also valid for windows.
     if let Some(home) = environment.get_user_home() {
         let home = PathBuf::from(home).join("Envs");
         if home.exists() {
-            return Some(home.to_string_lossy().to_string());
+            return Some(home);
         }
         let home = PathBuf::from(home).join("virtualenvs");
         if home.exists() {
-            return Some(home.to_string_lossy().to_string());
+            return Some(home);
         }
     }
     None
 }
 
 #[cfg(unix)]
-fn get_default_virtualenvwrapper_path(environment: &impl Environment) -> Option<String> {
+fn get_default_virtualenvwrapper_path(environment: &impl Environment) -> Option<PathBuf> {
     if let Some(home) = environment.get_user_home() {
         let home = PathBuf::from(home).join("virtualenvs");
         if home.exists() {
-            return Some(home.to_string_lossy().to_string());
+            return Some(home);
         }
     }
     None
 }
 
-fn get_work_on_home_path(environment: &impl Environment) -> Option<String> {
+fn get_work_on_home_path(environment: &impl Environment) -> Option<PathBuf> {
     // The WORKON_HOME variable contains the path to the root directory of all virtualenvwrapper environments.
     // If the interpreter path belongs to one of them then it is a virtualenvwrapper type of environment.
     if let Some(work_on_home) = environment.get_env_var("WORKON_HOME".to_string()) {
         if let Ok(work_on_home) = std::fs::canonicalize(work_on_home) {
             if work_on_home.exists() {
-                return Some(work_on_home.to_string_lossy().to_string());
+                return Some(work_on_home);
             }
         }
     }
@@ -49,23 +49,18 @@ fn get_work_on_home_path(environment: &impl Environment) -> Option<String> {
 }
 
 fn create_virtualenvwrapper_env(env: &PythonEnv) -> PythonEnvironment {
-    let executable = env.executable.clone().into_os_string().into_string().ok();
-    let env_path = env.path.clone().into_os_string().into_string().ok();
     PythonEnvironment {
         name: match env.path.file_name().to_owned() {
             Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
             None => None,
         },
-        python_executable_path: executable.clone(),
+        python_executable_path: Some(env.executable.clone()),
         category: PythonEnvironmentCategory::VirtualEnvWrapper,
         version: env.version.clone(),
-        env_path: env_path.clone(),
-        sys_prefix_path: env_path,
+        env_path: Some(env.path.clone()),
+        sys_prefix_path: Some(env.path.clone()),
         env_manager: None,
-        python_run_command: match executable {
-            Some(exe) => Some(vec![exe]),
-            None => None,
-        },
+        python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
         project_path: None,
     }
 }
