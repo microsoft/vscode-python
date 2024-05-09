@@ -19,6 +19,7 @@ mod utils;
 mod virtualenv;
 mod virtualenvwrapper;
 mod windows_python;
+mod venv;
 
 fn main() {
     let mut dispatcher = create_dispatcher();
@@ -55,6 +56,6 @@ fn main() {
             dispatcher.log_error(&format!("Error getting elapsed time: {:?}", e));
         }
     }
-    
+
     dispatcher.exit();
 }

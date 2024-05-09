@@ -20,13 +20,41 @@ pub struct PyEnvCfg {
     pub version: String,
 }
 
-pub fn parse_pyenv_cfg(path: &PathBuf) -> Option<PyEnvCfg> {
-    let cfg = path.join("pyvenv.cfg");
+const PYVENV_CONFIG_FILE: &str = "pyvenv.cfg";
+
+pub fn find_pyvenv_config_path(python_executable: &PathBuf) -> Option<PathBuf> {
+    // Check if the pyvenv.cfg file is in the parent directory relative to the interpreter.
+    // env
+    // |__ pyvenv.cfg  <--- check if this file exists
+    // |__ bin or Scripts
+    //     |__ python  <--- interpreterPath
+    let cfg = python_executable.parent()?.join(PYVENV_CONFIG_FILE);
+    if fs::metadata(&cfg).is_ok() {
+        return Some(cfg);
+    }
+
+    // Check if the pyvenv.cfg file is in the directory as the interpreter.
+    // env
+    // |__ pyvenv.cfg  <--- check if this file exists
+    // |__ python  <--- interpreterPath
+    let cfg = python_executable
+        .parent()?
+        .parent()?
+        .join(PYVENV_CONFIG_FILE);
+    if fs::metadata(&cfg).is_ok() {
+        return Some(cfg);
+    }
+
+    None
+}
+
+pub fn find_and_parse_pyvenv_cfg(python_executable: &PathBuf) -> Option<PyEnvCfg> {
+    let cfg = find_pyvenv_config_path(&PathBuf::from(python_executable))?;
     if !fs::metadata(&cfg).is_ok() {
         return None;
     }
 
-    let contents = fs::read_to_string(cfg).ok()?;
+    let contents = fs::read_to_string(&cfg).ok()?;
     let version_regex = Regex::new(r"^version\s*=\s*(\d+\.\d+\.\d+)$").unwrap();
     let version_info_regex = Regex::new(r"^version_info\s*=\s*(\d+\.\d+\.\d+.*)$").unwrap();
     for line in contents.lines() {
@@ -51,18 +79,14 @@ pub fn parse_pyenv_cfg(path: &PathBuf) -> Option<PyEnvCfg> {
     None
 }
 
-pub fn get_version(path: &str) -> Option<String> {
-    if let Some(parent_folder) = PathBuf::from(path).parent() {
-        if let Some(pyenv_cfg) = parse_pyenv_cfg(&parent_folder.to_path_buf()) {
+pub fn get_version(python_executable: &str) -> Option<String> {
+    if let Some(parent_folder) = PathBuf::from(python_executable).parent() {
+        if let Some(pyenv_cfg) = find_and_parse_pyvenv_cfg(&parent_folder.to_path_buf()) {
             return Some(pyenv_cfg.version);
         }
-        if let Some(parent_folder) = parent_folder.parent() {
-            if let Some(pyenv_cfg) = parse_pyenv_cfg(&parent_folder.to_path_buf()) {
-                return Some(pyenv_cfg.version);
-            }
-        }
     }
-    let output = Command::new(path)
+
+    let output = Command::new(python_executable)
         .arg("-c")
         .arg("import sys; print(sys.version)")
         .output()

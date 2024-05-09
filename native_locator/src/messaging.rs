@@ -80,6 +80,8 @@ pub enum PythonEnvironmentCategory {
     WindowsStore,
     Pipenv,
     VirtualEnvWrapper,
+    Venv,
+    VirtualEnv,
 }
 
 #[derive(Serialize, Deserialize)]

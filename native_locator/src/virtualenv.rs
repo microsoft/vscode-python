@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use std::path::PathBuf;
-
+use crate::messaging::{MessageDispatcher, PythonEnvironment, PythonEnvironmentCategory};
 use crate::utils::PythonEnv;
+use std::path::PathBuf;
 
 pub fn is_virtualenv(env: &PythonEnv) -> bool {
     if let Some(file_path) = PathBuf::from(env.executable.clone()).parent() {
@@ -40,4 +40,28 @@ pub fn is_virtualenv(env: &PythonEnv) -> bool {
     }
 
     false
+}
+
+pub fn find_and_report(env: &PythonEnv, dispatcher: &mut impl MessageDispatcher) -> Option<()> {
+    if is_virtualenv(env) {
+        let env = PythonEnvironment {
+            name: match env.path.file_name().to_owned() {
+                Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
+                None => None,
+            },
+            python_executable_path: Some(env.executable.clone()),
+            category: PythonEnvironmentCategory::VirtualEnv,
+            version: env.version.clone(),
+            env_path: Some(env.path.clone()),
+            sys_prefix_path: Some(env.path.clone()),
+            env_manager: None,
+            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+            project_path: None,
+        };
+
+        dispatcher.report_environment(env);
+
+        return Some(());
+    }
+    None
 }
