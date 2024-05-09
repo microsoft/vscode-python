@@ -59,7 +59,7 @@ if __name__ == "__main__":
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
     try:
-        test_ids_from_buffer = raw_json["params"]
+        test_ids_from_buffer = raw_json.get("params")
         if test_ids_from_buffer:
             arg_array = ["-p", "vscode_pytest"] + args + test_ids_from_buffer
             print("Running pytest with args: " + str(arg_array))
