@@ -291,10 +291,8 @@ jobs:
       - name: Run single-workspace tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.6
-        with:
-          run: npm run testSingleWorkspace
-          working-directory: ${{ env.special-working-directory }}
+        run: npm run testSingleWorkspace
+        working-directory: ${{ env.special-working-directory }}
         if: matrix.test-suite == 'single-workspace'
 
       - name: Run debugger tests
