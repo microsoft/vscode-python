@@ -290,7 +290,7 @@ jobs:
 
       - name: Run single-workspace tests on non-Linux
         env:
-            CI_PYTHON_VERSION: ${{ matrix.python }}
+          CI_PYTHON_VERSION: ${{ matrix.python }}
         run: npm run testSingleWorkspace
         shell: bash
         working-directory: ${{ env.special-working-directory }}
@@ -298,7 +298,7 @@ jobs:
 
       - name: Run single-workspace tests on Linux
         env:
-            CI_PYTHON_VERSION: ${{ matrix.python }}
+          CI_PYTHON_VERSION: ${{ matrix.python }}
         run: xvfb-run -a npm run testSingleWorkspace
         shell: bash
         working-directory: ${{ env.special-working-directory }}
@@ -483,24 +483,21 @@ jobs:
         with:
           run: npm run testSingleWorkspace:cover
 
-
       - name: Run single-workspace tests on non-Linux
         env:
-            CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
-            CI_DISABLE_AUTO_SELECTION: 1
+          CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+          CI_DISABLE_AUTO_SELECTION: 1
         run: npm run testSingleWorkspace:cover
         shell: bash
         if: runner.os != 'Linux'
 
       - name: Run single-workspace tests on Linux
         env:
-            CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
-            CI_DISABLE_AUTO_SELECTION: 1
+          CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
+          CI_DISABLE_AUTO_SELECTION: 1
         run: xvfb-run -a npm run testSingleWorkspace:cover
         shell: bash
         if: runner.os == 'Linux'
-
-
 
       # Enable these tests when coverage is setup for multiroot workspace tests
       # - name: Run multi-workspace tests
