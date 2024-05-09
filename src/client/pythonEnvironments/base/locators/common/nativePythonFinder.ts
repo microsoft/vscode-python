@@ -5,6 +5,7 @@ import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
+import { PassThrough } from 'stream';
 import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
@@ -56,16 +57,34 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
 
     public startSearch(token?: CancellationToken): Promise<void> {
         const deferred = createDeferred<void>();
-        const proc = ch.spawn(NATIVE_LOCATOR, [], { stdio: 'pipe' });
+        const proc = ch.spawn(NATIVE_LOCATOR, [], { env: process.env });
         const disposables: Disposable[] = [];
 
+        // jsonrpc package cannot handle messages coming through too quicly.
+        // Lets handle the messages and close the stream only when
+        // we have got the exit event.
+        const readable = new PassThrough();
+        proc.stdout.pipe(readable, { end: false });
+        const writable = new PassThrough();
+        writable.pipe(proc.stdin, { end: false });
+        const disposeStreams = new Disposable(() => {
+            readable.end();
+            readable.destroy();
+            writable.end();
+            writable.destroy();
+        });
         const connection = rpc.createMessageConnection(
-            new rpc.StreamMessageReader(proc.stdout),
-            new rpc.StreamMessageWriter(proc.stdin),
+            new rpc.StreamMessageReader(readable),
+            new rpc.StreamMessageWriter(writable),
         );
 
         disposables.push(
             connection,
+            disposeStreams,
+            connection.onError((ex) => {
+                disposeStreams.dispose();
+                traceError('Error in Native Python Finder', ex);
+            }),
             connection.onNotification('pythonEnvironment', (data: NativeEnvInfo) => {
                 this._onDidFindPythonEnvironment.fire(data);
             }),
@@ -73,7 +92,8 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
                 this._onDidFindEnvironmentManager.fire(data);
             }),
             connection.onNotification('exit', () => {
-                traceVerbose('Native Python Finder exited');
+                traceInfo('Native Python Finder exited');
+                disposeStreams.dispose();
             }),
             connection.onNotification('log', (data: NativeLog) => {
                 switch (data.level) {
