@@ -384,12 +384,12 @@ pub fn find_and_report(
     let conda_binary = find_conda_binary(environment);
     match conda_binary {
         Some(conda_binary) => {
-            let params = messaging::EnvManager::new(
+            let env_manager = messaging::EnvManager::new(
                 conda_binary.clone(),
                 get_conda_version(&conda_binary),
                 EnvManagerType::Conda,
             );
-            dispatcher.report_environment_manager(params);
+            dispatcher.report_environment_manager(env_manager.clone());
 
             let envs = get_distinct_conda_envs(&conda_binary, environment);
             for env in envs {
@@ -401,7 +401,7 @@ pub fn find_and_report(
                     get_conda_python_version(&env.path),
                     Some(env.path.clone()),
                     Some(env.path.clone()),
-                    None,
+                    Some(env_manager.clone()),
                     if env.named {
                         Some(vec![
                             conda_binary.to_string_lossy().to_string(),

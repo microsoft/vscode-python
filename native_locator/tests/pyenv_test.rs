@@ -57,7 +57,10 @@ fn find_pyenv_envs() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
-    use python_finder::pyenv;
+    use python_finder::{
+        messaging::{EnvManager, EnvManagerType, PythonEnvironment},
+        pyenv,
+    };
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
 
@@ -74,21 +77,149 @@ fn find_pyenv_envs() {
     pyenv::find_and_report(&mut dispatcher, &known);
 
     assert_eq!(dispatcher.messages.len(), 6);
-    let expected_manager =
-        json!({ "executablePath": pyenv_exe.clone(), "version": null, "tool": "pyenv" });
-    let expected_3_9_9 = json!({"projectPath": null, "name": null,"pythonExecutablePath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.9.9/bin/python"]), "pythonRunCommand": [join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.9.9/bin/python"])], "category": "pyenv","version": "3.9.9","envPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.9.9"]),"sysPrefixPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.9.9"]), "envManager": expected_manager});
-    let expected_virtual_env = json!({"projectPath": null, "name": "my-virtual-env", "version": "3.10.13", "category": "pyenvVirtualEnv", "envPath": join_test_paths(&[home.to_str().unwrap(),".pyenv/versions/my-virtual-env"]), "pythonExecutablePath": join_test_paths(&[home.to_str().unwrap(),".pyenv/versions/my-virtual-env/bin/python"]), "sysPrefixPath": join_test_paths(&[home.to_str().unwrap(),".pyenv/versions/my-virtual-env"]), "pythonRunCommand": [join_test_paths(&[home.to_str().unwrap(),".pyenv/versions/my-virtual-env/bin/python"])], "envManager": expected_manager});
-    let expected_3_12_1 = json!({"projectPath": null, "name": null,"pythonExecutablePath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1/bin/python"]), "pythonRunCommand": [join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1/bin/python"])], "category": "pyenv","version": "3.12.1","envPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1"]),"sysPrefixPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1"]), "envManager": expected_manager});
-    let expected_3_13_dev = json!({"projectPath": null, "name": null,"pythonExecutablePath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.13-dev/bin/python"]), "pythonRunCommand": [join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.13-dev/bin/python"])], "category": "pyenv","version": "3.13-dev","envPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.13-dev"]),"sysPrefixPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.13-dev"]), "envManager": expected_manager});
-    let expected_3_12_1a3 = json!({"projectPath": null, "name": null,"pythonExecutablePath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1a3/bin/python"]), "pythonRunCommand": [join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1a3/bin/python"])], "category": "pyenv","version": "3.12.1a3","envPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1a3"]),"sysPrefixPath": join_test_paths(&[home.to_str().unwrap(), ".pyenv/versions/3.12.1a3"]), "envManager": expected_manager});
+    let expected_manager = EnvManager {
+        executable_path: pyenv_exe.clone(),
+        version: None,
+        tool: EnvManagerType::Pyenv,
+    };
+    let expected_3_9_9 = json!(PythonEnvironment {
+        project_path: None,
+        name: None,
+        python_executable_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.9.9/bin/python"
+        ])),
+        python_run_command: Some(vec![join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.9.9/bin/python"
+        ])
+        .to_str()
+        .unwrap()
+        .to_string()]),
+        category: python_finder::messaging::PythonEnvironmentCategory::Pyenv,
+        version: Some("3.9.9".to_string()),
+        env_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.9.9"
+        ])),
+        sys_prefix_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.9.9"
+        ])),
+        env_manager: Some(expected_manager.clone())
+    });
+    let expected_virtual_env = PythonEnvironment {
+        project_path: None,
+        name: Some("my-virtual-env".to_string()),
+        python_executable_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/my-virtual-env/bin/python",
+        ])),
+        python_run_command: Some(vec![join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/my-virtual-env/bin/python",
+        ])
+        .to_str()
+        .unwrap()
+        .to_string()]),
+        category: python_finder::messaging::PythonEnvironmentCategory::PyenvVirtualEnv,
+        version: Some("3.10.13".to_string()),
+        env_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/my-virtual-env",
+        ])),
+        sys_prefix_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/my-virtual-env",
+        ])),
+        env_manager: Some(expected_manager.clone()),
+    };
+    let expected_3_12_1 = PythonEnvironment {
+        project_path: None,
+        name: None,
+        python_executable_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1/bin/python",
+        ])),
+        python_run_command: Some(vec![join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1/bin/python",
+        ])
+        .to_str()
+        .unwrap()
+        .to_string()]),
+        category: python_finder::messaging::PythonEnvironmentCategory::Pyenv,
+        version: Some("3.12.1".to_string()),
+        env_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1",
+        ])),
+        sys_prefix_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1",
+        ])),
+        env_manager: Some(expected_manager.clone()),
+    };
+    let expected_3_13_dev = PythonEnvironment {
+        project_path: None,
+        name: None,
+        python_executable_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.13-dev/bin/python",
+        ])),
+        python_run_command: Some(vec![join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.13-dev/bin/python",
+        ])
+        .to_str()
+        .unwrap()
+        .to_string()]),
+        category: python_finder::messaging::PythonEnvironmentCategory::Pyenv,
+        version: Some("3.13-dev".to_string()),
+        env_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.13-dev",
+        ])),
+        sys_prefix_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.13-dev",
+        ])),
+        env_manager: Some(expected_manager.clone()),
+    };
+    let expected_3_12_1a3 = PythonEnvironment {
+        project_path: None,
+        name: None,
+        python_executable_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1a3/bin/python",
+        ])),
+        python_run_command: Some(vec![join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1a3/bin/python",
+        ])
+        .to_str()
+        .unwrap()
+        .to_string()]),
+        category: python_finder::messaging::PythonEnvironmentCategory::Pyenv,
+        version: Some("3.12.1a3".to_string()),
+        env_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1a3",
+        ])),
+        sys_prefix_path: Some(join_test_paths(&[
+            home.to_str().unwrap(),
+            ".pyenv/versions/3.12.1a3",
+        ])),
+        env_manager: Some(expected_manager.clone()),
+    };
     assert_messages(
         &[
-            expected_manager,
-            expected_3_9_9,
-            expected_virtual_env,
-            expected_3_12_1,
-            expected_3_13_dev,
-            expected_3_12_1a3,
+            json!(expected_manager),
+            json!(expected_3_9_9),
+            json!(expected_virtual_env),
+            json!(expected_3_12_1),
+            json!(expected_3_13_dev),
+            json!(expected_3_12_1a3),
         ],
         &dispatcher,
     )

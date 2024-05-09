@@ -92,6 +92,17 @@ fn compare_json(expected: &Value, actual: &Value) -> bool {
     }
 
     if expected.is_object() {
+        if expected.as_object().is_none() && actual.as_object().is_none() {
+            return true;
+        }
+
+        if expected.as_object().is_none() && actual.as_object().is_some() {
+            return false;
+        }
+        if expected.as_object().is_some() && actual.as_object().is_none() {
+            return false;
+        }
+
         let expected = expected.as_object().unwrap();
         let actual = actual.as_object().unwrap();
 
@@ -99,7 +110,8 @@ fn compare_json(expected: &Value, actual: &Value) -> bool {
             if !actual.contains_key(key) {
                 return false;
             }
-
+            println!("\nCompare Key {:?}", key);
+            println!("\nCompare Key {:?}", actual.get(key).is_none());
             if !compare_json(value, actual.get(key).unwrap()) {
                 return false;
             }
