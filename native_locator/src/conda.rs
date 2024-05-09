@@ -254,7 +254,7 @@ fn get_conda_envs_from_environment_txt(environment: &impl known::Environment) ->
 }
 
 fn get_known_env_locations(
-    conda_bin: PathBuf,
+    conda_bin: &PathBuf,
     environment: &impl known::Environment,
 ) -> Vec<String> {
     let mut paths = vec![];
@@ -289,7 +289,7 @@ fn get_known_env_locations(
 }
 
 fn get_conda_envs_from_known_env_locations(
-    conda_bin: PathBuf,
+    conda_bin: &PathBuf,
     environment: &impl known::Environment,
 ) -> Vec<String> {
     let mut envs = vec![];
@@ -332,12 +332,11 @@ struct CondaEnv {
 }
 
 fn get_distinct_conda_envs(
-    conda_bin: PathBuf,
+    conda_bin: &PathBuf,
     environment: &impl known::Environment,
 ) -> Vec<CondaEnv> {
     let mut envs = get_conda_envs_from_environment_txt(environment);
-    let mut known_envs =
-        get_conda_envs_from_known_env_locations(conda_bin.to_path_buf(), environment);
+    let mut known_envs = get_conda_envs_from_known_env_locations(conda_bin, environment);
     envs.append(&mut known_envs);
     envs.sort();
     envs.dedup();
@@ -386,26 +385,22 @@ pub fn find_and_report(
     match conda_binary {
         Some(conda_binary) => {
             let params = messaging::EnvManager::new(
-                conda_binary.to_string_lossy().to_string(),
+                conda_binary.clone(),
                 get_conda_version(&conda_binary),
                 EnvManagerType::Conda,
             );
             dispatcher.report_environment_manager(params);
 
-            let envs = get_distinct_conda_envs(conda_binary.to_path_buf(), environment);
+            let envs = get_distinct_conda_envs(&conda_binary, environment);
             for env in envs {
                 let executable = find_python_binary_path(Path::new(&env.path));
-                let env_path = env.path.to_string_lossy().to_string();
                 let params = messaging::PythonEnvironment::new(
                     Some(env.name.to_string()),
-                    match executable {
-                        Some(executable) => Some(executable.to_string_lossy().to_string()),
-                        None => None,
-                    },
+                    executable,
                     messaging::PythonEnvironmentCategory::Conda,
                     get_conda_python_version(&env.path),
-                    Some(env_path.clone()),
-                    Some(env_path),
+                    Some(env.path.clone()),
+                    Some(env.path.clone()),
                     None,
                     if env.named {
                         Some(vec![

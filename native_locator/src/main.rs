@@ -55,6 +55,6 @@ fn main() {
             dispatcher.log_error(&format!("Error getting elapsed time: {:?}", e));
         }
     }
-
+    
     dispatcher.exit();
 }
