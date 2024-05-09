@@ -478,9 +478,7 @@ jobs:
         env:
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
-        uses: GabrielBB/xvfb-action@v1.6
-        with:
-          run: npm run testSingleWorkspace:cover
+        run: npm run testSingleWorkspace:cover
 
       # Enable these tests when coverage is setup for multiroot workspace tests
       # - name: Run multi-workspace tests
