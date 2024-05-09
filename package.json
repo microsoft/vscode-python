@@ -1439,7 +1439,7 @@
                 {
                     "command": "python.execInREPL",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && pythonRunREPL"
                 }
             ],
             "editor/title": [

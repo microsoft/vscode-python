@@ -24,3 +24,8 @@ export enum EnableTestAdapterRewrite {
 export enum RecommendTensobardExtension {
     experiment = 'pythonRecommendTensorboardExt',
 }
+
+// Experiment to enable running Python REPL using IW.
+export enum EnableRunREPL {
+    experiment = 'pythonRunREPL',
+}
