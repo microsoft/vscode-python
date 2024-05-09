@@ -29,7 +29,10 @@ fn find_conda_exe_and_empty_envs() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
-    use python_finder::conda;
+    use python_finder::{
+        conda,
+        messaging::{EnvManager, EnvManagerType},
+    };
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
     let conda_dir = test_file_path(&["tests/unix/conda_without_envs"]);
@@ -47,8 +50,12 @@ fn find_conda_exe_and_empty_envs() {
     conda::find_and_report(&mut dispatcher, &known);
 
     let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
-    let expected_json = json!({"executablePath":conda_exe.clone(),"version":null, "tool": "conda"});
-    assert_messages(&[expected_json], &dispatcher)
+    let expected_conda_manager = EnvManager {
+        executable_path: conda_exe.clone(),
+        version: None,
+        tool: EnvManagerType::Conda,
+    };
+    assert_messages(&[json!(expected_conda_manager)], &dispatcher)
 }
 #[test]
 #[cfg(unix)]
@@ -58,6 +65,7 @@ fn finds_two_conda_envs_from_txt() {
         test_file_path,
     };
     use python_finder::conda;
+    use python_finder::messaging::{EnvManager, EnvManagerType, PythonEnvironment};
     use serde_json::json;
     use std::collections::HashMap;
     use std::fs;
@@ -90,12 +98,51 @@ fn finds_two_conda_envs_from_txt() {
     let conda_1_exe = join_test_paths(&[conda_1.clone().to_str().unwrap(), "python"]);
     let conda_2_exe = join_test_paths(&[conda_2.clone().to_str().unwrap(), "python"]);
 
-    let expected_conda_env =
-        json!({ "executablePath": conda_exe.clone(), "version": null, "tool": "conda"});
-    let expected_conda_1 = json!({ "name": "one","projectPath": null,  "pythonExecutablePath": conda_1_exe.clone(), "category": "conda", "version": "10.0.1", "envPath": conda_1.clone(), "sysPrefixPath": conda_1.clone(), "envManager": null, "pythonRunCommand": [conda_exe.clone(), "run", "-n", "one", "python"]});
-    let expected_conda_2 = json!({ "name": "two", "projectPath": null, "pythonExecutablePath": conda_2_exe.clone(), "category": "conda", "version": null, "envPath": conda_2.clone(), "sysPrefixPath": conda_2.clone(), "envManager": null,"pythonRunCommand": [conda_exe.clone(),"run","-n","two","python"]});
+    let expected_conda_manager = EnvManager {
+        executable_path: conda_exe.clone(),
+        version: None,
+        tool: EnvManagerType::Conda,
+    };
+    let expected_conda_1 = PythonEnvironment {
+        name: Some("one".to_string()),
+        project_path: None,
+        python_executable_path: Some(conda_1_exe.clone()),
+        category: python_finder::messaging::PythonEnvironmentCategory::Conda,
+        version: Some("10.0.1".to_string()),
+        env_path: Some(conda_1.clone()),
+        sys_prefix_path: Some(conda_1.clone()),
+        env_manager: Some(expected_conda_manager.clone()),
+        python_run_command: Some(vec![
+            conda_exe.clone().to_str().unwrap().to_string(),
+            "run".to_string(),
+            "-n".to_string(),
+            "one".to_string(),
+            "python".to_string(),
+        ]),
+    };
+    let expected_conda_2 = PythonEnvironment {
+        name: Some("two".to_string()),
+        project_path: None,
+        python_executable_path: Some(conda_2_exe.clone()),
+        category: python_finder::messaging::PythonEnvironmentCategory::Conda,
+        version: None,
+        env_path: Some(conda_2.clone()),
+        sys_prefix_path: Some(conda_2.clone()),
+        env_manager: Some(expected_conda_manager.clone()),
+        python_run_command: Some(vec![
+            conda_exe.clone().to_str().unwrap().to_string(),
+            "run".to_string(),
+            "-n".to_string(),
+            "two".to_string(),
+            "python".to_string(),
+        ]),
+    };
     assert_messages(
-        &[expected_conda_1, expected_conda_env, expected_conda_2],
+        &[
+            json!(expected_conda_1),
+            json!(expected_conda_manager),
+            json!(expected_conda_2),
+        ],
         &dispatcher,
     )
 }
