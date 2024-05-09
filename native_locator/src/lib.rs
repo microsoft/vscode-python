@@ -12,3 +12,4 @@ pub mod global_virtualenvs;
 pub mod virtualenvwrapper;
 pub mod pipenv;
 pub mod virtualenv;
+pub mod venv;

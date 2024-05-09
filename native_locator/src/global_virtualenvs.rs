@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 use crate::pipenv;
+use crate::venv;
+use crate::virtualenv;
 use crate::virtualenvwrapper;
 use crate::{
     known,
@@ -80,6 +82,12 @@ pub fn find_and_report(
             continue;
         }
         if virtualenvwrapper::find_and_report(&env, dispatcher, environment).is_some() {
+            continue;
+        }
+        if venv::find_and_report(&env, dispatcher).is_some() {
+            continue;
+        }
+        if virtualenv::find_and_report(&env, dispatcher).is_some() {
             continue;
         }
     }

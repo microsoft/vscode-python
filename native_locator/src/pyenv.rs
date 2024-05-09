@@ -9,8 +9,8 @@ use crate::known;
 use crate::messaging;
 use crate::messaging::EnvManager;
 use crate::messaging::EnvManagerType;
+use crate::utils::find_and_parse_pyvenv_cfg;
 use crate::utils::find_python_binary_path;
-use crate::utils::parse_pyenv_cfg;
 
 #[cfg(windows)]
 fn get_home_pyenv_dir(environment: &impl known::Environment) -> Option<PathBuf> {
@@ -124,7 +124,7 @@ fn report_if_virtual_env_environment(
     manager: Option<EnvManager>,
     dispatcher: &mut impl messaging::MessageDispatcher,
 ) -> Option<()> {
-    let pyenv_cfg = parse_pyenv_cfg(path)?;
+    let pyenv_cfg = find_and_parse_pyvenv_cfg(executable)?;
     let folder_name = path.file_name().unwrap().to_string_lossy().to_string();
     dispatcher.report_environment(messaging::PythonEnvironment::new(
         Some(folder_name),
@@ -182,7 +182,6 @@ pub fn find_and_report(
                 {
                     continue;
                 }
-
                 report_if_virtual_env_environment(&executable, &path, manager.clone(), dispatcher);
             }
         }

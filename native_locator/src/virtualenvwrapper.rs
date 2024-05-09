@@ -48,23 +48,6 @@ fn get_work_on_home_path(environment: &impl Environment) -> Option<PathBuf> {
     get_default_virtualenvwrapper_path(environment)
 }
 
-fn create_virtualenvwrapper_env(env: &PythonEnv) -> PythonEnvironment {
-    PythonEnvironment {
-        name: match env.path.file_name().to_owned() {
-            Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
-            None => None,
-        },
-        python_executable_path: Some(env.executable.clone()),
-        category: PythonEnvironmentCategory::VirtualEnvWrapper,
-        version: env.version.clone(),
-        env_path: Some(env.path.clone()),
-        sys_prefix_path: Some(env.path.clone()),
-        env_manager: None,
-        python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-        project_path: None,
-    }
-}
-
 pub fn is_virtualenvwrapper(env: &PythonEnv, environment: &impl Environment) -> bool {
     // For environment to be a virtualenvwrapper based it has to follow these two rules:
     // 1. It should be in a sub-directory under the WORKON_HOME
@@ -84,7 +67,22 @@ pub fn find_and_report(
     environment: &impl Environment,
 ) -> Option<()> {
     if is_virtualenvwrapper(env, environment) {
-        dispatcher.report_environment(create_virtualenvwrapper_env(env));
+        let env = PythonEnvironment {
+            name: match env.path.file_name().to_owned() {
+                Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
+                None => None,
+            },
+            python_executable_path: Some(env.executable.clone()),
+            category: PythonEnvironmentCategory::VirtualEnvWrapper,
+            version: env.version.clone(),
+            env_path: Some(env.path.clone()),
+            sys_prefix_path: Some(env.path.clone()),
+            env_manager: None,
+            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+            project_path: None,
+        };
+
+        dispatcher.report_environment(env);
         return Some(());
     }
     None
