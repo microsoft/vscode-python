@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use crate::known;
 use crate::known::Environment;
 use crate::locator::Locator;
+use crate::messaging::MessageDispatcher;
 use crate::messaging::PythonEnvironment;
-use crate::messaging::{self, MessageDispatcher};
 use crate::utils::{self, PythonEnv};
 use std::collections::HashMap;
 use std::env;
@@ -19,48 +18,6 @@ fn get_env_path(python_executable_path: &PathBuf) -> Option<PathBuf> {
         return Some(parent.to_path_buf());
     }
 }
-
-// fn report_path_python(
-//     dispatcher: &mut impl messaging::MessageDispatcher,
-//     python_executable_path: &PathBuf,
-// ) {
-//     let version = utils::get_version(python_executable_path);
-//     let env_path = get_env_path(python_executable_path);
-//     dispatcher.report_environment(messaging::PythonEnvironment::new(
-//         None,
-//         Some(PathBuf::from(python_executable_path)),
-//         messaging::PythonEnvironmentCategory::System,
-//         version,
-//         env_path.clone(),
-//         env_path,
-//         None,
-//         Some(vec![python_executable_path.to_str().unwrap().to_string()]),
-//     ));
-// }
-
-// fn report_python_on_path(
-//     dispatcher: &mut impl messaging::MessageDispatcher,
-//     environment: &impl known::Environment,
-// ) {
-//     if let Some(paths) = environment.get_env_var("PATH".to_string()) {
-//         let bin = if cfg!(windows) {
-//             "python.exe"
-//         } else {
-//             "python"
-//         };
-//         env::split_paths(&paths)
-//             .map(|p| p.join(bin))
-//             .filter(|p| p.exists())
-//             .for_each(|full_path| report_path_python(dispatcher, &full_path));
-//     }
-// }
-
-// pub fn find_and_report(
-//     dispatcher: &mut impl messaging::MessageDispatcher,
-//     environment: &impl known::Environment,
-// ) {
-//     report_python_on_path(dispatcher, environment);
-// }
 
 pub struct PythonOnPath<'a> {
     pub environments: HashMap<String, PythonEnvironment>,

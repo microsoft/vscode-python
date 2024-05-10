@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 use crate::locator::Locator;
-use crate::messaging::{MessageDispatcher, PythonEnvironment, PythonEnvironmentCategory};
+use crate::messaging::{MessageDispatcher, PythonEnvironment};
 use crate::utils::PythonEnv;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -47,36 +47,6 @@ pub fn is_virtualenv(env: &PythonEnv) -> bool {
     false
 }
 
-pub fn find_and_report(env: &PythonEnv, dispatcher: &mut impl MessageDispatcher) -> Option<()> {
-    if is_virtualenv(env) {
-        let env = PythonEnvironment {
-            name: match env
-                .path
-                .clone()
-                .expect("env.path can never be empty for virtualenvs")
-                .file_name()
-                .to_owned()
-            {
-                Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
-                None => None,
-            },
-            python_executable_path: Some(env.executable.clone()),
-            category: PythonEnvironmentCategory::VirtualEnv,
-            version: env.version.clone(),
-            env_path: env.path.clone(),
-            sys_prefix_path: env.path.clone(),
-            env_manager: None,
-            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-            project_path: None,
-        };
-
-        dispatcher.report_environment(env);
-
-        return Some(());
-    }
-    None
-}
-
 pub struct VirtualEnv {
     pub environments: HashMap<String, PythonEnvironment>,
 }
@@ -94,14 +64,6 @@ impl Locator for VirtualEnv {
         self.environments
             .contains_key(python_executable.to_str().unwrap_or_default())
     }
-
-    // fn is_compatible(&mut self, python_executable: &PathBuf) -> bool {
-    //     is_virtualenv(&PythonEnv {
-    //         executable: python_executable.clone(),
-    //         path: python_executable.parent().unwrap().to_path_buf(),
-    //         version: None,
-    //     })
-    // }
 
     fn track_if_compatible(&mut self, env: &PythonEnv) -> bool {
         if is_virtualenv(env) {

@@ -180,6 +180,7 @@ pub fn list_pyenv_environments(
 pub struct PyEnv<'a> {
     pub environments: HashMap<String, PythonEnvironment>,
     pub environment: &'a dyn Environment,
+    pub manager: Option<EnvManager>,
 }
 
 impl PyEnv<'_> {
@@ -187,6 +188,7 @@ impl PyEnv<'_> {
         PyEnv {
             environments: HashMap::new(),
             environment,
+            manager: None,
         }
     }
 }
@@ -203,7 +205,6 @@ impl Locator for PyEnv<'_> {
     }
 
     fn gather(&mut self) -> Option<()> {
-        let pyenv_dir = get_pyenv_dir(self.environment)?;
         let manager = match get_pyenv_binary(self.environment) {
             Some(pyenv_binary) => Some(messaging::EnvManager::new(
                 pyenv_binary,
@@ -212,6 +213,7 @@ impl Locator for PyEnv<'_> {
             )),
             None => None,
         };
+        self.manager = manager.clone();
 
         for env in list_pyenv_environments(&manager, self.environment)? {
             self.environments.insert(
@@ -228,6 +230,9 @@ impl Locator for PyEnv<'_> {
     }
 
     fn report(&self, reporter: &mut dyn MessageDispatcher) {
+        if let Some(manager) = &self.manager {
+            reporter.report_environment_manager(manager.clone());
+        }
         for env in self.environments.values() {
             reporter.report_environment(env.clone());
         }

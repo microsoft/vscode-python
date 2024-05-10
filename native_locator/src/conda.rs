@@ -384,56 +384,6 @@ fn get_distinct_conda_envs(
     conda_envs
 }
 
-pub fn find_and_report(
-    dispatcher: &mut impl messaging::MessageDispatcher,
-    environment: &impl known::Environment,
-) {
-    let conda_binary = find_conda_binary(environment);
-    match conda_binary {
-        Some(conda_binary) => {
-            let env_manager = messaging::EnvManager::new(
-                conda_binary.clone(),
-                get_conda_version(&conda_binary),
-                EnvManagerType::Conda,
-            );
-            dispatcher.report_environment_manager(env_manager.clone());
-
-            let envs = get_distinct_conda_envs(&conda_binary, environment);
-            for env in envs {
-                let executable = find_python_binary_path(Path::new(&env.path));
-                let params = messaging::PythonEnvironment::new(
-                    Some(env.name.to_string()),
-                    executable,
-                    messaging::PythonEnvironmentCategory::Conda,
-                    get_conda_python_version(&env.path),
-                    Some(env.path.clone()),
-                    Some(env.path.clone()),
-                    Some(env_manager.clone()),
-                    if env.named {
-                        Some(vec![
-                            conda_binary.to_string_lossy().to_string(),
-                            "run".to_string(),
-                            "-n".to_string(),
-                            env.name.to_string(),
-                            "python".to_string(),
-                        ])
-                    } else {
-                        Some(vec![
-                            conda_binary.to_string_lossy().to_string(),
-                            "run".to_string(),
-                            "-p".to_string(),
-                            env.path.to_string_lossy().to_string(),
-                            "python".to_string(),
-                        ])
-                    },
-                );
-                dispatcher.report_environment(params);
-            }
-        }
-        None => (),
-    }
-}
-
 pub struct Conda<'a> {
     pub environments: HashMap<String, PythonEnvironment>,
     pub manager: Option<EnvManager>,
@@ -503,6 +453,9 @@ impl Locator for Conda<'_> {
             if let Some(exe) = executable {
                 self.environments
                     .insert(exe.to_str().unwrap_or_default().to_string(), env);
+            } else if let Some(env_path) = env.env_path.clone() {
+                self.environments
+                    .insert(env_path.to_str().unwrap().to_string(), env);
             }
         }
 
@@ -510,6 +463,10 @@ impl Locator for Conda<'_> {
     }
 
     fn report(&self, reporter: &mut dyn MessageDispatcher) {
+        if let Some(manager) = &self.manager {
+            reporter.report_environment_manager(manager.clone());
+        }
+
         for env in self.environments.values() {
             reporter.report_environment(env.clone());
         }

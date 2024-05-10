@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use crate::known::Environment;
 use crate::locator::Locator;
 use crate::messaging::{MessageDispatcher, PythonEnvironment};
 use crate::utils::PythonEnv;
@@ -18,24 +17,6 @@ fn get_pipenv_project(env: &PythonEnv) -> Option<PathBuf> {
                 return Some(project_folder);
             }
         }
-    }
-
-    None
-}
-
-pub fn find_and_report(env: &PythonEnv, dispatcher: &mut impl MessageDispatcher) -> Option<()> {
-    if let Some(project_path) = get_pipenv_project(env) {
-        let env = PythonEnvironment::new_pipenv(
-            Some(env.executable.clone()),
-            env.version.clone(),
-            Some(env.path.clone()?),
-            env.path.clone(),
-            None,
-            project_path,
-        );
-
-        dispatcher.report_environment(env);
-        return Some(());
     }
 
     None

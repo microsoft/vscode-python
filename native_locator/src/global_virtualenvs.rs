@@ -67,25 +67,3 @@ pub fn list_global_virtual_envs(environment: &impl known::Environment) -> Vec<Py
 
     python_envs
 }
-
-// pub fn find_and_report(
-//     dispatcher: &mut impl MessageDispatcher,
-//     environment: &impl known::Environment,
-// ) -> Option<()> {
-//     for env in list_global_virtualenvs(environment).iter() {
-//         if pipenv::find_and_report(&env, dispatcher).is_some() {
-//             continue;
-//         }
-//         if virtualenvwrapper::find_and_report(&env, dispatcher, environment).is_some() {
-//             continue;
-//         }
-//         if venv::find_and_report(&env, dispatcher).is_some() {
-//             continue;
-//         }
-//         if virtualenv::find_and_report(&env, dispatcher).is_some() {
-//             continue;
-//         }
-//     }
-
-//     None
-// }

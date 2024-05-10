@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use global_virtualenvs::{get_global_virtualenv_dirs, list_global_virtual_envs};
+use global_virtualenvs::list_global_virtual_envs;
 use known::EnvironmentApi;
 use locator::Locator;
 use messaging::{create_dispatcher, MessageDispatcher};
-use std::slice::Windows;
 use std::time::SystemTime;
-use std::{fs, path::PathBuf};
 
 mod common_python;
 mod conda;

@@ -2,12 +2,11 @@
 // Licensed under the MIT License.
 
 use crate::locator::Locator;
-use crate::messaging::{PythonEnvironment, PythonEnvironmentCategory};
-use crate::utils::{find_python_binary_path, get_version, list_python_environments};
+use crate::messaging::PythonEnvironment;
+use crate::utils::list_python_environments;
 use crate::virtualenv;
 use crate::{known::Environment, messaging::MessageDispatcher, utils::PythonEnv};
 use std::collections::HashMap;
-use std::fs;
 use std::path::PathBuf;
 
 #[cfg(windows)]
@@ -66,62 +65,6 @@ pub fn is_virtualenvwrapper(env: &PythonEnv, environment: &dyn Environment) -> b
     }
 
     false
-}
-
-pub fn find_and_report(
-    env: &PythonEnv,
-    dispatcher: &mut impl MessageDispatcher,
-    environment: &impl Environment,
-) -> Option<()> {
-    if is_virtualenvwrapper(env, environment) {
-        let env = PythonEnvironment {
-            name: match env
-                .path
-                .clone()
-                .expect("env.path cannot be empty in virtualenvwrapper")
-                .file_name()
-                .to_owned()
-            {
-                Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
-                None => None,
-            },
-            python_executable_path: Some(env.executable.clone()),
-            category: PythonEnvironmentCategory::VirtualEnvWrapper,
-            version: env.version.clone(),
-            env_path: env.path.clone(),
-            sys_prefix_path: env.path.clone(),
-            env_manager: None,
-            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-            project_path: None,
-        };
-
-        dispatcher.report_environment(env);
-        return Some(());
-    }
-    None
-}
-
-fn list_python_environments_in_work_on_path(
-    environment: &dyn Environment,
-) -> Option<Vec<PythonEnv>> {
-    let mut python_envs: Vec<PythonEnv> = vec![];
-    for venv_dir in fs::read_dir(get_work_on_home_path(environment)?).ok()? {
-        if let Ok(venv_dir) = venv_dir {
-            let venv_dir = venv_dir.path();
-            if !venv_dir.is_dir() {
-                continue;
-            }
-            if let Some(executable) = find_python_binary_path(&venv_dir) {
-                python_envs.push(PythonEnv::new(
-                    executable.clone(),
-                    Some(venv_dir),
-                    get_version(&executable),
-                ))
-            }
-        }
-    }
-
-    Some(python_envs)
 }
 
 pub struct VirtualEnvWrapper<'a> {
