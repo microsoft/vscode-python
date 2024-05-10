@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter } from 'vscode';
 import { IDisposable } from '../../../../common/types';
 import { ILocator, BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
@@ -16,6 +16,7 @@ import {
     NativeGlobalPythonFinder,
     createNativeGlobalPythonFinder,
 } from '../common/nativePythonFinder';
+import { disposeAll } from '../../../../common/utils/resourceLifecycle';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -97,7 +98,11 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const promise = this.finder.startSearch();
         const envs: BasicEnvInfo[] = [];
-        this.disposables.push(
+        const disposables: IDisposable[] = [];
+        const disposable = new Disposable(() => disposeAll(disposables));
+        this.disposables.push(disposable);
+        promise.finally(() => disposable.dispose());
+        disposables.push(
             this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
                 envs.push({
                     kind: categoryToKind(data.category),
