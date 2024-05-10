@@ -109,16 +109,8 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         interpreterService,
         pathUtils,
     );
-    // uncomment
-    // const config = workspace.getConfiguration();
-    // const replSettings: IREPLSettings | undefined = config.get('python.REPL');
 
-    // if (replSettings && replSettings.enableIWREPL) {
-    //     registerReplCommands(ext.disposables, interpreterService);
-    // }
-    // uncomment
-
-    // Only register if they are in experiment for pythonRunREPL.
+    // Register native REPL context menu when in experiment
     const experimentService = ext.legacyIOC.serviceContainer.get<IExperimentService>(IExperimentService);
     commands.executeCommand('setContext', 'pythonRunREPL', false);
     if (experimentService) {
@@ -128,7 +120,6 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
             commands.executeCommand('setContext', 'pythonRunREPL', true);
         }
     }
-    // registerReplCommands(ext.disposables, interpreterService); // Register regardless
 }
 
 /// //////////////////////////
