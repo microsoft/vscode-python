@@ -4,8 +4,11 @@
 use global_virtualenvs::list_global_virtual_envs;
 use known::EnvironmentApi;
 use locator::Locator;
+use log::LevelFilter;
 use messaging::{create_dispatcher, MessageDispatcher};
 use std::time::SystemTime;
+
+use crate::messaging::initialize_logger;
 
 mod common_python;
 mod conda;
@@ -26,8 +29,9 @@ mod windows_python;
 fn main() {
     let mut dispatcher = create_dispatcher();
     let environment = EnvironmentApi {};
+    initialize_logger(LevelFilter::Debug);
 
-    dispatcher.log_info("Starting Native Locator");
+    log::info!("Starting Native Locator");
     let now = SystemTime::now();
 
     let mut virtualenv_locator = virtualenv::VirtualEnv::new();
@@ -106,13 +110,10 @@ fn main() {
 
     match now.elapsed() {
         Ok(elapsed) => {
-            dispatcher.log_info(&format!(
-                "Native Locator took {} milliseconds.",
-                elapsed.as_millis()
-            ));
+            log::info!("Native Locator took {} milliseconds.", elapsed.as_millis());
         }
         Err(e) => {
-            dispatcher.log_error(&format!("Error getting elapsed time: {:?}", e));
+            log::error!("Error getting elapsed time: {:?}", e);
         }
     }
 

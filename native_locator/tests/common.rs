@@ -43,10 +43,6 @@ pub fn create_test_dispatcher() -> TestDispatcher {
         fn exit(&mut self) -> () {
             //
         }
-        fn log_debug(&mut self, _message: &str) -> () {}
-        fn log_error(&mut self, _message: &str) -> () {}
-        fn log_info(&mut self, _message: &str) -> () {}
-        fn log_warning(&mut self, _message: &str) -> () {}
     }
     impl TestMessages for TestDispatcher {
         fn get_messages(&self) -> Vec<String> {
