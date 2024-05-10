@@ -10,9 +10,26 @@ use std::{
 
 #[derive(Debug)]
 pub struct PythonEnv {
-    pub path: PathBuf,
     pub executable: PathBuf,
+    pub path: Option<PathBuf>,
     pub version: Option<String>,
+}
+
+impl PythonEnv {
+    pub fn new(executable: PathBuf, path: Option<PathBuf>, version: Option<String>) -> Self {
+        Self {
+            executable,
+            path,
+            version,
+        }
+    }
+    pub fn from(executable: PathBuf) -> Self {
+        Self {
+            executable,
+            path: None,
+            version: None,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -79,8 +96,8 @@ pub fn find_and_parse_pyvenv_cfg(python_executable: &PathBuf) -> Option<PyEnvCfg
     None
 }
 
-pub fn get_version(python_executable: &str) -> Option<String> {
-    if let Some(parent_folder) = PathBuf::from(python_executable).parent() {
+pub fn get_version(python_executable: &PathBuf) -> Option<String> {
+    if let Some(parent_folder) = python_executable.parent() {
         if let Some(pyenv_cfg) = find_and_parse_pyvenv_cfg(&parent_folder.to_path_buf()) {
             return Some(pyenv_cfg.version);
         }
@@ -108,4 +125,25 @@ pub fn find_python_binary_path(env_path: &Path) -> Option<PathBuf> {
     let path_3 = env_path.join(python_bin_name);
     let paths = vec![path_1, path_2, path_3];
     paths.into_iter().find(|path| path.exists())
+}
+
+pub fn list_python_environments(path: &PathBuf) -> Option<Vec<PythonEnv>> {
+    let mut python_envs: Vec<PythonEnv> = vec![];
+    for venv_dir in fs::read_dir(path).ok()? {
+        if let Ok(venv_dir) = venv_dir {
+            let venv_dir = venv_dir.path();
+            if !venv_dir.is_dir() {
+                continue;
+            }
+            if let Some(executable) = find_python_binary_path(&venv_dir) {
+                python_envs.push(PythonEnv::new(
+                    executable.clone(),
+                    Some(venv_dir),
+                    get_version(&executable),
+                ));
+            }
+        }
+    }
+
+    Some(python_envs)
 }

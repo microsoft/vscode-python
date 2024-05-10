@@ -68,7 +68,7 @@ impl EnvManagerMessage {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum PythonEnvironmentCategory {
     System,
@@ -83,7 +83,7 @@ pub enum PythonEnvironmentCategory {
     VirtualEnv,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: Option<String>,
