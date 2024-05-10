@@ -21,7 +21,6 @@ import {
     IInterpreterPathService,
     ILogOutputChannel,
     IPathUtils,
-    // IREPLSettings,
 } from './common/types';
 import { noop } from './common/utils/misc';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
