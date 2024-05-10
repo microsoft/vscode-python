@@ -8,14 +8,15 @@ import pathlib
 import sys
 import traceback
 
+
 import pytest
 
-from typing import Any, Dict, List, Optional, Union, Literal, TypedDict  # noqa: E402
-
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import socket_manager  # noqa: E402
-
-DEFAULT_PORT = 45454
+from typing import Any, Dict, List, Optional, Union, TypedDict, Literal  # noqa: E402
 
 
 class TestData(TypedDict):
@@ -51,22 +52,20 @@ ERRORS = []
 IS_DISCOVERY = False
 map_id_to_path = dict()
 collected_tests_so_far = list()
-TEST_PORT = os.getenv("TEST_PORT")
-TEST_UUID = os.getenv("TEST_UUID")
+TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):
-    global TEST_PORT
-    global TEST_UUID
-    TEST_PORT = os.getenv("TEST_PORT")
-    TEST_UUID = os.getenv("TEST_UUID")
-    if TEST_UUID is None or TEST_PORT is None:
-        error_string = (
-            "PYTEST ERROR: TEST_UUID and/or TEST_PORT are not set at the time of pytest starting. Please confirm these environment variables are not being"
-            " changed or removed as they are required for successful test discovery and execution."
-            f" \nTEST_UUID = {TEST_UUID}\nTEST_PORT = {TEST_PORT}\n"
-        )
+    global TEST_RUN_PIPE
+    TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
+    error_string = (
+        "PYTEST ERROR: TEST_RUN_PIPE is not set at the time of pytest starting. "
+        "Please confirm this environment variable is not being changed or removed "
+        "as it is required for successful test discovery and execution."
+        f"TEST_RUN_PIPE = {TEST_RUN_PIPE}\n"
+    )
+    if not TEST_RUN_PIPE:
         print(error_string, file=sys.stderr)
     if "--collect-only" in args:
         global IS_DISCOVERY
@@ -80,13 +79,21 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 raise VSCodePytestError(
                     f"The path set in the argument --rootdir={rootdir} does not exist."
                 )
-            if (
-                os.path.islink(rootdir)
-                and pathlib.Path(os.path.realpath(rootdir)) == pathlib.Path.cwd()
-            ):
+
+            # Check if the rootdir is a symlink or a child of a symlink to the current cwd.
+            isSymlink = False
+
+            if os.path.islink(rootdir):
+                isSymlink = True
                 print(
-                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink to the cwd, {pathlib.Path.cwd()}.",
-                    "Therefore setting symlink path to rootdir argument.",
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink."
+                )
+            elif pathlib.Path(os.path.realpath(rootdir)) != rootdir:
+                print("Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink.")
+                isSymlink = has_symlink_parent(rootdir)
+            if isSymlink:
+                print(
+                    f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink or child of a symlink, adjusting pytest paths accordingly.",
                 )
                 global SYMLINK_PATH
                 SYMLINK_PATH = pathlib.Path(rootdir)
@@ -143,6 +150,21 @@ def pytest_exception_interact(node, call, report):
                 "success",
                 collected_test if collected_test else None,
             )
+
+
+def has_symlink_parent(current_path):
+    """Recursively checks if any parent directories of the given path are symbolic links."""
+    # Convert the current path to an absolute Path object
+    curr_path = pathlib.Path(current_path)
+    print("Checking for symlink parent starting at current path: ", curr_path)
+
+    # Iterate over all parent directories
+    for parent in curr_path.parents:
+        # Check if the parent directory is a symlink
+        if os.path.islink(parent):
+            print(f"Symlink found at: {parent}")
+            return True
+    return False
 
 
 def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
@@ -413,6 +435,37 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 
     for test_case in session.items:
         test_node = create_test_node(test_case)
+        if hasattr(test_case, "callspec"):  # This means it is a parameterized test.
+            function_name: str = ""
+            # parameterized test cases cut the repetitive part of the name off.
+            parent_part, parameterized_section = test_node["name"].split("[", 1)
+            test_node["name"] = "[" + parameterized_section
+            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
+            try:
+                function_name = test_case.originalname  # type: ignore
+                function_test_node = function_nodes_dict[parent_path]
+            except AttributeError:  # actual error has occurred
+                ERRORS.append(
+                    f"unable to find original name for {test_case.name} with parameterization detected."
+                )
+                raise VSCodePytestError("Unable to find original name for parameterized test case")
+            except KeyError:
+                function_test_node: TestNode = create_parameterized_function_node(
+                    function_name, get_node_path(test_case), test_case.nodeid
+                )
+                function_nodes_dict[parent_path] = function_test_node
+            function_test_node["children"].append(test_node)
+            # Check if the parent node of the function is file, if so create/add to this file node.
+            if isinstance(test_case.parent, pytest.File):
+                try:
+                    parent_test_case = file_nodes_dict[test_case.parent]
+                except KeyError:
+                    parent_test_case = create_file_node(test_case.parent)
+                    file_nodes_dict[test_case.parent] = parent_test_case
+                if function_test_node not in parent_test_case["children"]:
+                    parent_test_case["children"].append(function_test_node)
+            # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
+            test_node = function_test_node
         if isinstance(test_case.parent, pytest.Class):
             case_iter = test_case.parent
             node_child_iter = test_node
@@ -424,7 +477,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 except KeyError:
                     test_class_node = create_class_node(case_iter)
                     class_nodes_dict[case_iter.nodeid] = test_class_node
-                test_class_node["children"].append(node_child_iter)
+                # Check if the class already has the child node. This will occur if the test is parameterized.
+                if node_child_iter not in test_class_node["children"]:
+                    test_class_node["children"].append(node_child_iter)
                 # Iterate up.
                 node_child_iter = test_class_node
                 case_iter = case_iter.parent
@@ -443,35 +498,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
-        elif hasattr(test_case, "callspec"):  # This means it is a parameterized test.
-            function_name: str = ""
-            # parameterized test cases cut the repetitive part of the name off.
-            parent_part, parameterized_section = test_node["name"].split("[", 1)
-            test_node["name"] = "[" + parameterized_section
-            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
-            try:
-                function_name = test_case.originalname  # type: ignore
-                function_test_case = function_nodes_dict[parent_path]
-            except AttributeError:  # actual error has occurred
-                ERRORS.append(
-                    f"unable to find original name for {test_case.name} with parameterization detected."
-                )
-                raise VSCodePytestError("Unable to find original name for parameterized test case")
-            except KeyError:
-                function_test_case: TestNode = create_parameterized_function_node(
-                    function_name, get_node_path(test_case), test_case.nodeid
-                )
-                function_nodes_dict[parent_path] = function_test_case
-            function_test_case["children"].append(test_node)
-            # Now, add the function node to file node.
-            try:
-                parent_test_case = file_nodes_dict[test_case.parent]
-            except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
-            if function_test_case not in parent_test_case["children"]:
-                parent_test_case["children"].append(function_test_case)
-        else:  # This includes test cases that are pytest functions or a doctests.
+        elif not hasattr(test_case, "callspec"):
+            # This includes test cases that are pytest functions or a doctests.
             try:
                 parent_test_case = file_nodes_dict[test_case.parent]
             except KeyError:
@@ -694,8 +722,8 @@ def get_node_path(node: Any) -> pathlib.Path:
     return node_path
 
 
-__socket = None
-atexit.register(lambda: __socket.close() if __socket else None)
+__writer = None
+atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def execution_post(
@@ -757,27 +785,24 @@ def send_post_request(
     payload -- the payload data to be sent.
     cls_encoder -- a custom encoder if needed.
     """
-    global TEST_PORT
-    global TEST_UUID
-    if TEST_UUID is None or TEST_PORT is None:
-        # if TEST_UUID or TEST_PORT is None, print an error and fail as these are both critical errors
+    if not TEST_RUN_PIPE:
         error_msg = (
-            "PYTEST ERROR: TEST_UUID and/or TEST_PORT are not set at the time of pytest starting. Please confirm these environment variables are not being"
-            " changed or removed as they are required for successful pytest discovery and execution."
-            f" \nTEST_UUID = {TEST_UUID}\nTEST_PORT = {TEST_PORT}\n"
+            "PYTEST ERROR: TEST_RUN_PIPE is not set at the time of pytest starting. "
+            "Please confirm this environment variable is not being changed or removed "
+            "as it is required for successful test discovery and execution."
+            f"TEST_RUN_PIPE = {TEST_RUN_PIPE}\n"
         )
         print(error_msg, file=sys.stderr)
         raise VSCodePytestError(error_msg)
 
-    addr = ("localhost", int(TEST_PORT))
-    global __socket
+    global __writer
 
-    if __socket is None:
+    if __writer is None:
         try:
-            __socket = socket_manager.SocketManager(addr)
-            __socket.connect()
+            __writer = socket_manager.PipeManager(TEST_RUN_PIPE)
+            __writer.connect()
         except Exception as error:
-            error_msg = f"Error attempting to connect to extension communication socket[vscode-pytest]: {error}"
+            error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
             print(
                 "If you are on a Windows machine, this error may be occurring if any of your tests clear environment variables"
@@ -785,26 +810,25 @@ def send_post_request(
                 "for the correct way to clear environment variables during testing.\n",
                 file=sys.stderr,
             )
-            __socket = None
+            __writer = None
             raise VSCodePytestError(error_msg)
 
-    data = json.dumps(payload, cls=cls_encoder)
-    request = f"""Content-Length: {len(data)}
-Content-Type: application/json
-Request-uuid: {TEST_UUID}
-
-{data}"""
+    rpc = {
+        "jsonrpc": "2.0",
+        "params": payload,
+    }
+    data = json.dumps(rpc, cls=cls_encoder)
 
     try:
-        if __socket is not None and __socket.socket is not None:
-            __socket.socket.sendall(request.encode("utf-8"))
+        if __writer:
+            __writer.write(data)
         else:
             print(
-                f"Plugin error connection error[vscode-pytest], socket is None \n[vscode-pytest] data: \n{request} \n",
+                f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",
                 file=sys.stderr,
             )
     except Exception as error:
         print(
-            f"Plugin error, exception thrown while attempting to send data[vscode-pytest]: {error} \n[vscode-pytest] data: \n{request}\n",
+            f"Plugin error, exception thrown while attempting to send data[vscode-pytest]: {error} \n[vscode-pytest] data: \n{data}\n",
             file=sys.stderr,
         )

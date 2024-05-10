@@ -9,9 +9,9 @@ contact_links:
   - name: 'Jupyter'
     url: https://github.com/microsoft/vscode-jupyter/issues
     about: 'For issues relating to the Jupyter extension (including the interactive window)'
-  - name: 'Debugpy'
-    url: https://github.com/microsoft/debugpy/issues
-    about: 'For issues relating to the debugpy debugger'
+  - name: 'Python Debugger'
+    url: https://github.com/microsoft/vscode-python-debugger/issues
+    about: 'For issues relating to the Python debugger'
   - name: Help/Support
     url: https://github.com/microsoft/vscode-python/discussions/categories/q-a
     about: 'Having trouble with the extension? Need help getting something to work?'

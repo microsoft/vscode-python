@@ -6,6 +6,7 @@ import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { registerCreateEnvironmentFeatures } from './createEnvApi';
 import { registerCreateEnvironmentButtonFeatures } from './createEnvButtonContext';
+import { registerTriggerForPipInTerminal } from './globalPipInTerminalTrigger';
 import { registerInstalledPackagesDiagnosticsProvider } from './installedPackagesDiagnostic';
 import { registerPyProjectTomlFeatures } from './pyProjectTomlContext';
 
@@ -20,4 +21,5 @@ export function registerAllCreateEnvironmentFeatures(
     registerCreateEnvironmentButtonFeatures(disposables);
     registerPyProjectTomlFeatures(disposables);
     registerInstalledPackagesDiagnosticsProvider(disposables, interpreterService);
+    registerTriggerForPipInTerminal(disposables);
 }

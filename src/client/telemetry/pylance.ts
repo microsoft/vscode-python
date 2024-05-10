@@ -28,6 +28,7 @@
       "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "moduleversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "resultLength" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
    }
 */

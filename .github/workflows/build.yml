@@ -97,7 +97,6 @@ jobs:
 
       - name: Install other Python requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./python_files/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
@@ -195,7 +194,7 @@ jobs:
       - name: Install build pre-requisite
         run: python -m pip install wheel nox
 
-      - name: Install Python Extension dependencies (jedi, debugpy, etc.)
+      - name: Install Python Extension dependencies (jedi, etc.)
         run: nox --session install_python_libs
 
       - name: Install test requirements

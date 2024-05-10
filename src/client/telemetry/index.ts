@@ -2006,7 +2006,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation conditions is triggered.
      */
     /* __GDPR__
-       "environemt.check.trigger" : {
+       "environment.check.trigger" : {
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
@@ -2023,13 +2023,20 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation condition is computed.
      */
     /* __GDPR__
-       "environemt.check.result" : {
+       "environment.check.result" : {
           "result" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
     [EventName.ENVIRONMENT_CHECK_RESULT]: {
         result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
     };
+    /**
+     * Telemetry event sent when `pip install` was called from a global env in a shell where shell inegration is supported.
+     */
+    /* __GDPR__
+       "environment.terminal.global_pip" : { "owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_TERMINAL_GLOBAL_PIP]: never | undefined;
     /* __GDPR__
             "query-expfeature" : {
                 "owner": "luabud",

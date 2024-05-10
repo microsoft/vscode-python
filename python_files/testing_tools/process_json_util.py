@@ -2,12 +2,12 @@
 # Licensed under the MIT License.
 import io
 import json
-from typing import List
+from typing import List, Dict
 
 CONTENT_LENGTH: str = "Content-Length:"
 
 
-def process_rpc_json(data: str) -> List[str]:
+def process_rpc_json(data: str) -> Dict[str, List[str]]:
     """Process the JSON data which comes from the server."""
     str_stream: io.StringIO = io.StringIO(data)
 
@@ -22,7 +22,7 @@ def process_rpc_json(data: str) -> List[str]:
         if not line or line.isspace():
             raise ValueError("Header does not contain Content-Length")
 
-    while True:
+    while True:  # keep reading until the number of bytes is the CONTENT_LENGTH
         line: str = str_stream.readline()
         if not line or line.isspace():
             break

@@ -11,7 +11,6 @@ import type { SemVer } from 'semver';
 import { IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../common/types';
-import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
 import {
@@ -22,6 +21,7 @@ import {
 } from '../interpreter/contracts';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
+import { getDebugpyPath } from '../debugger/pythonDebugger';
 import type { Environment } from '../api/types';
 
 type PythonApiForJupyterExtension = {
@@ -110,7 +110,7 @@ export class JupyterExtensionIntegration {
                 this.interpreterSelector.getAllSuggestions(resource),
             getKnownSuggestions: (resource: Resource): IInterpreterQuickPickItem[] =>
                 this.interpreterSelector.getSuggestions(resource),
-            getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
+            getDebuggerPath: async () => dirname(await getDebugpyPath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),
             registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter.bind(

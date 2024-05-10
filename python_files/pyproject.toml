@@ -16,7 +16,6 @@ extraPaths = ['lib/python', 'lib/jedilsp']
 ignore = [
     # Ignore all pre-existing code with issues
     'get-pip.py',
-    'install_debugpy.py',
     'tensorboard_launcher.py',
     'testlauncher.py',
     'visualstudio_py_testlauncher.py',
@@ -24,7 +23,6 @@ ignore = [
     'testing_tools/adapter/util.py',
     'testing_tools/adapter/pytest/_discovery.py',
     'testing_tools/adapter/pytest/_pytest_item.py',
-    'tests/debug_adapter/test_install_debugpy.py',
     'tests/testing_tools/adapter/.data',
     'tests/testing_tools/adapter/test___main__.py',
     'tests/testing_tools/adapter/test_discovery.py',

@@ -9,7 +9,7 @@ import { execObservable } from '../../../common/process/rawProcessApis';
 import { createDeferred } from '../../../common/utils/async';
 import { Common, CreateEnv } from '../../../common/utils/localize';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { CreateEnvironmentProgress } from '../types';
+import { CreateEnvironmentOptionsInternal, CreateEnvironmentProgress } from '../types';
 import { pickWorkspaceFolder } from '../common/workspaceSelection';
 import { IInterpreterQuickPick } from '../../../interpreter/configuration/types';
 import { EnvironmentType, PythonEnvironment } from '../../info';
@@ -152,13 +152,18 @@ async function createVenv(
 export class VenvCreationProvider implements CreateEnvironmentProvider {
     constructor(private readonly interpreterQuickPick: IInterpreterQuickPick) {}
 
-    public async createEnvironment(options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined> {
+    public async createEnvironment(
+        options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
+    ): Promise<CreateEnvironmentResult | undefined> {
         let workspace: WorkspaceFolder | undefined;
         const workspaceStep = new MultiStepNode(
             undefined,
             async (context?: MultiStepAction) => {
                 try {
-                    workspace = (await pickWorkspaceFolder(undefined, context)) as WorkspaceFolder | undefined;
+                    workspace = (await pickWorkspaceFolder(
+                        { preSelectedWorkspace: options?.workspaceFolder },
+                        context,
+                    )) as WorkspaceFolder | undefined;
                 } catch (ex) {
                     if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
                         return ex;

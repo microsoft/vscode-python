@@ -25,6 +25,7 @@ vscode-python-signing.*
 .github/**
 .mocha-reporter/**
 .nvm/**
+.nox/**
 .nyc_output
 .prettierrc.js
 .sonarcloud.properties

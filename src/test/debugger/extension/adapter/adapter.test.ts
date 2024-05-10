@@ -70,7 +70,7 @@ suite('Debugger Integration', () => {
             }
             const [configName, scriptArgs] = tests[kind];
             test(kind, async () => {
-                const session = fix.resolveDebugger(configName, file, scriptArgs, workspaceRoot);
+                const session = await fix.resolveDebugger(configName, file, scriptArgs, workspaceRoot);
                 await session.start();
                 // Any debugger ops would go here.
                 await new Promise((r) => setTimeout(r, 300)); // 0.3 seconds
@@ -93,7 +93,7 @@ suite('Debugger Integration', () => {
             }
             const [configName, scriptArgs] = tests[kind];
             test(kind, async () => {
-                const session = fix.resolveDebugger(configName, file, scriptArgs, workspaceRoot);
+                const session = await fix.resolveDebugger(configName, file, scriptArgs, workspaceRoot);
                 const bp = session.addBreakpoint(file, 21); // line: "time.sleep()"
                 await session.start();
                 await session.waitForBreakpoint(bp);
