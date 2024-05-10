@@ -13,3 +13,4 @@ pub mod virtualenvwrapper;
 pub mod pipenv;
 pub mod virtualenv;
 pub mod venv;
+pub mod locator;

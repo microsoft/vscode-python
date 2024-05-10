@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use std::path::PathBuf;
-
 use crate::logging::{LogLevel, LogMessage};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 pub trait MessageDispatcher {
     fn report_environment_manager(&mut self, env: EnvManager) -> ();

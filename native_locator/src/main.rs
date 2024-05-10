@@ -20,6 +20,7 @@ mod virtualenv;
 mod virtualenvwrapper;
 mod windows_python;
 mod venv;
+mod locator;
 
 fn main() {
     let mut dispatcher = create_dispatcher();
