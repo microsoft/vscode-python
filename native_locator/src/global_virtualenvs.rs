@@ -1,18 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use crate::pipenv;
-use crate::venv;
-use crate::virtualenv;
-use crate::virtualenvwrapper;
 use crate::{
     known,
-    messaging::MessageDispatcher,
     utils::{find_python_binary_path, get_version, PythonEnv},
 };
 use std::{fs, path::PathBuf};
 
-fn get_global_virtualenv_dirs(environment: &impl known::Environment) -> Vec<PathBuf> {
+pub fn get_global_virtualenv_dirs(environment: &impl known::Environment) -> Vec<PathBuf> {
     let mut venv_dirs: Vec<PathBuf> = vec![];
 
     if let Some(work_on_home) = environment.get_env_var("WORKON_HOME".to_string()) {
@@ -48,7 +43,7 @@ fn get_global_virtualenv_dirs(environment: &impl known::Environment) -> Vec<Path
     venv_dirs
 }
 
-pub fn list_global_virtualenvs(environment: &impl known::Environment) -> Vec<PythonEnv> {
+pub fn list_global_virtual_envs(environment: &impl known::Environment) -> Vec<PythonEnv> {
     let mut python_envs: Vec<PythonEnv> = vec![];
     for root_dir in get_global_virtualenv_dirs(environment).iter() {
         if let Ok(dirs) = fs::read_dir(root_dir) {
@@ -59,11 +54,11 @@ pub fn list_global_virtualenvs(environment: &impl known::Environment) -> Vec<Pyt
                         continue;
                     }
                     if let Some(executable) = find_python_binary_path(&venv_dir) {
-                        python_envs.push(PythonEnv {
-                            path: venv_dir,
-                            executable: executable.clone(),
-                            version: get_version(executable.to_str().unwrap()),
-                        });
+                        python_envs.push(PythonEnv::new(
+                            executable.clone(),
+                            Some(venv_dir),
+                            get_version(&executable),
+                        ));
                     }
                 }
             }
@@ -71,26 +66,4 @@ pub fn list_global_virtualenvs(environment: &impl known::Environment) -> Vec<Pyt
     }
 
     python_envs
-}
-
-pub fn find_and_report(
-    dispatcher: &mut impl MessageDispatcher,
-    environment: &impl known::Environment,
-) -> Option<()> {
-    for env in list_global_virtualenvs(environment).iter() {
-        if pipenv::find_and_report(&env, dispatcher).is_some() {
-            continue;
-        }
-        if virtualenvwrapper::find_and_report(&env, dispatcher, environment).is_some() {
-            continue;
-        }
-        if venv::find_and_report(&env, dispatcher).is_some() {
-            continue;
-        }
-        if virtualenv::find_and_report(&env, dispatcher).is_some() {
-            continue;
-        }
-    }
-
-    None
 }

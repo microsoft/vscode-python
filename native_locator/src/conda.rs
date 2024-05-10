@@ -2,10 +2,17 @@
 // Licensed under the MIT License.
 
 use crate::known;
+use crate::known::Environment;
+use crate::locator::Locator;
 use crate::messaging;
+use crate::messaging::EnvManager;
 use crate::messaging::EnvManagerType;
+use crate::messaging::MessageDispatcher;
+use crate::messaging::PythonEnvironment;
 use crate::utils::find_python_binary_path;
+use crate::utils::PythonEnv;
 use regex::Regex;
+use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -129,7 +136,7 @@ fn get_conda_bin_names() -> Vec<&'static str> {
 }
 
 /// Find the conda binary on the PATH environment variable
-fn find_conda_binary_on_path(environment: &impl known::Environment) -> Option<PathBuf> {
+fn find_conda_binary_on_path(environment: &dyn known::Environment) -> Option<PathBuf> {
     let paths = environment.get_env_var("PATH".to_string())?;
     for path in env::split_paths(&paths) {
         for bin in get_conda_bin_names() {
@@ -148,7 +155,7 @@ fn find_conda_binary_on_path(environment: &impl known::Environment) -> Option<Pa
 }
 
 #[cfg(windows)]
-fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathBuf> {
+fn get_known_conda_locations(environment: &dyn known::Environment) -> Vec<PathBuf> {
     let user_profile = environment.get_env_var("USERPROFILE".to_string()).unwrap();
     let program_data = environment.get_env_var("PROGRAMDATA".to_string()).unwrap();
     let all_user_profile = environment
@@ -170,7 +177,7 @@ fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathB
 }
 
 #[cfg(unix)]
-fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathBuf> {
+fn get_known_conda_locations(environment: &dyn known::Environment) -> Vec<PathBuf> {
     let mut known_paths = vec![
         PathBuf::from("/opt/anaconda3/bin"),
         PathBuf::from("/opt/miniconda3/bin"),
@@ -192,7 +199,7 @@ fn get_known_conda_locations(environment: &impl known::Environment) -> Vec<PathB
 }
 
 /// Find conda binary in known locations
-fn find_conda_binary_in_known_locations(environment: &impl known::Environment) -> Option<PathBuf> {
+fn find_conda_binary_in_known_locations(environment: &dyn known::Environment) -> Option<PathBuf> {
     let conda_bin_names = get_conda_bin_names();
     let known_locations = get_known_conda_locations(environment);
     for location in known_locations {
@@ -209,7 +216,7 @@ fn find_conda_binary_in_known_locations(environment: &impl known::Environment) -
 }
 
 /// Find the conda binary on the system
-pub fn find_conda_binary(environment: &impl known::Environment) -> Option<PathBuf> {
+pub fn find_conda_binary(environment: &dyn known::Environment) -> Option<PathBuf> {
     let conda_binary_on_path = find_conda_binary_on_path(environment);
     match conda_binary_on_path {
         Some(conda_binary_on_path) => Some(conda_binary_on_path),
@@ -232,7 +239,7 @@ pub fn get_conda_version(conda_binary: &PathBuf) -> Option<String> {
     get_version_from_meta_json(&conda_python_json_path)
 }
 
-fn get_conda_envs_from_environment_txt(environment: &impl known::Environment) -> Vec<String> {
+fn get_conda_envs_from_environment_txt(environment: &dyn known::Environment) -> Vec<String> {
     let mut envs = vec![];
     let home = environment.get_user_home();
     match home {
@@ -255,7 +262,7 @@ fn get_conda_envs_from_environment_txt(environment: &impl known::Environment) ->
 
 fn get_known_env_locations(
     conda_bin: &PathBuf,
-    environment: &impl known::Environment,
+    environment: &dyn known::Environment,
 ) -> Vec<String> {
     let mut paths = vec![];
     let home = environment.get_user_home();
@@ -290,7 +297,7 @@ fn get_known_env_locations(
 
 fn get_conda_envs_from_known_env_locations(
     conda_bin: &PathBuf,
-    environment: &impl known::Environment,
+    environment: &dyn known::Environment,
 ) -> Vec<String> {
     let mut envs = vec![];
     for location in get_known_env_locations(conda_bin, environment) {
@@ -333,7 +340,7 @@ struct CondaEnv {
 
 fn get_distinct_conda_envs(
     conda_bin: &PathBuf,
-    environment: &impl known::Environment,
+    environment: &dyn known::Environment,
 ) -> Vec<CondaEnv> {
     let mut envs = get_conda_envs_from_environment_txt(environment);
     let mut known_envs = get_conda_envs_from_known_env_locations(conda_bin, environment);
@@ -377,52 +384,91 @@ fn get_distinct_conda_envs(
     conda_envs
 }
 
-pub fn find_and_report(
-    dispatcher: &mut impl messaging::MessageDispatcher,
-    environment: &impl known::Environment,
-) {
-    let conda_binary = find_conda_binary(environment);
-    match conda_binary {
-        Some(conda_binary) => {
-            let env_manager = messaging::EnvManager::new(
-                conda_binary.clone(),
-                get_conda_version(&conda_binary),
-                EnvManagerType::Conda,
-            );
-            dispatcher.report_environment_manager(env_manager.clone());
+pub struct Conda<'a> {
+    pub environments: HashMap<String, PythonEnvironment>,
+    pub manager: Option<EnvManager>,
+    pub environment: &'a dyn Environment,
+}
 
-            let envs = get_distinct_conda_envs(&conda_binary, environment);
-            for env in envs {
-                let executable = find_python_binary_path(Path::new(&env.path));
-                let params = messaging::PythonEnvironment::new(
-                    Some(env.name.to_string()),
-                    executable,
-                    messaging::PythonEnvironmentCategory::Conda,
-                    get_conda_python_version(&env.path),
-                    Some(env.path.clone()),
-                    Some(env.path.clone()),
-                    Some(env_manager.clone()),
-                    if env.named {
-                        Some(vec![
-                            conda_binary.to_string_lossy().to_string(),
-                            "run".to_string(),
-                            "-n".to_string(),
-                            env.name.to_string(),
-                            "python".to_string(),
-                        ])
-                    } else {
-                        Some(vec![
-                            conda_binary.to_string_lossy().to_string(),
-                            "run".to_string(),
-                            "-p".to_string(),
-                            env.path.to_string_lossy().to_string(),
-                            "python".to_string(),
-                        ])
-                    },
-                );
-                dispatcher.report_environment(params);
+impl Conda<'_> {
+    pub fn with<'a>(environment: &'a impl Environment) -> Conda {
+        Conda {
+            environments: HashMap::new(),
+            environment,
+            manager: None,
+        }
+    }
+}
+
+impl Locator for Conda<'_> {
+    fn is_known(&self, python_executable: &PathBuf) -> bool {
+        self.environments
+            .contains_key(python_executable.to_str().unwrap_or_default())
+    }
+
+    fn track_if_compatible(&mut self, _env: &PythonEnv) -> bool {
+        // We will find everything in gather
+        false
+    }
+
+    fn gather(&mut self) -> Option<()> {
+        let conda_binary = find_conda_binary(self.environment)?;
+        let manager = EnvManager::new(
+            conda_binary.clone(),
+            get_conda_version(&conda_binary),
+            EnvManagerType::Conda,
+        );
+        self.manager = Some(manager.clone());
+
+        let envs = get_distinct_conda_envs(&conda_binary, self.environment);
+        for env in envs {
+            let executable = find_python_binary_path(Path::new(&env.path));
+            let env = messaging::PythonEnvironment::new(
+                Some(env.name.to_string()),
+                executable.clone(),
+                messaging::PythonEnvironmentCategory::Conda,
+                get_conda_python_version(&env.path),
+                Some(env.path.clone()),
+                Some(env.path.clone()),
+                Some(manager.clone()),
+                if env.named {
+                    Some(vec![
+                        conda_binary.to_string_lossy().to_string(),
+                        "run".to_string(),
+                        "-n".to_string(),
+                        env.name.to_string(),
+                        "python".to_string(),
+                    ])
+                } else {
+                    Some(vec![
+                        conda_binary.to_string_lossy().to_string(),
+                        "run".to_string(),
+                        "-p".to_string(),
+                        env.path.to_string_lossy().to_string(),
+                        "python".to_string(),
+                    ])
+                },
+            );
+
+            if let Some(exe) = executable {
+                self.environments
+                    .insert(exe.to_str().unwrap_or_default().to_string(), env);
+            } else if let Some(env_path) = env.env_path.clone() {
+                self.environments
+                    .insert(env_path.to_str().unwrap().to_string(), env);
             }
         }
-        None => (),
+
+        Some(())
+    }
+
+    fn report(&self, reporter: &mut dyn MessageDispatcher) {
+        if let Some(manager) = &self.manager {
+            reporter.report_environment_manager(manager.clone());
+        }
+
+        for env in self.environments.values() {
+            reporter.report_environment(env.clone());
+        }
     }
 }

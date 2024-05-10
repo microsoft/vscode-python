@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use std::path::PathBuf;
-
 use crate::logging::{LogLevel, LogMessage};
 use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
 
 pub trait MessageDispatcher {
     fn report_environment_manager(&mut self, env: EnvManager) -> ();
@@ -69,7 +68,7 @@ impl EnvManagerMessage {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum PythonEnvironmentCategory {
     System,
@@ -84,7 +83,7 @@ pub enum PythonEnvironmentCategory {
     VirtualEnv,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PythonEnvironment {
     pub name: Option<String>,

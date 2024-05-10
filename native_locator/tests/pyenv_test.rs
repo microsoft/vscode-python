@@ -7,7 +7,7 @@ mod common;
 #[cfg(unix)]
 fn does_not_find_any_pyenv_envs() {
     use crate::common::{create_test_dispatcher, create_test_environment};
-    use python_finder::pyenv;
+    use python_finder::{locator::Locator, pyenv};
     use std::{collections::HashMap, path::PathBuf};
 
     let mut dispatcher = create_test_dispatcher();
@@ -17,7 +17,9 @@ fn does_not_find_any_pyenv_envs() {
         Vec::new(),
     );
 
-    pyenv::find_and_report(&mut dispatcher, &known);
+    let mut locator = pyenv::PyEnv::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     assert_eq!(dispatcher.messages.len(), 0);
 }
@@ -29,6 +31,7 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
+    use python_finder::locator::Locator;
     use python_finder::pyenv;
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
@@ -43,7 +46,9 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
         vec![PathBuf::from(homebrew_bin)],
     );
 
-    pyenv::find_and_report(&mut dispatcher, &known);
+    let mut locator = pyenv::PyEnv::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     assert_eq!(dispatcher.messages.len(), 1);
     let expected_json = json!({"executablePath":pyenv_exe,"version":null, "tool": "pyenv"});
@@ -57,6 +62,7 @@ fn find_pyenv_envs() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
+    use python_finder::locator::Locator;
     use python_finder::{
         messaging::{EnvManager, EnvManagerType, PythonEnvironment},
         pyenv,
@@ -74,7 +80,9 @@ fn find_pyenv_envs() {
         vec![PathBuf::from(homebrew_bin)],
     );
 
-    pyenv::find_and_report(&mut dispatcher, &known);
+    let mut locator = pyenv::PyEnv::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     assert_eq!(dispatcher.messages.len(), 6);
     let expected_manager = EnvManager {

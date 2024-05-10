@@ -1,12 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use crate::messaging::{MessageDispatcher, PythonEnvironment, PythonEnvironmentCategory};
+use crate::locator::Locator;
+use crate::messaging::{MessageDispatcher, PythonEnvironment};
 use crate::utils::PythonEnv;
+use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub fn is_virtualenv(env: &PythonEnv) -> bool {
-    if let Some(file_path) = PathBuf::from(env.executable.clone()).parent() {
+    if env.path.is_none() {
+        return false;
+    }
+    if let Some(file_path) = env.executable.parent() {
         // Check if there are any activate.* files in the same directory as the interpreter.
         //
         // env
@@ -42,26 +47,62 @@ pub fn is_virtualenv(env: &PythonEnv) -> bool {
     false
 }
 
-pub fn find_and_report(env: &PythonEnv, dispatcher: &mut impl MessageDispatcher) -> Option<()> {
-    if is_virtualenv(env) {
-        let env = PythonEnvironment {
-            name: match env.path.file_name().to_owned() {
-                Some(name) => Some(name.to_string_lossy().to_owned().to_string()),
-                None => None,
-            },
-            python_executable_path: Some(env.executable.clone()),
-            category: PythonEnvironmentCategory::VirtualEnv,
-            version: env.version.clone(),
-            env_path: Some(env.path.clone()),
-            sys_prefix_path: Some(env.path.clone()),
-            env_manager: None,
-            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-            project_path: None,
-        };
+pub struct VirtualEnv {
+    pub environments: HashMap<String, PythonEnvironment>,
+}
 
-        dispatcher.report_environment(env);
-
-        return Some(());
+impl VirtualEnv {
+    pub fn new() -> VirtualEnv {
+        VirtualEnv {
+            environments: HashMap::new(),
+        }
     }
-    None
+}
+
+impl Locator for VirtualEnv {
+    fn is_known(&self, python_executable: &PathBuf) -> bool {
+        self.environments
+            .contains_key(python_executable.to_str().unwrap_or_default())
+    }
+
+    fn track_if_compatible(&mut self, env: &PythonEnv) -> bool {
+        if is_virtualenv(env) {
+            self.environments.insert(
+                env.executable.to_str().unwrap().to_string(),
+                PythonEnvironment {
+                    name: Some(
+                        env.path
+                            .clone()
+                            .expect("env.path can never be empty for virtualenvs")
+                            .file_name()
+                            .unwrap()
+                            .to_string_lossy()
+                            .to_string(),
+                    ),
+                    python_executable_path: Some(env.executable.clone()),
+                    version: env.version.clone(),
+                    category: crate::messaging::PythonEnvironmentCategory::VirtualEnv,
+                    sys_prefix_path: env.path.clone(),
+                    env_path: env.path.clone(),
+                    env_manager: None,
+                    project_path: None,
+                    python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+                },
+            );
+            return true;
+        }
+        false
+    }
+
+    fn gather(&mut self) -> Option<()> {
+        // There are no common global locations for virtual environments.
+        // We expect the user of this class to call `is_compatible`
+        None
+    }
+
+    fn report(&self, reporter: &mut dyn MessageDispatcher) {
+        for env in self.environments.values() {
+            reporter.report_environment(env.clone());
+        }
+    }
 }

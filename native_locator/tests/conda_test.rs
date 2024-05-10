@@ -7,7 +7,7 @@ mod common;
 #[cfg(unix)]
 fn does_not_find_any_conda_envs() {
     use crate::common::{create_test_dispatcher, create_test_environment};
-    use python_finder::conda;
+    use python_finder::{conda, locator::Locator};
     use std::{collections::HashMap, path::PathBuf};
 
     let mut dispatcher = create_test_dispatcher();
@@ -17,7 +17,9 @@ fn does_not_find_any_conda_envs() {
         Vec::new(),
     );
 
-    conda::find_and_report(&mut dispatcher, &known);
+    let mut locator = conda::Conda::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     assert_eq!(dispatcher.messages.len(), 0);
 }
@@ -29,10 +31,8 @@ fn find_conda_exe_and_empty_envs() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
-    use python_finder::{
-        conda,
-        messaging::{EnvManager, EnvManagerType},
-    };
+    use python_finder::messaging::{EnvManager, EnvManagerType};
+    use python_finder::{conda, locator::Locator};
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
     let conda_dir = test_file_path(&["tests/unix/conda_without_envs"]);
@@ -47,7 +47,9 @@ fn find_conda_exe_and_empty_envs() {
         Vec::new(),
     );
 
-    conda::find_and_report(&mut dispatcher, &known);
+    let mut locator = conda::Conda::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
     let expected_conda_manager = EnvManager {
@@ -64,8 +66,8 @@ fn finds_two_conda_envs_from_txt() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
-    use python_finder::conda;
     use python_finder::messaging::{EnvManager, EnvManagerType, PythonEnvironment};
+    use python_finder::{conda, locator::Locator};
     use serde_json::json;
     use std::collections::HashMap;
     use std::fs;
@@ -92,7 +94,9 @@ fn finds_two_conda_envs_from_txt() {
         Vec::new(),
     );
 
-    conda::find_and_report(&mut dispatcher, &known);
+    let mut locator = conda::Conda::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
     let conda_1_exe = join_test_paths(&[conda_1.clone().to_str().unwrap(), "python"]);

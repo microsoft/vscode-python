@@ -10,7 +10,7 @@ fn find_python_in_path_this() {
         assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
         test_file_path,
     };
-    use python_finder::{common_python, messaging::PythonEnvironment};
+    use python_finder::{common_python, locator::Locator, messaging::PythonEnvironment};
     use serde_json::json;
     use std::collections::HashMap;
 
@@ -27,7 +27,9 @@ fn find_python_in_path_this() {
         Vec::new(),
     );
 
-    common_python::find_and_report(&mut dispatcher, &known);
+    let mut locator = common_python::PythonOnPath::with(&known);
+    locator.gather();
+    locator.report(&mut dispatcher);
 
     assert_eq!(dispatcher.messages.len(), 1);
     let env = PythonEnvironment {
@@ -39,7 +41,7 @@ fn find_python_in_path_this() {
         version: None,
         python_run_command: Some(vec![unix_python_exe.clone().to_str().unwrap().to_string()]),
         env_path: Some(unix_python.clone()),
-        sys_prefix_path: Some(unix_python.clone()),
+        sys_prefix_path: None,
     };
     assert_messages(&[json!(env)], &dispatcher);
 }
