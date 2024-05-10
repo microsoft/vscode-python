@@ -1,26 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use crate::{messaging::MessageDispatcher, utils::PythonEnv};
-use std::path::PathBuf;
+use crate::{
+    messaging::{EnvManager, PythonEnvironment},
+    utils::PythonEnv,
+};
+
+#[derive(Debug)]
+pub enum LocatorResult {
+    Managers(Vec<EnvManager>),
+    Environments(Vec<PythonEnvironment>),
+}
 
 pub trait Locator {
     /**
-     * Whether the given Python executable is known to this locator.
+     * Given a Python environment, this will convert it to a PythonEnvironment that can be supported by this locator.
+     * If an environment is not supported by this locator, this will return None.
+     *
+     * I.e. use this to test whether an environment is of a specific type.
      */
-    fn is_known(&self, python_executable: &PathBuf) -> bool;
+    fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment>;
     /**
-     * Track the given Python executable if it is compatible with the environments supported by this locator.
-     * This way, when report is called, the environment passed here will be reported as a known environment by this locator.
-     * Returns true if the environment was tracked, false otherwise.
+     * Finds all environments specific to this locator.
      */
-    fn track_if_compatible(&mut self, env: &PythonEnv) -> bool;
-    /**
-     * Finds all environments managed by this locator.
-     */
-    fn gather(&mut self) -> Option<()>;
-    /**
-     * Report all of the tracked environments and managers.
-     */
-    fn report(&self, reporter: &mut dyn MessageDispatcher);
+    fn find(&self) -> Option<LocatorResult>;
 }

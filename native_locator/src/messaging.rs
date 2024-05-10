@@ -1,13 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-use crate::logging::{LogLevel, LogMessage};
+use crate::{
+    logging::{LogLevel, LogMessage},
+    utils::PythonEnv,
+};
 use env_logger::Builder;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 
 pub trait MessageDispatcher {
+    fn was_environment_reported(&self, env: &PythonEnv) -> bool;
     fn report_environment_manager(&mut self, env: EnvManager) -> ();
     fn report_environment(&mut self, env: PythonEnvironment) -> ();
     fn exit(&mut self) -> ();
@@ -15,6 +19,7 @@ pub trait MessageDispatcher {
 
 #[derive(Serialize, Deserialize, Copy, Clone)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub enum EnvManagerType {
     Conda,
     Pyenv,
@@ -22,6 +27,7 @@ pub enum EnvManagerType {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct EnvManager {
     pub executable_path: PathBuf,
     pub version: Option<String>,
@@ -50,6 +56,7 @@ impl Clone for EnvManager {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct EnvManagerMessage {
     pub jsonrpc: String,
     pub method: String,
@@ -68,6 +75,7 @@ impl EnvManagerMessage {
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub enum PythonEnvironmentCategory {
     System,
     Homebrew,
@@ -83,6 +91,7 @@ pub enum PythonEnvironmentCategory {
 
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct PythonEnvironment {
     pub name: Option<String>,
     pub python_executable_path: Option<PathBuf>,
@@ -148,6 +157,7 @@ impl PythonEnvironment {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct PythonEnvironmentMessage {
     pub jsonrpc: String,
     pub method: String,
@@ -166,6 +176,7 @@ impl PythonEnvironmentMessage {
 
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct ExitMessage {
     pub jsonrpc: String,
     pub method: String,
@@ -182,7 +193,10 @@ impl ExitMessage {
     }
 }
 
-pub struct JsonRpcDispatcher {}
+pub struct JsonRpcDispatcher {
+    pub reported_managers: HashSet<String>,
+    pub reported_environments: HashSet<String>,
+}
 pub fn send_message<T: serde::Serialize>(message: T) -> () {
     let message = serde_json::to_string(&message).unwrap();
     print!(
@@ -211,12 +225,34 @@ pub fn initialize_logger(log_level: LevelFilter) {
         .filter(None, log_level)
         .init();
 }
+
+impl JsonRpcDispatcher {}
 impl MessageDispatcher for JsonRpcDispatcher {
+    fn was_environment_reported(&self, env: &PythonEnv) -> bool {
+        if let Some(key) = env.executable.as_os_str().to_str() {
+            return self.reported_environments.contains(key);
+        }
+        false
+    }
+
     fn report_environment_manager(&mut self, env: EnvManager) -> () {
-        send_message(EnvManagerMessage::new(env));
+        if let Some(key) = get_manager_key(&env) {
+            if !self.reported_managers.contains(&key) {
+                self.reported_managers.insert(key);
+                send_message(EnvManagerMessage::new(env));
+            }
+        }
     }
     fn report_environment(&mut self, env: PythonEnvironment) -> () {
-        send_message(PythonEnvironmentMessage::new(env));
+        if let Some(key) = get_environment_key(&env) {
+            if !self.reported_environments.contains(&key) {
+                self.reported_environments.insert(key);
+                send_message(PythonEnvironmentMessage::new(env.clone()));
+            }
+            if let Some(manager) = env.env_manager {
+                self.report_environment_manager(manager);
+            }
+        }
     }
     fn exit(&mut self) -> () {
         send_message(ExitMessage::new());
@@ -224,5 +260,22 @@ impl MessageDispatcher for JsonRpcDispatcher {
 }
 
 pub fn create_dispatcher() -> JsonRpcDispatcher {
-    JsonRpcDispatcher {}
+    JsonRpcDispatcher {
+        reported_managers: HashSet::new(),
+        reported_environments: HashSet::new(),
+    }
+}
+
+fn get_environment_key(env: &PythonEnvironment) -> Option<String> {
+    match env.python_executable_path.clone() {
+        Some(key) => Some(key.as_os_str().to_str()?.to_string()),
+        None => match env.env_path.clone() {
+            Some(key) => Some(key.as_os_str().to_str().unwrap().to_string()),
+            None => None,
+        },
+    }
+}
+
+fn get_manager_key(manager: &EnvManager) -> Option<String> {
+    Some(manager.executable_path.to_str()?.to_string())
 }

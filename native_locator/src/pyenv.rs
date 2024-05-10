@@ -1,22 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use regex::Regex;
-use std::collections::HashMap;
-use std::fs;
-use std::path::PathBuf;
-
 use crate::known;
 use crate::known::Environment;
 use crate::locator::Locator;
+use crate::locator::LocatorResult;
 use crate::messaging;
 use crate::messaging::EnvManager;
 use crate::messaging::EnvManagerType;
-use crate::messaging::MessageDispatcher;
 use crate::messaging::PythonEnvironment;
 use crate::utils::find_and_parse_pyvenv_cfg;
 use crate::utils::find_python_binary_path;
 use crate::utils::PythonEnv;
+use regex::Regex;
+use std::fs;
+use std::path::PathBuf;
 
 #[cfg(windows)]
 fn get_home_pyenv_dir(environment: &dyn known::Environment) -> Option<PathBuf> {
@@ -178,63 +176,34 @@ pub fn list_pyenv_environments(
 }
 
 pub struct PyEnv<'a> {
-    pub environments: HashMap<String, PythonEnvironment>,
     pub environment: &'a dyn Environment,
-    pub manager: Option<EnvManager>,
 }
 
 impl PyEnv<'_> {
     pub fn with<'a>(environment: &'a impl Environment) -> PyEnv {
-        PyEnv {
-            environments: HashMap::new(),
-            environment,
-            manager: None,
-        }
+        PyEnv { environment }
     }
 }
 
 impl Locator for PyEnv<'_> {
-    fn is_known(&self, python_executable: &PathBuf) -> bool {
-        self.environments
-            .contains_key(python_executable.to_str().unwrap_or_default())
-    }
-
-    fn track_if_compatible(&mut self, _env: &PythonEnv) -> bool {
+    fn resolve(&self, _env: &PythonEnv) -> Option<PythonEnvironment> {
         // We will find everything in gather
-        false
+        None
     }
 
-    fn gather(&mut self) -> Option<()> {
-        let manager = match get_pyenv_binary(self.environment) {
-            Some(pyenv_binary) => Some(messaging::EnvManager::new(
-                pyenv_binary,
-                None,
-                EnvManagerType::Pyenv,
-            )),
-            None => None,
-        };
-        self.manager = manager.clone();
-
-        for env in list_pyenv_environments(&manager, self.environment)? {
-            self.environments.insert(
-                env.python_executable_path
-                    .as_ref()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
-                env,
-            );
+    fn find(&self) -> Option<LocatorResult> {
+        let pyenv_binary = get_pyenv_binary(self.environment)?;
+        let manager = messaging::EnvManager::new(pyenv_binary, None, EnvManagerType::Pyenv);
+        let mut environments: Vec<PythonEnvironment> = vec![];
+        if let Some(envs) = list_pyenv_environments(&Some(manager.clone()), self.environment) {
+            for env in envs {
+                environments.push(env);
+            }
         }
-        Some(())
-    }
-
-    fn report(&self, reporter: &mut dyn MessageDispatcher) {
-        if let Some(manager) = &self.manager {
-            reporter.report_environment_manager(manager.clone());
-        }
-        for env in self.environments.values() {
-            reporter.report_environment(env.clone());
+        if environments.is_empty() {
+            Some(LocatorResult::Managers(vec![manager]))
+        } else {
+            Some(LocatorResult::Environments(environments))
         }
     }
 }

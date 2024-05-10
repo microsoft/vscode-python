@@ -7,7 +7,7 @@ mod common;
 #[cfg(unix)]
 fn find_python_in_path_this() {
     use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
+        assert_messages, create_test_environment, get_environments_from_result, join_test_paths,
         test_file_path,
     };
     use python_finder::{common_python, locator::Locator, messaging::PythonEnvironment};
@@ -17,7 +17,6 @@ fn find_python_in_path_this() {
     let unix_python = test_file_path(&["tests/unix/known"]);
     let unix_python_exe = join_test_paths(&[unix_python.clone().to_str().unwrap(), "python"]);
 
-    let mut dispatcher = create_test_dispatcher();
     let known = create_test_environment(
         HashMap::from([(
             "PATH".to_string(),
@@ -27,11 +26,13 @@ fn find_python_in_path_this() {
         Vec::new(),
     );
 
-    let mut locator = common_python::PythonOnPath::with(&known);
-    locator.gather();
-    locator.report(&mut dispatcher);
+    let locator = common_python::PythonOnPath::with(&known);
+    locator.find();
+    let result = locator.find();
 
-    assert_eq!(dispatcher.messages.len(), 1);
+    let environments = get_environments_from_result(&result);
+    assert_eq!(environments.len(), 1);
+
     let env = PythonEnvironment {
         env_manager: None,
         project_path: None,
@@ -43,5 +44,8 @@ fn find_python_in_path_this() {
         env_path: Some(unix_python.clone()),
         sys_prefix_path: None,
     };
-    assert_messages(&[json!(env)], &dispatcher);
+    assert_messages(
+        &[json!(env)],
+        &environments.iter().map(|e| json!(e)).collect::<Vec<_>>(),
+    );
 }

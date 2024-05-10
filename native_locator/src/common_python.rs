@@ -2,11 +2,9 @@
 // Licensed under the MIT License.
 
 use crate::known::Environment;
-use crate::locator::Locator;
-use crate::messaging::MessageDispatcher;
+use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
 use crate::utils::{self, PythonEnv};
-use std::collections::HashMap;
 use std::env;
 use std::path::PathBuf;
 
@@ -20,73 +18,61 @@ fn get_env_path(python_executable_path: &PathBuf) -> Option<PathBuf> {
 }
 
 pub struct PythonOnPath<'a> {
-    pub environments: HashMap<String, PythonEnvironment>,
     pub environment: &'a dyn Environment,
 }
 
 impl PythonOnPath<'_> {
     pub fn with<'a>(environment: &'a impl Environment) -> PythonOnPath {
-        PythonOnPath {
-            environments: HashMap::new(),
-            environment,
-        }
+        PythonOnPath { environment }
     }
 }
 
 impl Locator for PythonOnPath<'_> {
-    fn is_known(&self, python_executable: &PathBuf) -> bool {
-        self.environments
-            .contains_key(python_executable.to_str().unwrap_or_default())
-    }
-
-    fn track_if_compatible(&mut self, env: &PythonEnv) -> bool {
+    fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         let bin = if cfg!(windows) {
             "python.exe"
         } else {
             "python"
         };
         if env.executable.file_name().unwrap().to_ascii_lowercase() != bin {
-            return false;
+            return None;
         }
-        self.environments.insert(
-            env.executable.to_str().unwrap().to_string(),
-            PythonEnvironment {
-                name: None,
-                python_executable_path: Some(env.executable.clone()),
-                version: env.version.clone(),
-                category: crate::messaging::PythonEnvironmentCategory::System,
-                sys_prefix_path: None,
-                env_path: env.path.clone(),
-                env_manager: None,
-                project_path: None,
-                python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-            },
-        );
-        true
+        Some(PythonEnvironment {
+            name: None,
+            python_executable_path: Some(env.executable.clone()),
+            version: env.version.clone(),
+            category: crate::messaging::PythonEnvironmentCategory::System,
+            sys_prefix_path: None,
+            env_path: env.path.clone(),
+            env_manager: None,
+            project_path: None,
+            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+        })
     }
 
-    fn gather(&mut self) -> Option<()> {
+    fn find(&self) -> Option<LocatorResult> {
         let paths = self.environment.get_env_var("PATH".to_string())?;
         let bin = if cfg!(windows) {
             "python.exe"
         } else {
             "python"
         };
+        let mut environments: Vec<PythonEnvironment> = vec![];
         env::split_paths(&paths)
             .map(|p| p.join(bin))
             .filter(|p| p.exists())
             .for_each(|full_path| {
                 let version = utils::get_version(&full_path);
                 let env_path = get_env_path(&full_path);
-                self.track_if_compatible(&PythonEnv::new(full_path, env_path, version));
+                if let Some(env) = self.resolve(&PythonEnv::new(full_path, env_path, version)) {
+                    environments.push(env);
+                }
             });
 
-        Some(())
-    }
-
-    fn report(&self, reporter: &mut dyn MessageDispatcher) {
-        for env in self.environments.values() {
-            reporter.report_environment(env.clone());
+        if environments.is_empty() {
+            None
+        } else {
+            Some(LocatorResult::Environments(environments))
         }
     }
 }

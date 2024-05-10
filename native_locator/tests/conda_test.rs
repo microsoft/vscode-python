@@ -6,29 +6,28 @@ mod common;
 #[test]
 #[cfg(unix)]
 fn does_not_find_any_conda_envs() {
-    use crate::common::{create_test_dispatcher, create_test_environment};
+    use crate::common::{create_test_environment, get_environments_from_result};
     use python_finder::{conda, locator::Locator};
     use std::{collections::HashMap, path::PathBuf};
 
-    let mut dispatcher = create_test_dispatcher();
     let known = create_test_environment(
         HashMap::from([("PATH".to_string(), "".to_string())]),
         Some(PathBuf::from("SOME_BOGUS_HOME_DIR")),
         Vec::new(),
     );
 
-    let mut locator = conda::Conda::with(&known);
-    locator.gather();
-    locator.report(&mut dispatcher);
+    let locator = conda::Conda::with(&known);
+    let result = locator.find();
 
-    assert_eq!(dispatcher.messages.len(), 0);
+    let environments = get_environments_from_result(&result);
+    assert_eq!(environments.len(), 0);
 }
 
 #[test]
 #[cfg(unix)]
 fn find_conda_exe_and_empty_envs() {
     use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
+        assert_messages, create_test_environment, get_managers_from_result, join_test_paths,
         test_file_path,
     };
     use python_finder::messaging::{EnvManager, EnvManagerType};
@@ -37,7 +36,6 @@ fn find_conda_exe_and_empty_envs() {
     use std::{collections::HashMap, path::PathBuf};
     let conda_dir = test_file_path(&["tests/unix/conda_without_envs"]);
 
-    let mut dispatcher = create_test_dispatcher();
     let known = create_test_environment(
         HashMap::from([(
             "PATH".to_string(),
@@ -47,9 +45,11 @@ fn find_conda_exe_and_empty_envs() {
         Vec::new(),
     );
 
-    let mut locator = conda::Conda::with(&known);
-    locator.gather();
-    locator.report(&mut dispatcher);
+    let locator = conda::Conda::with(&known);
+    let result = locator.find();
+
+    let managers = get_managers_from_result(&result);
+    assert_eq!(managers.len(), 1);
 
     let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
     let expected_conda_manager = EnvManager {
@@ -57,14 +57,17 @@ fn find_conda_exe_and_empty_envs() {
         version: None,
         tool: EnvManagerType::Conda,
     };
-    assert_messages(&[json!(expected_conda_manager)], &dispatcher)
+    assert_messages(
+        &[json!(expected_conda_manager)],
+        &managers.iter().map(|e| json!(e)).collect::<Vec<_>>(),
+    )
 }
 #[test]
 #[cfg(unix)]
 fn finds_two_conda_envs_from_txt() {
     use crate::common::{
-        assert_messages, create_test_dispatcher, create_test_environment, join_test_paths,
-        test_file_path,
+        assert_messages, create_test_environment, get_environments_from_result,
+        get_managers_from_result, join_test_paths, test_file_path,
     };
     use python_finder::messaging::{EnvManager, EnvManagerType, PythonEnvironment};
     use python_finder::{conda, locator::Locator};
@@ -84,7 +87,6 @@ fn finds_two_conda_envs_from_txt() {
         ),
     );
 
-    let mut dispatcher = create_test_dispatcher();
     let known = create_test_environment(
         HashMap::from([(
             "PATH".to_string(),
@@ -94,9 +96,12 @@ fn finds_two_conda_envs_from_txt() {
         Vec::new(),
     );
 
-    let mut locator = conda::Conda::with(&known);
-    locator.gather();
-    locator.report(&mut dispatcher);
+    let locator = conda::Conda::with(&known);
+    let result = locator.find();
+
+    let managers = get_managers_from_result(&result);
+    let environments = get_environments_from_result(&result);
+    assert_eq!(managers.len(), 1);
 
     let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
     let conda_1_exe = join_test_paths(&[conda_1.clone().to_str().unwrap(), "python"]);
@@ -142,11 +147,11 @@ fn finds_two_conda_envs_from_txt() {
         ]),
     };
     assert_messages(
-        &[
-            json!(expected_conda_1),
-            json!(expected_conda_manager),
-            json!(expected_conda_2),
-        ],
-        &dispatcher,
-    )
+        &[json!(expected_conda_manager)],
+        &managers.iter().map(|e| json!(e)).collect::<Vec<_>>(),
+    );
+    assert_messages(
+        &[json!(expected_conda_1), json!(expected_conda_2)],
+        &environments.iter().map(|e| json!(e)).collect::<Vec<_>>(),
+    );
 }

@@ -1,20 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use std::{
-    collections::{HashMap, HashSet},
-    fs::DirEntry,
-    io::Error,
-    path::PathBuf,
-};
-
 use crate::{
     known::Environment,
-    locator::Locator,
-    messaging::{MessageDispatcher, PythonEnvironment},
+    locator::{Locator, LocatorResult},
+    messaging::PythonEnvironment,
     utils::PythonEnv,
 };
 use regex::Regex;
+use std::{collections::HashSet, fs::DirEntry, io::Error, path::PathBuf};
 
 fn is_symlinked_python_executable(path: Result<DirEntry, Error>) -> Option<PathBuf> {
     let path = path.ok()?.path();
@@ -30,37 +24,28 @@ fn is_symlinked_python_executable(path: Result<DirEntry, Error>) -> Option<PathB
 }
 
 pub struct Homebrew<'a> {
-    pub environments: HashMap<String, PythonEnvironment>,
     pub environment: &'a dyn Environment,
 }
 
 impl Homebrew<'_> {
     pub fn with<'a>(environment: &'a impl Environment) -> Homebrew {
-        Homebrew {
-            environments: HashMap::new(),
-            environment,
-        }
+        Homebrew { environment }
     }
 }
 
 impl Locator for Homebrew<'_> {
-    fn is_known(&self, python_executable: &PathBuf) -> bool {
-        self.environments
-            .contains_key(python_executable.to_str().unwrap_or_default())
+    fn resolve(&self, _env: &PythonEnv) -> Option<PythonEnvironment> {
+        None
     }
 
-    fn track_if_compatible(&mut self, _env: &PythonEnv) -> bool {
-        // We will find everything in gather
-        false
-    }
-
-    fn gather(&mut self) -> Option<()> {
+    fn find(&self) -> Option<LocatorResult> {
         let homebrew_prefix = self
             .environment
             .get_env_var("HOMEBREW_PREFIX".to_string())?;
         let homebrew_prefix_bin = PathBuf::from(homebrew_prefix).join("bin");
         let mut reported: HashSet<String> = HashSet::new();
         let python_regex = Regex::new(r"/(\d+\.\d+\.\d+)/").unwrap();
+        let mut environments: Vec<PythonEnvironment> = vec![];
         for file in std::fs::read_dir(homebrew_prefix_bin).ok()? {
             if let Some(exe) = is_symlinked_python_executable(file) {
                 let python_version = exe.to_string_lossy().to_string();
@@ -85,16 +70,13 @@ impl Locator for Homebrew<'_> {
                     None,
                     Some(vec![exe.to_string_lossy().to_string()]),
                 );
-                self.environments
-                    .insert(exe.to_string_lossy().to_string(), env);
+                environments.push(env);
             }
         }
-        Some(())
-    }
-
-    fn report(&self, reporter: &mut dyn MessageDispatcher) {
-        for env in self.environments.values() {
-            reporter.report_environment(env.clone());
+        if environments.is_empty() {
+            None
+        } else {
+            Some(LocatorResult::Environments(environments))
         }
     }
 }

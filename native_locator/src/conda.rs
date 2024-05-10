@@ -4,15 +4,14 @@
 use crate::known;
 use crate::known::Environment;
 use crate::locator::Locator;
+use crate::locator::LocatorResult;
 use crate::messaging;
 use crate::messaging::EnvManager;
 use crate::messaging::EnvManagerType;
-use crate::messaging::MessageDispatcher;
 use crate::messaging::PythonEnvironment;
 use crate::utils::find_python_binary_path;
 use crate::utils::PythonEnv;
 use regex::Regex;
-use std::collections::HashMap;
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -385,7 +384,6 @@ fn get_distinct_conda_envs(
 }
 
 pub struct Conda<'a> {
-    pub environments: HashMap<String, PythonEnvironment>,
     pub manager: Option<EnvManager>,
     pub environment: &'a dyn Environment,
 }
@@ -393,7 +391,6 @@ pub struct Conda<'a> {
 impl Conda<'_> {
     pub fn with<'a>(environment: &'a impl Environment) -> Conda {
         Conda {
-            environments: HashMap::new(),
             environment,
             manager: None,
         }
@@ -401,26 +398,21 @@ impl Conda<'_> {
 }
 
 impl Locator for Conda<'_> {
-    fn is_known(&self, python_executable: &PathBuf) -> bool {
-        self.environments
-            .contains_key(python_executable.to_str().unwrap_or_default())
-    }
-
-    fn track_if_compatible(&mut self, _env: &PythonEnv) -> bool {
+    fn resolve(&self, _env: &PythonEnv) -> Option<PythonEnvironment> {
         // We will find everything in gather
-        false
+        None
     }
 
-    fn gather(&mut self) -> Option<()> {
+    fn find(&self) -> Option<LocatorResult> {
         let conda_binary = find_conda_binary(self.environment)?;
         let manager = EnvManager::new(
             conda_binary.clone(),
             get_conda_version(&conda_binary),
             EnvManagerType::Conda,
         );
-        self.manager = Some(manager.clone());
 
         let envs = get_distinct_conda_envs(&conda_binary, self.environment);
+        let mut environments: Vec<PythonEnvironment> = vec![];
         for env in envs {
             let executable = find_python_binary_path(Path::new(&env.path));
             let env = messaging::PythonEnvironment::new(
@@ -450,25 +442,13 @@ impl Locator for Conda<'_> {
                 },
             );
 
-            if let Some(exe) = executable {
-                self.environments
-                    .insert(exe.to_str().unwrap_or_default().to_string(), env);
-            } else if let Some(env_path) = env.env_path.clone() {
-                self.environments
-                    .insert(env_path.to_str().unwrap().to_string(), env);
-            }
+            environments.push(env)
         }
 
-        Some(())
-    }
-
-    fn report(&self, reporter: &mut dyn MessageDispatcher) {
-        if let Some(manager) = &self.manager {
-            reporter.report_environment_manager(manager.clone());
-        }
-
-        for env in self.environments.values() {
-            reporter.report_environment(env.clone());
+        if environments.is_empty() {
+            Some(LocatorResult::Managers(vec![manager]))
+        } else {
+            Some(LocatorResult::Environments(environments))
         }
     }
 }

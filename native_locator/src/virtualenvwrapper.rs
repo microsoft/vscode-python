@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use crate::locator::Locator;
+use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
 use crate::utils::list_python_environments;
 use crate::virtualenv;
-use crate::{known::Environment, messaging::MessageDispatcher, utils::PythonEnv};
-use std::collections::HashMap;
+use crate::{known::Environment, utils::PythonEnv};
 use std::path::PathBuf;
 
 #[cfg(windows)]
@@ -68,67 +67,55 @@ pub fn is_virtualenvwrapper(env: &PythonEnv, environment: &dyn Environment) -> b
 }
 
 pub struct VirtualEnvWrapper<'a> {
-    pub environments: HashMap<String, PythonEnvironment>,
     pub environment: &'a dyn Environment,
 }
 
 impl VirtualEnvWrapper<'_> {
     pub fn with<'a>(environment: &'a impl Environment) -> VirtualEnvWrapper {
-        VirtualEnvWrapper {
-            environments: HashMap::new(),
-            environment,
-        }
+        VirtualEnvWrapper { environment }
     }
 }
 
 impl Locator for VirtualEnvWrapper<'_> {
-    fn is_known(&self, python_executable: &PathBuf) -> bool {
-        self.environments
-            .contains_key(python_executable.to_str().unwrap_or_default())
-    }
-
-    fn track_if_compatible(&mut self, env: &PythonEnv) -> bool {
+    fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_virtualenvwrapper(env, self.environment) {
-            self.environments.insert(
-                env.executable.to_str().unwrap().to_string(),
-                PythonEnvironment {
-                    name: Some(
-                        env.path
-                            .clone()
-                            .expect("env.path cannot be empty for virtualenv rapper")
-                            .file_name()
-                            .unwrap()
-                            .to_string_lossy()
-                            .to_string(),
-                    ),
-                    python_executable_path: Some(env.executable.clone()),
-                    version: env.version.clone(),
-                    category: crate::messaging::PythonEnvironmentCategory::Venv,
-                    sys_prefix_path: env.path.clone(),
-                    env_path: env.path.clone(),
-                    env_manager: None,
-                    project_path: None,
-                    python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-                },
-            );
-            return true;
+            return Some(PythonEnvironment {
+                name: Some(
+                    env.path
+                        .clone()
+                        .expect("env.path cannot be empty for virtualenv rapper")
+                        .file_name()
+                        .unwrap()
+                        .to_string_lossy()
+                        .to_string(),
+                ),
+                python_executable_path: Some(env.executable.clone()),
+                version: env.version.clone(),
+                category: crate::messaging::PythonEnvironmentCategory::Venv,
+                sys_prefix_path: env.path.clone(),
+                env_path: env.path.clone(),
+                env_manager: None,
+                project_path: None,
+                python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+            });
         }
-        false
+        None
     }
 
-    fn gather(&mut self) -> Option<()> {
+    fn find(&self) -> Option<LocatorResult> {
         let work_on_home = get_work_on_home_path(self.environment)?;
         let envs = list_python_environments(&work_on_home)?;
+        let mut environments: Vec<PythonEnvironment> = vec![];
         envs.iter().for_each(|env| {
-            self.track_if_compatible(env);
+            if let Some(env) = self.resolve(env) {
+                environments.push(env);
+            }
         });
 
-        Some(())
-    }
-
-    fn report(&self, reporter: &mut dyn MessageDispatcher) {
-        for env in self.environments.values() {
-            reporter.report_environment(env.clone());
+        if environments.is_empty() {
+            None
+        } else {
+            Some(LocatorResult::Environments(environments))
         }
     }
 }

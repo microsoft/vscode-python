@@ -3,7 +3,8 @@
 
 use python_finder::{
     known::Environment,
-    messaging::{EnvManager, MessageDispatcher, PythonEnvironment},
+    locator::LocatorResult,
+    messaging::{EnvManager, PythonEnvironment},
 };
 use serde_json::Value;
 use std::{collections::HashMap, path::PathBuf};
@@ -24,35 +25,10 @@ pub fn join_test_paths(paths: &[&str]) -> PathBuf {
     path
 }
 
-pub struct TestDispatcher {
-    pub messages: Vec<String>,
-}
 pub trait TestMessages {
     fn get_messages(&self) -> Vec<String>;
 }
 
-#[allow(dead_code)]
-pub fn create_test_dispatcher() -> TestDispatcher {
-    impl MessageDispatcher for TestDispatcher {
-        fn report_environment_manager(&mut self, env: EnvManager) -> () {
-            self.messages.push(serde_json::to_string(&env).unwrap());
-        }
-        fn report_environment(&mut self, env: PythonEnvironment) -> () {
-            self.messages.push(serde_json::to_string(&env).unwrap());
-        }
-        fn exit(&mut self) -> () {
-            //
-        }
-    }
-    impl TestMessages for TestDispatcher {
-        fn get_messages(&self) -> Vec<String> {
-            self.messages.clone()
-        }
-    }
-    TestDispatcher {
-        messages: Vec::new(),
-    }
-}
 pub struct TestEnvironment {
     vars: HashMap<String, String>,
     home: Option<PathBuf>,
@@ -106,8 +82,6 @@ fn compare_json(expected: &Value, actual: &Value) -> bool {
             if !actual.contains_key(key) {
                 return false;
             }
-            println!("\nCompare Key {:?}", key);
-            println!("\nCompare Key {:?}", actual.get(key).is_none());
             if !compare_json(value, actual.get(key).unwrap()) {
                 return false;
             }
@@ -135,11 +109,11 @@ fn compare_json(expected: &Value, actual: &Value) -> bool {
 }
 
 #[allow(dead_code)]
-pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
+pub fn assert_messages(expected_json: &[Value], actual_json: &[Value]) {
     let mut expected_json = expected_json.to_vec();
     assert_eq!(
         expected_json.len(),
-        dispatcher.messages.len(),
+        actual_json.len(),
         "Incorrect number of messages"
     );
 
@@ -148,9 +122,7 @@ pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
     }
 
     // Ignore the order of the json items when comparing.
-    for actual in dispatcher.messages.iter() {
-        let actual: serde_json::Value = serde_json::from_str(actual.as_str()).unwrap();
-
+    for actual in actual_json.iter() {
         let mut valid_index: Option<usize> = None;
         for (i, expected) in expected_json.iter().enumerate() {
             if !compare_json(expected, &actual) {
@@ -159,14 +131,48 @@ pub fn assert_messages(expected_json: &[Value], dispatcher: &TestDispatcher) {
 
             // Ensure we verify using standard assert_eq!, just in case the code is faulty..
             valid_index = Some(i);
-            assert_eq!(expected, &actual);
+            assert_eq!(expected, actual);
         }
         if let Some(index) = valid_index {
             // This is to ensure we don't compare the same item twice.
             expected_json.remove(index);
         } else {
             // Use traditional assert so we can see the fully output in the test results.
-            assert_eq!(expected_json[0], actual);
+            assert_eq!(&expected_json[0], actual);
         }
+    }
+}
+
+#[allow(dead_code)]
+pub fn get_environments_from_result(result: &Option<LocatorResult>) -> Vec<PythonEnvironment> {
+    match result {
+        Some(environments) => match environments {
+            python_finder::locator::LocatorResult::Environments(envs) => envs.clone(),
+            _ => vec![],
+        },
+        None => vec![],
+    }
+}
+
+#[allow(dead_code)]
+pub fn get_managers_from_result(result: &Option<LocatorResult>) -> Vec<EnvManager> {
+    match result {
+        Some(environments) => match environments {
+            python_finder::locator::LocatorResult::Managers(managers) => managers.clone(),
+            python_finder::locator::LocatorResult::Environments(envs) => {
+                let mut managers: HashMap<String, EnvManager> = HashMap::new();
+                envs.iter().for_each(|env| {
+                    if let Some(manager) = env.env_manager.clone() {
+                        let key = manager.executable_path.to_str().unwrap().to_string();
+                        managers.insert(key, manager);
+                    }
+                });
+                managers
+                    .values()
+                    .map(|m| m.clone())
+                    .collect::<Vec<EnvManager>>()
+            }
+        },
+        None => vec![],
     }
 }
