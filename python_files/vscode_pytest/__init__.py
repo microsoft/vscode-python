@@ -552,7 +552,7 @@ def build_nested_folders(
     """
     # check if session node is a parent of the file node, throw error if not.
     session_node_path = session_node["path"]
-    if not file_node["path"].is_relative_to(session_node_path):
+    if not pathlib.Path.is_relative_to(file_node["path"], session_node_path):
         # If the session node is not a parent of the file node, we need to find their common parent.
         raise ValueError("session and file not relative to each other, fixing now....")
 
