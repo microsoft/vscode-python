@@ -182,9 +182,9 @@ def test_pytest_collect(file, expected_const):
     if actual_list is not None:
         actual_item = actual_list.pop(0)
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
-        assert actual_item.get("status") == "success", (
-            "Status is not 'success', error is: " + actual_item.get("error")
-        )
+        assert (
+            actual_item.get("status") == "success"
+        ), f"Status is not 'success', error is: {actual_item.get('error')}"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
         assert is_same_tree(
             actual_item.get("tests"), expected_const
