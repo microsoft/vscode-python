@@ -73,30 +73,27 @@ pub fn is_conda_environment(any_path: &Path) -> bool {
     }
 }
 
-/// Get the version of a package in a conda environment. This will find the version
-/// from the 'conda-meta' directory in a platform agnostic way.
-fn get_version_from_meta_json(json_file: &Path) -> Option<String> {
-    let file_name = json_file.file_name()?.to_string_lossy();
-
-    match Regex::new(r"(?m)([\d\w\-]*)-([\d\.]*)-.*\.json")
-        .ok()?
-        .captures(&file_name)?
-        .get(2)
-    {
-        Some(version) => Some(version.as_str().to_string()),
-        None => None,
-    }
+struct CondaPackage {
+    path: PathBuf,
+    version: String,
 }
 
-/// Get the path to the json file of a package in the conda environment from the 'conda-meta' directory.
-fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<PathBuf> {
+/// Get the path to the json file along with the version of a package in the conda environment from the 'conda-meta' directory.
+fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<CondaPackage> {
     let package_name = format!("{}-", package);
     let conda_meta_path = get_conda_meta_path(any_path)?;
+    let regex = Regex::new(format!("^{}-((\\d+\\.*)*)-.*.json$", package).as_str());
     std::fs::read_dir(conda_meta_path).ok()?.find_map(|entry| {
         let path = entry.ok()?.path();
         let file_name = path.file_name()?.to_string_lossy();
         if file_name.starts_with(&package_name) && file_name.ends_with(".json") {
-            Some(path)
+            match regex.clone().ok()?.captures(&file_name)?.get(1) {
+                Some(version) => Some(CondaPackage {
+                    path: path.clone(),
+                    version: version.as_str().to_string(),
+                }),
+                None => None,
+            }
         } else {
             None
         }
@@ -108,7 +105,7 @@ fn get_conda_package_json_path(any_path: &Path, package: &str) -> Option<PathBuf
 pub fn is_python_conda_env(any_path: &Path) -> bool {
     let conda_python_json_path = get_conda_package_json_path(any_path, "python");
     match conda_python_json_path {
-        Some(path) => path.exists(),
+        Some(result) => result.path.exists(),
         None => false,
     }
 }
@@ -117,7 +114,7 @@ pub fn is_python_conda_env(any_path: &Path) -> bool {
 pub fn get_conda_python_version(any_path: &Path) -> Option<String> {
     let conda_python_json_path = get_conda_package_json_path(any_path, "python");
     match conda_python_json_path {
-        Some(path) => get_version_from_meta_json(&path),
+        Some(result) => Some(result.version.clone()),
         None => None,
     }
 }
@@ -231,11 +228,13 @@ pub fn get_conda_version(conda_binary: &PathBuf) -> Option<String> {
     if parent.ends_with("Library") {
         parent = parent.parent()?;
     }
-    let conda_python_json_path = match get_conda_package_json_path(&parent, "conda") {
-        Some(exe) => Some(exe),
-        None => get_conda_package_json_path(&parent.parent()?, "conda"),
-    }?;
-    get_version_from_meta_json(&conda_python_json_path)
+    match get_conda_package_json_path(&parent, "conda") {
+        Some(result) => Some(result.version),
+        None => match get_conda_package_json_path(&parent.parent()?, "conda") {
+            Some(result) => Some(result.version),
+            None => None,
+        },
+    }
 }
 
 fn get_conda_envs_from_environment_txt(environment: &dyn known::Environment) -> Vec<String> {
