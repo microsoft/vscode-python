@@ -33,7 +33,6 @@ fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<Pytho
             None,
             None,
             [executable.clone()],
-            None,
         );
 
         pythons.push(env);
