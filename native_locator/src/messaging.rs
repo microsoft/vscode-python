@@ -83,6 +83,7 @@ pub enum PythonEnvironmentCategory {
     Pyenv,
     PyenvVirtualEnv,
     WindowsStore,
+    WindowsRegistry,
     Pipenv,
     VirtualEnvWrapper,
     Venv,

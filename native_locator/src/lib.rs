@@ -14,3 +14,5 @@ pub mod pipenv;
 pub mod virtualenv;
 pub mod venv;
 pub mod locator;
+pub mod windows_registry;
+pub mod windows_store;
