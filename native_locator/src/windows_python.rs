@@ -91,7 +91,10 @@ impl Locator for WindowsPython<'_> {
         if environments.is_empty() {
             None
         } else {
-            Some(LocatorResult::Environments(environments))
+            Some(LocatorResult {
+                managers: vec![],
+                environments,
+            })
         }
     }
 }

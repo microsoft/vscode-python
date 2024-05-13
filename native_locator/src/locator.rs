@@ -7,9 +7,9 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub enum LocatorResult {
-    Managers(Vec<EnvManager>),
-    Environments(Vec<PythonEnvironment>),
+pub struct LocatorResult {
+    pub managers: Vec<EnvManager>,
+    pub environments: Vec<PythonEnvironment>,
 }
 
 pub trait Locator {

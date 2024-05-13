@@ -96,13 +96,15 @@ fn resolve_environment(
 }
 
 fn find_environments(locator: &dyn Locator, dispatcher: &mut JsonRpcDispatcher) -> Option<()> {
-    match locator.find()? {
-        locator::LocatorResult::Environments(envs) => envs
+    if let Some(result) = locator.find() {
+        result
+            .environments
             .iter()
-            .for_each(|e| dispatcher.report_environment(e.clone())),
-        locator::LocatorResult::Managers(items) => items
+            .for_each(|e| dispatcher.report_environment(e.clone()));
+        result
+            .managers
             .iter()
-            .for_each(|m| dispatcher.report_environment_manager(m.clone())),
+            .for_each(|m| dispatcher.report_environment_manager(m.clone()));
     }
     Some(())
 }
