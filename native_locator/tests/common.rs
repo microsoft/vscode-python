@@ -146,10 +146,7 @@ pub fn assert_messages(expected_json: &[Value], actual_json: &[Value]) {
 #[allow(dead_code)]
 pub fn get_environments_from_result(result: &Option<LocatorResult>) -> Vec<PythonEnvironment> {
     match result {
-        Some(environments) => match environments {
-            python_finder::locator::LocatorResult::Environments(envs) => envs.clone(),
-            _ => vec![],
-        },
+        Some(result) => result.environments.clone(),
         None => vec![],
     }
 }
@@ -157,22 +154,7 @@ pub fn get_environments_from_result(result: &Option<LocatorResult>) -> Vec<Pytho
 #[allow(dead_code)]
 pub fn get_managers_from_result(result: &Option<LocatorResult>) -> Vec<EnvManager> {
     match result {
-        Some(environments) => match environments {
-            python_finder::locator::LocatorResult::Managers(managers) => managers.clone(),
-            python_finder::locator::LocatorResult::Environments(envs) => {
-                let mut managers: HashMap<String, EnvManager> = HashMap::new();
-                envs.iter().for_each(|env| {
-                    if let Some(manager) = env.env_manager.clone() {
-                        let key = manager.executable_path.to_str().unwrap().to_string();
-                        managers.insert(key, manager);
-                    }
-                });
-                managers
-                    .values()
-                    .map(|m| m.clone())
-                    .collect::<Vec<EnvManager>>()
-            }
-        },
+        Some(result) => result.managers.clone(),
         None => vec![],
     }
 }

@@ -200,10 +200,10 @@ impl Locator for PyEnv<'_> {
                 environments.push(env);
             }
         }
-        if environments.is_empty() {
-            Some(LocatorResult::Managers(vec![manager]))
-        } else {
-            Some(LocatorResult::Environments(environments))
-        }
+
+        Some(LocatorResult {
+            managers: vec![manager],
+            environments,
+        })
     }
 }

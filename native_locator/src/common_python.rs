@@ -72,7 +72,10 @@ impl Locator for PythonOnPath<'_> {
         if environments.is_empty() {
             None
         } else {
-            Some(LocatorResult::Environments(environments))
+            Some(LocatorResult {
+                environments,
+                managers: vec![],
+            })
         }
     }
 }
