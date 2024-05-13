@@ -751,7 +751,7 @@ fn get_conda_environments_from_environments_txt_that_have_not_been_discovered(
             }
         }
         if environments.len() > 0 {
-            Some(LocatorResult {
+            return Some(LocatorResult {
                 managers: vec![manager],
                 environments,
             });
