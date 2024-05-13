@@ -26,8 +26,7 @@ fn find_python_in_path_this() {
         Vec::new(),
     );
 
-    let locator = common_python::PythonOnPath::with(&known);
-    locator.find();
+    let mut locator = common_python::PythonOnPath::with(&known);
     let result = locator.find();
 
     let environments = get_environments_from_result(&result);

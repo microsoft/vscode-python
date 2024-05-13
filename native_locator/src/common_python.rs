@@ -50,7 +50,7 @@ impl Locator for PythonOnPath<'_> {
         })
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         let paths = self.environment.get_env_var("PATH".to_string())?;
         let bin = if cfg!(windows) {
             "python.exe"

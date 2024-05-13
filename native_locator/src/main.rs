@@ -24,8 +24,8 @@ mod utils;
 mod venv;
 mod virtualenv;
 mod virtualenvwrapper;
-mod windows_store;
 mod windows_registry;
+mod windows_store;
 
 fn main() {
     let environment = EnvironmentApi {};
@@ -39,27 +39,27 @@ fn main() {
     let venv_locator = venv::Venv::new();
     let virtualenvwrapper_locator = virtualenvwrapper::VirtualEnvWrapper::with(&environment);
     let pipenv_locator = pipenv::PipEnv::new();
-    let path_locator = common_python::PythonOnPath::with(&environment);
-    let pyenv_locator = pyenv::PyEnv::with(&environment);
+    let mut path_locator = common_python::PythonOnPath::with(&environment);
+    let mut conda_locator = conda::Conda::with(&environment);
+    let mut pyenv_locator = pyenv::PyEnv::with(&environment, &mut conda_locator);
 
     #[cfg(unix)]
-    let homebrew_locator = homebrew::Homebrew::with(&environment);
+    let mut homebrew_locator = homebrew::Homebrew::with(&environment);
     #[cfg(windows)]
-    let windows_store = windows_store::WindowsStore::with(&environment);
+    let mut windows_store = windows_store::WindowsStore::with(&environment);
     #[cfg(windows)]
-    let windows_registry = windows_registry::WindowsRegistry::new();
-    let conda_locator = conda::Conda::with(&environment);
+    let mut windows_registry = windows_registry::WindowsRegistry::new();
 
     // Step 1: These environments take precedence over all others.
     // As they are very specific and guaranteed to be specific type.
-    find_environments(&pyenv_locator, &mut dispatcher);
+    find_environments(&mut pyenv_locator, &mut dispatcher);
     #[cfg(unix)]
-    find_environments(&homebrew_locator, &mut dispatcher);
-    find_environments(&conda_locator, &mut dispatcher);
+    find_environments(&mut homebrew_locator, &mut dispatcher);
+    find_environments(&mut conda_locator, &mut dispatcher);
     #[cfg(windows)]
-    find_environments(&windows_registry, &mut dispatcher);
+    find_environments(&mut windows_registry, &mut dispatcher);
     #[cfg(windows)]
-    find_environments(&windows_store, &mut dispatcher);
+    find_environments(&mut windows_store, &mut dispatcher);
 
     // Step 2: Search in some global locations.
     for env in list_global_virtual_envs(&environment).iter() {
@@ -74,7 +74,7 @@ fn main() {
     }
 
     // Step 3: Finally find in the current PATH variable
-    find_environments(&path_locator, &mut dispatcher);
+    find_environments(&mut path_locator, &mut dispatcher);
 
     match now.elapsed() {
         Ok(elapsed) => {
@@ -100,7 +100,7 @@ fn resolve_environment(
     false
 }
 
-fn find_environments(locator: &dyn Locator, dispatcher: &mut JsonRpcDispatcher) -> Option<()> {
+fn find_environments(locator: &mut dyn Locator, dispatcher: &mut JsonRpcDispatcher) -> Option<()> {
     if let Some(result) = locator.find() {
         result
             .environments

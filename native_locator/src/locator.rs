@@ -23,5 +23,5 @@ pub trait Locator {
     /**
      * Finds all environments specific to this locator.
      */
-    fn find(&self) -> Option<LocatorResult>;
+    fn find(&mut self) -> Option<LocatorResult>;
 }

@@ -74,7 +74,7 @@ impl Locator for WindowsRegistry {
         None
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         let environments = get_registry_pythons("PythonCore")?;
         if environments.is_empty() {
             None

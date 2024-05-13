@@ -16,7 +16,7 @@ fn does_not_find_any_conda_envs() {
         Vec::new(),
     );
 
-    let locator = conda::Conda::with(&known);
+    let mut locator = conda::Conda::with(&known);
     let result = locator.find();
 
     let environments = get_environments_from_result(&result);
@@ -33,7 +33,8 @@ fn find_conda_exe_and_empty_envs() {
     use python_finder::messaging::{EnvManager, EnvManagerType};
     use python_finder::{conda, locator::Locator};
     use serde_json::json;
-    use std::{collections::HashMap, path::PathBuf};
+    use std::collections::HashMap;
+    let user_home = test_file_path(&["tests/unix/conda_without_envs"]);
     let conda_dir = test_file_path(&["tests/unix/conda_without_envs"]);
 
     let known = create_test_environment(
@@ -41,20 +42,24 @@ fn find_conda_exe_and_empty_envs() {
             "PATH".to_string(),
             conda_dir.clone().to_str().unwrap().to_string(),
         )]),
-        Some(PathBuf::from("SOME_BOGUS_HOME_DIR")),
+        Some(user_home),
         Vec::new(),
     );
 
-    let locator = conda::Conda::with(&known);
+    let mut locator = conda::Conda::with(&known);
     let result = locator.find();
-
     let managers = get_managers_from_result(&result);
     assert_eq!(managers.len(), 1);
 
-    let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
+    let conda_exe = join_test_paths(&[
+        conda_dir.clone().to_str().unwrap(),
+        "anaconda3",
+        "bin",
+        "conda",
+    ]);
     let expected_conda_manager = EnvManager {
         executable_path: conda_exe.clone(),
-        version: None,
+        version: Some("4.0.2".to_string()),
         tool: EnvManagerType::Conda,
     };
     assert_messages(
@@ -75,7 +80,8 @@ fn finds_two_conda_envs_from_txt() {
     use std::collections::HashMap;
     use std::fs;
 
-    let conda_dir = test_file_path(&["tests/unix/conda"]);
+    let home = test_file_path(&["tests/unix/conda"]);
+    let conda_dir = test_file_path(&["tests/unix/conda/anaconda3"]);
     let conda_1 = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "envs/one"]);
     let conda_2 = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "envs/two"]);
     let _ = fs::write(
@@ -92,24 +98,24 @@ fn finds_two_conda_envs_from_txt() {
             "PATH".to_string(),
             conda_dir.clone().to_str().unwrap().to_string(),
         )]),
-        Some(conda_dir.clone()),
+        Some(home),
         Vec::new(),
     );
 
-    let locator = conda::Conda::with(&known);
+    let mut locator = conda::Conda::with(&known);
     let result = locator.find();
 
     let managers = get_managers_from_result(&result);
     let environments = get_environments_from_result(&result);
     assert_eq!(managers.len(), 1);
 
-    let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "conda"]);
+    let conda_exe = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "bin", "conda"]);
     let conda_1_exe = join_test_paths(&[conda_1.clone().to_str().unwrap(), "python"]);
     let conda_2_exe = join_test_paths(&[conda_2.clone().to_str().unwrap(), "python"]);
 
     let expected_conda_manager = EnvManager {
         executable_path: conda_exe.clone(),
-        version: None,
+        version: Some("4.0.2".to_string()),
         tool: EnvManagerType::Conda,
     };
     let expected_conda_1 = PythonEnvironment {

@@ -42,7 +42,7 @@ impl Locator for PipEnv {
         ))
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         None
     }
 }
