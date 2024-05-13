@@ -24,7 +24,8 @@ mod utils;
 mod venv;
 mod virtualenv;
 mod virtualenvwrapper;
-mod windows_python;
+mod windows_store;
+mod windows_registry;
 
 fn main() {
     let environment = EnvironmentApi {};
@@ -44,7 +45,9 @@ fn main() {
     #[cfg(unix)]
     let homebrew_locator = homebrew::Homebrew::with(&environment);
     #[cfg(windows)]
-    let windows_locator = windows_python::WindowsPython::with(&environment);
+    let windows_store = windows_store::WindowsStore::with(&environment);
+    #[cfg(windows)]
+    let windows_registry = windows_registry::WindowsRegistry::new();
     let conda_locator = conda::Conda::with(&environment);
 
     // Step 1: These environments take precedence over all others.
@@ -54,7 +57,9 @@ fn main() {
     find_environments(&homebrew_locator, &mut dispatcher);
     find_environments(&conda_locator, &mut dispatcher);
     #[cfg(windows)]
-    find_environments(&windows_locator, &mut dispatcher);
+    find_environments(&windows_registry, &mut dispatcher);
+    #[cfg(windows)]
+    find_environments(&windows_store, &mut dispatcher);
 
     // Step 2: Search in some global locations.
     for env in list_global_virtual_envs(&environment).iter() {

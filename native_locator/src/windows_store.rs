@@ -9,10 +9,12 @@ use crate::utils::PythonEnv;
 use std::path::Path;
 use std::path::PathBuf;
 
-fn is_windows_python_executable(path: &PathBuf) -> bool {
+pub fn is_windows_python_executable(path: &PathBuf) -> bool {
     let name = path.file_name().unwrap().to_string_lossy().to_lowercase();
+    // TODO: Is it safe to assume the number 3?
     name.starts_with("python3.") && name.ends_with(".exe")
 }
+
 fn list_windows_store_python_executables(
     environment: &dyn known::Environment,
 ) -> Option<Vec<PathBuf>> {
@@ -38,22 +40,18 @@ fn list_windows_store_python_executables(
     Some(python_envs)
 }
 
-fn list_registry_pythons() -> Option<Vec<PathBuf>> {
-    None
-}
-
-pub struct WindowsPython<'a> {
+pub struct WindowsStore<'a> {
     pub environment: &'a dyn Environment,
 }
 
-impl WindowsPython<'_> {
+impl WindowsStore<'_> {
     #[allow(dead_code)]
-    pub fn with<'a>(environment: &'a impl Environment) -> WindowsPython {
-        WindowsPython { environment }
+    pub fn with<'a>(environment: &'a impl Environment) -> WindowsStore {
+        WindowsStore { environment }
     }
 }
 
-impl Locator for WindowsPython<'_> {
+impl Locator for WindowsStore<'_> {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_windows_python_executable(&env.executable) {
             return Some(PythonEnvironment {
@@ -74,13 +72,6 @@ impl Locator for WindowsPython<'_> {
     fn find(&self) -> Option<LocatorResult> {
         let mut environments: Vec<PythonEnvironment> = vec![];
         if let Some(envs) = list_windows_store_python_executables(self.environment) {
-            envs.iter().for_each(|env| {
-                if let Some(env) = self.resolve(&&PythonEnv::from(env.clone())) {
-                    environments.push(env);
-                }
-            });
-        }
-        if let Some(envs) = list_registry_pythons() {
             envs.iter().for_each(|env| {
                 if let Some(env) = self.resolve(&&PythonEnv::from(env.clone())) {
                     environments.push(env);
