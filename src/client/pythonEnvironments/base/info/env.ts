@@ -276,13 +276,19 @@ export function areSameEnv(
     if (leftInfo === undefined || rightInfo === undefined) {
         return undefined;
     }
-    const leftFilename = leftInfo.executable!.filename;
-    const rightFilename = rightInfo.executable!.filename;
-
+    if (
+        (leftInfo.executable?.filename && !rightInfo.executable?.filename) ||
+        (!leftInfo.executable?.filename && rightInfo.executable?.filename)
+    ) {
+        return false;
+    }
     if (leftInfo.id && leftInfo.id === rightInfo.id) {
         // In case IDs are available, use it.
         return true;
     }
+
+    const leftFilename = leftInfo.executable!.filename;
+    const rightFilename = rightInfo.executable!.filename;
 
     if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
         // Otherwise use ID function to get the ID. Note ID returned by function may itself change if executable of
