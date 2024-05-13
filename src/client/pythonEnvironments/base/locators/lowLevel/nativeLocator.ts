@@ -104,14 +104,16 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         promise.finally(() => disposable.dispose());
         disposables.push(
             this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
-                envs.push({
-                    kind: categoryToKind(data.category),
-                    // TODO: What if executable is undefined?
-                    executablePath: data.pythonExecutablePath!,
-                    envPath: data.envPath,
-                    version: parseVersion(data.version),
-                    name: data.name === '' ? undefined : data.name,
-                });
+                // TODO: What if executable is undefined?
+                if (data.pythonExecutablePath) {
+                    envs.push({
+                        kind: categoryToKind(data.category),
+                        executablePath: data.pythonExecutablePath,
+                        envPath: data.envPath,
+                        version: parseVersion(data.version),
+                        name: data.name === '' ? undefined : data.name,
+                    });
+                }
             }),
             this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
                 switch (toolToKnownEnvironmentTool(data.tool)) {
