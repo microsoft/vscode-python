@@ -303,4 +303,7 @@ def test_config_sub_folder():
         assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "config_sub_folder")
-        assert actual_item.get("tests").get("name") == "config_sub_folder"
+        assert actual_item.get("tests") is not None
+        if actual_item.get("tests") is not None:
+            tests: Any = actual_item.get("tests")
+            assert tests.get("name") == "config_sub_folder"
