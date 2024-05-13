@@ -509,9 +509,25 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     created_files_folders_dict: Dict[str, TestNode] = {}
     for _, file_node in file_nodes_dict.items():
         # Iterate through all the files that exist and construct them into nested folders.
-        root_folder_node: TestNode = build_nested_folders(
-            file_node, created_files_folders_dict, session
-        )
+        root_folder_node: TestNode
+        try:
+            root_folder_node: TestNode = build_nested_folders(
+                file_node, created_files_folders_dict, session_node
+            )
+        except ValueError:
+            # This exception is raised when the session node is not a parent of the file node.
+            print(
+                "[vscode-pytest]: Session path not a parent of test paths, adjusting session node to common parent."
+            )
+            common_parent = os.path.commonpath([file_node["path"], get_node_path(session)])
+            common_parent_path = pathlib.Path(common_parent)
+            print("[vscode-pytest]: Session node now set to: ", common_parent)
+            session_node["path"] = common_parent_path  # pathlib.Path
+            session_node["id_"] = common_parent  # str
+            session_node["name"] = common_parent_path.name  # str
+            root_folder_node = build_nested_folders(
+                file_node, created_files_folders_dict, session_node
+            )
         # The final folder we get to is the highest folder in the path
         # and therefore we add this as a child to the session.
         root_id = root_folder_node.get("id_")
@@ -524,7 +540,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 def build_nested_folders(
     file_node: TestNode,
     created_files_folders_dict: Dict[str, TestNode],
-    session: pytest.Session,
+    session_node: TestNode,
 ) -> TestNode:
     """Takes a file or folder and builds the nested folder structure for it.
 
@@ -534,11 +550,18 @@ def build_nested_folders(
     created_files_folders_dict -- Dictionary of all the folders and files that have been created where the key is the path.
     session -- the pytest session object.
     """
-    prev_folder_node = file_node
+    # check if session node is a parent of the file node, throw error if not.
+    session_node_path = session_node["path"]
+    if not file_node["path"].is_relative_to(session_node_path):
+        # If the session node is not a parent of the file node, we need to find their common parent.
+        raise ValueError("session and file not relative to each other, fixing now....")
 
     # Begin the iterator_path one level above the current file.
+    prev_folder_node = file_node
     iterator_path = file_node["path"].parent
-    while iterator_path != get_node_path(session):
+    counter = 0
+    max_iter = 100
+    while iterator_path != session_node_path:
         curr_folder_name = iterator_path.name
         try:
             curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
@@ -549,6 +572,15 @@ def build_nested_folders(
             curr_folder_node["children"].append(prev_folder_node)
         iterator_path = iterator_path.parent
         prev_folder_node = curr_folder_node
+        # Handles error where infinite loop occurs.
+        counter += 1
+        if counter > max_iter:
+            raise ValueError(
+                "[vscode-pytest]: Infinite loop occurred in build_nested_folders. iterator_path: ",
+                iterator_path,
+                "session_node_path: ",
+                session_node_path,
+            )
     return prev_folder_node
 
 

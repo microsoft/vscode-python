@@ -114,6 +114,10 @@ def test_parameterized_error_collect():
             expected_discovery_test_output.nested_classes_expected_test_output,
         ),
         (
+            "test_multi_class_nest.py",
+            expected_discovery_test_output.nested_classes_expected_test_output,
+        ),
+        (
             "unittest_skiptest_file_level.py",
             expected_discovery_test_output.unittest_skip_file_level_expected_output,
         ),
@@ -276,3 +280,27 @@ def test_pytest_config_file():
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+
+
+def test_config_sub_folder():
+    """Here the session node will be a subfolder of the workspace root and the test are in another subfolder.
+    This tests checks to see if test node path are under the session node and if so the session node is correctly updated to the common path."""
+    folder_path = helpers.TEST_DATA_PATH / "config_sub_folder"
+    actual = helpers.runner_with_cwd(
+        [
+            "--collect-only",
+            "-c=config/pytest.ini",
+            "--rootdir=config/",
+            "-vv",
+        ],
+        folder_path,
+    )
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success"
+        assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "config_sub_folder")
+        assert actual_item.get("tests").get("name") == "config_sub_folder"
