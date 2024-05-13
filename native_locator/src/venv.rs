@@ -48,7 +48,7 @@ impl Locator for Venv {
         None
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         // There are no common global locations for virtual environments.
         // We expect the user of this class to call `is_compatible`
         None

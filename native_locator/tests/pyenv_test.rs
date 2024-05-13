@@ -9,7 +9,7 @@ fn does_not_find_any_pyenv_envs() {
     use crate::common::{
         create_test_environment, get_environments_from_result, get_managers_from_result,
     };
-    use python_finder::{locator::Locator, pyenv};
+    use python_finder::{conda::Conda, locator::Locator, pyenv};
     use std::{collections::HashMap, path::PathBuf};
 
     let known = create_test_environment(
@@ -18,8 +18,8 @@ fn does_not_find_any_pyenv_envs() {
         Vec::new(),
     );
 
-    let locator = pyenv::PyEnv::with(&known);
-    locator.find();
+    let mut conda = Conda::with(&known);
+    let mut locator = pyenv::PyEnv::with(&known, &mut conda);
     let result = locator.find();
 
     assert_eq!(get_managers_from_result(&result).len(), 0);
@@ -33,8 +33,8 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
         assert_messages, create_test_environment, get_managers_from_result, join_test_paths,
         test_file_path,
     };
-    use python_finder::locator::Locator;
     use python_finder::pyenv;
+    use python_finder::{conda::Conda, locator::Locator};
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
 
@@ -47,7 +47,8 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
         vec![PathBuf::from(homebrew_bin)],
     );
 
-    let locator = pyenv::PyEnv::with(&known);
+    let mut conda = Conda::with(&known);
+    let mut locator = pyenv::PyEnv::with(&known, &mut conda);
     let result = locator.find();
 
     let managers = get_managers_from_result(&result);
@@ -67,6 +68,7 @@ fn find_pyenv_envs() {
         assert_messages, create_test_environment, get_environments_from_result,
         get_managers_from_result, join_test_paths, test_file_path,
     };
+    use python_finder::conda::Conda;
     use python_finder::locator::Locator;
     use python_finder::{
         messaging::{EnvManager, EnvManagerType, PythonEnvironment},
@@ -84,7 +86,8 @@ fn find_pyenv_envs() {
         vec![PathBuf::from(homebrew_bin)],
     );
 
-    let locator = pyenv::PyEnv::with(&known);
+    let mut conda = Conda::with(&known);
+    let mut locator = pyenv::PyEnv::with(&known, &mut conda);
     let result = locator.find();
 
     let managers = get_managers_from_result(&result);

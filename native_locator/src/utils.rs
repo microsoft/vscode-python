@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+use crate::messaging::{EnvManager, PythonEnvironment};
 use regex::Regex;
 use std::{
     fs,
@@ -146,4 +147,19 @@ pub fn list_python_environments(path: &PathBuf) -> Option<Vec<PythonEnv>> {
     }
 
     Some(python_envs)
+}
+
+pub fn get_environment_key(env: &PythonEnvironment) -> Option<String> {
+    if let Some(ref path) = env.python_executable_path {
+        return Some(path.to_string_lossy().to_string());
+    }
+    if let Some(ref path) = env.env_path {
+        return Some(path.to_string_lossy().to_string());
+    }
+
+    None
+}
+
+pub fn get_environment_manager_key(env: &EnvManager) -> String {
+    return env.executable_path.to_string_lossy().to_string();
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use crate::conda::CondaLocator;
 use crate::known;
 use crate::known::Environment;
 use crate::locator::Locator;
@@ -119,6 +120,16 @@ fn get_pure_python_environment(
     ))
 }
 
+fn is_conda_environment(path: &PathBuf) -> bool {
+    if let Some(name) = path.file_name() {
+        let name = name.to_ascii_lowercase().to_string_lossy().to_string();
+        return name.starts_with("anaconda")
+            || name.starts_with("miniconda")
+            || name.starts_with("miniforge");
+    }
+    false
+}
+
 fn get_virtual_env_environment(
     executable: &PathBuf,
     path: &PathBuf,
@@ -145,6 +156,7 @@ fn get_virtual_env_environment(
 pub fn list_pyenv_environments(
     manager: &Option<EnvManager>,
     environment: &dyn known::Environment,
+    conda_locator: &mut dyn CondaLocator,
 ) -> Option<Vec<messaging::PythonEnvironment>> {
     let pyenv_dir = get_pyenv_dir(environment)?;
     let mut envs: Vec<messaging::PythonEnvironment> = vec![];
@@ -161,12 +173,16 @@ pub fn list_pyenv_environments(
                 continue;
             }
             if let Some(executable) = find_python_binary_path(&path) {
-                match get_pure_python_environment(&executable, &path, manager) {
-                    Some(env) => envs.push(env),
-                    None => match get_virtual_env_environment(&executable, &path, manager) {
-                        Some(env) => envs.push(env),
-                        None => (),
-                    },
+                if let Some(env) = get_pure_python_environment(&executable, &path, manager) {
+                    envs.push(env);
+                } else if let Some(env) = get_virtual_env_environment(&executable, &path, manager) {
+                    envs.push(env);
+                } else if is_conda_environment(&path) {
+                    if let Some(result) = conda_locator.find_in(&path) {
+                        result.environments.iter().for_each(|e| {
+                            envs.push(e.clone());
+                        });
+                    }
                 }
             }
         }
@@ -177,11 +193,18 @@ pub fn list_pyenv_environments(
 
 pub struct PyEnv<'a> {
     pub environment: &'a dyn Environment,
+    pub conda_locator: &'a mut dyn CondaLocator,
 }
 
 impl PyEnv<'_> {
-    pub fn with<'a>(environment: &'a impl Environment) -> PyEnv {
-        PyEnv { environment }
+    pub fn with<'a>(
+        environment: &'a impl Environment,
+        conda_locator: &'a mut impl CondaLocator,
+    ) -> PyEnv<'a> {
+        PyEnv {
+            environment,
+            conda_locator,
+        }
     }
 }
 
@@ -191,11 +214,13 @@ impl Locator for PyEnv<'_> {
         None
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         let pyenv_binary = get_pyenv_binary(self.environment)?;
         let manager = messaging::EnvManager::new(pyenv_binary, None, EnvManagerType::Pyenv);
         let mut environments: Vec<PythonEnvironment> = vec![];
-        if let Some(envs) = list_pyenv_environments(&Some(manager.clone()), self.environment) {
+        if let Some(envs) =
+            list_pyenv_environments(&Some(manager.clone()), self.environment, self.conda_locator)
+        {
             for env in envs {
                 environments.push(env);
             }

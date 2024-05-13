@@ -102,7 +102,7 @@ impl Locator for VirtualEnvWrapper<'_> {
         None
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         let work_on_home = get_work_on_home_path(self.environment)?;
         let envs = list_python_environments(&work_on_home)?;
         let mut environments: Vec<PythonEnvironment> = vec![];

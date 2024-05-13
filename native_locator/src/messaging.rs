@@ -3,7 +3,7 @@
 
 use crate::{
     logging::{LogLevel, LogMessage},
-    utils::PythonEnv,
+    utils::{get_environment_key, get_environment_manager_key, PythonEnv},
 };
 use env_logger::Builder;
 use log::LevelFilter;
@@ -237,11 +237,10 @@ impl MessageDispatcher for JsonRpcDispatcher {
     }
 
     fn report_environment_manager(&mut self, env: EnvManager) -> () {
-        if let Some(key) = get_manager_key(&env) {
-            if !self.reported_managers.contains(&key) {
-                self.reported_managers.insert(key);
-                send_message(EnvManagerMessage::new(env));
-            }
+        let key = get_environment_manager_key(&env);
+        if !self.reported_managers.contains(&key) {
+            self.reported_managers.insert(key);
+            send_message(EnvManagerMessage::new(env));
         }
     }
     fn report_environment(&mut self, env: PythonEnvironment) -> () {
@@ -265,18 +264,4 @@ pub fn create_dispatcher() -> JsonRpcDispatcher {
         reported_managers: HashSet::new(),
         reported_environments: HashSet::new(),
     }
-}
-
-fn get_environment_key(env: &PythonEnvironment) -> Option<String> {
-    match env.python_executable_path.clone() {
-        Some(key) => Some(key.as_os_str().to_str()?.to_string()),
-        None => match env.env_path.clone() {
-            Some(key) => Some(key.as_os_str().to_str().unwrap().to_string()),
-            None => None,
-        },
-    }
-}
-
-fn get_manager_key(manager: &EnvManager) -> Option<String> {
-    Some(manager.executable_path.to_str()?.to_string())
 }

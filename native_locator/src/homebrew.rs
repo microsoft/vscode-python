@@ -38,7 +38,7 @@ impl Locator for Homebrew<'_> {
         None
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         let homebrew_prefix = self
             .environment
             .get_env_var("HOMEBREW_PREFIX".to_string())?;

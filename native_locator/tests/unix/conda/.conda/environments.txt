@@ -1,2 +1,2 @@
-/Users/donjayamanne/Development/vsc/vscode-python/native_locator/tests/unix/conda/envs/one
-/Users/donjayamanne/Development/vsc/vscode-python/native_locator/tests/unix/conda/envs/two
+/Users/donjayamanne/Development/vsc/vscode-python/native_locator/tests/unix/conda/anaconda3/envs/one
+/Users/donjayamanne/Development/vsc/vscode-python/native_locator/tests/unix/conda/anaconda3/envs/two

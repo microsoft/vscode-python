@@ -69,7 +69,7 @@ impl Locator for WindowsStore<'_> {
         None
     }
 
-    fn find(&self) -> Option<LocatorResult> {
+    fn find(&mut self) -> Option<LocatorResult> {
         let mut environments: Vec<PythonEnvironment> = vec![];
         if let Some(envs) = list_windows_store_python_executables(self.environment) {
             envs.iter().for_each(|env| {
