@@ -9,6 +9,8 @@ use crate::messaging::{PythonEnvironment, PythonEnvironmentCategory};
 use crate::utils::PythonEnv;
 #[cfg(windows)]
 use winreg::RegKey;
+#[cfg(windows)]
+use std::path::PathBuf;
 
 #[cfg(windows)]
 fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<PythonEnvironment>> {
@@ -31,6 +33,7 @@ fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<Pytho
             None,
             None,
             [executable.clone()],
+            None,
         );
 
         pythons.push(env);
@@ -45,10 +48,10 @@ pub fn get_registry_pythons(company: &str) -> Option<Vec<PythonEnvironment>> {
     let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
 
     let mut pythons = vec![];
-    if let Some(hklm_pythons) = get_registry_pythons_from_key(dispatcher, &hklm, company) {
+    if let Some(hklm_pythons) = get_registry_pythons_from_key(&hklm, company) {
         pythons.extend(hklm_pythons);
     }
-    if let Some(hkcu_pythons) = get_registry_pythons_from_key(dispatcher, &hkcu, company) {
+    if let Some(hkcu_pythons) = get_registry_pythons_from_key(&hkcu, company) {
         pythons.extend(hkcu_pythons);
     }
 
