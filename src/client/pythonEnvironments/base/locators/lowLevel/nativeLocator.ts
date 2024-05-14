@@ -7,7 +7,7 @@ import { ILocator, BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { PythonEnvKind, PythonVersion } from '../../info';
 import { Conda } from '../../../common/environmentManagers/conda';
-import { traceError } from '../../../../logging';
+import { traceError, traceInfo } from '../../../../logging';
 import type { KnownEnvironmentTools } from '../../../../api/types';
 import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
 import {
@@ -17,6 +17,7 @@ import {
     createNativeGlobalPythonFinder,
 } from '../common/nativePythonFinder';
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -96,6 +97,8 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
     }
 
     public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+        const stopWatch = new StopWatch();
+        traceInfo('Searching for Python environments using Native Locator');
         const promise = this.finder.startSearch();
         const envs: BasicEnvInfo[] = [];
         const disposables: IDisposable[] = [];
@@ -133,9 +136,17 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         );
 
         const iterator = async function* (): IPythonEnvsIterator<BasicEnvInfo> {
+            // When this promise is complete, we know that the search is complete.
             await promise;
+            traceInfo(
+                `Finished searching for Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
+            );
             yield* envs;
+            traceInfo(
+                `Finished yielding Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
+            );
         };
+
         return iterator();
     }
 }

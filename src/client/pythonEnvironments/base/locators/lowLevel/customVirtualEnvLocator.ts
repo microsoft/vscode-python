@@ -23,7 +23,8 @@ import {
 } from '../../../common/environmentManagers/simplevirtualenvs';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../../logging';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
  */
@@ -99,6 +100,8 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
     // eslint-disable-next-line class-methods-use-this
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         async function* iterator() {
+            const stopWatch = new StopWatch();
+            traceInfo('Searching for custom virtual environments');
             const envRootDirs = await getCustomVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
@@ -132,7 +135,7 @@ export class CustomVirtualEnvironmentLocator extends FSWatchingLocator {
             });
 
             yield* iterable(chain(envGenerators));
-            traceVerbose(`Finished searching for custom virtual envs`);
+            traceInfo(`Finished searching for custom virtual envs: ${stopWatch.elapsedTime} milliseconds`);
         }
 
         return iterator();

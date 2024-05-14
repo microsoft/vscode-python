@@ -106,6 +106,13 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         }
 
         const deferred = createDeferred<InterpreterInformation>();
+        const info = EnvironmentInfoService.getInterpreterInfo(env);
+        if (info !== undefined) {
+            this.cache.set(normCasePath(interpreterPath), deferred);
+            deferred.resolve(info);
+            return info;
+        }
+
         this.cache.set(normCasePath(interpreterPath), deferred);
         this._getEnvironmentInfo(env, priority)
             .then((r) => {
@@ -204,6 +211,22 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
                 this.cache.delete(key);
             }
         });
+    }
+
+    private static getInterpreterInfo(env: PythonEnvInfo): InterpreterInformation | undefined {
+        if (env.version.major > -1 && env.version.minor > -1 && env.version.micro > -1 && env.location) {
+            return {
+                arch: env.arch,
+                executable: {
+                    filename: env.executable.filename,
+                    ctime: -1,
+                    mtime: -1,
+                    sysPrefix: env.location,
+                },
+                version: env.version,
+            };
+        }
+        return undefined;
     }
 }
 

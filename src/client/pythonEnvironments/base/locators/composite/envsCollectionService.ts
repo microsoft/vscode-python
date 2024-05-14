@@ -5,7 +5,7 @@ import { Event, EventEmitter } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { normalizePath } from '../../../common/externalDependencies';
@@ -107,14 +107,18 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     }
 
     public triggerRefresh(query?: PythonLocatorQuery, options?: TriggerRefreshOptions): Promise<void> {
-        const stopWatch = new StopWatch();
         let refreshPromise = this.getRefreshPromiseForQuery(query);
         if (!refreshPromise) {
             if (options?.ifNotTriggerredAlready && this.hasRefreshFinished(query)) {
                 // Do not trigger another refresh if a refresh has previously finished.
                 return Promise.resolve();
             }
-            refreshPromise = this.startRefresh(query).then(() => this.sendTelemetry(query, stopWatch));
+            const stopWatch = new StopWatch();
+            traceInfo(`Starting Environment refresh`);
+            refreshPromise = this.startRefresh(query).then(() => {
+                this.sendTelemetry(query, stopWatch);
+                traceInfo(`Environment refresh took ${stopWatch.elapsedTime} milliseconds`);
+            });
         }
         return refreshPromise;
     }
@@ -139,7 +143,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             pending: 0,
         };
         const updatesDone = createDeferred<void>();
-
+        const stopWatch = new StopWatch();
         if (iterator.onUpdated !== undefined) {
             const listener = iterator.onUpdated(async (event) => {
                 if (isProgressEvent(event)) {
@@ -147,9 +151,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         case ProgressReportStage.discoveryFinished:
                             state.done = true;
                             listener.dispose();
+                            traceInfo(`Environments refresh finished (event): ${stopWatch.elapsedTime} milliseconds`);
                             break;
                         case ProgressReportStage.allPathsDiscovered:
                             if (!query) {
+                                traceInfo(
+                                    `Environments refresh paths discovered (event): ${stopWatch.elapsedTime} milliseconds`,
+                                );
                                 // Only mark as all paths discovered when querying for all envs.
                                 this.progress.fire(event);
                             }
@@ -178,6 +186,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             seen.push(env);
             this.cache.addEnv(env);
         }
+        traceInfo(`Environments refresh paths discovered: ${stopWatch.elapsedTime} milliseconds`);
         await updatesDone.promise;
         // If query for all envs is done, `seen` should contain the list of all envs.
         await this.cache.validateCache(seen, query === undefined);
