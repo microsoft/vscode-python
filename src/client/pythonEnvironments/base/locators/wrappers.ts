@@ -11,6 +11,7 @@ import { PythonEnvInfo } from '../info';
 import { BasicEnvInfo, ILocator, IPythonEnvsIterator, PythonLocatorQuery } from '../locator';
 import { combineIterators, Locators } from '../locators';
 import { LazyResourceBasedLocator } from './common/resourceBasedLocator';
+import { traceInfo } from '../../../logging';
 
 /**
  * A wrapper around all locators used by the extension.
@@ -35,7 +36,7 @@ export class ExtensionLocators<I = PythonEnvInfo> extends Locators<I> {
                 : this.nonWorkspace;
             iterators.push(...nonWorkspace.map((loc) => loc.iterEnvs(query)));
         }
-        return combineIterators(iterators);
+        return combineIterators(iterators, (msg: string) => traceInfo(`Locator ${msg}`));
     }
 }
 type WorkspaceLocatorFactoryResult = ILocator<BasicEnvInfo> & Partial<IDisposable>;
