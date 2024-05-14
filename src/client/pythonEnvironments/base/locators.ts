@@ -19,11 +19,8 @@ import { PythonEnvsWatchers } from './watchers';
 /**
  * Combine the `onUpdated` event of the given iterators into a single event.
  */
-export function combineIterators<I>(
-    iterators: IPythonEnvsIterator<I>[],
-    onLog?: (msg: string) => void,
-): IPythonEnvsIterator<I> {
-    const result: IPythonEnvsIterator<I> = chain(iterators, undefined, onLog);
+export function combineIterators<I>(iterators: IPythonEnvsIterator<I>[]): IPythonEnvsIterator<I> {
+    const result: IPythonEnvsIterator<I> = chain(iterators);
     const events = iterators.map((it) => it.onUpdated).filter((v) => v);
     if (!events || events.length === 0) {
         // There are no sub-events, so we leave `onUpdated` undefined.

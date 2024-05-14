@@ -5,8 +5,6 @@
 
 'use strict';
 
-import { StopWatch } from './stopWatch';
-
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
         setTimeout(() => resolve(timeout), timeout);
@@ -153,11 +151,8 @@ const NEVER: Promise<unknown> = new Promise(() => {
 export async function* chain<T>(
     iterators: AsyncIterator<T, T | void>[],
     onError?: (err: Error, index: number) => Promise<void>,
-    onLog?: (msg: string) => void,
     // Ultimately we may also want to support cancellation.
 ): IAsyncIterableIterator<T> {
-    const stopWatch = new StopWatch();
-    onLog?.(`Iterator chain started`);
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
 
@@ -187,7 +182,6 @@ export async function* chain<T>(
             yield result!.value as T;
         }
     }
-    onLog?.(`Iterator chain done: ${stopWatch.elapsedTime} milliseconds`);
 }
 
 /**
