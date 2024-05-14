@@ -63,21 +63,24 @@ fn get_conda_package_json_path(path: &Path, package: &str) -> Option<CondaPackag
     let path = path.join("conda-meta");
     let package_name = format!("{}-", package);
     let regex = Regex::new(format!("^{}-((\\d+\\.*)*)-.*.json$", package).as_str());
-    std::fs::read_dir(path).ok()?.find_map(|entry| {
-        let path = entry.ok()?.path();
-        let file_name = path.file_name()?.to_string_lossy();
-        if file_name.starts_with(&package_name) && file_name.ends_with(".json") {
-            match regex.clone().ok()?.captures(&file_name)?.get(1) {
-                Some(version) => Some(CondaPackage {
-                    path: path.clone(),
-                    version: version.as_str().to_string(),
-                }),
-                None => None,
+    std::fs::read_dir(path)
+        .ok()?
+        .filter_map(Result::ok)
+        .find_map(|entry| {
+            let path = entry.path();
+            let file_name = path.file_name()?.to_string_lossy();
+            if file_name.starts_with(&package_name) && file_name.ends_with(".json") {
+                match regex.clone().ok().unwrap().captures(&file_name)?.get(1) {
+                    Some(version) => Some(CondaPackage {
+                        path: path.clone(),
+                        version: version.as_str().to_string(),
+                    }),
+                    None => None,
+                }
+            } else {
+                None
             }
-        } else {
-            None
-        }
-    })
+        })
 }
 
 fn get_conda_executable(path: &PathBuf) -> Option<PathBuf> {
@@ -109,13 +112,10 @@ fn find_conda_binary_on_path(environment: &dyn known::Environment) -> Option<Pat
     for path in env::split_paths(&paths) {
         for bin in get_conda_bin_names() {
             let conda_path = path.join(bin);
-            match std::fs::metadata(&conda_path) {
-                Ok(metadata) => {
-                    if metadata.is_file() || metadata.is_symlink() {
-                        return Some(conda_path);
-                    }
+            if let Ok(metadata) = std::fs::metadata(&conda_path) {
+                if metadata.is_file() || metadata.is_symlink() {
+                    return Some(conda_path);
                 }
-                Err(_) => (),
             }
         }
     }
@@ -213,40 +213,37 @@ struct CondaEnvironment {
 }
 fn get_conda_environment_info(env_path: &PathBuf, named: bool) -> Option<CondaEnvironment> {
     let metadata = env_path.metadata();
-    match metadata {
-        Ok(metadata) => {
-            if metadata.is_dir() {
-                let path = env_path.clone();
-                if let Some(python_binary) = find_python_binary_path(&path) {
-                    if let Some(package_info) = get_conda_package_json_path(&path, "python") {
-                        return Some(CondaEnvironment {
-                            name: path.file_name()?.to_string_lossy().to_string(),
-                            path,
-                            named,
-                            python_executable_path: Some(python_binary),
-                            version: Some(package_info.version),
-                        });
-                    } else {
-                        return Some(CondaEnvironment {
-                            name: path.file_name()?.to_string_lossy().to_string(),
-                            path,
-                            named,
-                            python_executable_path: Some(python_binary),
-                            version: None,
-                        });
-                    }
+    if let Ok(metadata) = metadata {
+        if metadata.is_dir() {
+            let path = env_path.clone();
+            if let Some(python_binary) = find_python_binary_path(&path) {
+                if let Some(package_info) = get_conda_package_json_path(&path, "python") {
+                    return Some(CondaEnvironment {
+                        name: path.file_name()?.to_string_lossy().to_string(),
+                        path,
+                        named,
+                        python_executable_path: Some(python_binary),
+                        version: Some(package_info.version),
+                    });
                 } else {
                     return Some(CondaEnvironment {
                         name: path.file_name()?.to_string_lossy().to_string(),
                         path,
                         named,
-                        python_executable_path: None,
+                        python_executable_path: Some(python_binary),
                         version: None,
                     });
                 }
+            } else {
+                return Some(CondaEnvironment {
+                    name: path.file_name()?.to_string_lossy().to_string(),
+                    path,
+                    named,
+                    python_executable_path: None,
+                    version: None,
+                });
             }
         }
-        Err(_) => (),
     }
 
     None
@@ -258,14 +255,12 @@ fn get_environments_from_envs_folder_in_conda_directory(
     // iterate through all sub directories in the env folder
     // for each sub directory, check if it has a python executable
     // if it does, create a PythonEnvironment object and add it to the list
-    for entry in std::fs::read_dir(path.join("envs")).ok()? {
-        match entry {
-            Ok(entry) => {
-                if let Some(env) = get_conda_environment_info(&entry.path(), true) {
-                    envs.push(env);
-                }
-            }
-            Err(_) => (),
+    for entry in std::fs::read_dir(path.join("envs"))
+        .ok()?
+        .filter_map(Result::ok)
+    {
+        if let Some(env) = get_conda_environment_info(&entry.path(), true) {
+            envs.push(env);
         }
     }
 
@@ -274,21 +269,14 @@ fn get_environments_from_envs_folder_in_conda_directory(
 
 fn get_conda_envs_from_environment_txt(environment: &dyn known::Environment) -> Vec<String> {
     let mut envs = vec![];
-    let home = environment.get_user_home();
-    match home {
-        Some(home) => {
-            let home = Path::new(&home);
-            let environment_txt = home.join(".conda").join("environments.txt");
-            match std::fs::read_to_string(environment_txt) {
-                Ok(reader) => {
-                    for line in reader.lines() {
-                        envs.push(line.to_string());
-                    }
-                }
-                Err(_) => (),
+    if let Some(home) = environment.get_user_home() {
+        let home = Path::new(&home);
+        let environment_txt = home.join(".conda").join("environments.txt");
+        if let Ok(reader) = std::fs::read_to_string(environment_txt) {
+            for line in reader.lines() {
+                envs.push(line.to_string());
             }
         }
-        None => (),
     }
     envs
 }
@@ -309,31 +297,28 @@ fn get_conda_conda_rc(environment: &dyn known::Environment) -> Option<Condarc> {
     if let Some(home) = environment.get_user_home() {
         let conda_rc = Path::new(&home).join(".condarc");
         let mut start_consuming_values = false;
-        match std::fs::read_to_string(conda_rc) {
-            Ok(reader) => {
-                let mut env_dirs = vec![];
-                for line in reader.lines() {
-                    if line.starts_with("envs_dirs:") && !start_consuming_values {
-                        start_consuming_values = true;
-                        continue;
-                    }
-                    if start_consuming_values {
-                        if line.trim().starts_with("-") {
-                            if let Some(env_dir) = line.splitn(2, '-').nth(1) {
-                                let env_dir = PathBuf::from(env_dir.trim());
-                                if env_dir.exists() {
-                                    env_dirs.push(env_dir);
-                                }
+        if let Ok(reader) = std::fs::read_to_string(conda_rc) {
+            let mut env_dirs = vec![];
+            for line in reader.lines() {
+                if line.starts_with("envs_dirs:") && !start_consuming_values {
+                    start_consuming_values = true;
+                    continue;
+                }
+                if start_consuming_values {
+                    if line.trim().starts_with("-") {
+                        if let Some(env_dir) = line.splitn(2, '-').nth(1) {
+                            let env_dir = PathBuf::from(env_dir.trim());
+                            if env_dir.exists() {
+                                env_dirs.push(env_dir);
                             }
-                            continue;
-                        } else {
-                            break;
                         }
+                        continue;
+                    } else {
+                        break;
                     }
                 }
-                return Some(Condarc { env_dirs });
             }
-            Err(_) => (),
+            return Some(Condarc { env_dirs });
         }
     }
     None
@@ -346,21 +331,16 @@ fn get_conda_envs_from_conda_rc(
     let mut envs: Vec<CondaEnvironment> = vec![];
     for env in get_conda_conda_rc(environment)?.env_dirs {
         if let Ok(reader) = std::fs::read_dir(env) {
-            for entry in reader {
-                match entry {
-                    Ok(entry) => {
-                        if entry.path().is_dir()
-                            && was_conda_environment_created_by_specific_conda(
-                                &entry.path(),
-                                root_conda_path,
-                            )
-                        {
-                            if let Some(env) = get_conda_environment_info(&entry.path(), false) {
-                                envs.push(env);
-                            }
-                        }
+            for entry in reader.filter_map(Result::ok) {
+                if entry.path().is_dir()
+                    && was_conda_environment_created_by_specific_conda(
+                        &entry.path(),
+                        root_conda_path,
+                    )
+                {
+                    if let Some(env) = get_conda_environment_info(&entry.path(), false) {
+                        envs.push(env);
                     }
-                    Err(_) => (),
                 }
             }
         }
@@ -383,23 +363,17 @@ fn was_conda_environment_created_by_specific_conda(
     root_conda_path: &PathBuf,
 ) -> bool {
     let conda_meta_history = env_path.join("conda-meta").join("history");
-    match std::fs::read_to_string(conda_meta_history.clone()) {
-        Ok(reader) => {
-            for line in reader.lines() {
-                let line = line.to_lowercase();
-                if line.starts_with("# cmd:") && line.contains(" create ") {
-                    if line.contains(&root_conda_path.to_str().unwrap().to_lowercase()) {
-                        return true;
-                    } else {
-                        return false;
-                    }
+    if let Ok(reader) = std::fs::read_to_string(conda_meta_history.clone()) {
+        for line in reader.lines() {
+            let line = line.to_lowercase();
+            if line.starts_with("# cmd:") && line.contains(" create ") {
+                if line.contains(&root_conda_path.to_str().unwrap().to_lowercase()) {
+                    return true;
+                } else {
+                    return false;
                 }
             }
         }
-        Err(_) => warn!(
-            "Error reading conda-meta/history file {:?}",
-            conda_meta_history
-        ),
     }
 
     false
@@ -555,7 +529,6 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
             python_executable_path: Some(python_exe),
             version: Some(package_info.version),
             env_path: Some(path.clone()),
-            sys_prefix_path: Some(path.clone()),
             env_manager: Some(manager.clone()),
             python_run_command: Some(vec![
                 conda_exe,
@@ -600,7 +573,6 @@ pub fn get_conda_environments_in_specified_path(
                     exe.clone(),
                     messaging::PythonEnvironmentCategory::Conda,
                     env.version.clone(),
-                    Some(env.path.clone()),
                     Some(env.path.clone()),
                     Some(manager.clone()),
                     get_activation_command(env, &manager),
@@ -745,7 +717,6 @@ fn get_conda_environments_from_environments_txt_that_have_not_been_discovered(
                     exe.clone(),
                     messaging::PythonEnvironmentCategory::Conda,
                     env.version.clone(),
-                    Some(env.path.clone()),
                     Some(env.path.clone()),
                     Some(manager.clone()),
                     get_activation_command(&env, &manager),

@@ -8,10 +8,10 @@ use crate::{
     utils::PythonEnv,
 };
 use regex::Regex;
-use std::{collections::HashSet, fs::DirEntry, io::Error, path::PathBuf};
+use std::{collections::HashSet, fs::DirEntry, path::PathBuf};
 
-fn is_symlinked_python_executable(path: Result<DirEntry, Error>) -> Option<PathBuf> {
-    let path = path.ok()?.path();
+fn is_symlinked_python_executable(path: DirEntry) -> Option<PathBuf> {
+    let path = path.path();
     let name = path.file_name()?.to_string_lossy();
     if !name.starts_with("python") || name.ends_with("-config") || name.ends_with("-build") {
         return None;
@@ -46,7 +46,10 @@ impl Locator for Homebrew<'_> {
         let mut reported: HashSet<String> = HashSet::new();
         let python_regex = Regex::new(r"/(\d+\.\d+\.\d+)/").unwrap();
         let mut environments: Vec<PythonEnvironment> = vec![];
-        for file in std::fs::read_dir(homebrew_prefix_bin).ok()? {
+        for file in std::fs::read_dir(homebrew_prefix_bin)
+            .ok()?
+            .filter_map(Result::ok)
+        {
             if let Some(exe) = is_symlinked_python_executable(file) {
                 let python_version = exe.to_string_lossy().to_string();
                 let version = match python_regex.captures(&python_version) {
@@ -66,7 +69,6 @@ impl Locator for Homebrew<'_> {
                     Some(exe.clone()),
                     crate::messaging::PythonEnvironmentCategory::Homebrew,
                     version,
-                    None,
                     None,
                     None,
                     Some(vec![exe.to_string_lossy().to_string()]),
