@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+#[cfg(windows)]
 use crate::conda::CondaLocator;
 #[cfg(windows)]
 use crate::locator::{Locator, LocatorResult};
+#[cfg(windows)]
 use crate::messaging::EnvManager;
 #[cfg(windows)]
 use crate::messaging::{PythonEnvironment, PythonEnvironmentCategory};
