@@ -58,7 +58,6 @@ fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<Pytho
                     },
                     env_path,
                     None,
-                    None,
                     Some(vec![executable.to_string_lossy().to_string()]),
                 );
                 pythons.push(env);
