@@ -111,7 +111,6 @@ fn get_pure_python_environment(
         messaging::PythonEnvironmentCategory::Pyenv,
         Some(version),
         Some(path.clone()),
-        Some(path.clone()),
         manager.clone(),
         Some(vec![executable
             .clone()
@@ -145,7 +144,6 @@ fn get_virtual_env_environment(
         messaging::PythonEnvironmentCategory::PyenvVirtualEnv,
         Some(pyenv_cfg.version),
         Some(path.clone()),
-        Some(path.clone()),
         manager.clone(),
         Some(vec![executable
             .clone()
@@ -168,23 +166,21 @@ pub fn list_pyenv_environments(
         .into_string()
         .ok()?;
 
-    for entry in fs::read_dir(&versions_dir).ok()? {
-        if let Ok(path) = entry {
-            let path = path.path();
-            if !path.is_dir() {
-                continue;
-            }
-            if let Some(executable) = find_python_binary_path(&path) {
-                if let Some(env) = get_pure_python_environment(&executable, &path, manager) {
-                    envs.push(env);
-                } else if let Some(env) = get_virtual_env_environment(&executable, &path, manager) {
-                    envs.push(env);
-                } else if is_conda_environment(&path) {
-                    if let Some(result) = conda_locator.find_in(&path) {
-                        result.environments.iter().for_each(|e| {
-                            envs.push(e.clone());
-                        });
-                    }
+    for entry in fs::read_dir(&versions_dir).ok()?.filter_map(Result::ok) {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        if let Some(executable) = find_python_binary_path(&path) {
+            if let Some(env) = get_pure_python_environment(&executable, &path, manager) {
+                envs.push(env);
+            } else if let Some(env) = get_virtual_env_environment(&executable, &path, manager) {
+                envs.push(env);
+            } else if is_conda_environment(&path) {
+                if let Some(result) = conda_locator.find_in(&path) {
+                    result.environments.iter().for_each(|e| {
+                        envs.push(e.clone());
+                    });
                 }
             }
         }

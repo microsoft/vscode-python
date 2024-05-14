@@ -100,7 +100,6 @@ pub struct PythonEnvironment {
     pub category: PythonEnvironmentCategory,
     pub version: Option<String>,
     pub env_path: Option<PathBuf>,
-    pub sys_prefix_path: Option<PathBuf>,
     pub env_manager: Option<EnvManager>,
     pub python_run_command: Option<Vec<String>>,
     /**
@@ -117,7 +116,6 @@ impl PythonEnvironment {
         category: PythonEnvironmentCategory,
         version: Option<String>,
         env_path: Option<PathBuf>,
-        sys_prefix_path: Option<PathBuf>,
         env_manager: Option<EnvManager>,
         python_run_command: Option<Vec<String>>,
     ) -> Self {
@@ -128,34 +126,9 @@ impl PythonEnvironment {
             category,
             version,
             env_path,
-            sys_prefix_path,
             env_manager,
             python_run_command,
             project_path: None,
-        }
-    }
-    pub fn new_pipenv(
-        python_executable_path: Option<PathBuf>,
-        version: Option<String>,
-        env_path: Option<PathBuf>,
-        sys_prefix_path: Option<PathBuf>,
-        env_manager: Option<EnvManager>,
-        project_path: PathBuf,
-    ) -> Self {
-        Self {
-            display_name: None,
-            name: None,
-            python_executable_path: python_executable_path.clone(),
-            category: PythonEnvironmentCategory::Pipenv,
-            version,
-            env_path,
-            sys_prefix_path,
-            env_manager,
-            python_run_command: match python_executable_path {
-                Some(exe) => Some(vec![exe.to_string_lossy().to_string()]),
-                None => None,
-            },
-            project_path: Some(project_path),
         }
     }
 }

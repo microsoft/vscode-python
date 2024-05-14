@@ -43,7 +43,6 @@ impl Locator for PythonOnPath<'_> {
             python_executable_path: Some(env.executable.clone()),
             version: env.version.clone(),
             category: crate::messaging::PythonEnvironmentCategory::System,
-            sys_prefix_path: None,
             env_path: env.path.clone(),
             env_manager: None,
             project_path: None,

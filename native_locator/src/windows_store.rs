@@ -55,9 +55,8 @@ fn list_windows_store_python_executables(
                         display_name: Some(result.display_name),
                         name: None,
                         python_executable_path: Some(exe.clone()),
-                        version: result.version,
+                        version: None,
                         category: crate::messaging::PythonEnvironmentCategory::WindowsStore,
-                        sys_prefix_path: Some(PathBuf::from(result.env_path.clone())),
                         env_path: Some(PathBuf::from(result.env_path.clone())),
                         env_manager: None,
                         project_path: None,
@@ -84,7 +83,6 @@ fn get_package_full_name_from_registry(name: String, hkcu: &RegKey) -> Option<St
 #[cfg(windows)]
 struct StorePythonInfo {
     display_name: String,
-    version: Option<String>,
     env_path: String,
 }
 
@@ -97,14 +95,9 @@ fn get_package_display_name_and_location(name: String, hkcu: &RegKey) -> Option<
         let env_path = package_key.get_value("PackageRootFolder").ok()?;
 
         let regex = regex::Regex::new("PythonSoftwareFoundation.Python.((\\d+\\.?)*)_.*").ok()?;
-        let version = match regex.captures(&name)?.get(1) {
-            Some(version) => Some(version.as_str().to_string()),
-            None => None,
-        };
 
         return Some(StorePythonInfo {
             display_name,
-            version,
             env_path,
         });
     }
@@ -134,7 +127,6 @@ impl Locator for WindowsStore<'_> {
                 python_executable_path: Some(env.executable.clone()),
                 version: None,
                 category: crate::messaging::PythonEnvironmentCategory::WindowsStore,
-                sys_prefix_path: None,
                 env_path: None,
                 env_manager: None,
                 project_path: None,

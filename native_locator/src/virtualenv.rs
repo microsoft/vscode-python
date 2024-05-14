@@ -70,7 +70,6 @@ impl Locator for VirtualEnv {
                 python_executable_path: Some(env.executable.clone()),
                 version: env.version.clone(),
                 category: crate::messaging::PythonEnvironmentCategory::VirtualEnv,
-                sys_prefix_path: env.path.clone(),
                 env_path: env.path.clone(),
                 env_manager: None,
                 project_path: None,

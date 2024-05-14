@@ -93,7 +93,6 @@ impl Locator for VirtualEnvWrapper<'_> {
                 python_executable_path: Some(env.executable.clone()),
                 version: env.version.clone(),
                 category: crate::messaging::PythonEnvironmentCategory::Venv,
-                sys_prefix_path: env.path.clone(),
                 env_path: env.path.clone(),
                 env_manager: None,
                 project_path: None,

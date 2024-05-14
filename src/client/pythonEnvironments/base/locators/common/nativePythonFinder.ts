@@ -16,13 +16,13 @@ const NATIVE_LOCATOR = isWindows()
     : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder');
 
 export interface NativeEnvInfo {
+    displayName?: string;
     name: string;
     pythonExecutablePath?: string;
     category: string;
     version?: string;
     pythonRunCommand?: string[];
     envPath?: string;
-    sysPrefixPath?: string;
     /**
      * Path to the project directory when dealing with pipenv virtual environments.
      */

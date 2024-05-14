@@ -126,7 +126,6 @@ fn finds_two_conda_envs_from_txt() {
         category: python_finder::messaging::PythonEnvironmentCategory::Conda,
         version: Some("10.0.1".to_string()),
         env_path: Some(conda_1.clone()),
-        sys_prefix_path: Some(conda_1.clone()),
         env_manager: Some(expected_conda_manager.clone()),
         python_run_command: Some(vec![
             conda_exe.clone().to_str().unwrap().to_string(),
@@ -144,7 +143,6 @@ fn finds_two_conda_envs_from_txt() {
         category: python_finder::messaging::PythonEnvironmentCategory::Conda,
         version: None,
         env_path: Some(conda_2.clone()),
-        sys_prefix_path: Some(conda_2.clone()),
         env_manager: Some(expected_conda_manager.clone()),
         python_run_command: Some(vec![
             conda_exe.clone().to_str().unwrap().to_string(),
