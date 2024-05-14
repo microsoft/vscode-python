@@ -6,7 +6,7 @@ use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
 use crate::utils::{self, PythonEnv};
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 fn get_env_path(python_executable_path: &PathBuf) -> Option<PathBuf> {
     let parent = python_executable_path.parent()?;
@@ -58,8 +58,18 @@ impl Locator for PythonOnPath<'_> {
         } else {
             "python"
         };
+
+        // Exclude files from this folder, as they would have been discovered elsewhere (widows_store)
+        // Also the exe is merely a pointer to another file.
+        let home = self.environment.get_user_home()?;
+        let apps_path = Path::new(&home)
+            .join("AppData")
+            .join("Local")
+            .join("Microsoft")
+            .join("WindowsApps");
         let mut environments: Vec<PythonEnvironment> = vec![];
         env::split_paths(&paths)
+            .filter(|p| !p.starts_with(apps_path.clone()))
             .map(|p| p.join(bin))
             .filter(|p| p.exists())
             .for_each(|full_path| {
