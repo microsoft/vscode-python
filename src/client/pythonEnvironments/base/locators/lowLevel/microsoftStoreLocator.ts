@@ -12,7 +12,8 @@ import {
     isStorePythonInstalled,
     getMicrosoftStoreAppsRoot,
 } from '../../../common/environmentManagers/microsoftStoreEnv';
-import { traceVerbose } from '../../../../logging';
+import { traceInfo } from '../../../../logging';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 /**
  * This is a glob pattern which matches following file names:
@@ -87,13 +88,14 @@ export class MicrosoftStoreLocator extends FSWatchingLocator {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
-            traceVerbose('Searching for windows store envs');
+            const stopWatch = new StopWatch();
+            traceInfo('Searching for windows store envs');
             const exes = await getMicrosoftStorePythonExes();
             yield* exes.map(async (executablePath: string) => ({
                 kind,
                 executablePath,
             }));
-            traceVerbose(`Finished searching for windows store envs`);
+            traceInfo(`Finished searching for windows store envs: ${stopWatch.elapsedTime} milliseconds`);
         };
         return iterator(this.kind);
     }
