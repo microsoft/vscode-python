@@ -119,6 +119,7 @@ fn finds_two_conda_envs_from_txt() {
         tool: EnvManagerType::Conda,
     };
     let expected_conda_1 = PythonEnvironment {
+        display_name: None,
         name: Some("one".to_string()),
         project_path: None,
         python_executable_path: Some(conda_1_exe.clone()),
@@ -133,9 +134,10 @@ fn finds_two_conda_envs_from_txt() {
             "-n".to_string(),
             "one".to_string(),
             "python".to_string(),
-        ]),
-    };
-    let expected_conda_2 = PythonEnvironment {
+            ]),
+        };
+        let expected_conda_2 = PythonEnvironment {
+        display_name: None,
         name: Some("two".to_string()),
         project_path: None,
         python_executable_path: Some(conda_2_exe.clone()),

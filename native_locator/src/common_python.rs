@@ -38,6 +38,7 @@ impl Locator for PythonOnPath<'_> {
             return None;
         }
         Some(PythonEnvironment {
+            display_name: None,
             name: None,
             python_executable_path: Some(env.executable.clone()),
             version: env.version.clone(),

@@ -415,6 +415,7 @@ impl Locator for Conda<'_> {
         for env in envs {
             let executable = find_python_binary_path(Path::new(&env.path));
             let env = messaging::PythonEnvironment::new(
+                None,
                 Some(env.name.to_string()),
                 executable.clone(),
                 messaging::PythonEnvironmentCategory::Conda,

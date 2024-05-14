@@ -33,6 +33,7 @@ fn find_python_in_path_this() {
     assert_eq!(environments.len(), 1);
 
     let env = PythonEnvironment {
+        display_name: None,
         env_manager: None,
         project_path: None,
         name: None,

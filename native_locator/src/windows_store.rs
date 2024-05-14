@@ -55,6 +55,7 @@ impl Locator for WindowsStore<'_> {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_windows_python_executable(&env.executable) {
             return Some(PythonEnvironment {
+                display_name: None,
                 name: None,
                 python_executable_path: Some(env.executable.clone()),
                 version: None,

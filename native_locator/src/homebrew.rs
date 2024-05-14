@@ -62,6 +62,7 @@ impl Locator for Homebrew<'_> {
                 reported.insert(exe.to_string_lossy().to_string());
                 let env = crate::messaging::PythonEnvironment::new(
                     None,
+                    None,
                     Some(exe.clone()),
                     crate::messaging::PythonEnvironmentCategory::Homebrew,
                     version,

@@ -26,6 +26,7 @@ impl Locator for Venv {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_venv(&env) {
             return Some(PythonEnvironment {
+                display_name: None,
                 name: Some(
                     env.path
                         .clone()

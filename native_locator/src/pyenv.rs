@@ -106,6 +106,7 @@ fn get_pure_python_environment(
     let version = get_pyenv_version(&path.file_name().unwrap().to_string_lossy().to_string())?;
     Some(messaging::PythonEnvironment::new(
         None,
+        None,
         Some(executable.clone()),
         messaging::PythonEnvironmentCategory::Pyenv,
         Some(version),
@@ -138,6 +139,7 @@ fn get_virtual_env_environment(
     let pyenv_cfg = find_and_parse_pyvenv_cfg(executable)?;
     let folder_name = path.file_name().unwrap().to_string_lossy().to_string();
     Some(messaging::PythonEnvironment::new(
+        None,
         Some(folder_name),
         Some(executable.clone()),
         messaging::PythonEnvironmentCategory::PyenvVirtualEnv,

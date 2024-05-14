@@ -41,23 +41,23 @@ fn main() {
     let pipenv_locator = pipenv::PipEnv::new();
     let mut path_locator = common_python::PythonOnPath::with(&environment);
     let mut conda_locator = conda::Conda::with(&environment);
-    let mut pyenv_locator = pyenv::PyEnv::with(&environment, &mut conda_locator);
 
     #[cfg(unix)]
     let mut homebrew_locator = homebrew::Homebrew::with(&environment);
     #[cfg(windows)]
     let mut windows_store = windows_store::WindowsStore::with(&environment);
     #[cfg(windows)]
-    let mut windows_registry = windows_registry::WindowsRegistry::new();
+    let mut windows_registry = windows_registry::WindowsRegistry::with(&mut conda_locator);
 
     // Step 1: These environments take precedence over all others.
     // As they are very specific and guaranteed to be specific type.
+    #[cfg(windows)]
+    find_environments(&mut windows_registry, &mut dispatcher);
+    let mut pyenv_locator = pyenv::PyEnv::with(&environment, &mut conda_locator);
     find_environments(&mut pyenv_locator, &mut dispatcher);
     #[cfg(unix)]
     find_environments(&mut homebrew_locator, &mut dispatcher);
     find_environments(&mut conda_locator, &mut dispatcher);
-    #[cfg(windows)]
-    find_environments(&mut windows_registry, &mut dispatcher);
     #[cfg(windows)]
     find_environments(&mut windows_store, &mut dispatcher);
 

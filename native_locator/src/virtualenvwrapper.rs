@@ -80,6 +80,7 @@ impl Locator for VirtualEnvWrapper<'_> {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_virtualenvwrapper(env, self.environment) {
             return Some(PythonEnvironment {
+                display_name: None,
                 name: Some(
                     env.path
                         .clone()

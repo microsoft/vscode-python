@@ -549,6 +549,7 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
     if let Some(package_info) = get_conda_package_json_path(&path, "python") {
         let conda_exe = manager.executable_path.to_str().unwrap().to_string();
         return Some(PythonEnvironment {
+            display_name: None,
             name: None,
             category: messaging::PythonEnvironmentCategory::Conda,
             python_executable_path: Some(python_exe),
@@ -594,6 +595,7 @@ pub fn get_conda_environments_in_specified_path(
             envs.unwrap_or_default().iter().for_each(|env| {
                 let exe = env.python_executable_path.clone();
                 let env = PythonEnvironment::new(
+                    None,
                     Some(env.name.clone()),
                     exe.clone(),
                     messaging::PythonEnvironmentCategory::Conda,
@@ -738,6 +740,7 @@ fn get_conda_environments_from_environments_txt_that_have_not_been_discovered(
             if let Some(env) = get_conda_environment_info(&PathBuf::from(env), false) {
                 let exe = env.python_executable_path.clone();
                 let env = PythonEnvironment::new(
+                    None,
                     Some(env.name.clone()),
                     exe.clone(),
                     messaging::PythonEnvironmentCategory::Conda,
