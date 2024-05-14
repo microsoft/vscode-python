@@ -94,6 +94,7 @@ pub enum PythonEnvironmentCategory {
 #[serde(rename_all = "camelCase")]
 #[derive(Debug)]
 pub struct PythonEnvironment {
+    pub display_name: Option<String>,
     pub name: Option<String>,
     pub python_executable_path: Option<PathBuf>,
     pub category: PythonEnvironmentCategory,
@@ -110,6 +111,7 @@ pub struct PythonEnvironment {
 
 impl PythonEnvironment {
     pub fn new(
+        display_name: Option<String>,
         name: Option<String>,
         python_executable_path: Option<PathBuf>,
         category: PythonEnvironmentCategory,
@@ -120,6 +122,7 @@ impl PythonEnvironment {
         python_run_command: Option<Vec<String>>,
     ) -> Self {
         Self {
+            display_name,
             name,
             python_executable_path,
             category,
@@ -140,6 +143,7 @@ impl PythonEnvironment {
         project_path: PathBuf,
     ) -> Self {
         Self {
+            display_name: None,
             name: None,
             python_executable_path: python_executable_path.clone(),
             category: PythonEnvironmentCategory::Pipenv,
