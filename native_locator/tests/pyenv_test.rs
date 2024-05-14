@@ -105,6 +105,7 @@ fn find_pyenv_envs() {
     );
 
     let expected_3_9_9 = json!(PythonEnvironment {
+        display_name: None,
         project_path: None,
         name: None,
         python_executable_path: Some(join_test_paths(&[
@@ -123,20 +124,21 @@ fn find_pyenv_envs() {
         env_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/3.9.9"
-        ])),
-        sys_prefix_path: Some(join_test_paths(&[
+            ])),
+            sys_prefix_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/3.9.9"
         ])),
         env_manager: Some(expected_manager.clone())
     });
     let expected_virtual_env = PythonEnvironment {
+        display_name: None,
         project_path: None,
         name: Some("my-virtual-env".to_string()),
         python_executable_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/my-virtual-env/bin/python",
-        ])),
+            ])),
         python_run_command: Some(vec![join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/my-virtual-env/bin/python",
@@ -153,16 +155,17 @@ fn find_pyenv_envs() {
         sys_prefix_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/my-virtual-env",
-        ])),
-        env_manager: Some(expected_manager.clone()),
-    };
-    let expected_3_12_1 = PythonEnvironment {
+            ])),
+            env_manager: Some(expected_manager.clone()),
+        };
+        let expected_3_12_1 = PythonEnvironment {
+        display_name: None,
         project_path: None,
         name: None,
         python_executable_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/3.12.1/bin/python",
-        ])),
+            ])),
         python_run_command: Some(vec![join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/3.12.1/bin/python",
@@ -179,10 +182,11 @@ fn find_pyenv_envs() {
         sys_prefix_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/3.12.1",
-        ])),
+            ])),
         env_manager: Some(expected_manager.clone()),
     };
     let expected_3_13_dev = PythonEnvironment {
+        display_name: None,
         project_path: None,
         name: None,
         python_executable_path: Some(join_test_paths(&[
@@ -205,10 +209,11 @@ fn find_pyenv_envs() {
         sys_prefix_path: Some(join_test_paths(&[
             home.to_str().unwrap(),
             ".pyenv/versions/3.13-dev",
-        ])),
+            ])),
         env_manager: Some(expected_manager.clone()),
     };
     let expected_3_12_1a3 = PythonEnvironment {
+        display_name: None,
         project_path: None,
         name: None,
         python_executable_path: Some(join_test_paths(&[
