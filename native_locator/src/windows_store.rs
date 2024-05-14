@@ -72,6 +72,7 @@ fn list_windows_store_python_executables(
     Some(python_envs)
 }
 
+#[cfg(windows)]
 fn get_package_full_name_from_registry(name: String, hkcu: &RegKey) -> Option<String> {
     let key = format!("Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\SystemAppData\\{}\\Schemas", name);
     let package_key = hkcu.open_subkey(key).ok()?;
@@ -80,12 +81,14 @@ fn get_package_full_name_from_registry(name: String, hkcu: &RegKey) -> Option<St
 }
 
 #[derive(Debug)]
+#[cfg(windows)]
 struct StorePythonInfo {
     display_name: String,
     version: Option<String>,
     env_path: String,
 }
 
+#[cfg(windows)]
 fn get_package_display_name_and_location(name: String, hkcu: &RegKey) -> Option<StorePythonInfo> {
     if let Some(name) = get_package_full_name_from_registry(name, &hkcu) {
         let key = format!("Software\\Classes\\Local Settings\\Software\\Microsoft\\Windows\\CurrentVersion\\AppModel\\Repository\\Packages\\{}", name);
