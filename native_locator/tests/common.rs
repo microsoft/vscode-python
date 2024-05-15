@@ -1,11 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use python_finder::{
-    known::Environment,
-    locator::LocatorResult,
-    messaging::{EnvManager, PythonEnvironment},
-};
+use python_finder::known::Environment;
 use serde_json::Value;
 use std::{collections::HashMap, path::PathBuf};
 
