@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as ch from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
-import { Disposable } from 'vscode';
+import { Disposable, window } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { traceError, traceLog } from '../logging';
 
@@ -10,11 +10,13 @@ const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server
 export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
     interrupt(): void;
+    input(): void;
 }
 
 class PythonServerImpl implements Disposable {
     constructor(private connection: rpc.MessageConnection, private pythonServer: ch.ChildProcess) {
         this.initialize();
+        this.input();
     }
 
     private initialize(): void {
@@ -22,6 +24,24 @@ class PythonServerImpl implements Disposable {
             console.log('Log:', message);
         });
         this.connection.listen();
+    }
+
+    // Register input handler
+    public input(): void {
+        // Register input request handler
+        this.connection.onRequest('input', async (request) => {
+            // Ask for user input via popup quick input, send it back to Python
+            let userPrompt = 'Enter your input here: ';
+            if (request && request.prompt) {
+                userPrompt = request.prompt;
+            }
+            const input = await window.showInputBox({
+                title: 'Input Request',
+                prompt: userPrompt,
+                ignoreFocusOut: true,
+            });
+            return { userInput: input };
+        });
     }
 
     public execute(code: string): Promise<string> {

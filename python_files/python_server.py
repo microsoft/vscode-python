@@ -1,3 +1,5 @@
+from typing import Dict, List, Optional, Union
+
 # import debugpy
 # debugpy.connect(5678)
 import sys
@@ -5,10 +7,12 @@ import json
 import contextlib
 import io
 import traceback
+import uuid
 
 STDIN = sys.stdin
 STDOUT = sys.stdout
 STDERR = sys.stderr
+USER_GLOBALS = {}
 
 
 def send_message(msg: str):
@@ -23,6 +27,59 @@ def print_log(msg: str):
 
 def send_response(response: str, response_id: int):
     send_message(json.dumps({"jsonrpc": "2.0", "id": response_id, "result": response}))
+
+
+def send_request(params: Optional[Union[List, Dict]] = None):
+    request_id = uuid.uuid4().hex
+    if params is None:
+        send_message(json.dumps({"jsonrpc": "2.0", "id": request_id, "method": "input"}))
+    else:
+        send_message(
+            json.dumps({"jsonrpc": "2.0", "id": request_id, "method": "input", "params": params})
+        )
+    return request_id
+
+
+original_input = input
+
+
+def custom_input(prompt=""):
+    request_id = send_request({"prompt": prompt})
+    try:
+        headers = get_headers()
+        content_length = int(headers.get("Content-Length", 0))
+
+        if content_length:
+            message_text = STDIN.read(content_length)  # make sure Im getting right content
+            message_json = json.loads(message_text)
+            our_user_input = message_json["result"]["userInput"]
+            return our_user_input
+    except Exception:
+        print_log(traceback.format_exc())
+
+
+# Set input to our custom input
+USER_GLOBALS["input"] = custom_input
+input = custom_input
+
+
+def handle_response(request_id):
+    while not STDIN.closed:
+        try:
+            headers = get_headers()
+            content_length = int(headers.get("Content-Length", 0))
+
+            if content_length:
+                message_text = STDIN.read(content_length)
+                message_json = json.loads(message_text)
+                our_user_input = message_json["result"]["userInput"]
+                if message_json["id"] == request_id:
+                    send_response(our_user_input, message_json["id"])
+                elif message_json["method"] == "exit":
+                    sys.exit(0)
+
+        except Exception:
+            print_log(traceback.format_exc())
 
 
 def exec_function(user_input):
@@ -41,15 +98,13 @@ def execute(request, user_globals):
         with redirect_io("stderr", str_error):
             str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
             with redirect_io("stdin", str_input):
-                user_output_globals = exec_user_input(request["params"], user_globals)
+                exec_user_input(request["params"], user_globals)
     send_response(str_output.get_value(), request["id"])
-    user_globals.update(user_output_globals)
 
 
 def exec_user_input(user_input, user_globals):
     # have to do redirection
     user_input = user_input[0] if isinstance(user_input, list) else user_input
-    user_globals = user_globals.copy()
 
     try:
         callable = exec_function(user_input)
@@ -60,7 +115,6 @@ def exec_user_input(user_input, user_globals):
         print(traceback.format_exc())
     except Exception:
         print(traceback.format_exc())
-    return user_globals
 
 
 class CustomIO(io.TextIOWrapper):
@@ -68,7 +122,18 @@ class CustomIO(io.TextIOWrapper):
 
     def __init__(self, name, encoding="utf-8", newline=None):
         self._buffer = io.BytesIO()
+        self._custom_name = name
         super().__init__(self._buffer, encoding=encoding, newline=newline)
+
+    def read(self, size: Optional[int] = None):
+        if self._custom_name == "<stdin>":
+            request_id = send_request()
+            result = handle_response(request_id)
+            return result["result"][
+                "userInput"
+            ]  # Read from stdin, simply return user 'input' from TS side
+        else:
+            return super().read(size)
 
     def close(self):
         """Provide this close method which is used by some tools."""
@@ -98,21 +163,19 @@ def get_headers():
 
 
 if __name__ == "__main__":
-    user_globals = {}
-
     while not STDIN.closed:
         try:
             headers = get_headers()
             content_length = int(headers.get("Content-Length", 0))
 
+            # TODO: pull out to separate function
             if content_length:
                 request_text = STDIN.read(content_length)  # make sure Im getting right content
                 request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
-                    execute(request_json, user_globals)
-
+                    execute(request_json, USER_GLOBALS)
                 elif request_json["method"] == "exit":
                     sys.exit(0)
 
-        except Exception as e:
-            print_log(str(e))
+        except Exception:
+            print_log(traceback.format_exc())

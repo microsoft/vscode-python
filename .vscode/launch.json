@@ -252,7 +252,7 @@
     ],
     "compounds": [
         {
-            "name": "Debug Test Discovery",
+            "name": "Debug Python and Extension",
             "configurations": ["Python: Attach Listen", "Extension"]
         }
     ]
