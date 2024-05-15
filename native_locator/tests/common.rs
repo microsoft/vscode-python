@@ -7,7 +7,6 @@ use std::{collections::HashMap, path::PathBuf};
 
 #[allow(dead_code)]
 pub fn test_file_path(paths: &[&str]) -> PathBuf {
-    // let parts: Vec<String> = paths.iter().map(|p| p.to_string()).collect();
     let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     paths.iter().for_each(|p| root.push(p));
