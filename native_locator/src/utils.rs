@@ -24,13 +24,6 @@ impl PythonEnv {
             version,
         }
     }
-    pub fn from(executable: PathBuf) -> Self {
-        Self {
-            executable,
-            path: None,
-            version: None,
-        }
-    }
 }
 
 #[derive(Debug)]

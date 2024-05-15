@@ -25,7 +25,7 @@ pub enum EnvManagerType {
     Pyenv,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[derive(Debug)]
 pub struct EnvManager {
@@ -40,16 +40,6 @@ impl EnvManager {
             executable_path,
             version,
             tool,
-        }
-    }
-}
-
-impl Clone for EnvManager {
-    fn clone(&self) -> Self {
-        Self {
-            executable_path: self.executable_path.clone(),
-            version: self.version.clone(),
-            tool: self.tool.clone(),
         }
     }
 }

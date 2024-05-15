@@ -1,17 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use python_finder::{
-    known::Environment,
-    locator::LocatorResult,
-    messaging::{EnvManager, PythonEnvironment},
-};
+use python_finder::known::Environment;
 use serde_json::Value;
 use std::{collections::HashMap, path::PathBuf};
 
 #[allow(dead_code)]
 pub fn test_file_path(paths: &[&str]) -> PathBuf {
-    // let parts: Vec<String> = paths.iter().map(|p| p.to_string()).collect();
     let mut root = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
 
     paths.iter().for_each(|p| root.push(p));
@@ -32,6 +27,7 @@ pub trait TestMessages {
 pub struct TestEnvironment {
     vars: HashMap<String, String>,
     home: Option<PathBuf>,
+    root: Option<PathBuf>,
     globals_locations: Vec<PathBuf>,
 }
 #[allow(dead_code)]
@@ -39,10 +35,14 @@ pub fn create_test_environment(
     vars: HashMap<String, String>,
     home: Option<PathBuf>,
     globals_locations: Vec<PathBuf>,
+    root: Option<PathBuf>,
 ) -> TestEnvironment {
     impl Environment for TestEnvironment {
         fn get_env_var(&self, key: String) -> Option<String> {
             self.vars.get(&key).cloned()
+        }
+        fn get_root(&self) -> Option<PathBuf> {
+            self.root.clone()
         }
         fn get_user_home(&self) -> Option<PathBuf> {
             self.home.clone()
@@ -54,6 +54,7 @@ pub fn create_test_environment(
     TestEnvironment {
         vars,
         home,
+        root,
         globals_locations,
     }
 }
@@ -140,21 +141,5 @@ pub fn assert_messages(expected_json: &[Value], actual_json: &[Value]) {
             // Use traditional assert so we can see the fully output in the test results.
             assert_eq!(&expected_json[0], actual);
         }
-    }
-}
-
-#[allow(dead_code)]
-pub fn get_environments_from_result(result: &Option<LocatorResult>) -> Vec<PythonEnvironment> {
-    match result {
-        Some(result) => result.environments.clone(),
-        None => vec![],
-    }
-}
-
-#[allow(dead_code)]
-pub fn get_managers_from_result(result: &Option<LocatorResult>) -> Vec<EnvManager> {
-    match result {
-        Some(result) => result.managers.clone(),
-        None => vec![],
     }
 }

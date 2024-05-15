@@ -6,7 +6,7 @@ use crate::{
     utils::PythonEnv,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct LocatorResult {
     pub managers: Vec<EnvManager>,
     pub environments: Vec<PythonEnvironment>,
