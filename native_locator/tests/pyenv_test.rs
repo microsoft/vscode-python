@@ -16,6 +16,7 @@ fn does_not_find_any_pyenv_envs() {
         HashMap::new(),
         Some(PathBuf::from("SOME_BOGUS_HOME_DIR")),
         Vec::new(),
+        None,
     );
 
     let mut conda = Conda::with(&known);
@@ -38,13 +39,22 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
 
-    let home = test_file_path(&["tests", "unix", "pyenv_without_envs"]);
-    let homebrew_bin = join_test_paths(&[home.to_str().unwrap(), "opt", "homebrew", "bin"]);
+    let home = test_file_path(&["tests", "unix", "pyenv_without_envs", "user_home"]);
+    let homebrew_bin = test_file_path(&[
+        "tests",
+        "unix",
+        "pyenv_without_envs",
+        "home",
+        "opt",
+        "homebrew",
+        "bin",
+    ]);
     let pyenv_exe = join_test_paths(&[homebrew_bin.to_str().unwrap(), "pyenv"]);
     let known = create_test_environment(
         HashMap::new(),
         Some(home.clone()),
         vec![PathBuf::from(homebrew_bin)],
+        None,
     );
 
     let mut conda = Conda::with(&known);
@@ -77,13 +87,15 @@ fn find_pyenv_envs() {
     use serde_json::json;
     use std::{collections::HashMap, path::PathBuf};
 
-    let home = test_file_path(&["tests", "unix", "pyenv"]);
-    let homebrew_bin = join_test_paths(&[home.to_str().unwrap(), "opt", "homebrew", "bin"]);
+    let home = test_file_path(&["tests", "unix", "pyenv", "user_home"]);
+    let homebrew_bin =
+        test_file_path(&["tests", "unix", "pyenv", "home", "opt", "homebrew", "bin"]);
     let pyenv_exe = join_test_paths(&[homebrew_bin.to_str().unwrap(), "pyenv"]);
     let known = create_test_environment(
         HashMap::new(),
         Some(home.clone()),
         vec![PathBuf::from(homebrew_bin)],
+        None,
     );
 
     let mut conda = Conda::with(&known);

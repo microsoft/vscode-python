@@ -32,6 +32,7 @@ pub trait TestMessages {
 pub struct TestEnvironment {
     vars: HashMap<String, String>,
     home: Option<PathBuf>,
+    root: Option<PathBuf>,
     globals_locations: Vec<PathBuf>,
 }
 #[allow(dead_code)]
@@ -39,10 +40,14 @@ pub fn create_test_environment(
     vars: HashMap<String, String>,
     home: Option<PathBuf>,
     globals_locations: Vec<PathBuf>,
+    root: Option<PathBuf>,
 ) -> TestEnvironment {
     impl Environment for TestEnvironment {
         fn get_env_var(&self, key: String) -> Option<String> {
             self.vars.get(&key).cloned()
+        }
+        fn get_root(&self) -> Option<PathBuf> {
+            self.root.clone()
         }
         fn get_user_home(&self) -> Option<PathBuf> {
             self.home.clone()
@@ -54,6 +59,7 @@ pub fn create_test_environment(
     TestEnvironment {
         vars,
         home,
+        root,
         globals_locations,
     }
 }
