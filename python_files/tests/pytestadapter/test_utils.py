@@ -45,6 +45,7 @@ def generate_expected_const(json_str, test_data_path_str, test_data_path):
     data = json.loads(json_str)
 
     def convert_node(node):
+        converted = {}
         if node["type_"] == "folder":
             converted = {
                 "name": node["name"],
