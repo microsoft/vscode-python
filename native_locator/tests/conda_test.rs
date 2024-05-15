@@ -143,7 +143,7 @@ fn find_conda_exe_and_empty_envs() {
 
 #[test]
 #[cfg(unix)]
-fn find_conda_from_custom_install_locationxxx() {
+fn find_conda_from_custom_install_location() {
     use crate::common::{create_test_environment, test_file_path};
     use python_finder::messaging::{EnvManager, EnvManagerType, PythonEnvironment};
     use python_finder::{conda, locator::Locator};
@@ -205,7 +205,7 @@ fn find_conda_from_custom_install_locationxxx() {
 
 #[test]
 #[cfg(unix)]
-fn finds_two_conda_envs_from_txt() {
+fn finds_two_conda_envs_from_known_location() {
     use crate::common::{
         assert_messages, create_test_environment, join_test_paths, test_file_path,
     };
@@ -213,24 +213,11 @@ fn finds_two_conda_envs_from_txt() {
     use python_finder::{conda, locator::Locator};
     use serde_json::json;
     use std::collections::HashMap;
-    use std::fs;
 
     let home = test_file_path(&["tests/unix/conda/user_home"]);
     let conda_dir = test_file_path(&["tests/unix/conda/user_home/anaconda3"]);
     let conda_1 = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "envs/one"]);
     let conda_2 = join_test_paths(&[conda_dir.clone().to_str().unwrap(), "envs/two"]);
-    let environments_txt = test_file_path(&["tests/unix/conda/.conda/environments.txt"]);
-
-    fs::create_dir_all(environments_txt.parent().unwrap()).unwrap_or_default();
-    fs::write(
-        environments_txt.clone(),
-        format!(
-            "{}\n{}",
-            conda_1.clone().to_str().unwrap().to_string(),
-            conda_2.clone().to_str().unwrap().to_string()
-        ),
-    )
-    .unwrap_or_default();
 
     let known = create_test_environment(
         HashMap::from([(
@@ -300,6 +287,4 @@ fn finds_two_conda_envs_from_txt() {
         &[json!(expected_conda_1), json!(expected_conda_2)],
         &environments.iter().map(|e| json!(e)).collect::<Vec<_>>(),
     );
-
-    fs::write(environments_txt, "").unwrap_or_default();
 }
