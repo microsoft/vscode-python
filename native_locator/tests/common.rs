@@ -148,19 +148,3 @@ pub fn assert_messages(expected_json: &[Value], actual_json: &[Value]) {
         }
     }
 }
-
-#[allow(dead_code)]
-pub fn get_environments_from_result(result: &Option<LocatorResult>) -> Vec<PythonEnvironment> {
-    match result {
-        Some(result) => result.environments.clone(),
-        None => vec![],
-    }
-}
-
-#[allow(dead_code)]
-pub fn get_managers_from_result(result: &Option<LocatorResult>) -> Vec<EnvManager> {
-    match result {
-        Some(result) => result.managers.clone(),
-        None => vec![],
-    }
-}
