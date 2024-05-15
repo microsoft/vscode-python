@@ -143,7 +143,7 @@ fn find_conda_exe_and_empty_envs() {
 
 #[test]
 #[cfg(unix)]
-fn find_conda_from_custom_install_location() {
+fn find_conda_from_custom_install_locationxxx() {
     use crate::common::{create_test_environment, test_file_path};
     use python_finder::messaging::{EnvManager, EnvManagerType, PythonEnvironment};
     use python_finder::{conda, locator::Locator};
@@ -164,15 +164,7 @@ fn find_conda_from_custom_install_location() {
     )
     .unwrap();
 
-    let known = create_test_environment(
-        HashMap::from([(
-            "PATH".to_string(),
-            conda_dir.clone().to_str().unwrap().to_string(),
-        )]),
-        Some(home),
-        Vec::new(),
-        None,
-    );
+    let known = create_test_environment(HashMap::new(), Some(home), Vec::new(), None);
 
     let mut locator = conda::Conda::with(&known);
     let result = locator.find().unwrap();
