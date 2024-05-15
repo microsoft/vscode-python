@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from python_files.tests.pytestadapter.test_utils import generate_expected_const
 from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output, helpers  # noqa: E402
