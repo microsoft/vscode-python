@@ -6,7 +6,6 @@ import tempfile
 import os
 import sys
 import json
-import os
 
 
 from .helpers import (  # noqa: E402
