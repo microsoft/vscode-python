@@ -44,7 +44,7 @@ original_input = input
 
 
 def custom_input(prompt=""):
-    request_id = send_request({"prompt": prompt})
+    send_request({"prompt": prompt})
     try:
         headers = get_headers()
         content_length = int(headers.get("Content-Length", 0))
