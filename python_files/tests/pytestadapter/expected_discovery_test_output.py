@@ -541,7 +541,7 @@ parametrize_tests_expected_output = {
                             "name": "test_adding",
                             "path": os.fspath(parameterize_tests_path),
                             "type_": "function",
-                            "id_": "parametrize_tests.py::TestClass::test_adding",
+                            "id_": os.fspath(parameterize_tests_path) + "::TestClass::test_adding",
                             "children": [
                                 {
                                     "name": "[3+5-8]",
@@ -638,7 +638,7 @@ parametrize_tests_expected_output = {
                             ),
                         },
                     ],
-                    "id_": "parametrize_tests.py::test_string",
+                    "id_": os.fspath(parameterize_tests_path) + "::test_string",
                 },
             ],
         },
@@ -760,7 +760,7 @@ param_same_name_expected_output = {
                                     ),
                                 },
                             ],
-                            "id_": "param_same_name/test_param1.py::test_odd_even",
+                            "id_": os.fspath(param1_path) + "::test_odd_even",
                         }
                     ],
                 },
@@ -818,7 +818,7 @@ param_same_name_expected_output = {
                                     ),
                                 },
                             ],
-                            "id_": "param_same_name/test_param2.py::test_odd_even",
+                            "id_": os.fspath(param2_path) + "::test_odd_even",
                         }
                     ],
                 },
@@ -1077,3 +1077,200 @@ symlink_expected_discovery_output = {
     ],
     "id_": str(SYMLINK_FOLDER_PATH),
 }
+
+same_function_new_class_param_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "same_function_new_class_param.py",
+            "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+            "type_": "file",
+            "id_": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+            "children": [
+                {
+                    "name": "TestNotEmpty",
+                    "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_integer",
+                            "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[1-1]",
+                                    "path": os.fspath(
+                                        TEST_DATA_PATH / "same_function_new_class_param.py"
+                                    ),
+                                    "lineno": find_test_line_number(
+                                        "TestNotEmpty::test_integer",
+                                        os.fspath(
+                                            TEST_DATA_PATH / "same_function_new_class_param.py"
+                                        ),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_integer[1-1]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_integer[1-1]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                },
+                                {
+                                    "name": "[2-2]",
+                                    "path": os.fspath(
+                                        TEST_DATA_PATH / "same_function_new_class_param.py"
+                                    ),
+                                    "lineno": find_test_line_number(
+                                        "TestNotEmpty::test_integer",
+                                        os.fspath(
+                                            TEST_DATA_PATH / "same_function_new_class_param.py"
+                                        ),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_integer[2-2]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_integer[2-2]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py")
+                            + "::TestNotEmpty::test_integer",
+                        },
+                        {
+                            "name": "test_string",
+                            "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[a-a]",
+                                    "path": os.fspath(
+                                        TEST_DATA_PATH / "same_function_new_class_param.py"
+                                    ),
+                                    "lineno": find_test_line_number(
+                                        "TestNotEmpty::test_string",
+                                        os.fspath(
+                                            TEST_DATA_PATH / "same_function_new_class_param.py"
+                                        ),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_string[a-a]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_string[a-a]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                },
+                                {
+                                    "name": "[b-b]",
+                                    "path": os.fspath(
+                                        TEST_DATA_PATH / "same_function_new_class_param.py"
+                                    ),
+                                    "lineno": find_test_line_number(
+                                        "TestNotEmpty::test_string",
+                                        os.fspath(
+                                            TEST_DATA_PATH / "same_function_new_class_param.py"
+                                        ),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_string[b-b]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestNotEmpty::test_string[b-b]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py")
+                            + "::TestNotEmpty::test_string",
+                        },
+                    ],
+                    "id_": "same_function_new_class_param.py::TestNotEmpty",
+                },
+                {
+                    "name": "TestEmpty",
+                    "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_integer",
+                            "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[0-0]",
+                                    "path": os.fspath(
+                                        TEST_DATA_PATH / "same_function_new_class_param.py"
+                                    ),
+                                    "lineno": find_test_line_number(
+                                        "TestEmpty::test_integer",
+                                        os.fspath(
+                                            TEST_DATA_PATH / "same_function_new_class_param.py"
+                                        ),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestEmpty::test_integer[0-0]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestEmpty::test_integer[0-0]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py")
+                            + "::TestEmpty::test_integer",
+                        },
+                        {
+                            "name": "test_string",
+                            "path": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[-]",
+                                    "path": os.fspath(
+                                        TEST_DATA_PATH / "same_function_new_class_param.py"
+                                    ),
+                                    "lineno": find_test_line_number(
+                                        "TestEmpty::test_string",
+                                        os.fspath(
+                                            TEST_DATA_PATH / "same_function_new_class_param.py"
+                                        ),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestEmpty::test_string[-]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "same_function_new_class_param.py::TestEmpty::test_string[-]",
+                                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(TEST_DATA_PATH / "same_function_new_class_param.py")
+                            + "::TestEmpty::test_string",
+                        },
+                    ],
+                    "id_": "same_function_new_class_param.py::TestEmpty",
+                },
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
+
+print(param_same_name_expected_output)

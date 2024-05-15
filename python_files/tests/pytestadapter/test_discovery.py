@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
+from python_files.tests.pytestadapter.test_utils import generate_expected_const
 from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output, helpers  # noqa: E402
@@ -114,6 +115,10 @@ def test_parameterized_error_collect():
             expected_discovery_test_output.nested_classes_expected_test_output,
         ),
         (
+            "same_function_new_class_param.py",
+            expected_discovery_test_output.same_function_new_class_param_expected_output,
+        ),
+        (
             "test_multi_class_nest.py",
             expected_discovery_test_output.nested_classes_expected_test_output,
         ),
@@ -187,7 +192,9 @@ def test_pytest_collect(file, expected_const):
         ), f"Status is not 'success', error is: {actual_item.get('error')}"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
         assert is_same_tree(
-            actual_item.get("tests"), expected_const
+            actual_item.get("tests"),
+            expected_const,
+            ["id_", "lineno", "name", "runID"],
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 
 
@@ -255,6 +262,7 @@ def test_pytest_root_dir():
         assert is_same_tree(
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
+            ["id_", "lineno", "name", "runID"],
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 
 
@@ -281,6 +289,7 @@ def test_pytest_config_file():
         assert is_same_tree(
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
+            ["id_", "lineno", "name", "runID"],
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 
 
