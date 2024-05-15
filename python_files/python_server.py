@@ -125,16 +125,6 @@ class CustomIO(io.TextIOWrapper):
         self._custom_name = name
         super().__init__(self._buffer, encoding=encoding, newline=newline)
 
-    def read(self, size: Optional[int] = None):
-        if self._custom_name == "<stdin>":
-            request_id = send_request()
-            result = handle_response(request_id)
-            return result["result"][
-                "userInput"
-            ]  # Read from stdin, simply return user 'input' from TS side
-        else:
-            return super().read(size)
-
     def close(self):
         """Provide this close method which is used by some tools."""
         # This is intentionally empty.
