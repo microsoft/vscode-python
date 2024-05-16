@@ -38,6 +38,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Enable_SourceMap_Support]: [];
     [Commands.Exec_Selection_In_Terminal]: [];
     [Commands.Exec_Selection_In_Django_Shell]: [];
+    [Commands.Exec_In_REPL]: [];
     [Commands.Create_Terminal]: [];
     [Commands.PickLocalProcess]: [];
     [Commands.ClearStorage]: [];

@@ -30,3 +30,8 @@ export enum RecommendTensobardExtension {
 export enum CreateEnvOnPipInstallTrigger {
     experiment = 'pythonCreateEnvOnPipInstall',
 }
+
+// Experiment to enable running Python REPL using IW.
+export enum EnableRunREPL {
+    experiment = 'pythonRunREPL',
+}

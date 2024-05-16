@@ -308,6 +308,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.execInREPL",
+                "title": "%python.command.python.execInREPL.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
@@ -437,7 +442,8 @@
                             "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
                             "pythonREPLSmartSend",
-                            "pythonRecommendTensorboardExt"
+                            "pythonRecommendTensorboardExt",
+                            "pythonRunREPL"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -447,7 +453,8 @@
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
-                            "%python.experiments.pythonRecommendTensorboardExt.description%"
+                            "%python.experiments.pythonRecommendTensorboardExt.description%",
+                            "%python.experiments.pythonRunREPL.description%"
                         ]
                     },
                     "scope": "window",
@@ -465,7 +472,8 @@
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
-                            "pythonREPLSmartSend"
+                            "pythonREPLSmartSend",
+                            "pythonRunREPL"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -474,7 +482,8 @@
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%"
+                            "%python.experiments.pythonREPLSmartSend.description%",
+                            "%python.experiments.pythonRunREPL.description%"
                         ]
                     },
                     "scope": "window",
@@ -1256,6 +1265,12 @@
                 },
                 {
                     "category": "Python",
+                    "command": "python.execInREPL",
+                    "title": "%python.command.python.execInREPL.title%",
+                    "when": "false"
+                },
+                {
+                    "category": "Python",
                     "command": "python.launchTensorBoard",
                     "title": "%python.command.python.launchTensorBoard.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
@@ -1353,6 +1368,11 @@
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
                     "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "command": "python.execInREPL",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && pythonRunREPL"
                 }
             ],
             "editor/title": [

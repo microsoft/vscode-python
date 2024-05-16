@@ -107,7 +107,9 @@ suite('REPL - Smart Send', () => {
             .returns(() => activeResourceService.object);
         activeResourceService.setup((a) => a.getActiveResource()).returns(() => resource);
 
-        pythonSettings.setup((s) => s.REPL).returns(() => ({ enableREPLSmartSend: true, REPLSmartSend: true }));
+        pythonSettings
+            .setup((s) => s.REPL)
+            .returns(() => ({ enableREPLSmartSend: true, REPLSmartSend: true, enableIWREPL: false }));
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 

@@ -200,7 +200,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     }
 }
 
-function getSingleLineSelectionText(textEditor: TextEditor): string {
+export function getSingleLineSelectionText(textEditor: TextEditor): string {
     const { selection } = textEditor;
     const selectionRange = new Range(selection.start, selection.end);
     const selectionText = textEditor.document.getText(selectionRange);
@@ -227,7 +227,7 @@ function getSingleLineSelectionText(textEditor: TextEditor): string {
     return selectionText;
 }
 
-function getMultiLineSelectionText(textEditor: TextEditor): string {
+export function getMultiLineSelectionText(textEditor: TextEditor): string {
     const { selection } = textEditor;
     const selectionRange = new Range(selection.start, selection.end);
     const selectionText = textEditor.document.getText(selectionRange);
