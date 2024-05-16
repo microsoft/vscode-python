@@ -313,6 +313,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.execInREPLEnter",
+                "title": "%python.command.python.execInREPLEnter.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
@@ -454,7 +459,8 @@
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
                             "%python.experiments.pythonRecommendTensorboardExt.description%",
-                            "%python.experiments.pythonRunREPL.description%"
+                            "%python.experiments.pythonRunREPL.description%",
+                            "%python.command.python.execInREPLEnter.title%"
                         ]
                     },
                     "scope": "window",
