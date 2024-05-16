@@ -313,6 +313,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.execInREPLEnter",
+                "title": "%python.command.python.execInREPLEnter.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
