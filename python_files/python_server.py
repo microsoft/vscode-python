@@ -44,13 +44,13 @@ original_input = input
 
 
 def custom_input(prompt=""):
-    send_request({"prompt": prompt})
     try:
+        send_request({"prompt": prompt})
         headers = get_headers()
         content_length = int(headers.get("Content-Length", 0))
 
         if content_length:
-            message_text = STDIN.read(content_length)  # make sure Im getting right content
+            message_text = STDIN.read(content_length)
             message_json = json.loads(message_text)
             our_user_input = message_json["result"]["userInput"]
             return our_user_input
@@ -103,7 +103,6 @@ def execute(request, user_globals):
 
 
 def exec_user_input(user_input, user_globals):
-    # have to do redirection
     user_input = user_input[0] if isinstance(user_input, list) else user_input
 
     try:
@@ -158,9 +157,8 @@ if __name__ == "__main__":
             headers = get_headers()
             content_length = int(headers.get("Content-Length", 0))
 
-            # TODO: pull out to separate function
             if content_length:
-                request_text = STDIN.read(content_length)  # make sure Im getting right content
+                request_text = STDIN.read(content_length)
                 request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
                     execute(request_json, USER_GLOBALS)
