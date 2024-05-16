@@ -182,7 +182,7 @@ fn find_conda_from_custom_install_location() {
 
     let expected_conda_env = PythonEnvironment {
         display_name: None,
-        name: None,
+        name: Some("base".to_string()),
         project_path: None,
         python_executable_path: Some(conda_dir.clone().join("bin").join("python")),
         category: python_finder::messaging::PythonEnvironmentCategory::Conda,

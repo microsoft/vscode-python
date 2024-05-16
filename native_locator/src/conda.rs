@@ -632,7 +632,7 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
         let conda_exe = manager.executable_path.to_str().unwrap().to_string();
         return Some(PythonEnvironment {
             display_name: None,
-            name: None,
+            name: Some("base".to_string()),
             category: messaging::PythonEnvironmentCategory::Conda,
             python_executable_path: Some(python_exe),
             version: Some(package_info.version),
