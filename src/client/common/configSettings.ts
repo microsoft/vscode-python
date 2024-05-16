@@ -38,6 +38,7 @@ import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 import { getOSType, OSType } from './utils/platform';
 import { isWindows } from './platform/platformService';
+import { getConfiguration } from './vscodeApis/workspaceApis';
 
 const untildify = require('untildify');
 
@@ -552,4 +553,9 @@ function isValidPythonPath(pythonPath: string): boolean {
         fs.existsSync(pythonPath) &&
         path.basename(getOSType() === OSType.Windows ? pythonPath.toLowerCase() : pythonPath).startsWith('python')
     );
+}
+
+export function useNativeLocator(): boolean {
+    const config = getConfiguration('python');
+    return config.get<string>('locator', 'js') === 'native';
 }

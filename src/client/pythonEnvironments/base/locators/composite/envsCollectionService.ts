@@ -8,7 +8,7 @@ import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { normalizePath } from '../../../common/externalDependencies';
+import { normalizePath, resolveSymbolicLink } from '../../../common/externalDependencies';
 import { PythonEnvInfo } from '../../info';
 import { getEnvPath } from '../../info/env';
 import {
@@ -24,6 +24,9 @@ import {
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
+import { noop } from '../../../../common/utils/misc';
+import { useNativeLocator } from '../../../../common/configSettings';
+import { isWindows } from '../../../../common/platform/platformService';
 
 /**
  * A service which maintains the collection of known environments.
@@ -83,6 +86,40 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     public async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
         path = normalizePath(path);
+
+        // Old code path.
+        if (!useNativeLocator()) {
+            return this.doResolveEnv(path);
+        }
+
+        // Perhaps this is a symlinked path, try to resolve it.
+        // With native resolves, we end up with the real paths.
+        // Thus always use the real path to get the environment information.
+        // E.g. with home brew users might end up setting one of the following as the Python exe in settings or elsewhere:
+        //  - `/opt/homebrew/opt/python@3.11/bin/python3.11`
+        //  - `/opt/homebrew/bin/python3.11`
+        // Both of them are symlinks and point to the same python executable real path,
+        // & thats `/opt/homebrew/opt/python@3.11/Frameworks/Python.framework/Versions/3.11/bin/python3.11`
+        // Native locators return the real path, thus we should always use the real path (where possible).
+        // This way we end up finding the environment regardless of the path used (whether its symlinked or not).
+        // If we do not do this, then we end up discovering these again.
+
+        // Ignore windows
+        if (!isWindows()) {
+            const realPath = await resolveSymbolicLink(path).catch(noop);
+            if (realPath) {
+                const resolved = await this.doResolveEnv(realPath);
+                if (resolved) {
+                    return resolved;
+                }
+            }
+        }
+        return this.doResolveEnv(path);
+    }
+
+    private async doResolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
+        path = normalizePath(path);
+
         // Note cache may have incomplete info when a refresh is happening.
         // This API is supposed to return complete info by definition, so
         // only use cache if it has complete info on an environment.
@@ -95,10 +132,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             return undefined;
         });
         traceVerbose(`Resolved ${path} using downstream locator`);
-        if (resolved) {
-            this.cache.addEnv(resolved, true);
-        }
-        return resolved;
+        // Note: Work around, its possible by now the item in cache is available.
+        // & item in cache was returned by the native locator, & thats more accurate than anything else.
+        // If not, then the return value is still the same as `resolved`
+        return resolved ? this.cache.addEnv(resolved, true) : undefined;
     }
 
     public getEnvs(query?: PythonLocatorQuery): PythonEnvInfo[] {

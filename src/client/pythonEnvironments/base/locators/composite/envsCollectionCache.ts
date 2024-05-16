@@ -33,8 +33,9 @@ export interface IEnvsCollectionCache {
 
     /**
      * Adds environment to cache.
+     * Returns the latest item, if the item in cache is later, then the item is not added & the item in cache is returned.
      */
-    addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): void;
+    addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): PythonEnvInfo;
 
     /**
      * Return cached environment information for a given path if it exists and
@@ -145,8 +146,14 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
         return this.envs;
     }
 
-    public addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): void {
+    public addEnv(env: PythonEnvInfo, hasLatestInfo?: boolean): PythonEnvInfo {
         const found = this.envs.find((e) => areSameEnv(e, env));
+
+        // If the item in cache is returned by the native locator, then give that preference over others.
+        // The only way we can get the new env info is when the old paths find env information using old approach.
+        if (found?.identifiedUsingNativeLocator && hasLatestInfo) {
+            return found;
+        }
         if (!found) {
             this.envs.push(env);
             this.fire({ new: env });
@@ -159,6 +166,7 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
             this.validatedEnvs.add(env.id!);
             this.flush(env).ignoreErrors(); // If we have latest info, flush it so it can be saved.
         }
+        return env;
     }
 
     public updateEnv(oldValue: PythonEnvInfo, newValue: PythonEnvInfo | undefined, forceUpdate = false): void {

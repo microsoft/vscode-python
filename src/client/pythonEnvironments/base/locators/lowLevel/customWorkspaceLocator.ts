@@ -4,10 +4,11 @@
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
-import { getPythonSetting, onDidChangePythonSetting } from '../../../common/externalDependencies';
+import { getPythonSetting, onDidChangePythonSetting, resolveSymbolicLink } from '../../../common/externalDependencies';
 import '../../../../common/extensions';
 import { traceVerbose } from '../../../../logging';
 import { DEFAULT_INTERPRETER_SETTING } from '../../../../common/constants';
+import { useNativeLocator } from '../../../../common/configSettings';
 
 export const DEFAULT_INTERPRETER_PATH_SETTING_KEY = 'defaultInterpreterPath';
 
@@ -34,10 +35,14 @@ export class CustomWorkspaceLocator extends FSWatchingLocator {
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (root: string) {
             traceVerbose('Searching for custom workspace envs');
-            const filename = getPythonSetting<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, root);
+            let filename = getPythonSetting<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, root);
             if (!filename || filename === DEFAULT_INTERPRETER_SETTING) {
                 // If the user has not set a custom interpreter, our job is done.
                 return;
+            }
+            // If we're using native locator, then return the resolved path.
+            if (useNativeLocator() && filename) {
+                filename = await resolveSymbolicLink(filename).catch(() => filename!);
             }
             yield { kind: PythonEnvKind.Unknown, executablePath: filename };
             traceVerbose(`Finished searching for custom workspace envs`);

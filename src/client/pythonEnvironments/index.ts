@@ -40,7 +40,7 @@ import { traceError } from '../logging';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 import { CustomWorkspaceLocator } from './base/locators/lowLevel/customWorkspaceLocator';
 import { NativeLocator } from './base/locators/lowLevel/nativeLocator';
-import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { useNativeLocator } from '../common/configSettings';
 
 const PYTHON_ENV_INFO_CACHE_KEY = 'PYTHON_ENV_INFO_CACHEv2';
 
@@ -136,11 +136,6 @@ async function createLocator(
         resolvingLocator,
     );
     return caching;
-}
-
-function useNativeLocator(): boolean {
-    const config = getConfiguration('python');
-    return config.get<string>('locator', 'js') === 'native';
 }
 
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>[] {
