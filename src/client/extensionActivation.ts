@@ -53,7 +53,7 @@ import { initializePersistentStateForTriggers } from './common/persistentState';
 import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
-import { registerReplCommands } from './repl/replCommands';
+import { registerReplCommands, registerReplExecuteOnEnter } from './repl/replCommands';
 import { EnableRunREPL } from './common/experiments/groups';
 
 export async function activateComponents(
@@ -117,6 +117,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         if (replExperimentValue) {
             registerReplCommands(ext.disposables, interpreterService);
             commands.executeCommand('setContext', 'pythonRunREPL', true);
+            registerReplExecuteOnEnter(ext.disposables);
         }
     }
 }

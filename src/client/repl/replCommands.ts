@@ -12,6 +12,7 @@ import {
     WorkspaceEdit,
     NotebookEditor,
     TextEditor,
+    Selection,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
@@ -101,4 +102,37 @@ export async function registerReplCommands(
             }
         }),
     );
+}
+
+// Register Python execute command for keybinding 'Enter'
+// Conditionally call interactive.execute OR insert \n in text input box.
+export async function registerReplExecuteOnEnter(disposables: Disposable[]): Promise<void> {
+    disposables.push(
+        commands.registerCommand(Commands.Exec_In_REPL_Enter, async (uri: Uri) => {
+            const completeCode = false;
+            const uri2 = uri;
+            if (completeCode) {
+                await commands.executeCommand('interactive.execute');
+            } else {
+                // Insert new line on behalf of user. "Regular" monaco editor behavior
+                const editor = window.activeTextEditor;
+                if (editor) {
+                    const position = editor.selection.active;
+                    // move cursor to end of line and also add newline character
+                    const newPosition = position.with(position.line, editor.document.lineAt(position.line).text.length);
+                    editor.selection = new Selection(newPosition, newPosition);
+                    // add newline character
+                    editor.edit((editBuilder) => {
+                        editBuilder.insert(newPosition, '\n');
+                    });
+                }
+
+                // If user types enter on blank line, call interactive.execute
+                if (editor && editor.document.lineAt(editor.selection.active.line).text === '') {
+                    await commands.executeCommand('interactive.execute');
+                }
+            }
+        }), // This closing parenthesis was missing.
+    );
+    // Handle case when user enters on blank line, just trigger interactive.execute
 }

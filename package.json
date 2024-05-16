@@ -459,7 +459,8 @@
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
                             "%python.experiments.pythonRecommendTensorboardExt.description%",
-                            "%python.experiments.pythonRunREPL.description%"
+                            "%python.experiments.pythonRunREPL.description%",
+                            "%python.command.python.execInREPLEnter.title%"
                         ]
                     },
                     "scope": "window",
@@ -1114,6 +1115,11 @@
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+            },
+            {
+                "command": "python.execInREPLEnter",
+                "key": "enter",
+                "when": "activeEditor == 'workbench.editor.interactive'"
             },
             {
                 "command": "python.refreshTensorBoard",
