@@ -91,7 +91,7 @@ export async function registerReplCommands(
                 const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
                 const workspaceEdit = new WorkspaceEdit();
                 workspaceEdit.set(notebookDocument.uri, [notebookEdit]);
-                workspace.applyEdit(workspaceEdit);
+                await workspace.applyEdit(workspaceEdit);
 
                 // Execute the cell
                 commands.executeCommand('notebook.cell.execute', {
