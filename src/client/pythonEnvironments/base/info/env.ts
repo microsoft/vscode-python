@@ -42,6 +42,12 @@ export function buildEnvInfo(init?: {
     sysPrefix?: string;
     searchLocation?: Uri;
     type?: PythonEnvType;
+    /**
+     * Command used to run Python in this environment.
+     * E.g. `conda run -n envName python` or `python.exe`
+     */
+    pythonRunCommand?: string[];
+    identifiedUsingNativeLocator?: boolean;
 }): PythonEnvInfo {
     const env: PythonEnvInfo = {
         name: init?.name ?? '',
@@ -69,6 +75,8 @@ export function buildEnvInfo(init?: {
             org: init?.org ?? '',
         },
         source: init?.source ?? [],
+        pythonRunCommand: init?.pythonRunCommand,
+        identifiedUsingNativeLocator: init?.identifiedUsingNativeLocator,
     };
     if (init !== undefined) {
         updateEnv(env, init);
