@@ -23,6 +23,7 @@ export interface NativeEnvInfo {
     version?: string;
     pythonRunCommand?: string[];
     envPath?: string;
+    envManager?: NativeEnvManagerInfo;
     /**
      * Path to the project directory when dealing with pipenv virtual environments.
      */

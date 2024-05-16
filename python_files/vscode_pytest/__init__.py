@@ -440,10 +440,23 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             # parameterized test cases cut the repetitive part of the name off.
             parent_part, parameterized_section = test_node["name"].split("[", 1)
             test_node["name"] = "[" + parameterized_section
-            parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
+
+            first_split = test_case.nodeid.rsplit(
+                "::", 1
+            )  # splits the parameterized test name from the rest of the nodeid
+            second_split = first_split[0].rsplit(
+                ".py", 1
+            )  # splits the file path from the rest of the nodeid
+
+            class_and_method = second_split[1] + "::"  # This has "::" separator at both ends
+            # construct the parent id, so it is absolute path :: any class and method :: parent_part
+            parent_id = os.fspath(get_node_path(test_case)) + class_and_method + parent_part
+            # file, middle, param = test_case.nodeid.rsplit("::", 2)
+            # parent_id = test_case.nodeid.rsplit("::", 1)[0] + "::" + parent_part
+            # parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
             try:
                 function_name = test_case.originalname  # type: ignore
-                function_test_node = function_nodes_dict[parent_path]
+                function_test_node = function_nodes_dict[parent_id]
             except AttributeError:  # actual error has occurred
                 ERRORS.append(
                     f"unable to find original name for {test_case.name} with parameterization detected."
@@ -451,9 +464,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 raise VSCodePytestError("Unable to find original name for parameterized test case")
             except KeyError:
                 function_test_node: TestNode = create_parameterized_function_node(
-                    function_name, get_node_path(test_case), test_case.nodeid
+                    function_name, get_node_path(test_case), parent_id
                 )
-                function_nodes_dict[parent_path] = function_test_node
+                function_nodes_dict[parent_id] = function_test_node
             function_test_node["children"].append(test_node)
             # Check if the parent node of the function is file, if so create/add to this file node.
             if isinstance(test_case.parent, pytest.File):
@@ -643,17 +656,16 @@ def create_class_node(class_module: pytest.Class) -> TestNode:
 
 
 def create_parameterized_function_node(
-    function_name: str, test_path: pathlib.Path, test_id: str
+    function_name: str, test_path: pathlib.Path, function_id: str
 ) -> TestNode:
     """Creates a function node to be the parent for the parameterized test nodes.
 
     Keyword arguments:
     function_name -- the name of the function.
     test_path -- the path to the test file.
-    test_id -- the id of the test, which is a parameterized test so it
+    function_id -- the previously constructed function id that fits the pattern- absolute path :: any class and method :: parent_part
       must be edited to get a unique id for the function node.
     """
-    function_id: str = test_id.split("::")[0] + "::" + function_name
     return {
         "name": function_name,
         "path": test_path,

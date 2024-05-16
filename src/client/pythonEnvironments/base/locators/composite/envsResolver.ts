@@ -154,6 +154,12 @@ export class PythonEnvsResolver implements IResolvingLocator {
 
 async function setKind(env: BasicEnvInfo, environmentKinds: Map<string, PythonEnvKind>) {
     const { path } = getEnvPath(env.executablePath, env.envPath);
+    // For native locators, do not try to identify the environment kind.
+    // its already set by the native locator & thats accurate.
+    if (env.identifiedUsingNativeLocator) {
+        environmentKinds.set(path, env.kind);
+        return;
+    }
     let kind = environmentKinds.get(path);
     if (!kind) {
         if (!isIdentifierRegistered(env.kind)) {

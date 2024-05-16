@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IDisposable } from '../../../../common/types';
 import { ILocator, BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
@@ -116,6 +116,10 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
                         envPath: data.envPath,
                         version: parseVersion(data.version),
                         name: data.name === '' ? undefined : data.name,
+                        displayName: data.displayName,
+                        pythonRunCommand: data.pythonRunCommand,
+                        searchLocation: data.projectPath ? Uri.file(data.projectPath) : undefined,
+                        identifiedUsingNativeLocator: true,
                     });
                 }
             }),

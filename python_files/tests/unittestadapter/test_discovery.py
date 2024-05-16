@@ -129,7 +129,7 @@ def test_simple_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    assert is_same_tree(actual.get("tests"), expected)
+    assert is_same_tree(actual.get("tests"), expected, ["id_", "lineno", "name"])
     assert "error" not in actual
 
 
@@ -185,7 +185,7 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    assert is_same_tree(actual.get("tests"), expected)
+    assert is_same_tree(actual.get("tests"), expected, ["id_", "lineno", "name"])
     assert "error" not in actual
 
 
@@ -256,7 +256,7 @@ def test_error_discovery() -> None:
     actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "error"
-    assert is_same_tree(expected, actual.get("tests"))
+    assert is_same_tree(expected, actual.get("tests"), ["id_", "lineno", "name"])
     assert len(actual.get("error", [])) == 1
 
 
@@ -274,6 +274,7 @@ def test_unit_skip() -> None:
     assert is_same_tree(
         actual.get("tests"),
         expected_discovery_test_output.skip_unittest_folder_discovery_output,
+        ["id_", "lineno", "name"],
     )
     assert "error" not in actual
 
@@ -296,4 +297,5 @@ def test_complex_tree() -> None:
     assert is_same_tree(
         actual.get("tests"),
         expected_discovery_test_output.complex_tree_expected_output,
+        ["id_", "lineno", "name"],
     )

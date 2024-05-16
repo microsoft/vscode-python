@@ -10,7 +10,7 @@ use crate::{
 use regex::Regex;
 use std::{collections::HashSet, fs::DirEntry, path::PathBuf};
 
-fn is_symlinked_python_executable(path: DirEntry) -> Option<PathBuf> {
+fn is_symlinked_python_executable(path: &DirEntry) -> Option<PathBuf> {
     let path = path.path();
     let name = path.file_name()?.to_string_lossy();
     if !name.starts_with("python") || name.ends_with("-config") || name.ends_with("-build") {
@@ -50,7 +50,7 @@ impl Locator for Homebrew<'_> {
             .ok()?
             .filter_map(Result::ok)
         {
-            if let Some(exe) = is_symlinked_python_executable(file) {
+            if let Some(exe) = is_symlinked_python_executable(&file) {
                 let python_version = exe.to_string_lossy().to_string();
                 let version = match python_regex.captures(&python_version) {
                     Some(captures) => match captures.get(1) {
@@ -62,6 +62,22 @@ impl Locator for Homebrew<'_> {
                 if reported.contains(&exe.to_string_lossy().to_string()) {
                     continue;
                 }
+                let env_path = match exe.parent() {
+                    Some(path) => {
+                        if let Some(name) = path.file_name() {
+                            if name.to_ascii_lowercase() == "bin"
+                                || name.to_ascii_lowercase() == "Scripts"
+                            {
+                                Some(path.parent()?.to_path_buf())
+                            } else {
+                                Some(path.to_path_buf())
+                            }
+                        } else {
+                            None
+                        }
+                    }
+                    None => continue,
+                };
                 reported.insert(exe.to_string_lossy().to_string());
                 let env = crate::messaging::PythonEnvironment::new(
                     None,
@@ -69,7 +85,7 @@ impl Locator for Homebrew<'_> {
                     Some(exe.clone()),
                     crate::messaging::PythonEnvironmentCategory::Homebrew,
                     version,
-                    None,
+                    env_path,
                     None,
                     Some(vec![exe.to_string_lossy().to_string()]),
                 );

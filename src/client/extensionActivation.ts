@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugConfigurationProvider, debug, languages, window } from 'vscode';
+import { DebugConfigurationProvider, debug, languages, window, commands } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -16,6 +16,7 @@ import { IFileSystem } from './common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentService,
     IExtensions,
     IInterpreterPathService,
     ILogOutputChannel,
@@ -52,6 +53,8 @@ import { initializePersistentStateForTriggers } from './common/persistentState';
 import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
+import { registerReplCommands } from './repl/replCommands';
+import { EnableRunREPL } from './common/experiments/groups';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -105,6 +108,17 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         interpreterService,
         pathUtils,
     );
+
+    // Register native REPL context menu when in experiment
+    const experimentService = ext.legacyIOC.serviceContainer.get<IExperimentService>(IExperimentService);
+    commands.executeCommand('setContext', 'pythonRunREPL', false);
+    if (experimentService) {
+        const replExperimentValue = experimentService.inExperimentSync(EnableRunREPL.experiment);
+        if (replExperimentValue) {
+            registerReplCommands(ext.disposables, interpreterService);
+            commands.executeCommand('setContext', 'pythonRunREPL', true);
+        }
+    }
 }
 
 /// //////////////////////////
