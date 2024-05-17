@@ -104,8 +104,8 @@ export async function registerReplCommands(
     );
 }
 
-// Register Python execute command for keybinding 'Enter'
-// Conditionally call interactive.execute OR insert \n in text input box.
+// TODO: Register Python execute command for keybinding 'Enter'
+// TODO: Conditionally call interactive.execute OR insert \n in text input box.
 export async function registerReplExecuteOnEnter(disposables: Disposable[]): Promise<void> {
     disposables.push(
         commands.registerCommand(Commands.Exec_In_REPL_Enter, async (uri: Uri) => {
@@ -127,12 +127,11 @@ export async function registerReplExecuteOnEnter(disposables: Disposable[]): Pro
                     });
                 }
 
-                // If user types enter on blank line, call interactive.execute
+                // Handle case when user enters on blank line, just trigger interactive.execute
                 if (editor && editor.document.lineAt(editor.selection.active.line).text === '') {
                     await commands.executeCommand('interactive.execute');
                 }
             }
-        }), // This closing parenthesis was missing.
+        }),
     );
-    // Handle case when user enters on blank line, just trigger interactive.execute
 }
