@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Union
-import debugpy
+# import debugpy
 
-debugpy.connect(5678)
+# debugpy.connect(5678)
 import sys
 import json
 import contextlib
@@ -94,10 +94,12 @@ def exec_function(user_input):
 def check_valid_command(request):
     try:
         user_input = request["params"]
-        ast.parse(user_input)
-        return True
+        ast.parse(user_input[0])
+        send_response("True", request["id"])
+        # return True
     except SyntaxError:
-        return False
+        send_response("False", request["id"])
+        # return False
 
 
 def execute(request, user_globals):

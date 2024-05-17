@@ -133,7 +133,10 @@ export async function registerReplExecuteOnEnter(
 
             // Check if userTextInput is a complete Python command
             if (userTextInput) {
-                completeCode = await pythonServer.checkValidCommand(userTextInput); // NOT EVEN CALLING METHOD!!!!!
+                const stringBoolean = await pythonServer.checkValidCommand(userTextInput);
+                if (stringBoolean === 'True') {
+                    completeCode = true;
+                }
             }
 
             if (completeCode) {

@@ -1,3 +1,4 @@
+// eslint-disable-next-line max-classes-per-file
 import * as path from 'path';
 import * as ch from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -6,12 +7,15 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 import { traceError, traceLog } from '../logging';
 
 const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server.py');
-
+// export let serverInstance: PythonServer | undefined;
+export class pythonServerInstance {
+    public static serverInstance: PythonServer | undefined;
+}
 export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
     interrupt(): void;
     input(): void;
-    checkValidCommand(code: string): Promise<boolean>;
+    checkValidCommand(code: string): Promise<string>;
 }
 
 class PythonServerImpl implements Disposable {
@@ -55,7 +59,7 @@ class PythonServerImpl implements Disposable {
         }
     }
 
-    public async checkValidCommand(code: string): Promise<boolean> {
+    public async checkValidCommand(code: string): Promise<string> {
         return this.connection.sendRequest('check_valid_command', code);
     }
 
@@ -66,6 +70,10 @@ class PythonServerImpl implements Disposable {
 }
 
 export function createPythonServer(interpreter: string[]): PythonServer {
+    if (pythonServerInstance.serverInstance) {
+        return pythonServerInstance.serverInstance;
+    }
+
     const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH]);
 
     pythonServer.stderr.on('data', (data) => {
@@ -81,6 +89,7 @@ export function createPythonServer(interpreter: string[]): PythonServer {
         new rpc.StreamMessageReader(pythonServer.stdout),
         new rpc.StreamMessageWriter(pythonServer.stdin),
     );
-
-    return new PythonServerImpl(connection, pythonServer);
+    const ourPythonServerImpl = new PythonServerImpl(connection, pythonServer);
+    pythonServerInstance.serverInstance = ourPythonServerImpl;
+    return ourPythonServerImpl;
 }
