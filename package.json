@@ -459,8 +459,7 @@
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
                             "%python.experiments.pythonRecommendTensorboardExt.description%",
-                            "%python.experiments.pythonRunREPL.description%",
-                            "%python.command.python.execInREPLEnter.title%"
+                            "%python.experiments.pythonRunREPL.description%"
                         ]
                     },
                     "scope": "window",
