@@ -6,7 +6,6 @@ use regex::Regex;
 use std::{
     fs,
     path::{Path, PathBuf},
-    process::Command,
 };
 
 #[derive(Debug)]

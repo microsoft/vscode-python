@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-use crate::known::Environment;
 use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
 use crate::utils::PythonEnv;

@@ -61,6 +61,7 @@ fn list_windows_store_python_executables(
                         env_manager: None,
                         project_path: None,
                         python_run_command: Some(vec![exe.to_string_lossy().to_string()]),
+                        arch: None,
                     };
                     python_envs.push(env);
                 }
@@ -129,6 +130,7 @@ impl Locator for WindowsStore<'_> {
                 env_manager: None,
                 project_path: None,
                 python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+                arch: None,
             });
         }
         None
