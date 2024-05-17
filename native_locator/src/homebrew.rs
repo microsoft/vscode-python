@@ -165,15 +165,6 @@ fn get_python_info(
     None
 }
 
-fn resolve_apple_silicon(executable: &PathBuf) -> Option<PythonEnvironment> {
-    None
-}
-fn resolve_apple_intel(executable: &PathBuf) -> Option<PythonEnvironment> {
-    None
-}
-fn resolve_linux(executable: &PathBuf) -> Option<PythonEnvironment> {
-    None
-}
 pub struct Homebrew<'a> {
     pub environment: &'a dyn Environment,
 }

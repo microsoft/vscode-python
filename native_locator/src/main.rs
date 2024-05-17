@@ -68,7 +68,8 @@ fn main() {
             continue;
         }
 
-        let _ = resolve_environment(&virtualenvwrapper, env, &mut dispatcher)
+        let _ = resolve_environment(&homebrew_locator, env, &mut dispatcher)
+            || resolve_environment(&virtualenvwrapper, env, &mut dispatcher)
             || resolve_environment(&pipenv_locator, env, &mut dispatcher)
             || resolve_environment(&venv_locator, env, &mut dispatcher)
             || resolve_environment(&virtualenv_locator, env, &mut dispatcher);
