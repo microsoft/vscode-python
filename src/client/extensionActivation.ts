@@ -117,7 +117,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         if (replExperimentValue) {
             registerReplCommands(ext.disposables, interpreterService);
             commands.executeCommand('setContext', 'pythonRunREPL', true);
-            registerReplExecuteOnEnter(ext.disposables);
+            registerReplExecuteOnEnter(ext.disposables, interpreterService);
         }
     }
 }

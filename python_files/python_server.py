@@ -1,11 +1,14 @@
 from typing import Dict, List, Optional, Union
+import debugpy
 
+debugpy.connect(5678)
 import sys
 import json
 import contextlib
 import io
 import traceback
 import uuid
+import ast
 
 STDIN = sys.stdin
 STDOUT = sys.stdout
@@ -88,6 +91,15 @@ def exec_function(user_input):
     return eval
 
 
+def check_valid_command(request):
+    try:
+        user_input = request["params"]
+        ast.parse(user_input)
+        return True
+    except SyntaxError:
+        return False
+
+
 def execute(request, user_globals):
     str_output = CustomIO("<stdout>", encoding="utf-8")
     str_error = CustomIO("<stderr>", encoding="utf-8")
@@ -160,6 +172,8 @@ if __name__ == "__main__":
                 request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
                     execute(request_json, USER_GLOBALS)
+                if request_json["method"] == "check_valid_command":
+                    check_valid_command(request_json)
                 elif request_json["method"] == "exit":
                     sys.exit(0)
 

@@ -19,6 +19,7 @@ import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
+import { createPythonServer } from './pythonServer';
 import { createReplController } from './replController';
 
 let notebookController: NotebookController | undefined;
@@ -106,16 +107,41 @@ export async function registerReplCommands(
 
 // TODO: Register Python execute command for keybinding 'Enter'
 // TODO: Conditionally call interactive.execute OR insert \n in text input box.
-export async function registerReplExecuteOnEnter(disposables: Disposable[]): Promise<void> {
+export async function registerReplExecuteOnEnter(
+    disposables: Disposable[],
+    interpreterService: IInterpreterService,
+): Promise<void> {
     disposables.push(
         commands.registerCommand(Commands.Exec_In_REPL_Enter, async (uri: Uri) => {
-            const completeCode = false;
-            const uri2 = uri;
+            const interpreter = await interpreterService.getActiveInterpreter(uri);
+            if (!interpreter) {
+                commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
+                return;
+            }
+
+            // Create Separate Python server to check valid command
+            const pythonServer = createPythonServer([interpreter!.path! as string]);
+
+            const activeEditor = window.activeTextEditor;
+            let userTextInput;
+            let completeCode = false;
+
+            if (activeEditor) {
+                const { document } = activeEditor;
+                userTextInput = document.getText();
+            }
+
+            // Check if userTextInput is a complete Python command
+            if (userTextInput) {
+                completeCode = await pythonServer.checkValidCommand(userTextInput); // NOT EVEN CALLING METHOD!!!!!
+            }
+
             if (completeCode) {
                 await commands.executeCommand('interactive.execute');
             } else {
                 // Insert new line on behalf of user. "Regular" monaco editor behavior
                 const editor = window.activeTextEditor;
+
                 if (editor) {
                     const position = editor.selection.active;
                     // move cursor to end of line and also add newline character

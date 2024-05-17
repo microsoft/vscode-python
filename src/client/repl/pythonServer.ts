@@ -11,6 +11,7 @@ export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
     interrupt(): void;
     input(): void;
+    checkValidCommand(code: string): Promise<boolean>;
 }
 
 class PythonServerImpl implements Disposable {
@@ -52,6 +53,10 @@ class PythonServerImpl implements Disposable {
         if (this.pythonServer.kill('SIGINT')) {
             traceLog('Python server interrupted');
         }
+    }
+
+    public async checkValidCommand(code: string): Promise<boolean> {
+        return this.connection.sendRequest('check_valid_command', code);
     }
 
     public dispose(): void {
