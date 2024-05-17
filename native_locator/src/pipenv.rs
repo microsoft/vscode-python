@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+use crate::known::Environment;
 use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
 use crate::utils::PythonEnv;
@@ -18,6 +19,17 @@ fn get_pipenv_project(env: &PythonEnv) -> Option<PathBuf> {
     None
 }
 
+pub fn is_pipenv(env: &PythonEnv) -> bool {
+    // If we have a Pipfile, then this is a pipenv environment.
+    // Else likely a virtualenvwrapper or the like.
+    if let Some(project_path) = get_pipenv_project(env) {
+        if project_path.join("Pipfile").exists() {
+            return true;
+        }
+    }
+    false
+}
+
 pub struct PipEnv {}
 
 impl PipEnv {
@@ -28,6 +40,9 @@ impl PipEnv {
 
 impl Locator for PipEnv {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
+        if !is_pipenv(env) {
+            return None;
+        }
         let project_path = get_pipenv_project(env)?;
         Some(PythonEnvironment {
             display_name: None,
@@ -39,6 +54,7 @@ impl Locator for PipEnv {
             env_manager: None,
             python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
             project_path: Some(project_path),
+            arch: None,
         })
     }
 

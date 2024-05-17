@@ -196,6 +196,7 @@ fn find_conda_from_custom_install_location() {
             conda_dir.to_string_lossy().to_string(),
             "python".to_string(),
         ]),
+        arch: None,
     };
     assert_eq!(json!(expected_conda_env), json!(result.environments[0]));
 
@@ -265,6 +266,7 @@ fn finds_two_conda_envs_from_known_location() {
             "one".to_string(),
             "python".to_string(),
         ]),
+        arch: None,
     };
     let expected_conda_2 = PythonEnvironment {
         display_name: None,
@@ -282,6 +284,7 @@ fn finds_two_conda_envs_from_known_location() {
             "two".to_string(),
             "python".to_string(),
         ]),
+        arch: None,
     };
     assert_messages(
         &[json!(expected_conda_1), json!(expected_conda_2)],

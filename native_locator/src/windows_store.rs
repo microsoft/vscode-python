@@ -94,8 +94,6 @@ fn get_package_display_name_and_location(name: String, hkcu: &RegKey) -> Option<
         let display_name = package_key.get_value("DisplayName").ok()?;
         let env_path = package_key.get_value("PackageRootFolder").ok()?;
 
-        let regex = regex::Regex::new("PythonSoftwareFoundation.Python.((\\d+\\.?)*)_.*").ok()?;
-
         return Some(StorePythonInfo {
             display_name,
             env_path,

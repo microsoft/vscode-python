@@ -83,6 +83,14 @@ pub enum PythonEnvironmentCategory {
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 #[derive(Debug)]
+pub enum Architecture {
+    X64,
+    X86,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+#[derive(Debug)]
 pub struct PythonEnvironment {
     pub display_name: Option<String>,
     pub name: Option<String>,
@@ -96,6 +104,7 @@ pub struct PythonEnvironment {
      * The project path for the Pipenv environment.
      */
     pub project_path: Option<PathBuf>,
+    pub arch: Option<Architecture>,
 }
 
 impl PythonEnvironment {
@@ -119,6 +128,7 @@ impl PythonEnvironment {
             env_manager,
             python_run_command,
             project_path: None,
+            arch: None,
         }
     }
 }

@@ -3,9 +3,11 @@
 
 use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
+use crate::pipenv::is_pipenv;
 use crate::utils::list_python_environments;
 use crate::virtualenv;
 use crate::{known::Environment, utils::PythonEnv};
+use std::fs;
 use std::path::PathBuf;
 
 #[cfg(windows)]
@@ -29,7 +31,7 @@ fn get_default_virtualenvwrapper_path(environment: &dyn Environment) -> Option<P
 #[cfg(unix)]
 fn get_default_virtualenvwrapper_path(environment: &dyn Environment) -> Option<PathBuf> {
     if let Some(home) = environment.get_user_home() {
-        let home = PathBuf::from(home).join("virtualenvs");
+        let home = PathBuf::from(home).join(".virtualenvs");
         if home.exists() {
             return Some(home);
         }
@@ -37,7 +39,7 @@ fn get_default_virtualenvwrapper_path(environment: &dyn Environment) -> Option<P
     None
 }
 
-fn get_work_on_home_path(environment: &dyn Environment) -> Option<PathBuf> {
+pub fn get_work_on_home_path(environment: &dyn Environment) -> Option<PathBuf> {
     // The WORKON_HOME variable contains the path to the root directory of all virtualenvwrapper environments.
     // If the interpreter path belongs to one of them then it is a virtualenvwrapper type of environment.
     if let Some(work_on_home) = environment.get_env_var("WORKON_HOME".to_string()) {
@@ -54,6 +56,10 @@ pub fn is_virtualenvwrapper(env: &PythonEnv, environment: &dyn Environment) -> b
     if env.path.is_none() {
         return false;
     }
+    if is_pipenv(env) {
+        return false;
+    }
+
     // For environment to be a virtualenvwrapper based it has to follow these two rules:
     // 1. It should be in a sub-directory under the WORKON_HOME
     // 2. It should be a valid virtualenv environment
@@ -64,6 +70,17 @@ pub fn is_virtualenvwrapper(env: &PythonEnv, environment: &dyn Environment) -> b
     }
 
     false
+}
+
+fn get_project(env: &PythonEnv) -> Option<PathBuf> {
+    let project_file = env.path.clone()?.join(".project");
+    if let Ok(contents) = fs::read_to_string(project_file) {
+        let project_folder = PathBuf::from(contents.trim().to_string());
+        if project_folder.exists() {
+            return Some(project_folder);
+        }
+    }
+    None
 }
 
 pub struct VirtualEnvWrapper<'a> {
@@ -78,28 +95,29 @@ impl VirtualEnvWrapper<'_> {
 
 impl Locator for VirtualEnvWrapper<'_> {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
-        if is_virtualenvwrapper(env, self.environment) {
-            return Some(PythonEnvironment {
-                display_name: None,
-                name: Some(
-                    env.path
-                        .clone()
-                        .expect("env.path cannot be empty for virtualenv rapper")
-                        .file_name()
-                        .unwrap()
-                        .to_string_lossy()
-                        .to_string(),
-                ),
-                python_executable_path: Some(env.executable.clone()),
-                version: env.version.clone(),
-                category: crate::messaging::PythonEnvironmentCategory::Venv,
-                env_path: env.path.clone(),
-                env_manager: None,
-                project_path: None,
-                python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-            });
+        if !is_virtualenvwrapper(env, self.environment) {
+            return None;
         }
-        None
+        Some(PythonEnvironment {
+            display_name: None,
+            name: Some(
+                env.path
+                    .clone()
+                    .expect("env.path cannot be empty for virtualenv rapper")
+                    .file_name()
+                    .unwrap()
+                    .to_string_lossy()
+                    .to_string(),
+            ),
+            python_executable_path: Some(env.executable.clone()),
+            version: env.version.clone(),
+            category: crate::messaging::PythonEnvironmentCategory::VirtualEnvWrapper,
+            env_path: env.path.clone(),
+            env_manager: None,
+            project_path: get_project(env),
+            python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+            arch: None,
+        })
     }
 
     fn find(&mut self) -> Option<LocatorResult> {
@@ -111,7 +129,6 @@ impl Locator for VirtualEnvWrapper<'_> {
                 environments.push(env);
             }
         });
-
         if environments.is_empty() {
             None
         } else {

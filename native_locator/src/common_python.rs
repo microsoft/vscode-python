@@ -47,6 +47,7 @@ impl Locator for PythonOnPath<'_> {
             env_manager: None,
             project_path: None,
             python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
+            arch: None,
         })
     }
 

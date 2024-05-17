@@ -8,10 +8,9 @@ use crate::{
     utils::PythonEnv,
 };
 use regex::Regex;
-use std::{collections::HashSet, fs::DirEntry, path::PathBuf};
+use std::{collections::HashSet, path::PathBuf};
 
-fn is_symlinked_python_executable(path: &DirEntry) -> Option<PathBuf> {
-    let path = path.path();
+fn is_symlinked_python_executable(path: &PathBuf) -> Option<PathBuf> {
     let name = path.file_name()?.to_string_lossy();
     if !name.starts_with("python") || name.ends_with("-config") || name.ends_with("-build") {
         return None;
@@ -23,6 +22,154 @@ fn is_symlinked_python_executable(path: &DirEntry) -> Option<PathBuf> {
     Some(std::fs::canonicalize(path).ok()?)
 }
 
+fn get_homebrew_prefix_env_var(environment: &dyn Environment) -> Option<PathBuf> {
+    if let Some(homebrew_prefix) = environment.get_env_var("HOMEBREW_PREFIX".to_string()) {
+        let homebrew_prefix_bin = PathBuf::from(homebrew_prefix).join("bin");
+        if homebrew_prefix_bin.exists() {
+            return Some(homebrew_prefix_bin);
+        }
+    }
+    None
+}
+
+fn get_homebrew_prefix_bin(environment: &dyn Environment) -> Option<PathBuf> {
+    if let Some(homebrew_prefix) = get_homebrew_prefix_env_var(environment) {
+        return Some(homebrew_prefix);
+    }
+
+    // Homebrew install folders documented here https://docs.brew.sh/Installation
+    // /opt/homebrew for Apple Silicon,
+    // /usr/local for macOS Intel
+    // /home/linuxbrew/.linuxbrew for Linux
+    [
+        "/home/linuxbrew/.linuxbrew/bin",
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+    ]
+    .iter()
+    .map(|p| PathBuf::from(p))
+    .find(|p| p.exists())
+}
+
+fn get_env_path(python_exe_from_bin_dir: &PathBuf, resolved_file: &PathBuf) -> Option<PathBuf> {
+    // If the fully resolved file path contains the words `/homebrew/` or `/linuxbrew/`
+    // Then we know this is definitely a home brew version of python.
+    // And in these cases we can compute the sysprefix.
+
+    let resolved_file = resolved_file.to_str()?;
+    // 1. MacOS Silicon
+    if python_exe_from_bin_dir
+        .to_string_lossy()
+        .to_lowercase()
+        .starts_with("/opt/homebrew/bin/python")
+        && resolved_file
+            .to_lowercase()
+            .starts_with("/opt/homebrew/cellar/python@")
+    {
+        // Resolved exe is something like `/opt/homebrew/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/bin/python3.12`
+        let reg_ex = Regex::new("/opt/homebrew/Cellar/python@((\\d+\\.?)*)/(\\d+\\.?)*/Frameworks/Python.framework/Versions/(\\d+\\.?)*/bin/python(\\d+\\.?)*").unwrap();
+        let captures = reg_ex.captures(&resolved_file)?;
+        let version = captures.get(1).map(|m| m.as_str()).unwrap_or_default();
+        let sys_prefix = PathBuf::from(format!(
+            "/opt/homebrew/opt/python@{}/Frameworks/Python.framework/Versions/{}",
+            version, version
+        ));
+
+        return if sys_prefix.exists() {
+            Some(sys_prefix)
+        } else {
+            None
+        };
+    }
+
+    // 2. Linux
+    if python_exe_from_bin_dir
+        .to_string_lossy()
+        .to_lowercase()
+        .starts_with("/home/linuxbrew/.linuxbrew/bin/python")
+        && resolved_file
+            .to_lowercase()
+            .starts_with("/home/linuxbrew/.linuxbrew/cellar/python@")
+    {
+        // Resolved exe is something like `/home/linuxbrew/.linuxbrew/Cellar/python@3.12/3.12.3/bin/python3.12`
+        let reg_ex = Regex::new("/home/linuxbrew/.linuxbrew/Cellar/python@(\\d+\\.?\\d+\\.?)/(\\d+\\.?\\d+\\.?\\d+\\.?)/bin/python.*").unwrap();
+        let captures = reg_ex.captures(&resolved_file)?;
+        let version = captures.get(1).map(|m| m.as_str()).unwrap_or_default();
+        let full_version = captures.get(2).map(|m| m.as_str()).unwrap_or_default();
+        let sys_prefix = PathBuf::from(format!(
+            "/home/linuxbrew/.linuxbrew/Cellar/python@{}/{}",
+            version, full_version
+        ));
+
+        return if sys_prefix.exists() {
+            Some(sys_prefix)
+        } else {
+            None
+        };
+    }
+
+    // 3. MacOS Intel
+    if python_exe_from_bin_dir
+        .to_string_lossy()
+        .to_lowercase()
+        .starts_with("/usr/local/bin/python")
+        && resolved_file
+            .to_lowercase()
+            .starts_with("/usr/local/Cellar/python@")
+    {
+        // Resolved exe is something like `/usr/local/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/bin/python3.12`
+        let reg_ex = Regex::new("/usr/local/Cellar/python@(\\d+\\.?\\d+\\.?)/(\\d+\\.?\\d+\\.?\\d+\\.?)/Frameworks/Python.framework/Versions/(\\d+\\.?\\d+\\.?)/bin/python.*").unwrap();
+        let captures = reg_ex.captures(&resolved_file)?;
+        let version = captures.get(1).map(|m| m.as_str()).unwrap_or_default();
+        let full_version = captures.get(2).map(|m| m.as_str()).unwrap_or_default();
+        let sys_prefix = PathBuf::from(format!(
+            "/usr/local/Cellar/python@{}/{}",
+            version, full_version
+        ));
+
+        return if sys_prefix.exists() {
+            Some(sys_prefix)
+        } else {
+            None
+        };
+    }
+    None
+}
+
+fn get_python_info(
+    python_exe_from_bin_dir: &PathBuf,
+    reported: &mut HashSet<String>,
+    python_version_regex: &Regex,
+) -> Option<PythonEnvironment> {
+    // Possible we do not have python3.12 or the like in bin directory
+    // & we have only python3, in that case we should add python3 to the list
+    if let Some(resolved_exe) = is_symlinked_python_executable(python_exe_from_bin_dir) {
+        let user_friendly_exe = python_exe_from_bin_dir;
+        let python_version = resolved_exe.to_string_lossy().to_string();
+        let version = match python_version_regex.captures(&python_version) {
+            Some(captures) => match captures.get(1) {
+                Some(version) => Some(version.as_str().to_string()),
+                None => None,
+            },
+            None => None,
+        };
+        if reported.contains(&resolved_exe.to_string_lossy().to_string()) {
+            return None;
+        }
+        reported.insert(resolved_exe.to_string_lossy().to_string());
+        return Some(PythonEnvironment::new(
+            None,
+            None,
+            Some(user_friendly_exe.clone()),
+            crate::messaging::PythonEnvironmentCategory::Homebrew,
+            version,
+            get_env_path(python_exe_from_bin_dir, &resolved_exe),
+            None,
+            Some(vec![user_friendly_exe.to_string_lossy().to_string()]),
+        ));
+    }
+    None
+}
 pub struct Homebrew<'a> {
     pub environment: &'a dyn Environment,
 }
@@ -39,59 +186,38 @@ impl Locator for Homebrew<'_> {
     }
 
     fn find(&mut self) -> Option<LocatorResult> {
-        let homebrew_prefix = self
-            .environment
-            .get_env_var("HOMEBREW_PREFIX".to_string())?;
-        let homebrew_prefix_bin = PathBuf::from(homebrew_prefix).join("bin");
+        let homebrew_prefix_bin = get_homebrew_prefix_bin(self.environment)?;
         let mut reported: HashSet<String> = HashSet::new();
         let python_regex = Regex::new(r"/(\d+\.\d+\.\d+)/").unwrap();
         let mut environments: Vec<PythonEnvironment> = vec![];
-        for file in std::fs::read_dir(homebrew_prefix_bin)
+        for file in std::fs::read_dir(&homebrew_prefix_bin)
             .ok()?
             .filter_map(Result::ok)
         {
-            if let Some(exe) = is_symlinked_python_executable(&file) {
-                let python_version = exe.to_string_lossy().to_string();
-                let version = match python_regex.captures(&python_version) {
-                    Some(captures) => match captures.get(1) {
-                        Some(version) => Some(version.as_str().to_string()),
-                        None => None,
-                    },
-                    None => None,
-                };
-                if reported.contains(&exe.to_string_lossy().to_string()) {
+            // If this file name is `python3`, then ignore this for now.
+            // We would prefer to use `python3.x` instead of `python3`.
+            // That way its more consistent and future proof
+            if let Some(file_name) = file.file_name().to_str() {
+                if file_name.to_lowercase() == "python3" {
                     continue;
                 }
-                let env_path = match exe.parent() {
-                    Some(path) => {
-                        if let Some(name) = path.file_name() {
-                            if name.to_ascii_lowercase() == "bin"
-                                || name.to_ascii_lowercase() == "Scripts"
-                            {
-                                Some(path.parent()?.to_path_buf())
-                            } else {
-                                Some(path.to_path_buf())
-                            }
-                        } else {
-                            None
-                        }
-                    }
-                    None => continue,
-                };
-                reported.insert(exe.to_string_lossy().to_string());
-                let env = crate::messaging::PythonEnvironment::new(
-                    None,
-                    None,
-                    Some(exe.clone()),
-                    crate::messaging::PythonEnvironmentCategory::Homebrew,
-                    version,
-                    env_path,
-                    None,
-                    Some(vec![exe.to_string_lossy().to_string()]),
-                );
+            }
+
+            if let Some(env) = get_python_info(&file.path(), &mut reported, &python_regex) {
                 environments.push(env);
             }
         }
+
+        // Possible we do not have python3.12 or the like in bin directory
+        // & we have only python3, in that case we should add python3 to the list
+        if let Some(env) = get_python_info(
+            &homebrew_prefix_bin.join("python3"),
+            &mut reported,
+            &python_regex,
+        ) {
+            environments.push(env);
+        }
+
         if environments.is_empty() {
             None
         } else {

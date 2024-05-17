@@ -37,7 +37,7 @@ fn main() {
 
     let virtualenv_locator = virtualenv::VirtualEnv::new();
     let venv_locator = venv::Venv::new();
-    let virtualenvwrapper_locator = virtualenvwrapper::VirtualEnvWrapper::with(&environment);
+    let mut virtualenvwrapper = virtualenvwrapper::VirtualEnvWrapper::with(&environment);
     let pipenv_locator = pipenv::PipEnv::new();
     let mut path_locator = common_python::PythonOnPath::with(&environment);
     let mut conda_locator = conda::Conda::with(&environment);
@@ -54,6 +54,7 @@ fn main() {
     #[cfg(windows)]
     find_environments(&mut windows_registry, &mut dispatcher);
     let mut pyenv_locator = pyenv::PyEnv::with(&environment, &mut conda_locator);
+    find_environments(&mut virtualenvwrapper, &mut dispatcher);
     find_environments(&mut pyenv_locator, &mut dispatcher);
     #[cfg(unix)]
     find_environments(&mut homebrew_locator, &mut dispatcher);
@@ -67,8 +68,8 @@ fn main() {
             continue;
         }
 
-        let _ = resolve_environment(&pipenv_locator, env, &mut dispatcher)
-            || resolve_environment(&virtualenvwrapper_locator, env, &mut dispatcher)
+        let _ = resolve_environment(&virtualenvwrapper, env, &mut dispatcher)
+            || resolve_environment(&pipenv_locator, env, &mut dispatcher)
             || resolve_environment(&venv_locator, env, &mut dispatcher)
             || resolve_environment(&virtualenv_locator, env, &mut dispatcher);
     }

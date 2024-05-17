@@ -646,6 +646,7 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
                 "python".to_string(),
             ]),
             project_path: None,
+            arch: None,
         });
     }
     None

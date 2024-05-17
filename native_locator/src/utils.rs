@@ -96,16 +96,7 @@ pub fn get_version(python_executable: &PathBuf) -> Option<String> {
             return Some(pyenv_cfg.version);
         }
     }
-
-    let output = Command::new(python_executable)
-        .arg("-c")
-        .arg("import sys; print(sys.version)")
-        .output()
-        .ok()?;
-    let output = String::from_utf8(output.stdout).ok()?;
-    let output = output.trim();
-    let output = output.split_whitespace().next().unwrap_or(output);
-    Some(output.to_string())
+    None
 }
 
 pub fn find_python_binary_path(env_path: &Path) -> Option<PathBuf> {

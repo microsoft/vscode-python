@@ -90,7 +90,17 @@ fn get_pyenv_version(folder_name: &String) -> Option<String> {
                             Some(version) => Some(version.as_str().to_string()),
                             None => None,
                         },
-                        None => None,
+                        None => {
+                            // win32 versions, rc Versions = like 3.11.0a-win32
+                            let python_regex = Regex::new(r"^(\d+\.\d+.\d+\w\d+)-win32").unwrap();
+                            match python_regex.captures(&folder_name) {
+                                Some(captures) => match captures.get(1) {
+                                    Some(version) => Some(version.as_str().to_string()),
+                                    None => None,
+                                },
+                                None => None,
+                            }
+                        }
                     }
                 }
             }
@@ -103,8 +113,9 @@ fn get_pure_python_environment(
     path: &PathBuf,
     manager: &Option<EnvManager>,
 ) -> Option<PythonEnvironment> {
-    let version = get_pyenv_version(&path.file_name().unwrap().to_string_lossy().to_string())?;
-    Some(messaging::PythonEnvironment::new(
+    let file_name = path.file_name()?.to_string_lossy().to_string();
+    let version = get_pyenv_version(&file_name)?;
+    let mut env = messaging::PythonEnvironment::new(
         None,
         None,
         Some(executable.clone()),
@@ -117,7 +128,12 @@ fn get_pure_python_environment(
             .into_os_string()
             .into_string()
             .unwrap()]),
-    ))
+    );
+    if file_name.ends_with("-win32") {
+        env.arch = Some(messaging::Architecture::X86);
+    }
+
+    Some(env)
 }
 
 fn is_conda_environment(path: &PathBuf) -> bool {
