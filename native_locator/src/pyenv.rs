@@ -208,13 +208,7 @@ pub fn list_pyenv_environments(
 fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf) -> Option<String> {
     // Look for version in path
     // Sample /opt/homebrew/Cellar/pyenv/2.4.0/libexec/pyenv
-    if !pyenv_binary_path
-        .to_string_lossy()
-        .contains("homebrew/Cellar/pyenv")
-        && !pyenv_binary_path
-            .to_string_lossy()
-            .contains("/opt/homebrew/bin/pyenv")
-    {
+    if !pyenv_binary_path.to_string_lossy().contains("/pyenv/") {
         return None;
     }
     // Find the real path, generally we have a symlink.
