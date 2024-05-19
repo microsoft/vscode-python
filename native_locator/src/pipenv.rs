@@ -18,7 +18,7 @@ fn get_pipenv_project(env: &PythonEnv) -> Option<PathBuf> {
     None
 }
 
-pub fn is_pipenv(env: &PythonEnv) -> bool {
+fn is_pipenv(env: &PythonEnv) -> bool {
     // If we have a Pipfile, then this is a pipenv environment.
     // Else likely a virtualenvwrapper or the like.
     if let Some(project_path) = get_pipenv_project(env) {

@@ -3,7 +3,6 @@
 
 use crate::locator::{Locator, LocatorResult};
 use crate::messaging::PythonEnvironment;
-use crate::pipenv::is_pipenv;
 use crate::utils::list_python_environments;
 use crate::virtualenv;
 use crate::{known::Environment, utils::PythonEnv};
@@ -54,9 +53,6 @@ pub fn get_work_on_home_path(environment: &dyn Environment) -> Option<PathBuf> {
 
 pub fn is_virtualenvwrapper(env: &PythonEnv, environment: &dyn Environment) -> bool {
     if env.path.is_none() {
-        return false;
-    }
-    if is_pipenv(env) {
         return false;
     }
 

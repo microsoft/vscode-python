@@ -66,7 +66,7 @@ fn get_pyenv_binary(environment: &dyn known::Environment) -> Option<PathBuf> {
     }
 }
 
-fn get_pyenv_version(folder_name: &String) -> Option<String> {
+fn get_version(folder_name: &String) -> Option<String> {
     // Stable Versions = like 3.10.10
     let python_regex = Regex::new(r"^(\d+\.\d+\.\d+)$").unwrap();
     match python_regex.captures(&folder_name) {
@@ -114,7 +114,7 @@ fn get_pure_python_environment(
     manager: &Option<EnvManager>,
 ) -> Option<PythonEnvironment> {
     let file_name = path.file_name()?.to_string_lossy().to_string();
-    let version = get_pyenv_version(&file_name)?;
+    let version = get_version(&file_name)?;
     let mut env = messaging::PythonEnvironment::new(
         None,
         None,
@@ -205,6 +205,28 @@ pub fn list_pyenv_environments(
     Some(envs)
 }
 
+fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf) -> Option<String> {
+    // Look for version in path
+    // Sample /opt/homebrew/Cellar/pyenv/2.4.0/libexec/pyenv
+    if !pyenv_binary_path
+        .to_string_lossy()
+        .contains("homebrew/Cellar/pyenv")
+        && !pyenv_binary_path
+            .to_string_lossy()
+            .contains("/opt/homebrew/bin/pyenv")
+    {
+        return None;
+    }
+    // Find the real path, generally we have a symlink.
+    let real_path = fs::read_link(pyenv_binary_path)
+        .ok()?
+        .to_string_lossy()
+        .to_string();
+    let version_regex = Regex::new(r"pyenv/(\d+\.\d+\.\d+)/").unwrap();
+    let captures = version_regex.captures(&real_path)?.get(1)?;
+    Some(captures.as_str().to_string())
+}
+
 pub struct PyEnv<'a> {
     pub environment: &'a dyn Environment,
     pub conda_locator: &'a mut dyn CondaLocator,
@@ -230,7 +252,8 @@ impl Locator for PyEnv<'_> {
 
     fn find(&mut self) -> Option<LocatorResult> {
         let pyenv_binary = get_pyenv_binary(self.environment)?;
-        let manager = messaging::EnvManager::new(pyenv_binary, None, EnvManagerType::Pyenv);
+        let version = get_pyenv_manager_version(&pyenv_binary);
+        let manager = messaging::EnvManager::new(pyenv_binary, version, EnvManagerType::Pyenv);
         let mut environments: Vec<PythonEnvironment> = vec![];
         if let Some(envs) =
             list_pyenv_environments(&Some(manager.clone()), self.environment, self.conda_locator)

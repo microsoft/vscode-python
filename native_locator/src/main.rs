@@ -62,15 +62,21 @@ fn main() {
     #[cfg(windows)]
     find_environments(&mut windows_store, &mut dispatcher);
 
-    // Step 2: Search in some global locations.
+    // Step 2: Search in some global locations for virtual envs.
     for env in list_global_virtual_envs(&environment).iter() {
         if dispatcher.was_environment_reported(&env) {
             continue;
         }
 
+        // First must be homebrew, as it is the most specific and supports symlinks
         let _ = resolve_environment(&homebrew_locator, env, &mut dispatcher)
-            || resolve_environment(&virtualenvwrapper, env, &mut dispatcher)
+            // Pipeenv before virtualenvwrapper as it is more specific.
+            // Because pipenv environments are also virtualenvwrapper environments.
             || resolve_environment(&pipenv_locator, env, &mut dispatcher)
+            // Before venv, as all venvs are also virtualenvwrapper environments.
+            || resolve_environment(&virtualenvwrapper, env, &mut dispatcher)
+            // Before virtualenv as this is more specific.
+            // All venvs are also virtualenvs environments.
             || resolve_environment(&venv_locator, env, &mut dispatcher)
             || resolve_environment(&virtualenv_locator, env, &mut dispatcher);
     }
