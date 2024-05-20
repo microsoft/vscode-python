@@ -215,7 +215,7 @@ fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf, environment: &dyn know
     }
     let version = fs::read_to_string(version_file).ok()?;
     let version_regex = Regex::new(r"(\d+\.\d+\.\d+)").unwrap();
-    let captures = version_regex.captures(&real_path)?.get(1)?;
+    let captures = version_regex.captures(&version)?.get(1)?;
     Some(captures.as_str().to_string())
 }
 
