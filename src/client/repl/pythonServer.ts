@@ -19,7 +19,11 @@ export interface PythonServer extends Disposable {
 }
 
 class PythonServerImpl implements Disposable {
-    constructor(private connection: rpc.MessageConnection, private pythonServer: ch.ChildProcess) {
+    constructor(
+        private connection: rpc.MessageConnection,
+        private pythonServer: ch.ChildProcess,
+        private interpreter: string,
+    ) {
         this.initialize();
         this.input();
     }
@@ -54,8 +58,23 @@ class PythonServerImpl implements Disposable {
     }
 
     public interrupt(): void {
+        // Passing SIGINT to interrupt only would work for Mac and Linux
         if (this.pythonServer.kill('SIGINT')) {
-            traceLog('Python server interrupted');
+            traceLog('Python REPL server interrupted');
+        } else {
+            // Handle interrupt for windows
+            // Run python_files/ctrlc.py with 12345 as argument
+            const ctrlc = ch.spawn(this.interpreter, [
+                path.join(EXTENSION_ROOT_DIR, 'python_files', 'ctrlc.py'),
+                '12345',
+            ]);
+            ctrlc.on('exit', (code) => {
+                if (code === 0) {
+                    traceLog('Windows Python REPL server interrupted successfully with exit code 0');
+                } else {
+                    traceLog('Windows Python REPL interrupt may have failed');
+                }
+            });
         }
     }
 
@@ -89,7 +108,7 @@ export function createPythonServer(interpreter: string[]): PythonServer {
         new rpc.StreamMessageReader(pythonServer.stdout),
         new rpc.StreamMessageWriter(pythonServer.stdin),
     );
-    const ourPythonServerImpl = new PythonServerImpl(connection, pythonServer);
+    const ourPythonServerImpl = new PythonServerImpl(connection, pythonServer, interpreter[0]);
     pythonServerInstance.serverInstance = ourPythonServerImpl;
     return ourPythonServerImpl;
 }
