@@ -206,12 +206,19 @@ pub fn list_pyenv_environments(
 }
 
 #[cfg(windows)]
-fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf, environment: &dyn known::Environment) -> Option<String> {
+fn get_pyenv_manager_version(
+    pyenv_binary_path: &PathBuf,
+    environment: &dyn known::Environment,
+) -> Option<String> {
     // In windows, the version is stored in the `.pyenv/.version` file
     let pyenv_dir = get_pyenv_dir(environment)?;
-    let version_file = PathBuf::from(pyenv_dir).join(".version");
+    let mut version_file = PathBuf::from(&pyenv_dir).join(".version");
     if !version_file.exists() {
-        return None;
+        // We might have got the path `~/.pyenv/pyenv-win`
+        version_file = pyenv_dir.parent()?.join(".version");
+        if !version_file.exists() {
+            return None;
+        }
     }
     let version = fs::read_to_string(version_file).ok()?;
     let version_regex = Regex::new(r"(\d+\.\d+\.\d+)").unwrap();
@@ -220,7 +227,10 @@ fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf, environment: &dyn know
 }
 
 #[cfg(unix)]
-fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf, _environment: &dyn known::Environment) -> Option<String> {
+fn get_pyenv_manager_version(
+    pyenv_binary_path: &PathBuf,
+    _environment: &dyn known::Environment,
+) -> Option<String> {
     // Look for version in path
     // Sample /opt/homebrew/Cellar/pyenv/2.4.0/libexec/pyenv
     if !pyenv_binary_path.to_string_lossy().contains("/pyenv/") {
