@@ -205,7 +205,22 @@ pub fn list_pyenv_environments(
     Some(envs)
 }
 
-fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf) -> Option<String> {
+#[cfg(windows)]
+fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf, environment: &dyn known::Environment) -> Option<String> {
+    // In windows, the version is stored in the `.pyenv/.version` file
+    let pyenv_dir = get_pyenv_dir(environment)?;
+    let version_file = PathBuf::from(pyenv_dir).join(".version");
+    if !version_file.exists() {
+        return None;
+    }
+    let version = fs::read_to_string(version_file).ok()?;
+    let version_regex = Regex::new(r"(\d+\.\d+\.\d+)").unwrap();
+    let captures = version_regex.captures(&real_path)?.get(1)?;
+    Some(captures.as_str().to_string())
+}
+
+#[cfg(unix)]
+fn get_pyenv_manager_version(pyenv_binary_path: &PathBuf, _environment: &dyn known::Environment) -> Option<String> {
     // Look for version in path
     // Sample /opt/homebrew/Cellar/pyenv/2.4.0/libexec/pyenv
     if !pyenv_binary_path.to_string_lossy().contains("/pyenv/") {
@@ -246,7 +261,7 @@ impl Locator for PyEnv<'_> {
 
     fn find(&mut self) -> Option<LocatorResult> {
         let pyenv_binary = get_pyenv_binary(self.environment)?;
-        let version = get_pyenv_manager_version(&pyenv_binary);
+        let version = get_pyenv_manager_version(&pyenv_binary, self.environment);
         let manager = messaging::EnvManager::new(pyenv_binary, version, EnvManagerType::Pyenv);
         let mut environments: Vec<PythonEnvironment> = vec![];
         if let Some(envs) =

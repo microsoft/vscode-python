@@ -69,10 +69,16 @@ fn main() {
         }
 
         // First must be homebrew, as it is the most specific and supports symlinks
-        let _ = resolve_environment(&homebrew_locator, env, &mut dispatcher)
-            // Pipeenv before virtualenvwrapper as it is more specific.
+        #[cfg(unix)]
+        let homebrew_result = resolve_environment(&homebrew_locator, env, &mut dispatcher);
+        #[cfg(unix)]
+        if homebrew_result {
+            continue;
+        }
+
+        let _ = // Pipeenv before virtualenvwrapper as it is more specific.
             // Because pipenv environments are also virtualenvwrapper environments.
-            || resolve_environment(&pipenv_locator, env, &mut dispatcher)
+            resolve_environment(&pipenv_locator, env, &mut dispatcher)
             // Before venv, as all venvs are also virtualenvwrapper environments.
             || resolve_environment(&virtualenvwrapper, env, &mut dispatcher)
             // Before virtualenv as this is more specific.

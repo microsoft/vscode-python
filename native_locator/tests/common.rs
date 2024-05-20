@@ -20,10 +20,12 @@ pub fn join_test_paths(paths: &[&str]) -> PathBuf {
     path
 }
 
+#[allow(dead_code)]
 pub trait TestMessages {
     fn get_messages(&self) -> Vec<String>;
 }
 
+#[allow(dead_code)]
 pub struct TestEnvironment {
     vars: HashMap<String, String>,
     home: Option<PathBuf>,
