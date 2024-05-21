@@ -7,10 +7,8 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 import { traceError, traceLog } from '../logging';
 
 const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server.py');
-// export let serverInstance: PythonServer | undefined;
-export class pythonServerInstance {
-    public static serverInstance: PythonServer | undefined;
-}
+let serverInstance: PythonServer | undefined;
+
 export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
     interrupt(): void;
@@ -19,6 +17,8 @@ export interface PythonServer extends Disposable {
 }
 
 class PythonServerImpl implements Disposable {
+    private readonly disposables: Disposable[] = [];
+
     constructor(
         private connection: rpc.MessageConnection,
         private pythonServer: ch.ChildProcess,
@@ -29,9 +29,11 @@ class PythonServerImpl implements Disposable {
     }
 
     private initialize(): void {
-        this.connection.onNotification('log', (message: string) => {
-            console.log('Log:', message);
-        });
+        this.disposables.push(
+            this.connection.onNotification('log', (message: string) => {
+                console.log('Log:', message);
+            }),
+        );
         this.connection.listen();
     }
 
@@ -62,8 +64,9 @@ class PythonServerImpl implements Disposable {
         if (this.pythonServer.kill('SIGINT')) {
             traceLog('Python REPL server interrupted');
         } else {
-            // Handle interrupt for windows
+            // TODO: Handle interrupt for windows
             // Run python_files/ctrlc.py with 12345 as argument
+            // TODO: properly get PID from Python Server
             const ctrlc = ch.spawn(this.interpreter, [
                 path.join(EXTENSION_ROOT_DIR, 'python_files', 'ctrlc.py'),
                 '12345',
@@ -84,13 +87,14 @@ class PythonServerImpl implements Disposable {
 
     public dispose(): void {
         this.connection.sendNotification('exit');
+        this.disposables.forEach((d) => d.dispose());
         this.connection.dispose();
     }
 }
 
 export function createPythonServer(interpreter: string[]): PythonServer {
-    if (pythonServerInstance.serverInstance) {
-        return pythonServerInstance.serverInstance;
+    if (serverInstance) {
+        return serverInstance;
     }
 
     const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH]);
@@ -109,6 +113,6 @@ export function createPythonServer(interpreter: string[]): PythonServer {
         new rpc.StreamMessageWriter(pythonServer.stdin),
     );
     const ourPythonServerImpl = new PythonServerImpl(connection, pythonServer, interpreter[0]);
-    pythonServerInstance.serverInstance = ourPythonServerImpl;
+    serverInstance = ourPythonServerImpl;
     return ourPythonServerImpl;
 }

@@ -1,8 +1,13 @@
 import * as vscode from 'vscode';
 import { createPythonServer } from './pythonServer';
 
-export function createReplController(interpreterPath: string): vscode.NotebookController {
+export function createReplController(
+    interpreterPath: string,
+    disposables: vscode.Disposable[],
+): vscode.NotebookController {
     const server = createPythonServer([interpreterPath]);
+    disposables.push(server);
+
     const controller = vscode.notebooks.createNotebookController('pythonREPL', 'interactive', 'Python REPL');
     controller.supportedLanguages = ['python'];
     controller.supportsExecutionOrder = true;
@@ -39,5 +44,6 @@ export function createReplController(interpreterPath: string): vscode.NotebookCo
             }
         }
     };
+    disposables.push(controller);
     return controller;
 }

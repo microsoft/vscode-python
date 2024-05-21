@@ -62,7 +62,7 @@ export async function registerReplCommands(
                 const interpreterPath = interpreter.path;
 
                 if (!notebookController) {
-                    notebookController = createReplController(interpreterPath);
+                    notebookController = createReplController(interpreterPath, disposables);
                 }
                 const activeEditor = window.activeTextEditor as TextEditor;
 
@@ -83,8 +83,8 @@ export async function registerReplCommands(
                     res = (await commands.executeCommand(
                         'interactive.open',
                         {
+                            preserveFocus: true,
                             ViewColumn: ViewColumn.Beside,
-                            preserveFocus: false,
                         },
                         undefined,
                         notebookController.id,
@@ -92,6 +92,10 @@ export async function registerReplCommands(
                     )) as { notebookEditor: NotebookEditor };
                     notebookEditor = res.notebookEditor;
                     notebookDocument = res.notebookEditor.notebook;
+
+                    // await window.showNotebookDocument(notebookDocument!, {
+                    //     viewColumn: ViewColumn.Beside,
+                    // }); correctly open IW on the side.
                 }
 
                 notebookController!.updateNotebookAffinity(notebookDocument!, NotebookControllerAffinity.Default);

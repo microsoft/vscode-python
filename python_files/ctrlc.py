@@ -6,7 +6,9 @@ kernel = ctypes.windll.kernel32
 
 pid = int(sys.argv[1])
 kernel.FreeConsole()
-kernel.AttachConsole(pid)
+kernel.AttachConsole(
+    pid
+)  # TODO: can we attach second time in windows? # Run something, interrupt, run another thing, interrupt
 kernel.SetConsoleCtrlHandler(None, 1)
 kernel.GenerateConsoleCtrlEvent(0, 0)
 sys.exit(0)
