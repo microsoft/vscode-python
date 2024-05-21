@@ -67,24 +67,17 @@ export async function registerReplCommands(
                 const activeEditor = window.activeTextEditor as TextEditor;
 
                 const code = await getSelectedTextToExecute(activeEditor);
-                // const ourResource = Uri.from({ scheme: 'untitled', path: 'repl.interactive' });
-
-                // const notebookDocument = await workspace.openNotebookDocument(ourResource); // before using interactive.open
-                // commands.executeCommand('_interactive.open'); command to open interactive window so intellisense is registered.
 
                 // We want to keep notebookEditor, whenever we want to run.
                 // Find interactive window, or open it.
                 let res;
 
                 if (!notebookEditor) {
-                    // notebookEditor = await window.showNotebookDocument(notebookDocument, {
-                    //     viewColumn: ViewColumn.Beside,
-                    // }); //  comment out to try _interactive.open
                     res = (await commands.executeCommand(
                         'interactive.open',
                         {
                             preserveFocus: true,
-                            ViewColumn: ViewColumn.Beside,
+                            viewColumn: ViewColumn.Beside,
                         },
                         undefined,
                         notebookController.id,
@@ -92,10 +85,6 @@ export async function registerReplCommands(
                     )) as { notebookEditor: NotebookEditor };
                     notebookEditor = res.notebookEditor;
                     notebookDocument = res.notebookEditor.notebook;
-
-                    // await window.showNotebookDocument(notebookDocument!, {
-                    //     viewColumn: ViewColumn.Beside,
-                    // }); correctly open IW on the side.
                 }
 
                 notebookController!.updateNotebookAffinity(notebookDocument!, NotebookControllerAffinity.Default);
@@ -126,8 +115,7 @@ export async function registerReplCommands(
     );
 }
 
-// TODO: Register Python execute command for keybinding 'Enter'
-// TODO: Conditionally call interactive.execute OR insert \n in text input box.
+// Command for 'Enter': Conditionally call interactive.execute OR insert \n in text input box.
 export async function registerReplExecuteOnEnter(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
@@ -165,13 +153,11 @@ export async function registerReplExecuteOnEnter(
                 await commands.executeCommand('interactive.execute');
             } else {
                 // Insert new line on behalf of user. "Regular" monaco editor behavior
-
                 if (editor) {
                     const position = editor.selection.active;
-                    // move cursor to end of line and also add newline character
                     const newPosition = position.with(position.line, editor.document.lineAt(position.line).text.length);
                     editor.selection = new Selection(newPosition, newPosition);
-                    // add newline character
+
                     editor.edit((editBuilder) => {
                         editBuilder.insert(newPosition, '\n');
                     });

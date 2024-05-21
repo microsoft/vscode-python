@@ -37,7 +37,6 @@ class PythonServerImpl implements Disposable {
         this.connection.listen();
     }
 
-    // Register input handler
     public input(): void {
         // Register input request handler
         this.connection.onRequest('input', async (request) => {
@@ -65,7 +64,6 @@ class PythonServerImpl implements Disposable {
             traceLog('Python REPL server interrupted');
         } else {
             // TODO: Handle interrupt for windows
-            // Run python_files/ctrlc.py with 12345 as argument
             // TODO: properly get PID from Python Server
             const ctrlc = ch.spawn(this.interpreter, [
                 path.join(EXTENSION_ROOT_DIR, 'python_files', 'ctrlc.py'),
