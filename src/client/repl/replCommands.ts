@@ -70,10 +70,10 @@ export async function registerReplCommands(
 
                 // We want to keep notebookEditor, whenever we want to run.
                 // Find interactive window, or open it.
-                let res;
+                let interactiveWindowObject;
 
                 if (!notebookEditor) {
-                    res = (await commands.executeCommand(
+                    interactiveWindowObject = (await commands.executeCommand(
                         'interactive.open',
                         {
                             preserveFocus: true,
@@ -83,8 +83,8 @@ export async function registerReplCommands(
                         notebookController.id,
                         'Python REPL',
                     )) as { notebookEditor: NotebookEditor };
-                    notebookEditor = res.notebookEditor;
-                    notebookDocument = res.notebookEditor.notebook;
+                    notebookEditor = interactiveWindowObject.notebookEditor;
+                    notebookDocument = interactiveWindowObject.notebookEditor.notebook;
                 }
 
                 notebookController!.updateNotebookAffinity(notebookDocument!, NotebookControllerAffinity.Default);
