@@ -72,10 +72,19 @@ export async function registerReplCommands(
 
                 // We want to keep notebookEditor, whenever we want to run.
                 // Find interactive window, or open it.
+                let res;
                 if (!notebookEditor) {
-                    notebookEditor = await window.showNotebookDocument(notebookDocument, {
-                        viewColumn: ViewColumn.Beside,
-                    });
+                    // notebookEditor = await window.showNotebookDocument(notebookDocument, {
+                    //     viewColumn: ViewColumn.Beside,
+                    // }); comment out to try _interactive.open
+                    res = (await commands.executeCommand('interactive.open', {
+                        ViewColumn: ViewColumn.Beside,
+                        preserveFocus: true,
+                        undefined,
+                        controllerId: notebookController.id,
+                        title: 'Python REPL',
+                    })) as { notebookEditor: NotebookEditor };
+                    notebookEditor = res.notebookEditor;
                 }
 
                 notebookController!.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
@@ -138,12 +147,12 @@ export async function registerReplExecuteOnEnter(
                     completeCode = true;
                 }
             }
-
-            if (completeCode) {
+            const editor = window.activeTextEditor;
+            // Execute right away when complete code and Not multi-line
+            if (completeCode && !isMultiLineText(editor)) {
                 await commands.executeCommand('interactive.execute');
             } else {
                 // Insert new line on behalf of user. "Regular" monaco editor behavior
-                const editor = window.activeTextEditor;
 
                 if (editor) {
                     const position = editor.selection.active;
@@ -163,4 +172,12 @@ export async function registerReplExecuteOnEnter(
             }
         }),
     );
+}
+
+function isMultiLineText(textEditor: TextEditor | undefined): boolean {
+    if (textEditor) {
+        const { document } = textEditor;
+        return document.lineCount > 1;
+    }
+    return false;
 }
