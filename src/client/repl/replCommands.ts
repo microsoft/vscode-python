@@ -13,6 +13,7 @@ import {
     NotebookEditor,
     TextEditor,
     Selection,
+    NotebookDocument,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
@@ -25,6 +26,7 @@ import { createReplController } from './replController';
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
 // TODO: figure out way to put markdown telling user kernel has been dead and need to pick again.
+let notebookDocument: NotebookDocument | undefined;
 
 async function getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined> {
     if (!textEditor) {
@@ -65,29 +67,34 @@ export async function registerReplCommands(
                 const activeEditor = window.activeTextEditor as TextEditor;
 
                 const code = await getSelectedTextToExecute(activeEditor);
-                const ourResource = Uri.from({ scheme: 'untitled', path: 'repl.interactive' });
+                // const ourResource = Uri.from({ scheme: 'untitled', path: 'repl.interactive' });
 
-                const notebookDocument = await workspace.openNotebookDocument(ourResource);
+                // const notebookDocument = await workspace.openNotebookDocument(ourResource); // before using interactive.open
                 // commands.executeCommand('_interactive.open'); command to open interactive window so intellisense is registered.
 
                 // We want to keep notebookEditor, whenever we want to run.
                 // Find interactive window, or open it.
                 let res;
+
                 if (!notebookEditor) {
                     // notebookEditor = await window.showNotebookDocument(notebookDocument, {
                     //     viewColumn: ViewColumn.Beside,
-                    // }); comment out to try _interactive.open
-                    res = (await commands.executeCommand('interactive.open', {
-                        ViewColumn: ViewColumn.Beside,
-                        preserveFocus: true,
+                    // }); //  comment out to try _interactive.open
+                    res = (await commands.executeCommand(
+                        'interactive.open',
+                        {
+                            ViewColumn: ViewColumn.Beside,
+                            preserveFocus: false,
+                        },
                         undefined,
-                        controllerId: notebookController.id,
-                        title: 'Python REPL',
-                    })) as { notebookEditor: NotebookEditor };
+                        notebookController.id,
+                        'Python REPL',
+                    )) as { notebookEditor: NotebookEditor };
                     notebookEditor = res.notebookEditor;
+                    notebookDocument = res.notebookEditor.notebook;
                 }
 
-                notebookController!.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
+                notebookController!.updateNotebookAffinity(notebookDocument!, NotebookControllerAffinity.Default);
 
                 // Auto-Select Python REPL Kernel
                 await commands.executeCommand('notebook.selectKernel', {
@@ -97,17 +104,18 @@ export async function registerReplCommands(
                 });
 
                 const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
-                const { cellCount } = notebookDocument;
+                const { cellCount } = notebookDocument!;
                 // Add new cell to interactive window document
                 const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
                 const workspaceEdit = new WorkspaceEdit();
-                workspaceEdit.set(notebookDocument.uri, [notebookEdit]);
+                workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
                 await workspace.applyEdit(workspaceEdit);
 
                 // Execute the cell
                 commands.executeCommand('notebook.cell.execute', {
                     ranges: [{ start: cellCount, end: cellCount + 1 }],
-                    document: ourResource,
+                    // document: ourResource,
+                    document: notebookDocument!.uri,
                 });
             }
         }),
