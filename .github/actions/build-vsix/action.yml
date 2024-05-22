@@ -71,11 +71,14 @@ runs:
       run: npm run addExtensionPackDependencies
       shell: bash
 
-    - name: Build VSIX
+    - name: Build Webpack
       run: |
         npx gulp clean
         npx gulp prePublishBundle
-        npx vsce package --target ${{ inputs.vsix_target }} package --out ms-python-insiders.vsix --pre-release
+      shell: bash
+
+    - name: Build VSIX
+      run: npx vsce package --target ${{ inputs.vsix_target }} --out ms-python-insiders.vsix --pre-release
       shell: bash
 
     - name: Rename VSIX
