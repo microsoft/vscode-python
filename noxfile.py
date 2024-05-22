@@ -45,14 +45,25 @@ def install_python_libs(session: nox.Session):
 
 
 @nox.session()
-def native_build(session:nox.Session):
+def native_build(session: nox.Session):
     with session.cd("./native_locator"):
-        session.run("cargo", "build", "--release", "--package", "python-finder", external=True)
+        session.run("cargo", "fetch", external=True)
+        session.run(
+            "cargo",
+            "build",
+            "--frozen",
+            "--release",
+            "--package",
+            "python-finder",
+            external=True,
+        )
         if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
             pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
 
         if not pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").exists():
-            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text("*\n", encoding="utf-8")
+            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text(
+                "*\n", encoding="utf-8"
+            )
 
         if sys.platform == "win32":
             shutil.copy(

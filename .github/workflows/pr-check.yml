@@ -12,7 +12,6 @@ env:
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
-  VSIX_NAME: ms-python-insiders.vsix
   TEST_RESULTS_DIRECTORY: .
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
@@ -22,7 +21,42 @@ env:
 jobs:
   build-vsix:
     name: Create VSIX
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            code-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            code-target: win32-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            code-target: linux-x64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            code-target: linux-arm64
+            arch: aarch64
+          - os: ubuntu-latest
+            target: arm-unknown-linux-gnueabihf
+            code-target: linux-armhf
+            arch: armv7
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            code-target: darwin-x64
+          - os: macos-14
+            target: aarch64-apple-darwin
+            code-target: darwin-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            code-target: alpine-x64
+            arch: x86_64
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            code-target: alpine-arm64
+            arch: aarch64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -31,7 +65,7 @@ jobs:
         uses: ./.github/actions/build-vsix
         with:
           node_version: ${{ env.NODE_VERSION}}
-          vsix_name: ${{ env.VSIX_NAME }}
+          vsix_name: "ms-python-insiders-${{ matrix.code-target }}.vsix"
           artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
 
   lint:
