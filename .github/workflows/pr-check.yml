@@ -64,6 +64,7 @@ jobs:
           vsix_name: 'ms-python-insiders-${{ matrix.vsix-target }}.vsix'
           artifact_name: '${{ env.ARTIFACT_NAME_VSIX }}-${{ matrix.vsix-target }}'
           cargo_target: ${{ matrix.target }}
+          vsix_target: ${{ matrix.vsix-target }}
 
   lint:
     name: Lint

@@ -14,6 +14,9 @@ inputs:
   cargo_target:
     description: 'Cargo build target for the native build'
     required: true
+  vsix_target:
+    description: 'vsix build target for the native build'
+    required: true
 
 runs:
   using: 'composite'
@@ -76,7 +79,10 @@ runs:
       shell: bash
 
     - name: Build VSIX
-      run: npm run package
+      run: |
+        npx gulp clean
+        npx gulp prePublishBundle
+        npx vsce package --target ${{ inputs.vsix_target }} package --out ${{ inputs.vsix_name }}
       shell: bash
 
     - name: Rename VSIX
