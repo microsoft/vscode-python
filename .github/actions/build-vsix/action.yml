@@ -50,6 +50,10 @@ runs:
       run: nox --session install_python_libs
       shell: bash
 
+    - name: Add Rustup target
+      run: rustup target add ${{ inputs.cargo_target }}
+      shell: bash
+
     - name: Build Native Binaries
       run: nox --session native_build
       shell: bash
