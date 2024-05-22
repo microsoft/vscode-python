@@ -6,6 +6,7 @@ import pathlib
 import nox
 import shutil
 import sys
+import sysconfig
 
 
 @nox.session()
@@ -48,7 +49,17 @@ def install_python_libs(session: nox.Session):
 @nox.session()
 def native_build(session: nox.Session):
     with session.cd("./native_locator"):
+        if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
+            pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
+
+        if not pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").exists():
+            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text(
+                "*\n", encoding="utf-8"
+            )
+
+        ext = sysconfig.get_config_var("EXE") or ""
         target = os.environ.get("CARGO_TARGET", None)
+
         session.run("cargo", "fetch", external=True)
         if target:
             session.run(
@@ -62,6 +73,9 @@ def native_build(session: nox.Session):
                 "python-finder",
                 external=True,
             )
+            source = f"./target/{target}/release/python-finder{ext}"
+            dest = f"./bin/python-finder{ext}"
+            shutil.copy(source, dest)
         else:
             session.run(
                 "cargo",
@@ -72,24 +86,10 @@ def native_build(session: nox.Session):
                 "python-finder",
                 external=True,
             )
-        if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
-            pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
 
-        if not pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").exists():
-            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text(
-                "*\n", encoding="utf-8"
-            )
-
-        if sys.platform == "win32":
-            shutil.copy(
-                "./target/release/python-finder.exe",
-                "./bin/python-finder.exe",
-            )
-        else:
-            shutil.copy(
-                "./target/release/python-finder",
-                "./bin/python-finder",
-            )
+            source = f"./target/release/python-finder{ext}"
+            dest = f"./bin/python-finder{ext}"
+            shutil.copy(source, dest)
 
 
 @nox.session()
