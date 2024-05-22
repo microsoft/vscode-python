@@ -67,6 +67,7 @@ jobs:
           node_version: ${{ env.NODE_VERSION}}
           vsix_name: "ms-python-insiders-${{ matrix.code-target }}.vsix"
           artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
+          cargo_target: ${{ matrix.target }}
 
   lint:
     name: Lint

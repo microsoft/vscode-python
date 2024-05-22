@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import pathlib
 import nox
 import shutil
@@ -47,16 +48,30 @@ def install_python_libs(session: nox.Session):
 @nox.session()
 def native_build(session: nox.Session):
     with session.cd("./native_locator"):
+        target = os.environ.get("CARGO_TARGET", None)
         session.run("cargo", "fetch", external=True)
-        session.run(
-            "cargo",
-            "build",
-            "--frozen",
-            "--release",
-            "--package",
-            "python-finder",
-            external=True,
-        )
+        if target:
+            session.run(
+                "cargo",
+                "build",
+                "--frozen",
+                "--release",
+                "--target",
+                target,
+                "--package",
+                "python-finder",
+                external=True,
+            )
+        else:
+            session.run(
+                "cargo",
+                "build",
+                "--frozen",
+                "--release",
+                "--package",
+                "python-finder",
+                external=True,
+            )
         if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
             pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
 

@@ -11,6 +11,9 @@ inputs:
   artifact_name:
     description: 'Name to give the artifact containing the VSIX'
     required: true
+  cargo_target:
+    description: 'Cargo build target for the native build'
+    required: true
 
 runs:
   using: 'composite'
@@ -50,6 +53,8 @@ runs:
     - name: Build Native Binaries
       run: nox --session native_build
       shell: bash
+      env:
+        CARGO_TARGET: ${{ inputs.cargo_target }}
 
     - name: Run npm ci
       run: npm ci --prefer-offline
