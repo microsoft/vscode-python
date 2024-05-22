@@ -67,13 +67,6 @@ runs:
       run: npm ci --prefer-offline
       shell: bash
 
-    # Use the GITHUB_RUN_ID environment variable to update the build number.
-    # GITHUB_RUN_ID is a unique number for each run within a repository.
-    # This number does not change if you re-run the workflow run.
-    - name: Update extension build number
-      run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
-      shell: bash
-
     - name: Update optional extension dependencies
       run: npm run addExtensionPackDependencies
       shell: bash
@@ -82,7 +75,7 @@ runs:
       run: |
         npx gulp clean
         npx gulp prePublishBundle
-        npx vsce package --target ${{ inputs.vsix_target }} package --out ms-python-insiders.vsix
+        npx vsce package --target ${{ inputs.vsix_target }} package --out ms-python-insiders.vsix --pre-release
       shell: bash
 
     - name: Rename VSIX
