@@ -28,35 +28,31 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            code-target: win32-x64
+            vsix-target: win32-x64
           - os: windows-latest
             target: aarch64-pc-windows-msvc
-            code-target: win32-arm64
+            vsix-target: win32-arm64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            code-target: linux-x64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            code-target: linux-arm64
-            arch: aarch64
-          - os: ubuntu-latest
-            target: arm-unknown-linux-gnueabihf
-            code-target: linux-armhf
-            arch: armv7
+            vsix-target: linux-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-gnu
+          #     vsix-target: linux-arm64
+          #   - os: ubuntu-latest
+          #     target: arm-unknown-linux-gnueabihf
+          #     vsix-target: linux-armhf
           - os: macos-latest
             target: x86_64-apple-darwin
-            code-target: darwin-x64
+            vsix-target: darwin-x64
           - os: macos-14
             target: aarch64-apple-darwin
-            code-target: darwin-arm64
+            vsix-target: darwin-arm64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
-            code-target: alpine-x64
-            arch: x86_64
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            code-target: alpine-arm64
-            arch: aarch64
+            vsix-target: alpine-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-musl
+          #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -65,8 +61,8 @@ jobs:
         uses: ./.github/actions/build-vsix
         with:
           node_version: ${{ env.NODE_VERSION}}
-          vsix_name: 'ms-python-insiders-${{ matrix.code-target }}.vsix'
-          artifact_name: ${{ env.ARTIFACT_NAME_VSIX }}
+          vsix_name: 'ms-python-insiders-${{ matrix.vsix-target }}.vsix'
+          artifact_name: '${{ env.ARTIFACT_NAME_VSIX }}-${{ matrix.vsix-target }}'
           cargo_target: ${{ matrix.target }}
 
   lint:
