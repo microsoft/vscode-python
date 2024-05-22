@@ -16,7 +16,9 @@ import {
     NotebookDocument,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
+import { IActiveResourceService } from '../common/application/types';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
+import { IConfigurationService } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
@@ -47,12 +49,28 @@ async function getSelectedTextToExecute(textEditor: TextEditor): Promise<string 
     return code;
 }
 
+// Will only be called when user has experiment enabled.
 export async function registerReplCommands(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
+    configurationService: IConfigurationService,
+    activeResourceService: IActiveResourceService,
 ): Promise<void> {
     disposables.push(
         commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
+            let nativeREPLSetting = false;
+
+            // Get REPL setting value from user settings
+            if (configurationService) {
+                const pythonSettings = configurationService.getSettings(activeResourceService.getActiveResource());
+                nativeREPLSetting = pythonSettings.REPL.sendToNativeREPL;
+                // If nativeREPLSetting is false(Send to Terminal REPL), then fall back to running in Terminal REPL
+                if (!nativeREPLSetting) {
+                    await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
+                    return;
+                }
+            }
+
             const interpreter = await interpreterService.getActiveInterpreter(uri);
             if (!interpreter) {
                 commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);

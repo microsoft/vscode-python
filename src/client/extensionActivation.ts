@@ -9,7 +9,12 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
+import {
+    IActiveResourceService,
+    IApplicationEnvironment,
+    ICommandManager,
+    IWorkspaceService,
+} from './common/application/types';
 import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -111,12 +116,20 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
 
     // Register native REPL context menu when in experiment
     const experimentService = ext.legacyIOC.serviceContainer.get<IExperimentService>(IExperimentService);
-    commands.executeCommand('setContext', 'pythonRunREPL', false);
+    const configurationService = ext.legacyIOC.serviceContainer.get<IConfigurationService>(IConfigurationService);
+    const activeResourceService = ext.legacyIOC.serviceContainer.get<IActiveResourceService>(IActiveResourceService);
+    // commands.executeCommand('setContext', 'pythonRunREPL', false);
     if (experimentService) {
         const replExperimentValue = experimentService.inExperimentSync(EnableRunREPL.experiment);
+        commands.executeCommand('setContext', 'pythonRunREPL', replExperimentValue);
+        // If user is in pythonRunREPL experiment, we enable the sendToNativeREPL setting to True by default.
         if (replExperimentValue) {
-            registerReplCommands(ext.disposables, interpreterService);
-            commands.executeCommand('setContext', 'pythonRunREPL', true);
+            configurationService.updateSetting(
+                'REPL.sendToNativeREPL',
+                true,
+                activeResourceService.getActiveResource(),
+            );
+            registerReplCommands(ext.disposables, interpreterService, configurationService, activeResourceService);
             registerReplExecuteOnEnter(ext.disposables, interpreterService);
         }
     }

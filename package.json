@@ -633,6 +633,12 @@
                     "scope": "resource",
                     "type": "boolean"
                 },
+                "python.REPL.sendToNativeREPL": {
+                    "default": false,
+                    "description": "%python.sendToNativeREPL.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
                     "description": "%python.testing.autoTestDiscoverOnSaveEnabled.description%",
@@ -1113,7 +1119,12 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+                "when": "!pythonRunREPL && editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+            },
+            {
+                "command": "python.execInREPL",
+                "key": "shift+enter",
+                "when": "pythonRunREPL"
             },
             {
                 "command": "python.execInREPLEnter",
