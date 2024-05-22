@@ -82,7 +82,7 @@ runs:
       run: |
         npx gulp clean
         npx gulp prePublishBundle
-        npx vsce package --target ${{ inputs.vsix_target }} package --out ${{ inputs.vsix_name }}
+        npx vsce package --target ${{ inputs.vsix_target }} package --out ms-python-insiders.vsix
       shell: bash
 
     - name: Rename VSIX
