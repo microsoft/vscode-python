@@ -82,12 +82,8 @@ export async function registerReplCommands(
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
 
-                // We want to keep notebookEditor, whenever we want to run.
-                // Find interactive window, or open it.
-                let interactiveWindowObject;
-
                 if (!notebookEditor) {
-                    interactiveWindowObject = (await commands.executeCommand(
+                    const interactiveWindowObject = (await commands.executeCommand(
                         'interactive.open',
                         {
                             preserveFocus: true,
