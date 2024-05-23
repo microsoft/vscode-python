@@ -1118,12 +1118,17 @@
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "config.python.REPL.sendToNativeREPL"
+                "when": "config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'"
+            },
+            {
+                "command": "python.execREPLShiftEnter",
+                "key": "shift+enter",
+                "when": "activeEditor == 'workbench.editor.interactive' && config.interactiveWindow.executeWithShiftEnter"
             },
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "activeEditor == 'workbench.editor.interactive'"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
             },
             {
                 "command": "python.refreshTensorBoard",
