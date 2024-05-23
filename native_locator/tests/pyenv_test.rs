@@ -30,6 +30,7 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
     use crate::common::{
         assert_messages, create_test_environment, join_test_paths, test_file_path,
     };
+    use python_finder::messaging::{EnvManager, EnvManagerType};
     use python_finder::pyenv;
     use python_finder::{conda::Conda, locator::Locator};
     use serde_json::json;
@@ -57,14 +58,17 @@ fn does_not_find_any_pyenv_envs_even_with_pyenv_installed() {
     let mut locator = pyenv::PyEnv::with(&known, &mut conda);
     let result = locator.find().unwrap();
 
-    let managers = result.managers;
+    let managers = result.clone().managers;
     assert_eq!(managers.len(), 1);
 
-    let expected_json = json!({"executablePath":pyenv_exe,"version":null, "tool": "pyenv"});
-    assert_messages(
-        &[expected_json],
-        &managers.iter().map(|e| json!(e)).collect::<Vec<_>>(),
-    )
+    let expected_manager = EnvManager {
+        executable_path: pyenv_exe.clone(),
+        version: None,
+        tool: EnvManagerType::Pyenv,
+        company: None,
+        company_display_name: None,
+    };
+    assert_eq!(json!(expected_manager), json!(result.managers[0]));
 }
 
 #[test]
@@ -103,6 +107,8 @@ fn find_pyenv_envs() {
         executable_path: pyenv_exe.clone(),
         version: None,
         tool: EnvManagerType::Pyenv,
+        company: None,
+        company_display_name: None,
     };
     assert_eq!(json!(expected_manager), json!(result.managers[0]));
 
@@ -128,7 +134,8 @@ fn find_pyenv_envs() {
             ".pyenv/versions/3.9.9"
         ])),
         env_manager: Some(expected_manager.clone()),
-        arch: None
+        arch: None,
+        ..Default::default()
     });
     let expected_virtual_env = PythonEnvironment {
         display_name: None,
@@ -153,6 +160,7 @@ fn find_pyenv_envs() {
         ])),
         env_manager: Some(expected_manager.clone()),
         arch: None,
+        ..Default::default()
     };
     let expected_3_12_1 = PythonEnvironment {
         display_name: None,
@@ -177,6 +185,7 @@ fn find_pyenv_envs() {
         ])),
         env_manager: Some(expected_manager.clone()),
         arch: None,
+        ..Default::default()
     };
     let expected_3_13_dev = PythonEnvironment {
         display_name: None,
@@ -201,6 +210,7 @@ fn find_pyenv_envs() {
         ])),
         env_manager: Some(expected_manager.clone()),
         arch: None,
+        ..Default::default()
     };
     let expected_3_12_1a3 = PythonEnvironment {
         display_name: None,
@@ -225,6 +235,7 @@ fn find_pyenv_envs() {
         ])),
         env_manager: Some(expected_manager.clone()),
         arch: None,
+        ..Default::default()
     };
 
     assert_messages(

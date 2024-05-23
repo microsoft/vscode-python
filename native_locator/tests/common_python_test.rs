@@ -42,6 +42,7 @@ fn find_python_in_path_this() {
         python_run_command: Some(vec![unix_python_exe.clone().to_str().unwrap().to_string()]),
         env_path: Some(user_home.clone()),
         arch: None,
+        ..Default::default()
     };
     assert_messages(
         &[json!(env)],

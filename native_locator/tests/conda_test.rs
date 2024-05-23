@@ -136,6 +136,8 @@ fn find_conda_exe_and_empty_envs() {
         executable_path: conda_exe.clone(),
         version: Some("4.0.2".to_string()),
         tool: EnvManagerType::Conda,
+        company: None,
+        company_display_name: None,
     };
     assert_eq!(managers.len(), 1);
     assert_eq!(json!(expected_conda_manager), json!(managers[0]));
@@ -177,12 +179,14 @@ fn find_conda_from_custom_install_location() {
         executable_path: conda_exe.clone(),
         version: Some("4.0.2".to_string()),
         tool: EnvManagerType::Conda,
+        company: None,
+        company_display_name: None,
     };
     assert_eq!(json!(expected_conda_manager), json!(result.managers[0]));
 
     let expected_conda_env = PythonEnvironment {
         display_name: None,
-        name: Some("base".to_string()),
+        name: None,
         project_path: None,
         python_executable_path: Some(conda_dir.clone().join("bin").join("python")),
         category: python_finder::messaging::PythonEnvironmentCategory::Conda,
@@ -197,6 +201,7 @@ fn find_conda_from_custom_install_location() {
             "python".to_string(),
         ]),
         arch: None,
+        ..Default::default()
     };
     assert_eq!(json!(expected_conda_env), json!(result.environments[0]));
 
@@ -245,6 +250,8 @@ fn finds_two_conda_envs_from_known_location() {
         executable_path: conda_exe.clone(),
         version: Some("4.0.2".to_string()),
         tool: EnvManagerType::Conda,
+        company: None,
+        company_display_name: None,
     };
 
     assert_eq!(managers.len(), 1);
@@ -267,6 +274,7 @@ fn finds_two_conda_envs_from_known_location() {
             "python".to_string(),
         ]),
         arch: None,
+        ..Default::default()
     };
     let expected_conda_2 = PythonEnvironment {
         display_name: None,
@@ -285,6 +293,7 @@ fn finds_two_conda_envs_from_known_location() {
             "python".to_string(),
         ]),
         arch: None,
+        ..Default::default()
     };
     assert_messages(
         &[json!(expected_conda_1), json!(expected_conda_2)],
