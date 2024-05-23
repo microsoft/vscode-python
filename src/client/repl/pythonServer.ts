@@ -1,4 +1,3 @@
-// eslint-disable-next-line max-classes-per-file
 import * as path from 'path';
 import * as ch from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -13,7 +12,7 @@ export interface PythonServer extends Disposable {
     execute(code: string): Promise<string>;
     interrupt(): void;
     input(): void;
-    checkValidCommand(code: string): Promise<string>;
+    checkValidCommand(code: string): Promise<boolean>;
 }
 
 class PythonServerImpl implements Disposable {
@@ -61,8 +60,12 @@ class PythonServerImpl implements Disposable {
         }
     }
 
-    public async checkValidCommand(code: string): Promise<string> {
-        return this.connection.sendRequest('check_valid_command', code);
+    public async checkValidCommand(code: string): Promise<boolean> {
+        const completeCode = await this.connection.sendRequest('check_valid_command', code);
+        if (completeCode === 'True') {
+            return new Promise((resolve) => resolve(true));
+        }
+        return new Promise((resolve) => resolve(false));
     }
 
     public dispose(): void {

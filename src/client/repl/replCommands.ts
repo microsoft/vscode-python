@@ -133,7 +133,11 @@ export async function registerReplCommands(
     );
 }
 
-// Command for 'Enter': Conditionally call interactive.execute OR insert \n in text input box.
+/**
+ * Command triggered for 'Enter': Conditionally call interactive.execute OR insert \n in text input box.
+ * @param disposables
+ * @param interpreterService
+ */
 export async function registerReplExecuteOnEnter(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
@@ -160,10 +164,7 @@ export async function registerReplExecuteOnEnter(
 
             // Check if userTextInput is a complete Python command
             if (userTextInput) {
-                const stringBoolean = await pythonServer.checkValidCommand(userTextInput);
-                if (stringBoolean === 'True') {
-                    completeCode = true;
-                }
+                completeCode = await pythonServer.checkValidCommand(userTextInput);
             }
             const editor = window.activeTextEditor;
             // Execute right away when complete code and Not multi-line
