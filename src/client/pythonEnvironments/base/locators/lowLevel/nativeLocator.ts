@@ -19,6 +19,8 @@ import {
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { Architecture } from '../../../../common/utils/platform';
+import { sendTelemetryEvent } from '../../../../telemetry';
+import { EventName } from '../../../../telemetry/constants';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -107,6 +109,7 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         const disposable = new Disposable(() => disposeAll(disposables));
         this.disposables.push(disposable);
         promise.finally(() => disposable.dispose());
+        let environmentsWithoutPython = 0;
         disposables.push(
             this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
                 // TODO: What if executable is undefined?
@@ -128,6 +131,8 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
                         ctime: data.creationTime,
                         mtime: data.modifiedTime,
                     });
+                } else {
+                    environmentsWithoutPython += 1;
                 }
             }),
             this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
@@ -154,6 +159,7 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
                 `Finished searching for Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
             );
             yield* envs;
+            sendTelemetry(envs, environmentsWithoutPython, stopWatch);
             traceInfo(
                 `Finished yielding Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
             );
@@ -161,4 +167,43 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
 
         return iterator();
     }
+}
+
+function sendTelemetry(envs: BasicEnvInfo[], environmentsWithoutPython: number, stopWatch: StopWatch) {
+    const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
+    const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
+    const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
+    const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
+    const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
+    const otherGlobalEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherGlobal).length;
+    const otherVirtualEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherVirtual).length;
+    const pipEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pipenv).length;
+    const poetryEnvs = envs.filter((e) => e.kind === PythonEnvKind.Poetry).length;
+    const pyenvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pyenv).length;
+    const systemEnvs = envs.filter((e) => e.kind === PythonEnvKind.System).length;
+    const unknownEnvs = envs.filter((e) => e.kind === PythonEnvKind.Unknown).length;
+    const venvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Venv).length;
+    const virtualEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnv).length;
+    const virtualEnvWrapperEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnvWrapper).length;
+
+    // Intent is to capture time taken for discovery of all envs to complete the first time.
+    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+        interpreters: envs.length,
+        environmentsWithoutPython,
+        activeStateEnvs,
+        condaEnvs,
+        customEnvs,
+        hatchEnvs,
+        microsoftStoreEnvs,
+        otherGlobalEnvs,
+        otherVirtualEnvs,
+        pipEnvEnvs,
+        poetryEnvs,
+        pyenvEnvs,
+        systemEnvs,
+        unknownEnvs,
+        venvEnvs,
+        virtualEnvEnvs,
+        virtualEnvWrapperEnvs,
+    });
 }

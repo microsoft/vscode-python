@@ -9,7 +9,7 @@ import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { normalizePath } from '../../../common/externalDependencies';
-import { PythonEnvInfo } from '../../info';
+import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getEnvPath } from '../../info/env';
 import {
     GetRefreshEnvironmentsOptions,
@@ -54,7 +54,11 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.progressPromises.get(stage)?.promise;
     }
 
-    constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
+    constructor(
+        private readonly cache: IEnvsCollectionCache,
+        private readonly locator: IResolvingLocator,
+        private readonly usingNativeLocator: boolean,
+    ) {
         super();
         this.locator.onChanged((event) => {
             const query: PythonLocatorQuery | undefined = event.providerId
@@ -258,12 +262,46 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private sendTelemetry(query: PythonLocatorQuery | undefined, stopWatch: StopWatch) {
         if (!query && !this.hasRefreshFinished(query)) {
+            const envs = this.cache.getAllEnvs();
+            const environmentsWithoutPython = envs.filter(
+                (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
+            ).length;
+            const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
+            const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
+            const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
+            const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
+            const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
+            const otherGlobalEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherGlobal).length;
+            const otherVirtualEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherVirtual).length;
+            const pipEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pipenv).length;
+            const poetryEnvs = envs.filter((e) => e.kind === PythonEnvKind.Poetry).length;
+            const pyenvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pyenv).length;
+            const systemEnvs = envs.filter((e) => e.kind === PythonEnvKind.System).length;
+            const unknownEnvs = envs.filter((e) => e.kind === PythonEnvKind.Unknown).length;
+            const venvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Venv).length;
+            const virtualEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnv).length;
+            const virtualEnvWrapperEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnvWrapper).length;
+
             // Intent is to capture time taken for discovery of all envs to complete the first time.
             sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                 interpreters: this.cache.getAllEnvs().length,
-                environmentsWithoutPython: this.cache
-                    .getAllEnvs()
-                    .filter((e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath').length,
+                usingNativeLocator: this.usingNativeLocator,
+                environmentsWithoutPython,
+                activeStateEnvs,
+                condaEnvs,
+                customEnvs,
+                hatchEnvs,
+                microsoftStoreEnvs,
+                otherGlobalEnvs,
+                otherVirtualEnvs,
+                pipEnvEnvs,
+                poetryEnvs,
+                pyenvEnvs,
+                systemEnvs,
+                unknownEnvs,
+                venvEnvs,
+                virtualEnvEnvs,
+                virtualEnvWrapperEnvs,
             });
         }
         this.hasRefreshFinishedForQuery.set(query, true);

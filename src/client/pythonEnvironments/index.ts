@@ -134,6 +134,7 @@ async function createLocator(
         await createCollectionCache(ext),
         // This is shared.
         resolvingLocator,
+        useNativeLocator(),
     );
     return caching;
 }
