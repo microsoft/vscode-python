@@ -193,10 +193,12 @@ export async function registerReplExecuteOnEnter(
     );
 }
 
-export async function registerReplExecuteOnShiftEnter(): Promise<void> {
-    commands.registerCommand(Commands.Exec_In_REPL_Shift_Enter, async () => {
-        await commands.executeCommand(Commands.Exec_In_REPL_Enter);
-    });
+export async function registerReplExecuteOnShiftEnter(disposables: Disposable[]): Promise<void> {
+    disposables.push(
+        commands.registerCommand(Commands.Exec_In_REPL_Shift_Enter, async () => {
+            await commands.executeCommand(Commands.Exec_In_REPL_Enter);
+        }),
+    );
 }
 
 function isMultiLineText(textEditor: TextEditor | undefined): boolean {

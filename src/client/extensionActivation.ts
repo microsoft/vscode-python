@@ -109,7 +109,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
 
     registerReplCommands(ext.disposables, interpreterService);
     registerReplExecuteOnEnter(ext.disposables, interpreterService);
-    registerReplExecuteOnShiftEnter();
+    registerReplExecuteOnShiftEnter(ext.disposables);
 }
 
 /// //////////////////////////
