@@ -256,8 +256,11 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         });
     }
 
-    private static getInterpreterInfo(env: PythonEnvInfo, allowPartialVersions?: boolean): InterpreterInformation | undefined {
-        if (allowPartialVersions ){
+    private static getInterpreterInfo(
+        env: PythonEnvInfo,
+        allowPartialVersions?: boolean,
+    ): InterpreterInformation | undefined {
+        if (allowPartialVersions) {
             if (env.version.major > -1 && env.version.minor > -1 && env.location) {
                 return {
                     arch: env.arch,

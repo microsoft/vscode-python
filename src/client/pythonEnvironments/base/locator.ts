@@ -163,9 +163,9 @@ export type BasicEnvInfo = {
      */
     pythonRunCommand?: string[];
     identifiedUsingNativeLocator?: boolean;
-    arch?: Architecture,
-    ctime?: number,
-    mtime?: number,
+    arch?: Architecture;
+    ctime?: number;
+    mtime?: number;
 };
 
 /**

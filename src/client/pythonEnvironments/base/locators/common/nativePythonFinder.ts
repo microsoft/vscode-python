@@ -28,10 +28,10 @@ export interface NativeEnvInfo {
      * Path to the project directory when dealing with pipenv virtual environments.
      */
     projectPath?: string;
-    arch?: 'X64' |'X86',
-    symlinks?: string[],
-    creationTime?: number,
-    modifiedTime?: number,
+    arch?: 'X64' | 'X86';
+    symlinks?: string[];
+    creationTime?: number;
+    modifiedTime?: number;
 }
 
 export interface NativeEnvManagerInfo {

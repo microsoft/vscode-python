@@ -64,7 +64,7 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         await updateEnvUsingRegistry(resolvedEnv);
     }
     setEnvDisplayString(resolvedEnv);
-    if (env.arch && !resolvedEnv.arch){
+    if (env.arch && !resolvedEnv.arch) {
         resolvedEnv.arch = env.arch;
     }
     if (env.ctime && env.mtime) {
