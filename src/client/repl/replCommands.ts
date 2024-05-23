@@ -80,7 +80,6 @@ export async function registerReplCommands(
                     notebookController = createReplController(interpreterPath, disposables);
                 }
                 const activeEditor = window.activeTextEditor as TextEditor;
-
                 const code = await getSelectedTextToExecute(activeEditor);
 
                 // We want to keep notebookEditor, whenever we want to run.
@@ -112,24 +111,32 @@ export async function registerReplCommands(
                         extension: PVSC_EXTENSION_ID,
                     });
 
-                    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
                     const { cellCount } = notebookDocument;
-                    // Add new cell to interactive window document
-                    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
-                    const workspaceEdit = new WorkspaceEdit();
-                    workspaceEdit.set(notebookDocument.uri, [notebookEdit]);
-                    await workspace.applyEdit(workspaceEdit);
-
+                    await addCellToNotebook(code as string);
                     // Execute the cell
                     commands.executeCommand('notebook.cell.execute', {
                         ranges: [{ start: cellCount, end: cellCount + 1 }],
-                        // document: ourResource,
                         document: notebookDocument.uri,
                     });
                 }
             }
         }),
     );
+}
+/**
+ * Function that adds cell to notebook.
+ * This function will only get called when notebook document is defined.
+ * @param code
+ *
+ */
+async function addCellToNotebook(code: string): Promise<void> {
+    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
+    const { cellCount } = notebookDocument!;
+    // Add new cell to interactive window document
+    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
+    const workspaceEdit = new WorkspaceEdit();
+    workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
+    await workspace.applyEdit(workspaceEdit);
 }
 
 /**
