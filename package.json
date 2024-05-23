@@ -630,7 +630,7 @@
                 },
                 "python.REPL.sendToNativeREPL": {
                     "default": false,
-                    "description": "%python.sendToNativeREPL.description%",
+                    "description": "%python.REPL.sendToNativeREPL.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
