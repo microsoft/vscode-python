@@ -523,7 +523,7 @@ export namespace CreateEnv {
         export const createEnvironment = l10n.t('Create');
 
         export const globalPipInstallTriggerMessage = l10n.t(
-            'You may have installed Python packages into your global environment, which can cause conflicts between package versions. Would you like to create a virtual environment with these packages installed to isolate your dependencies?',
+            'You may have installed Python packages into your global environment, which can cause conflicts between package versions. Would you like to create a virtual environment with these packages to isolate your dependencies?',
         );
     }
 }
