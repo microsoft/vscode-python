@@ -3,25 +3,19 @@
 
 'use strict';
 
-import { DebugConfigurationProvider, debug, languages, window, commands } from 'vscode';
+import { DebugConfigurationProvider, debug, languages, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import {
-    IActiveResourceService,
-    IApplicationEnvironment,
-    ICommandManager,
-    IWorkspaceService,
-} from './common/application/types';
+import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
 import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
-    IExperimentService,
     IExtensions,
     IInterpreterPathService,
     ILogOutputChannel,
@@ -59,7 +53,6 @@ import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter } from './repl/replCommands';
-import { EnableRunREPL } from './common/experiments/groups';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -114,25 +107,8 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         pathUtils,
     );
 
-    // Register native REPL context menu when in experiment
-    const experimentService = ext.legacyIOC.serviceContainer.get<IExperimentService>(IExperimentService);
-    const configurationService = ext.legacyIOC.serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const activeResourceService = ext.legacyIOC.serviceContainer.get<IActiveResourceService>(IActiveResourceService);
-    // commands.executeCommand('setContext', 'pythonRunREPL', false);
-    if (experimentService) {
-        const replExperimentValue = experimentService.inExperimentSync(EnableRunREPL.experiment);
-        commands.executeCommand('setContext', 'pythonRunREPL', replExperimentValue);
-        // If user is in pythonRunREPL experiment, we enable the sendToNativeREPL setting to True by default.
-        if (replExperimentValue) {
-            configurationService.updateSetting(
-                'REPL.sendToNativeREPL',
-                true,
-                activeResourceService.getActiveResource(),
-            );
-            registerReplCommands(ext.disposables, interpreterService, configurationService, activeResourceService);
-            registerReplExecuteOnEnter(ext.disposables, interpreterService);
-        }
-    }
+    registerReplCommands(ext.disposables, interpreterService);
+    registerReplExecuteOnEnter(ext.disposables, interpreterService);
 }
 
 /// //////////////////////////

@@ -21,6 +21,8 @@ import {
     TerminalShellExecutionStartEvent,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
+import { Resource } from '../types';
+import { getWorkspaceFolders } from './workspaceApis';
 
 export function showTextDocument(uri: Uri): Thenable<TextEditor> {
     return window.showTextDocument(uri);
@@ -237,4 +239,13 @@ export function createStepForwardEndNode<T>(deferred?: Deferred<T>, result?: T):
         },
         undefined,
     );
+}
+
+export function getActiveResource(): Resource {
+    const editor = window.activeTextEditor;
+    if (editor && !editor.document.isUntitled) {
+        return editor.document.uri;
+    }
+    const workspaces = getWorkspaceFolders();
+    return Array.isArray(workspaces) && workspaces.length > 0 ? workspaces[0].uri : undefined;
 }

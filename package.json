@@ -442,8 +442,7 @@
                             "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
                             "pythonREPLSmartSend",
-                            "pythonRecommendTensorboardExt",
-                            "pythonRunREPL"
+                            "pythonRecommendTensorboardExt"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -453,8 +452,7 @@
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
                             "%python.experiments.pythonREPLSmartSend.description%",
-                            "%python.experiments.pythonRecommendTensorboardExt.description%",
-                            "%python.experiments.pythonRunREPL.description%"
+                            "%python.experiments.pythonRecommendTensorboardExt.description%"
                         ]
                     },
                     "scope": "window",
@@ -472,8 +470,7 @@
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
-                            "pythonREPLSmartSend",
-                            "pythonRunREPL"
+                            "pythonREPLSmartSend"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -482,8 +479,7 @@
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%",
-                            "%python.experiments.pythonRunREPL.description%"
+                            "%python.experiments.pythonREPLSmartSend.description%"
                         ]
                     },
                     "scope": "window",
@@ -632,7 +628,10 @@
                     "default": false,
                     "description": "%python.REPL.sendToNativeREPL.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
@@ -1114,12 +1113,12 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "!pythonRunREPL && editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+                "when": "!config.python.REPL.sendToNativeREPL && editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
             },
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "pythonRunREPL"
+                "when": "config.python.REPL.sendToNativeREPL"
             },
             {
                 "command": "python.execInREPLEnter",
@@ -1388,7 +1387,7 @@
                 {
                     "command": "python.execInREPL",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && pythonRunREPL && config.python.REPL.sendToNativeREPL"
+                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && config.python.REPL.sendToNativeREPL"
                 }
             ],
             "editor/title": [
