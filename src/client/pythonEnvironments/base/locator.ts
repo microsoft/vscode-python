@@ -12,6 +12,7 @@ import {
     PythonEnvsChangedEvent,
     PythonEnvsWatcher,
 } from './watcher';
+import type { Architecture } from '../../common/utils/platform';
 
 /**
  * A single update to a previously provided Python env object.
@@ -162,6 +163,9 @@ export type BasicEnvInfo = {
      */
     pythonRunCommand?: string[];
     identifiedUsingNativeLocator?: boolean;
+    arch?: Architecture,
+    ctime?: number,
+    mtime?: number,
 };
 
 /**

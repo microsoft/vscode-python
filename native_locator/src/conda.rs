@@ -6,6 +6,7 @@ use crate::known::Environment;
 use crate::locator::Locator;
 use crate::locator::LocatorResult;
 use crate::messaging;
+use crate::messaging::Architecture;
 use crate::messaging::EnvManager;
 use crate::messaging::EnvManagerType;
 use crate::messaging::PythonEnvironment;
@@ -14,9 +15,11 @@ use crate::utils::{find_python_binary_path, get_environment_key, get_environment
 use log::trace;
 use log::warn;
 use regex::Regex;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::env;
+use std::fs::read_to_string;
 use std::path::{Path, PathBuf};
 
 /// Specifically returns the file names that are valid for 'conda' on windows
@@ -57,6 +60,13 @@ struct CondaPackage {
     #[allow(dead_code)]
     path: PathBuf,
     version: String,
+    arch: Option<Architecture>,
+}
+
+#[derive(Deserialize, Debug)]
+struct CondaMetaPackageStructure {
+    channel: Option<String>,
+    // version: Option<String>,
 }
 
 /// Get the path to the json file along with the version of a package in the conda environment from the 'conda-meta' directory.
@@ -72,16 +82,38 @@ fn get_conda_package_json_path(path: &Path, package: &str) -> Option<CondaPackag
             let path = entry.path();
             let file_name = path.file_name()?.to_string_lossy();
             if file_name.starts_with(&package_name) && file_name.ends_with(".json") {
-                match regex.clone().ok().unwrap().captures(&file_name)?.get(1) {
-                    Some(version) => Some(CondaPackage {
+                if let Some(version) = regex.clone().ok().unwrap().captures(&file_name)?.get(1) {
+                    let mut arch: Option<Architecture> = None;
+                    // Sample contents
+                    // {
+                    //   "build": "h966fe2a_2",
+                    //   "build_number": 2,
+                    //   "channel": "https://repo.anaconda.com/pkgs/main/win-64",
+                    //   "constrains": [],
+                    // }
+                    // 32bit channel is https://repo.anaconda.com/pkgs/main/win-32/
+                    // 64bit channel is "channel": "https://repo.anaconda.com/pkgs/main/osx-arm64",
+                    if let Some(contents) = read_to_string(&path).ok() {
+                        if let Some(js) =
+                            serde_json::from_str::<CondaMetaPackageStructure>(&contents).ok()
+                        {
+                            if let Some(channel) = js.channel {
+                                if channel.ends_with("64") {
+                                    arch = Some(Architecture::X64);
+                                } else if channel.ends_with("32") {
+                                    arch = Some(Architecture::X86);
+                                }
+                            }
+                        }
+                    }
+                    return Some(CondaPackage {
                         path: path.clone(),
                         version: version.as_str().to_string(),
-                    }),
-                    None => None,
+                        arch,
+                    });
                 }
-            } else {
-                None
             }
+            None
         })
 }
 
@@ -202,6 +234,8 @@ fn get_conda_manager(path: &PathBuf) -> Option<EnvManager> {
         executable_path: conda_exe,
         version: Some(conda_pkg.version),
         tool: EnvManagerType::Conda,
+        company: None,
+        company_display_name: None,
     })
 }
 
@@ -213,6 +247,7 @@ struct CondaEnvironment {
     python_executable_path: Option<PathBuf>,
     version: Option<String>,
     conda_install_folder: Option<String>,
+    arch: Option<Architecture>,
 }
 fn get_conda_environment_info(env_path: &PathBuf, named: bool) -> Option<CondaEnvironment> {
     let metadata = env_path.metadata();
@@ -229,6 +264,7 @@ fn get_conda_environment_info(env_path: &PathBuf, named: bool) -> Option<CondaEn
                         python_executable_path: Some(python_binary),
                         version: Some(package_info.version),
                         conda_install_folder,
+                        arch: package_info.arch,
                     });
                 } else {
                     return Some(CondaEnvironment {
@@ -238,6 +274,7 @@ fn get_conda_environment_info(env_path: &PathBuf, named: bool) -> Option<CondaEn
                         python_executable_path: Some(python_binary),
                         version: None,
                         conda_install_folder,
+                        arch: None,
                     });
                 }
             } else {
@@ -248,6 +285,7 @@ fn get_conda_environment_info(env_path: &PathBuf, named: bool) -> Option<CondaEn
                     python_executable_path: None,
                     version: None,
                     conda_install_folder,
+                    arch: None,
                 });
             }
         }
@@ -631,11 +669,17 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
     if let Some(package_info) = get_conda_package_json_path(&path, "python") {
         let conda_exe = manager.executable_path.to_str().unwrap().to_string();
         return Some(PythonEnvironment {
-            display_name: None,
-            name: Some("base".to_string()),
+            // Do not set the name to `base`
+            // Ideally we would like to see this idetnfieid as a base env.
+            // However if user has 2 conda installations, then the second base env
+            // will be activated in python extension using first conda executable and -n base,
+            // I.e. base env of the first install will be activated instead of this.
+            // Hence lets always just give the path.
+            // name: Some("base".to_string()),
             category: messaging::PythonEnvironmentCategory::Conda,
             python_executable_path: Some(python_exe),
             version: Some(package_info.version),
+            arch: package_info.arch,
             env_path: Some(path.clone()),
             env_manager: Some(manager.clone()),
             python_run_command: Some(vec![
@@ -645,8 +689,7 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
                 path.to_str().unwrap().to_string(),
                 "python".to_string(),
             ]),
-            project_path: None,
-            arch: None,
+            ..Default::default()
         });
     }
     None
@@ -660,78 +703,82 @@ fn get_conda_environments_in_specified_install_path(
     let mut environments: Vec<PythonEnvironment> = vec![];
     let mut detected_envs: HashSet<String> = HashSet::new();
     let mut detected_managers: HashSet<String> = HashSet::new();
-    if conda_install_folder.is_dir() && conda_install_folder.exists() {
-        if let Some(manager) = get_conda_manager(&conda_install_folder) {
-            // 1. Base environment.
-            if let Some(env) = get_root_python_environment(&conda_install_folder, &manager) {
-                if let Some(env_path) = env.clone().env_path {
-                    possible_conda_envs.remove(&env_path);
-                    let key = env_path.to_string_lossy().to_string();
-                    if !detected_envs.contains(&key) {
-                        detected_envs.insert(key);
-                        environments.push(env);
-                    }
+    if !conda_install_folder.is_dir() || !conda_install_folder.exists() {
+        return None;
+    }
+
+    if let Some(manager) = get_conda_manager(&conda_install_folder) {
+        // 1. Base environment.
+        if let Some(env) = get_root_python_environment(&conda_install_folder, &manager) {
+            if let Some(env_path) = env.clone().env_path {
+                possible_conda_envs.remove(&env_path);
+                let key = env_path.to_string_lossy().to_string();
+                if !detected_envs.contains(&key) {
+                    detected_envs.insert(key);
+                    environments.push(env);
                 }
             }
+        }
 
-            // 2. All environments in the `<conda install folder>/envs` folder
-            let mut envs: Vec<CondaEnvironment> = vec![];
-            if let Some(environments) =
-                get_environments_from_envs_folder_in_conda_directory(conda_install_folder)
-            {
-                environments.iter().for_each(|env| {
-                    possible_conda_envs.remove(&env.env_path);
-                    envs.push(env.clone());
-                });
-            }
-
-            // 3. All environments in the environments.txt and other locations (such as `conda config --show envs_dirs`)
-            // Only include those environments that were created by the specific conda installation
-            // Ignore environments that are in the env sub directory of the conda folder, as those would have been
-            // tracked elsewhere, we're only interested in conda envs located in other parts of the file system created using the -p flag.
-            // E.g conda_install_folder is `<home>/<conda install folder>`
-            // Then all folders such as `<home>/<conda install folder>/envs/env1` can be ignored
-            // As these would have been discovered in previous step.
-            for (key, env) in possible_conda_envs.clone().iter() {
-                if env
-                    .env_path
-                    .to_string_lossy()
-                    .contains(conda_install_folder.to_str().unwrap())
-                {
-                    continue;
-                }
-                if was_conda_environment_created_by_specific_conda(&env, conda_install_folder) {
-                    envs.push(env.clone());
-                    possible_conda_envs.remove(key);
-                }
-            }
-
-            // Finally construct the PythonEnvironment objects
-            envs.iter().for_each(|env| {
-                let exe = env.python_executable_path.clone();
-                let env = PythonEnvironment::new(
-                    None,
-                    Some(env.name.clone()),
-                    exe.clone(),
-                    messaging::PythonEnvironmentCategory::Conda,
-                    env.version.clone(),
-                    Some(env.env_path.clone()),
-                    Some(manager.clone()),
-                    get_activation_command(env, &manager),
-                );
-                if let Some(key) = get_environment_key(&env) {
-                    if !detected_envs.contains(&key) {
-                        detected_envs.insert(key);
-                        environments.push(env);
-                    }
-                }
+        // 2. All environments in the `<conda install folder>/envs` folder
+        let mut envs: Vec<CondaEnvironment> = vec![];
+        if let Some(environments) =
+            get_environments_from_envs_folder_in_conda_directory(conda_install_folder)
+        {
+            environments.iter().for_each(|env| {
+                possible_conda_envs.remove(&env.env_path);
+                envs.push(env.clone());
             });
+        }
 
-            let key = get_environment_manager_key(&manager);
-            if !detected_managers.contains(&key) {
-                detected_managers.insert(key);
-                managers.push(manager);
+        // 3. All environments in the environments.txt and other locations (such as `conda config --show envs_dirs`)
+        // Only include those environments that were created by the specific conda installation
+        // Ignore environments that are in the env sub directory of the conda folder, as those would have been
+        // tracked elsewhere, we're only interested in conda envs located in other parts of the file system created using the -p flag.
+        // E.g conda_install_folder is `<home>/<conda install folder>`
+        // Then all folders such as `<home>/<conda install folder>/envs/env1` can be ignored
+        // As these would have been discovered in previous step.
+        for (key, env) in possible_conda_envs.clone().iter() {
+            if env
+                .env_path
+                .to_string_lossy()
+                .contains(conda_install_folder.to_str().unwrap())
+            {
+                continue;
             }
+            if was_conda_environment_created_by_specific_conda(&env, conda_install_folder) {
+                envs.push(env.clone());
+                possible_conda_envs.remove(key);
+            }
+        }
+
+        // Finally construct the PythonEnvironment objects
+        envs.iter().for_each(|env| {
+            let exe = env.python_executable_path.clone();
+            let arch = env.arch.clone();
+            let mut env = PythonEnvironment::new(
+                None,
+                Some(env.name.clone()),
+                exe.clone(),
+                messaging::PythonEnvironmentCategory::Conda,
+                env.version.clone(),
+                Some(env.env_path.clone()),
+                Some(manager.clone()),
+                get_activation_command(env, &manager),
+            );
+            env.arch = arch;
+            if let Some(key) = get_environment_key(&env) {
+                if !detected_envs.contains(&key) {
+                    detected_envs.insert(key);
+                    environments.push(env);
+                }
+            }
+        });
+
+        let key = get_environment_manager_key(&manager);
+        if !detected_managers.contains(&key) {
+            detected_managers.insert(key);
+            managers.push(manager);
         }
     }
 
@@ -973,6 +1020,9 @@ impl Conda<'_> {
 
 impl CondaLocator for Conda<'_> {
     fn find_in(&mut self, possible_conda_folder: &PathBuf) -> Option<LocatorResult> {
+        if !is_conda_install_location(possible_conda_folder) {
+            return None;
+        }
         let mut possible_conda_envs = get_known_conda_envs_from_various_locations(self.environment);
         self.filter_result(get_conda_environments_in_specified_install_path(
             possible_conda_folder,

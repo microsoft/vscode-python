@@ -170,6 +170,7 @@ pub struct Homebrew<'a> {
 }
 
 impl Homebrew<'_> {
+    #[cfg(unix)]
     pub fn with<'a>(environment: &'a impl Environment) -> Homebrew {
         Homebrew { environment }
     }

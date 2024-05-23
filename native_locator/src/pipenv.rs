@@ -44,16 +44,13 @@ impl Locator for PipEnv {
         }
         let project_path = get_pipenv_project(env)?;
         Some(PythonEnvironment {
-            display_name: None,
-            name: None,
             python_executable_path: Some(env.executable.clone()),
             category: crate::messaging::PythonEnvironmentCategory::Pipenv,
             version: env.version.clone(),
             env_path: env.path.clone(),
-            env_manager: None,
             python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
             project_path: Some(project_path),
-            arch: None,
+            ..Default::default()
         })
     }
 

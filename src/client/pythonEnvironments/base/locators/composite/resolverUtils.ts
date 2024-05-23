@@ -64,9 +64,17 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         await updateEnvUsingRegistry(resolvedEnv);
     }
     setEnvDisplayString(resolvedEnv);
-    const { ctime, mtime } = await getFileInfo(resolvedEnv.executable.filename);
-    resolvedEnv.executable.ctime = ctime;
-    resolvedEnv.executable.mtime = mtime;
+    if (env.arch && !resolvedEnv.arch){
+        resolvedEnv.arch = env.arch;
+    }
+    if (env.ctime && env.mtime) {
+        resolvedEnv.executable.ctime = env.ctime;
+        resolvedEnv.executable.mtime = env.mtime;
+    } else {
+        const { ctime, mtime } = await getFileInfo(resolvedEnv.executable.filename);
+        resolvedEnv.executable.ctime = ctime;
+        resolvedEnv.executable.mtime = mtime;
+    }
     const type = await getEnvType(resolvedEnv);
     if (type) {
         resolvedEnv.type = type;

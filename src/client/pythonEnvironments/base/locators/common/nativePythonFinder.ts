@@ -10,6 +10,7 @@ import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred } from '../../../../common/utils/async';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 const NATIVE_LOCATOR = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder.exe')
@@ -28,6 +29,10 @@ export interface NativeEnvInfo {
      * Path to the project directory when dealing with pipenv virtual environments.
      */
     projectPath?: string;
+    arch?: 'X64' |'X86',
+    symlinks?: string[],
+    creationTime?: number,
+    modifiedTime?: number,
 }
 
 export interface NativeEnvManagerInfo {
@@ -60,7 +65,7 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
         const deferred = createDeferred<void>();
         const proc = ch.spawn(NATIVE_LOCATOR, [], { env: process.env });
         const disposables: Disposable[] = [];
-
+        const stopWatch = new StopWatch();
         // jsonrpc package cannot handle messages coming through too quicly.
         // Lets handle the messages and close the stream only when
         // we have got the exit event.
@@ -115,6 +120,7 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
             connection.onClose(() => {
                 deferred.resolve();
                 disposables.forEach((d) => d.dispose());
+                traceInfo(`Completed Native Locator Search in ${stopWatch.elapsedTime}ms`);
             }),
             {
                 dispose: () => {

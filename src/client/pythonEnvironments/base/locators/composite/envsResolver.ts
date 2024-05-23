@@ -137,7 +137,7 @@ export class PythonEnvsResolver implements IResolvingLocator {
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
-        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
+        const info = await this.environmentInfoService.getMandatoryEnvironmentInfo(seen[envIndex]);
         const old = seen[envIndex];
         if (info) {
             const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
@@ -194,7 +194,9 @@ function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: Py
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
     const isEnvLackingPython =
         getEnvPath(resolvedEnv.executable.filename, resolvedEnv.location).pathType === 'envFolderPath';
-    if (isEnvLackingPython) {
+    // TODO: Shouldn't this only apply to conda, how else can we have an environment and not have Python in it?
+    // If thats the case, then this should be gated on environment.kind === PythonEnvKind.Conda
+    if (isEnvLackingPython && environment.kind !== PythonEnvKind.MicrosoftStore) {
         // Install python later into these envs might change the version, which can be confusing for users.
         // So avoid displaying any version until it is installed.
         resolvedEnv.version = getEmptyVersion();

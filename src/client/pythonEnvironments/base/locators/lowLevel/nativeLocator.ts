@@ -18,6 +18,7 @@ import {
 } from '../common/nativePythonFinder';
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { Architecture } from '../../../../common/utils/platform';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -65,9 +66,9 @@ function parseVersion(version?: string): PythonVersion | undefined {
     try {
         const [major, minor, micro] = version.split('.').map((v) => parseInt(v, 10));
         return {
-            major,
-            minor,
-            micro,
+            major: typeof major === 'number' ? major : -1,
+            minor: typeof minor === 'number' ? minor : -1,
+            micro: typeof micro === 'number' ? micro : -1,
             sysVersion: version,
         };
     } catch {
@@ -110,6 +111,7 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
             this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
                 // TODO: What if executable is undefined?
                 if (data.pythonExecutablePath) {
+                    const arch = (data.arch || '').toLowerCase();
                     envs.push({
                         kind: categoryToKind(data.category),
                         executablePath: data.pythonExecutablePath,
@@ -120,6 +122,11 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
                         pythonRunCommand: data.pythonRunCommand,
                         searchLocation: data.projectPath ? Uri.file(data.projectPath) : undefined,
                         identifiedUsingNativeLocator: true,
+                        arch:
+                            // eslint-disable-next-line no-nested-ternary
+                            arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
+                        ctime: data.creationTime,
+                        mtime: data.modifiedTime,
                     });
                 }
             }),

@@ -57,7 +57,6 @@ impl Locator for VirtualEnv {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_virtualenv(env) {
             return Some(PythonEnvironment {
-                display_name: None,
                 name: Some(
                     env.path
                         .clone()
@@ -71,10 +70,8 @@ impl Locator for VirtualEnv {
                 version: env.version.clone(),
                 category: crate::messaging::PythonEnvironmentCategory::VirtualEnv,
                 env_path: env.path.clone(),
-                env_manager: None,
-                project_path: None,
                 python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-                arch: None,
+                ..Default::default()
             });
         }
         None

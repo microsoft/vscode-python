@@ -95,7 +95,6 @@ impl Locator for VirtualEnvWrapper<'_> {
             return None;
         }
         Some(PythonEnvironment {
-            display_name: None,
             name: Some(
                 env.path
                     .clone()
@@ -109,10 +108,9 @@ impl Locator for VirtualEnvWrapper<'_> {
             version: env.version.clone(),
             category: crate::messaging::PythonEnvironmentCategory::VirtualEnvWrapper,
             env_path: env.path.clone(),
-            env_manager: None,
             project_path: get_project(env),
             python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-            arch: None,
+            ..Default::default()
         })
     }
 

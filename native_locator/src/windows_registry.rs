@@ -17,16 +17,70 @@ use std::path::PathBuf;
 use winreg::RegKey;
 
 #[cfg(windows)]
-fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<PythonEnvironment>> {
+fn get_registry_pythons_from_key(
+    hk: &RegKey,
+    conda_locator: &mut dyn CondaLocator,
+) -> Option<LocatorResult> {
+    let mut environments = vec![];
+    let mut managers: Vec<EnvManager> = vec![];
+    let python_key = hk.open_subkey("Software\\Python").ok()?;
+    for company in python_key.enum_keys().filter_map(Result::ok) {
+        if let Some(result) =
+            get_registry_pythons_from_key_for_company(&hk, &company, conda_locator)
+        {
+            managers.extend(result.managers);
+            environments.extend(result.environments);
+        }
+    }
+
+    Some(LocatorResult {
+        environments,
+        managers,
+    })
+}
+
+#[cfg(windows)]
+fn get_registry_pythons_from_key_for_company(
+    hk: &RegKey,
+    company: &str,
+    conda_locator: &mut dyn CondaLocator,
+) -> Option<LocatorResult> {
+    use crate::messaging::Architecture;
+
+    let mut environments = vec![];
+    let mut managers: Vec<EnvManager> = vec![];
     let python_key = hk.open_subkey("Software\\Python").ok()?;
     let company_key = python_key.open_subkey(company).ok()?;
-
-    let mut pythons = vec![];
+    let company_display_name: Option<String> = company_key.get_value("DisplayName").ok();
     for key in company_key.enum_keys().filter_map(Result::ok) {
         if let Some(key) = company_key.open_subkey(key).ok() {
             if let Some(install_path_key) = key.open_subkey("InstallPath").ok() {
                 let env_path: String = install_path_key.get_value("").ok().unwrap_or_default();
                 let env_path = PathBuf::from(env_path);
+
+                // Possible this is a conda install folder.
+                if let Some(conda_result) = conda_locator.find_in(&env_path) {
+                    for manager in conda_result.managers {
+                        let mut mgr = manager.clone();
+                        mgr.company = Some(company.to_string());
+                        mgr.company_display_name = company_display_name.clone();
+                        managers.push(mgr)
+                    }
+                    for env in conda_result.environments {
+                        let mut env = env.clone();
+                        env.company = Some(company.to_string());
+                        env.company_display_name = company_display_name.clone();
+                        if let Some(mgr) = env.env_manager {
+                            let mut mgr = mgr.clone();
+                            mgr.company = Some(company.to_string());
+                            mgr.company_display_name = company_display_name.clone();
+                            env.env_manager = Some(mgr);
+                        }
+                        environments.push(env);
+                    }
+                    continue;
+                }
+
                 let env_path = if env_path.exists() {
                     Some(env_path)
                 } else {
@@ -44,9 +98,11 @@ fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<Pytho
                     continue;
                 }
                 let version: String = key.get_value("Version").ok().unwrap_or_default();
+                let architecture: String =
+                    key.get_value("SysArchitecture").ok().unwrap_or_default();
                 let display_name: String = key.get_value("DisplayName").ok().unwrap_or_default();
 
-                let env = PythonEnvironment::new(
+                let mut env = PythonEnvironment::new(
                     Some(display_name),
                     None,
                     Some(executable.clone()),
@@ -60,58 +116,44 @@ fn get_registry_pythons_from_key(hk: &RegKey, company: &str) -> Option<Vec<Pytho
                     None,
                     Some(vec![executable.to_string_lossy().to_string()]),
                 );
-                pythons.push(env);
+                if architecture.contains("32") {
+                    env.arch = Some(Architecture::X86);
+                } else if architecture.contains("64") {
+                    env.arch = Some(Architecture::X64);
+                }
+                env.company = Some(company.to_string());
+                env.company_display_name = company_display_name.clone();
+                environments.push(env);
             }
         }
     }
 
-    Some(pythons)
+    Some(LocatorResult {
+        environments,
+        managers,
+    })
 }
 
 #[cfg(windows)]
-pub fn get_registry_pythons(company: &str) -> Option<Vec<PythonEnvironment>> {
+fn get_registry_pythons(conda_locator: &mut dyn CondaLocator) -> Option<LocatorResult> {
     let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
     let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
 
-    let mut pythons = vec![];
-    if let Some(hklm_pythons) = get_registry_pythons_from_key(&hklm, company) {
-        pythons.extend(hklm_pythons);
-    }
-    if let Some(hkcu_pythons) = get_registry_pythons_from_key(&hkcu, company) {
-        pythons.extend(hkcu_pythons);
-    }
-    Some(pythons)
-}
-
-#[cfg(windows)]
-pub fn get_registry_pythons_anaconda(conda_locator: &mut dyn CondaLocator) -> LocatorResult {
-    let hklm = winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE);
-    let hkcu = winreg::RegKey::predef(winreg::enums::HKEY_CURRENT_USER);
-
-    let mut pythons = vec![];
-    if let Some(hklm_pythons) = get_registry_pythons_from_key(&hklm, "ContinuumAnalytics") {
-        pythons.extend(hklm_pythons);
-    }
-    if let Some(hkcu_pythons) = get_registry_pythons_from_key(&hkcu, "ContinuumAnalytics") {
-        pythons.extend(hkcu_pythons);
-    }
-
-    let mut environments: Vec<PythonEnvironment> = vec![];
+    let mut environments = vec![];
     let mut managers: Vec<EnvManager> = vec![];
 
-    for env in pythons.iter() {
-        if let Some(env_path) = env.clone().env_path {
-            if let Some(mut result) = conda_locator.find_in(&env_path) {
-                environments.append(&mut result.environments);
-                managers.append(&mut result.managers);
-            }
-        }
+    if let Some(result) = get_registry_pythons_from_key(&hklm, conda_locator) {
+        managers.extend(result.managers);
+        environments.extend(result.environments);
     }
-
-    LocatorResult {
-        managers,
+    if let Some(result) = get_registry_pythons_from_key(&hkcu, conda_locator) {
+        managers.extend(result.managers);
+        environments.extend(result.environments);
+    }
+    Some(LocatorResult {
         environments,
-    }
+        managers,
+    })
 }
 
 #[cfg(windows)]
@@ -134,23 +176,11 @@ impl Locator for WindowsRegistry<'_> {
     }
 
     fn find(&mut self) -> Option<LocatorResult> {
-        let mut environments: Vec<PythonEnvironment> = vec![];
-        let mut managers: Vec<EnvManager> = vec![];
-
-        let mut result = get_registry_pythons("PythonCore").unwrap_or_default();
-        environments.append(&mut result);
-
-        let mut result = get_registry_pythons_anaconda(self.conda_locator) ;
-        environments.append(&mut result.environments);
-        managers.append(&mut result.managers);
-
-        if environments.is_empty() && managers.is_empty() {
-            None
-        } else {
-            Some(LocatorResult {
-                managers,
-                environments,
-            })
+        if let Some(result) = get_registry_pythons(self.conda_locator) {
+            if !result.environments.is_empty() && !result.managers.is_empty() {
+                return Some(result);
+            }
         }
+        None
     }
 }

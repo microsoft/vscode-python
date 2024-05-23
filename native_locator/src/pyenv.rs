@@ -207,7 +207,7 @@ pub fn list_pyenv_environments(
 
 #[cfg(windows)]
 fn get_pyenv_manager_version(
-    pyenv_binary_path: &PathBuf,
+    _pyenv_binary_path: &PathBuf,
     environment: &dyn known::Environment,
 ) -> Option<String> {
     // In windows, the version is stored in the `.pyenv/.version` file

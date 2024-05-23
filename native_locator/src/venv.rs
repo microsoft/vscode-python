@@ -26,7 +26,6 @@ impl Locator for Venv {
     fn resolve(&self, env: &PythonEnv) -> Option<PythonEnvironment> {
         if is_venv(&env) {
             return Some(PythonEnvironment {
-                display_name: None,
                 name: Some(
                     env.path
                         .clone()
@@ -40,10 +39,8 @@ impl Locator for Venv {
                 version: env.version.clone(),
                 category: crate::messaging::PythonEnvironmentCategory::Venv,
                 env_path: env.path.clone(),
-                env_manager: None,
-                project_path: None,
                 python_run_command: Some(vec![env.executable.to_str().unwrap().to_string()]),
-                arch: None,
+                ..Default::default()
             });
         }
         None

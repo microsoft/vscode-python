@@ -8,7 +8,7 @@ use crate::{
 use env_logger::Builder;
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashSet, path::PathBuf};
+use std::{collections::HashSet, path::PathBuf, time::UNIX_EPOCH};
 
 pub trait MessageDispatcher {
     fn was_environment_reported(&self, env: &PythonEnv) -> bool;
@@ -32,6 +32,8 @@ pub struct EnvManager {
     pub executable_path: PathBuf,
     pub version: Option<String>,
     pub tool: EnvManagerType,
+    pub company: Option<String>,
+    pub company_display_name: Option<String>,
 }
 
 impl EnvManager {
@@ -40,6 +42,8 @@ impl EnvManager {
             executable_path,
             version,
             tool,
+            company: None,
+            company_display_name: None,
         }
     }
 }
@@ -105,6 +109,33 @@ pub struct PythonEnvironment {
      */
     pub project_path: Option<PathBuf>,
     pub arch: Option<Architecture>,
+    pub symlinks: Option<Vec<PathBuf>>,
+    pub creation_time: Option<u128>,
+    pub modified_time: Option<u128>,
+    pub company: Option<String>,
+    pub company_display_name: Option<String>,
+}
+
+impl Default for PythonEnvironment {
+    fn default() -> Self {
+        Self {
+            display_name: None,
+            name: None,
+            python_executable_path: None,
+            category: PythonEnvironmentCategory::System,
+            version: None,
+            env_path: None,
+            env_manager: None,
+            python_run_command: None,
+            project_path: None,
+            arch: None,
+            symlinks: None,
+            creation_time: None,
+            modified_time: None,
+            company: None,
+            company_display_name: None,
+        }
+    }
 }
 
 impl PythonEnvironment {
@@ -129,6 +160,11 @@ impl PythonEnvironment {
             python_run_command,
             project_path: None,
             arch: None,
+            symlinks: None,
+            creation_time: None,
+            modified_time: None,
+            company: None,
+            company_display_name: None,
         }
     }
 }
@@ -222,12 +258,29 @@ impl MessageDispatcher for JsonRpcDispatcher {
     }
     fn report_environment(&mut self, env: PythonEnvironment) -> () {
         if let Some(key) = get_environment_key(&env) {
+            if let Some(ref manager) = env.env_manager {
+                self.report_environment_manager(manager.clone());
+            }
             if !self.reported_environments.contains(&key) {
                 self.reported_environments.insert(key);
-                send_message(PythonEnvironmentMessage::new(env.clone()));
-            }
-            if let Some(manager) = env.env_manager {
-                self.report_environment_manager(manager);
+
+                // Get the creation and modified times.
+                let mut env = env.clone();
+                if let Some(ref exe) = env.python_executable_path {
+                    if let Ok(metadata) = exe.metadata() {
+                        if let Ok(ctime) = metadata.created() {
+                            if let Ok(ctime) = ctime.duration_since(UNIX_EPOCH) {
+                                env.creation_time = Some(ctime.as_millis());
+                            }
+                        }
+                        if let Ok(mtime) = metadata.modified() {
+                            if let Ok(mtime) = mtime.duration_since(UNIX_EPOCH) {
+                                env.modified_time = Some(mtime.as_millis());
+                            }
+                        }
+                    }
+                }
+                send_message(PythonEnvironmentMessage::new(env));
             }
         }
     }

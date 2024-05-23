@@ -29,7 +29,7 @@ mod windows_store;
 
 fn main() {
     let environment = EnvironmentApi {};
-    initialize_logger(LevelFilter::Debug);
+    initialize_logger(LevelFilter::Trace);
 
     log::info!("Starting Native Locator");
     let now = SystemTime::now();
@@ -52,6 +52,8 @@ fn main() {
     // Step 1: These environments take precedence over all others.
     // As they are very specific and guaranteed to be specific type.
     #[cfg(windows)]
+    find_environments(&mut windows_store, &mut dispatcher);
+    #[cfg(windows)]
     find_environments(&mut windows_registry, &mut dispatcher);
     let mut pyenv_locator = pyenv::PyEnv::with(&environment, &mut conda_locator);
     find_environments(&mut virtualenvwrapper, &mut dispatcher);
@@ -59,8 +61,6 @@ fn main() {
     #[cfg(unix)]
     find_environments(&mut homebrew_locator, &mut dispatcher);
     find_environments(&mut conda_locator, &mut dispatcher);
-    #[cfg(windows)]
-    find_environments(&mut windows_store, &mut dispatcher);
 
     // Step 2: Search in some global locations for virtual envs.
     for env in list_global_virtual_envs(&environment).iter() {
