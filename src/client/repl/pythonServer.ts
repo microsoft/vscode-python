@@ -92,7 +92,6 @@ export function createPythonServer(interpreter: string[]): PythonServer {
         new rpc.StreamMessageReader(pythonServer.stdout),
         new rpc.StreamMessageWriter(pythonServer.stdin),
     );
-    const ourPythonServerImpl = new PythonServerImpl(connection, pythonServer);
-    serverInstance = ourPythonServerImpl;
-    return ourPythonServerImpl;
+    serverInstance = new PythonServerImpl(connection, pythonServer);
+    return serverInstance;
 }
