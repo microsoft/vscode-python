@@ -105,29 +105,31 @@ export async function registerReplCommands(
                     notebookDocument = interactiveWindowObject.notebookEditor.notebook;
                 }
 
-                notebookController!.updateNotebookAffinity(notebookDocument!, NotebookControllerAffinity.Default);
+                if (notebookDocument) {
+                    notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
 
-                // Auto-Select Python REPL Kernel
-                await commands.executeCommand('notebook.selectKernel', {
-                    notebookEditor,
-                    id: notebookController?.id,
-                    extension: PVSC_EXTENSION_ID,
-                });
+                    // Auto-Select Python REPL Kernel
+                    await commands.executeCommand('notebook.selectKernel', {
+                        notebookEditor,
+                        id: notebookController.id,
+                        extension: PVSC_EXTENSION_ID,
+                    });
 
-                const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
-                const { cellCount } = notebookDocument!;
-                // Add new cell to interactive window document
-                const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
-                const workspaceEdit = new WorkspaceEdit();
-                workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-                await workspace.applyEdit(workspaceEdit);
+                    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
+                    const { cellCount } = notebookDocument;
+                    // Add new cell to interactive window document
+                    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
+                    const workspaceEdit = new WorkspaceEdit();
+                    workspaceEdit.set(notebookDocument.uri, [notebookEdit]);
+                    await workspace.applyEdit(workspaceEdit);
 
-                // Execute the cell
-                commands.executeCommand('notebook.cell.execute', {
-                    ranges: [{ start: cellCount, end: cellCount + 1 }],
-                    // document: ourResource,
-                    document: notebookDocument!.uri,
-                });
+                    // Execute the cell
+                    commands.executeCommand('notebook.cell.execute', {
+                        ranges: [{ start: cellCount, end: cellCount + 1 }],
+                        // document: ourResource,
+                        document: notebookDocument.uri,
+                    });
+                }
             }
         }),
     );
@@ -151,7 +153,7 @@ export async function registerReplExecuteOnEnter(
             }
 
             // Create Separate Python server to check valid command
-            const pythonServer = createPythonServer([interpreter!.path! as string]);
+            const pythonServer = createPythonServer([interpreter.path as string]);
 
             const activeEditor = window.activeTextEditor;
             let userTextInput;
