@@ -192,9 +192,5 @@ export async function registerReplExecuteOnEnter(
 }
 
 function isMultiLineText(textEditor: TextEditor | undefined): boolean {
-    if (textEditor) {
-        const { document } = textEditor;
-        return document.lineCount > 1;
-    }
-    return false;
+    return (textEditor?.document?.lineCount ?? 0) > 1;
 }
