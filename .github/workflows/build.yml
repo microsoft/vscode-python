@@ -28,6 +28,7 @@ jobs:
       run:
         shell: python
     outputs:
+      vsix_basename: ${{ steps.vsix_names.outputs.vsix_basename }}
       vsix_name: ${{ steps.vsix_names.outputs.vsix_name }}
       vsix_artifact_name: ${{ steps.vsix_names.outputs.vsix_artifact_name }}
     steps:
@@ -40,13 +41,45 @@ jobs:
           else:
             vsix_type = "release"
           print(f"::set-output name=vsix_name::ms-python-{vsix_type}.vsix")
+          print(f"::set-output name=vsix_basename::ms-python-{vsix_type}")
           print(f"::set-output name=vsix_artifact_name::ms-python-{vsix_type}-vsix")
 
   build-vsix:
     name: Create VSIX
     if: github.repository == 'microsoft/vscode-python'
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            vsix-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            vsix-target: win32-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            vsix-target: linux-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-gnu
+          #     vsix-target: linux-arm64
+          #   - os: ubuntu-latest
+          #     target: arm-unknown-linux-gnueabihf
+          #     vsix-target: linux-armhf
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            vsix-target: darwin-x64
+          - os: macos-14
+            target: aarch64-apple-darwin
+            vsix-target: darwin-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            vsix-target: alpine-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-musl
+          #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,9 +87,11 @@ jobs:
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         with:
-          node_version: ${{ env.NODE_VERSION }}
-          vsix_name: ${{ needs.setup.outputs.vsix_name }}
-          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
+          node_version: ${{ env.NODE_VERSION}}
+          vsix_name: ${{ needs.setup.outputs.vsix_basename }}-${{ matrix.vsix-target }}.vsix'
+          artifact_name: '${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}'
+          cargo_target: ${{ matrix.target }}
+          vsix_target: ${{ matrix.vsix-target }}
 
   lint:
     name: Lint

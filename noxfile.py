@@ -5,8 +5,9 @@ import os
 import pathlib
 import nox
 import shutil
-import sys
 import sysconfig
+
+EXT_ROOT = pathlib.Path(__file__).parent
 
 
 @nox.session()
@@ -90,6 +91,13 @@ def native_build(session: nox.Session):
             source = f"./target/release/python-finder{ext}"
             dest = f"./bin/python-finder{ext}"
             shutil.copy(source, dest)
+
+    # Remove native_locator/bin exclusion from .vscodeignore
+    vscode_ignore = EXT_ROOT / ".vscodeignore"
+    remove_patterns = ("native_locator/bin/**",)
+    lines = vscode_ignore.read_text(encoding="utf-8").splitlines()
+    filtered_lines = [line for line in lines if not line.startswith(remove_patterns)]
+    vscode_ignore.write_text("\n".join(filtered_lines) + "\n", encoding="utf-8")
 
 
 @nox.session()
