@@ -82,20 +82,20 @@ export async function registerReplCommands(
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
 
-                if (!notebookEditor) {
-                    const interactiveWindowObject = (await commands.executeCommand(
-                        'interactive.open',
-                        {
-                            preserveFocus: true,
-                            viewColumn: ViewColumn.Beside,
-                        },
-                        undefined,
-                        notebookController.id,
-                        'Python REPL',
-                    )) as { notebookEditor: NotebookEditor };
-                    notebookEditor = interactiveWindowObject.notebookEditor;
-                    notebookDocument = interactiveWindowObject.notebookEditor.notebook;
-                }
+                // if (!notebookEditor) {
+                const interactiveWindowObject = (await commands.executeCommand(
+                    'interactive.open',
+                    {
+                        preserveFocus: true,
+                        viewColumn: ViewColumn.Beside,
+                    },
+                    undefined,
+                    notebookController.id,
+                    'Python REPL',
+                )) as { notebookEditor: NotebookEditor };
+                notebookEditor = interactiveWindowObject.notebookEditor;
+                notebookDocument = interactiveWindowObject.notebookEditor.notebook;
+                // }
 
                 if (notebookDocument) {
                     notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
