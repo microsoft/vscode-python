@@ -94,6 +94,9 @@ extends:
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
+      - script: nox --session native_build
+        displayName: Build RUST binaries
+
       - script: python ./build/update_ext_version.py --for-publishing
         displayName: Update build number
 
