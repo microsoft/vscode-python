@@ -109,7 +109,7 @@ extends:
       - script: nox --session native_build
         displayName: Build RUST binaries
 
-      - script: gulp prePublishBundle
+      - script: npx gulp prePublishBundle
         displayName: Build
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
