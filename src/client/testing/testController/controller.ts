@@ -29,17 +29,9 @@ import { traceError, traceInfo, traceVerbose } from '../../logging';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
-import { TestProvider } from '../types';
 import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
 import { pythonTestAdapterRewriteEnabled } from './common/utils';
-import {
-    ITestController,
-    ITestDiscoveryAdapter,
-    ITestFrameworkController,
-    TestRefreshOptions,
-    ITestExecutionAdapter,
-    ITestResultResolver,
-} from './common/types';
+import { ITestController, ITestFrameworkController, TestRefreshOptions } from './common/types';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
 import { PytestTestDiscoveryAdapter } from './pytest/pytestDiscoveryAdapter';
@@ -157,49 +149,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         workspaces.forEach((workspace) => {
             const settings = this.configSettings.getSettings(workspace.uri);
 
-            let discoveryAdapter: ITestDiscoveryAdapter;
-            let executionAdapter: ITestExecutionAdapter;
-            let testProvider: TestProvider;
-            let resultResolver: ITestResultResolver;
-            if (settings.testing.unittestEnabled) {
-                testProvider = UNITTEST_PROVIDER;
-                resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-                discoveryAdapter = new UnittestTestDiscoveryAdapter(
-                    this.configSettings,
-                    this.testOutputChannel,
-                    resultResolver,
-                    this.envVarsService,
-                );
-                executionAdapter = new UnittestTestExecutionAdapter(
-                    this.configSettings,
-                    this.testOutputChannel,
-                    resultResolver,
-                    this.envVarsService,
-                );
-            } else {
-                testProvider = PYTEST_PROVIDER;
-                resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
-                discoveryAdapter = new PytestTestDiscoveryAdapter(
-                    this.configSettings,
-                    this.testOutputChannel,
-                    resultResolver,
-                    this.envVarsService,
-                );
-                executionAdapter = new PytestTestExecutionAdapter(
-                    this.configSettings,
-                    this.testOutputChannel,
-                    resultResolver,
-                    this.envVarsService,
-                );
-            }
-
-            const workspaceTestAdapter = new WorkspaceTestAdapter(
-                testProvider,
-                discoveryAdapter,
-                executionAdapter,
-                workspace.uri,
-                resultResolver,
-            );
+            const resultResolver = new PythonResultResolver(this.testController, PYTEST_PROVIDER, workspace.uri);
+            const workspaceTestAdapter = new WorkspaceTestAdapter(workspace.uri, resultResolver);
 
             this.testAdapters.set(workspace.uri, workspaceTestAdapter);
 
@@ -257,12 +208,25 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             // ** experiment to roll out NEW test discovery mechanism
             if (settings.testing.pytestEnabled) {
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
+                    // create test adapter for the given framework and type
+
                     traceInfo(`Running discovery for pytest using the new test adapter.`);
                     if (workspace && workspace.uri) {
-                        const testAdapter = this.testAdapters.get(workspace.uri);
-                        if (testAdapter) {
-                            testAdapter.discoverTests(
+                        const workspaceTestAdapter = this.testAdapters.get(workspace.uri);
+                        if (workspaceTestAdapter) {
+                            // update test provider
+                            workspaceTestAdapter.resultResolver.testProvider = PYTEST_PROVIDER;
+                            // create test adapter for the given framework and type
+                            const pytestDiscoveryAdapter = new PytestTestDiscoveryAdapter(
+                                this.configSettings,
+                                this.testOutputChannel,
+                                workspaceTestAdapter.resultResolver,
+                                this.envVarsService,
+                            );
+                            workspaceTestAdapter.discoverTests(
                                 this.testController,
+                                pytestDiscoveryAdapter,
+                                PYTEST_PROVIDER,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
                             );
@@ -279,11 +243,24 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             } else if (settings.testing.unittestEnabled) {
                 if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
                     traceInfo(`Running discovery for unittest using the new test adapter.`);
+                    // create test adapter for the given framework and type
+
                     if (workspace && workspace.uri) {
                         const testAdapter = this.testAdapters.get(workspace.uri);
                         if (testAdapter) {
+                            // update test provider
+                            testAdapter.resultResolver.testProvider = UNITTEST_PROVIDER;
+                            // create test adapter for the given framework and type
+                            const unittestDiscoveryAdapter = new UnittestTestDiscoveryAdapter(
+                                this.configSettings,
+                                this.testOutputChannel,
+                                testAdapter.resultResolver,
+                                this.envVarsService,
+                            );
                             testAdapter.discoverTests(
                                 this.testController,
+                                unittestDiscoveryAdapter,
+                                UNITTEST_PROVIDER,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
                             );
@@ -414,18 +391,34 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             });
                             // ** experiment to roll out NEW test discovery mechanism
                             if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
+                                // create test adapter for the given framework and type
                                 const testAdapter =
                                     this.testAdapters.get(workspace.uri) ||
                                     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                                return testAdapter.executeTests(
-                                    this.testController,
-                                    runInstance,
-                                    testItems,
-                                    token,
-                                    request.profile?.kind === TestRunProfileKind.Debug,
-                                    this.pythonExecFactory,
-                                    this.debugLauncher,
-                                );
+                                if (testAdapter) {
+                                    // update test provider
+                                    testAdapter.resultResolver.testProvider = PYTEST_PROVIDER;
+                                    // create test adapter for the given framework and type
+                                    const pytestExecutionAdapter = new PytestTestExecutionAdapter(
+                                        this.configSettings,
+                                        this.testOutputChannel,
+                                        testAdapter.resultResolver,
+                                        this.envVarsService,
+                                    );
+                                    return testAdapter.executeTests(
+                                        this.testController,
+                                        pytestExecutionAdapter,
+                                        PYTEST_PROVIDER,
+                                        runInstance,
+                                        testItems,
+                                        token,
+                                        request.profile?.kind === TestRunProfileKind.Debug,
+                                        this.pythonExecFactory,
+                                        this.debugLauncher,
+                                    );
+                                }
+                                traceError('Unable to find test adapter for workspace.');
+                                return Promise.resolve();
                             }
                             return this.pytest.runTests(
                                 {
@@ -448,15 +441,31 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 const testAdapter =
                                     this.testAdapters.get(workspace.uri) ||
                                     (this.testAdapters.values().next().value as WorkspaceTestAdapter);
-                                return testAdapter.executeTests(
-                                    this.testController,
-                                    runInstance,
-                                    testItems,
-                                    token,
-                                    request.profile?.kind === TestRunProfileKind.Debug,
-                                    this.pythonExecFactory,
-                                    this.debugLauncher,
-                                );
+
+                                if (testAdapter) {
+                                    // update test provider
+                                    testAdapter.resultResolver.testProvider = UNITTEST_PROVIDER;
+                                    // create test adapter for the given framework and type
+                                    const unittestExecutionAdapter = new UnittestTestExecutionAdapter(
+                                        this.configSettings,
+                                        this.testOutputChannel,
+                                        testAdapter.resultResolver,
+                                        this.envVarsService,
+                                    );
+                                    return testAdapter.executeTests(
+                                        this.testController,
+                                        unittestExecutionAdapter,
+                                        UNITTEST_PROVIDER,
+                                        runInstance,
+                                        testItems,
+                                        token,
+                                        request.profile?.kind === TestRunProfileKind.Debug,
+                                        this.pythonExecFactory,
+                                        this.debugLauncher,
+                                    );
+                                }
+                                traceError('Unable to find test adapter for workspace.');
+                                return Promise.resolve();
                             }
                             // below is old way of running unittest execution
                             return this.unittest.runTests(

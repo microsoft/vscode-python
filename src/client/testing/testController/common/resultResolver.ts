@@ -26,7 +26,7 @@ import { Deferred } from '../../../common/utils/async';
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
 
-    testProvider: TestProvider;
+    public testProvider: TestProvider;
 
     public runIdToTestItem: Map<string, TestItem>;
 
