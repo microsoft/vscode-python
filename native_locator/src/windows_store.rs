@@ -29,7 +29,7 @@ pub fn is_windows_python_executable(path: &PathBuf) -> bool {
 
 #[cfg(windows)]
 pub fn is_windows_app_folder_in_program_files(path: &PathBuf) -> bool {
-    path.to_string().to_lowercase()[1..].starts_with(":\\program files\\windowsapps")
+    path.to_str().unwrap_or_default().to_string().to_lowercase()[1..].starts_with(":\\program files\\windowsapps")
 }
 
 #[cfg(windows)]
