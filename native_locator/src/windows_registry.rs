@@ -39,7 +39,7 @@ fn get_registry_pythons_from_key_for_company(
                         let env_path: String =
                             install_path_key.get_value("").ok().unwrap_or_default();
                         let env_path = PathBuf::from(env_path);
-                        if is_windows_app_folder_in_program_files(env_path) {
+                        if is_windows_app_folder_in_program_files(&env_path) {
                             trace!(
                                 "Found Python ({}) in {}\\Software\\Python\\{}\\{}, but skipping as this is a Windows Store Python",
                                 env_path.to_str().unwrap_or_default(),
