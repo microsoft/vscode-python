@@ -53,6 +53,15 @@ function getSendToNativeREPLSetting(): boolean {
     const configuration = getConfiguration('python', uri);
     return configuration.get<boolean>('REPL.sendToNativeREPL', false);
 }
+
+window.onDidChangeVisibleTextEditors((editors) => {
+    const interactiveWindowIsOpen = editors.some((editor) => editor.document.uri.scheme === 'vscode-interactive-input');
+    if (!interactiveWindowIsOpen) {
+        notebookEditor = undefined;
+        notebookDocument = undefined;
+    }
+});
+
 // Will only be called when user has experiment enabled.
 export async function registerReplCommands(
     disposables: Disposable[],
@@ -107,6 +116,12 @@ export async function registerReplCommands(
                     });
 
                     await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
+                    // await window.showNotebookDocument(window.activeNotebookEditor!.notebook, {
+                    //     viewColumn: ViewColumn.Beside,
+                    // });
+                    // const myVar = window.activeNotebookEditor!.notebook;
+                    // await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
+                    // const myVar2 = myVar;
                 }
 
                 if (notebookDocument) {
@@ -119,13 +134,17 @@ export async function registerReplCommands(
                         extension: PVSC_EXTENSION_ID,
                     });
 
-                    const { cellCount } = notebookDocument; // CELL COUNT IS NOT GETTING UPDATED PROPERLY
+                    // const { cellCount } = notebookDocument; // CELL COUNT IS NOT GETTING UPDATED PROPERLY
+                    const { cellCount } = window.activeNotebookEditor!.notebook;
                     await addCellToNotebook(code as string);
                     // Execute the cell
                     commands.executeCommand('notebook.cell.execute', {
                         ranges: [{ start: cellCount, end: cellCount + 1 }],
                         document: notebookDocument.uri,
                     });
+                    // await commands.executeCommand('interactive.execute');
+                    // grab active notebook
+                    // const activeNotebook = window.activeNotebookEditor;
                 }
             }
         }),
