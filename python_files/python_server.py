@@ -11,6 +11,9 @@ STDIN = sys.stdin
 STDOUT = sys.stdout
 STDERR = sys.stderr
 USER_GLOBALS = {}
+# import debugpy
+
+# debugpy.connect(5678)
 
 
 def send_message(msg: str):

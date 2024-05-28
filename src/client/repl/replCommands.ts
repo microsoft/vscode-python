@@ -96,6 +96,18 @@ export async function registerReplCommands(
                     notebookEditor = interactiveWindowObject.notebookEditor;
                     notebookDocument = interactiveWindowObject.notebookEditor.notebook;
                 }
+                // open notebook
+                if (notebookEditor && notebookDocument) {
+                    // show existing notebook editor
+                    // Auto-Select Python REPL Kernel
+                    await commands.executeCommand('notebook.selectKernel', {
+                        notebookEditor,
+                        id: notebookController.id,
+                        extension: PVSC_EXTENSION_ID,
+                    });
+
+                    await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
+                }
 
                 if (notebookDocument) {
                     notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
@@ -107,7 +119,7 @@ export async function registerReplCommands(
                         extension: PVSC_EXTENSION_ID,
                     });
 
-                    const { cellCount } = notebookDocument;
+                    const { cellCount } = notebookDocument; // CELL COUNT IS NOT GETTING UPDATED PROPERLY
                     await addCellToNotebook(code as string);
                     // Execute the cell
                     commands.executeCommand('notebook.cell.execute', {
