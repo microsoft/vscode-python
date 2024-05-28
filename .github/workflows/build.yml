@@ -88,8 +88,8 @@ jobs:
         uses: ./.github/actions/build-vsix
         with:
           node_version: ${{ env.NODE_VERSION}}
-          vsix_name: ${{ needs.setup.outputs.vsix_basename }}-${{ matrix.vsix-target }}.vsix'
-          artifact_name: '${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}'
+          vsix_name: ${{ needs.setup.outputs.vsix_basename }}-${{ matrix.vsix-target }}.vsix
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}
           cargo_target: ${{ matrix.target }}
           vsix_target: ${{ matrix.vsix-target }}
 
