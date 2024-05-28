@@ -107,13 +107,6 @@ export async function registerReplCommands(
                 }
                 // Handle case where user has closed REPL window, and re-opens.
                 if (notebookEditor && notebookDocument) {
-                    // Auto-Select Python REPL Kernel
-                    await commands.executeCommand('notebook.selectKernel', {
-                        notebookEditor,
-                        id: notebookController.id,
-                        extension: PVSC_EXTENSION_ID,
-                    });
-
                     await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
                 }
 
