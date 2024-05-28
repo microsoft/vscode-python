@@ -105,9 +105,8 @@ export async function registerReplCommands(
                     notebookEditor = interactiveWindowObject.notebookEditor;
                     notebookDocument = interactiveWindowObject.notebookEditor.notebook;
                 }
-                // open notebook
+                // Handle case where user has closed REPL window, and re-opens.
                 if (notebookEditor && notebookDocument) {
-                    // show existing notebook editor
                     // Auto-Select Python REPL Kernel
                     await commands.executeCommand('notebook.selectKernel', {
                         notebookEditor,
@@ -116,12 +115,6 @@ export async function registerReplCommands(
                     });
 
                     await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
-                    // await window.showNotebookDocument(window.activeNotebookEditor!.notebook, {
-                    //     viewColumn: ViewColumn.Beside,
-                    // });
-                    // const myVar = window.activeNotebookEditor!.notebook;
-                    // await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
-                    // const myVar2 = myVar;
                 }
 
                 if (notebookDocument) {
@@ -134,17 +127,13 @@ export async function registerReplCommands(
                         extension: PVSC_EXTENSION_ID,
                     });
 
-                    // const { cellCount } = notebookDocument; // CELL COUNT IS NOT GETTING UPDATED PROPERLY
-                    const { cellCount } = window.activeNotebookEditor!.notebook;
+                    const { cellCount } = notebookDocument;
                     await addCellToNotebook(code as string);
                     // Execute the cell
                     commands.executeCommand('notebook.cell.execute', {
                         ranges: [{ start: cellCount, end: cellCount + 1 }],
                         document: notebookDocument.uri,
                     });
-                    // await commands.executeCommand('interactive.execute');
-                    // grab active notebook
-                    // const activeNotebook = window.activeNotebookEditor;
                 }
             }
         }),
