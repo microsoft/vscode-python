@@ -14,6 +14,11 @@ pub trait Environment {
 }
 
 pub struct EnvironmentApi {}
+impl EnvironmentApi {
+    pub fn new() -> Self {
+        EnvironmentApi {}
+    }
+}
 
 #[cfg(windows)]
 impl Environment for EnvironmentApi {

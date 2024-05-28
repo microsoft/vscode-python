@@ -28,6 +28,11 @@ pub fn is_windows_python_executable(path: &PathBuf) -> bool {
 }
 
 #[cfg(windows)]
+pub fn is_windows_app_folder_in_program_files(path: &PathBuf) -> bool {
+    path.to_str().unwrap_or_default().to_string().to_lowercase()[1..].starts_with(":\\program files\\windowsapps")
+}
+
+#[cfg(windows)]
 fn list_windows_store_python_executables(
     environment: &dyn known::Environment,
 ) -> Option<Vec<PythonEnvironment>> {

@@ -7,7 +7,7 @@ use crate::{
 };
 use std::{fs, path::PathBuf};
 
-pub fn get_global_virtualenv_dirs(environment: &impl known::Environment) -> Vec<PathBuf> {
+fn get_global_virtualenv_dirs(environment: &impl known::Environment) -> Vec<PathBuf> {
     let mut venv_dirs: Vec<PathBuf> = vec![];
 
     if let Some(work_on_home) = environment.get_env_var("WORKON_HOME".to_string()) {

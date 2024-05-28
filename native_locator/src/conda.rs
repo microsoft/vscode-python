@@ -117,7 +117,7 @@ fn get_conda_package_json_path(path: &Path, package: &str) -> Option<CondaPackag
         })
 }
 
-fn get_conda_executable(path: &PathBuf) -> Option<PathBuf> {
+fn get_conda_executable(path: &Path) -> Option<PathBuf> {
     for relative_path in get_relative_paths_to_conda_executable() {
         let exe = path.join(&relative_path);
         if exe.exists() {
@@ -226,7 +226,7 @@ pub fn find_conda_binary(environment: &dyn known::Environment) -> Option<PathBuf
     }
 }
 
-fn get_conda_manager(path: &PathBuf) -> Option<EnvManager> {
+fn get_conda_manager(path: &Path) -> Option<EnvManager> {
     let conda_exe = get_conda_executable(path)?;
     let conda_pkg = get_conda_package_json_path(path, "conda")?;
 
@@ -529,7 +529,7 @@ fn get_conda_conda_rc(environment: &dyn known::Environment) -> Option<Condarc> {
  */
 fn was_conda_environment_created_by_specific_conda(
     env: &CondaEnvironment,
-    root_conda_path: &PathBuf,
+    root_conda_path: &Path,
 ) -> bool {
     if let Some(cmd_line) = env.conda_install_folder.clone() {
         if cmd_line
@@ -661,7 +661,7 @@ fn get_activation_command(env: &CondaEnvironment, manager: &EnvManager) -> Optio
     }
 }
 
-fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<PythonEnvironment> {
+fn get_root_python_environment(path: &Path, manager: &EnvManager) -> Option<PythonEnvironment> {
     let python_exe = path.join(get_relative_paths_to_main_python_executable());
     if !python_exe.exists() {
         return None;
@@ -680,7 +680,7 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
             python_executable_path: Some(python_exe),
             version: Some(package_info.version),
             arch: package_info.arch,
-            env_path: Some(path.clone()),
+            env_path: Some(path.to_path_buf().clone()),
             env_manager: Some(manager.clone()),
             python_run_command: Some(vec![
                 conda_exe,
@@ -696,7 +696,7 @@ fn get_root_python_environment(path: &PathBuf, manager: &EnvManager) -> Option<P
 }
 
 fn get_conda_environments_in_specified_install_path(
-    conda_install_folder: &PathBuf,
+    conda_install_folder: &Path,
     possible_conda_envs: &mut HashMap<PathBuf, CondaEnvironment>,
 ) -> Option<LocatorResult> {
     let mut managers: Vec<EnvManager> = vec![];
@@ -842,7 +842,7 @@ fn find_conda_environments_from_known_conda_install_locations(
     })
 }
 
-fn is_conda_install_location(path: &PathBuf) -> bool {
+fn is_conda_install_location(path: &Path) -> bool {
     let envs_path = path.join("envs");
     return envs_path.exists() && envs_path.is_dir();
 }
@@ -963,7 +963,7 @@ pub struct Conda<'a> {
 }
 
 pub trait CondaLocator {
-    fn find_in(&mut self, possible_conda_folder: &PathBuf) -> Option<LocatorResult>;
+    fn find_in(&mut self, possible_conda_folder: &Path) -> Option<LocatorResult>;
 }
 
 impl Conda<'_> {
@@ -1019,7 +1019,7 @@ impl Conda<'_> {
 }
 
 impl CondaLocator for Conda<'_> {
-    fn find_in(&mut self, possible_conda_folder: &PathBuf) -> Option<LocatorResult> {
+    fn find_in(&mut self, possible_conda_folder: &Path) -> Option<LocatorResult> {
         if !is_conda_install_location(possible_conda_folder) {
             return None;
         }
