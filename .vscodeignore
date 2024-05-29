@@ -67,6 +67,7 @@ test/**
 tmp/**
 typings/**
 types/**
+native_locator/.vscode/**
 native_locator/src/**
 native_locator/tests/**
 native_locator/bin/**
