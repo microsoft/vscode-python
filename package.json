@@ -1118,7 +1118,7 @@
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'"
+                "when": "config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive' && editorLangId == python && editorTextFocus && !jupyter.ownsSelection"
             },
             {
                 "command": "python.execREPLShiftEnter",
