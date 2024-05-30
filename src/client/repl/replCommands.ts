@@ -54,9 +54,8 @@ function getSendToNativeREPLSetting(): boolean {
     return configuration.get<boolean>('REPL.sendToNativeREPL', false);
 }
 
-window.onDidChangeVisibleTextEditors((editors) => {
-    const interactiveWindowIsOpen = editors.some((editor) => editor.document.uri.scheme === 'vscode-interactive-input');
-    if (!interactiveWindowIsOpen) {
+workspace.onDidCloseNotebookDocument((nb) => {
+    if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
         notebookEditor = undefined;
         notebookDocument = undefined;
     }
