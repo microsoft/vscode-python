@@ -261,7 +261,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (workspace && workspace.uri) {
                         const testAdapter = this.testAdapters.get(workspace.uri);
                         if (testAdapter) {
-                            testAdapter.discoverTests(
+                            await testAdapter.discoverTests(
                                 this.testController,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
@@ -282,7 +282,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (workspace && workspace.uri) {
                         const testAdapter = this.testAdapters.get(workspace.uri);
                         if (testAdapter) {
-                            testAdapter.discoverTests(
+                            await testAdapter.discoverTests(
                                 this.testController,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
