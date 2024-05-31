@@ -467,7 +467,8 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                     function_name, get_node_path(test_case), parent_id
                 )
                 function_nodes_dict[parent_id] = function_test_node
-            function_test_node["children"].append(test_node)
+            if test_node not in function_test_node["children"]:
+                function_test_node["children"].append(test_node)
             # Check if the parent node of the function is file, if so create/add to this file node.
             if isinstance(test_case.parent, pytest.File):
                 try:

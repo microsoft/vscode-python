@@ -1273,4 +1273,125 @@ same_function_new_class_param_expected_output = {
     "id_": TEST_DATA_PATH_STR,
 }
 
-print(param_same_name_expected_output)
+test_param_span_class_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_param_span_class.py",
+            "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+            "type_": "file",
+            "id_": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+            "children": [
+                {
+                    "name": "TestClass1",
+                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_method1",
+                            "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[1]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass1::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                                {
+                                    "name": "[2]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass1::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(
+                                TEST_DATA_PATH
+                                / "test_param_span_class.py::TestClass1::test_method1"
+                            ),
+                        }
+                    ],
+                    "id_": "test_param_span_class.py::TestClass1",
+                },
+                {
+                    "name": "TestClass2",
+                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_method1",
+                            "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[1]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass2::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                                {
+                                    "name": "[2]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass2::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(
+                                TEST_DATA_PATH
+                                / "test_param_span_class.py::TestClass2::test_method1"
+                            ),
+                        }
+                    ],
+                    "id_": "test_param_span_class.py::TestClass2",
+                },
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}

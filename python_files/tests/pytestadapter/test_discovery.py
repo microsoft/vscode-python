@@ -110,6 +110,10 @@ def test_parameterized_error_collect():
     "file, expected_const",
     [
         (
+            "test_param_span_class.py",
+            expected_discovery_test_output.test_param_span_class_expected_output,
+        ),
+        (
             "test_multi_class_nest.py",
             expected_discovery_test_output.nested_classes_expected_test_output,
         ),
