@@ -1121,11 +1121,6 @@
                 "when": "config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'&& editorLangId == python && editorTextFocus && !jupyter.ownsSelection"
             },
             {
-                "command": "python.execREPLShiftEnter",
-                "key": "shift+enter",
-                "when": "activeEditor == 'workbench.editor.interactive' && config.interactiveWindow.executeWithShiftEnter && editorLangId == python"
-            },
-            {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
                 "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"

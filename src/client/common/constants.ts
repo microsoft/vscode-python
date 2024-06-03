@@ -49,7 +49,6 @@ export namespace Commands {
     export const Exec_In_REPL = 'python.execInREPL';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Exec_In_REPL_Enter = 'python.execInREPLEnter';
-    export const Exec_In_REPL_Shift_Enter = 'python.execREPLShiftEnter';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const InstallJupyter = 'python.installJupyter';
