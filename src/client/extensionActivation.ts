@@ -52,7 +52,7 @@ import { initializePersistentStateForTriggers } from './common/persistentState';
 import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
-import { registerReplCommands, registerReplExecuteOnEnter, registerReplExecuteOnShiftEnter } from './repl/replCommands';
+import { registerReplCommands, registerReplExecuteOnEnter } from './repl/replCommands';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -109,7 +109,6 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
 
     registerReplCommands(ext.disposables, interpreterService);
     registerReplExecuteOnEnter(ext.disposables, interpreterService);
-    registerReplExecuteOnShiftEnter(ext.disposables);
 }
 
 /// //////////////////////////
