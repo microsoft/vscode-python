@@ -24,35 +24,12 @@ import { createPythonServer } from './pythonServer';
 import { createReplController } from './replController';
 import { getActiveResource } from '../common/vscodeApis/windowApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { ExecCommandHandler } from './replCommandHandlers';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
 // TODO: figure out way to put markdown telling user kernel has been dead and need to pick again.
 let notebookDocument: NotebookDocument | undefined;
-
-async function getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined> {
-    if (!textEditor) {
-        return undefined;
-    }
-
-    const { selection } = textEditor;
-    let code: string;
-
-    if (selection.isEmpty) {
-        code = textEditor.document.lineAt(selection.start.line).text;
-    } else if (selection.isSingleLine) {
-        code = getSingleLineSelectionText(textEditor);
-    } else {
-        code = getMultiLineSelectionText(textEditor);
-    }
-
-    return code;
-}
-function getSendToNativeREPLSetting(): boolean {
-    const uri = getActiveResource();
-    const configuration = getConfiguration('python', uri);
-    return configuration.get<boolean>('REPL.sendToNativeREPL', false);
-}
 
 workspace.onDidCloseNotebookDocument((nb) => {
     if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
@@ -67,68 +44,7 @@ export async function registerReplCommands(
     interpreterService: IInterpreterService,
 ): Promise<void> {
     disposables.push(
-        commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
-            const nativeREPLSetting = getSendToNativeREPLSetting();
-
-            // If nativeREPLSetting is false(Send to Terminal REPL), then fall back to running in Terminal REPL
-            if (!nativeREPLSetting) {
-                await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
-                return;
-            }
-
-            const interpreter = await interpreterService.getActiveInterpreter(uri);
-            if (!interpreter) {
-                commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
-                return;
-            }
-            if (interpreter) {
-                const interpreterPath = interpreter.path;
-
-                if (!notebookController) {
-                    notebookController = createReplController(interpreterPath, disposables);
-                }
-                const activeEditor = window.activeTextEditor as TextEditor;
-                const code = await getSelectedTextToExecute(activeEditor);
-
-                if (!notebookEditor) {
-                    const interactiveWindowObject = (await commands.executeCommand(
-                        'interactive.open',
-                        {
-                            preserveFocus: true,
-                            viewColumn: ViewColumn.Beside,
-                        },
-                        undefined,
-                        notebookController.id,
-                        'Python REPL',
-                    )) as { notebookEditor: NotebookEditor };
-                    notebookEditor = interactiveWindowObject.notebookEditor;
-                    notebookDocument = interactiveWindowObject.notebookEditor.notebook;
-                }
-                // Handle case where user has closed REPL window, and re-opens.
-                if (notebookEditor && notebookDocument) {
-                    await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
-                }
-
-                if (notebookDocument) {
-                    notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
-
-                    // Auto-Select Python REPL Kernel
-                    await commands.executeCommand('notebook.selectKernel', {
-                        notebookEditor,
-                        id: notebookController.id,
-                        extension: PVSC_EXTENSION_ID,
-                    });
-
-                    const { cellCount } = notebookDocument;
-                    await addCellToNotebook(code as string);
-                    // Execute the cell
-                    commands.executeCommand('notebook.cell.execute', {
-                        ranges: [{ start: cellCount, end: cellCount + 1 }],
-                        document: notebookDocument.uri,
-                    });
-                }
-            }
-        }),
+        commands.registerCommand(Commands.Exec_In_REPL, new ExecCommandHandler(interpreterService).execute),
     );
 }
 /**
