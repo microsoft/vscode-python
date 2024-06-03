@@ -3,7 +3,8 @@ import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { createPythonServer } from './pythonServer';
-import { getSendToNativeREPLSetting, getSelectedTextToExecute } from './replUtils';
+import { createReplController } from './replController';
+import { getSendToNativeREPLSetting, getSelectedTextToExecute, addCellToNotebook } from './replUtils';
 
 export interface IReplExecHandler {
     interpreterService: IInterpreterService;
@@ -16,8 +17,22 @@ export interface IReplExecHandler {
 export class ExecCommandHandler implements IReplExecHandler {
     interpreterService: IInterpreterService;
 
-    constructor(interpreterService: IInterpreterService) {
+    notebookController: NotebookController | undefined;
+
+    notebookEditor: NotebookEditor | undefined;
+
+    notebookDocument: NotebookDocument | undefined;
+
+    constructor(
+        interpreterService: IInterpreterService,
+        notebookController?: NotebookController,
+        notebookEditor?: NotebookEditor,
+        notebookDocument?: NotebookDocument,
+    ) {
         this.interpreterService = interpreterService;
+        this.notebookController = notebookController;
+        this.notebookEditor = notebookEditor;
+        this.notebookDocument = notebookDocument;
     }
 
     async execute(uri: Uri): Promise<void> {
@@ -37,8 +52,8 @@ export class ExecCommandHandler implements IReplExecHandler {
         if (interpreter) {
             const interpreterPath = interpreter.path;
 
-            if (!notebookController) {
-                notebookController = createReplController(interpreterPath, disposables);
+            if (!this.notebookController) {
+                this.notebookController = createReplController(interpreterPath, disposables);
             }
             const activeEditor = window.activeTextEditor as TextEditor;
             const code = await getSelectedTextToExecute(activeEditor);

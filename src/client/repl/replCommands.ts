@@ -25,10 +25,10 @@ import { createReplController } from './replController';
 import { getActiveResource } from '../common/vscodeApis/windowApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 import { ExecCommandHandler } from './replCommandHandlers';
+import { isMultiLineText } from './replUtils';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
-// TODO: figure out way to put markdown telling user kernel has been dead and need to pick again.
 let notebookDocument: NotebookDocument | undefined;
 
 workspace.onDidCloseNotebookDocument((nb) => {
@@ -44,23 +44,11 @@ export async function registerReplCommands(
     interpreterService: IInterpreterService,
 ): Promise<void> {
     disposables.push(
-        commands.registerCommand(Commands.Exec_In_REPL, new ExecCommandHandler(interpreterService).execute),
+        commands.registerCommand(
+            Commands.Exec_In_REPL,
+            new ExecCommandHandler(interpreterService, notebookController, notebookEditor, notebookDocument).execute,
+        ),
     );
-}
-/**
- * Function that adds cell to notebook.
- * This function will only get called when notebook document is defined.
- * @param code
- *
- */
-async function addCellToNotebook(code: string): Promise<void> {
-    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
-    const { cellCount } = notebookDocument!;
-    // Add new cell to interactive window document
-    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
-    const workspaceEdit = new WorkspaceEdit();
-    workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-    await workspace.applyEdit(workspaceEdit);
 }
 
 /**
@@ -119,8 +107,4 @@ export async function registerReplExecuteOnEnter(
             }
         }),
     );
-}
-
-function isMultiLineText(textEditor: TextEditor | undefined): boolean {
-    return (textEditor?.document?.lineCount ?? 0) > 1;
 }
