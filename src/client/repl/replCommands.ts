@@ -4,7 +4,6 @@ import {
     workspace,
     window,
     NotebookControllerAffinity,
-    ViewColumn,
     NotebookEditor,
     TextEditor,
     NotebookDocument,
@@ -22,7 +21,6 @@ import {
 } from './replCommandHandler';
 import { getReplController } from './replController';
 import {
-    addCellToNotebook,
     checkUserInputCompleteCode,
     getActiveInterpreter,
     getSelectedTextToExecute,
