@@ -6,13 +6,8 @@ import {
     window,
     NotebookControllerAffinity,
     ViewColumn,
-    NotebookEdit,
-    NotebookCellData,
-    NotebookCellKind,
-    WorkspaceEdit,
     NotebookEditor,
     TextEditor,
-    Selection,
     NotebookDocument,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
