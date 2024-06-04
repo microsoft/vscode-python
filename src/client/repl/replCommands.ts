@@ -39,7 +39,12 @@ workspace.onDidCloseNotebookDocument((nb) => {
     }
 });
 
-// Will only be called when user has experiment enabled.
+/**
+ * Registers REPL command for shift+enter if sendToNativeREPL setting is enabled.
+ * @param disposables
+ * @param interpreterService
+ * @returns Promise<void>
+ */
 export async function registerReplCommands(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
@@ -48,7 +53,6 @@ export async function registerReplCommands(
         commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
             const nativeREPLSetting = getSendToNativeREPLSetting();
 
-            // If nativeREPLSetting is false(Send to Terminal REPL), then fall back to running in Terminal REPL
             if (!nativeREPLSetting) {
                 await executeInTerminal();
                 return;
@@ -94,8 +98,8 @@ export async function registerReplExecuteOnEnter(
             // Create Separate Python server to check valid command
             const pythonServer = createPythonServer([interpreter.path as string]);
             const completeCode = await checkUserInputCompleteCode(window.activeTextEditor, pythonServer);
-
             const editor = window.activeTextEditor;
+
             // Execute right away when complete code and Not multi-line
             if (completeCode && !isMultiLineText(editor)) {
                 await commands.executeCommand('interactive.execute');
