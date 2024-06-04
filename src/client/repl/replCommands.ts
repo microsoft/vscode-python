@@ -21,7 +21,7 @@ import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { createPythonServer } from './pythonServer';
 import { createReplController } from './replController';
-import { getSelectedTextToExecute, getSendToNativeREPLSetting } from './replUtils';
+import { addCellToNotebook, getSelectedTextToExecute, getSendToNativeREPLSetting } from './replUtils';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
@@ -93,7 +93,7 @@ export async function registerReplCommands(
                     });
 
                     const { cellCount } = notebookDocument;
-                    await addCellToNotebook(code as string);
+                    await addCellToNotebook(notebookDocument, code as string);
                     // Execute the cell
                     commands.executeCommand('notebook.cell.execute', {
                         ranges: [{ start: cellCount, end: cellCount + 1 }],
@@ -103,21 +103,6 @@ export async function registerReplCommands(
             }
         }),
     );
-}
-/**
- * Function that adds cell to notebook.
- * This function will only get called when notebook document is defined.
- * @param code
- *
- */
-async function addCellToNotebook(code: string): Promise<void> {
-    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
-    const { cellCount } = notebookDocument!;
-    // Add new cell to interactive window document
-    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
-    const workspaceEdit = new WorkspaceEdit();
-    workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-    await workspace.applyEdit(workspaceEdit);
 }
 
 /**
