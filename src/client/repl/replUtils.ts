@@ -6,6 +6,7 @@ import {
     TextEditor,
     workspace,
     WorkspaceEdit,
+    Selection,
 } from 'vscode';
 import { getActiveResource } from '../common/vscodeApis/windowApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
@@ -84,4 +85,22 @@ export async function checkUserInputCompleteCode(
     }
 
     return completeCode;
+}
+
+/**
+ * Function that inserts new line in the given (input) text editor
+ * @param activeEditor
+ * @returns void
+ */
+
+export function insertNewLineToREPLInput(activeEditor: TextEditor | undefined): void {
+    if (activeEditor) {
+        const position = activeEditor.selection.active;
+        const newPosition = position.with(position.line, activeEditor.document.lineAt(position.line).text.length);
+        activeEditor.selection = new Selection(newPosition, newPosition);
+
+        activeEditor.edit((editBuilder) => {
+            editBuilder.insert(newPosition, '\n');
+        });
+    }
 }

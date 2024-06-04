@@ -26,6 +26,7 @@ import {
     checkUserInputCompleteCode,
     getSelectedTextToExecute,
     getSendToNativeREPLSetting,
+    insertNewLineToREPLInput,
 } from './replUtils';
 
 let notebookController: NotebookController | undefined;
@@ -137,15 +138,7 @@ export async function registerReplExecuteOnEnter(
                 await commands.executeCommand('interactive.execute');
             } else {
                 // Insert new line on behalf of user. "Regular" monaco editor behavior
-                if (editor) {
-                    const position = editor.selection.active;
-                    const newPosition = position.with(position.line, editor.document.lineAt(position.line).text.length);
-                    editor.selection = new Selection(newPosition, newPosition);
-
-                    editor.edit((editBuilder) => {
-                        editBuilder.insert(newPosition, '\n');
-                    });
-                }
+                insertNewLineToREPLInput(editor);
 
                 // Handle case when user enters on blank line, just trigger interactive.execute
                 if (editor && editor.document.lineAt(editor.selection.active.line).text === '') {
