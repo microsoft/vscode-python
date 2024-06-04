@@ -1,5 +1,6 @@
 import { commands, window, NotebookController, NotebookEditor, ViewColumn, NotebookDocument } from 'vscode';
 import { Commands } from '../common/constants';
+import { addCellToNotebook } from './replUtils';
 
 export async function executeInTerminal(): Promise<void> {
     await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
@@ -36,4 +37,39 @@ export async function openInteractiveREPL(
         await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
     }
     return notebookEditor;
+}
+
+/**
+ * Function that selects notebook Kernel.
+ * @param notebookEditor
+ * @param notebookControllerId
+ * @param extensionId
+ * @return Promise<void>
+ */
+export async function selectNotebookKernel(
+    notebookEditor: NotebookEditor,
+    notebookControllerId: string,
+    extensionId: string,
+): Promise<void> {
+    await commands.executeCommand('notebook.selectKernel', {
+        notebookEditor,
+        id: notebookControllerId,
+        extension: extensionId,
+    });
+}
+
+/**
+ * Function that executes notebook cell given code.
+ * @param notebookDocument
+ * @param code
+ * @return Promise<void>
+ */
+export async function executeNotebookCell(notebookDocument: NotebookDocument, code: string): Promise<void> {
+    const { cellCount } = notebookDocument;
+    await addCellToNotebook(notebookDocument, code);
+    // Execute the cell
+    commands.executeCommand('notebook.cell.execute', {
+        ranges: [{ start: cellCount, end: cellCount + 1 }],
+        document: notebookDocument.uri,
+    });
 }

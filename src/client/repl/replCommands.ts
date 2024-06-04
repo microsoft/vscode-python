@@ -14,7 +14,12 @@ import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { createPythonServer } from './pythonServer';
-import { executeInTerminal, openInteractiveREPL } from './replCommandHandler';
+import {
+    executeInTerminal,
+    executeNotebookCell,
+    openInteractiveREPL,
+    selectNotebookKernel,
+} from './replCommandHandler';
 import { getReplController } from './replController';
 import {
     addCellToNotebook,
@@ -63,21 +68,8 @@ export async function registerReplCommands(
 
                 if (notebookDocument) {
                     notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
-
-                    // Auto-Select Python REPL Kernel
-                    await commands.executeCommand('notebook.selectKernel', {
-                        notebookEditor,
-                        id: notebookController.id,
-                        extension: PVSC_EXTENSION_ID,
-                    });
-
-                    const { cellCount } = notebookDocument;
-                    await addCellToNotebook(notebookDocument, code as string);
-                    // Execute the cell
-                    commands.executeCommand('notebook.cell.execute', {
-                        ranges: [{ start: cellCount, end: cellCount + 1 }],
-                        document: notebookDocument.uri,
-                    });
+                    await selectNotebookKernel(notebookEditor, notebookController.id, PVSC_EXTENSION_ID);
+                    await executeNotebookCell(notebookDocument, code as string);
                 }
             }
         }),
