@@ -62,6 +62,7 @@ export async function addCellToNotebook(notebookDocument: NotebookDocument, code
     workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
     await workspace.applyEdit(workspaceEdit);
 }
+
 /**
  * Function that checks if native REPL's text input box contains complete code.
  * @param activeEditor
