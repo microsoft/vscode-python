@@ -14,10 +14,12 @@ import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { createPythonServer } from './pythonServer';
-import { createReplController, getReplController } from './replController';
+import { executeInTerminal, openInteractiveREPL } from './replCommandHandler';
+import { getReplController } from './replController';
 import {
     addCellToNotebook,
     checkUserInputCompleteCode,
+    getActiveInterpreter,
     getSelectedTextToExecute,
     getSendToNativeREPLSetting,
     insertNewLineToREPLInput,
@@ -45,43 +47,19 @@ export async function registerReplCommands(
 
             // If nativeREPLSetting is false(Send to Terminal REPL), then fall back to running in Terminal REPL
             if (!nativeREPLSetting) {
-                await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
+                await executeInTerminal();
                 return;
             }
 
-            const interpreter = await interpreterService.getActiveInterpreter(uri);
-            if (!interpreter) {
-                commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
-                return;
-            }
-            let notebookController = getReplController(interpreter, disposables);
+            const interpreter = await getActiveInterpreter(uri, interpreterService);
+
             if (interpreter) {
-                const interpreterPath = interpreter.path;
-
-                if (!notebookController) {
-                    notebookController = createReplController(interpreterPath, disposables);
-                }
+                const notebookController = getReplController(interpreter, disposables);
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
 
-                if (!notebookEditor) {
-                    const interactiveWindowObject = (await commands.executeCommand(
-                        'interactive.open',
-                        {
-                            preserveFocus: true,
-                            viewColumn: ViewColumn.Beside,
-                        },
-                        undefined,
-                        notebookController.id,
-                        'Python REPL',
-                    )) as { notebookEditor: NotebookEditor };
-                    notebookEditor = interactiveWindowObject.notebookEditor;
-                    notebookDocument = interactiveWindowObject.notebookEditor.notebook;
-                }
-                // Handle case where user has closed REPL window, and re-opens.
-                if (notebookEditor && notebookDocument) {
-                    await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
-                }
+                notebookEditor = await openInteractiveREPL(notebookController, notebookEditor);
+                notebookDocument = notebookEditor.notebook;
 
                 if (notebookDocument) {
                     notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);

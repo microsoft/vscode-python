@@ -7,9 +7,15 @@ import {
     workspace,
     WorkspaceEdit,
     Selection,
+    Uri,
+    commands,
 } from 'vscode';
+import { Commands } from '../common/constants';
+import { noop } from '../common/utils/misc';
 import { getActiveResource } from '../common/vscodeApis/windowApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { IInterpreterService } from '../interpreter/contracts';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
 import { PythonServer } from './pythonServer';
 
@@ -108,4 +114,23 @@ export function insertNewLineToREPLInput(activeEditor: TextEditor | undefined): 
 
 export function isMultiLineText(textEditor: TextEditor | undefined): boolean {
     return (textEditor?.document?.lineCount ?? 0) > 1;
+}
+
+/**
+ * Function that trigger interpreter warning if invalid interpreter.
+ * Function will also return undefined or active interpreter
+ * @parm uri
+ * @param interpreterService
+ * @returns Promise<PythonEnvironment | undefined>
+ */
+export async function getActiveInterpreter(
+    uri: Uri,
+    interpreterService: IInterpreterService,
+): Promise<PythonEnvironment | undefined> {
+    const interpreter = await interpreterService.getActiveInterpreter(uri);
+    if (!interpreter) {
+        commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
+        return undefined;
+    }
+    return interpreter;
 }
