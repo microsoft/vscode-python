@@ -19,40 +19,13 @@ import { Disposable } from 'vscode-jsonrpc';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
-import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
 import { createPythonServer } from './pythonServer';
 import { createReplController } from './replController';
-import { getActiveResource } from '../common/vscodeApis/windowApis';
-import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { getSelectedTextToExecute, getSendToNativeREPLSetting } from './replUtils';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
-// TODO: figure out way to put markdown telling user kernel has been dead and need to pick again.
 let notebookDocument: NotebookDocument | undefined;
-
-async function getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined> {
-    if (!textEditor) {
-        return undefined;
-    }
-
-    const { selection } = textEditor;
-    let code: string;
-
-    if (selection.isEmpty) {
-        code = textEditor.document.lineAt(selection.start.line).text;
-    } else if (selection.isSingleLine) {
-        code = getSingleLineSelectionText(textEditor);
-    } else {
-        code = getMultiLineSelectionText(textEditor);
-    }
-
-    return code;
-}
-function getSendToNativeREPLSetting(): boolean {
-    const uri = getActiveResource();
-    const configuration = getConfiguration('python', uri);
-    return configuration.get<boolean>('REPL.sendToNativeREPL', false);
-}
 
 workspace.onDidCloseNotebookDocument((nb) => {
     if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
