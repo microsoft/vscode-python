@@ -22,6 +22,7 @@ import {
     getSelectedTextToExecute,
     getSendToNativeREPLSetting,
     insertNewLineToREPLInput,
+    isMultiLineText,
 } from './replUtils';
 
 let notebookController: NotebookController | undefined;
@@ -132,7 +133,6 @@ export async function registerReplExecuteOnEnter(
             if (completeCode && !isMultiLineText(editor)) {
                 await commands.executeCommand('interactive.execute');
             } else {
-                // Insert new line on behalf of user. "Regular" monaco editor behavior
                 insertNewLineToREPLInput(editor);
 
                 // Handle case when user enters on blank line, just trigger interactive.execute
@@ -142,8 +142,4 @@ export async function registerReplExecuteOnEnter(
             }
         }),
     );
-}
-
-function isMultiLineText(textEditor: TextEditor | undefined): boolean {
-    return (textEditor?.document?.lineCount ?? 0) > 1;
 }

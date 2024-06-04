@@ -104,3 +104,7 @@ export function insertNewLineToREPLInput(activeEditor: TextEditor | undefined): 
         });
     }
 }
+
+export function isMultiLineText(textEditor: TextEditor | undefined): boolean {
+    return (textEditor?.document?.lineCount ?? 0) > 1;
+}
