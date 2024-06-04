@@ -10,6 +10,7 @@ import {
 import { getActiveResource } from '../common/vscodeApis/windowApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
+import { PythonServer } from './pythonServer';
 
 /**
  * Function that returns selected text to execute in the REPL.
@@ -59,4 +60,28 @@ export async function addCellToNotebook(notebookDocument: NotebookDocument, code
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
     await workspace.applyEdit(workspaceEdit);
+}
+/**
+ * Function that checks if native REPL's text input box contains complete code.
+ * @param activeEditor
+ * @param pythonServer
+ * @returns Promise<boolean> - True if complete/Valid code is present, False otherwise.
+ */
+export async function checkUserInputCompleteCode(
+    activeEditor: TextEditor | undefined,
+    pythonServer: PythonServer,
+): Promise<boolean> {
+    let completeCode = false;
+    let userTextInput;
+    if (activeEditor) {
+        const { document } = activeEditor;
+        userTextInput = document.getText();
+    }
+
+    // Check if userTextInput is a complete Python command
+    if (userTextInput) {
+        completeCode = await pythonServer.checkValidCommand(userTextInput);
+    }
+
+    return completeCode;
 }

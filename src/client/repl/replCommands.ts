@@ -21,7 +21,12 @@ import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { createPythonServer } from './pythonServer';
 import { createReplController } from './replController';
-import { addCellToNotebook, getSelectedTextToExecute, getSendToNativeREPLSetting } from './replUtils';
+import {
+    addCellToNotebook,
+    checkUserInputCompleteCode,
+    getSelectedTextToExecute,
+    getSendToNativeREPLSetting,
+} from './replUtils';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
@@ -124,20 +129,8 @@ export async function registerReplExecuteOnEnter(
 
             // Create Separate Python server to check valid command
             const pythonServer = createPythonServer([interpreter.path as string]);
+            const completeCode = await checkUserInputCompleteCode(window.activeTextEditor, pythonServer);
 
-            const activeEditor = window.activeTextEditor;
-            let userTextInput;
-            let completeCode = false;
-
-            if (activeEditor) {
-                const { document } = activeEditor;
-                userTextInput = document.getText();
-            }
-
-            // Check if userTextInput is a complete Python command
-            if (userTextInput) {
-                completeCode = await pythonServer.checkValidCommand(userTextInput);
-            }
             const editor = window.activeTextEditor;
             // Execute right away when complete code and Not multi-line
             if (completeCode && !isMultiLineText(editor)) {
