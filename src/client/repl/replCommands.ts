@@ -1,6 +1,5 @@
 import {
     commands,
-    NotebookController,
     Uri,
     workspace,
     window,
@@ -15,7 +14,7 @@ import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { createPythonServer } from './pythonServer';
-import { createReplController } from './replController';
+import { createReplController, getReplController } from './replController';
 import {
     addCellToNotebook,
     checkUserInputCompleteCode,
@@ -25,7 +24,6 @@ import {
     isMultiLineText,
 } from './replUtils';
 
-let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
 let notebookDocument: NotebookDocument | undefined;
 
@@ -56,6 +54,7 @@ export async function registerReplCommands(
                 commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
                 return;
             }
+            let notebookController = getReplController(interpreter, disposables);
             if (interpreter) {
                 const interpreterPath = interpreter.path;
 
