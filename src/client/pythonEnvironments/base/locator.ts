@@ -157,11 +157,6 @@ export type BasicEnvInfo = {
      * E.g. display name as provided by Windows Registry or Windows Store, etc
      */
     displayName?: string;
-    /**
-     * Command used to run Python in this environment.
-     * E.g. `conda run -n envName python` or `python.exe`
-     */
-    pythonRunCommand?: string[];
     identifiedUsingNativeLocator?: boolean;
     arch?: Architecture;
     ctime?: number;

@@ -28,17 +28,21 @@ function categoryToKind(category: string): PythonEnvKind {
             return PythonEnvKind.Conda;
         case 'system':
         case 'homebrew':
-        case 'windowsregistry':
+        case 'windows-registry':
             return PythonEnvKind.System;
         case 'pyenv':
             return PythonEnvKind.Pyenv;
         case 'pipenv':
             return PythonEnvKind.Pipenv;
-        case 'pyenvvirtualenv':
+        case 'pyenv-virtualenv':
+            return PythonEnvKind.VirtualEnv;
+        case 'venv':
+            return PythonEnvKind.Venv;
+        case 'virtualenv':
             return PythonEnvKind.VirtualEnv;
         case 'virtualenvwrapper':
             return PythonEnvKind.VirtualEnvWrapper;
-        case 'windowsstore':
+        case 'windows-store':
             return PythonEnvKind.MicrosoftStore;
         default: {
             traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
@@ -113,43 +117,40 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         disposables.push(
             this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
                 // TODO: What if executable is undefined?
-                if (data.pythonExecutablePath) {
+                if (data.executable) {
                     const arch = (data.arch || '').toLowerCase();
                     envs.push({
                         kind: categoryToKind(data.category),
-                        executablePath: data.pythonExecutablePath,
-                        envPath: data.envPath,
+                        executablePath: data.executable,
+                        envPath: data.prefix,
                         version: parseVersion(data.version),
                         name: data.name === '' ? undefined : data.name,
                         displayName: data.displayName,
-                        pythonRunCommand: data.pythonRunCommand,
-                        searchLocation: data.projectPath ? Uri.file(data.projectPath) : undefined,
+                        searchLocation: data.project ? Uri.file(data.project) : undefined,
                         identifiedUsingNativeLocator: true,
                         arch:
                             // eslint-disable-next-line no-nested-ternary
                             arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
-                        ctime: data.creationTime,
-                        mtime: data.modifiedTime,
                     });
                 } else {
                     environmentsWithoutPython += 1;
                 }
             }),
-            this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
-                switch (toolToKnownEnvironmentTool(data.tool)) {
-                    case 'Conda': {
-                        Conda.setConda(data.executablePath);
-                        break;
+                this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
+                    switch (toolToKnownEnvironmentTool(data.tool)) {
+                        case 'Conda': {
+                            Conda.setConda(data.executable);
+                            break;
+                        }
+                        case 'Pyenv': {
+                            setPyEnvBinary(data.executable);
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
                     }
-                    case 'Pyenv': {
-                        setPyEnvBinary(data.executablePath);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }),
+                }),
         );
 
         const iterator = async function* (): IPythonEnvsIterator<BasicEnvInfo> {

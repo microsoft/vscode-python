@@ -12,31 +12,29 @@ import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../
 import { createDeferred } from '../../../../common/utils/async';
 
 const NATIVE_LOCATOR = isWindows()
-    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder');
+    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet.exe')
+    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
-    name: string;
-    pythonExecutablePath?: string;
+    name?: string;
+    executable?: string;
     category: string;
     version?: string;
     pythonRunCommand?: string[];
-    envPath?: string;
-    envManager?: NativeEnvManagerInfo;
+    prefix?: string;
+    manager?: NativeEnvManagerInfo;
     /**
      * Path to the project directory when dealing with pipenv virtual environments.
      */
-    projectPath?: string;
+    project?: string;
     arch?: 'X64' | 'X86';
     symlinks?: string[];
-    creationTime?: number;
-    modifiedTime?: number;
 }
 
 export interface NativeEnvManagerInfo {
     tool: string;
-    executablePath: string;
+    executable: string;
     version?: string;
 }
 
@@ -62,13 +60,18 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
 
     public startSearch(token?: CancellationToken): Promise<void> {
         const deferred = createDeferred<void>();
-        const proc = ch.spawn(NATIVE_LOCATOR, [], { env: process.env });
+        const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quicly.
         // Lets handle the messages and close the stream only when
         // we have got the exit event.
         const readable = new PassThrough();
         proc.stdout.pipe(readable, { end: false });
+        let err = '';
+        proc.stderr.on('data', (data) => {
+            err += data.toString();
+            traceError('Native Python Finder', err);
+        });
         const writable = new PassThrough();
         writable.pipe(proc.stdin, { end: false });
         const disposeStreams = new Disposable(() => {
@@ -87,10 +90,10 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
                 disposeStreams.dispose();
                 traceError('Error in Native Python Finder', ex);
             }),
-            connection.onNotification('pythonEnvironment', (data: NativeEnvInfo) => {
+            connection.onNotification('environment', (data: NativeEnvInfo) => {
                 this._onDidFindPythonEnvironment.fire(data);
             }),
-            connection.onNotification('envManager', (data: NativeEnvManagerInfo) => {
+            connection.onNotification('manager', (data: NativeEnvManagerInfo) => {
                 this._onDidFindEnvironmentManager.fire(data);
             }),
             connection.onNotification('exit', () => {
