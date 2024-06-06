@@ -42,10 +42,10 @@ extends:
       - name: Linux
         packageArch: x64
         vsceTarget: linux-x64
-      - name: Alpine
+      - name: Linux
         packageArch: arm64
         vsceTarget: alpine-arm64
-      - name: Alpine
+      - name: Linux
         packageArch: x64
         vsceTarget: alpine-x64
       - name: MacOS
