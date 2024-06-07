@@ -23,7 +23,6 @@ resources:
       name: microsoft/python-environment-tools
       ref: main
       endpoint: Monaco
-      path: vscode-python/python-env-tools
 
 parameters:
   - name: publishExtension
@@ -101,6 +100,8 @@ extends:
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
+
+
       - script: nox --session native_build
         displayName: Build RUST binaries
 
@@ -115,6 +116,9 @@ extends:
 
       - script: nox --session native_build
         displayName: Build RUST binaries
+        env:
+          NATIVE_SOURCE_DIR: $(Agent.BuildDirectory)/python-environment-tools
+          NATIVE_DEST_DIR: $(Agent.BuildDirectory)/vscode-python/python-env-tools
 
       - script: npx gulp prePublishBundle
         displayName: Build
