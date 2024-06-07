@@ -37,6 +37,10 @@ extends:
     publishExtension: ${{ parameters.publishExtension }}
     ghCreateTag: false
     l10nSourcePaths: ./src/client
+    sdl:
+      sourceRepositoriesToScan:
+        include:
+          - repository: python-environment-tools
     buildPlatforms:
       - name: Linux
         vsceTarget: ''
