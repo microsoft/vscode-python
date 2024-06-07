@@ -90,6 +90,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: 'python-env-tools'
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
+
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:

@@ -49,7 +49,7 @@ def install_python_libs(session: nox.Session):
 
 @nox.session()
 def native_build(session: nox.Session):
-    with session.cd("./native_locator"):
+    with session.cd("./python-env-tools"):
         if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
             pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
 
@@ -70,12 +70,10 @@ def native_build(session: nox.Session):
                 "--release",
                 "--target",
                 target,
-                "--package",
-                "python-finder",
                 external=True,
             )
-            source = f"./target/{target}/release/python-finder{ext}"
-            dest = f"./bin/python-finder{ext}"
+            source = f"./target/{target}/release/pet{ext}"
+            dest = f"./bin/pet{ext}"
             shutil.copy(source, dest)
         else:
             session.run(
@@ -83,13 +81,11 @@ def native_build(session: nox.Session):
                 "build",
                 "--frozen",
                 "--release",
-                "--package",
-                "python-finder",
                 external=True,
             )
 
-            source = f"./target/release/python-finder{ext}"
-            dest = f"./bin/python-finder{ext}"
+            source = f"./target/release/pet{ext}"
+            dest = f"./bin/pet{ext}"
             shutil.copy(source, dest)
 
     # Remove native_locator/bin exclusion from .vscodeignore
