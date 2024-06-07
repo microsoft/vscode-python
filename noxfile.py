@@ -52,10 +52,10 @@ def install_python_libs(session: nox.Session):
 def native_build(session: nox.Session):
     source_dir = pathlib.Path(
         os.getenv("NATIVE_SOURCE_DIR", None)
-        or (pathlib.Path.cwd() / "python-env-tools").resolve()
-    )
+        or (pathlib.Path.cwd() / "python-env-tools")
+    ).resolve()
     dest_dir = pathlib.Path(
-        os.getenv("NATIVE_DEST_DIR", None) or pathlib.Path.cwd() / "python-env-tools"
+        os.getenv("NATIVE_DEST_DIR", None) or (pathlib.Path.cwd() / "python-env-tools")
     ).resolve()
     with session.cd(source_dir):
         if not pathlib.Path(dest_dir / "bin").exists():
