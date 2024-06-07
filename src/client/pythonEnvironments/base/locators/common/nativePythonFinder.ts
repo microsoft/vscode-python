@@ -11,9 +11,9 @@ import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred } from '../../../../common/utils/async';
 
-const NATIVE_LOCATOR = isWindows()
-    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder');
+const PYTHON_ENV_TOOLS_PATH = isWindows()
+    ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
+    : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
@@ -62,7 +62,7 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
 
     public startSearch(token?: CancellationToken): Promise<void> {
         const deferred = createDeferred<void>();
-        const proc = ch.spawn(NATIVE_LOCATOR, [], { env: process.env });
+        const proc = ch.spawn(PYTHON_ENV_TOOLS_PATH, [], { env: process.env });
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quicly.
         // Lets handle the messages and close the stream only when

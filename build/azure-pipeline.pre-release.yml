@@ -18,6 +18,13 @@ resources:
       ref: main
       endpoint: Monaco
 
+    - repository: python-environment-tools
+      type: github
+      name: microsoft/python-environment-tools
+      ref: main
+      endpoint: Monaco
+      path: vscode-python/python-env-tools
+
 parameters:
   - name: publishExtension
     displayName: 🚀 Publish Extension

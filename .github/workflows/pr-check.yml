@@ -90,6 +90,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: 'python-env-tools'
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
+
       - name: Install base Python requirements
         uses: brettcannon/pip-secure-install@v1
         with:
@@ -185,6 +196,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.special-working-directory-relative }}
+
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: ${{ env.special-working-directory-relative }}/python-env-tools
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -363,9 +385,20 @@ jobs:
         with:
           path: ${{ env.special-working-directory-relative }}
 
-      - name: Native Locator tests
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: ${{ env.special-working-directory-relative }}/python-env-tools
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
+
+      - name: Python Environment Tools tests
         run: cargo test -- --nocapture
-        working-directory: ${{ env.special-working-directory }}/native_locator
+        working-directory: ${{ env.special-working-directory }}/python-env-tools
 
   smoke-tests:
     name: Smoke tests
@@ -388,6 +421,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: python-env-tools
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
+
       - name: Smoke tests
         uses: ./.github/actions/smoke-tests
         with:
@@ -408,6 +452,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: python-env-tools
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
 
       - name: Install Node
         uses: actions/setup-node@v4
