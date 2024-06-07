@@ -23,6 +23,7 @@ resources:
       name: microsoft/python-environment-tools
       ref: main
       endpoint: Monaco
+      path: ./python-environment-tools
 
 parameters:
   - name: publishExtension
