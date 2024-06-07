@@ -50,13 +50,19 @@ def install_python_libs(session: nox.Session):
 
 @nox.session()
 def native_build(session: nox.Session):
-    native_dir = (pathlib.Path.cwd() / "python-env-tools").resolve()
-    with session.cd(native_dir):
-        if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
-            pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
+    source_dir = pathlib.Path(
+        os.getenv("NATIVE_SOURCE_DIR", None)
+        or (pathlib.Path.cwd() / "python-env-tools").resolve()
+    )
+    dest_dir = pathlib.Path(
+        os.getenv("NATIVE_DEST_DIR", None) or pathlib.Path.cwd() / "python-env-tools"
+    ).resolve()
+    with session.cd(source_dir):
+        if not pathlib.Path(dest_dir / "bin").exists():
+            pathlib.Path(dest_dir / "bin").mkdir()
 
-        if not pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").exists():
-            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text(
+        if not pathlib.Path(dest_dir / "bin" / ".gitignore").exists():
+            pathlib.Path(dest_dir / "bin" / ".gitignore").write_text(
                 "*\n", encoding="utf-8"
             )
 
@@ -74,9 +80,7 @@ def native_build(session: nox.Session):
                 target,
                 external=True,
             )
-            source = f"./target/{target}/release/pet{ext}"
-            dest = f"./bin/pet{ext}"
-            shutil.copy(source, dest)
+            source = source_dir / "target" / target / "release" / f"pet{ext}"
         else:
             session.run(
                 "cargo",
@@ -85,10 +89,9 @@ def native_build(session: nox.Session):
                 "--release",
                 external=True,
             )
-
-            source = f"./target/release/pet{ext}"
-            dest = f"./bin/pet{ext}"
-            shutil.copy(source, dest)
+            source = source_dir / "target" / "release" / f"pet{ext}"
+        dest = dest_dir / "bin" / f"pet{ext}"
+        shutil.copy(source, dest)
 
     # Remove python-env-tools/bin exclusion from .vscodeignore
     vscode_ignore = EXT_ROOT / ".vscodeignore"
