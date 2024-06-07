@@ -212,6 +212,17 @@ jobs:
         with:
           path: ${{ env.special-working-directory-relative }}
 
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: ${{ env.special-working-directory-relative }}/python-env-tools
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
+
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -392,6 +403,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: ${{ env.special-working-directory-relative }}/python-env-tools
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
 
       - name: Smoke tests
         uses: ./.github/actions/smoke-tests

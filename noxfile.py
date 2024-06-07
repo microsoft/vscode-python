@@ -3,9 +3,11 @@
 
 import os
 import pathlib
+from time import sleep
 import nox
 import shutil
 import sysconfig
+import uuid
 
 EXT_ROOT = pathlib.Path(__file__).parent
 
@@ -88,15 +90,73 @@ def native_build(session: nox.Session):
             dest = f"./bin/pet{ext}"
             shutil.copy(source, dest)
 
-    # Remove native_locator/bin exclusion from .vscodeignore
+    # Remove python-env-tools/bin exclusion from .vscodeignore
     vscode_ignore = EXT_ROOT / ".vscodeignore"
-    remove_patterns = ("native_locator/bin/**",)
+    remove_patterns = ("python-env-tools/bin/**",)
     lines = vscode_ignore.read_text(encoding="utf-8").splitlines()
     filtered_lines = [line for line in lines if not line.startswith(remove_patterns)]
     vscode_ignore.write_text("\n".join(filtered_lines) + "\n", encoding="utf-8")
 
 
+def delete_dir(path: pathlib.Path, ignore_errors=None):
+    attempt = 0
+    known = []
+    while attempt < 5:
+        try:
+            shutil.rmtree(os.fspath(path), ignore_errors=ignore_errors)
+            return
+        except PermissionError as pe:
+            if os.fspath(pe.filename) in known:
+                break
+            print(f"Changing permissions on {pe.filename}")
+            os.chmod(pe.filename, 0o666)
+
+    shutil.rmtree(os.fspath(path))
+
+
+@nox.session()
+def checkout_native(session: nox.Session):
+    dest = (pathlib.Path.cwd() / "python-env-tools").resolve()
+    if dest.exists():
+        shutil.rmtree(os.fspath(dest))
+
+    tempdir = os.getenv("TEMP") or os.getenv("TMP") or "/tmp"
+    tempdir = pathlib.Path(tempdir) / str(uuid.uuid4()) / "python-env-tools"
+    tempdir.mkdir(0o666, parents=True)
+
+    session.log(f"Temp dir: {tempdir}")
+
+    session.log(f"Cloning python-environment-tools to {tempdir}")
+    try:
+        with session.cd(tempdir):
+            session.run("git", "init", external=True)
+            session.run(
+                "git",
+                "remote",
+                "add",
+                "origin",
+                "https://github.com/microsoft/python-environment-tools",
+                external=True,
+            )
+            session.run("git", "fetch", "origin", "main", external=True)
+            session.run(
+                "git", "checkout", "--force", "-B", "main", "origin/main", external=True
+            )
+            delete_dir(tempdir / ".git")
+            delete_dir(tempdir / ".github")
+            delete_dir(tempdir / ".vscode")
+            (tempdir / "CODE_OF_CONDUCT.md").unlink()
+            shutil.move(os.fspath(tempdir), os.fspath(dest))
+    except PermissionError as e:
+        print(f"Permission error: {e}")
+        if not dest.exists():
+            raise
+    finally:
+        delete_dir(tempdir.parent, ignore_errors=True)
+
+
 @nox.session()
 def setup_repo(session: nox.Session):
     install_python_libs(session)
+    checkout_native(session)
     native_build(session)
