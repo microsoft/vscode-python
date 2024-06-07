@@ -3,7 +3,6 @@
 
 import os
 import pathlib
-from time import sleep
 import nox
 import shutil
 import sysconfig
@@ -51,7 +50,8 @@ def install_python_libs(session: nox.Session):
 
 @nox.session()
 def native_build(session: nox.Session):
-    with session.cd("./python-env-tools"):
+    native_dir = (pathlib.Path.cwd() / "python-env-tools").resolve()
+    with session.cd(native_dir):
         if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
             pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
 
