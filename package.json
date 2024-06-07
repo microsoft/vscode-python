@@ -25,7 +25,8 @@
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
         "contribIssueReporter",
-        "terminalShellIntegration"
+        "terminalShellIntegration",
+        "testRunInDebug"
     ],
     "author": {
         "name": "Microsoft Corporation"
