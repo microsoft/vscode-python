@@ -100,10 +100,11 @@ extends:
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
-
-
       - script: nox --session native_build
         displayName: Build RUST binaries
+        env:
+          NATIVE_SOURCE_DIR: $(Agent.BuildDirectory)/python-environment-tools
+          NATIVE_DEST_DIR: $(Agent.BuildDirectory)/vscode-python/python-env-tools
 
       - script: python ./build/update_ext_version.py --for-publishing
         displayName: Update build number
@@ -113,12 +114,6 @@ extends:
 
       - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
-
-      - script: nox --session native_build
-        displayName: Build RUST binaries
-        env:
-          NATIVE_SOURCE_DIR: $(Agent.BuildDirectory)/python-environment-tools
-          NATIVE_DEST_DIR: $(Agent.BuildDirectory)/vscode-python/python-env-tools
 
       - script: npx gulp prePublishBundle
         displayName: Build
