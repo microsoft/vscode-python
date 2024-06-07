@@ -19,9 +19,9 @@ import { getUserHomeDir } from '../../../../common/utils/platform';
 
 const untildify = require('untildify');
 
-const NATIVE_LOCATOR = isWindows()
-    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet');
+const PYTHON_ENV_TOOLS_PATH = isWindows()
+    ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
+    : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
@@ -153,8 +153,12 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
     // eslint-disable-next-line class-methods-use-this
     private start(): rpc.MessageConnection {
+<<<<<<< HEAD
         this.outputChannel.info(`Starting Python Locator ${NATIVE_LOCATOR} server`);
         const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
+=======
+        const proc = ch.spawn(PYTHON_ENV_TOOLS_PATH, ['server'], { env: process.env });
+>>>>>>> a674fbf89 (Add support for python-environment-tools build (#23573))
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quickly.
         // Lets handle the messages and close the stream only when

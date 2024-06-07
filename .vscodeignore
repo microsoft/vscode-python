@@ -67,9 +67,8 @@ test/**
 tmp/**
 typings/**
 types/**
-native_locator/.vscode/**
-native_locator/src/**
-native_locator/tests/**
-native_locator/bin/**
-native_locator/target/**
-native_locator/Cargo.*
+python-env-tools/.github/**
+python-env-tools/.vscode/**
+python-env-tools/crates/**
+python-env-tools/target/**
+python-env-tools/Cargo.*
