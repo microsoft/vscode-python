@@ -80,7 +80,6 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
             new rpc.StreamMessageReader(readable),
             new rpc.StreamMessageWriter(writable),
         );
-
         disposables.push(
             connection,
             disposeStreams,
@@ -94,9 +93,19 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
             connection.onNotification('manager', (data: NativeEnvManagerInfo) => {
                 this._onDidFindEnvironmentManager.fire(data);
             }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            connection.onNotification((method: string, data: any) => {
+                console.log(method);
+                this._onDidFindEnvironmentManager.fire(data);
+            }),
             connection.onNotification('exit', () => {
                 traceInfo('Native Python Finder exited');
                 disposeStreams.dispose();
+            }),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            connection.onRequest((method: string, args: any) => {
+                console.error(method, args);
+                return 'HELLO THERE';
             }),
             connection.onNotification('log', (data: NativeLog) => {
                 switch (data.level) {
@@ -147,6 +156,11 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
         }
 
         connection.listen();
+        connection.sendRequest('initialize', { body: ['This is id', 'Another'], supported: true }).then((r) => {
+            console.error(r);
+            void connection.sendNotification('initialized');
+        });
+
         return deferred.promise;
     }
 

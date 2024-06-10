@@ -21,6 +21,7 @@ import { StopWatch } from '../../../../common/utils/stopWatch';
 import { Architecture } from '../../../../common/utils/platform';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
+import { createDeferred } from '../../../../common/utils/async';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -114,6 +115,7 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         this.disposables.push(disposable);
         promise.finally(() => disposable.dispose());
         let environmentsWithoutPython = 0;
+        let deferred = createDeferred();
         disposables.push(
             this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
                 // TODO: What if executable is undefined?
@@ -132,38 +134,45 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
                             // eslint-disable-next-line no-nested-ternary
                             arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
                     });
+                    deferred.resolve();
                 } else {
                     environmentsWithoutPython += 1;
                 }
             }),
-                this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
-                    switch (toolToKnownEnvironmentTool(data.tool)) {
-                        case 'Conda': {
-                            Conda.setConda(data.executable);
-                            break;
-                        }
-                        case 'Pyenv': {
-                            setPyEnvBinary(data.executable);
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
+            this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
+                switch (toolToKnownEnvironmentTool(data.tool)) {
+                    case 'Conda': {
+                        Conda.setConda(data.executable);
+                        break;
                     }
-                }),
+                    case 'Pyenv': {
+                        setPyEnvBinary(data.executable);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }),
         );
 
         const iterator = async function* (): IPythonEnvsIterator<BasicEnvInfo> {
             // When this promise is complete, we know that the search is complete.
-            await promise;
+            // await promise;
             traceInfo(
                 `Finished searching for Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
             );
-            yield* envs;
-            sendTelemetry(envs, environmentsWithoutPython, stopWatch);
-            traceInfo(
-                `Finished yielding Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
-            );
+            while (true) {
+                if (!envs.length) {
+                    await deferred.promise;
+                }
+                if (envs.length) {
+                    const localCopy = [...envs];
+                    envs.length = 0;
+                    yield* localCopy;
+                }
+                deferred = createDeferred();
+            }
         };
 
         return iterator();
