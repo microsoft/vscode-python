@@ -11,7 +11,7 @@
             "smartStep": true,
             "sourceMaps": true,
             "outFiles": ["${workspaceFolder}/out/**/*", "!${workspaceFolder}/**/node_modules**/*"],
-            "preLaunchTask": "Compile",
+            // "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"],
             "env": {
                 // Enable this to turn on redux logging during debugging

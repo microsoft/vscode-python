@@ -11,9 +11,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred } from '../../../../common/utils/async';
 
-const NATIVE_LOCATOR = isWindows()
-    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet');
+const NATIVE_LOCATOR = '/Users/donjayamanne/Development/vsc/python-environment-tools/target/debug/pet';
 
 export interface NativeEnvInfo {
     displayName?: string;
