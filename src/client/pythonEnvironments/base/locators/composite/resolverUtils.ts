@@ -147,7 +147,7 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
     const { executablePath } = env;
     let version;
     try {
-        version = env.version ?? parseVersionFromExecutable(executablePath);
+        version = parseVersionFromExecutable(executablePath);
     } catch {
         version = UNKNOWN_PYTHON_VERSION;
     }
@@ -170,7 +170,7 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath, kind } = env;
     const envInfo = buildEnvInfo({
         kind,
-        version: env.version ?? (await getPythonVersionFromPath(executablePath)),
+        version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
         sysPrefix: env.envPath,
         location: env.envPath,
@@ -243,7 +243,7 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     } else {
         executable = await conda.getInterpreterPathForEnvironment({ prefix: envPath });
     }
-    const version = env.version ?? (executable ? await getPythonVersionFromPath(executable) : undefined);
+    const version = executable ? await getPythonVersionFromPath(executable) : undefined;
     const info = buildEnvInfo({
         executable,
         kind: PythonEnvKind.Conda,
