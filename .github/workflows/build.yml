@@ -377,7 +377,12 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: windows-latest
+            vsix-target: win32-x64
+          - os: ubuntu-latest
+            vsix-target: linux-x64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -386,4 +391,4 @@ jobs:
         uses: ./.github/actions/smoke-tests
         with:
           node_version: ${{ env.NODE_VERSION }}
-          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}
