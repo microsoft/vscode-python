@@ -1143,7 +1143,23 @@ export interface IEventNamePropertyMapping {
        "python_interpreter_discovery" : {
            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
           "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"},
-          "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+          "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
+          "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+          "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "hatchEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "microsoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "otherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "otherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "pipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "poetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "pyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "systemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "unknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "venvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "virtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "virtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
@@ -1152,9 +1168,168 @@ export interface IEventNamePropertyMapping {
          */
         interpreters?: number;
         /**
+         * Whether or not we're using the native locator.
+         */
+        usingNativeLocator?: boolean;
+        /**
          * The number of environments discovered not containing an interpreter
          */
         environmentsWithoutPython?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        activeStateEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        condaEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        customEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        hatchEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        microsoftStoreEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        otherGlobalEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        otherVirtualEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        pipEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        poetryEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        pyenvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        systemEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        unknownEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        venvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        virtualEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        virtualEnvWrapperEnvs?: number;
+    };
+    /**
+     * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.
+     */
+    /* __GDPR__
+       "python_interpreter_discovery_native" : {
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+          "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "hatchEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "microsoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "otherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "otherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "pipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "poetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "pyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "systemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "unknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "venvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "virtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+          "virtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+       }
+     */
+    [EventName.PYTHON_INTERPRETER_DISCOVERY_NATIVE]: {
+        /**
+         * The number of the interpreters discovered
+         */
+        interpreters?: number;
+        /**
+         * The number of environments discovered not containing an interpreter
+         */
+        environmentsWithoutPython?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        activeStateEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        condaEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        customEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        hatchEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        microsoftStoreEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        otherGlobalEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        otherVirtualEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        pipEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        poetryEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        pyenvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        systemEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        unknownEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        venvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        virtualEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        virtualEnvWrapperEnvs?: number;
     };
     /**
      * Telemetry event sent with details when user clicks the prompt with the following message:
@@ -2006,7 +2181,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation conditions is triggered.
      */
     /* __GDPR__
-       "environemt.check.trigger" : {
+       "environment.check.trigger" : {
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
@@ -2023,13 +2198,20 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation condition is computed.
      */
     /* __GDPR__
-       "environemt.check.result" : {
+       "environment.check.result" : {
           "result" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
     [EventName.ENVIRONMENT_CHECK_RESULT]: {
         result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
     };
+    /**
+     * Telemetry event sent when `pip install` was called from a global env in a shell where shell inegration is supported.
+     */
+    /* __GDPR__
+       "environment.terminal.global_pip" : { "owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_TERMINAL_GLOBAL_PIP]: never | undefined;
     /* __GDPR__
             "query-expfeature" : {
                 "owner": "luabud",

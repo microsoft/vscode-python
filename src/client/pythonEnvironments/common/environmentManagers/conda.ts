@@ -287,6 +287,10 @@ export class Conda {
         return Conda.condaPromise.get(shellPath);
     }
 
+    public static setConda(condaPath: string): void {
+        Conda.condaPromise.set(undefined, Promise.resolve(new Conda(condaPath)));
+    }
+
     /**
      * Locates the preferred "conda" utility on this system by considering user settings,
      * binaries on PATH, Python interpreters in the registry, and known install locations.
@@ -342,7 +346,7 @@ export class Conda {
                     prefixes.push(home, path.join(localAppData, 'Continuum'));
                 }
             } else {
-                prefixes.push('/usr/share', '/usr/local/share', '/opt');
+                prefixes.push('/usr/share', '/usr/local/share', '/opt', '/opt/homebrew/bin');
                 if (home) {
                     prefixes.push(home, path.join(home, 'opt'));
                 }

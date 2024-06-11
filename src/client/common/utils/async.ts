@@ -155,6 +155,7 @@ export async function* chain<T>(
 ): IAsyncIterableIterator<T> {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
+
     while (numRunning > 0) {
         // Promise.race will not fail, because each promise calls getNext,
         // Which handles failures by wrapping each iterator in a try/catch block.

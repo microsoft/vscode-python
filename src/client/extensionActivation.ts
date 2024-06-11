@@ -52,6 +52,7 @@ import { initializePersistentStateForTriggers } from './common/persistentState';
 import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
+import { registerReplCommands, registerReplExecuteOnEnter } from './repl/replCommands';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -94,8 +95,20 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const interpreterPathService: IInterpreterPathService = ext.legacyIOC.serviceContainer.get<IInterpreterPathService>(
         IInterpreterPathService,
     );
+    const interpreterService: IInterpreterService = ext.legacyIOC.serviceContainer.get<IInterpreterService>(
+        IInterpreterService,
+    );
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
-    registerAllCreateEnvironmentFeatures(ext.disposables, interpreterQuickPick, interpreterPathService, pathUtils);
+    registerAllCreateEnvironmentFeatures(
+        ext.disposables,
+        interpreterQuickPick,
+        interpreterPathService,
+        interpreterService,
+        pathUtils,
+    );
+
+    registerReplCommands(ext.disposables, interpreterService);
+    registerReplExecuteOnEnter(ext.disposables, interpreterService);
 }
 
 /// //////////////////////////

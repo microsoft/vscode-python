@@ -370,33 +370,40 @@ double_nested_folder_expected_execution_output = {
 }
 # This is the expected output for the nested_folder tests.
 # └── parametrize_tests.py
+#   └── TestClass
 #    └── test_adding[3+5-8]: success
 #    └── test_adding[2+4-6]: success
 #    └── test_adding[6+9-16]: failure
 parametrize_tests_path = TEST_DATA_PATH / "parametrize_tests.py"
 
 parametrize_tests_expected_execution_output = {
-    get_absolute_test_id("parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path): {
+    get_absolute_test_id(
+        "parametrize_tests.py::TestClass::test_adding[3+5-8]", parametrize_tests_path
+    ): {
         "test": get_absolute_test_id(
-            "parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path
+            "parametrize_tests.py::TestClass::test_adding[3+5-8]", parametrize_tests_path
         ),
         "outcome": "success",
         "message": None,
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id("parametrize_tests.py::test_adding[2+4-6]", parametrize_tests_path): {
+    get_absolute_test_id(
+        "parametrize_tests.py::TestClass::test_adding[2+4-6]", parametrize_tests_path
+    ): {
         "test": get_absolute_test_id(
-            "parametrize_tests.py::test_adding[2+4-6]", parametrize_tests_path
+            "parametrize_tests.py::TestClass::test_adding[2+4-6]", parametrize_tests_path
         ),
         "outcome": "success",
         "message": None,
         "traceback": None,
         "subtest": None,
     },
-    get_absolute_test_id("parametrize_tests.py::test_adding[6+9-16]", parametrize_tests_path): {
+    get_absolute_test_id(
+        "parametrize_tests.py::TestClass::test_adding[6+9-16]", parametrize_tests_path
+    ): {
         "test": get_absolute_test_id(
-            "parametrize_tests.py::test_adding[6+9-16]", parametrize_tests_path
+            "parametrize_tests.py::TestClass::test_adding[6+9-16]", parametrize_tests_path
         ),
         "outcome": "failure",
         "message": "ERROR MESSAGE",
@@ -407,11 +414,14 @@ parametrize_tests_expected_execution_output = {
 
 # This is the expected output for the single parameterized tests.
 # └── parametrize_tests.py
+#   └── TestClass
 #    └── test_adding[3+5-8]: success
 single_parametrize_tests_expected_execution_output = {
-    get_absolute_test_id("parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path): {
+    get_absolute_test_id(
+        "parametrize_tests.py::TestClass::test_adding[3+5-8]", parametrize_tests_path
+    ): {
         "test": get_absolute_test_id(
-            "parametrize_tests.py::test_adding[3+5-8]", parametrize_tests_path
+            "parametrize_tests.py::TestClass::test_adding[3+5-8]", parametrize_tests_path
         ),
         "outcome": "success",
         "message": None,

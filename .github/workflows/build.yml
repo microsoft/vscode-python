@@ -28,6 +28,7 @@ jobs:
       run:
         shell: python
     outputs:
+      vsix_basename: ${{ steps.vsix_names.outputs.vsix_basename }}
       vsix_name: ${{ steps.vsix_names.outputs.vsix_name }}
       vsix_artifact_name: ${{ steps.vsix_names.outputs.vsix_artifact_name }}
     steps:
@@ -40,13 +41,45 @@ jobs:
           else:
             vsix_type = "release"
           print(f"::set-output name=vsix_name::ms-python-{vsix_type}.vsix")
+          print(f"::set-output name=vsix_basename::ms-python-{vsix_type}")
           print(f"::set-output name=vsix_artifact_name::ms-python-{vsix_type}-vsix")
 
   build-vsix:
     name: Create VSIX
     if: github.repository == 'microsoft/vscode-python'
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            vsix-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            vsix-target: win32-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            vsix-target: linux-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-gnu
+          #     vsix-target: linux-arm64
+          #   - os: ubuntu-latest
+          #     target: arm-unknown-linux-gnueabihf
+          #     vsix-target: linux-armhf
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            vsix-target: darwin-x64
+          - os: macos-14
+            target: aarch64-apple-darwin
+            vsix-target: darwin-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            vsix-target: alpine-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-musl
+          #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,9 +87,11 @@ jobs:
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         with:
-          node_version: ${{ env.NODE_VERSION }}
-          vsix_name: ${{ needs.setup.outputs.vsix_name }}
-          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
+          node_version: ${{ env.NODE_VERSION}}
+          vsix_name: ${{ needs.setup.outputs.vsix_basename }}-${{ matrix.vsix-target }}.vsix
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}
+          cargo_target: ${{ matrix.target }}
+          vsix_target: ${{ matrix.vsix-target }}
 
   lint:
     name: Lint
@@ -97,7 +132,6 @@ jobs:
 
       - name: Install other Python requirements
         run: |
-          python -m pip --disable-pip-version-check install -t ./python_files/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
@@ -188,42 +222,18 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
 
-      - name: Download get-pip.py
-        run: |
-          python -m pip install wheel
-          python -m pip install -r build/build-install-requirements.txt
-          python ./python_files/download_get_pip.py
-        shell: bash
+      - name: Upgrade Pip
+        run: python -m pip install -U pip
 
-      - name: Install debugpy
-        run: |
-          # We need to have debugpy so that tests relying on it keep passing, but we don't need install_debugpy's logic in the test phase.
-          python -m pip --disable-pip-version-check install -t ./python_files/lib/python --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+      # For faster/better builds of sdists.
+      - name: Install build pre-requisite
+        run: python -m pip install wheel nox
 
-      - name: Install core Python requirements
-        uses: brettcannon/pip-secure-install@v1
-        with:
-          requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
-          options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/python" --no-cache-dir --implementation py'
-        if: startsWith(matrix.python, 3.)
-
-      - name: Install Jedi requirements
-        uses: brettcannon/pip-secure-install@v1
-        with:
-          requirements-file: '"${{ env.special-working-directory-relative }}/python_files/jedilsp_requirements/requirements.txt"'
-          options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/jedilsp" --no-cache-dir --implementation py'
-        if: startsWith(matrix.python, 3.)
+      - name: Install Python Extension dependencies (jedi, etc.)
+        run: nox --session install_python_libs
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
-
-      - name: Install debugpy wheels (Python ${{ matrix.python }})
-        run: |
-          python -m pip install wheel
-          python -m pip install -r build/build-install-requirements.txt
-          python ./python_files/install_debugpy.py
-        shell: bash
-        if: matrix.test-suite == 'debugger'
 
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt

@@ -14,6 +14,7 @@ import {
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
 import { LoadLanguageServerExtension } from '../../client/activation/common/loadLanguageServerExtension';
+import { RequirementsTxtLinkActivator } from '../../client/activation/requirementsTxtLinkActivator';
 
 suite('Unit Tests - Language Server Activation Service Registry', () => {
     let serviceManager: IServiceManager;
@@ -44,6 +45,12 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
             serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
                 LoadLanguageServerExtension,
+            ),
+        ).once();
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                RequirementsTxtLinkActivator,
             ),
         ).once();
     });

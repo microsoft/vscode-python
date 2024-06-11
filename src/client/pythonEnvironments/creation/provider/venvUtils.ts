@@ -61,6 +61,10 @@ function tomlHasBuildSystem(toml: tomljs.JsonMap): boolean {
     return toml['build-system'] !== undefined;
 }
 
+function tomlHasProject(toml: tomljs.JsonMap): boolean {
+    return toml.project !== undefined;
+}
+
 function getTomlOptionalDeps(toml: tomljs.JsonMap): string[] {
     const extras: string[] = [];
     if (toml.project && (toml.project as tomljs.JsonMap)['optional-dependencies']) {
@@ -139,7 +143,7 @@ async function pickRequirementsFiles(
 
 export function isPipInstallableToml(tomlContent: string): boolean {
     const toml = tomlParse(tomlContent);
-    return tomlHasBuildSystem(toml);
+    return tomlHasBuildSystem(toml) && tomlHasProject(toml);
 }
 
 export interface IPackageInstallSelection {
@@ -162,12 +166,17 @@ export async function pickPackagesToInstall(
 
             let extras: string[] = [];
             let hasBuildSystem = false;
+            let hasProject = false;
 
             if (await fs.pathExists(tomlPath)) {
                 const toml = tomlParse(await fs.readFile(tomlPath, 'utf-8'));
                 extras = getTomlOptionalDeps(toml);
                 hasBuildSystem = tomlHasBuildSystem(toml);
+                hasProject = tomlHasProject(toml);
 
+                if (!hasProject) {
+                    traceVerbose('Create env: Found toml without project. So we will not use editable install.');
+                }
                 if (!hasBuildSystem) {
                     traceVerbose('Create env: Found toml without build system. So we will not use editable install.');
                 }
@@ -179,7 +188,7 @@ export async function pickPackagesToInstall(
                 return MultiStepAction.Back;
             }
 
-            if (hasBuildSystem) {
+            if (hasBuildSystem && hasProject) {
                 if (extras.length > 0) {
                     traceVerbose('Create Env: Found toml with optional dependencies.');
 

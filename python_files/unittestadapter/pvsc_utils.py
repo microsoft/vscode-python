@@ -2,19 +2,23 @@
 # Licensed under the MIT License.
 
 import argparse
+import atexit
 import enum
 import inspect
+import json
 import os
 import pathlib
 import sys
 import unittest
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union, Dict
+
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import TypedDict  # noqa: E402
+from testing_tools import socket_manager  # noqa: E402
+from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa: E402
 
 # Types
 
@@ -41,6 +45,43 @@ class TestItem(TestData):
 
 class TestNode(TestData):
     children: "List[TestNode | TestItem]"
+
+
+class TestExecutionStatus(str, enum.Enum):
+    error = "error"
+    success = "success"
+
+
+TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, Union[str, None]]]
+
+
+class VSCodeUnittestError(Exception):
+    """A custom exception class for unittest errors."""
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class DiscoveryPayloadDict(TypedDict):
+    cwd: str
+    status: Literal["success", "error"]
+    tests: Optional[TestNode]
+    error: NotRequired[List[str]]
+
+
+class ExecutionPayloadDict(TypedDict):
+    cwd: str
+    status: TestExecutionStatus
+    result: Optional[TestResultTypeAlias]
+    not_found: NotRequired[List[str]]
+    error: NotRequired[str]
+
+
+class EOTPayloadDict(TypedDict):
+    """A dictionary that is used to send a end of transmission post request to the server."""
+
+    command_type: Union[Literal["discovery"], Literal["execution"]]
+    eot: bool
 
 
 # Helper functions for data retrieval.
@@ -254,3 +295,60 @@ def parse_unittest_args(
         parsed_args.failfast,
         parsed_args.locals,
     )
+
+
+__writer = None
+atexit.register(lambda: __writer.close() if __writer else None)
+
+
+def send_post_request(
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict],
+    test_run_pipe: str,
+):
+    """
+    Sends a post request to the server.
+
+    Keyword arguments:
+    payload -- the payload data to be sent.
+    test_run_pipe -- the name of the pipe to send the data to.
+    """
+    if not test_run_pipe:
+        error_msg = (
+            "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
+            "Please confirm this environment variable is not being changed or removed "
+            "as it is required for successful test discovery and execution."
+            f"TEST_RUN_PIPE = {test_run_pipe}\n"
+        )
+        print(error_msg, file=sys.stderr)
+        raise VSCodeUnittestError(error_msg)
+
+    global __writer
+
+    if __writer is None:
+        try:
+            __writer = socket_manager.PipeManager(test_run_pipe)
+            __writer.connect()
+        except Exception as error:
+            error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
+            __writer = None
+            raise VSCodeUnittestError(error_msg)
+
+    rpc = {
+        "jsonrpc": "2.0",
+        "params": payload,
+    }
+    data = json.dumps(rpc)
+
+    try:
+        if __writer:
+            __writer.write(data)
+        else:
+            print(
+                f"Connection error[vscode-unittest], writer is None \n[vscode-unittest] data: \n{data} \n",
+                file=sys.stderr,
+            )
+    except Exception as error:
+        print(
+            f"Exception thrown while attempting to send data[vscode-unittest]: {error} \n[vscode-unittest] data: \n{data}\n",
+            file=sys.stderr,
+        )

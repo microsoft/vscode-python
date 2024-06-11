@@ -40,6 +40,8 @@ import { traceError } from '../logging';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 import { CustomWorkspaceLocator } from './base/locators/lowLevel/customWorkspaceLocator';
 import { PixiLocator } from './base/locators/lowLevel/pixiLocator';
+import { NativeLocator } from './base/locators/lowLevel/nativeLocator';
+import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 
 const PYTHON_ENV_INFO_CACHE_KEY = 'PYTHON_ENV_INFO_CACHEv2';
 
@@ -133,33 +135,43 @@ async function createLocator(
         await createCollectionCache(ext),
         // This is shared.
         resolvingLocator,
+        useNativeLocator(),
     );
     return caching;
 }
 
+function useNativeLocator(): boolean {
+    const config = getConfiguration('python');
+    return config.get<string>('locator', 'js') === 'native';
+}
+
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>[] {
     const locators: (ILocator<BasicEnvInfo> & Partial<IDisposable>)[] = [];
-    locators.push(
-        // OS-independent locators go here.
-        new PyenvLocator(),
-        new CondaEnvironmentLocator(),
-        new ActiveStateLocator(),
-        new GlobalVirtualEnvironmentLocator(),
-        new CustomVirtualEnvironmentLocator(),
-    );
-
-    if (getOSType() === OSType.Windows) {
-        locators.push(
-            // Windows specific locators go here.
-            new WindowsRegistryLocator(),
-            new MicrosoftStoreLocator(),
-            new WindowsPathEnvVarLocator(),
-        );
+    if (useNativeLocator()) {
+        locators.push(new NativeLocator());
     } else {
         locators.push(
-            // Linux/Mac locators go here.
-            new PosixKnownPathsLocator(),
+            // OS-independent locators go here.
+            new PyenvLocator(),
+            new CondaEnvironmentLocator(),
+            new ActiveStateLocator(),
+            new GlobalVirtualEnvironmentLocator(),
+            new CustomVirtualEnvironmentLocator(),
         );
+
+        if (getOSType() === OSType.Windows) {
+            locators.push(
+                // Windows specific locators go here.
+                new WindowsRegistryLocator(),
+                new MicrosoftStoreLocator(),
+                new WindowsPathEnvVarLocator(),
+            );
+        } else {
+            locators.push(
+                // Linux/Mac locators go here.
+                new PosixKnownPathsLocator(),
+            );
+        }
     }
 
     const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];

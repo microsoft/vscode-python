@@ -23,7 +23,7 @@ const SINGLE_UNITTEST_SUBTEST = {
     },
 };
 
-const SINGLE_PYTEST_PAYLOAD = {
+export const SINGLE_PYTEST_PAYLOAD = {
     cwd: 'path/to',
     status: 'success',
     result: {
@@ -69,6 +69,13 @@ export function createPayload(uuid: string, data: unknown): string {
     return `Content-Length: ${JSON.stringify(data).length}
 Content-Type: application/json
 Request-uuid: ${uuid}
+
+${JSON.stringify(data)}`;
+}
+
+export function createPayload2(data: unknown): string {
+    return `Content-Length: ${JSON.stringify(data).length}
+Content-Type: application/json
 
 ${JSON.stringify(data)}`;
 }

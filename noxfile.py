@@ -1,9 +1,13 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import os
 import pathlib
 import nox
 import shutil
+import sysconfig
+
+EXT_ROOT = pathlib.Path(__file__).parent
 
 
 @nox.session()
@@ -32,13 +36,6 @@ def install_python_libs(session: nox.Session):
 
     session.install("packaging")
 
-    # Install debugger
-    session.run(
-        "python",
-        "./python_files/install_debugpy.py",
-        env={"PYTHONPATH": "./python_files/lib/temp"},
-    )
-
     # Download get-pip script
     session.run(
         "python",
@@ -48,3 +45,62 @@ def install_python_libs(session: nox.Session):
 
     if pathlib.Path("./python_files/lib/temp").exists():
         shutil.rmtree("./python_files/lib/temp")
+
+
+@nox.session()
+def native_build(session: nox.Session):
+    with session.cd("./native_locator"):
+        if not pathlib.Path(pathlib.Path.cwd() / "bin").exists():
+            pathlib.Path(pathlib.Path.cwd() / "bin").mkdir()
+
+        if not pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").exists():
+            pathlib.Path(pathlib.Path.cwd() / "bin" / ".gitignore").write_text(
+                "*\n", encoding="utf-8"
+            )
+
+        ext = sysconfig.get_config_var("EXE") or ""
+        target = os.environ.get("CARGO_TARGET", None)
+
+        session.run("cargo", "fetch", external=True)
+        if target:
+            session.run(
+                "cargo",
+                "build",
+                "--frozen",
+                "--release",
+                "--target",
+                target,
+                "--package",
+                "python-finder",
+                external=True,
+            )
+            source = f"./target/{target}/release/python-finder{ext}"
+            dest = f"./bin/python-finder{ext}"
+            shutil.copy(source, dest)
+        else:
+            session.run(
+                "cargo",
+                "build",
+                "--frozen",
+                "--release",
+                "--package",
+                "python-finder",
+                external=True,
+            )
+
+            source = f"./target/release/python-finder{ext}"
+            dest = f"./bin/python-finder{ext}"
+            shutil.copy(source, dest)
+
+    # Remove native_locator/bin exclusion from .vscodeignore
+    vscode_ignore = EXT_ROOT / ".vscodeignore"
+    remove_patterns = ("native_locator/bin/**",)
+    lines = vscode_ignore.read_text(encoding="utf-8").splitlines()
+    filtered_lines = [line for line in lines if not line.startswith(remove_patterns)]
+    vscode_ignore.write_text("\n".join(filtered_lines) + "\n", encoding="utf-8")
+
+
+@nox.session()
+def setup_repo(session: nox.Session):
+    install_python_libs(session)
+    native_build(session)

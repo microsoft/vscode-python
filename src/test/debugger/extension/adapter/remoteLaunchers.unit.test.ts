@@ -5,7 +5,6 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
 import '../../../../client/common/extensions';
 import * as launchers from '../../../../client/debugger/extension/adapter/remoteLaunchers';
 
@@ -24,7 +23,7 @@ suite('External debugpy Debugger Launcher', () => {
     ].forEach((testParams) => {
         suite(testParams.testName, async () => {
             test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
-                const args = launchers.getDebugpyLauncherArgs(
+                const args = await launchers.getDebugpyLauncherArgs(
                     {
                         host: 'something',
                         port: 1234,
@@ -36,7 +35,7 @@ suite('External debugpy Debugger Launcher', () => {
                 expect(args).to.be.deep.equal(expectedArgs);
             });
             test('Test remote debug launcher args (and wait for debugger to attach)', async () => {
-                const args = launchers.getDebugpyLauncherArgs(
+                const args = await launchers.getDebugpyLauncherArgs(
                     {
                         host: 'something',
                         port: 1234,
@@ -48,14 +47,5 @@ suite('External debugpy Debugger Launcher', () => {
                 expect(args).to.be.deep.equal(expectedArgs);
             });
         });
-    });
-});
-
-suite('Path To Debugger Package', () => {
-    const pathToPythonLibDir = path.join(EXTENSION_ROOT_DIR, 'python_files', 'lib', 'python');
-    test('Path to debugpy debugger package', () => {
-        const actual = launchers.getDebugpyPackagePath();
-        const expected = path.join(pathToPythonLibDir, 'debugpy');
-        expect(actual).to.be.deep.equal(expected);
     });
 });

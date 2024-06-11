@@ -80,7 +80,7 @@ def test_parse_unittest_args(args: List[str], expected: List[str]) -> None:
 
 
 def test_simple_discovery() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and a test tree
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
     if unittest discovery was performed successfully.
     """
     start_dir = os.fsdecode(TEST_DATA_PATH)
@@ -126,16 +126,15 @@ def test_simple_discovery() -> None:
         "id_": start_dir,
     }
 
-    uuid = "some-uuid"
-    actual = discover_tests(start_dir, pattern, None, uuid)
+    actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    assert is_same_tree(actual.get("tests"), expected)
+    assert is_same_tree(actual.get("tests"), expected, ["id_", "lineno", "name"])
     assert "error" not in actual
 
 
 def test_simple_discovery_with_top_dir_calculated() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and a test tree
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
     if unittest discovery was performed successfully.
     """
     start_dir = "."
@@ -181,25 +180,23 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
         "id_": os.fsdecode(pathlib.PurePath(TEST_DATA_PATH)),
     }
 
-    uuid = "some-uuid"
     # Define the CWD to be the root of the test data folder.
     os.chdir(os.fsdecode(pathlib.PurePath(TEST_DATA_PATH)))
-    actual = discover_tests(start_dir, pattern, None, uuid)
+    actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
-    assert is_same_tree(actual.get("tests"), expected)
+    assert is_same_tree(actual.get("tests"), expected, ["id_", "lineno", "name"])
     assert "error" not in actual
 
 
 def test_empty_discovery() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and no test tree
+    """The discover_tests function should return a dictionary with a "success" status,  no errors, and no test tree
     if unittest discovery was performed successfully but no tests were found.
     """
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_empty*"
 
-    uuid = "some-uuid"
-    actual = discover_tests(start_dir, pattern, None, uuid)
+    actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
     assert "tests" in actual
@@ -207,7 +204,7 @@ def test_empty_discovery() -> None:
 
 
 def test_error_discovery() -> None:
-    """The discover_tests function should return a dictionary with an "error" status, a uuid, the discovered tests, and a list of errors
+    """The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
     if unittest discovery failed at some point.
     """
     # Discover tests in .data/discovery_error/.
@@ -256,29 +253,28 @@ def test_error_discovery() -> None:
         "id_": start_dir,
     }
 
-    uuid = "some-uuid"
-    actual = discover_tests(start_dir, pattern, None, uuid)
+    actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "error"
-    assert is_same_tree(expected, actual.get("tests"))
+    assert is_same_tree(expected, actual.get("tests"), ["id_", "lineno", "name"])
     assert len(actual.get("error", [])) == 1
 
 
 def test_unit_skip() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, a uuid, no errors, and test tree.
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and test tree.
     if unittest discovery was performed and found a test in one file marked as skipped and another file marked as skipped.
     """
     start_dir = os.fsdecode(TEST_DATA_PATH / "unittest_skip")
     pattern = "unittest_*"
 
-    uuid = "some-uuid"
-    actual = discover_tests(start_dir, pattern, None, uuid)
+    actual = discover_tests(start_dir, pattern, None)
 
     assert actual["status"] == "success"
     assert "tests" in actual
     assert is_same_tree(
         actual.get("tests"),
         expected_discovery_test_output.skip_unittest_folder_discovery_output,
+        ["id_", "lineno", "name"],
     )
     assert "error" not in actual
 
@@ -295,11 +291,11 @@ def test_complex_tree() -> None:
     )
     pattern = "test_*.py"
     top_level_dir = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "utils_complex_tree"))
-    uuid = "some-uuid"
-    actual = discover_tests(start_dir, pattern, top_level_dir, uuid)
+    actual = discover_tests(start_dir, pattern, top_level_dir)
     assert actual["status"] == "success"
     assert "error" not in actual
     assert is_same_tree(
         actual.get("tests"),
         expected_discovery_test_output.complex_tree_expected_output,
+        ["id_", "lineno", "name"],
     )

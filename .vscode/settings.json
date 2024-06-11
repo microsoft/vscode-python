@@ -30,6 +30,10 @@
         },
         "editor.defaultFormatter": "charliermarsh.ruff",
     },
+    "[rust]": {
+        "editor.defaultFormatter": "rust-lang.rust-analyzer",
+        "editor.formatOnSave": true
+    },
     "[typescript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
@@ -67,5 +71,8 @@
         "python_files/tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "rust-analyzer.linkedProjects": [
+        ".\\native_locator\\Cargo.toml"
+    ]
 }

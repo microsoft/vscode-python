@@ -36,6 +36,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         default=None,
         help="Install additional dependencies from sources like `pyproject.toml` into the virtual environment.",
     )
+
     parser.add_argument(
         "--extras",
         action="append",
@@ -49,6 +50,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         default=False,
         help="Add .gitignore to the newly created virtual environment.",
     )
+
     parser.add_argument(
         "--name",
         default=VENV_NAME,
@@ -57,12 +59,14 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         metavar="NAME",
         action="store",
     )
+
     parser.add_argument(
         "--stdin",
         action="store_true",
         default=False,
         help="Read arguments from stdin.",
     )
+
     return parser.parse_args(argv)
 
 
@@ -71,11 +75,15 @@ def is_installed(module: str) -> bool:
 
 
 def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
-    return os.path.exists(path)
+    return pathlib.Path(path).exists()
 
 
 def venv_exists(name: str) -> bool:
-    return os.path.exists(CWD / name) and file_exists(get_venv_path(name))
+    return (
+        (CWD / name).exists()
+        and (CWD / name / "pyvenv.cfg").exists()
+        and file_exists(get_venv_path(name))
+    )
 
 
 def run_process(args: Sequence[str], error_message: str) -> None:

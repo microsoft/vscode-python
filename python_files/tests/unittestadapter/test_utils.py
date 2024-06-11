@@ -110,7 +110,7 @@ def test_get_existing_child_node() -> None:
     tree_copy = tree.copy()
 
     # Check that the tree didn't get mutated by get_child_node.
-    assert is_same_tree(tree, tree_copy)
+    assert is_same_tree(tree, tree_copy, ["id_", "lineno", "name"])
 
 
 def test_no_existing_child_node() -> None:
@@ -164,7 +164,7 @@ def test_no_existing_child_node() -> None:
     tree_after["children"] = tree_after["children"][:-1]
 
     # Check that all pre-existing items in the tree didn't get mutated by get_child_node.
-    assert is_same_tree(tree_before, tree_after)
+    assert is_same_tree(tree_before, tree_after, ["id_", "lineno", "name"])
 
     # Check for the added node.
     last_child = tree["children"][-1]
@@ -226,7 +226,7 @@ def test_build_simple_tree() -> None:
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert is_same_tree(expected, tests)
+    assert is_same_tree(expected, tests, ["id_", "lineno", "name"])
     assert not errors
 
 
@@ -286,7 +286,7 @@ def test_build_decorated_tree() -> None:
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert is_same_tree(expected, tests)
+    assert is_same_tree(expected, tests, ["id_", "lineno", "name"])
     assert not errors
 
 

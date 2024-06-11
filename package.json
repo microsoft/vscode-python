@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2024.3.0-dev",
+    "version": "2024.9.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -24,7 +24,8 @@
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
-        "contribIssueReporter"
+        "contribIssueReporter",
+        "terminalShellIntegration"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -45,7 +46,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.86.0"
+        "vscode": "^1.89.0-20240415"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -84,6 +85,16 @@
                 "description": "%walkthrough.pythonWelcome.description%",
                 "when": "workspacePlatform != webworker",
                 "steps": [
+                   {
+                        "id": "python.createPythonFolder",
+                        "title": "%walkthrough.step.python.createPythonFolder.title%",
+                        "description": "%walkthrough.step.python.createPythonFolder.description%",
+                        "media": {
+                            "svg": "resources/walkthrough/open-folder.svg",
+                            "altText": "%walkthrough.step.python.createPythonFile.altText%"
+                        },
+                        "when": "workspaceFolderCount = 0"
+                    },
                     {
                         "id": "python.createPythonFile",
                         "title": "%walkthrough.step.python.createPythonFile.title%",
@@ -91,8 +102,7 @@
                         "media": {
                             "svg": "resources/walkthrough/open-folder.svg",
                             "altText": "%walkthrough.step.python.createPythonFile.altText%"
-                        },
-                        "when": ""
+                        }
                     },
                     {
                         "id": "python.installPythonWin8",
@@ -122,16 +132,6 @@
                         },
                         "when": "workspacePlatform == linux && showInstallPythonTile",
                         "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.selectInterpreter",
-                        "title": "%walkthrough.step.python.selectInterpreter.title%",
-                        "description": "%walkthrough.step.python.selectInterpreter.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/python-interpreter.svg",
-                            "altText": "%walkthrough.step.python.selectInterpreter.altText%"
-                        },
-                        "when": "workspaceFolderCount == 0"
                     },
                     {
                         "id": "python.createEnvironment",
@@ -140,8 +140,7 @@
                         "media": {
                             "svg": "resources/walkthrough/create-environment.svg",
                             "altText": "%walkthrough.step.python.createEnvironment.altText%"
-                        },
-                        "when": "workspaceFolderCount > 0"
+                        }
                     },
                     {
                         "id": "python.runAndDebug",
@@ -150,8 +149,7 @@
                         "media": {
                             "svg": "resources/walkthrough/rundebug2.svg",
                             "altText": "%walkthrough.step.python.runAndDebug.altText%"
-                        },
-                        "when": ""
+                        }
                     },
                     {
                         "id": "python.learnMoreWithDS",
@@ -160,85 +158,7 @@
                         "media": {
                             "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
                             "svg": "resources/walkthrough/learnmore.svg"
-                        },
-                        "when": ""
-                    }
-                ]
-            },
-            {
-                "id": "pythonWelcome2",
-                "title": "%walkthrough.pythonWelcome.title%",
-                "description": "%walkthrough.pythonWelcome.description%",
-                "when": "false",
-                "steps": [
-                    {
-                        "id": "python.createPythonFile",
-                        "title": "%walkthrough.step.python.createPythonFile.title%",
-                        "description": "%walkthrough.step.python.createPythonFile.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/open-folder.svg",
-                            "altText": "%walkthrough.step.python.createPythonFile.altText%"
-                        },
-                        "when": ""
-                    },
-                    {
-                        "id": "python.installPythonWin8",
-                        "title": "%walkthrough.step.python.installPythonWin8.title%",
-                        "description": "%walkthrough.step.python.installPythonWin8.description%",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-windows-8.md"
-                        },
-                        "when": "workspacePlatform == windows && showInstallPythonTile"
-                    },
-                    {
-                        "id": "python.installPythonMac",
-                        "title": "%walkthrough.step.python.installPythonMac.title%",
-                        "description": "%walkthrough.step.python.installPythonMac.description%",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-macos.md"
-                        },
-                        "when": "workspacePlatform == mac && showInstallPythonTile",
-                        "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.installPythonLinux",
-                        "title": "%walkthrough.step.python.installPythonLinux.title%",
-                        "description": "%walkthrough.step.python.installPythonLinux.description%",
-                        "media": {
-                            "markdown": "resources/walkthrough/install-python-linux.md"
-                        },
-                        "when": "workspacePlatform == linux && showInstallPythonTile",
-                        "command": "workbench.action.terminal.new"
-                    },
-                    {
-                        "id": "python.createEnvironment2",
-                        "title": "%walkthrough.step.python.createEnvironment.title2%",
-                        "description": "%walkthrough.step.python.createEnvironment.description2%",
-                        "media": {
-                            "svg": "resources/walkthrough/create-environment.svg",
-                            "altText": "%walkthrough.step.python.createEnvironment.altText%"
-                        },
-                        "when": ""
-                    },
-                    {
-                        "id": "python.runAndDebug2",
-                        "title": "%walkthrough.step.python.runAndDebug2.title%",
-                        "description": "%walkthrough.step.python.runAndDebug2.description%",
-                        "media": {
-                            "svg": "resources/walkthrough/rundebug2.svg",
-                            "altText": "%walkthrough.step.python.runAndDebug.altText%"
-                        },
-                        "when": ""
-                    },
-                    {
-                        "id": "python.learnMoreWithDS2",
-                        "title": "%walkthrough.step.python.learnMoreWithDS2.title%",
-                        "description": "%walkthrough.step.python.learnMoreWithDS.description2%",
-                        "media": {
-                            "altText": "%walkthrough.step.python.learnMoreWithDS.altText%",
-                            "svg": "resources/walkthrough/learnmore.svg"
-                        },
-                        "when": ""
+                        }
                     }
                 ]
             },
@@ -388,6 +308,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.execInREPL",
+                "title": "%python.command.python.execInREPL.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.launchTensorBoard",
                 "title": "%python.command.python.launchTensorBoard.title%"
             },
@@ -456,7 +381,7 @@
                     "uniqueItems": true
                 },
                 "python.createEnvironment.contentButton": {
-                    "default": "show",
+                    "default": "hide",
                     "markdownDescription": "%python.createEnvironment.contentButton.description%",
                     "scope": "machine-overridable",
                     "type": "string",
@@ -466,7 +391,7 @@
                     ]
                 },
                 "python.createEnvironment.trigger": {
-                    "default": "off",
+                    "default": "prompt",
                     "markdownDescription": "%python.createEnvironment.trigger.description%",
                     "scope": "machine-overridable",
                     "type": "string",
@@ -502,7 +427,7 @@
                 "python.experiments.enabled": {
                     "default": true,
                     "description": "%python.experiments.enabled.description%",
-                    "scope": "machine",
+                    "scope": "window",
                     "type": "boolean"
                 },
                 "python.experiments.optInto": {
@@ -530,7 +455,7 @@
                             "%python.experiments.pythonRecommendTensorboardExt.description%"
                         ]
                     },
-                    "scope": "machine",
+                    "scope": "window",
                     "type": "array",
                     "uniqueItems": true
                 },
@@ -557,7 +482,7 @@
                             "%python.experiments.pythonREPLSmartSend.description%"
                         ]
                     },
-                    "scope": "machine",
+                    "scope": "window",
                     "type": "array",
                     "uniqueItems": true
                 },
@@ -630,6 +555,19 @@
                         "experimental"
                     ]
                 },
+                "python.locator": {
+                    "default": "js",
+                    "description": "%python.locator.description%",
+                    "enum": [
+                        "js",
+                        "native"
+                    ],
+                    "tags": [
+                        "experimental"
+                    ],
+                    "scope": "machine",
+                    "type": "string"
+                },
                 "python.pipenvPath": {
                     "default": "pipenv",
                     "description": "%python.pipenvPath.description%",
@@ -691,6 +629,15 @@
                     "description": "%python.EnableREPLSmartSend.description%",
                     "scope": "resource",
                     "type": "boolean"
+                },
+                "python.REPL.sendToNativeREPL": {
+                    "default": false,
+                    "description": "%python.REPL.sendToNativeREPL.description%",
+                    "scope": "resource",
+                    "type": "boolean",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
@@ -1172,7 +1119,17 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused"
+                "when": "!config.python.REPL.sendToNativeREPL && editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+            },
+            {
+                "command": "python.execInREPL",
+                "key": "shift+enter",
+                "when": "config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'&& editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused"
+            },
+            {
+                "command": "python.execInREPLEnter",
+                "key": "enter",
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
             },
             {
                 "command": "python.refreshTensorBoard",
@@ -1242,10 +1199,10 @@
         ],
         "menus": {
             "issue/reporter": [
-				{
-					"command": "python.reportIssue"
-				}
-			],
+                {
+                    "command": "python.reportIssue"
+                }
+            ],
             "commandPalette": [
                 {
                     "category": "Python",
@@ -1326,6 +1283,12 @@
                     "command": "python.execSelectionInTerminal",
                     "title": "%python.command.python.execSelectionInTerminal.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.execInREPL",
+                    "title": "%python.command.python.execInREPL.title%",
+                    "when": "false"
                 },
                 {
                     "category": "Python",
@@ -1425,7 +1388,12 @@
                 {
                     "command": "python.execSelectionInTerminal",
                     "group": "Python",
-                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                    "when": "!config.python.REPL.sendToNativeREPL && editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported"
+                },
+                {
+                    "command": "python.execInREPL",
+                    "group": "Python",
+                    "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && config.python.REPL.sendToNativeREPL"
                 }
             ],
             "editor/title": [
@@ -1599,7 +1567,7 @@
         "@typescript-eslint/eslint-plugin": "^3.7.0",
         "@typescript-eslint/parser": "^3.7.0",
         "@vscode/test-electron": "^2.3.8",
-        "@vscode/vsce": "^2.18.0",
+        "@vscode/vsce": "^2.26.1",
         "bent": "^7.3.12",
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",

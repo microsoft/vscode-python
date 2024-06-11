@@ -6,6 +6,9 @@ on:
     types: [trigger-needs-more-info]
   workflow_dispatch:
 
+permissions:
+  issues: write
+
 jobs:
   main:
     runs-on: ubuntu-latest
