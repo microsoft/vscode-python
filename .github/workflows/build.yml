@@ -68,12 +68,12 @@ jobs:
           #   - os: ubuntu-latest
           #     target: arm-unknown-linux-gnueabihf
           #     vsix-target: linux-armhf
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            vsix-target: darwin-x64
-          - os: macos-14
-            target: aarch64-apple-darwin
-            vsix-target: darwin-arm64
+          #   - os: macos-latest
+          #     target: x86_64-apple-darwin
+          #     vsix-target: darwin-x64
+          #   - os: macos-14
+          #     target: aarch64-apple-darwin
+          #     vsix-target: darwin-arm64
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
             vsix-target: alpine-x64
