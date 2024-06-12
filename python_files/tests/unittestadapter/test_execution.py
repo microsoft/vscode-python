@@ -5,14 +5,14 @@ import os
 import pathlib
 import sys
 from unittest.mock import patch
-from typing import Dict
+from typing import Dict, Optional
 
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from unittestadapter.pvsc_utils import ExecutionPayloadDict, TestResultTypeAlias  # noqa: E402
+from unittestadapter.pvsc_utils import ExecutionPayloadDict  # noqa: E402
 from unittestadapter.execution import run_tests  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
@@ -64,7 +64,7 @@ def test_single_ids_run(mock_send_run_data):
     test_actual = args[0]  # first argument is the result
 
     assert test_actual
-    actual_result: TestResultTypeAlias | None = actual["result"]
+    actual_result: Optional[Dict[str, Dict[str, Optional[str]]]] = actual["result"]
     if actual_result is None:
         raise AssertionError("actual_result is None")
     else:
