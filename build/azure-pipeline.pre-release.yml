@@ -37,7 +37,8 @@ extends:
     workingDirectory: $(Build.SourcesDirectory)/vscode-python
     publishExtension: ${{ parameters.publishExtension }}
     ghCreateTag: false
-    l10nSourcePaths: ./src/client
+    l10nSourcePaths: $(Build.SourcesDirectory)/vscode-python/src/client
+    l10nPackageNlsPath: $(Build.SourcesDirectory)/vscode-python/package.nls.json
     sourceRepositoriesToScan:
       include:
         - repository: python-environment-tools
@@ -99,7 +100,6 @@ extends:
           default: true
           addToPath: true
         displayName: Install Rust toolchain
-
 
       - script: python -m pip install -U pip
         displayName: Upgrade pip
