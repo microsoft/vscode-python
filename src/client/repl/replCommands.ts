@@ -24,6 +24,8 @@ import { createPythonServer } from './pythonServer';
 import { createReplController } from './replController';
 import { getActiveResource } from '../common/vscodeApis/windowApis';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { IServiceManager } from '../ioc/types';
+import { ICodeExecutionHelper } from '../terminals/types';
 
 let notebookController: NotebookController | undefined;
 let notebookEditor: NotebookEditor | undefined;
@@ -48,6 +50,7 @@ async function getSelectedTextToExecute(textEditor: TextEditor): Promise<string 
 
     return code;
 }
+
 function getSendToNativeREPLSetting(): boolean {
     const uri = getActiveResource();
     const configuration = getConfiguration('python', uri);
@@ -65,6 +68,7 @@ workspace.onDidCloseNotebookDocument((nb) => {
 export async function registerReplCommands(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
+    serviceManager: IServiceManager,
 ): Promise<void> {
     disposables.push(
         commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
@@ -89,6 +93,14 @@ export async function registerReplCommands(
                 }
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
+                // TODO: smart send here
+                const codeExecutionHelper = serviceManager.get<ICodeExecutionHelper>(ICodeExecutionHelper);
+                // const resource = getActiveResource();
+                let wholeFileContent = '';
+                if (activeEditor && activeEditor.document) {
+                    wholeFileContent = activeEditor.document.getText();
+                }
+                const normalizedCode = await codeExecutionHelper.normalizeLines(code!, wholeFileContent);
 
                 if (!notebookEditor) {
                     const interactiveWindowObject = (await commands.executeCommand(
@@ -120,7 +132,7 @@ export async function registerReplCommands(
                     });
 
                     const { cellCount } = notebookDocument;
-                    await addCellToNotebook(code as string);
+                    await addCellToNotebook(normalizedCode as string);
                     // Execute the cell
                     commands.executeCommand('notebook.cell.execute', {
                         ranges: [{ start: cellCount, end: cellCount + 1 }],

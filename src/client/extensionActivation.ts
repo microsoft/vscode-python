@@ -98,6 +98,9 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const interpreterService: IInterpreterService = ext.legacyIOC.serviceContainer.get<IInterpreterService>(
         IInterpreterService,
     );
+    const { legacyIOC } = ext;
+    const { serviceManager } = legacyIOC;
+
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
     registerAllCreateEnvironmentFeatures(
         ext.disposables,
@@ -107,7 +110,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         pathUtils,
     );
 
-    registerReplCommands(ext.disposables, interpreterService);
+    registerReplCommands(ext.disposables, interpreterService, serviceManager);
     registerReplExecuteOnEnter(ext.disposables, interpreterService);
 }
 
