@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { DebugConfiguration, l10n, Uri, WorkspaceFolder } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSessionOptions, TestRun } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -32,7 +32,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
+    public async launchDebugger(options: LaunchOptions, callback?: () => void, runInstance?: TestRun): Promise<void> {
         const deferred = createDeferred<void>();
         if (options.token && options.token.isCancellationRequested) {
             return undefined;
@@ -52,7 +52,17 @@ export class DebugLauncher implements ITestDebugLauncher {
             deferred.resolve();
             callback?.();
         });
-        debugManager.startDebugging(workspaceFolder, launchArgs);
+
+        const debugSessionOptions: DebugSessionOptions = {
+            testRun: runInstance,
+        };
+
+        debugManager.startDebugging(workspaceFolder, launchArgs, debugSessionOptions);
+
+        debugManager.onDidTerminateDebugSession(() => {
+            deferred.resolve();
+            callback?.();
+        });
         return deferred.promise;
     }
 

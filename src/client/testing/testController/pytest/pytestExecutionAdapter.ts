@@ -166,10 +166,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     pytestPort: resultNamedPipeName,
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
-                await debugLauncher!.launchDebugger(launchOptions, () => {
-                    serverDispose(); // this will resolve deferredTillServerClose
-                    deferredTillEOT?.resolve();
-                });
+                await debugLauncher!.launchDebugger(
+                    launchOptions,
+                    () => {
+                        serverDispose(); // this will resolve deferredTillServerClose
+                        deferredTillEOT?.resolve();
+                    },
+                    runInstance,
+                );
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read
                 const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
