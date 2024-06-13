@@ -77,6 +77,7 @@ extends:
     buildSteps:
       - checkout: self
         displayName: Checkout Python Extension
+        path: '.'
 
       - task: NodeTool@0
         inputs:
