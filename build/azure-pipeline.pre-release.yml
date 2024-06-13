@@ -129,6 +129,8 @@ extends:
 
       - script: nox --session native_build
         displayName: Build RUST binaries
+        env:
+          ENABLE_CARGO_CONFIG: 'True'
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox

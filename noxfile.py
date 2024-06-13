@@ -48,15 +48,21 @@ def install_python_libs(session: nox.Session):
         shutil.rmtree("./python_files/lib/temp")
 
 
+def enable_rustc_flags(source_dir: pathlib.Path):
+    config_toml_disabled = source_dir / ".cargo" / "config.toml.disabled"
+    config_toml = source_dir / ".cargo" / "config.toml"
+    if config_toml_disabled.exists() and not config_toml.exists():
+        config_toml.write_bytes(config_toml_disabled.read_bytes())
+
+
 @nox.session()
 def native_build(session: nox.Session):
-    source_dir = pathlib.Path(
-        os.getenv("NATIVE_SOURCE_DIR", None)
-        or (pathlib.Path.cwd() / "python-env-tools")
-    ).resolve()
-    dest_dir = pathlib.Path(
-        os.getenv("NATIVE_DEST_DIR", None) or (pathlib.Path.cwd() / "python-env-tools")
-    ).resolve()
+    source_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
+    dest_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
+
+    if os.getenv("ENABLE_CARGO_CONFIG", None):
+        enable_rustc_flags(source_dir)
+
     with session.cd(source_dir):
         if not pathlib.Path(dest_dir / "bin").exists():
             pathlib.Path(dest_dir / "bin").mkdir()
