@@ -14,7 +14,7 @@ import { InterpreterUri } from './types';
 import { getPixiEnvironmentFromInterpreter } from '../../pythonEnvironments/common/environmentManagers/pixi';
 
 /**
- * A Python module installer for a conda environment.
+ * A Python module installer for a pixi project.
  */
 @injectable()
 export class PixiInstaller extends ModuleInstaller {
@@ -68,7 +68,6 @@ export class PixiInstaller extends ModuleInstaller {
         const execPath = pixiEnv?.pixi.command;
 
         let args = ['add', moduleName];
-        // eslint-disable-next-line camelcase
         const manifestPath = pixiEnv?.manifestPath;
         if (manifestPath !== undefined) {
             args = args.concat(['--manifest-path', manifestPath]);
