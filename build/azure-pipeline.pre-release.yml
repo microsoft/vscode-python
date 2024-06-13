@@ -75,6 +75,9 @@ extends:
         vsceTarget: win32-x64
 
     buildSteps:
+      - checkout: self
+        displayName: Checkout Python Extension
+
       - task: NodeTool@0
         inputs:
           versionSpec: '18.17.1'
