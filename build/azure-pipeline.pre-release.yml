@@ -107,15 +107,6 @@ extends:
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
-      - checkout: python-environment-tools
-        displayName: Checkout python-environment-tools
-        path: ./python-environment-tools
-
-      - script: nox --session native_build
-        displayName: Build RUST binaries
-        env:
-          NATIVE_SOURCE_DIR: $(Build.SourcesDirectory)/python-environment-tools
-          NATIVE_DEST_DIR: $(Build.SourcesDirectory)/vscode-python/python-env-tools
 
       - script: python ./build/update_ext_version.py --for-publishing
         displayName: Update build number
@@ -129,8 +120,19 @@ extends:
       - script: npx gulp prePublishBundle
         displayName: Build
 
+      - checkout: python-environment-tools
+        displayName: Checkout python-environment-tools
+        path: ./python-environment-tools
+
+      - script: nox --session native_build
+        displayName: Build RUST binaries
+        env:
+          NATIVE_SOURCE_DIR: $(Build.SourcesDirectory)/python-environment-tools
+          NATIVE_DEST_DIR: $(Build.SourcesDirectory)/vscode-python/python-env-tools
+
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox
+
     tsa:
       config:
         areaPath: 'Visual Studio Code Python Extensions'
