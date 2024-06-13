@@ -75,9 +75,6 @@ extends:
         vsceTarget: win32-x64
 
     buildSteps:
-      - checkout: python-environment-tools
-        displayName: Checkout python-environment-tools
-
       - task: NodeTool@0
         inputs:
           versionSpec: '18.17.1'
@@ -109,6 +106,10 @@ extends:
 
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
+
+      - checkout: python-environment-tools
+        displayName: Checkout python-environment-tools
+        path: ./python-environment-tools
 
       - script: nox --session native_build
         displayName: Build RUST binaries
