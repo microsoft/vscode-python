@@ -16,8 +16,8 @@ import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
  * Returns all virtual environment locations to look for in a workspace.
  */
 async function getVirtualEnvDirs(root: string): Promise<string[]> {
-    const pixi = await Pixi.getPixi(root);
-    const envDirs = (await pixi?.getEnvList()) ?? [];
+    const pixi = await Pixi.getPixi();
+    const envDirs = (await pixi?.getEnvList(root)) ?? [];
     return asyncFilter(envDirs, pathExists);
 }
 

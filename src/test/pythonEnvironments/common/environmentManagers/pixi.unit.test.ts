@@ -111,7 +111,7 @@ suite('Pixi binary is located correctly', async () => {
         getPythonSetting.returns(pixiPath);
         // If `verify` is false, don’t verify that the command has been called with that path
         exec.callsFake(makeExecHandler(verify ? { pixiPath, cwd: projectDirs.nonWindows.path } : undefined));
-        const pixi = await Pixi.getPixi(projectDirs.nonWindows.path);
+        const pixi = await Pixi.getPixi();
         expect(pixi?.command).to.equal(pixiPath);
     };
 
@@ -125,7 +125,7 @@ suite('Pixi binary is located correctly', async () => {
         exec.callsFake((_file: string, _args: string[], _options: ShellOptions) =>
             Promise.reject(new Error('Command failed')),
         );
-        const hatch = await Pixi.getPixi(projectDirs.nonWindows.path);
-        expect(hatch?.command).to.equal(undefined);
+        const pixi = await Pixi.getPixi();
+        expect(pixi?.command).to.equal(undefined);
     });
 });

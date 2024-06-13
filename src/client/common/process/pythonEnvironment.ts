@@ -180,7 +180,7 @@ export async function createPixiEnv(
     procs: IProcessService,
     fs: IFileSystem,
 ): Promise<PythonEnvironment | undefined> {
-    const pythonArgv = pixiEnv.pixi.getRunPythonArgs(pixiEnv.projectInfo.manifest_path, pixiEnv.envName);
+    const pythonArgv = pixiEnv.pixi.getRunPythonArgs(pixiEnv.manifestPath, pixiEnv.envName);
     const deps = createDeps(
         async (filename) => fs.pathExists(filename),
         pythonArgv,

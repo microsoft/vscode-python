@@ -4,12 +4,15 @@
 'use strict';
 
 import * as path from 'path';
+import { readJSON } from 'fs-extra';
 import { OSType, getOSType, getUserHomeDir } from '../../../common/utils/platform';
-import { exec, getPythonSetting, isParentPath, pathExists, pathExistsSync } from '../externalDependencies';
+import { exec, getPythonSetting, onDidChangePythonSetting, pathExists, pathExistsSync } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
 import { traceError, traceVerbose, traceWarn } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
+
+export const PIXITOOLPATH_SETTING_KEY = 'pixiToolPath';
 
 // This type corresponds to the output of 'pixi info --json', and property
 // names must be spelled exactly as they are in order to match the schema.
@@ -42,41 +45,23 @@ export type PixiProjectInfo = {
     version: string;
 };
 
+export type PixiEnvMetadata = {
+    manifest_path: string; // eslint-disable-line camelcase
+    pixi_version: string; // eslint-disable-line camelcase
+    environment_name: string; // eslint-disable-line camelcase
+};
+
 export async function isPixiEnvironment(interpreterPath: string): Promise<boolean> {
-    const projectDir = getPixiProjectFolderFromInterpreter(interpreterPath);
-    const pixiTomlPath = path.join(projectDir, 'pixi.toml');
-    return pathExists(pixiTomlPath);
-}
-
-/**
- * Returns the path to the project directory based on the interpreter path.
- *
- * This function does not check if the path actually exists.
- *
- * @param interpreterPath The path to the interpreter
- */
-export function getPixiProjectFolderFromInterpreter(interpreterPath: string): string {
-    // We want to verify the following layout
-    // project
-    // |__ pixi.toml                    <-- check if this exists
-    // |__ .pixi
-    //     |__ envs
-    //         |__ <environment>
-    //             |__ bin/""
-    //                 |__ python       <-- interpreterPath
-
-    const envDir = getCondaEnvironmentFromInterpreterPath(interpreterPath);
-    const envsDir = path.dirname(envDir);
-    const pixiDir = path.dirname(envsDir);
-    const projectDir = path.dirname(pixiDir);
-
-    return projectDir;
+    const prefix = getPrefixFromInterpreterPath(interpreterPath);
+    return (
+        pathExists(path.join(prefix, 'conda-meta/pixi')) || pathExists(path.join(prefix, 'conda-meta/pixi_env_prefix'))
+    );
 }
 
 /**
  * Returns the path to the environment directory based on the interpreter path.
  */
-export function getCondaEnvironmentFromInterpreterPath(interpreterPath: string): string {
+export function getPrefixFromInterpreterPath(interpreterPath: string): string {
     const interpreterDir = path.dirname(interpreterPath);
     if (getOSType() === OSType.Windows) {
         return interpreterDir;
@@ -91,16 +76,19 @@ export class Pixi {
      * Locating pixi binary can be expensive, since it potentially involves spawning or
      * trying to spawn processes; so we only do it once per session.
      */
-    private static pixiPromise: Map<string, Promise<Pixi | undefined>> = new Map<string, Promise<Pixi | undefined>>();
+    private static pixiPromise: Promise<Pixi | undefined> | undefined;
 
     /**
      * Creates a Pixi service corresponding to the corresponding "pixi" command.
      *
      * @param command - Command used to run pixi. This has the same meaning as the
      * first argument of spawn() - i.e. it can be a full path, or just a binary name.
-     * @param cwd - The working directory to use as cwd when running pixi.
      */
-    constructor(public readonly command: string, private cwd: string) {}
+    constructor(public readonly command: string) {
+        onDidChangePythonSetting(PIXITOOLPATH_SETTING_KEY, () => {
+            Pixi.pixiPromise = undefined;
+        });
+    }
 
     /**
      * Returns a Pixi instance corresponding to the binary which can be used to run commands for the cwd.
@@ -109,26 +97,26 @@ export class Pixi {
      * execution as soon as possible. To do that we need to ensure the operations before the command are
      * performed synchronously.
      */
-    public static async getPixi(cwd: string): Promise<Pixi | undefined> {
-        if (Pixi.pixiPromise.get(cwd) === undefined || isTestExecution()) {
-            Pixi.pixiPromise.set(cwd, Pixi.locate(cwd));
+    public static async getPixi(): Promise<Pixi | undefined> {
+        if (Pixi.pixiPromise === undefined || isTestExecution()) {
+            Pixi.pixiPromise = Pixi.locate();
         }
-        return Pixi.pixiPromise.get(cwd);
+        return Pixi.pixiPromise;
     }
 
-    private static async locate(cwd: string): Promise<Pixi | undefined> {
+    private static async locate(): Promise<Pixi | undefined> {
         // First thing this method awaits on should be pixi command execution, hence perform all operations
         // before that synchronously.
 
-        traceVerbose(`Getting pixi for cwd ${cwd}`);
+        traceVerbose(`Getting pixi`);
         // Produce a list of candidate binaries to be probed by exec'ing them.
         function* getCandidates() {
             // Read the pixi location from the settings.
             try {
-                const custompixiToolPath = getPythonSetting<string>('pixiToolPath');
-                if (custompixiToolPath && custompixiToolPath !== 'pixi') {
+                const customPixiToolPath = getPythonSetting<string>(PIXITOOLPATH_SETTING_KEY);
+                if (customPixiToolPath && customPixiToolPath !== 'pixi') {
                     // If user has specified a custom pixi path, use it first.
-                    yield custompixiToolPath;
+                    yield customPixiToolPath;
                 }
             } catch (ex) {
                 traceError(`Failed to get pixi setting`, ex);
@@ -149,49 +137,40 @@ export class Pixi {
 
         // Probe the candidates, and pick the first one that exists and does what we need.
         for (const pixiToolPath of getCandidates()) {
-            traceVerbose(`Probing pixi binary for ${cwd}: ${pixiToolPath}`);
-            const pixi = new Pixi(pixiToolPath, cwd);
-            const virtualenvs = await pixi.getEnvList();
-            if (virtualenvs !== undefined) {
-                traceVerbose(`Found pixi via filesystem probing for ${cwd}: ${pixiToolPath}`);
+            traceVerbose(`Probing pixi binary: ${pixiToolPath}`);
+            const pixi = new Pixi(pixiToolPath);
+            const pixiVersion = await pixi.getVersion();
+            if (pixiVersion !== undefined) {
+                traceVerbose(`Found pixi ${pixiVersion} via filesystem probing: ${pixiToolPath}`);
                 return pixi;
             }
-            traceVerbose(`Failed to find pixi for ${cwd}: ${pixiToolPath}`);
+            traceVerbose(`Failed to find pixi: ${pixiToolPath}`);
         }
 
         // Didn't find anything.
-        traceVerbose(`No pixi binary found for ${cwd}`);
+        traceVerbose(`No pixi binary found`);
         return undefined;
     }
 
     /**
-     * Retrieves list of Python environments known to this pixi for this working directory.
-     * Returns `undefined` if we failed to spawn because the binary doesn't exist or isn't on PATH,
-     * or the current user doesn't have execute permissions for it, or this pixi couldn't handle
-     * command line arguments that we passed (indicating an old version that we do not support, or
-     * pixi has not been setup properly for the cwd).
+     * Retrieves list of Python environments known to this pixi for the specified directory.
      *
      * Corresponds to "pixi info --json" and extracting the environments. Swallows errors if any.
      */
-    public async getEnvList(): Promise<string[] | undefined> {
-        return this.getEnvListCached(this.cwd);
-    }
-
-    /**
-     * Method created to facilitate caching. The caching decorator uses function arguments as cache key,
-     * so pass in cwd on which we need to cache.
-     */
-    @cache(30_000, true, 10_000)
-    private async getEnvListCached(cwd: string): Promise<string[] | undefined> {
+    public async getEnvList(cwd: string): Promise<string[] | undefined> {
         const pixiInfo = await this.getPixiInfo(cwd);
         // eslint-disable-next-line camelcase
         return pixiInfo?.environments_info.map((env) => env.prefix);
     }
 
+    /**
+     * Method that runs `pixi info` and returns the result. The value is cached for "only" 1 second
+     * because the output changes if the project manifest is modified.
+     */
     @cache(1_000, true, 1_000)
-    public async getPixiInfo(_cwd: string): Promise<PixiInfo | undefined> {
+    public async getPixiInfo(cwd: string): Promise<PixiInfo | undefined> {
         const infoOutput = await exec(this.command, ['info', '--json'], {
-            cwd: this.cwd,
+            cwd,
             throwOnStdErr: false,
         }).catch(traceError);
         if (!infoOutput) {
@@ -202,6 +181,28 @@ export class Pixi {
         return pixiInfo;
     }
 
+    /**
+     * Runs `pixi --version` and returns the version part of the output.
+     */
+    @cache(30_000, true, 10_000)
+    public async getVersion(): Promise<string | undefined> {
+        const versionOutput = await exec(this.command, ['--version'], {
+            throwOnStdErr: false,
+        }).catch(traceError);
+        if (!versionOutput) {
+            return undefined;
+        }
+
+        return versionOutput.stdout.split(' ')[1].trim();
+    }
+
+    /**
+     * Returns the command line arguments to run `python` within a specific pixi environment.
+     * @param manifestPath The path to the manifest file used by pixi.
+     * @param envName The name of the environment in the pixi project
+     * @param isolatedFlag Whether to add `-I` to the python invocation.
+     * @returns A list of arguments that can be passed to exec.
+     */
     public getRunPythonArgs(manifestPath: string, envName?: string, isolatedFlag = false): string[] {
         let python = [this.command, 'run', '--manifest-path', manifestPath];
         if (isNonDefaultPixiEnvironmentName(envName)) {
@@ -214,47 +215,73 @@ export class Pixi {
         }
         return [...python, OUTPUT_MARKER_SCRIPT];
     }
-}
 
-/**
- * Returns true if interpreter path belongs to a pixi environment which is associated with a particular folder,
- * false otherwise.
- *
- * @param interpreterPath Absolute path to any python interpreter.
- * @param folder Absolute path to the folder.
- */
-export async function isPixiEnvironmentRelatedToFolder(interpreterPath: string, folder: string): Promise<boolean> {
-    const projectPath = getPixiProjectFolderFromInterpreter(interpreterPath);
-    return isParentPath(folder, projectPath);
+    /**
+     * Starting from Pixi 0.24.0, each environment has a special file that records some information
+     * about which manifest created the environment.
+     *
+     * @param envDir The root directory (or prefix) of a conda environment
+     */
+    @cache(5_000, true, 10_000)
+    // eslint-disable-next-line class-methods-use-this
+    async getPixiEnvironmentMetadata(envDir: string): Promise<PixiEnvMetadata | undefined> {
+        const pixiPath = path.join(envDir, 'conda-meta/pixi');
+        const result: PixiEnvMetadata | undefined = await readJSON(pixiPath).catch(traceVerbose);
+        return result;
+    }
 }
 
 export type PixiEnvironmentInfo = {
     interpreterPath: string;
     pixi: Pixi;
     pixiVersion: string;
-    projectInfo: PixiProjectInfo;
-    projectDir: string;
+    manifestPath: string;
     envName?: string;
 };
 
+/**
+ * Given the location of an interpreter, try to deduce information about the environment in which it
+ * resides.
+ * @param interpreterPath The full path to the interpreter.
+ * @param pixi Optionally a pixi instance. If this is not specified it will be located.
+ * @returns Information about the pixi environment.
+ */
 export async function getPixiEnvironmentFromInterpreter(
     interpreterPath: string,
+    pixi?: Pixi,
 ): Promise<PixiEnvironmentInfo | undefined> {
-    const envDir = getCondaEnvironmentFromInterpreterPath(interpreterPath);
-    const envsDir = path.dirname(envDir);
-    const envName = path.basename(envDir);
-    const pixiDir = path.dirname(envsDir);
-    const projectDir = path.dirname(pixiDir);
+    const prefix = getPrefixFromInterpreterPath(interpreterPath);
 
     // Find the pixi executable for the project
-    const pixi = await Pixi.getPixi(projectDir);
+    pixi = pixi || (await Pixi.getPixi());
     if (!pixi) {
         traceWarn(`could not find a pixi interpreter for the interpreter at ${interpreterPath}`);
         return undefined;
     }
 
+    // Check if the environment has pixi metadata that we can source.
+    const metadata = await pixi.getPixiEnvironmentMetadata(prefix);
+    if (metadata !== undefined) {
+        return {
+            interpreterPath,
+            pixi,
+            pixiVersion: metadata.pixi_version,
+            manifestPath: metadata.manifest_path,
+            envName: metadata.environment_name,
+        };
+    }
+
+    // Otherwise, we'll have to try to deduce this information.
+
+    // Usually the pixi environments are stored under `<projectDir>/.pixi/envs/<environment>/`. So,
+    // we walk backwards to determine the project directory.
+    const envName = path.basename(prefix);
+    const envsDir = path.dirname(prefix);
+    const dotPixiDir = path.dirname(envsDir);
+    const pixiProjectDir = path.dirname(dotPixiDir);
+
     // Invoke pixi to get information about the pixi project
-    const pixiInfo = await pixi.getPixiInfo(projectDir);
+    const pixiInfo = await pixi.getPixiInfo(pixiProjectDir);
     if (!pixiInfo || !pixiInfo.project_info) {
         traceWarn(`failed to determine pixi project information for the interpreter at ${interpreterPath}`);
         return undefined;
@@ -262,11 +289,10 @@ export async function getPixiEnvironmentFromInterpreter(
 
     return {
         interpreterPath,
-        pixiVersion: pixiInfo.version,
-        projectInfo: pixiInfo.project_info,
-        projectDir,
-        envName,
         pixi,
+        pixiVersion: pixiInfo.version,
+        manifestPath: pixiInfo.project_info.manifest_path,
+        envName,
     };
 }
 

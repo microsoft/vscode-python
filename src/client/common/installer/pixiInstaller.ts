@@ -69,7 +69,7 @@ export class PixiInstaller extends ModuleInstaller {
 
         let args = ['add', moduleName];
         // eslint-disable-next-line camelcase
-        const manifestPath = pixiEnv?.projectInfo.manifest_path;
+        const manifestPath = pixiEnv?.manifestPath;
         if (manifestPath !== undefined) {
             args = args.concat(['--manifest-path', manifestPath]);
         }
