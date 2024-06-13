@@ -34,6 +34,7 @@ parameters:
 extends:
   template: azure-pipelines/extension/pre-release.yml@templates
   parameters:
+    workingDirectory: $(Build.SourcesDirectory)/vscode-python
     publishExtension: ${{ parameters.publishExtension }}
     ghCreateTag: false
     l10nSourcePaths: ./src/client
@@ -77,7 +78,7 @@ extends:
     buildSteps:
       - checkout: self
         displayName: Checkout Python Extension
-        path: $(Build.SourcesDirectory)
+        path: vscode-python
 
       - task: NodeTool@0
         inputs:
@@ -99,8 +100,6 @@ extends:
           addToPath: true
         displayName: Install Rust toolchain
 
-      - script: npm ci
-        displayName: Install NPM dependencies
 
       - script: python -m pip install -U pip
         displayName: Upgrade pip
@@ -108,31 +107,41 @@ extends:
       - script: python -m pip install wheel nox
         displayName: Install wheel and nox
 
+      - script: npm ci
+        displayName: Install NPM dependencies
+        workingDirectory: vscode-python
+
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
-
+        workingDirectory: vscode-python
 
       - script: python ./build/update_ext_version.py --for-publishing
         displayName: Update build number
+        workingDirectory: vscode-python
 
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
+        workingDirectory: vscode-python
 
       - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
+        workingDirectory: vscode-python
 
       - script: npx gulp prePublishBundle
         displayName: Build
+        workingDirectory: vscode-python
 
       - checkout: python-environment-tools
         displayName: Checkout python-environment-tools
-        path: $(Build.SourcesDirectory)/python-env-tools
+        path: vscode-python/python-env-tools
 
       - script: nox --session native_build
         displayName: Build RUST binaries
+        workingDirectory: vscode-python
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox
+        workingDirectory: vscode-python
 
     tsa:
       config:
