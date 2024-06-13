@@ -6,7 +6,7 @@ import * as externalDependencies from '../../../../client/pythonEnvironments/com
 import { TEST_LAYOUT_ROOT } from '../commonTestConstants';
 import { Pixi } from '../../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
-export type HatchCommand = { cmd: 'info --json' } | { cmd: null };
+export type PixiCommand = { cmd: 'info --json' } | { cmd: '--version' } | { cmd: null };
 
 const textPixiDir = path.join(TEST_LAYOUT_ROOT, 'pixi');
 export const projectDirs = {
@@ -51,7 +51,11 @@ export const projectDirs = {
 /**
  * Convert the command line arguments into a typed command.
  */
-export function pixiCommand(args: string[]): HatchCommand {
+export function pixiCommand(args: string[]): PixiCommand {
+    if (args[0] === '--version') {
+        return { cmd: '--version' };
+    }
+
     if (args.length < 2) {
         return { cmd: null };
     }
@@ -72,6 +76,11 @@ export function makeExecHandler(verify: VerifyOptions = {}) {
             throw new Error('Command failed: not the correct pixi path');
         }
 
+        const cmd = pixiCommand(args);
+        if (cmd.cmd === '--version') {
+            return { stdout: 'pixi 0.24.1' };
+        }
+
         /// Verify that the working directory is the expected one
         const cwd = typeof options.cwd === 'string' ? options.cwd : options.cwd?.toString();
         if (verify.cwd) {
@@ -81,7 +90,6 @@ export function makeExecHandler(verify: VerifyOptions = {}) {
         }
 
         /// Convert the command into a single string
-        const cmd = pixiCommand(args);
         if (cmd.cmd === 'info --json') {
             const project = Object.values(projectDirs).find((p) => cwd?.startsWith(p.path));
             if (!project) {
@@ -110,12 +118,12 @@ suite('Pixi binary is located correctly', async () => {
     const testPath = async (pixiPath: string, verify = true) => {
         getPythonSetting.returns(pixiPath);
         // If `verify` is false, don’t verify that the command has been called with that path
-        exec.callsFake(makeExecHandler(verify ? { pixiPath, cwd: projectDirs.nonWindows.path } : undefined));
+        exec.callsFake(makeExecHandler(verify ? { pixiPath } : undefined));
         const pixi = await Pixi.getPixi();
         expect(pixi?.command).to.equal(pixiPath);
     };
 
-    test('Return a Pixi instance in an empty directory', () => testPath('hatchPath', false));
+    test('Return a Pixi instance in an empty directory', () => testPath('pixiPath', false));
     test('When user has specified a valid Pixi path, use it', () => testPath('path/to/pixi/binary'));
     // 'pixi' is the default value
     test('When user hasn’t specified a path, use Pixi on PATH if available', () => testPath('pixi'));

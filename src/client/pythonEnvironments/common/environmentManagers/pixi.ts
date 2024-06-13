@@ -250,6 +250,10 @@ export async function getPixiEnvironmentFromInterpreter(
     interpreterPath: string,
     pixi?: Pixi,
 ): Promise<PixiEnvironmentInfo | undefined> {
+    if (!interpreterPath) {
+        return undefined;
+    }
+
     const prefix = getPrefixFromInterpreterPath(interpreterPath);
 
     // Find the pixi executable for the project
