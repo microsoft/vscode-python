@@ -3,13 +3,18 @@
 
 import { Disposable, EventEmitter, type Event, type Uri } from 'vscode';
 import * as ch from 'child_process';
+import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { PassThrough } from 'stream';
+import { isWindows } from '../../../../common/platform/platformService';
+import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred } from '../../../../common/utils/async';
 import { DisposableBase } from '../../../../common/utils/resourceLifecycle';
 
-const NATIVE_LOCATOR = '/Users/donjayamanne/Development/vsc/python-environment-tools/target/release/pet';
+const NATIVE_LOCATOR = isWindows()
+    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet.exe')
+    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
