@@ -188,7 +188,11 @@ function checkIfFinishedAndNotify(
     }
 }
 
-function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo, identifiedUsingNativeLocator = false) {
+function getResolvedEnv(
+    interpreterInfo: InterpreterInformation,
+    environment: PythonEnvInfo,
+    identifiedUsingNativeLocator = false,
+) {
     // Deep copy into a new object
     const resolvedEnv = cloneDeep(environment);
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
