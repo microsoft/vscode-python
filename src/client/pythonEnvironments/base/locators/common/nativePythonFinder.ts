@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, type Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -49,23 +49,25 @@ interface NativeLog {
 
 class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGlobalPythonFinder {
     async *refresh(_paths: Uri[]): AsyncIterable<NativeEnvInfo> {
-        const result =  this.start();
+        const result = this.start();
         let completed = false;
-        void result.completed.finally(() => {completed = true});
+        void result.completed.finally(() => {
+            completed = true;
+        });
         const envs: NativeEnvInfo[] = [];
         let discovered = createDeferred();
         const disposable = result.discovered((data) => envs.push(data));
 
         do {
             await Promise.race([result.completed, discovered.promise]);
-            if (envs.length ){
+            if (envs.length) {
                 const dataToSend = [...envs];
                 envs.length = 0;
-                for (const data of dataToSend){
+                for (const data of dataToSend) {
                     yield data;
                 }
             }
-            if (!completed){
+            if (!completed) {
                 discovered = createDeferred();
                 envs.length = 0;
             }
@@ -75,7 +77,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private start(): {completed:Promise<void>, discovered: Event<NativeEnvInfo>}{
+    private start(): { completed: Promise<void>; discovered: Event<NativeEnvInfo> } {
         const discovered = new EventEmitter<NativeEnvInfo>();
         const completed = createDeferred<void>();
         const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
@@ -166,9 +168,8 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             void connection.sendNotification('initialized');
         });
 
-        return {completed: completed.promise, discovered: discovered.event};
+        return { completed: completed.promise, discovered: discovered.event };
     }
-
 }
 
 export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
