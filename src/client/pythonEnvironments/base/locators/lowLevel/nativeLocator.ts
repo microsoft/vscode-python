@@ -7,21 +7,12 @@ import { ILocator, BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { PythonEnvKind, PythonVersion } from '../../info';
 import { Conda } from '../../../common/environmentManagers/conda';
-import { traceError, traceInfo } from '../../../../logging';
+import { traceError } from '../../../../logging';
 import type { KnownEnvironmentTools } from '../../../../api/types';
 import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
-import {
-    NativeEnvInfo,
-    NativeEnvManagerInfo,
-    NativeGlobalPythonFinder,
-    createNativeGlobalPythonFinder,
-} from '../common/nativePythonFinder';
+import { NativeGlobalPythonFinder, createNativeGlobalPythonFinder } from '../common/nativePythonFinder';
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
-import { StopWatch } from '../../../../common/utils/stopWatch';
 import { Architecture } from '../../../../common/utils/platform';
-import { sendTelemetryEvent } from '../../../../telemetry';
-import { EventName } from '../../../../telemetry/constants';
-import { createDeferred } from '../../../../common/utils/async';
 
 function categoryToKind(category: string): PythonEnvKind {
     switch (category.toLowerCase()) {
@@ -29,9 +20,12 @@ function categoryToKind(category: string): PythonEnvKind {
             return PythonEnvKind.Conda;
         case 'system':
         case 'homebrew':
+        case 'mac-python-org':
+        case 'mac-command-line-tools':
         case 'windows-registry':
             return PythonEnvKind.System;
         case 'pyenv':
+        case 'pyenv-other':
             return PythonEnvKind.Pyenv;
         case 'pipenv':
             return PythonEnvKind.Pipenv;
@@ -45,6 +39,8 @@ function categoryToKind(category: string): PythonEnvKind {
             return PythonEnvKind.VirtualEnvWrapper;
         case 'windows-store':
             return PythonEnvKind.MicrosoftStore;
+        case 'unknown':
+            return PythonEnvKind.Unknown;
         default: {
             traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
             return PythonEnvKind.Unknown;
@@ -105,115 +101,43 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         return Promise.resolve();
     }
 
-    public iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
-        const stopWatch = new StopWatch();
-        traceInfo('Searching for Python environments using Native Locator');
-        const promise = this.finder.startSearch();
-        const envs: BasicEnvInfo[] = [];
+    public async *iterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const disposables: IDisposable[] = [];
         const disposable = new Disposable(() => disposeAll(disposables));
         this.disposables.push(disposable);
-        promise.finally(() => disposable.dispose());
-        let environmentsWithoutPython = 0;
-        let deferred = createDeferred();
-        disposables.push(
-            this.finder.onDidFindPythonEnvironment((data: NativeEnvInfo) => {
-                // TODO: What if executable is undefined?
-                if (data.executable) {
-                    const arch = (data.arch || '').toLowerCase();
-                    envs.push({
-                        kind: categoryToKind(data.category),
-                        executablePath: data.executable,
-                        envPath: data.prefix,
-                        version: parseVersion(data.version),
-                        name: data.name === '' ? undefined : data.name,
-                        displayName: data.displayName,
-                        searchLocation: data.project ? Uri.file(data.project) : undefined,
-                        identifiedUsingNativeLocator: true,
-                        arch:
-                            // eslint-disable-next-line no-nested-ternary
-                            arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
-                    });
-                    deferred.resolve();
-                } else {
-                    environmentsWithoutPython += 1;
-                }
-            }),
-            this.finder.onDidFindEnvironmentManager((data: NativeEnvManagerInfo) => {
-                switch (toolToKnownEnvironmentTool(data.tool)) {
+        for await (const data of this.finder.refresh([])) {
+            if (data.manager) {
+                switch (toolToKnownEnvironmentTool(data.manager.tool)) {
                     case 'Conda': {
-                        Conda.setConda(data.executable);
+                        Conda.setConda(data.manager.executable);
                         break;
                     }
                     case 'Pyenv': {
-                        setPyEnvBinary(data.executable);
+                        setPyEnvBinary(data.manager.executable);
                         break;
                     }
                     default: {
                         break;
                     }
                 }
-            }),
-        );
-
-        const iterator = async function* (): IPythonEnvsIterator<BasicEnvInfo> {
-            // When this promise is complete, we know that the search is complete.
-            // await promise;
-            traceInfo(
-                `Finished searching for Python environments using Native Locator: ${stopWatch.elapsedTime} milliseconds`,
-            );
-            while (true) {
-                if (!envs.length) {
-                    await deferred.promise;
-                }
-                if (envs.length) {
-                    const localCopy = [...envs];
-                    envs.length = 0;
-                    yield* localCopy;
-                }
-                deferred = createDeferred();
             }
-        };
-
-        return iterator();
+            if (data.executable) {
+                const arch = (data.arch || '').toLowerCase();
+                const env: BasicEnvInfo = {
+                    kind: categoryToKind(data.category),
+                    executablePath: data.executable,
+                    envPath: data.prefix,
+                    version: parseVersion(data.version),
+                    name: data.name === '' ? undefined : data.name,
+                    displayName: data.displayName,
+                    searchLocation: data.project ? Uri.file(data.project) : undefined,
+                    identifiedUsingNativeLocator: true,
+                    arch:
+                        // eslint-disable-next-line no-nested-ternary
+                        arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
+                };
+                yield env;
+            }
+        }
     }
-}
-
-function sendTelemetry(envs: BasicEnvInfo[], environmentsWithoutPython: number, stopWatch: StopWatch) {
-    const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
-    const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
-    const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
-    const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
-    const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
-    const otherGlobalEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherGlobal).length;
-    const otherVirtualEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherVirtual).length;
-    const pipEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pipenv).length;
-    const poetryEnvs = envs.filter((e) => e.kind === PythonEnvKind.Poetry).length;
-    const pyenvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pyenv).length;
-    const systemEnvs = envs.filter((e) => e.kind === PythonEnvKind.System).length;
-    const unknownEnvs = envs.filter((e) => e.kind === PythonEnvKind.Unknown).length;
-    const venvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Venv).length;
-    const virtualEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnv).length;
-    const virtualEnvWrapperEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnvWrapper).length;
-
-    // Intent is to capture time taken for discovery of all envs to complete the first time.
-    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-        interpreters: envs.length,
-        environmentsWithoutPython,
-        activeStateEnvs,
-        condaEnvs,
-        customEnvs,
-        hatchEnvs,
-        microsoftStoreEnvs,
-        otherGlobalEnvs,
-        otherVirtualEnvs,
-        pipEnvEnvs,
-        poetryEnvs,
-        pyenvEnvs,
-        systemEnvs,
-        unknownEnvs,
-        venvEnvs,
-        virtualEnvEnvs,
-        virtualEnvWrapperEnvs,
-    });
 }

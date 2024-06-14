@@ -1,17 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, EventEmitter, type Event, type Uri } from 'vscode';
 import * as ch from 'child_process';
-import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { PassThrough } from 'stream';
-import { isWindows } from '../../../../common/platform/platformService';
-import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred } from '../../../../common/utils/async';
+import { DisposableBase } from '../../../../common/utils/resourceLifecycle';
 
-const NATIVE_LOCATOR = '/Users/donjayamanne/Development/vsc/python-environment-tools/target/debug/pet';
+const NATIVE_LOCATOR = '/Users/donjayamanne/Development/vsc/python-environment-tools/target/release/pet';
 
 export interface NativeEnvInfo {
     displayName?: string;
@@ -19,14 +17,13 @@ export interface NativeEnvInfo {
     executable?: string;
     category: string;
     version?: string;
-    pythonRunCommand?: string[];
     prefix?: string;
     manager?: NativeEnvManagerInfo;
     /**
      * Path to the project directory when dealing with pipenv virtual environments.
      */
     project?: string;
-    arch?: 'X64' | 'X86';
+    arch?: 'x64' | 'x86';
     symlinks?: string[];
 }
 
@@ -37,9 +34,7 @@ export interface NativeEnvManagerInfo {
 }
 
 export interface NativeGlobalPythonFinder extends Disposable {
-    startSearch(token?: CancellationToken): Promise<void>;
-    onDidFindPythonEnvironment: Event<NativeEnvInfo>;
-    onDidFindEnvironmentManager: Event<NativeEnvManagerInfo>;
+    refresh(paths: Uri[]): AsyncIterable<NativeEnvInfo>;
 }
 
 interface NativeLog {
@@ -47,17 +42,37 @@ interface NativeLog {
     message: string;
 }
 
-class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
-    private readonly _onDidFindPythonEnvironment = new EventEmitter<NativeEnvInfo>();
+class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGlobalPythonFinder {
+    async *refresh(_paths: Uri[]): AsyncIterable<NativeEnvInfo> {
+        const result =  this.start();
+        let completed = false;
+        void result.completed.finally(() => {completed = true});
+        const envs: NativeEnvInfo[] = [];
+        let discovered = createDeferred();
+        const disposable = result.discovered((data) => envs.push(data));
 
-    private readonly _onDidFindEnvironmentManager = new EventEmitter<NativeEnvManagerInfo>();
+        do {
+            await Promise.race([result.completed, discovered.promise]);
+            if (envs.length ){
+                const dataToSend = [...envs];
+                envs.length = 0;
+                for (const data of dataToSend){
+                    yield data;
+                }
+            }
+            if (!completed){
+                discovered = createDeferred();
+                envs.length = 0;
+            }
+        } while (!completed);
 
-    public readonly onDidFindPythonEnvironment = this._onDidFindPythonEnvironment.event;
+        disposable.dispose();
+    }
 
-    public readonly onDidFindEnvironmentManager = this._onDidFindEnvironmentManager.event;
-
-    public startSearch(token?: CancellationToken): Promise<void> {
-        const deferred = createDeferred<void>();
+    // eslint-disable-next-line class-methods-use-this
+    private start(): {completed:Promise<void>, discovered: Event<NativeEnvInfo>}{
+        const discovered = new EventEmitter<NativeEnvInfo>();
+        const completed = createDeferred<void>();
         const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quicly.
@@ -83,24 +98,22 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
         disposables.push(
             connection,
             disposeStreams,
+            discovered,
             connection.onError((ex) => {
                 disposeStreams.dispose();
                 traceError('Error in Native Python Finder', ex);
             }),
             connection.onNotification('environment', (data: NativeEnvInfo) => {
-                this._onDidFindPythonEnvironment.fire(data);
-            }),
-            connection.onNotification('manager', (data: NativeEnvManagerInfo) => {
-                this._onDidFindEnvironmentManager.fire(data);
+                discovered.fire(data);
             }),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             connection.onNotification((method: string, data: any) => {
-                console.log(method);
-                this._onDidFindEnvironmentManager.fire(data);
+                console.log(method, data);
             }),
-            connection.onNotification('exit', () => {
-                traceInfo('Native Python Finder exited');
+            connection.onNotification('exit', (time: number) => {
+                traceInfo(`Native Python Finder completed after ${time}ms`);
                 disposeStreams.dispose();
+                completed.resolve();
             }),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             connection.onRequest((method: string, args: any) => {
@@ -126,7 +139,7 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
                 }
             }),
             connection.onClose(() => {
-                deferred.resolve();
+                completed.resolve();
                 disposables.forEach((d) => d.dispose());
             }),
             {
@@ -135,25 +148,12 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
                         if (proc.exitCode === null) {
                             proc.kill();
                         }
-                    } catch (err) {
-                        traceVerbose('Error while disposing Native Python Finder', err);
+                    } catch (ex) {
+                        traceVerbose('Error while disposing Native Python Finder', ex);
                     }
                 },
             },
         );
-
-        if (token) {
-            disposables.push(
-                token.onCancellationRequested(() => {
-                    deferred.resolve();
-                    try {
-                        proc.kill();
-                    } catch (err) {
-                        traceVerbose('Error while handling cancellation request for Native Python Finder', err);
-                    }
-                }),
-            );
-        }
 
         connection.listen();
         connection.sendRequest('initialize', { body: ['This is id', 'Another'], supported: true }).then((r) => {
@@ -161,13 +161,9 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
             void connection.sendNotification('initialized');
         });
 
-        return deferred.promise;
+        return {completed: completed.promise, discovered: discovered.event};
     }
 
-    public dispose() {
-        this._onDidFindPythonEnvironment.dispose();
-        this._onDidFindEnvironmentManager.dispose();
-    }
 }
 
 export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
