@@ -59,7 +59,11 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
     const resolvedEnv = await resolverForKind(env);
     resolvedEnv.searchLocation = getSearchLocation(resolvedEnv, searchLocation);
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
-    if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
+    if (
+        !env.identifiedUsingNativeLocator &&
+        getOSType() === OSType.Windows &&
+        resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)
+    ) {
         // We can update env further using information we can get from the Windows registry.
         await updateEnvUsingRegistry(resolvedEnv);
     }
@@ -75,9 +79,11 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         resolvedEnv.executable.ctime = ctime;
         resolvedEnv.executable.mtime = mtime;
     }
-    const type = await getEnvType(resolvedEnv);
-    if (type) {
-        resolvedEnv.type = type;
+    if (!env.identifiedUsingNativeLocator) {
+        const type = await getEnvType(resolvedEnv);
+        if (type) {
+            resolvedEnv.type = type;
+        }
     }
     return resolvedEnv;
 }
@@ -147,7 +153,7 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
     const { executablePath } = env;
     let version;
     try {
-        version = parseVersionFromExecutable(executablePath);
+        version = env.identifiedUsingNativeLocator ? env.version : parseVersionFromExecutable(executablePath);
     } catch {
         version = UNKNOWN_PYTHON_VERSION;
     }
@@ -169,7 +175,7 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath, kind } = env;
     const envInfo = buildEnvInfo({
         kind,
-        version: await getPythonVersionFromPath(executablePath),
+        version: env.identifiedUsingNativeLocator ? env.version : await getPythonVersionFromPath(executablePath),
         executable: executablePath,
         sysPrefix: env.envPath,
         location: env.envPath,

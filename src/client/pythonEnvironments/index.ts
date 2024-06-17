@@ -197,15 +197,20 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
 }
 
 function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
-    const locators = new WorkspaceLocators(watchRoots, [
-        (root: vscode.Uri) => [
-            new WorkspaceVirtualEnvironmentLocator(root.fsPath),
-            new PoetryLocator(root.fsPath),
-            new HatchLocator(root.fsPath),
-            new CustomWorkspaceLocator(root.fsPath),
-        ],
-        // Add an ILocator factory func here for each kind of workspace-rooted locator.
-    ]);
+    const locators = new WorkspaceLocators(
+        watchRoots,
+        useNativeLocator()
+            ? []
+            : [
+                  (root: vscode.Uri) => [
+                      new WorkspaceVirtualEnvironmentLocator(root.fsPath),
+                      new PoetryLocator(root.fsPath),
+                      new HatchLocator(root.fsPath),
+                      new CustomWorkspaceLocator(root.fsPath),
+                  ],
+                  // Add an ILocator factory func here for each kind of workspace-rooted locator.
+              ],
+    );
     ext.disposables.push(locators);
     return locators;
 }

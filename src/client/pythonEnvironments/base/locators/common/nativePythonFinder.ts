@@ -10,7 +10,10 @@ import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred } from '../../../../common/utils/async';
-import { DisposableBase } from '../../../../common/utils/resourceLifecycle';
+import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
+import { getPythonSetting } from '../../../common/externalDependencies';
+import { DEFAULT_INTERPRETER_PATH_SETTING_KEY } from '../lowLevel/customWorkspaceLocator';
+import { noop } from '../../../../common/utils/misc';
 
 const NATIVE_LOCATOR = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet.exe')
@@ -48,18 +51,29 @@ interface NativeLog {
 }
 
 class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGlobalPythonFinder {
+    private readonly connection: rpc.MessageConnection;
+
+    constructor() {
+        super();
+        this.connection = this.start();
+    }
+
     async *refresh(_paths: Uri[]): AsyncIterable<NativeEnvInfo> {
-        const result = this.start();
+        const result = this.doRefresh();
         let completed = false;
         void result.completed.finally(() => {
             completed = true;
         });
         const envs: NativeEnvInfo[] = [];
         let discovered = createDeferred();
-        const disposable = result.discovered((data) => envs.push(data));
-
+        const disposable = result.discovered((data) => {
+            envs.push(data);
+            discovered.resolve();
+        });
         do {
-            await Promise.race([result.completed, discovered.promise]);
+            if (!envs.length) {
+                await Promise.race([result.completed, discovered.promise]);
+            }
             if (envs.length) {
                 const dataToSend = [...envs];
                 envs.length = 0;
@@ -69,17 +83,13 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             }
             if (!completed) {
                 discovered = createDeferred();
-                envs.length = 0;
             }
         } while (!completed);
-
         disposable.dispose();
     }
 
     // eslint-disable-next-line class-methods-use-this
-    private start(): { completed: Promise<void>; discovered: Event<NativeEnvInfo> } {
-        const discovered = new EventEmitter<NativeEnvInfo>();
-        const completed = createDeferred<void>();
+    private start(): rpc.MessageConnection {
         const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quicly.
@@ -87,9 +97,8 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         // we have got the exit event.
         const readable = new PassThrough();
         proc.stdout.pipe(readable, { end: false });
-        let err = '';
         proc.stderr.on('data', (data) => {
-            err += data.toString();
+            const err = data.toString();
             traceError('Native Python Finder', err);
         });
         const writable = new PassThrough();
@@ -105,17 +114,10 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         disposables.push(
             connection,
             disposeStreams,
-            discovered,
             connection.onError((ex) => {
                 disposeStreams.dispose();
                 traceError('Error in Native Python Finder', ex);
             }),
-            connection.onNotification('environment', (data: NativeEnvInfo) => {
-                discovered.fire(data);
-            }),
-            // connection.onNotification((method: string, data: any) => {
-            //     console.log(method, data);
-            // }),
             connection.onNotification('log', (data: NativeLog) => {
                 switch (data.level) {
                     case 'info':
@@ -135,7 +137,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                 }
             }),
             connection.onClose(() => {
-                completed.resolve();
                 disposables.forEach((d) => d.dispose());
             }),
             {
@@ -152,19 +153,86 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         );
 
         connection.listen();
-        connection
-            .sendRequest<number>('refresh', {
-                // Send configuration information to the Python finder.
-                search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
-                conda_executable: undefined,
-            })
-            .then((durationInMilliSeconds: number) => {
-                completed.resolve();
-                traceInfo(`Native Python Finder took ${durationInMilliSeconds}ms to complete.`);
-            })
-            .catch((ex) => traceError('Error in Native Python Finder', ex));
+        this._register(Disposable.from(...disposables));
+        return connection;
+    }
 
-        return { completed: completed.promise, discovered: discovered.event };
+    private doRefresh(): { completed: Promise<void>; discovered: Event<NativeEnvInfo> } {
+        const disposable = this._register(new DisposableStore());
+        const discovered = disposable.add(new EventEmitter<NativeEnvInfo>());
+        const completed = createDeferred<void>();
+        const pendingPromises: Promise<void>[] = [];
+
+        const notifyUponCompletion = () => {
+            const initialCount = pendingPromises.length;
+            Promise.all(pendingPromises)
+                .then(() => {
+                    if (initialCount === pendingPromises.length) {
+                        completed.resolve();
+                    } else {
+                        setTimeout(notifyUponCompletion, 0);
+                    }
+                })
+                .catch(noop);
+        };
+        const trackPromiseAndNotifyOnCompletion = (promise: Promise<void>) => {
+            pendingPromises.push(promise);
+            notifyUponCompletion();
+        };
+
+        disposable.add(
+            this.connection.onNotification('environment', (data: NativeEnvInfo) => {
+                // We know that in the Python extension if either Version of Prefix is not provided by locator
+                // Then we end up resolving the information.
+                // Lets do that here,
+                // This is a hack, as the other part of the code that resolves the version information
+                // doesn't work as expected, as its still a WIP.
+                if (data.executable && (!data.version || !data.prefix)) {
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    const promise = this.connection
+                        .sendRequest<{ duration: number; environment: NativeEnvInfo }>('resolve', {
+                            executable: data.executable,
+                        })
+                        .then(({ environment, duration }) => {
+                            traceInfo(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+                            discovered.fire(environment);
+                        })
+                        .catch((ex) => traceError(`Error in Resolving Python Environment ${data}`, ex));
+                    trackPromiseAndNotifyOnCompletion(promise);
+                } else {
+                    discovered.fire(data);
+                }
+            }),
+        );
+
+        const pythonPathSettings = (workspace.workspaceFolders || []).map((w) =>
+            getPythonSetting<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, w.uri.fsPath),
+        );
+        pythonPathSettings.push(getPythonSetting<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY));
+        const pythonSettings = Array.from(new Set(pythonPathSettings.filter((item) => !!item)).values()).map((p) =>
+            // We only want the parent directories.
+            path.dirname(p!),
+        );
+        trackPromiseAndNotifyOnCompletion(
+            this.connection
+                .sendRequest<{ duration: number }>('refresh', {
+                    // Send configuration information to the Python finder.
+                    search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
+                    // Also send the python paths that are configured in the settings.
+                    python_path_settings: pythonSettings,
+                    conda_executable: undefined,
+                })
+                .then(({ duration }) => traceInfo(`Native Python Finder completed in ${duration}ms`))
+                .catch((ex) => traceError('Error in Native Python Finder', ex)),
+        );
+        completed.promise.finally(() => disposable.dispose());
+        return {
+            completed: completed.promise,
+            discovered: discovered.event,
+        };
     }
 }
 
