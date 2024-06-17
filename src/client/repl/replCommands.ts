@@ -1,24 +1,11 @@
-import {
-    commands,
-    Uri,
-    workspace,
-    window,
-    NotebookControllerAffinity,
-    NotebookEditor,
-    TextEditor,
-    NotebookDocument,
-} from 'vscode';
+import { commands, Uri, window, TextEditor } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
-import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
+import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
+import { PythonEnvironment } from '../pythonEnvironments/info';
 import { NativeRepl } from './nativeRepl';
-import {
-    executeInTerminal,
-    executeNotebookCell,
-    openInteractiveREPL,
-    selectNotebookKernel,
-} from './replCommandHandler';
+import { executeInTerminal } from './replCommandHandler';
 import {
     getActiveInterpreter,
     getSelectedTextToExecute,
@@ -27,16 +14,23 @@ import {
     isMultiLineText,
 } from './replUtils';
 
-let notebookEditor: NotebookEditor | undefined;
-let notebookDocument: NotebookDocument | undefined;
-let nativeRepl: NativeRepl | undefined;
+// let notebookEditor: NotebookEditor | undefined; // unncessary? -> migrate notebookDocument to be stored in nativeRepl Class
+// let notebookDocument: NotebookDocument | undefined; // -> migrate notebookDocument to be stored in nativeRepl Class
+let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
 
-workspace.onDidCloseNotebookDocument((nb) => {
-    if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
-        notebookEditor = undefined;
-        notebookDocument = undefined;
+// workspace.onDidCloseNotebookDocument((nb) => {
+//     if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
+//         notebookEditor = undefined;
+//         notebookDocument = undefined;
+//     }
+// });
+
+export function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): NativeRepl {
+    if (!nativeRepl) {
+        nativeRepl = new NativeRepl(interpreter, disposables);
     }
-});
+    return nativeRepl;
+}
 
 /**
  * Registers REPL command for shift+enter if sendToNativeREPL setting is enabled.
@@ -60,20 +54,10 @@ export async function registerReplCommands(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
-                nativeRepl = new NativeRepl(interpreter, disposables);
-                const notebookController = nativeRepl.getReplController();
-
+                nativeRepl = getNativeRepl(interpreter, disposables); // Singleton Pattern for Native REPL.
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
-
-                notebookEditor = await openInteractiveREPL(notebookController, notebookDocument);
-                notebookDocument = notebookEditor.notebook;
-
-                if (notebookDocument) {
-                    notebookController.updateNotebookAffinity(notebookDocument, NotebookControllerAffinity.Default);
-                    await selectNotebookKernel(notebookEditor, notebookController.id, PVSC_EXTENSION_ID);
-                    await executeNotebookCell(notebookDocument, code as string);
-                }
+                await nativeRepl.sendToNativeRepl(code as string);
             }
         }),
     );

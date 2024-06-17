@@ -1,9 +1,5 @@
 import * as vscode from 'vscode';
-import { Disposable } from 'vscode-jsonrpc';
-import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer } from './pythonServer';
-
-let notebookController: vscode.NotebookController | undefined;
 
 export function createReplController(
     interpreterPath: string,
@@ -52,12 +48,12 @@ export function createReplController(
     return controller;
 }
 
-export function getReplController(
-    interpreter: PythonEnvironment,
-    disposables: Disposable[],
-): vscode.NotebookController {
-    if (!notebookController) {
-        notebookController = createReplController(interpreter.path, disposables);
-    }
-    return notebookController;
-}
+// export function getReplController(
+//     interpreter: PythonEnvironment,
+//     disposables: Disposable[],
+// ): vscode.NotebookController {
+//     if (!notebookController) {
+//         notebookController = createReplController(interpreter.path, disposables);
+//     }
+//     return notebookController;
+// }
