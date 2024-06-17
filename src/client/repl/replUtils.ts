@@ -19,7 +19,6 @@ import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 import { IInterpreterService } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
-import { PythonServer } from './pythonServer';
 
 /**
  * Function that returns selected text to execute in the REPL.
@@ -72,31 +71,6 @@ export async function addCellToNotebook(notebookDocument: NotebookDocument, code
 }
 
 /**
- * Function that checks if native REPL's text input box contains complete code.
- * @param activeEditor
- * @param pythonServer
- * @returns Promise<boolean> - True if complete/Valid code is present, False otherwise.
- */
-export async function checkUserInputCompleteCode(
-    activeEditor: TextEditor | undefined,
-    pythonServer: PythonServer,
-): Promise<boolean> {
-    let completeCode = false;
-    let userTextInput;
-    if (activeEditor) {
-        const { document } = activeEditor;
-        userTextInput = document.getText();
-    }
-
-    // Check if userTextInput is a complete Python command
-    if (userTextInput) {
-        completeCode = await pythonServer.checkValidCommand(userTextInput);
-    }
-
-    return completeCode;
-}
-
-/**
  * Function that inserts new line in the given (input) text editor
  * @param activeEditor
  * @returns void
@@ -136,16 +110,11 @@ export async function getActiveInterpreter(
     }
     return interpreter;
 }
+
 /**
- * Function that will return any opened notebookEditor.
+ * Function that will return NotebookEditor for given NotebookDocument.
  * @returns NotebookEditor | undefined
  */
-export function getNotebookEditor(): NotebookEditor | undefined {
-    const temp = window.visibleNotebookEditors;
-    return window.visibleNotebookEditors.find((editor) => editor !== undefined);
-}
-
-// get notebook editor given notebook document.
-export function getNotebookEditor2(notebookDocument: NotebookDocument): NotebookEditor | undefined {
+export function getExistingNotebookEditor(notebookDocument: NotebookDocument): NotebookEditor | undefined {
     return window.visibleNotebookEditors.find((editor) => editor.notebook === notebookDocument);
 }

@@ -12,16 +12,14 @@ import { Disposable } from 'vscode-jsonrpc';
 import { Commands, PVSC_EXTENSION_ID } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
-import { createPythonServer } from './pythonServer';
+import { NativeRepl } from './nativeRepl';
 import {
     executeInTerminal,
     executeNotebookCell,
     openInteractiveREPL,
     selectNotebookKernel,
 } from './replCommandHandler';
-import { getReplController } from './replController';
 import {
-    checkUserInputCompleteCode,
     getActiveInterpreter,
     getSelectedTextToExecute,
     getSendToNativeREPLSetting,
@@ -31,6 +29,7 @@ import {
 
 let notebookEditor: NotebookEditor | undefined;
 let notebookDocument: NotebookDocument | undefined;
+let nativeRepl: NativeRepl | undefined;
 
 workspace.onDidCloseNotebookDocument((nb) => {
     if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
@@ -61,7 +60,9 @@ export async function registerReplCommands(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
-                const notebookController = getReplController(interpreter, disposables);
+                nativeRepl = new NativeRepl(interpreter, disposables);
+                const notebookController = nativeRepl.getReplController();
+
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
 
@@ -94,10 +95,7 @@ export async function registerReplExecuteOnEnter(
                 commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
                 return;
             }
-
-            // Create Separate Python server to check valid command
-            const pythonServer = createPythonServer([interpreter.path as string]);
-            const completeCode = await checkUserInputCompleteCode(window.activeTextEditor, pythonServer);
+            const completeCode = nativeRepl?.checkUserInputCompleteCode(window.activeTextEditor);
             const editor = window.activeTextEditor;
 
             // Execute right away when complete code and Not multi-line
