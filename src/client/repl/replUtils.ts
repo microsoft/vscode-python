@@ -9,8 +9,9 @@ import {
     Selection,
     Uri,
     commands,
-    NotebookEditor,
     window,
+    TabInputNotebook,
+    ViewColumn,
 } from 'vscode';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
@@ -115,6 +116,23 @@ export async function getActiveInterpreter(
  * Function that will return NotebookEditor for given NotebookDocument.
  * @returns NotebookEditor | undefined
  */
-export function getExistingNotebookEditor(notebookDocument: NotebookDocument): NotebookEditor | undefined {
-    return window.visibleNotebookEditors.find((editor) => editor.notebook === notebookDocument);
+export function getExistingReplViewColumn(notebookDocument: NotebookDocument): ViewColumn | undefined {
+    // return window.visibleNotebookEditors.find((editor) => editor.notebook === notebookDocument);
+    const ourNotebookUri = notebookDocument.uri.toString();
+    // Use Tab groups, nested for loop for each tab and figure out the view column where I call this.
+    const ourTb = window.tabGroups;
+    for (const tabGroup of ourTb.all) {
+        for (const tab of tabGroup.tabs) {
+            if (tab.label === 'Python REPL') {
+                const tabInput = (tab.input as unknown) as TabInputNotebook;
+                const tabUri = tabInput.uri.toString();
+                if (tab.input && tabUri === ourNotebookUri) {
+                    // This is the tab we are looking for.
+                    const existingReplViewColumn = tab.group.viewColumn;
+                    return existingReplViewColumn;
+                }
+            }
+        }
+    }
+    return undefined;
 }

@@ -1,6 +1,6 @@
 import { commands, window, NotebookController, NotebookEditor, ViewColumn, NotebookDocument } from 'vscode';
 import { Commands } from '../common/constants';
-import { addCellToNotebook, getExistingNotebookEditor } from './replUtils';
+import { addCellToNotebook, getExistingReplViewColumn } from './replUtils';
 
 export async function executeInTerminal(): Promise<void> {
     await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
@@ -20,9 +20,10 @@ export async function openInteractiveREPL(
 
     // Case where NotebookDocument (REPL document already exists in the tab)
     if (notebookDocument) {
-        notebookEditor = getExistingNotebookEditor(notebookDocument);
+        // notebookEditor = getExistingNotebookEditor(notebookDocument);
+        const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
         // get viewcColumn of the notebookEditor
-        const replViewColumn = notebookEditor?.viewColumn ?? ViewColumn.Beside;
+        const replViewColumn = existingReplViewColumn ?? ViewColumn.Beside;
         notebookEditor = await window.showNotebookDocument(notebookDocument!, { viewColumn: replViewColumn });
     } else if (!notebookDocument) {
         // Case where NotebookDocument doesnt exist, open new REPL tab
