@@ -15,7 +15,6 @@ import { createPythonServer, PythonServer } from './pythonServer';
 import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from './replCommandHandler';
 import { createReplController } from './replController';
 
-// Each REPL class would have their own REPL controller and Python Server.
 export class NativeRepl {
     private pythonServer: PythonServer;
 
@@ -29,14 +28,13 @@ export class NativeRepl {
 
     private notebookEditor: NotebookEditor | undefined;
 
-    // Could also have attribute of URI for file specific REPL.
+    // TODO: In the future, could also have attribute of URI for file specific REPL.
     constructor(interpreter: PythonEnvironment, disposables: Disposable[]) {
         this.interpreter = interpreter;
         this.disposables = disposables;
         this.pythonServer = createPythonServer([interpreter.path as string]);
         this.replController = this.setReplController();
 
-        // Would below work???? Not sure since it is inside constructor
         this.watchNotebookClosed();
     }
 

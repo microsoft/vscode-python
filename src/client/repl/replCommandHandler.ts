@@ -20,9 +20,7 @@ export async function openInteractiveREPL(
 
     // Case where NotebookDocument (REPL document already exists in the tab)
     if (notebookDocument) {
-        // notebookEditor = getExistingNotebookEditor(notebookDocument);
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
-        // get viewcColumn of the notebookEditor
         const replViewColumn = existingReplViewColumn ?? ViewColumn.Beside;
         notebookEditor = await window.showNotebookDocument(notebookDocument!, { viewColumn: replViewColumn });
     } else if (!notebookDocument) {
@@ -40,10 +38,6 @@ export async function openInteractiveREPL(
         notebookEditor = interactiveWindowObject.notebookEditor;
         notebookDocument = interactiveWindowObject.notebookEditor.notebook;
     }
-    // Handle case where user has closed REPL window, and re-opens.
-    // if (notebookEditor && notebookDocument) {
-    //     notebookEditor = await window.showNotebookDocument(notebookDocument!, { viewColumn: ViewColumn.Beside });
-    // }
     return notebookEditor!;
 }
 

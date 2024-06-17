@@ -47,13 +47,3 @@ export function createReplController(
     disposables.push(controller);
     return controller;
 }
-
-// export function getReplController(
-//     interpreter: PythonEnvironment,
-//     disposables: Disposable[],
-// ): vscode.NotebookController {
-//     if (!notebookController) {
-//         notebookController = createReplController(interpreter.path, disposables);
-//     }
-//     return notebookController;
-// }

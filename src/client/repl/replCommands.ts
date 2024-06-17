@@ -14,17 +14,14 @@ import {
     isMultiLineText,
 } from './replUtils';
 
-// let notebookEditor: NotebookEditor | undefined; // unncessary? -> migrate notebookDocument to be stored in nativeRepl Class
-// let notebookDocument: NotebookDocument | undefined; // -> migrate notebookDocument to be stored in nativeRepl Class
 let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
 
-// workspace.onDidCloseNotebookDocument((nb) => {
-//     if (notebookDocument && nb.uri.toString() === notebookDocument.uri.toString()) {
-//         notebookEditor = undefined;
-//         notebookDocument = undefined;
-//     }
-// });
-
+/**
+ * Get Singleton Native REPL Instance
+ * @param interpreter
+ * @param disposables
+ * @returns Native REPL instance
+ */
 export function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): NativeRepl {
     if (!nativeRepl) {
         nativeRepl = new NativeRepl(interpreter, disposables);
@@ -54,7 +51,7 @@ export async function registerReplCommands(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
-                nativeRepl = getNativeRepl(interpreter, disposables); // Singleton Pattern for Native REPL.
+                nativeRepl = getNativeRepl(interpreter, disposables);
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
                 await nativeRepl.sendToNativeRepl(code as string);
