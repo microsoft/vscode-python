@@ -42,6 +42,7 @@ export interface NativeEnvManagerInfo {
 }
 
 export interface NativeGlobalPythonFinder extends Disposable {
+    resolve(executable: string): Promise<NativeEnvInfo>;
     refresh(paths: Uri[]): AsyncIterable<NativeEnvInfo>;
 }
 
@@ -56,6 +57,18 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     constructor() {
         super();
         this.connection = this.start();
+    }
+
+    public async resolve(executable: string): Promise<NativeEnvInfo> {
+        const { environment, duration } = await this.connection.sendRequest<{
+            duration: number;
+            environment: NativeEnvInfo;
+        }>('resolve', {
+            executable,
+        });
+
+        traceInfo(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+        return environment;
     }
 
     async *refresh(_paths: Uri[]): AsyncIterable<NativeEnvInfo> {
