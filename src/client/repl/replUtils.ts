@@ -91,13 +91,12 @@ export async function getActiveInterpreter(
 }
 
 /**
- * Function that will return NotebookEditor for given NotebookDocument.
- * @returns NotebookEditor | undefined
+ * Function that will return ViewColumn for existing Native REPL that belongs to given  NotebookDocument.
+ * @returns ViewColumn | undefined
  */
 export function getExistingReplViewColumn(notebookDocument: NotebookDocument): ViewColumn | undefined {
-    // return window.visibleNotebookEditors.find((editor) => editor.notebook === notebookDocument);
     const ourNotebookUri = notebookDocument.uri.toString();
-    // Use Tab groups, nested for loop for each tab and figure out the view column where I call this.
+    // Use Tab groups, to locate previously opened Python REPL tab and fetch view column.
     const ourTb = window.tabGroups;
     for (const tabGroup of ourTb.all) {
         for (const tab of tabGroup.tabs) {
