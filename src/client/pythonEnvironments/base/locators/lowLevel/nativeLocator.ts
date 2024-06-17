@@ -125,11 +125,11 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
                 const arch = (data.arch || '').toLowerCase();
                 const env: BasicEnvInfo = {
                     kind: categoryToKind(data.category),
-                    executablePath: data.executable,
-                    envPath: data.prefix,
-                    version: parseVersion(data.version),
-                    name: data.name === '' ? undefined : data.name,
-                    displayName: data.displayName,
+                    executablePath: data.executable ? data.executable : '',
+                    envPath: data.prefix ? data.prefix : undefined,
+                    version: data.version ? parseVersion(data.version) : undefined,
+                    name: data.name ? data.name : '',
+                    displayName: data.displayName ? data.displayName : '',
                     searchLocation: data.project ? Uri.file(data.project) : undefined,
                     identifiedUsingNativeLocator: true,
                     arch:

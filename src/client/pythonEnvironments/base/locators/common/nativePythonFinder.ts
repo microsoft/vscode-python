@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri, workspace } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -113,20 +113,9 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             connection.onNotification('environment', (data: NativeEnvInfo) => {
                 discovered.fire(data);
             }),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            connection.onNotification((method: string, data: any) => {
-                console.log(method, data);
-            }),
-            connection.onNotification('exit', (time: number) => {
-                traceInfo(`Native Python Finder completed after ${time}ms`);
-                disposeStreams.dispose();
-                completed.resolve();
-            }),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            connection.onRequest((method: string, args: any) => {
-                console.error(method, args);
-                return 'HELLO THERE';
-            }),
+            // connection.onNotification((method: string, data: any) => {
+            //     console.log(method, data);
+            // }),
             connection.onNotification('log', (data: NativeLog) => {
                 switch (data.level) {
                     case 'info':
@@ -163,10 +152,17 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         );
 
         connection.listen();
-        connection.sendRequest('initialize', { body: ['This is id', 'Another'], supported: true }).then((r) => {
-            console.error(r);
-            void connection.sendNotification('initialized');
-        });
+        connection
+            .sendRequest<number>('refresh', {
+                // Send configuration information to the Python finder.
+                search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
+                conda_executable: undefined,
+            })
+            .then((durationInMilliSeconds: number) => {
+                completed.resolve();
+                traceInfo(`Native Python Finder took ${durationInMilliSeconds}ms to complete.`);
+            })
+            .catch((ex) => traceError('Error in Native Python Finder', ex));
 
         return { completed: completed.promise, discovered: discovered.event };
     }
