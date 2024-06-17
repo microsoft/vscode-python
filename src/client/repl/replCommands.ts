@@ -65,7 +65,7 @@ export async function registerReplCommands(
                 const activeEditor = window.activeTextEditor as TextEditor;
                 const code = await getSelectedTextToExecute(activeEditor);
 
-                notebookEditor = await openInteractiveREPL(notebookController, notebookEditor);
+                notebookEditor = await openInteractiveREPL(notebookController, notebookDocument);
                 notebookDocument = notebookEditor.notebook;
 
                 if (notebookDocument) {

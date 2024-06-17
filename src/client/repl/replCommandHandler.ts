@@ -1,6 +1,6 @@
 import { commands, window, NotebookController, NotebookEditor, ViewColumn, NotebookDocument } from 'vscode';
 import { Commands } from '../common/constants';
-import { addCellToNotebook } from './replUtils';
+import { addCellToNotebook, getNotebookEditor, getNotebookEditor2 } from './replUtils';
 
 export async function executeInTerminal(): Promise<void> {
     await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
@@ -14,11 +14,18 @@ export async function executeInTerminal(): Promise<void> {
  */
 export async function openInteractiveREPL(
     notebookController: NotebookController,
-    notebookEditor: NotebookEditor | undefined,
+    notebookDocument: NotebookDocument | undefined,
 ): Promise<NotebookEditor> {
-    let notebookDocument: NotebookDocument | undefined;
+    let notebookEditor: NotebookEditor | undefined;
 
-    if (!notebookEditor) {
+    // Case where NotebookDocument (REPL document already exists in the tab)
+    if (notebookDocument) {
+        notebookEditor = getNotebookEditor2(notebookDocument);
+        // get viewcColumn of the notebookEditor
+        const replViewColumn = notebookEditor?.viewColumn ?? ViewColumn.Beside;
+        notebookEditor = await window.showNotebookDocument(notebookDocument!, { viewColumn: replViewColumn });
+    } else if (!notebookDocument) {
+        // Case where NotebookDocument doesnt exist, open new REPL tab
         const interactiveWindowObject = (await commands.executeCommand(
             'interactive.open',
             {
@@ -33,10 +40,10 @@ export async function openInteractiveREPL(
         notebookDocument = interactiveWindowObject.notebookEditor.notebook;
     }
     // Handle case where user has closed REPL window, and re-opens.
-    if (notebookEditor && notebookDocument) {
-        await window.showNotebookDocument(notebookDocument, { viewColumn: ViewColumn.Beside });
-    }
-    return notebookEditor;
+    // if (notebookEditor && notebookDocument) {
+    //     notebookEditor = await window.showNotebookDocument(notebookDocument!, { viewColumn: ViewColumn.Beside });
+    // }
+    return notebookEditor!;
 }
 
 /**

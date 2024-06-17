@@ -9,6 +9,8 @@ import {
     Selection,
     Uri,
     commands,
+    NotebookEditor,
+    window,
 } from 'vscode';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
@@ -133,4 +135,17 @@ export async function getActiveInterpreter(
         return undefined;
     }
     return interpreter;
+}
+/**
+ * Function that will return any opened notebookEditor.
+ * @returns NotebookEditor | undefined
+ */
+export function getNotebookEditor(): NotebookEditor | undefined {
+    const temp = window.visibleNotebookEditors;
+    return window.visibleNotebookEditors.find((editor) => editor !== undefined);
+}
+
+// get notebook editor given notebook document.
+export function getNotebookEditor2(notebookDocument: NotebookDocument): NotebookEditor | undefined {
+    return window.visibleNotebookEditors.find((editor) => editor.notebook === notebookDocument);
 }
