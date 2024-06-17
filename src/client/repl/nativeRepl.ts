@@ -43,12 +43,14 @@ export class NativeRepl {
      * This is for the purposes of correctly updating the notebookEditor and notebookDocument on close.
      */
     private watchNotebookClosed(): void {
-        workspace.onDidCloseNotebookDocument((nb) => {
-            if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
-                this.notebookEditor = undefined;
-                this.notebookDocument = undefined;
-            }
-        });
+        this.disposables.push(
+            workspace.onDidCloseNotebookDocument((nb) => {
+                if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
+                    this.notebookEditor = undefined;
+                    this.notebookDocument = undefined;
+                }
+            }),
+        );
     }
 
     /**
