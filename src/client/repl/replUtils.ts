@@ -1,18 +1,4 @@
-import {
-    NotebookCellData,
-    NotebookCellKind,
-    NotebookDocument,
-    NotebookEdit,
-    TextEditor,
-    workspace,
-    WorkspaceEdit,
-    Selection,
-    Uri,
-    commands,
-    window,
-    TabInputNotebook,
-    ViewColumn,
-} from 'vscode';
+import { NotebookDocument, TextEditor, Selection, Uri, commands, window, TabInputNotebook, ViewColumn } from 'vscode';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { getActiveResource } from '../common/vscodeApis/windowApis';
@@ -20,6 +6,14 @@ import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 import { IInterpreterService } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { getMultiLineSelectionText, getSingleLineSelectionText } from '../terminals/codeExecution/helper';
+
+/**
+ * Function that executes selected code in the terminal.
+ * @returns Promise<void>
+ */
+export async function executeInTerminal(): Promise<void> {
+    await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
+}
 
 /**
  * Function that returns selected text to execute in the REPL.
@@ -53,22 +47,6 @@ export function getSendToNativeREPLSetting(): boolean {
     const uri = getActiveResource();
     const configuration = getConfiguration('python', uri);
     return configuration.get<boolean>('REPL.sendToNativeREPL', false);
-}
-
-/**
- * Function that adds cell to notebook.
- * This function will only get called when notebook document is defined.
- * @param code
- *
- */
-export async function addCellToNotebook(notebookDocument: NotebookDocument, code: string): Promise<void> {
-    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
-    const { cellCount } = notebookDocument!;
-    // Add new cell to interactive window document
-    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
-    const workspaceEdit = new WorkspaceEdit();
-    workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-    await workspace.applyEdit(workspaceEdit);
 }
 
 /**

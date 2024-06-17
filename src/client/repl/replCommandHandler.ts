@@ -1,10 +1,17 @@
-import { commands, window, NotebookController, NotebookEditor, ViewColumn, NotebookDocument } from 'vscode';
-import { Commands } from '../common/constants';
-import { addCellToNotebook, getExistingReplViewColumn } from './replUtils';
-
-export async function executeInTerminal(): Promise<void> {
-    await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
-}
+import {
+    commands,
+    window,
+    NotebookController,
+    NotebookEditor,
+    ViewColumn,
+    NotebookDocument,
+    NotebookCellData,
+    NotebookCellKind,
+    NotebookEdit,
+    WorkspaceEdit,
+    workspace,
+} from 'vscode';
+import { getExistingReplViewColumn } from './replUtils';
 
 /**
  * Function that opens/show REPL using IW UI.
@@ -74,4 +81,20 @@ export async function executeNotebookCell(notebookDocument: NotebookDocument, co
         ranges: [{ start: cellCount, end: cellCount + 1 }],
         document: notebookDocument.uri,
     });
+}
+
+/**
+ * Function that adds cell to notebook.
+ * This function will only get called when notebook document is defined.
+ * @param code
+ *
+ */
+async function addCellToNotebook(notebookDocument: NotebookDocument, code: string): Promise<void> {
+    const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
+    const { cellCount } = notebookDocument!;
+    // Add new cell to interactive window document
+    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
+    const workspaceEdit = new WorkspaceEdit();
+    workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
+    await workspace.applyEdit(workspaceEdit);
 }

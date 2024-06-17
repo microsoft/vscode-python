@@ -5,8 +5,8 @@ import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { NativeRepl } from './nativeRepl';
-import { executeInTerminal } from './replCommandHandler';
 import {
+    executeInTerminal,
     getActiveInterpreter,
     getSelectedTextToExecute,
     getSendToNativeREPLSetting,
