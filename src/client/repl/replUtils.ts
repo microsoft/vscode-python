@@ -21,10 +21,6 @@ export async function executeInTerminal(): Promise<void> {
  * @returns code - Code to execute in the REPL.
  */
 export async function getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined> {
-    if (!textEditor) {
-        return undefined;
-    }
-
     const { selection } = textEditor;
     let code: string;
 
@@ -67,7 +63,7 @@ export function insertNewLineToREPLInput(activeEditor: TextEditor | undefined): 
     }
 }
 
-export function isMultiLineText(textEditor: TextEditor | undefined): boolean {
+export function isMultiLineText(textEditor: TextEditor): boolean {
     return (textEditor?.document?.lineCount ?? 0) > 1;
 }
 

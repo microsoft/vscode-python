@@ -1,4 +1,4 @@
-import { commands, Uri, window, TextEditor } from 'vscode';
+import { commands, Uri, window } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
@@ -52,9 +52,13 @@ export async function registerReplCommands(
 
             if (interpreter) {
                 nativeRepl = getNativeRepl(interpreter, disposables);
-                const activeEditor = window.activeTextEditor as TextEditor;
-                const code = await getSelectedTextToExecute(activeEditor);
-                await nativeRepl.sendToNativeRepl(code as string);
+                const activeEditor = window.activeTextEditor;
+                if (activeEditor) {
+                    const code = await getSelectedTextToExecute(activeEditor);
+                    if (code) {
+                        await nativeRepl.sendToNativeRepl(code as string);
+                    }
+                }
             }
         }),
     );
@@ -79,15 +83,17 @@ export async function registerReplExecuteOnEnter(
             const completeCode = nativeRepl?.checkUserInputCompleteCode(window.activeTextEditor);
             const editor = window.activeTextEditor;
 
-            // Execute right away when complete code and Not multi-line
-            if (completeCode && !isMultiLineText(editor)) {
-                await commands.executeCommand('interactive.execute');
-            } else {
-                insertNewLineToREPLInput(editor);
-
-                // Handle case when user enters on blank line, just trigger interactive.execute
-                if (editor && editor.document.lineAt(editor.selection.active.line).text === '') {
+            if (editor) {
+                // Execute right away when complete code and Not multi-line
+                if (completeCode && !isMultiLineText(editor)) {
                     await commands.executeCommand('interactive.execute');
+                } else {
+                    insertNewLineToREPLInput(editor);
+
+                    // Handle case when user enters on blank line, just trigger interactive.execute
+                    if (editor && editor.document.lineAt(editor.selection.active.line).text === '') {
+                        await commands.executeCommand('interactive.execute');
+                    }
                 }
             }
         }),
