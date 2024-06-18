@@ -8,15 +8,24 @@ import pathlib
 import sys
 import traceback
 
+
 from pluggy import Result
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
-
 from testing_tools import socket_manager  # noqa: E402
-from typing import Any, Dict, Generator, List, Optional, Union, TypedDict, Literal  # noqa: E402
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Union,
+    TypedDict,
+    Literal,
+    Generator,
+)  # noqa: E402
 
 
 class TestData(TypedDict):
@@ -89,7 +98,9 @@ def pytest_load_initial_conftests(early_config, parser, args):
                     f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink."
                 )
             elif pathlib.Path(os.path.realpath(rootdir)) != rootdir:
-                print("Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink.")
+                print(
+                    "Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink."
+                )
                 isSymlink = has_symlink_parent(rootdir)
             if isSymlink:
                 print(
@@ -125,9 +136,13 @@ def pytest_exception_interact(node, call, report):
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
                 return
-            ERRORS.append(call.excinfo.exconly() + "\n Check Python Test Logs for more details.")
+            ERRORS.append(
+                call.excinfo.exconly() + "\n Check Python Test Logs for more details."
+            )
         else:
-            ERRORS.append(report.longreprtext + "\n Check Python Test Logs for more details.")
+            ERRORS.append(
+                report.longreprtext + "\n Check Python Test Logs for more details."
+            )
     else:
         # If during execution, send this data that the given node failed.
         report_value = "error"
@@ -448,9 +463,13 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 ".py", 1
             )  # splits the file path from the rest of the nodeid
 
-            class_and_method = second_split[1] + "::"  # This has "::" separator at both ends
+            class_and_method = (
+                second_split[1] + "::"
+            )  # This has "::" separator at both ends
             # construct the parent id, so it is absolute path :: any class and method :: parent_part
-            parent_id = os.fspath(get_node_path(test_case)) + class_and_method + parent_part
+            parent_id = (
+                os.fspath(get_node_path(test_case)) + class_and_method + parent_part
+            )
             # file, middle, param = test_case.nodeid.rsplit("::", 2)
             # parent_id = test_case.nodeid.rsplit("::", 1)[0] + "::" + parent_part
             # parent_path = os.fspath(get_node_path(test_case)) + "::" + parent_part
@@ -461,7 +480,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 ERRORS.append(
                     f"unable to find original name for {test_case.name} with parameterization detected."
                 )
-                raise VSCodePytestError("Unable to find original name for parameterized test case")
+                raise VSCodePytestError(
+                    "Unable to find original name for parameterized test case"
+                )
             except KeyError:
                 function_test_node: TestNode = create_parameterized_function_node(
                     function_name, get_node_path(test_case), parent_id
@@ -510,7 +531,10 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 test_file_node = create_file_node(parent_module)
                 file_nodes_dict[parent_module] = test_file_node
             # Check if the class is already a child of the file node.
-            if test_class_node is not None and test_class_node not in test_file_node["children"]:
+            if (
+                test_class_node is not None
+                and test_class_node not in test_file_node["children"]
+            ):
                 test_file_node["children"].append(test_class_node)
         elif not hasattr(test_case, "callspec"):
             # This includes test cases that are pytest functions or a doctests.
@@ -533,7 +557,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             print(
                 "[vscode-pytest]: Session path not a parent of test paths, adjusting session node to common parent."
             )
-            common_parent = os.path.commonpath([file_node["path"], get_node_path(session)])
+            common_parent = os.path.commonpath(
+                [file_node["path"], get_node_path(session)]
+            )
             common_parent_path = pathlib.Path(common_parent)
             print("[vscode-pytest]: Session node now set to: ", common_parent)
             session_node["path"] = common_parent_path  # pathlib.Path
@@ -583,9 +609,13 @@ def build_nested_folders(
     while iterator_path != session_node_path:
         curr_folder_name = iterator_path.name
         try:
-            curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
+            curr_folder_node: TestNode = created_files_folders_dict[
+                os.fspath(iterator_path)
+            ]
         except KeyError:
-            curr_folder_node: TestNode = create_folder_node(curr_folder_name, iterator_path)
+            curr_folder_node: TestNode = create_folder_node(
+                curr_folder_name, iterator_path
+            )
             created_files_folders_dict[os.fspath(iterator_path)] = curr_folder_node
         if prev_folder_node not in curr_folder_node["children"]:
             curr_folder_node["children"].append(prev_folder_node)
@@ -884,7 +914,15 @@ def send_post_request(
         )
 
 
-@pytest.hookimpl(hookwrapper=True)
-def pytest_xdist_auto_num_workers(config: pytest.Config) -> Generator[None, Result[int], int]:
-    """determine how many workers to use based on how many tests were selected in the test explorer"""
-    return min((yield).get_result(), len(config.option.file_or_dir))
+def pytest_configure(config: pytest.Config):
+    if config.pluginmanager.hasplugin("xdist"):
+
+        class XdistHook:
+            @pytest.hookimpl(hookwrapper=True)
+            def pytest_xdist_auto_num_workers(
+                self, config: pytest.Config
+            ) -> Generator[None, Result[int], int]:
+                """determine how many workers to use based on how many tests were selected in the test explorer"""
+                return min((yield).get_result(), len(config.option.file_or_dir))
+
+        config.pluginmanager.register(XdistHook())
