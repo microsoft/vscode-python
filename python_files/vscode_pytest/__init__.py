@@ -9,14 +9,13 @@ import sys
 import traceback
 
 
-from pluggy import Result
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import socket_manager  # noqa: E402
-from typing import (
+from typing import (  # noqa: E402
     Any,
     Dict,
     List,
@@ -25,7 +24,7 @@ from typing import (
     TypedDict,
     Literal,
     Generator,
-)  # noqa: E402
+)
 
 
 class TestData(TypedDict):
@@ -914,15 +913,12 @@ def send_post_request(
         )
 
 
-def pytest_configure(config: pytest.Config):
-    if config.pluginmanager.hasplugin("xdist"):
-
-        class XdistHook:
-            @pytest.hookimpl(hookwrapper=True)
-            def pytest_xdist_auto_num_workers(
-                self, config: pytest.Config
-            ) -> Generator[None, Result[int], int]:
-                """determine how many workers to use based on how many tests were selected in the test explorer"""
-                return min((yield).get_result(), len(config.option.file_or_dir))
-
-        config.pluginmanager.register(XdistHook())
+try:
+    import xdist # pyright: ignore[reportMissingImports] # noqa: F401
+except ModuleNotFoundError:
+    pass
+else:
+    @pytest.hookimpl(wrapper=True)
+    def pytest_xdist_auto_num_workers(config: pytest.Config) -> Generator[None, int, int]:
+        """determine how many workers to use based on how many tests were selected in the test explorer"""
+        return min((yield), len(config.option.file_or_dir))
