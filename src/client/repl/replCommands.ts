@@ -40,7 +40,7 @@ export async function registerReplCommands(
                 if (activeEditor) {
                     const code = await getSelectedTextToExecute(activeEditor);
                     if (code) {
-                        await nativeRepl.sendToNativeRepl(code as string);
+                        await nativeRepl.sendToNativeRepl(code);
                     }
                 }
             }
