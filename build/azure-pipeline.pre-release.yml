@@ -91,14 +91,6 @@ extends:
           architecture: 'x64'
         displayName: Select Python version
 
-      - task: RustInstaller@1
-        inputs:
-          rustVersion: ms-1.78
-          toolchainFeed: https://pkgs.dev.azure.com/monacotools/Monaco/_packaging/vscode/nuget/v3/index.json
-          default: true
-          addToPath: true
-        displayName: Install Rust toolchain
-
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
@@ -127,10 +119,18 @@ extends:
         displayName: Checkout python-environment-tools
         path: ./s/python-env-tools
 
-      - script: nox --session native_build
-        displayName: Build RUST binaries
-        env:
-          ENABLE_CARGO_CONFIG: 'True'
+      - script: nox --session azure_pet_build_before
+        displayName: Enable cargo config for azure
+
+      - template: azure-pipelines\extension\templates\steps\build-rust-packages.yml@templates
+        parameters:
+          vsceTarget: ${{ variables.vsceTarget }}
+          binaryName: 'pet'
+          signing: true
+          workingDirectory: $(Build.SourcesDirectory)/python-env-tools
+
+      - script: nox --session azure_pet_build_after
+        displayName: Move bin to final location
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox

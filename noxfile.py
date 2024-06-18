@@ -48,7 +48,9 @@ def install_python_libs(session: nox.Session):
         shutil.rmtree("./python_files/lib/temp")
 
 
-def enable_rustc_flags(source_dir: pathlib.Path):
+@nox.session()
+def azure_pet_build_before(session: nox.Session):
+    source_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
     config_toml_disabled = source_dir / ".cargo" / "config.toml.disabled"
     config_toml = source_dir / ".cargo" / "config.toml"
     if config_toml_disabled.exists() and not config_toml.exists():
@@ -56,12 +58,31 @@ def enable_rustc_flags(source_dir: pathlib.Path):
 
 
 @nox.session()
+def azure_pet_build_after(session: nox.Session):
+    source_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
+    ext = sysconfig.get_config_var("EXE") or ""
+    bin_name = f"pet{ext}"
+
+    abs_bin_path = None
+    for root, _, files in os.walk(os.fspath(source_dir / "target")):
+        bin_path = pathlib.Path(root) / "release" / bin_name
+        if bin_path.exists():
+            abs_bin_path = bin_path.absolute()
+            break
+
+    assert abs_bin_path
+
+    dest_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
+    if not pathlib.Path(dest_dir / "bin").exists():
+        pathlib.Path(dest_dir / "bin").mkdir()
+    bin_dest = dest_dir / "bin" / bin_name
+    shutil.copyfile(abs_bin_path, bin_dest)
+
+
+@nox.session()
 def native_build(session: nox.Session):
     source_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
     dest_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
-
-    if os.getenv("ENABLE_CARGO_CONFIG", None):
-        enable_rustc_flags(source_dir)
 
     with session.cd(source_dir):
         if not pathlib.Path(dest_dir / "bin").exists():
