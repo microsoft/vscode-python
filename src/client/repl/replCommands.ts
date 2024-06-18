@@ -3,8 +3,7 @@ import { Disposable } from 'vscode-jsonrpc';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
-import { PythonEnvironment } from '../pythonEnvironments/info';
-import { NativeRepl } from './nativeRepl';
+import { getNativeRepl } from './nativeRepl';
 import {
     executeInTerminal,
     getActiveInterpreter,
@@ -13,21 +12,6 @@ import {
     insertNewLineToREPLInput,
     isMultiLineText,
 } from './replUtils';
-
-let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
-
-/**
- * Get Singleton Native REPL Instance
- * @param interpreter
- * @param disposables
- * @returns Native REPL instance
- */
-export function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): NativeRepl {
-    if (!nativeRepl) {
-        nativeRepl = new NativeRepl(interpreter, disposables);
-    }
-    return nativeRepl;
-}
 
 /**
  * Registers REPL command for shift+enter if sendToNativeREPL setting is enabled.
@@ -51,7 +35,7 @@ export async function registerReplCommands(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
-                nativeRepl = getNativeRepl(interpreter, disposables);
+                const nativeRepl = getNativeRepl(interpreter, disposables);
                 const activeEditor = window.activeTextEditor;
                 if (activeEditor) {
                     const code = await getSelectedTextToExecute(activeEditor);
@@ -80,7 +64,9 @@ export async function registerReplExecuteOnEnter(
                 commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
                 return;
             }
-            const completeCode = nativeRepl?.checkUserInputCompleteCode(window.activeTextEditor);
+
+            const nativeRepl = getNativeRepl(interpreter, disposables);
+            const completeCode = await nativeRepl?.checkUserInputCompleteCode(window.activeTextEditor);
             const editor = window.activeTextEditor;
 
             if (editor) {

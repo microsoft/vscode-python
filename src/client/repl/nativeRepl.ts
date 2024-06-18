@@ -15,27 +15,29 @@ import { createPythonServer, PythonServer } from './pythonServer';
 import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from './replCommandHandler';
 import { createReplController } from './replController';
 
-export class NativeRepl {
+export class NativeRepl implements Disposable {
     private pythonServer: PythonServer;
 
     private interpreter: PythonEnvironment;
 
-    private disposables: Disposable[];
+    private disposables: Disposable[] = [];
 
     private replController: NotebookController;
 
     private notebookDocument: NotebookDocument | undefined;
 
-    private notebookEditor: NotebookEditor | undefined;
-
     // TODO: In the future, could also have attribute of URI for file specific REPL.
-    constructor(interpreter: PythonEnvironment, disposables: Disposable[]) {
+    constructor(interpreter: PythonEnvironment) {
         this.interpreter = interpreter;
-        this.disposables = disposables;
+
         this.pythonServer = createPythonServer([interpreter.path as string]);
         this.replController = this.setReplController();
 
         this.watchNotebookClosed();
+    }
+
+    dispose(): void {
+        this.disposables.forEach((d) => d.dispose());
     }
 
     /**
@@ -46,7 +48,6 @@ export class NativeRepl {
         this.disposables.push(
             workspace.onDidCloseNotebookDocument((nb) => {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
-                    this.notebookEditor = undefined;
                     this.notebookDocument = undefined;
                 }
             }),
@@ -91,13 +92,28 @@ export class NativeRepl {
      * @param code
      */
     public async sendToNativeRepl(code: string): Promise<void> {
-        this.notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument);
-        this.notebookDocument = this.notebookEditor.notebook;
+        const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument);
+        this.notebookDocument = notebookEditor.notebook;
 
         if (this.notebookDocument) {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
-            await selectNotebookKernel(this.notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
+            await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
             await executeNotebookCell(this.notebookDocument, code);
         }
     }
+}
+
+let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
+
+/**
+ * Get Singleton Native REPL Instance
+ * @param interpreter
+ * @returns Native REPL instance
+ */
+export function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): NativeRepl {
+    if (!nativeRepl) {
+        nativeRepl = new NativeRepl(interpreter);
+        disposables.push(nativeRepl);
+    }
+    return nativeRepl;
 }
