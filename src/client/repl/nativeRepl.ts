@@ -1,13 +1,6 @@
 // Native Repl class that holds instance of pythonServer and replController
 
-import {
-    NotebookController,
-    NotebookControllerAffinity,
-    NotebookDocument,
-    NotebookEditor,
-    TextEditor,
-    workspace,
-} from 'vscode';
+import { NotebookController, NotebookControllerAffinity, NotebookDocument, TextEditor, workspace } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 import { PythonEnvironment } from '../pythonEnvironments/info';
