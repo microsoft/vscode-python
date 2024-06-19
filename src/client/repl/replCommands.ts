@@ -3,6 +3,7 @@ import { Disposable } from 'vscode-jsonrpc';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
+import { ICodeExecutionHelper } from '../terminals/types';
 import { getNativeRepl } from './nativeRepl';
 import {
     executeInTerminal,
@@ -22,6 +23,7 @@ import {
 export async function registerReplCommands(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
+    executionHelper: ICodeExecutionHelper,
 ): Promise<void> {
     disposables.push(
         commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
@@ -40,7 +42,13 @@ export async function registerReplCommands(
                 if (activeEditor) {
                     const code = await getSelectedTextToExecute(activeEditor);
                     if (code) {
-                        await nativeRepl.sendToNativeRepl(code);
+                        // Smart Send
+                        let wholeFileContent = '';
+                        if (activeEditor && activeEditor.document) {
+                            wholeFileContent = activeEditor.document.getText();
+                        }
+                        const normalizedCode = await executionHelper.normalizeLines(code!, wholeFileContent);
+                        await nativeRepl.sendToNativeRepl(normalizedCode);
                     }
                 }
             }
