@@ -72,7 +72,9 @@
         "workspaceContains:setup.py",
         "workspaceContains:requirements.txt",
         "workspaceContains:manage.py",
-        "workspaceContains:app.py"
+        "workspaceContains:app.py",
+        "workspaceContains:.venv",
+        "workspaceContains:.conda"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
