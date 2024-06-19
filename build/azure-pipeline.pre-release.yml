@@ -122,10 +122,10 @@ extends:
       - script: nox --session azure_pet_build_before
         displayName: Enable cargo config for azure
 
-      - template: azure-pipelines\extension\templates\steps\build-rust-packages.yml@templates
+      - template: azure-pipelines/extension/templates/steps/build-extension-rust-package.yml@templates
         parameters:
           vsceTarget: $(vsceTarget)
-          binaryName: 'pet'
+          binaryName: pet
           signing: true
           workingDirectory: $(Build.SourcesDirectory)/python-env-tools
           buildWasm: false
