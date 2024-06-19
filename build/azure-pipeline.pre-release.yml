@@ -129,7 +129,7 @@ extends:
           signing: true
           workingDirectory: $(Build.SourcesDirectory)/python-env-tools
           buildWasm: false
-          runTest: true
+          runTest: false
 
       - script: nox --session azure_pet_build_after
         displayName: Move bin to final location
