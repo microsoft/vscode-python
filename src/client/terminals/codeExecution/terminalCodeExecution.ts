@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Uri, window } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
@@ -17,6 +17,8 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { traceInfo } from '../../logging';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
+// import TerminalShellIntegration proposed api
+
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
@@ -93,6 +95,22 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 }
                 resolve(true);
             });
+
+            // use terminal shell integration
+            const myTerm = window.createTerminal();
+            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+                if (terminal.name === 'Python') {
+                    const execution = shellIntegration.executeCommand(`print('hello world')`);
+                    window.onDidEndTerminalShellExecution((event) => {
+                        if (event.execution === execution) {
+                            console.log(`Command exited with code ${event.exitCode}`); // I always get undefined
+                            const temp = event.exitCode;
+                            let temp2 = temp;
+                        }
+                    });
+                }
+            });
+
             terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
         });
         this.disposables.push(
