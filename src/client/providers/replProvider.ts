@@ -40,7 +40,7 @@ export class ReplProvider implements Disposable {
                 .then(noop, noop);
             return;
         }
-        const replProvider = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'repl');
+        const replProvider = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
         await replProvider.initializeRepl(resource);
     }
 }

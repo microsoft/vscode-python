@@ -65,7 +65,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
         if (this.replActive && (await this.replActive)) {
-            await terminalService.show();
+            await terminalService.show(); // in multi-file to REPL scenario, it just sends to same REPL.
             return;
         }
 

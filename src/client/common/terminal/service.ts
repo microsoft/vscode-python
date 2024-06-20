@@ -60,17 +60,17 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         // use terminal shell integration
-        window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-            // if (terminal.name === 'Python') {
-            const execution = shellIntegration.executeCommand(text);
-            window.onDidEndTerminalShellExecution((event) => {
-                if (event.execution === execution || event.execution === execution) {
-                    console.log(`Command exited with code ${event.exitCode}`); // switches btw undefined 0,1,130
-                    const temp = event.exitCode;
-                }
-            });
-        });
-        // this.terminal!.sendText(text, true); OG
+        // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+        //     // if (terminal.name === 'Python') {
+        //     const execution = shellIntegration.executeCommand(text);
+        //     window.onDidEndTerminalShellExecution((event) => {
+        //         if (event.execution === execution || event.execution === execution) {
+        //             console.log(`Command exited with code ${event.exitCode}`); // switches btw undefined 0,1,130
+        //             const temp = event.exitCode;
+        //         }
+        //     });
+        // });
+        this.terminal!.sendText(text, true);
     }
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
