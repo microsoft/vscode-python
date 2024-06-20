@@ -16,6 +16,7 @@ import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
+import { PythonEnvKind } from '../../info';
 
 const untildify = require('untildify');
 
@@ -154,16 +155,33 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     // eslint-disable-next-line class-methods-use-this
     private start(): rpc.MessageConnection {
         this.outputChannel.info(`Starting Python Locator ${PYTHON_ENV_TOOLS_PATH} server`);
-        const proc = ch.spawn(PYTHON_ENV_TOOLS_PATH, ['server'], { env: process.env });
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quickly.
         // Lets handle the messages and close the stream only when
         // we have got the exit event.
         const readable = new PassThrough();
-        proc.stdout.pipe(readable, { end: false });
-        proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
         const writable = new PassThrough();
-        writable.pipe(proc.stdin, { end: false });
+        const disposables: Disposable[] = [];
+        try {
+            const proc = ch.spawn(PYTHON_ENV_TOOLS_PATH, ['server'], { env: process.env });
+            proc.stdout.pipe(readable, { end: false });
+            proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
+            writable.pipe(proc.stdin, { end: false });
+            disposables.push({
+                dispose: () => {
+                    try {
+                        if (proc.exitCode === null) {
+                            proc.kill();
+                        }
+                    } catch (ex) {
+                        this.outputChannel.error('Error while disposing Native Python Finder', ex);
+                    }
+                },
+            });
+        } catch (err) {
+            this.outputChannel.error('Error in Native Python Finder', err);
+        }
+
         const disposeStreams = new Disposable(() => {
             readable.end();
             writable.end();
@@ -200,17 +218,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             connection.onClose(() => {
                 disposables.forEach((d) => d.dispose());
             }),
-            {
-                dispose: () => {
-                    try {
-                        if (proc.exitCode === null) {
-                            proc.kill();
-                        }
-                    } catch (ex) {
-                        this.outputChannel.error('Error disposing finder', ex);
-                    }
-                },
-            },
         );
 
         connection.listen();
@@ -348,4 +355,46 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
 
 export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
     return new NativeGlobalPythonFinderImpl();
+}
+
+export function categoryToKind(category: string): PythonEnvKind {
+    switch (category.toLowerCase()) {
+        case 'active-state':
+            return PythonEnvKind.ActiveState;
+        case 'conda':
+            return PythonEnvKind.Conda;
+        case 'system':
+        case 'homebrew':
+        case 'mac-python-org':
+        case 'mac-command-line-tools':
+        case 'windows-registry':
+            return PythonEnvKind.System;
+        case 'pyenv':
+        case 'pyenv-other':
+            return PythonEnvKind.Pyenv;
+        case 'pipenv':
+            return PythonEnvKind.Pipenv;
+        case 'pyenv-virtualenv':
+            return PythonEnvKind.VirtualEnv;
+        case 'venv':
+            return PythonEnvKind.Venv;
+        case 'virtualenv':
+            return PythonEnvKind.VirtualEnv;
+        case 'virtualenvwrapper':
+            return PythonEnvKind.VirtualEnvWrapper;
+        case 'windows-store':
+            return PythonEnvKind.MicrosoftStore;
+        case 'custom-env':
+            return PythonEnvKind.Custom;
+        case 'other-env':
+            return PythonEnvKind.OtherVirtual;
+        case 'hatch':
+            return PythonEnvKind.Hatch;
+        case 'unknown':
+            return PythonEnvKind.Unknown;
+        default: {
+            traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
+            return PythonEnvKind.Unknown;
+        }
+    }
 }

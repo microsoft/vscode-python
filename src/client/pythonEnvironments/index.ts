@@ -40,8 +40,6 @@ import { traceError } from '../logging';
 import { ActiveStateLocator } from './base/locators/lowLevel/activeStateLocator';
 import { CustomWorkspaceLocator } from './base/locators/lowLevel/customWorkspaceLocator';
 import { PixiLocator } from './base/locators/lowLevel/pixiLocator';
-import { NativeLocator } from './base/locators/lowLevel/nativeLocator';
-import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 
 const PYTHON_ENV_INFO_CACHE_KEY = 'PYTHON_ENV_INFO_CACHEv2';
 
@@ -135,43 +133,33 @@ async function createLocator(
         await createCollectionCache(ext),
         // This is shared.
         resolvingLocator,
-        useNativeLocator(),
     );
     return caching;
 }
 
-function useNativeLocator(): boolean {
-    const config = getConfiguration('python');
-    return config.get<string>('locator', 'js') === 'native';
-}
-
 function createNonWorkspaceLocators(ext: ExtensionState): ILocator<BasicEnvInfo>[] {
     const locators: (ILocator<BasicEnvInfo> & Partial<IDisposable>)[] = [];
-    if (useNativeLocator()) {
-        locators.push(new NativeLocator());
+    locators.push(
+        // OS-independent locators go here.
+        new PyenvLocator(),
+        new CondaEnvironmentLocator(),
+        new ActiveStateLocator(),
+        new GlobalVirtualEnvironmentLocator(),
+        new CustomVirtualEnvironmentLocator(),
+    );
+
+    if (getOSType() === OSType.Windows) {
+        locators.push(
+            // Windows specific locators go here.
+            new WindowsRegistryLocator(),
+            new MicrosoftStoreLocator(),
+            new WindowsPathEnvVarLocator(),
+        );
     } else {
         locators.push(
-            // OS-independent locators go here.
-            new PyenvLocator(),
-            new CondaEnvironmentLocator(),
-            new ActiveStateLocator(),
-            new GlobalVirtualEnvironmentLocator(),
-            new CustomVirtualEnvironmentLocator(),
+            // Linux/Mac locators go here.
+            new PosixKnownPathsLocator(),
         );
-
-        if (getOSType() === OSType.Windows) {
-            locators.push(
-                // Windows specific locators go here.
-                new WindowsRegistryLocator(),
-                new MicrosoftStoreLocator(),
-                new WindowsPathEnvVarLocator(),
-            );
-        } else {
-            locators.push(
-                // Linux/Mac locators go here.
-                new PosixKnownPathsLocator(),
-            );
-        }
     }
 
     const disposables = locators.filter((d) => d.dispose !== undefined) as IDisposable[];
@@ -198,21 +186,16 @@ function watchRoots(args: WatchRootsArgs): IDisposable {
 }
 
 function createWorkspaceLocator(ext: ExtensionState): WorkspaceLocators {
-    const locators = new WorkspaceLocators(
-        watchRoots,
-        useNativeLocator()
-            ? []
-            : [
-                  (root: vscode.Uri) => [
-                      new WorkspaceVirtualEnvironmentLocator(root.fsPath),
-                      new PoetryLocator(root.fsPath),
-                      new HatchLocator(root.fsPath),
-                      new PixiLocator(root.fsPath),
-                      new CustomWorkspaceLocator(root.fsPath),
-                  ],
-                  // Add an ILocator factory func here for each kind of workspace-rooted locator.
-              ],
-    );
+    const locators = new WorkspaceLocators(watchRoots, [
+        (root: vscode.Uri) => [
+            new WorkspaceVirtualEnvironmentLocator(root.fsPath),
+            new PoetryLocator(root.fsPath),
+            new HatchLocator(root.fsPath),
+            new PixiLocator(root.fsPath),
+            new CustomWorkspaceLocator(root.fsPath),
+        ],
+        // Add an ILocator factory func here for each kind of workspace-rooted locator.
+    ]);
     ext.disposables.push(locators);
     return locators;
 }

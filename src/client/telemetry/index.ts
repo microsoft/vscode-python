@@ -1235,6 +1235,70 @@ export interface IEventNamePropertyMapping {
          * Number of environments of a specific type
          */
         virtualEnvWrapperEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeEnvironmentsWithoutPython?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeActiveStateEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeCondaEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeCustomEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeHatchEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeMicrosoftStoreEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeOtherGlobalEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeOtherVirtualEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativePipEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativePoetryEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativePyenvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeSystemEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeUnknownEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeVenvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeVirtualEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeVirtualEnvWrapperEnvs?: number;
     };
     /**
      * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.
