@@ -19,6 +19,7 @@ import {
     AnacondaCompanyName,
     Conda,
     getCondaInterpreterPath,
+    getPythonVersionFromConda,
     isCondaEnvironment,
 } from '../../../common/environmentManagers/conda';
 import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
@@ -246,7 +247,7 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     } else {
         executable = await conda.getInterpreterPathForEnvironment({ prefix: envPath });
     }
-    const version = executable ? await getPythonVersionFromPath(executable) : undefined;
+    const version = executable ? await getPythonVersionFromConda(executable) : undefined;
     const info = buildEnvInfo({
         executable,
         kind: PythonEnvKind.Conda,
