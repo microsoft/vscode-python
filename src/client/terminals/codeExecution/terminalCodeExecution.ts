@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Uri, window } from 'vscode';
+import { Disposable, Uri, window, ExtensionContext } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
@@ -24,6 +24,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
     private replActive?: Promise<boolean>;
+    private replLaunched: boolean = false;
     constructor(
         @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
@@ -33,7 +34,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IInterpreterService) protected readonly interpreterService: IInterpreterService,
         @inject(ICommandManager) protected readonly commandManager: ICommandManager,
         @inject(IApplicationShell) protected readonly applicationShell: IApplicationShell,
-    ) {}
+    ) {
+        this.watchReplLaunch();
+    }
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
         await this.setCwdForFileExecution(file, options);
@@ -60,12 +63,29 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             await this.getTerminalService(resource).sendText(code);
         }
     }
+
+    // Function that listens to onDidWriteTerminalData and track if REPL launched by counting >>>
+    private watchReplLaunch(): void {
+        let count = 0;
+        this.applicationShell.onDidWriteTerminalData((e) => {
+            for (let i = 0; i < e.data.length; i++) {
+                if (e.data[i] === '>') {
+                    count++;
+                    if (count === 3) {
+                        this.replLaunched = true;
+                    }
+                }
+            }
+        });
+    }
+
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
         if (this.replActive && (await this.replActive)) {
             await terminalService.show();
             return;
         }
+
         this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
             let listener: IDisposable;
@@ -96,22 +116,37 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 resolve(true);
             });
 
-            // use terminal shell integration
-            const myTerm = window.createTerminal();
-            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-                if (terminal.name === 'Python') {
-                    const execution = shellIntegration.executeCommand(`print('hello world')`);
-                    window.onDidEndTerminalShellExecution((event) => {
-                        if (event.execution === execution) {
-                            console.log(`Command exited with code ${event.exitCode}`); // I always get undefined
-                            const temp = event.exitCode;
-                            let temp2 = temp;
-                        }
-                    });
-                }
-            });
+            // // use terminal shell integration
+            // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+            //     if (terminal.name === 'Python') {
+            //         const execution = shellIntegration.executeCommand(`print('hello world')`);
+            //         window.onDidEndTerminalShellExecution((event) => {
+            //             if (event.execution === execution) {
+            //                 console.log(`Command exited with code ${event.exitCode}`); // I always get undefined
+            //                 const temp = event.exitCode;
+            //                 let temp2 = temp;
+            //             }
+            //         });
+            //     }
+            // });
 
-            terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
+            await terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
+
+            // use terminal shell integration
+            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+                // if (terminal.name === 'Python') {
+                // const execution = shellIntegration.executeCommand(`print('hello world')`);
+                const execution = shellIntegration.executeCommand(`print('hello world')`);
+                const wrongExecution = shellIntegration.executeCommand(`dqwkodkqokoqwdWRONG`);
+                window.onDidEndTerminalShellExecution((event) => {
+                    if (event.execution === execution || event.execution === wrongExecution) {
+                        console.log(`Command exited with code ${event.exitCode}`); // switches btw undefined 0,1,130
+                        const temp = event.exitCode;
+                        let temp2 = temp;
+                    }
+                });
+                // }
+            });
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
