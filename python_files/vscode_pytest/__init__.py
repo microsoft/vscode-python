@@ -892,24 +892,13 @@ def send_post_request(
         )
 
 
-try:
-    import xdist  # pyright: ignore[reportMissingImports] # noqa: F401
-except ModuleNotFoundError:
-    pass
-else:
-
-    @pytest.hookimpl(wrapper=True)
-    def pytest_xdist_auto_num_workers(config: pytest.Config) -> Generator[None, int, int]:
-        """determine how many workers to use based on how many tests were selected in the test explorer"""
-        return min((yield), len(config.option.file_or_dir))
-
 class DeferPlugin:
     @pytest.hookimpl(wrapper=True)
     def pytest_xdist_auto_num_workers(self, config: pytest.Config):
         """determine how many workers to use based on how many tests were selected in the test explorer"""
         return min((yield), len(config.option.file_or_dir))
 
-def pytest_plugin_registered(plugin, manager):
+def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
     if manager.hasplugin("xdist") and not isinstance(plugin, DeferPlugin):
         manager.register(DeferPlugin())
 
