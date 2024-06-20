@@ -11,7 +11,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { createDeferred, createDeferredFrom } from '../../../../common/utils/async';
 import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
 import { noop } from '../../../../common/utils/misc';
-import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
+import { getConfiguration, getWorkspaceFolderPaths } from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';

@@ -54,11 +54,30 @@ export enum QuickPickItemKind {
 }
 
 export class Disposable {
-    constructor(private callOnDispose: () => void) {}
+    static from(...disposables: { dispose(): () => void }[]): Disposable {
+        return new Disposable(() => {
+            if (disposables) {
+                for (const disposable of disposables) {
+                    if (disposable && typeof disposable.dispose === 'function') {
+                        disposable.dispose();
+                    }
+                }
 
-    public dispose(): void {
-        if (this.callOnDispose) {
-            this.callOnDispose();
+                disposables = [];
+            }
+        });
+    }
+
+    private _callOnDispose: (() => void) | undefined;
+
+    constructor(callOnDispose: () => void) {
+        this._callOnDispose = callOnDispose;
+    }
+
+    dispose(): void {
+        if (typeof this._callOnDispose === 'function') {
+            this._callOnDispose();
+            this._callOnDispose = undefined;
         }
     }
 }
