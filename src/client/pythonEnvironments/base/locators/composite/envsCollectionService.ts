@@ -44,6 +44,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
 
+    private nativeFinder = createNativeGlobalPythonFinder();
+
     public refreshState = ProgressReportStage.discoveryFinished;
 
     public get onProgress(): Event<ProgressNotificationEvent> {
@@ -261,9 +263,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         if (!query && !this.hasRefreshFinished(query)) {
             const envs = this.cache.getAllEnvs();
 
-            const nativeFinder = createNativeGlobalPythonFinder();
             const nativeEnvs = [];
-            for await (const data of nativeFinder.refresh()) {
+            for await (const data of this.nativeFinder.refresh()) {
                 nativeEnvs.push(data);
             }
 
