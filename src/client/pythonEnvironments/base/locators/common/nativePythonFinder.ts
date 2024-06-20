@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, workspace, window, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, window, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -16,6 +16,7 @@ import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { PythonEnvKind } from '../../info';
+import { traceError } from '../../../../logging';
 
 const untildify = require('untildify');
 
@@ -173,12 +174,12 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                             proc.kill();
                         }
                     } catch (ex) {
-                        this.outputChannel.error('Error while disposing Native Python Finder', ex);
+                        this.outputChannel.error('Error disposing finder', ex);
                     }
                 },
             });
         } catch (err) {
-            this.outputChannel.error('Error in Native Python Finder', err);
+            this.outputChannel.error('Error starting finder', err);
         }
 
         const disposeStreams = new Disposable(() => {
