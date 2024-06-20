@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, window } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -58,7 +58,21 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!this.options?.hideFromUser) {
             this.terminal!.show(true);
         }
-        this.terminal!.sendText(text, true);
+
+        // use terminal shell integration
+        window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+            // if (terminal.name === 'Python') {
+            // const execution = shellIntegration.executeCommand(`print('hello world')`);
+            const execution = shellIntegration.executeCommand(text);
+            window.onDidEndTerminalShellExecution((event) => {
+                if (event.execution === execution || event.execution === execution) {
+                    console.log(`Command exited with code ${event.exitCode}`); // switches btw undefined 0,1,130
+                    const temp = event.exitCode;
+                    let temp2 = temp;
+                }
+            });
+        });
+        // this.terminal!.sendText(text, true); OG
     }
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();

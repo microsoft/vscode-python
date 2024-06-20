@@ -129,24 +129,24 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             //         });
             //     }
             // });
-
+            // Very first replCommandArgs.command is the exsecutable info: @'/Users/anthonykim/.pyenv/versions/3.9.18/bin/python'
             await terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
 
             // use terminal shell integration
-            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-                // if (terminal.name === 'Python') {
-                // const execution = shellIntegration.executeCommand(`print('hello world')`);
-                const execution = shellIntegration.executeCommand(`print('hello world')`);
-                const wrongExecution = shellIntegration.executeCommand(`dqwkodkqokoqwdWRONG`);
-                window.onDidEndTerminalShellExecution((event) => {
-                    if (event.execution === execution || event.execution === wrongExecution) {
-                        console.log(`Command exited with code ${event.exitCode}`); // switches btw undefined 0,1,130
-                        const temp = event.exitCode;
-                        let temp2 = temp;
-                    }
-                });
-                // }
-            });
+            // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+            //     // if (terminal.name === 'Python') {
+            //     // const execution = shellIntegration.executeCommand(`print('hello world')`);
+            //     const execution = shellIntegration.executeCommand(`print('hello world')`);
+            //     const wrongExecution = shellIntegration.executeCommand(`dqwkodkqokoqwdWRONG`);
+            //     window.onDidEndTerminalShellExecution((event) => {
+            //         if (event.execution === execution || event.execution === wrongExecution) {
+            //             console.log(`Command exited with code ${event.exitCode}`); // switches btw undefined 0,1,130
+            //             const temp = event.exitCode;
+            //             let temp2 = temp;
+            //         }
+            //     });
+            //     // }
+            // });
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
