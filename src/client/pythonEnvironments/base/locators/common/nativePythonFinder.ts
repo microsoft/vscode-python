@@ -1,14 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, workspace, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, workspace, window, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { PassThrough } from 'stream';
 import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
-import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
 import { createDeferred, createDeferredFrom } from '../../../../common/utils/async';
 import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
 import { DEFAULT_INTERPRETER_PATH_SETTING_KEY } from '../lowLevel/customWorkspaceLocator';
@@ -61,6 +60,8 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
     private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
 
+    private readonly outputChannel = this._register(window.createOutputChannel('Python Locator', { log: true }));
+
     constructor() {
         super();
         this.connection = this.start();
@@ -75,7 +76,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             executable,
         });
 
-        traceInfo(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+        this.outputChannel.info(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
         return environment;
     }
 
@@ -152,6 +153,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
     // eslint-disable-next-line class-methods-use-this
     private start(): rpc.MessageConnection {
+        this.outputChannel.info(`Starting Python Locator ${NATIVE_LOCATOR} server`);
         const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
         const disposables: Disposable[] = [];
         // jsonrpc package cannot handle messages coming through too quickly.
@@ -159,10 +161,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         // we have got the exit event.
         const readable = new PassThrough();
         proc.stdout.pipe(readable, { end: false });
-        proc.stderr.on('data', (data) => {
-            const err = data.toString();
-            traceError('Native Python Finder', err);
-        });
+        proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
         const writable = new PassThrough();
         writable.pipe(proc.stdin, { end: false });
         const disposeStreams = new Disposable(() => {
@@ -178,24 +177,24 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             disposeStreams,
             connection.onError((ex) => {
                 disposeStreams.dispose();
-                traceError('Error in Native Python Finder', ex);
+                this.outputChannel.error('Connection Error:', ex);
             }),
             connection.onNotification('log', (data: NativeLog) => {
                 switch (data.level) {
                     case 'info':
-                        traceInfo(`Native Python Finder: ${data.message}`);
+                        this.outputChannel.info(data.message);
                         break;
                     case 'warning':
-                        traceWarn(`Native Python Finder: ${data.message}`);
+                        this.outputChannel.warn(data.message);
                         break;
                     case 'error':
-                        traceError(`Native Python Finder: ${data.message}`);
+                        this.outputChannel.error(data.message);
                         break;
                     case 'debug':
-                        traceVerbose(`Native Python Finder: ${data.message}`);
+                        this.outputChannel.debug(data.message);
                         break;
                     default:
-                        traceLog(`Native Python Finder: ${data.message}`);
+                        this.outputChannel.trace(data.message);
                 }
             }),
             connection.onClose(() => {
@@ -208,7 +207,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                             proc.kill();
                         }
                     } catch (ex) {
-                        traceVerbose('Error while disposing Native Python Finder', ex);
+                        this.outputChannel.error('Error disposing finder', ex);
                     }
                 },
             },
@@ -244,6 +243,8 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
         disposable.add(
             this.connection.onNotification('environment', (data: NativeEnvInfo) => {
+                this.outputChannel.info(`Discovered env: ${data.executable || data.executable}`);
+                this.outputChannel.trace(`Discovered env info:\n ${JSON.stringify(data, undefined, 4)}`);
                 // We know that in the Python extension if either Version of Prefix is not provided by locator
                 // Then we end up resolving the information.
                 // Lets do that here,
@@ -259,10 +260,11 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                             executable: data.executable,
                         })
                         .then(({ environment, duration }) => {
-                            traceInfo(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+                            this.outputChannel.info(`Resolved ${environment.executable} in ${duration}ms`);
+                            this.outputChannel.trace(`Environment resolved:\n ${JSON.stringify(data, undefined, 4)}`);
                             discovered.fire(environment);
                         })
-                        .catch((ex) => traceError(`Error in Resolving Python Environment ${JSON.stringify(data)}`, ex));
+                        .catch((ex) => this.outputChannel.error(`Error in Resolving ${JSON.stringify(data)}`, ex));
                     trackPromiseAndNotifyOnCompletion(promise);
                 } else {
                     discovered.fire(data);
@@ -272,8 +274,8 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
         trackPromiseAndNotifyOnCompletion(
             this.sendRefreshRequest()
-                .then(({ duration }) => traceInfo(`Native Python Finder completed in ${duration}ms`))
-                .catch((ex) => traceError('Error in Native Python Finder', ex)),
+                .then(({ duration }) => this.outputChannel.info(`Refresh completed in ${duration}ms`))
+                .catch((ex) => this.outputChannel.error('Refresh error', ex)),
         );
 
         completed.promise.finally(() => disposable.dispose());
