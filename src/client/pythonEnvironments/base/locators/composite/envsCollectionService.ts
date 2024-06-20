@@ -259,7 +259,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
     }
 
+    private telemetrySentOnce = false;
+
     private async sendTelemetry(query: PythonLocatorQuery | undefined, stopWatch: StopWatch) {
+        if (this.telemetrySentOnce) {
+            return;
+        }
+        this.telemetrySentOnce = true;
         if (!query && !this.hasRefreshFinished(query)) {
             const envs = this.cache.getAllEnvs();
 
@@ -286,15 +292,18 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             const venvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Venv).length;
             const virtualEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnv).length;
             const virtualEnvWrapperEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnvWrapper).length;
+            const global = envs.filter(
+                (e) =>
+                    e.kind === PythonEnvKind.OtherGlobal ||
+                    e.kind === PythonEnvKind.System ||
+                    e.kind === PythonEnvKind.Custom ||
+                    e.kind === PythonEnvKind.OtherVirtual,
+            ).length;
 
             const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
-            const nativeActiveStateEnvs = nativeEnvs.filter(
-                (e) => categoryToKind(e.category) === PythonEnvKind.ActiveState,
-            ).length;
             const nativeCondaEnvs = nativeEnvs.filter((e) => categoryToKind(e.category) === PythonEnvKind.Conda).length;
             const nativeCustomEnvs = nativeEnvs.filter((e) => categoryToKind(e.category) === PythonEnvKind.Custom)
                 .length;
-            const nativeHatchEnvs = nativeEnvs.filter((e) => categoryToKind(e.category) === PythonEnvKind.Hatch).length;
             const nativeMicrosoftStoreEnvs = nativeEnvs.filter(
                 (e) => categoryToKind(e.category) === PythonEnvKind.MicrosoftStore,
             ).length;
@@ -320,6 +329,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             const nativeVirtualEnvWrapperEnvs = nativeEnvs.filter(
                 (e) => categoryToKind(e.category) === PythonEnvKind.VirtualEnvWrapper,
             ).length;
+            const nativeGlobal = nativeEnvs.filter(
+                (e) =>
+                    categoryToKind(e.category) === PythonEnvKind.OtherGlobal ||
+                    categoryToKind(e.category) === PythonEnvKind.System ||
+                    categoryToKind(e.category) === PythonEnvKind.Custom ||
+                    categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+            ).length;
 
             // Intent is to capture time taken for discovery of all envs to complete the first time.
             sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
@@ -340,11 +356,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 venvEnvs,
                 virtualEnvEnvs,
                 virtualEnvWrapperEnvs,
+                global,
                 nativeEnvironmentsWithoutPython,
-                nativeActiveStateEnvs,
                 nativeCondaEnvs,
                 nativeCustomEnvs,
-                nativeHatchEnvs,
                 nativeMicrosoftStoreEnvs,
                 nativeOtherGlobalEnvs,
                 nativeOtherVirtualEnvs,
@@ -356,6 +371,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 nativeVenvEnvs,
                 nativeVirtualEnvEnvs,
                 nativeVirtualEnvWrapperEnvs,
+                nativeGlobal,
             });
         }
         this.hasRefreshFinishedForQuery.set(query, true);

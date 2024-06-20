@@ -1236,13 +1236,13 @@ export interface IEventNamePropertyMapping {
          */
         virtualEnvWrapperEnvs?: number;
         /**
-         * Number of environments of a specific type found by native finder
+         * Number of all known Globals (System, Custom, GlobalCustom, etc)
          */
-        nativeEnvironmentsWithoutPython?: number;
+        global?: number;
         /**
          * Number of environments of a specific type found by native finder
          */
-        nativeActiveStateEnvs?: number;
+        nativeEnvironmentsWithoutPython?: number;
         /**
          * Number of environments of a specific type found by native finder
          */
@@ -1251,10 +1251,6 @@ export interface IEventNamePropertyMapping {
          * Number of environments of a specific type found by native finder
          */
         nativeCustomEnvs?: number;
-        /**
-         * Number of environments of a specific type found by native finder
-         */
-        nativeHatchEnvs?: number;
         /**
          * Number of environments of a specific type found by native finder
          */
@@ -1299,6 +1295,10 @@ export interface IEventNamePropertyMapping {
          * Number of environments of a specific type found by native finder
          */
         nativeVirtualEnvWrapperEnvs?: number;
+        /**
+         * Number of all known Globals (System, Custom, GlobalCustom, etc)
+         */
+        nativeGlobal?: number;
     };
     /**
      * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.

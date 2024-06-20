@@ -10,7 +10,6 @@ import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { createDeferred, createDeferredFrom } from '../../../../common/utils/async';
 import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
-import { DEFAULT_INTERPRETER_PATH_SETTING_KEY } from '../lowLevel/customWorkspaceLocator';
 import { noop } from '../../../../common/utils/misc';
 import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
@@ -291,47 +290,12 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             discovered: discovered.event,
         };
     }
-
-    private sendRefreshRequest() {
-        const pythonPathSettings = (workspace.workspaceFolders || []).map((w) =>
-            getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, w.uri),
-        );
-        pythonPathSettings.push(getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY));
-        // We can have multiple workspaces, each with its own setting.
-        const pythonSettings = Array.from(
-            new Set(
-                pythonPathSettings
-                    .filter((item) => !!item)
-                    // We only want the parent directories.
-                    .map((p) => path.dirname(p!))
-                    /// If setting value is 'python', then `path.dirname('python')` will yield `.`
-                    .filter((item) => item !== '.'),
-            ),
-        );
-
-        return this.connection.sendRequest<{ duration: number }>(
-            'refresh',
-            // Send configuration information to the Python finder.
-            {
-                // This has a special meaning in locator, its lot a low priority
-                // as we treat this as workspace folders that can contain a large number of files.
-                search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
-                // Also send the python paths that are configured in the settings.
-                python_interpreter_paths: pythonSettings,
-                // We do not want to mix this with `search_paths`
-                virtual_env_paths: getCustomVirtualEnvDirs(),
-                conda_executable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
-                poetry_executable: getPythonSettingAndUntildify<string>('poetryPath'),
-                pipenv_executable: getPythonSettingAndUntildify<string>('pipenvPath'),
-            },
-        );
-    }
 }
 
 /**
  * Gets all custom virtual environment locations to look for environments.
  */
-async function getCustomVirtualEnvDirs(): Promise<string[]> {
+function getCustomVirtualEnvDirs(): string[] {
     const venvDirs: string[] = [];
     const venvPath = getPythonSettingAndUntildify<string>(VENVPATH_SETTING_KEY);
     if (venvPath) {
@@ -342,7 +306,7 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     if (homeDir) {
         venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
     }
-    return Array.from(new Set(venvDirs));
+    return Array.from(new Set(venvDirs).values());
 }
 
 function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefined {
@@ -363,10 +327,15 @@ export function categoryToKind(category: string): PythonEnvKind {
             return PythonEnvKind.ActiveState;
         case 'conda':
             return PythonEnvKind.Conda;
+        case 'linux-global':
+            return PythonEnvKind.System;
+        case 'global-paths':
+            return PythonEnvKind.System;
         case 'system':
         case 'homebrew':
         case 'mac-python-org':
         case 'mac-command-line-tools':
+        case 'mac-xcode':
         case 'windows-registry':
             return PythonEnvKind.System;
         case 'pyenv':
