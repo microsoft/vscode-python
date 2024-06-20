@@ -4,6 +4,8 @@ import * as rpc from 'vscode-jsonrpc/node';
 import { Disposable, window } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { traceError, traceLog } from '../logging';
+import { captureTelemetry } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server.py');
 let serverInstance: PythonServer | undefined;
@@ -49,6 +51,7 @@ class PythonServerImpl implements Disposable {
         });
     }
 
+    @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)
     public execute(code: string): Promise<string> {
         return this.connection.sendRequest('execute', code);
     }

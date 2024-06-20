@@ -5,11 +5,10 @@ import { IJupyterExtensionDependencyManager } from '../common/application/types'
 import { IDisposableRegistry, IExtensions } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
+import { createHidingMiddleware } from './hidingMiddleware';
 
 import { LanguageClientMiddlewareBase } from './languageClientMiddlewareBase';
 import { LanguageServerType } from './types';
-
-import { createHidingMiddleware } from '@vscode/jupyter-lsp-middleware';
 
 export class LanguageClientMiddleware extends LanguageClientMiddlewareBase {
     public constructor(serviceContainer: IServiceContainer, serverType: LanguageServerType, serverVersion?: string) {

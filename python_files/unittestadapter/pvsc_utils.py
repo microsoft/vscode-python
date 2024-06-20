@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import unittest
-from typing import List, Optional, Tuple, Union, Dict
+from typing import List, Optional, Tuple, Union, Dict, Literal, TypedDict
 
 
 script_dir = pathlib.Path(__file__).parent.parent
@@ -18,7 +18,7 @@ sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import socket_manager  # noqa: E402
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa: E402
+from typing_extensions import NotRequired  # noqa: E402
 
 # Types
 
@@ -52,9 +52,6 @@ class TestExecutionStatus(str, enum.Enum):
     success = "success"
 
 
-TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, Union[str, None]]]
-
-
 class VSCodeUnittestError(Exception):
     """A custom exception class for unittest errors."""
 
@@ -72,7 +69,7 @@ class DiscoveryPayloadDict(TypedDict):
 class ExecutionPayloadDict(TypedDict):
     cwd: str
     status: TestExecutionStatus
-    result: Optional[TestResultTypeAlias]
+    result: Optional[Dict[str, Dict[str, Optional[str]]]]
     not_found: NotRequired[List[str]]
     error: NotRequired[str]
 

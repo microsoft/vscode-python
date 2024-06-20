@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, EventEmitter, Event, workspace, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -9,41 +9,46 @@ import { PassThrough } from 'stream';
 import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { traceError, traceInfo, traceLog, traceVerbose, traceWarn } from '../../../../logging';
-import { createDeferred } from '../../../../common/utils/async';
+import { createDeferred, createDeferredFrom } from '../../../../common/utils/async';
+import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
+import { DEFAULT_INTERPRETER_PATH_SETTING_KEY } from '../lowLevel/customWorkspaceLocator';
+import { noop } from '../../../../common/utils/misc';
+import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
+import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
+import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
+import { getUserHomeDir } from '../../../../common/utils/platform';
+
+const untildify = require('untildify');
 
 const NATIVE_LOCATOR = isWindows()
-    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'python-finder');
+    ? path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet.exe')
+    : path.join(EXTENSION_ROOT_DIR, 'native_locator', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
-    name: string;
-    pythonExecutablePath?: string;
+    name?: string;
+    executable?: string;
     category: string;
     version?: string;
-    pythonRunCommand?: string[];
-    envPath?: string;
-    envManager?: NativeEnvManagerInfo;
+    prefix?: string;
+    manager?: NativeEnvManagerInfo;
     /**
      * Path to the project directory when dealing with pipenv virtual environments.
      */
-    projectPath?: string;
-    arch?: 'X64' | 'X86';
+    project?: string;
+    arch?: 'x64' | 'x86';
     symlinks?: string[];
-    creationTime?: number;
-    modifiedTime?: number;
 }
 
 export interface NativeEnvManagerInfo {
     tool: string;
-    executablePath: string;
+    executable: string;
     version?: string;
 }
 
 export interface NativeGlobalPythonFinder extends Disposable {
-    startSearch(token?: CancellationToken): Promise<void>;
-    onDidFindPythonEnvironment: Event<NativeEnvInfo>;
-    onDidFindEnvironmentManager: Event<NativeEnvManagerInfo>;
+    resolve(executable: string): Promise<NativeEnvInfo>;
+    refresh(): AsyncIterable<NativeEnvInfo>;
 }
 
 interface NativeLog {
@@ -51,24 +56,113 @@ interface NativeLog {
     message: string;
 }
 
-class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
-    private readonly _onDidFindPythonEnvironment = new EventEmitter<NativeEnvInfo>();
+class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGlobalPythonFinder {
+    private readonly connection: rpc.MessageConnection;
 
-    private readonly _onDidFindEnvironmentManager = new EventEmitter<NativeEnvManagerInfo>();
+    private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
 
-    public readonly onDidFindPythonEnvironment = this._onDidFindPythonEnvironment.event;
+    constructor() {
+        super();
+        this.connection = this.start();
+        this.firstRefreshResults = this.refreshFirstTime();
+    }
 
-    public readonly onDidFindEnvironmentManager = this._onDidFindEnvironmentManager.event;
+    public async resolve(executable: string): Promise<NativeEnvInfo> {
+        const { environment, duration } = await this.connection.sendRequest<{
+            duration: number;
+            environment: NativeEnvInfo;
+        }>('resolve', {
+            executable,
+        });
 
-    public startSearch(token?: CancellationToken): Promise<void> {
-        const deferred = createDeferred<void>();
-        const proc = ch.spawn(NATIVE_LOCATOR, [], { env: process.env });
+        traceInfo(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+        return environment;
+    }
+
+    async *refresh(): AsyncIterable<NativeEnvInfo> {
+        if (this.firstRefreshResults) {
+            // If this is the first time we are refreshing,
+            // Then get the results from the first refresh.
+            // Those would have started earlier and cached in memory.
+            const results = this.firstRefreshResults();
+            this.firstRefreshResults = undefined;
+            yield* results;
+        } else {
+            const result = this.doRefresh();
+            let completed = false;
+            void result.completed.finally(() => {
+                completed = true;
+            });
+            const envs: NativeEnvInfo[] = [];
+            let discovered = createDeferred();
+            const disposable = result.discovered((data) => {
+                envs.push(data);
+                discovered.resolve();
+            });
+            do {
+                if (!envs.length) {
+                    await Promise.race([result.completed, discovered.promise]);
+                }
+                if (envs.length) {
+                    const dataToSend = [...envs];
+                    envs.length = 0;
+                    for (const data of dataToSend) {
+                        yield data;
+                    }
+                }
+                if (!completed) {
+                    discovered = createDeferred();
+                }
+            } while (!completed);
+            disposable.dispose();
+        }
+    }
+
+    refreshFirstTime() {
+        const result = this.doRefresh();
+        const completed = createDeferredFrom(result.completed);
+        const envs: NativeEnvInfo[] = [];
+        let discovered = createDeferred();
+        const disposable = result.discovered((data) => {
+            envs.push(data);
+            discovered.resolve();
+        });
+
+        const iterable = async function* () {
+            do {
+                if (!envs.length) {
+                    await Promise.race([completed.promise, discovered.promise]);
+                }
+                if (envs.length) {
+                    const dataToSend = [...envs];
+                    envs.length = 0;
+                    for (const data of dataToSend) {
+                        yield data;
+                    }
+                }
+                if (!completed.completed) {
+                    discovered = createDeferred();
+                }
+            } while (!completed.completed);
+            disposable.dispose();
+        };
+
+        return iterable.bind(this);
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private start(): rpc.MessageConnection {
+        const proc = ch.spawn(NATIVE_LOCATOR, ['server'], { env: process.env });
         const disposables: Disposable[] = [];
-        // jsonrpc package cannot handle messages coming through too quicly.
+        // jsonrpc package cannot handle messages coming through too quickly.
         // Lets handle the messages and close the stream only when
         // we have got the exit event.
         const readable = new PassThrough();
         proc.stdout.pipe(readable, { end: false });
+        proc.stderr.on('data', (data) => {
+            const err = data.toString();
+            traceError('Native Python Finder', err);
+        });
         const writable = new PassThrough();
         writable.pipe(proc.stdin, { end: false });
         const disposeStreams = new Disposable(() => {
@@ -79,23 +173,12 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
             new rpc.StreamMessageReader(readable),
             new rpc.StreamMessageWriter(writable),
         );
-
         disposables.push(
             connection,
             disposeStreams,
             connection.onError((ex) => {
                 disposeStreams.dispose();
                 traceError('Error in Native Python Finder', ex);
-            }),
-            connection.onNotification('pythonEnvironment', (data: NativeEnvInfo) => {
-                this._onDidFindPythonEnvironment.fire(data);
-            }),
-            connection.onNotification('envManager', (data: NativeEnvManagerInfo) => {
-                this._onDidFindEnvironmentManager.fire(data);
-            }),
-            connection.onNotification('exit', () => {
-                traceInfo('Native Python Finder exited');
-                disposeStreams.dispose();
             }),
             connection.onNotification('log', (data: NativeLog) => {
                 switch (data.level) {
@@ -116,7 +199,6 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
                 }
             }),
             connection.onClose(() => {
-                deferred.resolve();
                 disposables.forEach((d) => d.dispose());
             }),
             {
@@ -125,34 +207,141 @@ class NativeGlobalPythonFinderImpl implements NativeGlobalPythonFinder {
                         if (proc.exitCode === null) {
                             proc.kill();
                         }
-                    } catch (err) {
-                        traceVerbose('Error while disposing Native Python Finder', err);
+                    } catch (ex) {
+                        traceVerbose('Error while disposing Native Python Finder', ex);
                     }
                 },
             },
         );
 
-        if (token) {
-            disposables.push(
-                token.onCancellationRequested(() => {
-                    deferred.resolve();
-                    try {
-                        proc.kill();
-                    } catch (err) {
-                        traceVerbose('Error while handling cancellation request for Native Python Finder', err);
-                    }
-                }),
-            );
-        }
-
         connection.listen();
-        return deferred.promise;
+        this._register(Disposable.from(...disposables));
+        return connection;
     }
 
-    public dispose() {
-        this._onDidFindPythonEnvironment.dispose();
-        this._onDidFindEnvironmentManager.dispose();
+    private doRefresh(): { completed: Promise<void>; discovered: Event<NativeEnvInfo> } {
+        const disposable = this._register(new DisposableStore());
+        const discovered = disposable.add(new EventEmitter<NativeEnvInfo>());
+        const completed = createDeferred<void>();
+        const pendingPromises: Promise<void>[] = [];
+
+        const notifyUponCompletion = () => {
+            const initialCount = pendingPromises.length;
+            Promise.all(pendingPromises)
+                .then(() => {
+                    if (initialCount === pendingPromises.length) {
+                        completed.resolve();
+                    } else {
+                        setTimeout(notifyUponCompletion, 0);
+                    }
+                })
+                .catch(noop);
+        };
+        const trackPromiseAndNotifyOnCompletion = (promise: Promise<void>) => {
+            pendingPromises.push(promise);
+            notifyUponCompletion();
+        };
+
+        disposable.add(
+            this.connection.onNotification('environment', (data: NativeEnvInfo) => {
+                // We know that in the Python extension if either Version of Prefix is not provided by locator
+                // Then we end up resolving the information.
+                // Lets do that here,
+                // This is a hack, as the other part of the code that resolves the version information
+                // doesn't work as expected, as its still a WIP.
+                if (data.executable && (!data.version || !data.prefix)) {
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
+                    const promise = this.connection
+                        .sendRequest<{ duration: number; environment: NativeEnvInfo }>('resolve', {
+                            executable: data.executable,
+                        })
+                        .then(({ environment, duration }) => {
+                            traceInfo(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+                            discovered.fire(environment);
+                        })
+                        .catch((ex) => traceError(`Error in Resolving Python Environment ${JSON.stringify(data)}`, ex));
+                    trackPromiseAndNotifyOnCompletion(promise);
+                } else {
+                    discovered.fire(data);
+                }
+            }),
+        );
+
+        trackPromiseAndNotifyOnCompletion(
+            this.sendRefreshRequest()
+                .then(({ duration }) => traceInfo(`Native Python Finder completed in ${duration}ms`))
+                .catch((ex) => traceError('Error in Native Python Finder', ex)),
+        );
+
+        completed.promise.finally(() => disposable.dispose());
+        return {
+            completed: completed.promise,
+            discovered: discovered.event,
+        };
     }
+
+    private sendRefreshRequest() {
+        const pythonPathSettings = (workspace.workspaceFolders || []).map((w) =>
+            getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, w.uri),
+        );
+        pythonPathSettings.push(getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY));
+        // We can have multiple workspaces, each with its own setting.
+        const pythonSettings = Array.from(
+            new Set(
+                pythonPathSettings
+                    .filter((item) => !!item)
+                    // We only want the parent directories.
+                    .map((p) => path.dirname(p!))
+                    /// If setting value is 'python', then `path.dirname('python')` will yield `.`
+                    .filter((item) => item !== '.'),
+            ),
+        );
+
+        return this.connection.sendRequest<{ duration: number }>(
+            'refresh',
+            // Send configuration information to the Python finder.
+            {
+                // This has a special meaning in locator, its lot a low priority
+                // as we treat this as workspace folders that can contain a large number of files.
+                search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
+                // Also send the python paths that are configured in the settings.
+                python_interpreter_paths: pythonSettings,
+                // We do not want to mix this with `search_paths`
+                virtual_env_paths: getCustomVirtualEnvDirs(),
+                conda_executable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
+                poetry_executable: getPythonSettingAndUntildify<string>('poetryPath'),
+                pipenv_executable: getPythonSettingAndUntildify<string>('pipenvPath'),
+            },
+        );
+    }
+}
+
+/**
+ * Gets all custom virtual environment locations to look for environments.
+ */
+async function getCustomVirtualEnvDirs(): Promise<string[]> {
+    const venvDirs: string[] = [];
+    const venvPath = getPythonSettingAndUntildify<string>(VENVPATH_SETTING_KEY);
+    if (venvPath) {
+        venvDirs.push(untildify(venvPath));
+    }
+    const venvFolders = getPythonSettingAndUntildify<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
+    const homeDir = getUserHomeDir();
+    if (homeDir) {
+        venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
+    }
+    return Array.from(new Set(venvDirs));
+}
+
+function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefined {
+    const value = getConfiguration('python', scope).get<T>(name);
+    if (typeof value === 'string') {
+        return value ? ((untildify(value as string) as unknown) as T) : undefined;
+    }
+    return value;
 }
 
 export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
