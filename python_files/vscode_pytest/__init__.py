@@ -898,7 +898,7 @@ class DeferPlugin:
         """determine how many workers to use based on how many tests were selected in the test explorer"""
         return min((yield), len(config.option.file_or_dir))
 
+
 def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
     if manager.hasplugin("xdist") and not isinstance(plugin, DeferPlugin):
         manager.register(DeferPlugin())
-
