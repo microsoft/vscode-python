@@ -98,7 +98,7 @@ suite('REPL Provider', () => {
         await commandHandler!.call(replProvider);
 
         serviceContainer.verify(
-            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('repl')),
+            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('Python')),
             TypeMoq.Times.once(),
         );
         codeExecutionService.verify((c) => c.initializeRepl(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
