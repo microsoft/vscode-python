@@ -65,7 +65,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
         if (this.replActive && (await this.replActive)) {
-            await terminalService.show(); // in multi-file to REPL scenario, it just sends to same REPL.
+            await terminalService.show();
             return;
         }
 
@@ -99,7 +99,6 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 resolve(true);
             });
 
-            // Very first replCommandArgs.command is the exsecutable info: @'/Users/anthonykim/.pyenv/versions/3.9.18/bin/python'
             await terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
         });
         this.disposables.push(
