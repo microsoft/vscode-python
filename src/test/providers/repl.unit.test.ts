@@ -80,6 +80,11 @@ suite('REPL Provider', () => {
         const resource = Uri.parse('a');
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => Promise<void>);
+        const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
+        serviceContainer
+            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
+            .returns(() => executionService.object);
+
         commandManager
             .setup((c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
