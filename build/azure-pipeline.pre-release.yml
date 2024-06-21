@@ -15,7 +15,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: kanadig/rust-binaries
+      ref: main
       endpoint: Monaco
 
     - repository: python-environment-tools
