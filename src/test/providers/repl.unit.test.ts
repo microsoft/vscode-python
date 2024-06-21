@@ -26,7 +26,6 @@ suite('REPL Provider', () => {
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let replProvider: ReplProvider;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -36,12 +35,9 @@ suite('REPL Provider', () => {
         activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspace.object);
-        // serviceContainer
-        //     .setup((c) => c.get(ICodeExecutionService, TypeMoq.It.isValue('repl')))
-        //     .returns(() => codeExecutionService.object);
         serviceContainer
             .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
-            .returns(() => executionService.object);
+            .returns(() => codeExecutionService.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup((c) => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -103,7 +99,7 @@ suite('REPL Provider', () => {
         await commandHandler!.call(replProvider);
 
         serviceContainer.verify(
-            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isAny()),
+            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')),
             TypeMoq.Times.once(),
         );
         codeExecutionService.verify((c) => c.initializeRepl(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
