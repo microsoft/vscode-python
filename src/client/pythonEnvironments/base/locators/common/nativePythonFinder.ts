@@ -21,6 +21,7 @@ import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
+import { PythonEnvKind } from '../../info';
 
 const untildify = require('untildify');
 
@@ -53,6 +54,7 @@ export interface NativeEnvManagerInfo {
 export interface NativeGlobalPythonFinder extends Disposable {
     resolve(executable: string): Promise<NativeEnvInfo>;
     refresh(): AsyncIterable<NativeEnvInfo>;
+    categoryToKind(category: string): PythonEnvKind;
 }
 
 interface NativeLog {
@@ -83,6 +85,40 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
         this.outputChannel.info(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
         return environment;
+    }
+
+    categoryToKind(category: string): PythonEnvKind {
+        switch (category.toLowerCase()) {
+            case 'conda':
+                return PythonEnvKind.Conda;
+            case 'system':
+            case 'homebrew':
+            case 'mac-python-org':
+            case 'mac-command-line-tools':
+            case 'windows-registry':
+                return PythonEnvKind.System;
+            case 'pyenv':
+            case 'pyenv-other':
+                return PythonEnvKind.Pyenv;
+            case 'pipenv':
+                return PythonEnvKind.Pipenv;
+            case 'pyenv-virtualenv':
+                return PythonEnvKind.VirtualEnv;
+            case 'venv':
+                return PythonEnvKind.Venv;
+            case 'virtualenv':
+                return PythonEnvKind.VirtualEnv;
+            case 'virtualenvwrapper':
+                return PythonEnvKind.VirtualEnvWrapper;
+            case 'windows-store':
+                return PythonEnvKind.MicrosoftStore;
+            case 'unknown':
+                return PythonEnvKind.Unknown;
+            default: {
+                this.outputChannel.info(`Unknown Python Environment category '${category}' from Native Locator.`);
+                return PythonEnvKind.Unknown;
+            }
+        }
     }
 
     async *refresh(): AsyncIterable<NativeEnvInfo> {

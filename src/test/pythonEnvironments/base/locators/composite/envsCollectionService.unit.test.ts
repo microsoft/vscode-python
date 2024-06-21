@@ -29,6 +29,10 @@ import { OSType, getOSType } from '../../../../common';
 import * as nativeFinder from '../../../../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 
 class MockNativePythonFinder implements nativeFinder.NativeGlobalPythonFinder {
+    categoryToKind(_category: string): PythonEnvKind {
+        throw new Error('Method not implemented.');
+    }
+
     resolve(_executable: string): Promise<nativeFinder.NativeEnvInfo> {
         throw new Error('Method not implemented.');
     }

@@ -10,7 +10,7 @@ import { Conda } from '../../../common/environmentManagers/conda';
 import { traceError } from '../../../../logging';
 import type { KnownEnvironmentTools } from '../../../../api/types';
 import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
-import { NativeGlobalPythonFinder, categoryToKind, createNativeGlobalPythonFinder } from '../common/nativePythonFinder';
+import { NativeGlobalPythonFinder, createNativeGlobalPythonFinder } from '../common/nativePythonFinder';
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
 import { Architecture } from '../../../../common/utils/platform';
 
@@ -90,7 +90,7 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
             if (data.executable) {
                 const arch = (data.arch || '').toLowerCase();
                 const env: BasicEnvInfo = {
-                    kind: categoryToKind(data.category),
+                    kind: this.finder.categoryToKind(data.category),
                     executablePath: data.executable ? data.executable : '',
                     envPath: data.prefix ? data.prefix : undefined,
                     version: data.version ? parseVersion(data.version) : undefined,
