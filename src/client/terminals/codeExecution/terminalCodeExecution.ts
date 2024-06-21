@@ -17,7 +17,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { traceInfo } from '../../logging';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
-// import TerminalShellIntegration proposed api
 
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
