@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, window, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, workspace, window, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -10,13 +10,12 @@ import { isWindows } from '../../../../common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { createDeferred, createDeferredFrom } from '../../../../common/utils/async';
 import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
+import { DEFAULT_INTERPRETER_PATH_SETTING_KEY } from '../lowLevel/customWorkspaceLocator';
 import { noop } from '../../../../common/utils/misc';
-import { getConfiguration, getWorkspaceFolderPaths } from '../../../../common/vscodeApis/workspaceApis';
+import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
-import { PythonEnvKind } from '../../info';
-import { traceError } from '../../../../logging';
 
 const untildify = require('untildify');
 
@@ -155,7 +154,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     // eslint-disable-next-line class-methods-use-this
     private start(): rpc.MessageConnection {
         this.outputChannel.info(`Starting Python Locator ${PYTHON_ENV_TOOLS_PATH} server`);
-        const disposables: Disposable[] = [];
+
         // jsonrpc package cannot handle messages coming through too quickly.
         // Lets handle the messages and close the stream only when
         // we have got the exit event.
@@ -167,6 +166,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             proc.stdout.pipe(readable, { end: false });
             proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
             writable.pipe(proc.stdin, { end: false });
+
             disposables.push({
                 dispose: () => {
                     try {
@@ -178,10 +178,9 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                     }
                 },
             });
-        } catch (err) {
-            this.outputChannel.error('Error starting finder', err);
+        } catch (ex) {
+            this.outputChannel.error(`Error starting Python Finder ${PYTHON_ENV_TOOLS_PATH} server`, ex);
         }
-
         const disposeStreams = new Disposable(() => {
             readable.end();
             writable.end();
@@ -291,12 +290,47 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             discovered: discovered.event,
         };
     }
+
+    private sendRefreshRequest() {
+        const pythonPathSettings = (workspace.workspaceFolders || []).map((w) =>
+            getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, w.uri),
+        );
+        pythonPathSettings.push(getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY));
+        // We can have multiple workspaces, each with its own setting.
+        const pythonSettings = Array.from(
+            new Set(
+                pythonPathSettings
+                    .filter((item) => !!item)
+                    // We only want the parent directories.
+                    .map((p) => path.dirname(p!))
+                    /// If setting value is 'python', then `path.dirname('python')` will yield `.`
+                    .filter((item) => item !== '.'),
+            ),
+        );
+
+        return this.connection.sendRequest<{ duration: number }>(
+            'refresh',
+            // Send configuration information to the Python finder.
+            {
+                // This has a special meaning in locator, its lot a low priority
+                // as we treat this as workspace folders that can contain a large number of files.
+                search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
+                // Also send the python paths that are configured in the settings.
+                python_interpreter_paths: pythonSettings,
+                // We do not want to mix this with `search_paths`
+                virtual_env_paths: getCustomVirtualEnvDirs(),
+                conda_executable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
+                poetry_executable: getPythonSettingAndUntildify<string>('poetryPath'),
+                pipenv_executable: getPythonSettingAndUntildify<string>('pipenvPath'),
+            },
+        );
+    }
 }
 
 /**
  * Gets all custom virtual environment locations to look for environments.
  */
-function getCustomVirtualEnvDirs(): string[] {
+async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvDirs: string[] = [];
     const venvPath = getPythonSettingAndUntildify<string>(VENVPATH_SETTING_KEY);
     if (venvPath) {
@@ -307,7 +341,7 @@ function getCustomVirtualEnvDirs(): string[] {
     if (homeDir) {
         venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
     }
-    return Array.from(new Set(venvDirs).values());
+    return Array.from(new Set(venvDirs));
 }
 
 function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefined {
@@ -320,51 +354,4 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
 
 export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
     return new NativeGlobalPythonFinderImpl();
-}
-
-export function categoryToKind(category: string): PythonEnvKind {
-    switch (category.toLowerCase()) {
-        case 'active-state':
-            return PythonEnvKind.ActiveState;
-        case 'conda':
-            return PythonEnvKind.Conda;
-        case 'linux-global':
-            return PythonEnvKind.System;
-        case 'global-paths':
-            return PythonEnvKind.System;
-        case 'system':
-        case 'homebrew':
-        case 'mac-python-org':
-        case 'mac-command-line-tools':
-        case 'mac-xcode':
-        case 'windows-registry':
-            return PythonEnvKind.System;
-        case 'pyenv':
-        case 'pyenv-other':
-            return PythonEnvKind.Pyenv;
-        case 'pipenv':
-            return PythonEnvKind.Pipenv;
-        case 'pyenv-virtualenv':
-            return PythonEnvKind.VirtualEnv;
-        case 'venv':
-            return PythonEnvKind.Venv;
-        case 'virtualenv':
-            return PythonEnvKind.VirtualEnv;
-        case 'virtualenvwrapper':
-            return PythonEnvKind.VirtualEnvWrapper;
-        case 'windows-store':
-            return PythonEnvKind.MicrosoftStore;
-        case 'custom-env':
-            return PythonEnvKind.Custom;
-        case 'other-env':
-            return PythonEnvKind.OtherVirtual;
-        case 'hatch':
-            return PythonEnvKind.Hatch;
-        case 'unknown':
-            return PythonEnvKind.Unknown;
-        default: {
-            traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
-            return PythonEnvKind.Unknown;
-        }
-    }
 }
