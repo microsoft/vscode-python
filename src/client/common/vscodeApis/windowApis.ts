@@ -19,6 +19,8 @@ import {
     QuickPickItemButtonEvent,
     Uri,
     TerminalShellExecutionStartEvent,
+    LogOutputChannel,
+    OutputChannel,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
 import { Resource } from '../types';
@@ -248,4 +250,11 @@ export function getActiveResource(): Resource {
     }
     const workspaces = getWorkspaceFolders();
     return Array.isArray(workspaces) && workspaces.length > 0 ? workspaces[0].uri : undefined;
+}
+
+export function createOutputChannel(name: string, languageId?: string): OutputChannel {
+    return window.createOutputChannel(name, languageId);
+}
+export function createLogOutputChannel(name: string, options: { log: true }): LogOutputChannel {
+    return window.createOutputChannel(name, options);
 }

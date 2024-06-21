@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, workspace, window, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -12,10 +12,15 @@ import { createDeferred, createDeferredFrom } from '../../../../common/utils/asy
 import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
 import { DEFAULT_INTERPRETER_PATH_SETTING_KEY } from '../lowLevel/customWorkspaceLocator';
 import { noop } from '../../../../common/utils/misc';
-import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
+import {
+    getConfiguration,
+    getWorkspaceFolderPaths,
+    getWorkspaceFolders,
+} from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
+import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
 
 const untildify = require('untildify');
 
@@ -60,7 +65,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
 
     private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
 
-    private readonly outputChannel = this._register(window.createOutputChannel('Python Locator', { log: true }));
+    private readonly outputChannel = this._register(createLogOutputChannel('Python Locator', { log: true }));
 
     constructor() {
         super();
@@ -292,7 +297,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     }
 
     private sendRefreshRequest() {
-        const pythonPathSettings = (workspace.workspaceFolders || []).map((w) =>
+        const pythonPathSettings = (getWorkspaceFolders() || []).map((w) =>
             getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY, w.uri),
         );
         pythonPathSettings.push(getPythonSettingAndUntildify<string>(DEFAULT_INTERPRETER_PATH_SETTING_KEY));
@@ -314,7 +319,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             {
                 // This has a special meaning in locator, its lot a low priority
                 // as we treat this as workspace folders that can contain a large number of files.
-                search_paths: (workspace.workspaceFolders || []).map((w) => w.uri.fsPath),
+                search_paths: getWorkspaceFolderPaths(),
                 // Also send the python paths that are configured in the settings.
                 python_interpreter_paths: pythonSettings,
                 // We do not want to mix this with `search_paths`
