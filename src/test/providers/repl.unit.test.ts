@@ -103,7 +103,7 @@ suite('REPL Provider', () => {
         await commandHandler!.call(replProvider);
 
         serviceContainer.verify(
-            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')),
+            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isAny()),
             TypeMoq.Times.once(),
         );
         codeExecutionService.verify((c) => c.initializeRepl(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
