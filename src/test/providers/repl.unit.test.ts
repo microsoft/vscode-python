@@ -26,6 +26,7 @@ suite('REPL Provider', () => {
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let replProvider: ReplProvider;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -35,9 +36,12 @@ suite('REPL Provider', () => {
         activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspace.object);
+        // serviceContainer
+        //     .setup((c) => c.get(ICodeExecutionService, TypeMoq.It.isValue('repl')))
+        //     .returns(() => codeExecutionService.object);
         serviceContainer
-            .setup((c) => c.get(ICodeExecutionService, TypeMoq.It.isValue('repl')))
-            .returns(() => codeExecutionService.object);
+            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
+            .returns(() => executionService.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup((c) => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -80,10 +84,6 @@ suite('REPL Provider', () => {
         const resource = Uri.parse('a');
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => Promise<void>);
-        const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
-        serviceContainer
-            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
-            .returns(() => executionService.object);
 
         commandManager
             .setup((c) =>
