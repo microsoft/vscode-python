@@ -347,6 +347,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         ) {
                             return;
                         }
+                        traceError(`Environment ${exe} is missing from native locator`);
                         switch (env.kind) {
                             case PythonEnvKind.Conda:
                                 missingEnvironments.missingNativeCondaEnvs += 1;
@@ -589,6 +590,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         resolvedEnv.version.micro !== nativeVersion.micro ||
                         resolvedEnv.version.micro !== nativeVersion.micro
                     ) {
+                        traceError(
+                            `Environment ${e.executable} got the wrong version from native locator (Native = ${e.version}, Actual ${resolvedEnv.version.sysVersion})`,
+                        );
                         switch (kind) {
                             case PythonEnvKind.Conda:
                                 invalidVersions.invalidVersionsCondaEnvs += 1;
@@ -640,6 +644,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     }
                 }
                 if (e.prefix && resolvedEnv.executable.sysPrefix.toLowerCase() !== e.prefix.trim().toLowerCase()) {
+                    traceError(
+                        `Environment ${e.executable} got the wrong Sys.Prefix from native locator (Native = ${e.prefix}, Actual ${resolvedEnv.executable.sysPrefix})`,
+                    );
                     switch (kind) {
                         case PythonEnvKind.Conda:
                             invalidSysPrefix.invalidSysPrefixCondaEnvs += 1;
