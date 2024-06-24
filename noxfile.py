@@ -80,7 +80,7 @@ def azure_pet_build_after(session: nox.Session):
     shutil.copyfile(abs_bin_path, bin_dest)
 
     if sys.platform != "win32":
-        shutil.chown(bin_dest, 0o755)
+        os.chmod(os.fspath(bin_dest), 0o755)
 
 
 @nox.session()
