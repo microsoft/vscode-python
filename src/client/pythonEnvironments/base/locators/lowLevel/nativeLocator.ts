@@ -18,6 +18,8 @@ function toolToKnownEnvironmentTool(tool: string): KnownEnvironmentTools {
     switch (tool.toLowerCase()) {
         case 'conda':
             return 'Conda';
+        case 'poetry':
+            return 'Poetry';
         case 'pyenv':
             return 'Pyenv';
         default: {

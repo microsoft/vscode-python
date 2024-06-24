@@ -95,11 +95,14 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             case 'homebrew':
             case 'mac-python-org':
             case 'mac-command-line-tools':
+            case 'mac-xcode':
             case 'windows-registry':
                 return PythonEnvKind.System;
             case 'pyenv':
             case 'pyenv-other':
                 return PythonEnvKind.Pyenv;
+            case 'poetry':
+                return PythonEnvKind.Poetry;
             case 'pipenv':
                 return PythonEnvKind.Pipenv;
             case 'pyenv-virtualenv':
