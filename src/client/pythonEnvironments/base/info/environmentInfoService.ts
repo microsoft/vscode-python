@@ -31,19 +31,6 @@ export interface IEnvironmentInfoService {
         priority?: EnvironmentInfoServiceQueuePriority,
     ): Promise<InterpreterInformation | undefined>;
     /**
-     * Get the mandatory interpreter information for the given environment.
-     * E.g. executable path, version and sysPrefix are considered mandatory.
-     * However if we only have part of the version, thats still sufficient.
-     * If the fully resolved and acurate information for all parts of the env is required, then
-     * used `getEnvironmentInfo`.
-     * @param env The environment to get the interpreter information for.
-     * @param priority The priority of the request.
-     */
-    getMandatoryEnvironmentInfo(
-        env: PythonEnvInfo,
-        priority?: EnvironmentInfoServiceQueuePriority,
-    ): Promise<InterpreterInformation | undefined>;
-    /**
      * Reset any stored interpreter information for the given environment.
      * @param searchLocation Search location of the environment.
      */
@@ -120,36 +107,6 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
 
         const deferred = createDeferred<InterpreterInformation>();
         const info = EnvironmentInfoService.getInterpreterInfo(env);
-        if (info !== undefined) {
-            this.cache.set(normCasePath(interpreterPath), deferred);
-            deferred.resolve(info);
-            return info;
-        }
-
-        this.cache.set(normCasePath(interpreterPath), deferred);
-        this._getEnvironmentInfo(env, priority)
-            .then((r) => {
-                deferred.resolve(r);
-            })
-            .catch((ex) => {
-                deferred.reject(ex);
-            });
-        return deferred.promise;
-    }
-
-    public async getMandatoryEnvironmentInfo(
-        env: PythonEnvInfo,
-        priority?: EnvironmentInfoServiceQueuePriority,
-    ): Promise<InterpreterInformation | undefined> {
-        const interpreterPath = env.executable.filename;
-        const result = this.cache.get(normCasePath(interpreterPath));
-        if (result !== undefined) {
-            // Another call for this environment has already been made, return its result.
-            return result.promise;
-        }
-
-        const deferred = createDeferred<InterpreterInformation>();
-        const info = EnvironmentInfoService.getInterpreterInfo(env, true);
         if (info !== undefined) {
             this.cache.set(normCasePath(interpreterPath), deferred);
             deferred.resolve(info);
