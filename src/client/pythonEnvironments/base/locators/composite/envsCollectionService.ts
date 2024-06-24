@@ -24,7 +24,10 @@ import {
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
-import { createNativeGlobalPythonFinder } from '../common/nativePythonFinder';
+import { createNativeGlobalPythonFinder, NativeEnvInfo } from '../common/nativePythonFinder';
+import { pathExists } from '../../../../common/platform/fs-paths';
+import { noop } from '../../../../common/utils/misc';
+import { parseVersion } from '../../info/pythonVersion';
 
 /**
  * A service which maintains the collection of known environments.
@@ -267,13 +270,127 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         }
         this.telemetrySentOnce = true;
         if (!query && !this.hasRefreshFinished(query)) {
+            const { elapsedTime } = stopWatch;
             const envs = this.cache.getAllEnvs();
 
             const nativeEnvs = [];
+            const executablesFoundByNativeLocator = new Set<string>();
+            const nativeStopWatch = new StopWatch();
             for await (const data of this.nativeFinder.refresh()) {
                 nativeEnvs.push(data);
+                if (data.executable) {
+                    // Lowercase for purposes of comparison (safe).
+                    executablesFoundByNativeLocator.add(data.executable.toLowerCase());
+                } else if (data.prefix) {
+                    // Lowercase for purposes of comparison (safe).
+                    executablesFoundByNativeLocator.add(data.prefix.toLowerCase());
+                }
+                // Lowercase for purposes of comparison (safe).
+                (data.symlinks || []).forEach((exe) => executablesFoundByNativeLocator.add(exe.toLowerCase()));
             }
+            const nativeDuration = nativeStopWatch.elapsedTime;
+            void this.sendNativeLocatorTelemetry(nativeEnvs);
+            const missingEnvironments = {
+                missingNativeCondaEnvs: 0,
+                missingNativeCustomEnvs: 0,
+                missingNativeMicrosoftStoreEnvs: 0,
+                missingNativeGlobalEnvs: 0,
+                missingNativeOtherVirtualEnvs: 0,
+                missingNativePipEnvEnvs: 0,
+                missingNativePoetryEnvs: 0,
+                missingNativePyenvEnvs: 0,
+                missingNativeSystemEnvs: 0,
+                missingNativeUnknownEnvs: 0,
+                missingNativeVenvEnvs: 0,
+                missingNativeVirtualEnvEnvs: 0,
+                missingNativeVirtualEnvWrapperEnvs: 0,
+                missingNativeOtherGlobalEnvs: 0,
+            };
 
+            await Promise.all(
+                envs.map(async (env) => {
+                    // Verify the file exists, sometimes the files do not eixst,
+                    // E.g. we we can have a conda env without Python, in such a case we'll have a prefix but no executable.
+                    // However in the extension we treat this as an environment with an executable that can be `python` or `<fully resolved path to what we think will be the Python exe>`.
+                    // However native locator will not return exes. Even though the env is detected.
+                    // For those cases we'll look at the sysprefix.
+                    let exe = env.executable.filename || '';
+                    if (!exe || !(await pathExists(exe))) {
+                        exe = (await pathExists(env.executable.sysPrefix)) ? env.executable.sysPrefix : '';
+                    }
+                    // Lowercase for purposes of comparison (safe).
+                    exe = exe.trim().toLowerCase();
+                    if (!exe) {
+                        return;
+                    }
+                    // If this exe is not found by the native locator, then it is missing.
+                    // We need to also look in the list of symlinks.
+                    // Taking a count of each group isn't necessarily accurate.
+                    // Native locator might identify something as System and
+                    // Old Python ext code might identify it as Global, or the like.
+                    // Safest is to look for the executable.
+                    if (!executablesFoundByNativeLocator.has(exe)) {
+                        // There's a known bug with stable locator
+                        // https://github.com/microsoft/vscode-python/issues/23659
+                        // PyEnv Virtual envs are detected from the wrong location, as a result the exe will be different
+                        // from the one found by native locator.
+                        if (
+                            env.kind === PythonEnvKind.Pyenv &&
+                            (exe.toLowerCase().includes('/envs/') || exe.toLowerCase().includes('\\envs\\'))
+                        ) {
+                            return;
+                        }
+                        switch (env.kind) {
+                            case PythonEnvKind.Conda:
+                                missingEnvironments.missingNativeCondaEnvs += 1;
+                                break;
+                            case PythonEnvKind.Custom:
+                                missingEnvironments.missingNativeCustomEnvs += 1;
+                                break;
+                            case PythonEnvKind.MicrosoftStore:
+                                missingEnvironments.missingNativeMicrosoftStoreEnvs += 1;
+                                break;
+                            case PythonEnvKind.OtherGlobal:
+                                missingEnvironments.missingNativeGlobalEnvs += 1;
+                                break;
+                            case PythonEnvKind.OtherVirtual:
+                                missingEnvironments.missingNativeOtherVirtualEnvs += 1;
+                                break;
+                            case PythonEnvKind.Pipenv:
+                                missingEnvironments.missingNativePipEnvEnvs += 1;
+                                break;
+                            case PythonEnvKind.Poetry:
+                                missingEnvironments.missingNativePoetryEnvs += 1;
+                                break;
+                            case PythonEnvKind.Pyenv:
+                                missingEnvironments.missingNativePyenvEnvs += 1;
+                                break;
+                            case PythonEnvKind.System:
+                                missingEnvironments.missingNativeSystemEnvs += 1;
+                                break;
+                            case PythonEnvKind.Unknown:
+                                missingEnvironments.missingNativeUnknownEnvs += 1;
+                                break;
+                            case PythonEnvKind.Venv:
+                                missingEnvironments.missingNativeVenvEnvs += 1;
+                                break;
+                            case PythonEnvKind.VirtualEnv:
+                                missingEnvironments.missingNativeVirtualEnvEnvs += 1;
+                                break;
+                            case PythonEnvKind.VirtualEnvWrapper:
+                                missingEnvironments.missingNativeVirtualEnvWrapperEnvs += 1;
+                                break;
+                            case PythonEnvKind.ActiveState:
+                            case PythonEnvKind.Hatch:
+                            case PythonEnvKind.Pixi:
+                                // Do nothing.
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }),
+            );
             const environmentsWithoutPython = envs.filter(
                 (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
             ).length;
@@ -349,7 +466,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             ).length;
 
             // Intent is to capture time taken for discovery of all envs to complete the first time.
-            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
+                nativeDuration,
                 interpreters: this.cache.getAllEnvs().length,
                 environmentsWithoutPython,
                 activeStateEnvs,
@@ -383,8 +501,185 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 nativeVirtualEnvEnvs,
                 nativeVirtualEnvWrapperEnvs,
                 nativeGlobal,
+                ...missingEnvironments,
             });
         }
         this.hasRefreshFinishedForQuery.set(query, true);
+    }
+
+    private telemetrySentOnceForNativeLocator = false;
+
+    private async sendNativeLocatorTelemetry(nativeEnvs: NativeEnvInfo[]) {
+        if (this.telemetrySentOnceForNativeLocator) {
+            return;
+        }
+        this.telemetrySentOnceForNativeLocator = true;
+        const invalidVersions = {
+            invalidVersionsCondaEnvs: 0,
+            invalidVersionsCustomEnvs: 0,
+            invalidVersionsMicrosoftStoreEnvs: 0,
+            invalidVersionsGlobalEnvs: 0,
+            invalidVersionsOtherVirtualEnvs: 0,
+            invalidVersionsPipEnvEnvs: 0,
+            invalidVersionsPoetryEnvs: 0,
+            invalidVersionsPyenvEnvs: 0,
+            invalidVersionsSystemEnvs: 0,
+            invalidVersionsUnknownEnvs: 0,
+            invalidVersionsVenvEnvs: 0,
+            invalidVersionsVirtualEnvEnvs: 0,
+            invalidVersionsVirtualEnvWrapperEnvs: 0,
+            invalidVersionsOtherGlobalEnvs: 0,
+        };
+        const invalidSysPrefix = {
+            invalidSysPrefixCondaEnvs: 0,
+            invalidSysPrefixCustomEnvs: 0,
+            invalidSysPrefixMicrosoftStoreEnvs: 0,
+            invalidSysPrefixGlobalEnvs: 0,
+            invalidSysPrefixOtherVirtualEnvs: 0,
+            invalidSysPrefixPipEnvEnvs: 0,
+            invalidSysPrefixPoetryEnvs: 0,
+            invalidSysPrefixPyenvEnvs: 0,
+            invalidSysPrefixSystemEnvs: 0,
+            invalidSysPrefixUnknownEnvs: 0,
+            invalidSysPrefixVenvEnvs: 0,
+            invalidSysPrefixVirtualEnvEnvs: 0,
+            invalidSysPrefixVirtualEnvWrapperEnvs: 0,
+            invalidSysPrefixOtherGlobalEnvs: 0,
+        };
+
+        await Promise.all(
+            nativeEnvs.map(async (e) => {
+                if (!e.executable) {
+                    return;
+                }
+                if (!(await pathExists(e.executable))) {
+                    return;
+                }
+                const resolvedEnv = await this.resolveEnv(e.executable).catch(noop);
+                if (!resolvedEnv) {
+                    return;
+                }
+                const kind = this.nativeFinder.categoryToKind(e.category);
+                const nativeVersion = e.version ? parseVersion(e.version) : undefined;
+                if (
+                    nativeVersion &&
+                    resolvedEnv.version.major > 0 &&
+                    resolvedEnv.version.minor > 0 &&
+                    resolvedEnv.version.micro > 0 &&
+                    nativeVersion.major > 0 &&
+                    nativeVersion.minor > 0 &&
+                    nativeVersion.micro > 0
+                ) {
+                    if (
+                        resolvedEnv.version.major !== nativeVersion.major ||
+                        resolvedEnv.version.micro !== nativeVersion.micro ||
+                        resolvedEnv.version.micro !== nativeVersion.micro
+                    ) {
+                        switch (kind) {
+                            case PythonEnvKind.Conda:
+                                invalidVersions.invalidVersionsCondaEnvs += 1;
+                                break;
+                            case PythonEnvKind.Custom:
+                                invalidVersions.invalidVersionsCustomEnvs += 1;
+                                break;
+                            case PythonEnvKind.MicrosoftStore:
+                                invalidVersions.invalidVersionsMicrosoftStoreEnvs += 1;
+                                break;
+                            case PythonEnvKind.OtherGlobal:
+                                invalidVersions.invalidVersionsGlobalEnvs += 1;
+                                break;
+                            case PythonEnvKind.OtherVirtual:
+                                invalidVersions.invalidVersionsOtherVirtualEnvs += 1;
+                                break;
+                            case PythonEnvKind.Pipenv:
+                                invalidVersions.invalidVersionsPipEnvEnvs += 1;
+                                break;
+                            case PythonEnvKind.Poetry:
+                                invalidVersions.invalidVersionsPoetryEnvs += 1;
+                                break;
+                            case PythonEnvKind.Pyenv:
+                                invalidVersions.invalidVersionsPyenvEnvs += 1;
+                                break;
+                            case PythonEnvKind.System:
+                                invalidVersions.invalidVersionsSystemEnvs += 1;
+                                break;
+                            case PythonEnvKind.Unknown:
+                                invalidVersions.invalidVersionsUnknownEnvs += 1;
+                                break;
+                            case PythonEnvKind.Venv:
+                                invalidVersions.invalidVersionsVenvEnvs += 1;
+                                break;
+                            case PythonEnvKind.VirtualEnv:
+                                invalidVersions.invalidVersionsVirtualEnvEnvs += 1;
+                                break;
+                            case PythonEnvKind.VirtualEnvWrapper:
+                                invalidVersions.invalidVersionsVirtualEnvWrapperEnvs += 1;
+                                break;
+                            case PythonEnvKind.ActiveState:
+                            case PythonEnvKind.Hatch:
+                            case PythonEnvKind.Pixi:
+                                // Do nothing.
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                if (e.prefix && resolvedEnv.executable.sysPrefix.toLowerCase() !== e.prefix.trim().toLowerCase()) {
+                    switch (kind) {
+                        case PythonEnvKind.Conda:
+                            invalidSysPrefix.invalidSysPrefixCondaEnvs += 1;
+                            break;
+                        case PythonEnvKind.Custom:
+                            invalidSysPrefix.invalidSysPrefixCustomEnvs += 1;
+                            break;
+                        case PythonEnvKind.MicrosoftStore:
+                            invalidSysPrefix.invalidSysPrefixMicrosoftStoreEnvs += 1;
+                            break;
+                        case PythonEnvKind.OtherGlobal:
+                            invalidSysPrefix.invalidSysPrefixGlobalEnvs += 1;
+                            break;
+                        case PythonEnvKind.OtherVirtual:
+                            invalidSysPrefix.invalidSysPrefixOtherVirtualEnvs += 1;
+                            break;
+                        case PythonEnvKind.Pipenv:
+                            invalidSysPrefix.invalidSysPrefixPipEnvEnvs += 1;
+                            break;
+                        case PythonEnvKind.Poetry:
+                            invalidSysPrefix.invalidSysPrefixPoetryEnvs += 1;
+                            break;
+                        case PythonEnvKind.Pyenv:
+                            invalidSysPrefix.invalidSysPrefixPyenvEnvs += 1;
+                            break;
+                        case PythonEnvKind.System:
+                            invalidSysPrefix.invalidSysPrefixSystemEnvs += 1;
+                            break;
+                        case PythonEnvKind.Unknown:
+                            invalidSysPrefix.invalidSysPrefixUnknownEnvs += 1;
+                            break;
+                        case PythonEnvKind.Venv:
+                            invalidSysPrefix.invalidSysPrefixVenvEnvs += 1;
+                            break;
+                        case PythonEnvKind.VirtualEnv:
+                            invalidSysPrefix.invalidSysPrefixVirtualEnvEnvs += 1;
+                            break;
+                        case PythonEnvKind.VirtualEnvWrapper:
+                            invalidSysPrefix.invalidSysPrefixVirtualEnvWrapperEnvs += 1;
+                            break;
+                        case PythonEnvKind.ActiveState:
+                        case PythonEnvKind.Hatch:
+                        case PythonEnvKind.Pixi:
+                            // Do nothing.
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }),
+        );
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY_INVALID_NATIVE, 0, {
+            ...invalidVersions,
+            ...invalidSysPrefix,
+        });
     }
 }
