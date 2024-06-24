@@ -265,50 +265,57 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
     private telemetrySentOnce = false;
 
     private async sendTelemetry(query: PythonLocatorQuery | undefined, stopWatch: StopWatch) {
+        if (!query && !this.hasRefreshFinished(query)) {
+            void this.sendTelemetryImpl(stopWatch);
+        }
+        this.hasRefreshFinishedForQuery.set(query, true);
+    }
+
+    private async sendTelemetryImpl(stopWatch: StopWatch) {
         if (this.telemetrySentOnce) {
             return;
         }
         this.telemetrySentOnce = true;
-        if (!query && !this.hasRefreshFinished(query)) {
-            const { elapsedTime } = stopWatch;
-            const envs = this.cache.getAllEnvs();
+        const { elapsedTime } = stopWatch;
+        const envs = this.cache.getAllEnvs();
 
-            const nativeEnvs = [];
-            const executablesFoundByNativeLocator = new Set<string>();
-            const nativeStopWatch = new StopWatch();
-            for await (const data of this.nativeFinder.refresh()) {
-                nativeEnvs.push(data);
-                if (data.executable) {
-                    // Lowercase for purposes of comparison (safe).
-                    executablesFoundByNativeLocator.add(data.executable.toLowerCase());
-                } else if (data.prefix) {
-                    // Lowercase for purposes of comparison (safe).
-                    executablesFoundByNativeLocator.add(data.prefix.toLowerCase());
-                }
+        const nativeEnvs = [];
+        const executablesFoundByNativeLocator = new Set<string>();
+        const nativeStopWatch = new StopWatch();
+        for await (const data of this.nativeFinder.refresh()) {
+            nativeEnvs.push(data);
+            if (data.executable) {
                 // Lowercase for purposes of comparison (safe).
-                (data.symlinks || []).forEach((exe) => executablesFoundByNativeLocator.add(exe.toLowerCase()));
+                executablesFoundByNativeLocator.add(data.executable.toLowerCase());
+            } else if (data.prefix) {
+                // Lowercase for purposes of comparison (safe).
+                executablesFoundByNativeLocator.add(data.prefix.toLowerCase());
             }
-            const nativeDuration = nativeStopWatch.elapsedTime;
-            void this.sendNativeLocatorTelemetry(nativeEnvs);
-            const missingEnvironments = {
-                missingNativeCondaEnvs: 0,
-                missingNativeCustomEnvs: 0,
-                missingNativeMicrosoftStoreEnvs: 0,
-                missingNativeGlobalEnvs: 0,
-                missingNativeOtherVirtualEnvs: 0,
-                missingNativePipEnvEnvs: 0,
-                missingNativePoetryEnvs: 0,
-                missingNativePyenvEnvs: 0,
-                missingNativeSystemEnvs: 0,
-                missingNativeUnknownEnvs: 0,
-                missingNativeVenvEnvs: 0,
-                missingNativeVirtualEnvEnvs: 0,
-                missingNativeVirtualEnvWrapperEnvs: 0,
-                missingNativeOtherGlobalEnvs: 0,
-            };
+            // Lowercase for purposes of comparison (safe).
+            (data.symlinks || []).forEach((exe) => executablesFoundByNativeLocator.add(exe.toLowerCase()));
+        }
+        const nativeDuration = nativeStopWatch.elapsedTime;
+        void this.sendNativeLocatorTelemetry(nativeEnvs);
+        const missingEnvironments = {
+            missingNativeCondaEnvs: 0,
+            missingNativeCustomEnvs: 0,
+            missingNativeMicrosoftStoreEnvs: 0,
+            missingNativeGlobalEnvs: 0,
+            missingNativeOtherVirtualEnvs: 0,
+            missingNativePipEnvEnvs: 0,
+            missingNativePoetryEnvs: 0,
+            missingNativePyenvEnvs: 0,
+            missingNativeSystemEnvs: 0,
+            missingNativeUnknownEnvs: 0,
+            missingNativeVenvEnvs: 0,
+            missingNativeVirtualEnvEnvs: 0,
+            missingNativeVirtualEnvWrapperEnvs: 0,
+            missingNativeOtherGlobalEnvs: 0,
+        };
 
-            await Promise.all(
-                envs.map(async (env) => {
+        await Promise.all(
+            envs.map(async (env) => {
+                try {
                     // Verify the file exists, sometimes the files do not eixst,
                     // E.g. we we can have a conda env without Python, in such a case we'll have a prefix but no executable.
                     // However in the extension we treat this as an environment with an executable that can be `python` or `<fully resolved path to what we think will be the Python exe>`.
@@ -389,122 +396,129 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                                 break;
                         }
                     }
-                }),
-            );
-            const environmentsWithoutPython = envs.filter(
-                (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
-            ).length;
-            const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
-            const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
-            const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
-            const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
-            const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
-            const otherGlobalEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherGlobal).length;
-            const otherVirtualEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherVirtual).length;
-            const pipEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pipenv).length;
-            const poetryEnvs = envs.filter((e) => e.kind === PythonEnvKind.Poetry).length;
-            const pyenvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pyenv).length;
-            const systemEnvs = envs.filter((e) => e.kind === PythonEnvKind.System).length;
-            const unknownEnvs = envs.filter((e) => e.kind === PythonEnvKind.Unknown).length;
-            const venvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Venv).length;
-            const virtualEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnv).length;
-            const virtualEnvWrapperEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnvWrapper).length;
-            const global = envs.filter(
-                (e) =>
-                    e.kind === PythonEnvKind.OtherGlobal ||
-                    e.kind === PythonEnvKind.System ||
-                    e.kind === PythonEnvKind.Custom ||
-                    e.kind === PythonEnvKind.OtherVirtual,
-            ).length;
+                } catch (ex) {
+                    traceError(
+                        `Failed to send telemetry for missing environment ${
+                            env.executable.filename || env.executable.sysPrefix
+                        }`,
+                        ex,
+                    );
+                }
+            }),
+        ).catch((ex) => traceError('Failed to send telemetry for missing environments', ex));
 
-            const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
-            const nativeCondaEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Conda,
-            ).length;
-            const nativeCustomEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom,
-            ).length;
-            const nativeMicrosoftStoreEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.MicrosoftStore,
-            ).length;
-            const nativeOtherGlobalEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal,
-            ).length;
-            const nativeOtherVirtualEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
-            ).length;
-            const nativePipEnvEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pipenv,
-            ).length;
-            const nativePoetryEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Poetry,
-            ).length;
-            const nativePyenvEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pyenv,
-            ).length;
-            const nativeSystemEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System,
-            ).length;
-            const nativeUnknownEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Unknown,
-            ).length;
-            const nativeVenvEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Venv,
-            ).length;
-            const nativeVirtualEnvEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnv,
-            ).length;
-            const nativeVirtualEnvWrapperEnvs = nativeEnvs.filter(
-                (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnvWrapper,
-            ).length;
-            const nativeGlobal = nativeEnvs.filter(
-                (e) =>
-                    this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal ||
-                    this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System ||
-                    this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom ||
-                    this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
-            ).length;
+        const environmentsWithoutPython = envs.filter(
+            (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
+        ).length;
+        const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
+        const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
+        const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
+        const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
+        const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
+        const otherGlobalEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherGlobal).length;
+        const otherVirtualEnvs = envs.filter((e) => e.kind === PythonEnvKind.OtherVirtual).length;
+        const pipEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pipenv).length;
+        const poetryEnvs = envs.filter((e) => e.kind === PythonEnvKind.Poetry).length;
+        const pyenvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Pyenv).length;
+        const systemEnvs = envs.filter((e) => e.kind === PythonEnvKind.System).length;
+        const unknownEnvs = envs.filter((e) => e.kind === PythonEnvKind.Unknown).length;
+        const venvEnvs = envs.filter((e) => e.kind === PythonEnvKind.Venv).length;
+        const virtualEnvEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnv).length;
+        const virtualEnvWrapperEnvs = envs.filter((e) => e.kind === PythonEnvKind.VirtualEnvWrapper).length;
+        const global = envs.filter(
+            (e) =>
+                e.kind === PythonEnvKind.OtherGlobal ||
+                e.kind === PythonEnvKind.System ||
+                e.kind === PythonEnvKind.Custom ||
+                e.kind === PythonEnvKind.OtherVirtual,
+        ).length;
 
-            // Intent is to capture time taken for discovery of all envs to complete the first time.
-            sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
-                nativeDuration,
-                interpreters: this.cache.getAllEnvs().length,
-                environmentsWithoutPython,
-                activeStateEnvs,
-                condaEnvs,
-                customEnvs,
-                hatchEnvs,
-                microsoftStoreEnvs,
-                otherGlobalEnvs,
-                otherVirtualEnvs,
-                pipEnvEnvs,
-                poetryEnvs,
-                pyenvEnvs,
-                systemEnvs,
-                unknownEnvs,
-                venvEnvs,
-                virtualEnvEnvs,
-                virtualEnvWrapperEnvs,
-                global,
-                nativeEnvironmentsWithoutPython,
-                nativeCondaEnvs,
-                nativeCustomEnvs,
-                nativeMicrosoftStoreEnvs,
-                nativeOtherGlobalEnvs,
-                nativeOtherVirtualEnvs,
-                nativePipEnvEnvs,
-                nativePoetryEnvs,
-                nativePyenvEnvs,
-                nativeSystemEnvs,
-                nativeUnknownEnvs,
-                nativeVenvEnvs,
-                nativeVirtualEnvEnvs,
-                nativeVirtualEnvWrapperEnvs,
-                nativeGlobal,
-                ...missingEnvironments,
-            });
-        }
-        this.hasRefreshFinishedForQuery.set(query, true);
+        const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
+        const nativeCondaEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Conda,
+        ).length;
+        const nativeCustomEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom,
+        ).length;
+        const nativeMicrosoftStoreEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.MicrosoftStore,
+        ).length;
+        const nativeOtherGlobalEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal,
+        ).length;
+        const nativeOtherVirtualEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+        ).length;
+        const nativePipEnvEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pipenv,
+        ).length;
+        const nativePoetryEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Poetry,
+        ).length;
+        const nativePyenvEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pyenv,
+        ).length;
+        const nativeSystemEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System,
+        ).length;
+        const nativeUnknownEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Unknown,
+        ).length;
+        const nativeVenvEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Venv,
+        ).length;
+        const nativeVirtualEnvEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnv,
+        ).length;
+        const nativeVirtualEnvWrapperEnvs = nativeEnvs.filter(
+            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnvWrapper,
+        ).length;
+        const nativeGlobal = nativeEnvs.filter(
+            (e) =>
+                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal ||
+                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System ||
+                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom ||
+                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+        ).length;
+
+        // Intent is to capture time taken for discovery of all envs to complete the first time.
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
+            nativeDuration,
+            interpreters: this.cache.getAllEnvs().length,
+            environmentsWithoutPython,
+            activeStateEnvs,
+            condaEnvs,
+            customEnvs,
+            hatchEnvs,
+            microsoftStoreEnvs,
+            otherGlobalEnvs,
+            otherVirtualEnvs,
+            pipEnvEnvs,
+            poetryEnvs,
+            pyenvEnvs,
+            systemEnvs,
+            unknownEnvs,
+            venvEnvs,
+            virtualEnvEnvs,
+            virtualEnvWrapperEnvs,
+            global,
+            nativeEnvironmentsWithoutPython,
+            nativeCondaEnvs,
+            nativeCustomEnvs,
+            nativeMicrosoftStoreEnvs,
+            nativeOtherGlobalEnvs,
+            nativeOtherVirtualEnvs,
+            nativePipEnvEnvs,
+            nativePoetryEnvs,
+            nativePyenvEnvs,
+            nativeSystemEnvs,
+            nativeUnknownEnvs,
+            nativeVenvEnvs,
+            nativeVirtualEnvEnvs,
+            nativeVirtualEnvWrapperEnvs,
+            nativeGlobal,
+            ...missingEnvironments,
+        });
     }
 
     private telemetrySentOnceForNativeLocator = false;
