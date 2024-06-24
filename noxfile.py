@@ -5,6 +5,7 @@ import os
 import pathlib
 import nox
 import shutil
+import sys
 import sysconfig
 import uuid
 
@@ -77,6 +78,9 @@ def azure_pet_build_after(session: nox.Session):
         pathlib.Path(dest_dir / "bin").mkdir()
     bin_dest = dest_dir / "bin" / bin_name
     shutil.copyfile(abs_bin_path, bin_dest)
+
+    if sys.platform != "win32":
+        shutil.chmod(bin_dest, 0o755)
 
 
 @nox.session()
