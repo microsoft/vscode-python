@@ -119,13 +119,6 @@ class EnvironmentInfoService implements IEnvironmentInfoService {
         }
 
         const deferred = createDeferred<InterpreterInformation>();
-        const info = EnvironmentInfoService.getInterpreterInfo(env);
-        if (info !== undefined) {
-            this.cache.set(normCasePath(interpreterPath), deferred);
-            deferred.resolve(info);
-            return info;
-        }
-
         this.cache.set(normCasePath(interpreterPath), deferred);
         this._getEnvironmentInfo(env, priority)
             .then((r) => {
