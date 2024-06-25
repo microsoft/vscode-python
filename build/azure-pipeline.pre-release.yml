@@ -36,6 +36,7 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
     ghCreateTag: false
+    standardizedVersioning: true
     l10nSourcePaths: ./src/client
     sourceRepositoriesToScan:
       include:
@@ -103,8 +104,8 @@ extends:
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
-      - script: python ./build/update_ext_version.py --for-publishing
-        displayName: Update build number
+        # - script: python ./build/update_ext_version.py --for-publishing
+        #   displayName: Update build number
 
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
