@@ -1121,12 +1121,12 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "!config.python.REPL.sendToNativeREPL && editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
             },
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'&& editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused"
+                "when": "!accessibilityModeEnabled && config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'&& editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused"
             },
             {
                 "command": "python.execInREPLEnter",
