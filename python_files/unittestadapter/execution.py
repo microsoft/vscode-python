@@ -195,6 +195,11 @@ def run_tests(
     locals: Optional[bool] = None,
 ) -> ExecutionPayloadDict:
     cwd = os.path.abspath(start_dir)
+    if "/" in start_dir:  #  is a subdir
+        parent_dir = os.path.dirname(start_dir)
+        sys.path.insert(0, parent_dir)
+    else:
+        sys.path.insert(0, cwd)
     status = TestExecutionStatus.error
     error = None
     payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": None}

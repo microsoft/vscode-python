@@ -57,6 +57,11 @@ def discover_tests(
     }
     """
     cwd = os.path.abspath(start_dir)
+    if "/" in start_dir:  #  is a subdir
+        parent_dir = os.path.dirname(start_dir)
+        sys.path.insert(0, parent_dir)
+    else:
+        sys.path.insert(0, cwd)
     payload: DiscoveryPayloadDict = {"cwd": cwd, "status": "success", "tests": None}
     tests = None
     error: List[str] = []
