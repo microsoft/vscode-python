@@ -320,6 +320,7 @@ export class Conda {
                 yield* getCandidatesFromRegistry();
             }
             yield* getCandidatesFromKnownPaths();
+            yield* getCandidatesFromKnownPrefixes();
             yield* getCandidatesFromEnvironmentsTxt();
         }
 
@@ -332,6 +333,15 @@ export class Conda {
         }
 
         async function* getCandidatesFromKnownPaths() {
+            if (getOSType() === OSType.Windows) {
+                yield '/opt/homebrew/bin/conda';
+                if (home) {
+                    yield path.join(home, '.local', 'bin', 'conda');
+                }
+            }
+        }
+
+        async function* getCandidatesFromKnownPrefixes() {
             // Check common locations. We want to look up "<prefix>/*conda*/<suffix>", where prefix and suffix
             // depend on the platform, to account for both Anaconda and Miniconda, and all possible variations.
             // The check cannot use globs, because on Windows, prefixes are absolute paths with a drive letter,
@@ -346,7 +356,7 @@ export class Conda {
                     prefixes.push(home, path.join(localAppData, 'Continuum'));
                 }
             } else {
-                prefixes.push('/usr/share', '/usr/local/share', '/opt', '/opt/homebrew/bin');
+                prefixes.push('/usr/share', '/usr/local/share', '/opt');
                 if (home) {
                     prefixes.push(home, path.join(home, 'opt'));
                 }
