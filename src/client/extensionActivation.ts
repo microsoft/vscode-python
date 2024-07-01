@@ -107,8 +107,9 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         pathUtils,
     );
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
-    registerReplCommands(ext.disposables, interpreterService, executionHelper);
-    registerReplExecuteOnEnter(ext.disposables, interpreterService);
+    const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
+    registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);
+    registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager);
 }
 
 /// //////////////////////////
