@@ -1,5 +1,4 @@
 // Create test suite and test cases for the `replUtils` module
-import * as vscode from 'vscode';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { IInterpreterService } from '../../client/interpreter/contracts';
