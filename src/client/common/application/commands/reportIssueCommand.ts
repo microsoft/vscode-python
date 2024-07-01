@@ -26,6 +26,10 @@ import { getExtensions } from '../../vscodeApis/extensionsApi';
  */
 @injectable()
 export class ReportIssueCommandHandler implements IExtensionSingleActivationService {
+    public static openReportIssue(): void {
+        this.openReportIssue();
+    }
+
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

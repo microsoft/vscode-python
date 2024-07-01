@@ -7,11 +7,12 @@ import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { LanguageClientMiddlewareBase } from '../activation/languageClientMiddlewareBase';
 import { LanguageServerType } from '../activation/types';
-import { AppinsightsKey, PYLANCE_EXTENSION_ID } from '../common/constants';
+import { AppinsightsKey, Commands, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { buildApi, IBrowserExtensionApi } from './api';
+import { ReportIssueCommandHandler } from '../common/application/commands/reportIssueCommand';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
@@ -22,6 +23,10 @@ let pylanceApi: PylanceApi | undefined;
 
 export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
     const reporter = getTelemetryReporter();
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand(Commands.ReportIssue, () => ReportIssueCommandHandler.openReportIssue()),
+    );
 
     const activationPromise = Promise.resolve(buildApi(reporter));
     const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
