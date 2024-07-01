@@ -34,11 +34,19 @@ export class DebugLauncher implements ITestDebugLauncher {
 
     public async launchDebugger(options: LaunchOptions, callback?: () => void, runInstance?: TestRun): Promise<void> {
         const deferred = createDeferred<void>();
+        console.log('launch debugger', runInstance?.name);
         if (options.token && options.token.isCancellationRequested) {
             return undefined;
             deferred.resolve();
             callback?.();
         }
+        let callbackCalled = false;
+        options.token?.onCancellationRequested(() => {
+            console.log('onCancellationRequested', runInstance?.name);
+            deferred.resolve();
+            callback?.();
+            callbackCalled = true;
+        });
 
         const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
         const launchArgs = await this.getLaunchArgs(
@@ -48,11 +56,6 @@ export class DebugLauncher implements ITestDebugLauncher {
         );
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
-        debugManager.onDidTerminateDebugSession(() => {
-            deferred.resolve();
-            callback?.();
-        });
-
         const debugSessionOptions: DebugSessionOptions = {
             testRun: runInstance,
         };
@@ -60,8 +63,11 @@ export class DebugLauncher implements ITestDebugLauncher {
         debugManager.startDebugging(workspaceFolder, launchArgs, debugSessionOptions);
 
         debugManager.onDidTerminateDebugSession(() => {
-            deferred.resolve();
-            callback?.();
+            console.log('onDidTerminateDebugSession :', runInstance?.name);
+            if (!callbackCalled) {
+                deferred.resolve();
+                callback?.();
+            }
         });
         return deferred.promise;
     }

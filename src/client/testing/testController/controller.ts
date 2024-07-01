@@ -373,12 +373,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         } else {
             (this.workspaceService.workspaceFolders || []).forEach((w) => workspaces.push(w));
         }
+        // generate random number
+        const random = Math.floor(Math.random() * 1000);
         const runInstance = this.testController.createTestRun(
             request,
-            `Running Tests for Workspace(s): ${workspaces.map((w) => w.uri.fsPath).join(';')}`,
+            `Running Tests for Workspace(s): ${workspaces.map((w) => w.uri.fsPath).join(';')} random: ${random}`,
             true,
         );
-
+        console.log('created run isntance', runInstance?.name);
         const dispose = token.onCancellationRequested(() => {
             runInstance.appendOutput(`\nRun instance cancelled.\r\n`);
             runInstance.end();
@@ -480,6 +482,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             );
         } finally {
             traceVerbose('Finished running tests, ending runInstance.');
+            console.log('end run instance', runInstance?.name);
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();
             dispose.dispose();
