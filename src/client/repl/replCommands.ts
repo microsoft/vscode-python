@@ -1,5 +1,6 @@
 import { commands, Uri, window } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
+import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -24,9 +25,10 @@ export async function registerReplCommands(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
     executionHelper: ICodeExecutionHelper,
+    commandManager: ICommandManager,
 ): Promise<void> {
     disposables.push(
-        commands.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
+        commandManager.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
             const nativeREPLSetting = getSendToNativeREPLSetting();
 
             if (!nativeREPLSetting) {
@@ -64,9 +66,10 @@ export async function registerReplCommands(
 export async function registerReplExecuteOnEnter(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
+    commandManager: ICommandManager,
 ): Promise<void> {
     disposables.push(
-        commands.registerCommand(Commands.Exec_In_REPL_Enter, async (uri: Uri) => {
+        commandManager.registerCommand(Commands.Exec_In_REPL_Enter, async (uri: Uri) => {
             const interpreter = await interpreterService.getActiveInterpreter(uri);
             if (!interpreter) {
                 commands.executeCommand(Commands.TriggerEnvironmentSelection, uri).then(noop, noop);
