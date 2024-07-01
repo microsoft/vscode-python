@@ -7,8 +7,7 @@ import os
 import pathlib
 import sys
 import traceback
-
-
+import pluggy
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
@@ -892,8 +891,20 @@ def send_post_request(
         )
 
 
+def pluggy_version():
+    return pluggy.__version__
+
+
+def compat_hookimpl(*args, **kwargs):
+    if pluggy_version() >= "1.1.0":
+        kwargs["wrapper"] = kwargs.pop("hookwrapper", False)
+    else:
+        kwargs["hookwrapper"] = kwargs.pop("wrapper", False)
+    return pluggy.HookimplMarker("pytest")(*args, **kwargs)
+
+
 class DeferPlugin:
-    @pytest.hookimpl(wrapper=True)
+    @compat_hookimpl(wrapper=True)
     def pytest_xdist_auto_num_workers(self, config: pytest.Config) -> Generator[None, int, int]:
         """determine how many workers to use based on how many tests were selected in the test explorer"""
         return min((yield), len(config.option.file_or_dir))
