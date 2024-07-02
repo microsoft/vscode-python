@@ -1361,7 +1361,7 @@
                 {
                     "submenu": "python.run",
                     "group": "Python",
-                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted"
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted && !jupyter.ownsSelection && !notebookEditorFocused "
                 },
                 {
                     "submenu": "python.runFileInteractive",
