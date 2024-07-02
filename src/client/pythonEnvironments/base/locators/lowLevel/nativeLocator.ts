@@ -10,7 +10,7 @@ import { Conda } from '../../../common/environmentManagers/conda';
 import { traceError } from '../../../../logging';
 import type { KnownEnvironmentTools } from '../../../../api/types';
 import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
-import { NativeGlobalPythonFinder, createNativeGlobalPythonFinder } from '../common/nativePythonFinder';
+import { NativePythonFinder, getNativePythonFinder } from '../common/nativePythonFinder';
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
 import { Architecture } from '../../../../common/utils/platform';
 
@@ -54,11 +54,11 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
 
     private readonly disposables: IDisposable[] = [];
 
-    private readonly finder: NativeGlobalPythonFinder;
+    private readonly finder: NativePythonFinder;
 
     constructor() {
         this.onChanged = this.onChangedEmitter.event;
-        this.finder = createNativeGlobalPythonFinder();
+        this.finder = getNativePythonFinder();
         this.disposables.push(this.onChangedEmitter, this.finder);
     }
 

@@ -7,7 +7,7 @@ import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { EventEmitter, Uri } from 'vscode';
+import { EventEmitter, LogOutputChannel, Uri } from 'vscode';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../../../client/common/utils/async';
 import { PythonEnvInfo, PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
@@ -27,8 +27,15 @@ import { SimpleLocator } from '../../common';
 import { assertEnvEqual, assertEnvsEqual, createFile, deleteFile } from '../envTestUtils';
 import { OSType, getOSType } from '../../../../common';
 import * as nativeFinder from '../../../../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
+import { MockOutputChannel } from '../../../../mockClasses';
 
-class MockNativePythonFinder implements nativeFinder.NativeGlobalPythonFinder {
+class MockNativePythonFinder implements nativeFinder.NativePythonFinder {
+    private output: LogOutputChannel;
+
+    constructor() {
+        this.output = new MockOutputChannel('Python Locator');
+    }
+
     categoryToKind(_category: string): PythonEnvKind {
         throw new Error('Method not implemented.');
     }
@@ -46,13 +53,17 @@ class MockNativePythonFinder implements nativeFinder.NativeGlobalPythonFinder {
         })();
     }
 
+    logger(): LogOutputChannel {
+        return this.output;
+    }
+
     dispose() {
         /** noop */
     }
 }
 
 suite('Python envs locator - Environments Collection', async () => {
-    let createNativeGlobalPythonFinderStub: sinon.SinonStub;
+    let getNativePythonFinderStub: sinon.SinonStub;
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
 
@@ -164,8 +175,8 @@ suite('Python envs locator - Environments Collection', async () => {
     }
 
     setup(async () => {
-        createNativeGlobalPythonFinderStub = sinon.stub(nativeFinder, 'createNativeGlobalPythonFinder');
-        createNativeGlobalPythonFinderStub.returns(new MockNativePythonFinder());
+        getNativePythonFinderStub = sinon.stub(nativeFinder, 'getNativePythonFinder');
+        getNativePythonFinderStub.returns(new MockNativePythonFinder());
         storage = [];
         const parentLocator = new SimpleLocator(getLocatorEnvs());
         const cache = await createCollectionCache({
