@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, Uri } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri, LogOutputChannel } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -57,10 +57,11 @@ export type NativeCondaInfo = {
     environmentsFromTxt: string[];
 };
 
-export interface NativeGlobalPythonFinder extends Disposable {
+export interface NativePythonFinder extends Disposable {
     resolve(executable: string): Promise<NativeEnvInfo>;
     refresh(): AsyncIterable<NativeEnvInfo>;
     categoryToKind(category?: string): PythonEnvKind;
+    logger(): LogOutputChannel;
     getCondaInfo(): Promise<NativeCondaInfo>;
     find(searchPath: string): Promise<NativeEnvInfo[]>;
 }
@@ -70,7 +71,7 @@ interface NativeLog {
     message: string;
 }
 
-class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGlobalPythonFinder {
+class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePythonFinder {
     private readonly connection: rpc.MessageConnection;
 
     private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
@@ -170,6 +171,10 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             } while (!completed);
             disposable.dispose();
         }
+    }
+
+    logger(): LogOutputChannel {
+        return this.outputChannel;
     }
 
     refreshFirstTime() {
@@ -419,6 +424,10 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
     return value;
 }
 
-export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
-    return new NativeGlobalPythonFinderImpl();
+let _finder: NativePythonFinder | undefined;
+export function getNativePythonFinder(): NativePythonFinder {
+    if (!_finder) {
+        _finder = new NativeGlobalPythonFinderImpl();
+    }
+    return _finder;
 }

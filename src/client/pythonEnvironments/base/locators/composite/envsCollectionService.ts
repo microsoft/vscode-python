@@ -25,11 +25,7 @@ import {
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
-import {
-    createNativeGlobalPythonFinder,
-    NativeEnvInfo,
-    NativeGlobalPythonFinder as NativePythonFinder,
-} from '../common/nativePythonFinder';
+import { getNativePythonFinder, NativeEnvInfo, NativePythonFinder } from '../common/nativePythonFinder';
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
@@ -55,7 +51,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
 
-    private nativeFinder = createNativeGlobalPythonFinder();
+    private nativeFinder = getNativePythonFinder();
 
     public refreshState = ProgressReportStage.discoveryFinished;
 
