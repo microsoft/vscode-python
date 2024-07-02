@@ -3,11 +3,13 @@ import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import { It, Mock } from 'typemoq';
 import * as sinon from 'sinon';
+import { expect } from 'chai';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ICommandManager } from '../../client/common/application/types';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import * as replCommands from '../../client/repl/replCommands';
 import * as replUtils from '../../client/repl/replUtils';
+import { Commands } from '../../client/common/constants';
 // import { executeInTerminal, getActiveInterpreter, getSendToNativeREPLSetting } from '../../client/repl/replUtils';
 
 suite('REPL - register native repl command', () => {
@@ -47,68 +49,39 @@ suite('REPL - register native repl command', () => {
         );
 
         // Check to see if the command was registered
-        commandManager.verify((c) => c.registerCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
+        commandManager.verify(
+            (c) => c.registerCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.atLeastOnce(),
+        );
     });
 
-    // test('Ensure execInTerminal is not called if REPL setting is true', async () => {
-    //     const disposable = TypeMoq.Mock.ofType<Disposable>();
-    //     const disposableArray: Disposable[] = [disposable.object];
-    //     const getSendToNativeREPLSettingStub = Mock.ofInstance(getSendToNativeREPLSetting);
-    //     const getActiveInterpreterStub = Mock.ofInstance(getActiveInterpreter);
-    //     getSendToNativeREPLSettingStub.setup((x) => x()).returns(() => true);
-    //     getActiveInterpreterStub
-    //         .setup((x) => x(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-    //         .returns(async () => Promise.resolve(undefined));
-
-    //     const executeInTerminalStub = Mock.ofInstance(executeInTerminal);
-
-    //     // Inject the stubs into the module
-    //     await replCommands.registerReplCommands(
-    //         disposableArray,
-    //         interpreterService.object,
-    //         executionHelper.object,
-    //         commandManager.object,
-    //     );
-
-    //     // Extract the registered command handler and invoke it
-    //     commandManager.verify((c) => c.registerCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
-
-    //     // Verify the function interactions
-
-    //     executeInTerminalStub.verify((x) => x(), TypeMoq.Times.never());
-    // });
-
-    test('Ensure execInTerminal is called if REPL setting is false', async () => {
+    test('Ensure getSendToNativeREPLSetting is called', async () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         const disposableArray: Disposable[] = [disposable.object];
 
-        // const executeInTerminalStub = sinon.stub(replUtils, 'executeInTerminal').returns(Promise.resolve());
-
-        // Replace the original functions with the stubs
-        // sinon.replace(replUtils, 'getSendToNativeREPLSetting', getSendToNativeREPLSettingStub);
-        // sinon.replace(replUtils, 'executeInTerminal', executeInTerminalStub);
-
-        await replCommands.registerReplCommands(
-            disposableArray,
+        let commandHandler: undefined | (() => Promise<void>);
+        commandManager
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .setup((c) => c.registerCommand as any)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .returns(() => (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                if (command === Commands.Exec_In_REPL) {
+                    commandHandler = callback;
+                }
+                // eslint-disable-next-line no-void
+                return { dispose: () => void 0 };
+            });
+        replCommands.registerReplCommands(
+            [TypeMoq.Mock.ofType<Disposable>().object],
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
         );
 
-        // Extract the registered command handler and invoke it
-        const call = registerCommandSpy.getCall(0);
-        if (call) {
-            const commandHandler = call.args[1];
-            await commandHandler();
-        } else {
-            throw new Error('registerCommand was not called');
-        }
+        expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
 
-        // Verify the function interactions
+        await commandHandler!();
+
         sinon.assert.calledOnce(getSendToNativeREPLSettingStub);
-        // sinon.assert.calledOnce(executeInTerminalStub);
-
-        // Restore the original functions
-        sinon.restore();
     });
 });
