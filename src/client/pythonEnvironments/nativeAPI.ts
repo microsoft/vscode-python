@@ -110,6 +110,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         }
 
         this.refreshState = ProgressReportStage.discoveryStarted;
+        this._onProgress.fire({ stage: this.refreshState });
         const refreshPromise = createDeferred();
         this._refreshPromise = refreshPromise;
 
@@ -125,6 +126,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
             refreshPromise.reject(error);
         } finally {
             this.refreshState = ProgressReportStage.discoveryFinished;
+            this._onProgress.fire({ stage: this.refreshState });
         }
 
         return this._refreshPromise?.promise;
@@ -153,5 +155,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
 }
 
 export function createNativeEnvironmentsApi(finder: NativePythonFinder): IDiscoveryAPI {
-    return new NativePythonEnvironments(finder);
+    const native = new NativePythonEnvironments(finder);
+
+    return native;
 }
