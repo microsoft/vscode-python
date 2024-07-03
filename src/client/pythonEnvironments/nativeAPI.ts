@@ -230,7 +230,18 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                     try {
                         if (validEnv(this.finder, native)) {
                             if (!native.version) {
-                                this.resolveEnv(native.executable ?? native.prefix).ignoreErrors();
+                                this.resolveEnv(native.executable ?? native.prefix)
+                                    .then(() => {
+                                        const env = toPythonEnvInfo(this.finder, native);
+                                        if (env) {
+                                            this._envs.push(env);
+                                            this._onChanged.fire({
+                                                type: FileChangeType.Created,
+                                                new: env,
+                                            });
+                                        }
+                                    })
+                                    .ignoreErrors();
                             } else {
                                 const version = parseVersion(native.version);
                                 if (version.micro < 0 || version.minor < 0 || version.major < 0) {
@@ -277,9 +288,9 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                 const old = this._envs.find((item) => item.executable.filename === env.executable.filename);
                 if (old) {
                     this._envs = this._envs.filter((item) => item.executable.filename !== env.executable.filename);
+                    this._envs.push(env);
+                    this._onChanged.fire({ type: FileChangeType.Changed, old, new: env });
                 }
-                this._envs.push(env);
-                this._onChanged.fire({ type: FileChangeType.Changed, old, new: env });
             }
 
             return env;
