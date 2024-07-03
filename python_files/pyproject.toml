@@ -57,7 +57,7 @@ select = [
   "D2", "D400", "D403", "D419",  # pydocstyle
   "UP",  # pyupgrade
   "YTT",  # flake8-2020
-  #"ASYNC",  # flake8-async
+  "ASYNC",  # flake8-async
   #"B",  # flake8-bugbear
   #"A",  # flake8-builtins
   #"C",  # flake8-comprehensions
