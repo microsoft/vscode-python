@@ -40,7 +40,7 @@ class _TestOutput:
     def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
         self.old_out = old_out
-        if sys.version >= "3." and hasattr(old_out, "buffer"):
+        if sys.version_info[0] >= 3 and hasattr(old_out, "buffer"):
             self.buffer = _TestOutputBuffer(old_out.buffer, is_stdout)
 
     def flush(self):
