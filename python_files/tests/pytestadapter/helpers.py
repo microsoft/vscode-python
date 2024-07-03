@@ -289,10 +289,10 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
     raise ValueError(error_str)
 
 
-def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
+def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
     """Get the absolute test id by joining the testPath with the test_id."""
     split_id = test_id.split("::")[1:]
-    absolute_test_id = "::".join([str(testPath), *split_id])
+    absolute_test_id = "::".join([str(test_path), *split_id])
     return absolute_test_id
 
 

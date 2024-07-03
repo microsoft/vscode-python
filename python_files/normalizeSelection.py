@@ -142,7 +142,7 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
     return exact_nodes
 
 
-def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
+def traverse_file(whole_file_content, start_line, end_line, was_highlighted):
     """
     Intended to traverse through a user's given file content and find, collect all appropriate lines
     that should be sent to the REPL in case of smart selection.
@@ -153,7 +153,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     parsed_file_content = None
 
     try:
-        parsed_file_content = ast.parse(wholeFileContent)
+        parsed_file_content = ast.parse(whole_file_content)
     except Exception:
         # Handle case where user is attempting to run code where file contains deprecated Python code.
         # Let typescript side know and show warning message.
@@ -202,7 +202,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         which_line_next = 0
         for same_line_node in exact_nodes:
             should_run_top_blocks.append(same_line_node)
-            smart_code += f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
+            smart_code += f"{ast.get_source_segment(whole_file_content, same_line_node)}\n"
             which_line_next = get_next_block_lineno(should_run_top_blocks)
         return {
             "normalized_smart_result": smart_code,
@@ -216,7 +216,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         if start_line == top_node.lineno and end_line == top_node.end_lineno:
             should_run_top_blocks.append(top_node)
 
-            smart_code += f"{ast.get_source_segment(wholeFileContent, top_node)}\n"
+            smart_code += f"{ast.get_source_segment(whole_file_content, top_node)}\n"
             break  # If we found exact match, don't waste computation in parsing extra nodes.
         elif start_line >= top_node.lineno and end_line <= top_node.end_lineno:
             # Case to apply smart selection for multiple line.
@@ -231,7 +231,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
             should_run_top_blocks.append(top_node)
 
-            smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
+            smart_code += str(ast.get_source_segment(whole_file_content, top_node))
             smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     raw = stdin.read()
     contents = json.loads(raw.decode("utf-8"))
     # Empty highlight means user has not explicitly selected specific text.
-    empty_Highlight = contents.get("emptyHighlight", False)
+    empty_highlight = contents.get("emptyHighlight", False)
 
     # We also get the activeEditor selection start line and end line from the typescript VS Code side.
     # Remember to add 1 to each of the received since vscode starts line counting from 0 .
@@ -273,12 +273,12 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
 
-    if empty_Highlight and contents.get("smartSendSettingsEnabled"):
+    if empty_highlight and contents.get("smartSendSettingsEnabled"):
         result = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
             vscode_end_line,
-            not empty_Highlight,
+            not empty_highlight,
         )
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]

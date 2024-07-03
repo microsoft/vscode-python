@@ -88,17 +88,17 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 )
 
             # Check if the rootdir is a symlink or a child of a symlink to the current cwd.
-            isSymlink = False
+            is_symlink = False
 
             if os.path.islink(rootdir):
-                isSymlink = True
+                is_symlink = True
                 print(
                     f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink."
                 )
             elif pathlib.Path(os.path.realpath(rootdir)) != rootdir:
                 print("Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink.")
-                isSymlink = has_symlink_parent(rootdir)
-            if isSymlink:
+                is_symlink = has_symlink_parent(rootdir)
+            if is_symlink:
                 print(
                     f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink or child of a symlink, adjusting pytest paths accordingly.",
                 )
@@ -149,7 +149,7 @@ def pytest_exception_interact(node, call, report):
                 "Test failed with exception",
                 report.longreprtext,
             )
-            collected_test = testRunResultDict()
+            collected_test = TestRunResultDict()
             collected_test[node_id] = item_result
             cwd = pathlib.Path.cwd()
             execution_post(
@@ -174,7 +174,7 @@ def has_symlink_parent(current_path):
     return False
 
 
-def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
+def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
     """A function that returns the absolute test id. This is necessary because testIds are relative to the rootdir.
     This does not work for our case since testIds when referenced during run time are relative to the instantiation
     location. Absolute paths for testIds are necessary for the test tree ensures configurations that change the rootdir
@@ -185,7 +185,7 @@ def get_absolute_test_id(test_id: str, testPath: pathlib.Path) -> str:
     testPath -- the path to the file the test is located in, as a pathlib.Path object.
     """
     split_id = test_id.split("::")[1:]
-    absolute_test_id = "::".join([str(testPath), *split_id])
+    absolute_test_id = "::".join([str(test_path), *split_id])
     return absolute_test_id
 
 
@@ -229,7 +229,7 @@ def create_test_outcome(
     )
 
 
-class testRunResultDict(Dict[str, Dict[str, TestOutcome]]):
+class TestRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     """A class that stores all test run results."""
 
     outcome: str
@@ -272,7 +272,7 @@ def pytest_report_teststatus(report, config):
                 message,
                 traceback,
             )
-            collected_test = testRunResultDict()
+            collected_test = TestRunResultDict()
             collected_test[absolute_node_id] = item_result
             execution_post(
                 os.fsdecode(cwd),
@@ -306,7 +306,7 @@ def pytest_runtest_protocol(item, nextitem):
                 None,
                 None,
             )
-            collected_test = testRunResultDict()
+            collected_test = TestRunResultDict()
             collected_test[absolute_node_id] = item_result
             execution_post(
                 os.fsdecode(cwd),
@@ -375,14 +375,14 @@ def pytest_sessionfinish(session, exitstatus):
 
     if IS_DISCOVERY:
         if not (exitstatus == 0 or exitstatus == 1 or exitstatus == 5):
-            errorNode: TestNode = {
+            error_node: TestNode = {
                 "name": "",
                 "path": cwd,
                 "type_": "error",
                 "children": [],
                 "id_": "",
             }
-            post_response(os.fsdecode(cwd), errorNode)
+            post_response(os.fsdecode(cwd), error_node)
         try:
             session_node: Union[TestNode, None] = build_test_tree(session)
             if not session_node:
@@ -395,14 +395,14 @@ def pytest_sessionfinish(session, exitstatus):
             ERRORS.append(
                 f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
             )
-            errorNode: TestNode = {
+            error_node: TestNode = {
                 "name": "",
                 "path": cwd,
                 "type_": "error",
                 "children": [],
                 "id_": "",
             }
-            post_response(os.fsdecode(cwd), errorNode)
+            post_response(os.fsdecode(cwd), error_node)
     else:
         if exitstatus == 0 or exitstatus == 1:
             exitstatus_bool = "success"
@@ -731,7 +731,7 @@ class ExecutionPayloadDict(Dict):
 
     cwd: str
     status: Literal["success", "error"]
-    result: Union[testRunResultDict, None]
+    result: Union[TestRunResultDict, None]
     not_found: Union[List[str], None]  # Currently unused need to check
     error: Union[str, None]  # Currently unused need to check
 
@@ -784,7 +784,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def execution_post(
-    cwd: str, status: Literal["success", "error"], tests: Union[testRunResultDict, None]
+    cwd: str, status: Literal["success", "error"], tests: Union[TestRunResultDict, None]
 ):
     """
     Sends a POST request with execution payload details.

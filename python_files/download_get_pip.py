@@ -5,6 +5,7 @@ import json
 import os
 import pathlib
 import urllib.request as url_lib
+
 from packaging.version import parse as version_parser
 
 EXTENSION_ROOT = pathlib.Path(__file__).parent.parent

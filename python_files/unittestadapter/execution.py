@@ -56,10 +56,10 @@ class UnittestTestResult(unittest.TextTestResult):
         self.formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
         super(UnittestTestResult, self).__init__(*args, **kwargs)
 
-    def startTest(self, test: unittest.TestCase):
+    def startTest(self, test: unittest.TestCase):  # noqa: N802
         super(UnittestTestResult, self).startTest(test)
 
-    def addError(
+    def addError(  # noqa: N802
         self,
         test: unittest.TestCase,
         err: ErrorType,
@@ -67,7 +67,7 @@ class UnittestTestResult(unittest.TextTestResult):
         super(UnittestTestResult, self).addError(test, err)
         self.formatResult(test, TestOutcomeEnum.error, err)
 
-    def addFailure(
+    def addFailure(  # noqa: N802
         self,
         test: unittest.TestCase,
         err: ErrorType,
@@ -75,23 +75,23 @@ class UnittestTestResult(unittest.TextTestResult):
         super(UnittestTestResult, self).addFailure(test, err)
         self.formatResult(test, TestOutcomeEnum.failure, err)
 
-    def addSuccess(self, test: unittest.TestCase):
+    def addSuccess(self, test: unittest.TestCase):  # noqa: N802
         super(UnittestTestResult, self).addSuccess(test)
         self.formatResult(test, TestOutcomeEnum.success)
 
-    def addSkip(self, test: unittest.TestCase, reason: str):
+    def addSkip(self, test: unittest.TestCase, reason: str):  # noqa: N802
         super(UnittestTestResult, self).addSkip(test, reason)
         self.formatResult(test, TestOutcomeEnum.skipped)
 
-    def addExpectedFailure(self, test: unittest.TestCase, err: ErrorType):
+    def addExpectedFailure(self, test: unittest.TestCase, err: ErrorType):  # noqa: N802
         super(UnittestTestResult, self).addExpectedFailure(test, err)
         self.formatResult(test, TestOutcomeEnum.expected_failure, err)
 
-    def addUnexpectedSuccess(self, test: unittest.TestCase):
+    def addUnexpectedSuccess(self, test: unittest.TestCase):  # noqa: N802
         super(UnittestTestResult, self).addUnexpectedSuccess(test)
         self.formatResult(test, TestOutcomeEnum.unexpected_success)
 
-    def addSubTest(
+    def addSubTest(  # noqa: N802
         self,
         test: unittest.TestCase,
         subtest: unittest.TestCase,
@@ -105,7 +105,7 @@ class UnittestTestResult(unittest.TextTestResult):
             subtest,
         )
 
-    def formatResult(
+    def formatResult(  # noqa: N802
         self,
         test: unittest.TestCase,
         outcome: str,

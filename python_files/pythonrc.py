@@ -6,7 +6,7 @@ if sys.platform != "win32":
 original_ps1 = ">>> "
 
 
-class repl_hooks:
+class REPLHooks:
     def __init__(self):
         self.global_exit = None
         self.failure_flag = False
@@ -37,8 +37,8 @@ def get_last_command():
     return last_command
 
 
-class ps1:
-    hooks = repl_hooks()
+class PS1:
+    hooks = REPLHooks()
     sys.excepthook = hooks.my_excepthook
     sys.displayhook = hooks.my_displayhook
 
@@ -77,4 +77,4 @@ class ps1:
 
 
 if sys.platform != "win32":
-    sys.ps1 = ps1()
+    sys.ps1 = PS1()

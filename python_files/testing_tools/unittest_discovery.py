@@ -46,11 +46,11 @@ try:
     loader_errors = []
     for s in generate_test_cases(suite):
         tm = getattr(s, s._testMethodName)
-        testId = s.id()
-        if testId.startswith("unittest.loader._FailedTest"):
+        test_id = s.id()
+        if test_id.startswith("unittest.loader._FailedTest"):
             loader_errors.append(s._exception)
         else:
-            print(testId.replace(".", ":") + ":" + get_sourceline(tm))
+            print(test_id.replace(".", ":") + ":" + get_sourceline(tm))
 except Exception:
     print("=== exception start ===")
     traceback.print_exc()

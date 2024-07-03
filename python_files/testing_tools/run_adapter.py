@@ -14,8 +14,7 @@ sys.path.insert(
     ),
 )
 
-from testing_tools.adapter.__main__ import parse_args, main
-
+from testing_tools.adapter.__main__ import main, parse_args
 
 if __name__ == "__main__":
     tool, cmd, subargs, toolargs = parse_args()

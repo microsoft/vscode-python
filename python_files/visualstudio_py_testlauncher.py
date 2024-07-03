@@ -109,12 +109,12 @@ class _IpcChannel(object):
         self.lock = thread.allocate_lock()
         self._closed = False
         # start the testing reader thread loop
-        self.test_thread_id = thread.start_new_thread(self.readSocket, ())
+        self.test_thread_id = thread.start_new_thread(self.read_socket, ())
 
     def close(self):
         self._closed = True
 
-    def readSocket(self):
+    def read_socket(self):
         try:
             self.socket.recv(1024)
             self.callback()
@@ -139,40 +139,40 @@ _channel = None
 
 
 class VsTestResult(unittest.TextTestResult):
-    def startTest(self, test):
+    def startTest(self, test):  # noqa: N802
         super(VsTestResult, self).startTest(test)
         if _channel is not None:
             _channel.send_event(name="start", test=test.id())
 
-    def addError(self, test, err):
+    def addError(self, test, err):  # noqa: N802
         super(VsTestResult, self).addError(test, err)
         self.sendResult(test, "error", err)
 
-    def addFailure(self, test, err):
+    def addFailure(self, test, err):  # noqa: N802
         super(VsTestResult, self).addFailure(test, err)
         self.sendResult(test, "failed", err)
 
-    def addSuccess(self, test):
+    def addSuccess(self, test):  # noqa: N802
         super(VsTestResult, self).addSuccess(test)
         self.sendResult(test, "passed")
 
-    def addSkip(self, test, reason):
+    def addSkip(self, test, reason):  # noqa: N802
         super(VsTestResult, self).addSkip(test, reason)
         self.sendResult(test, "skipped")
 
-    def addExpectedFailure(self, test, err):
+    def addExpectedFailure(self, test, err):  # noqa: N802
         super(VsTestResult, self).addExpectedFailure(test, err)
         self.sendResult(test, "failed-expected", err)
 
-    def addUnexpectedSuccess(self, test):
+    def addUnexpectedSuccess(self, test):  # noqa: N802
         super(VsTestResult, self).addUnexpectedSuccess(test)
         self.sendResult(test, "passed-unexpected")
 
-    def addSubTest(self, test, subtest, err):
+    def addSubTest(self, test, subtest, err):  # noqa: N802
         super(VsTestResult, self).addSubTest(test, subtest, err)
         self.sendResult(test, "subtest-passed" if err is None else "subtest-failed", err, subtest)
 
-    def sendResult(self, test, outcome, trace=None, subtest=None):
+    def sendResult(self, test, outcome, trace=None, subtest=None):  # noqa: N802
         if _channel is not None:
             tb = None
             message = None
@@ -195,14 +195,14 @@ class VsTestResult(unittest.TextTestResult):
             _channel.send_event("result", **result)
 
 
-def stopTests():
+def stop_tests():
     try:
         os.kill(os.getpid(), signal.SIGUSR1)
     except Exception:
         os.kill(os.getpid(), signal.SIGTERM)
 
 
-class ExitCommand(Exception):
+class ExitCommand(Exception):  # noqa: N818
     pass
 
 
@@ -273,7 +273,9 @@ def main():
         except Exception:
             with contextlib.suppress(Exception):
                 signal.signal(signal.SIGTERM, signal_handler)
-        _channel = _IpcChannel(socket.create_connection(("127.0.0.1", opts.result_port)), stopTests)
+        _channel = _IpcChannel(
+            socket.create_connection(("127.0.0.1", opts.result_port)), stop_tests
+        )
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
 
@@ -291,9 +293,9 @@ def main():
             debugger_helper = windll["Microsoft.PythonTools.Debugger.Helper.x86.dll"]
         except WindowsError:
             debugger_helper = windll["Microsoft.PythonTools.Debugger.Helper.x64.dll"]
-        isTracing = c_char.in_dll(debugger_helper, "isTracing")
+        is_tracing = c_char.in_dll(debugger_helper, "isTracing")
         while True:
-            if isTracing.value != 0:
+            if is_tracing.value != 0:
                 break
             sleep(0.1)
 
@@ -331,10 +333,10 @@ def main():
                     for cls in test_suite._tests:
                         with contextlib.suppress(Exception):
                             for m in cls._tests:
-                                testId = m.id()
-                                if testId.startswith(opts.tests[0]):
+                                test_id = m.id()
+                                if test_id.startswith(opts.tests[0]):
                                     suite = cls
-                                if testId in opts.tests:
+                                if test_id in opts.tests:
                                     if tests is None:
                                         tests = unittest.TestSuite([m])
                                     else:

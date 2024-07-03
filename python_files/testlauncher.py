@@ -13,13 +13,13 @@ def parse_argv():
     3. Rest of the arguments are passed into the test runner.
     """
     cwd = sys.argv[1]
-    testRunner = sys.argv[2]
+    test_runner = sys.argv[2]
     args = sys.argv[3:]
 
-    return (cwd, testRunner, args)
+    return (cwd, test_runner, args)
 
 
-def run(cwd, testRunner, args):
+def run(cwd, test_runner, args):
     """Runs the test
     cwd -- the current directory to be set
     testRunner -- test runner to be used `pytest`
@@ -30,7 +30,7 @@ def run(cwd, testRunner, args):
     os.chdir(cwd)
 
     try:
-        if testRunner == "pytest":
+        if test_runner == "pytest":
             import pytest
 
             pytest.main(args)
@@ -40,5 +40,5 @@ def run(cwd, testRunner, args):
 
 
 if __name__ == "__main__":
-    cwd, testRunner, args = parse_argv()
-    run(cwd, testRunner, args)
+    cwd, test_runner, args = parse_argv()
+    run(cwd, test_runner, args)
