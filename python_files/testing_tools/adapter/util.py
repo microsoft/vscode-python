@@ -171,10 +171,7 @@ def fix_fileid(
 
 @contextlib.contextmanager
 def _replace_fd(file, target):
-    """
-    Temporarily replace the file descriptor for `file`,
-    for which sys.stdout or sys.stderr is passed.
-    """
+    """Temporarily replace the file descriptor for `file`, for which sys.stdout or sys.stderr is passed."""
     try:
         fd = file.fileno()
     except (AttributeError, io.UnsupportedOperation):

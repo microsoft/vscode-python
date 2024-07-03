@@ -231,8 +231,8 @@ def test_bad_id_error_execution():
 )
 def test_pytest_execution(test_ids, expected_const):
     """
-    Test that pytest discovery works as expected where run pytest is always successful
-    but the actual test results are both successes and failures.:
+    Test that pytest discovery works as expected where run pytest is always successful, but the actual test results are both successes and failures.
+
     1: skip_tests_execution_expected_output: test run on a file with skipped tests.
     2. error_raised_exception_execution_expected_output: test run on a file that raises an exception.
     3. uf_execution_expected_output: unittest tests run on multiple files.
@@ -277,8 +277,8 @@ def test_pytest_execution(test_ids, expected_const):
 
 
 def test_symlink_run():
-    """
-    Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+    """Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+
     Discovery should succeed and testids should be relative to the symlinked root directory.
     """
     with create_symlink(TEST_DATA_PATH, "root", "symlink_folder") as (

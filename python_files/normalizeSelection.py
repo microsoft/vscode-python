@@ -21,12 +21,11 @@ def split_lines(source):
 
 
 def _get_statements(selection):
-    """
-    Process a multiline selection into a list of its top-level statements.
+    """Process a multiline selection into a list of its top-level statements.
+
     This will remove empty newlines around and within the selection, dedent it,
     and split it using the result of `ast.parse()`.
     """
-
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
     lines = (line for line in split_lines(selection) if line.strip() != "")
 
@@ -143,9 +142,8 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
 
 
 def traverse_file(whole_file_content, start_line, end_line, was_highlighted):
-    """
-    Intended to traverse through a user's given file content and find, collect all appropriate lines
-    that should be sent to the REPL in case of smart selection.
+    """Intended to traverse through a user's given file content and find, collect all appropriate lines that should be sent to the REPL in case of smart selection.
+
     This could be exact statement such as just a single line print statement,
     or a multiline dictionary, or differently styled multi-line list comprehension, etc.
     Then call the normalize_lines function to normalize our smartly selected code block.

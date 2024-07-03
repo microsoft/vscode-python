@@ -130,8 +130,11 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
 
 
 def get_child_node(name: str, path: str, type_: TestNodeTypeEnum, root: TestNode) -> TestNode:
-    """Find a child node in a test tree given its name, type and path. If the node doesn't exist, create it.
-    Path is required to distinguish between nodes with the same name and type."""
+    """Find a child node in a test tree given its name, type and path.
+
+    If the node doesn't exist, create it.
+    Path is required to distinguish between nodes with the same name and type.
+    """
     try:
         result = next(
             node
@@ -266,7 +269,6 @@ def parse_unittest_args(
     - top_level_directory: The top-level directory of the project, defaults to None,
       and unittest will use start_directory behind the scenes.
     """
-
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--start-directory", "-s", default=".")
     arg_parser.add_argument("--pattern", "-p", default="test*.py")

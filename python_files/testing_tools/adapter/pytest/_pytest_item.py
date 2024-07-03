@@ -89,7 +89,7 @@ When parsing an item, we make use of the following attributes:
     + __code__
     + __closure__
 * own_markers
-"""
+"""  # noqa: D205
 
 from __future__ import absolute_import, print_function
 

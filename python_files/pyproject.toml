@@ -54,7 +54,7 @@ select = [
   "E4", "E7", "E9",  # pycodestyle
   "I",  # isort
   "N",  # pep8-naming
-  #"D2", "D400", "D403", "D419",  # pydocstyle
+  "D2", "D400", "D403", "D419",  # pydocstyle
   #"UP",  # pyupgrade
   #"YTT",  # flake8-2020
   #"ASYNC",  # flake8-async

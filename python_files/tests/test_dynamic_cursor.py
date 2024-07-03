@@ -5,13 +5,7 @@ import normalizeSelection
 
 
 def test_dictionary_mouse_mover():
-    """
-    Having the mouse cursor on second line,
-    'my_dict = {'
-    and pressing shift+enter should bring the
-    mouse cursor to line 6, on and to be able to run
-    'print('only send the dictionary')'
-    """
+    """Having the mouse cursor on second line, 'my_dict = {' and pressing shift+enter should bring the mouse cursor to line 6, on and to be able to run 'print('only send the dictionary')'."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -30,12 +24,10 @@ def test_dictionary_mouse_mover():
 
 
 def test_beginning_func():
-    """
-    Pressing shift+enter on the very first line,
-    of function definition, such as 'my_func():'
-    It should properly skip the comment and assert the
-    next executable line to be executed is line 5 at
-    'my_dict = {'
+    """Pressing shift+enter on the very first line, of function definition, such as 'my_func():'.
+
+    It should properly skip the comment and assert the next executable line to be
+    executed is line 5 at 'my_dict = {'.
     """
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
@@ -126,10 +118,7 @@ def test_skip_multi_comp_lambda():
 
 
 def test_move_whole_class():
-    """
-    Shift+enter on a class definition
-    should move the cursor after running whole class.
-    """
+    """Shift+enter on a class definition should move the cursor after running whole class."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\

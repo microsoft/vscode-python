@@ -7,6 +7,7 @@ import sys
 
 def parse_argv():
     """Parses arguments for use with the test launcher.
+
     Arguments are:
     1. Working directory.
     2. Test runner `pytest`
@@ -20,12 +21,12 @@ def parse_argv():
 
 
 def run(cwd, test_runner, args):
-    """Runs the test
+    """Runs the test.
+
     cwd -- the current directory to be set
     testRunner -- test runner to be used `pytest`
     args -- arguments passed into the test runner
     """
-
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
 

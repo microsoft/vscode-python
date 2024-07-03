@@ -189,12 +189,7 @@ def test_small_forloop():
 
 
 def inner_for_loop_component():
-    """
-    Pressing shift+enter inside a for loop,
-    specifically on a viable expression
-    by itself, such as print(i)
-    should only return that exact expression
-    """
+    """Pressing shift+enter inside a for loop, specifically on a viable expression by itself, such as print(i) should only return that exact expression."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -214,12 +209,7 @@ def inner_for_loop_component():
 
 
 def test_dict_comprehension():
-    """
-    Having the mouse cursor on the first line,
-    and pressing shift+enter should return the
-    whole dictionary comp, respecting user's code style.
-    """
-
+    """Having the mouse cursor on the first line, and pressing shift+enter should return the whole dictionary comp, respecting user's code style."""
     importlib.reload
     src = textwrap.dedent(
         """\
@@ -241,11 +231,7 @@ def test_dict_comprehension():
 
 
 def test_send_whole_generator():
-    """
-    Pressing shift+enter on the first line, which is the '('
-    should be returning the whole generator expression instead of just the '('
-    """
-
+    """Pressing shift+enter on the first line, which is the '(' should be returning the whole generator expression instead of just the '('."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -274,13 +260,7 @@ def test_send_whole_generator():
 
 
 def test_multiline_lambda():
-    """
-    Shift+enter on part of the lambda expression
-    should return the whole lambda expression,
-    regardless of whether all the component of
-    lambda expression is on the same or not.
-    """
-
+    """Shift+enter on part of the lambda expression should return the whole lambda expression, regardless of whether all the component of lambda expression is on the same or not."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -303,10 +283,7 @@ def test_multiline_lambda():
 
 
 def test_send_whole_class():
-    """
-    Shift+enter on a class definition
-    should send the whole class definition
-    """
+    """Shift+enter on a class definition should send the whole class definition."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -334,11 +311,7 @@ def test_send_whole_class():
 
 
 def test_send_whole_if_statement():
-    """
-    Shift+enter on an if statement
-    should send the whole if statement
-    including statements inside and else.
-    """
+    """Shift+enter on an if statement should send the whole if statement including statements inside and else."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\

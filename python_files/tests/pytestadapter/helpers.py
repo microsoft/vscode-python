@@ -64,13 +64,14 @@ def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
 
 
 def process_data_received(data: str) -> List[Dict[str, Any]]:
-    """Process the all JSON data which comes from the server. After listen is finished, this function will be called.
+    """Process the all JSON data which comes from the server.
+
+    After listen is finished, this function will be called.
     Here the data must be split into individual JSON messages and then parsed.
 
     This function also:
     - Checks that the jsonrpc value is 2.0
     - Checks that the last JSON message contains the `eot` token.
-
     """
     json_messages = []
     remaining = data
@@ -99,7 +100,8 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 
     returns:
     json_data: A single rpc payload of JSON data from the server.
-    remaining: The remaining data after the JSON data."""
+    remaining: The remaining data after the JSON data.
+    """
     str_stream: io.StringIO = io.StringIO(data)
 
     length: int = 0
@@ -133,6 +135,7 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 
 def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event):
     """Listen on the named pipe or Unix domain socket for JSON data from the server.
+
     Created as a separate function for clarity in threading context.
     """
     # Windows design

@@ -175,7 +175,9 @@ def has_symlink_parent(current_path):
 
 
 def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
-    """A function that returns the absolute test id. This is necessary because testIds are relative to the rootdir.
+    """A function that returns the absolute test id.
+
+    This is necessary because testIds are relative to the rootdir.
     This does not work for our case since testIds when referenced during run time are relative to the instantiation
     location. Absolute paths for testIds are necessary for the test tree ensures configurations that change the rootdir
     of pytest are handled correctly.
@@ -238,9 +240,10 @@ class TestRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_report_teststatus(report, config):
-    """
-    A pytest hook that is called when a test is called. It is called 3 times per test,
-      during setup, call, and teardown.
+    """A pytest hook that is called when a test is called.
+
+    It is called 3 times per test, during setup, call, and teardown.
+
     Keyword arguments:
     report -- the report on the test setup, call, and teardown.
     config -- configuration object.
@@ -342,7 +345,6 @@ def check_skipped_condition(item):
     Keyword arguments:
     item -- the pytest item object.
     """
-
     for marker in item.own_markers:
         # If the test is marked with skip then it will not hit the pytest_report_teststatus hook,
         # therefore we need to handle it as skipped here.
@@ -725,9 +727,7 @@ class DiscoveryPayloadDict(TypedDict):
 
 
 class ExecutionPayloadDict(Dict):
-    """
-    A dictionary that is used to send a execution post request to the server.
-    """
+    """A dictionary that is used to send a execution post request to the server."""
 
     cwd: str
     status: Literal["success", "error"]
@@ -744,8 +744,8 @@ class EOTPayloadDict(TypedDict):
 
 
 def get_node_path(node: Any) -> pathlib.Path:
-    """
-    A function that returns the path of a node given the switch to pathlib.Path.
+    """A function that returns the path of a node given the switch to pathlib.Path.
+
     It also evaluates if the node is a symlink and returns the equivalent path.
     """
     node_path = getattr(node, "path", None) or pathlib.Path(node.fspath)
@@ -786,15 +786,13 @@ atexit.register(lambda: __writer.close() if __writer else None)
 def execution_post(
     cwd: str, status: Literal["success", "error"], tests: Union[TestRunResultDict, None]
 ):
-    """
-    Sends a POST request with execution payload details.
+    """Sends a POST request with execution payload details.
 
     Args:
         cwd (str): Current working directory.
         status (Literal["success", "error"]): Execution status indicating success or error.
         tests (Union[testRunResultDict, None]): Test run results, if available.
     """
-
     payload: ExecutionPayloadDict = ExecutionPayloadDict(
         cwd=cwd, status=status, result=tests, not_found=None, error=None
     )
@@ -894,7 +892,7 @@ def send_post_request(
 class DeferPlugin:
     @pytest.hookimpl(wrapper=True)
     def pytest_xdist_auto_num_workers(self, config: pytest.Config) -> Generator[None, int, int]:
-        """determine how many workers to use based on how many tests were selected in the test explorer"""
+        """Determine how many workers to use based on how many tests were selected in the test explorer."""
         return min((yield), len(config.option.file_or_dir))
 
 

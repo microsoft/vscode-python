@@ -168,11 +168,12 @@ def test_parameterized_error_collect():
     ],
 )
 def test_pytest_collect(file, expected_const):
-    """
-    Test to test pytest discovery on a variety of test files/ folder structures.
-    Uses variables from expected_discovery_test_output.py to store the expected dictionary return.
-    Only handles discovery and therefore already contains the arg --collect-only.
-    All test discovery will succeed, be in the correct cwd, and match expected test output.
+    """Test to test pytest discovery on a variety of test files/ folder structures.
+
+    Uses variables from expected_discovery_test_output.py to store the expected
+    dictionary return. Only handles discovery and therefore already contains the arg
+    --collect-only. All test discovery will succeed, be in the correct cwd, and match
+    expected test output.
 
     Keyword arguments:
     file -- a string with the file or folder to run pytest discovery on.
@@ -206,8 +207,8 @@ def test_pytest_collect(file, expected_const):
     reason="See https://stackoverflow.com/questions/32877260/privlege-error-trying-to-create-symlink-using-python-on-windows-10",
 )
 def test_symlink_root_dir():
-    """
-    Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+    """Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+
     Discovery should succeed and testids should be relative to the symlinked root directory.
     """
     with helpers.create_symlink(helpers.TEST_DATA_PATH, "root", "symlink_folder") as (
@@ -242,9 +243,9 @@ def test_symlink_root_dir():
 
 
 def test_pytest_root_dir():
-    """
-    Test to test pytest discovery with the command line arg --rootdir specified to be a subfolder
-    of the workspace root. Discovery should succeed and testids should be relative to workspace root.
+    """Test to test pytest discovery with the command line arg --rootdir specified to be a subfolder of the workspace root.
+
+    Discovery should succeed and testids should be relative to workspace root.
     """
     rd = f"--rootdir={helpers.TEST_DATA_PATH / 'root' / 'tests'}"
     actual = helpers.runner_with_cwd(
@@ -270,9 +271,9 @@ def test_pytest_root_dir():
 
 
 def test_pytest_config_file():
-    """
-    Test to test pytest discovery with the command line arg -c with a specified config file which
-    changes the workspace root. Discovery should succeed and testids should be relative to workspace root.
+    """Test to test pytest discovery with the command line arg -c with a specified config file which changes the workspace root.
+
+    Discovery should succeed and testids should be relative to workspace root.
     """
     actual = helpers.runner_with_cwd(
         [
@@ -298,7 +299,10 @@ def test_pytest_config_file():
 
 def test_config_sub_folder():
     """Here the session node will be a subfolder of the workspace root and the test are in another subfolder.
-    This tests checks to see if test node path are under the session node and if so the session node is correctly updated to the common path."""
+
+    This tests checks to see if test node path are under the session node and if so the
+    session node is correctly updated to the common path.
+    """
     folder_path = helpers.TEST_DATA_PATH / "config_sub_folder"
     actual = helpers.runner_with_cwd(
         [

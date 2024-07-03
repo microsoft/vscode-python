@@ -19,9 +19,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 def test_no_ids_run() -> None:
-    """This test runs on an empty array of test_ids, therefore it should return
-    an empty dict for the result.
-    """
+    """This test runs on an empty array of test_ids, therefore it should return an empty dict for the result."""
     start_dir: str = os.fspath(TEST_DATA_PATH)
     testids = []
     pattern = "discovery_simple*"
@@ -43,8 +41,7 @@ def mock_send_run_data():
 
 
 def test_single_ids_run(mock_send_run_data):
-    """This test runs on a single test_id, therefore it should return
-    a dict with a single key-value pair for the result.
+    """This test runs on a single test_id, therefore it should return a dict with a single key-value pair for the result.
 
     This single test passes so the outcome should be 'success'.
     """
@@ -79,8 +76,7 @@ def test_single_ids_run(mock_send_run_data):
 
 
 def test_subtest_run(mock_send_run_data) -> None:
-    """This test runs on a the test_subtest which has a single method, test_even,
-    that uses unittest subtest.
+    """This test runs on a the test_subtest which has a single method, test_even, that uses unittest subtest.
 
     The actual result of run should return a dict payload with 6 entry for the 6 subtests.
     """
@@ -219,7 +215,6 @@ def test_multiple_ids_run(mock_send_run_data, test_ids, pattern, cwd, expected_o
 
 def test_failed_tests(mock_send_run_data):
     """This test runs on a single file `test_fail` with two tests that fail."""
-
     os.environ["TEST_RUN_PIPE"] = "fake"
     test_ids = [
         "test_fail_simple.RunFailSimple.test_one_fail",
@@ -254,9 +249,7 @@ def test_failed_tests(mock_send_run_data):
 
 
 def test_unknown_id(mock_send_run_data):
-    """This test runs on a unknown test_id, therefore it should return
-    an error as the outcome as it attempts to find the given test.
-    """
+    """This test runs on a unknown test_id, therefore it should return an error as the outcome as it attempts to find the given test."""
     os.environ["TEST_RUN_PIPE"] = "fake"
     test_ids = ["unknown_id"]
     actual = run_tests(
@@ -283,9 +276,7 @@ def test_unknown_id(mock_send_run_data):
 
 
 def test_incorrect_path():
-    """This test runs on a non existent path, therefore it should return
-    an error as the outcome as it attempts to find the given folder.
-    """
+    """This test runs on a non existent path, therefore it should return an error as the outcome as it attempts to find the given folder."""
     test_ids = ["unknown_id"]
     os.environ["TEST_RUN_PIPE"] = "fake"
 

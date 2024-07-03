@@ -288,7 +288,7 @@ class ReportDiscoveredTests(unittest.TestCase):
           test_spam.py
               SpamTests
                 test_okay
-        """
+        """  # noqa: D205, D400
         stub = StubSender()
         testroot = fix_path("/a/b/c")
         relfileid1 = "./test_ham.py"
@@ -898,7 +898,7 @@ class ReportDiscoveredTests(unittest.TestCase):
           test_spam.py
               SpamTests
                 test_okay
-        """
+        """  # noqa: D205, D400
         stub = StubSender()
         testroot1 = fix_path("/a/b/c")
         relfile1 = fix_path("./test_ham.py")
