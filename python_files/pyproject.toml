@@ -60,7 +60,7 @@ select = [
   "YTT",  # flake8-2020
   "ASYNC",  # flake8-async
   "B",  # flake8-bugbear
-  #"A",  # flake8-builtins
+  "A",  # flake8-builtins
   #"C",  # flake8-comprehensions
   #"DTZ",  # flake8-dasetimez
   #"INP",  # flake8-no-pep420

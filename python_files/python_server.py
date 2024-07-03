@@ -58,7 +58,7 @@ def custom_input(prompt=""):
 
 # Set input to our custom input
 USER_GLOBALS["input"] = custom_input
-input = custom_input
+input = custom_input  # noqa: A001
 
 
 def handle_response(request_id):
@@ -113,8 +113,8 @@ def exec_user_input(user_input, user_globals):
     user_input = user_input[0] if isinstance(user_input, list) else user_input
 
     try:
-        callable = exec_function(user_input)
-        retval = callable(user_input, user_globals)
+        callable_ = exec_function(user_input)
+        retval = callable_(user_input, user_globals)
         if retval is not None:
             print(retval)
     except KeyboardInterrupt:

@@ -191,7 +191,7 @@ def run_tests(
     top_level_dir: Optional[str],
     verbosity: int,
     failfast: Optional[bool],
-    locals: Optional[bool] = None,
+    locals_: Optional[bool] = None,
 ) -> ExecutionPayloadDict:
     cwd = os.path.abspath(start_dir)
     if "/" in start_dir:  #  is a subdir
@@ -212,13 +212,13 @@ def run_tests(
 
         if failfast is None:
             failfast = False
-        if locals is None:
-            locals = False
+        if locals_ is None:
+            locals_ = False
         if verbosity is None:
             verbosity = 1
         runner = unittest.TextTestRunner(
             resultclass=UnittestTestResult,
-            tb_locals=locals,
+            tb_locals=locals_,
             failfast=failfast,
             verbosity=verbosity,
         )
@@ -282,7 +282,7 @@ if __name__ == "__main__":
         top_level_dir,
         verbosity,
         failfast,
-        locals,
+        locals_,
     ) = parse_unittest_args(argv[index + 1 :])
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
@@ -335,7 +335,7 @@ if __name__ == "__main__":
                     top_level_dir,
                     verbosity,
                     failfast,
-                    locals,
+                    locals_,
                 )
         else:
             # No test ids received from buffer

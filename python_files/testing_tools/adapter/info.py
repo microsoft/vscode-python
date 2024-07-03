@@ -29,10 +29,10 @@ class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
 class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid")):
     KINDS = ("folder", "file", "suite", "function", "subtest")
 
-    def __new__(cls, id, kind, name, root=None, relpath=None, parentid=None):
+    def __new__(cls, id_, kind, name, root=None, relpath=None, parentid=None):
         self = super().__new__(
             cls,
-            id=str(id) if id else None,
+            id=str(id_) if id_ else None,
             kind=str(kind) if kind else None,
             name=str(name) if name else None,
             root=str(root) if root else None,
@@ -67,10 +67,10 @@ class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parenti
     MARKERS = ("skip", "skip-if", "expected-failure")
     KINDS = ("function", "doctest")
 
-    def __new__(cls, id, name, path, source, markers, parentid, kind="function"):
+    def __new__(cls, id_, name, path, source, markers, parentid, kind="function"):
         self = super().__new__(
             cls,
-            str(id) if id else None,
+            str(id_) if id_ else None,
             str(name) if name else None,
             path or None,
             str(source) if source else None,

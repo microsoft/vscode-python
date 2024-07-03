@@ -45,11 +45,11 @@ def test_single_ids_run(mock_send_run_data):
 
     This single test passes so the outcome should be 'success'.
     """
-    id = "discovery_simple.DiscoverySimple.test_one"
+    id_ = "discovery_simple.DiscoverySimple.test_one"
     os.environ["TEST_RUN_PIPE"] = "fake"
     actual: ExecutionPayloadDict = run_tests(
         os.fspath(TEST_DATA_PATH),
-        [id],
+        [id_],
         "discovery_simple*",
         None,
         1,
@@ -68,8 +68,8 @@ def test_single_ids_run(mock_send_run_data):
         if not isinstance(actual_result, Dict):
             raise AssertionError("actual_result is not a Dict")
         assert len(actual_result) == 1
-        assert id in actual_result
-        id_result = actual_result[id]
+        assert id_ in actual_result
+        id_result = actual_result[id_]
         assert id_result is not None
         assert "outcome" in id_result
         assert id_result["outcome"] == "success"
@@ -80,11 +80,11 @@ def test_subtest_run(mock_send_run_data) -> None:
 
     The actual result of run should return a dict payload with 6 entry for the 6 subtests.
     """
-    id = "test_subtest.NumbersTest.test_even"
+    id_ = "test_subtest.NumbersTest.test_even"
     os.environ["TEST_RUN_PIPE"] = "fake"
     actual = run_tests(
         os.fspath(TEST_DATA_PATH),
-        [id],
+        [id_],
         "test_subtest.py",
         None,
         1,
@@ -105,8 +105,8 @@ def test_subtest_run(mock_send_run_data) -> None:
     assert actual["result"] is not None
     result = actual["result"]
     assert len(result) == 6
-    for id in subtests_ids:
-        assert id in result
+    for id_ in subtests_ids:
+        assert id_ in result
 
 
 @pytest.mark.parametrize(

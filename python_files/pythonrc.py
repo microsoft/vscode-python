@@ -21,11 +21,11 @@ class REPLHooks:
 
         self.original_displayhook(value)
 
-    def my_excepthook(self, type, value, traceback):
+    def my_excepthook(self, type_, value, traceback):
         self.global_exit = value
         self.failure_flag = True
 
-        self.original_excepthook(type, value, traceback)
+        self.original_excepthook(type_, value, traceback)
 
 
 def get_last_command():
