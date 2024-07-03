@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as path from 'path';
 import { Disposable, Event, EventEmitter } from 'vscode';
-import { PythonEnvInfo, PythonVersion } from './base/info';
+import { PythonEnvInfo, PythonEnvKind, PythonEnvType, PythonVersion } from './base/info';
 import {
     GetRefreshEnvironmentsOptions,
     IDiscoveryAPI,
@@ -16,6 +17,8 @@ import { NativeEnvInfo, NativePythonFinder } from './base/locators/common/native
 import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
+import { cache } from '../common/utils/decorators';
+import { traceError } from '../logging';
 
 function makeExecutablePath(prefix?: string): string {
     if (!prefix) {
@@ -46,17 +49,118 @@ function getLocation(nativeEnv: NativeEnvInfo): string {
     return '';
 }
 
-function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
+function kindToShortString(kind: PythonEnvKind): string | undefined {
+    switch (kind) {
+        case PythonEnvKind.Poetry:
+            return 'poetry';
+        case PythonEnvKind.Pyenv:
+            return 'pyenv';
+        case PythonEnvKind.VirtualEnv:
+        case PythonEnvKind.Venv:
+        case PythonEnvKind.VirtualEnvWrapper:
+        case PythonEnvKind.OtherVirtual:
+            return 'venv';
+        case PythonEnvKind.Pipenv:
+            return 'pipenv';
+        case PythonEnvKind.Conda:
+            return 'conda';
+        case PythonEnvKind.ActiveState:
+            return 'active-state';
+        case PythonEnvKind.MicrosoftStore:
+            return 'Microsoft Store';
+        case PythonEnvKind.Hatch:
+            return 'hatch';
+        case PythonEnvKind.Pixi:
+            return 'pixi';
+        case PythonEnvKind.System:
+        case PythonEnvKind.Unknown:
+        case PythonEnvKind.OtherGlobal:
+        case PythonEnvKind.Custom:
+        default:
+            return undefined;
+    }
+}
+
+function toShortVersionString(version: PythonVersion): string {
+    return `${version.major}.${version.minor}.${version.micro}`.trim();
+}
+
+function getDisplayName(version: PythonVersion, kind: PythonEnvKind, arch: Architecture, name?: string): string {
+    const versionStr = toShortVersionString(version);
+    const kindStr = kindToShortString(kind);
+    if (arch === Architecture.x86) {
+        if (kindStr) {
+            return name ? `Python ${versionStr} 32-bit ('${name}')` : `Python ${versionStr} 32-bit (${kindStr})`;
+        }
+        return name ? `Python ${versionStr} 32-bit ('${name}')` : `Python ${versionStr} 32-bit`;
+    }
+    if (kindStr) {
+        return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr} (${kindStr})`;
+    }
+    return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr}`;
+}
+
+function validEnv(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): boolean {
     if (nativeEnv.prefix === undefined && nativeEnv.executable === undefined) {
         finder.logger().error(`Invalid environment [native]: ${JSON.stringify(nativeEnv)}`);
+        return false;
+    }
+    return true;
+}
+
+function getEnvType(kind: PythonEnvKind): PythonEnvType | undefined {
+    switch (kind) {
+        case PythonEnvKind.Poetry:
+        case PythonEnvKind.Pyenv:
+        case PythonEnvKind.VirtualEnv:
+        case PythonEnvKind.Venv:
+        case PythonEnvKind.VirtualEnvWrapper:
+        case PythonEnvKind.OtherVirtual:
+        case PythonEnvKind.Pipenv:
+        case PythonEnvKind.ActiveState:
+        case PythonEnvKind.Hatch:
+        case PythonEnvKind.Pixi:
+            return PythonEnvType.Virtual;
+
+        case PythonEnvKind.Conda:
+            return PythonEnvType.Conda;
+
+        case PythonEnvKind.System:
+        case PythonEnvKind.Unknown:
+        case PythonEnvKind.OtherGlobal:
+        case PythonEnvKind.Custom:
+        case PythonEnvKind.MicrosoftStore:
+        default:
+            return undefined;
+    }
+}
+
+function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
+    if (nativeEnv.name) {
+        return nativeEnv.name;
+    }
+
+    const envType = getEnvType(kind);
+    if (nativeEnv.prefix && (envType === PythonEnvType.Conda || envType === PythonEnvType.Virtual)) {
+        return path.basename(nativeEnv.prefix);
+    }
+    return '';
+}
+
+function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
+    if (!validEnv(finder, nativeEnv)) {
         return undefined;
     }
-    const name = nativeEnv.version ? `Python ${nativeEnv.version}` : 'Python';
+    const kind = finder.categoryToKind(nativeEnv.category);
+    const arch = toArch(nativeEnv.arch);
     const version: PythonVersion = parseVersion(nativeEnv.version ?? '');
+    const name = getName(nativeEnv, kind);
+    const displayName = nativeEnv.version ? getDisplayName(version, kind, arch, name) : 'Python';
+
     return {
-        name: nativeEnv.name ?? name,
+        name,
         location: getLocation(nativeEnv),
-        kind: finder.categoryToKind(nativeEnv.category),
+        kind,
         executable: {
             filename: nativeEnv.executable ?? makeExecutablePath(nativeEnv.prefix),
             sysPrefix: nativeEnv.prefix ?? '',
@@ -69,11 +173,14 @@ function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): 
             minor: version.minor,
             micro: version.micro,
         },
-        arch: toArch(nativeEnv.arch),
+        arch,
         distro: {
             org: '',
         },
         source: [],
+        detailedDisplayName: displayName,
+        display: displayName,
+        type: getEnvType(kind),
     };
 }
 
@@ -104,30 +211,47 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return this._refreshPromise?.promise;
     }
 
-    async triggerRefresh(_query?: PythonLocatorQuery, _options?: TriggerRefreshOptions): Promise<void> {
+    triggerRefresh(_query?: PythonLocatorQuery, _options?: TriggerRefreshOptions): Promise<void> {
         if (this.refreshState === ProgressReportStage.discoveryStarted && this._refreshPromise?.promise) {
             return this._refreshPromise?.promise;
         }
 
         this.refreshState = ProgressReportStage.discoveryStarted;
         this._onProgress.fire({ stage: this.refreshState });
-        const refreshPromise = createDeferred();
-        this._refreshPromise = refreshPromise;
+        this._refreshPromise = createDeferred();
 
-        try {
-            for await (const native of this.finder.refresh()) {
-                const env = toPythonEnvInfo(this.finder, native);
-                if (env) {
-                    this._envs.push();
+        setImmediate(async () => {
+            try {
+                for await (const native of this.finder.refresh()) {
+                    try {
+                        if (validEnv(this.finder, native)) {
+                            if (native.version === undefined) {
+                                this.resolveEnv(native.executable ?? native.prefix).ignoreErrors();
+                            } else {
+                                const version = parseVersion(native.version);
+                                if (version.micro < 0 || version.minor < 0 || version.major < 0) {
+                                    this.resolveEnv(native.executable ?? native.prefix).ignoreErrors();
+                                } else {
+                                    const env = toPythonEnvInfo(this.finder, native);
+                                    if (env) {
+                                        this._envs.push(env);
+                                    }
+                                }
+                            }
+                        }
+                    } catch (err) {
+                        traceError(`Failed to process environment: ${err}`);
+                    }
                 }
+                this._refreshPromise?.resolve();
+            } catch (error) {
+                this._refreshPromise?.reject(error);
+            } finally {
+                this.refreshState = ProgressReportStage.discoveryFinished;
+                this._refreshPromise = undefined;
+                this._onProgress.fire({ stage: this.refreshState });
             }
-            refreshPromise.resolve();
-        } catch (error) {
-            refreshPromise.reject(error);
-        } finally {
-            this.refreshState = ProgressReportStage.discoveryFinished;
-            this._onProgress.fire({ stage: this.refreshState });
-        }
+        });
 
         return this._refreshPromise?.promise;
     }
@@ -136,13 +260,21 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return this._envs;
     }
 
-    async resolveEnv(path: string): Promise<PythonEnvInfo | undefined> {
-        const native = await this.finder.resolve(path);
+    @cache(30_000, true)
+    async resolveEnv(envPath?: string): Promise<PythonEnvInfo | undefined> {
+        if (envPath === undefined) {
+            return undefined;
+        }
+        const native = await this.finder.resolve(envPath);
         if (native) {
             const env = toPythonEnvInfo(this.finder, native);
-            if (env && !this._envs.find((item) => item.executable.filename === env.executable.filename)) {
+            if (env) {
+                if (this._envs.find((item) => item.executable.filename === env.executable.filename)) {
+                    this._envs = this._envs.filter((item) => item.executable.filename !== env.executable.filename);
+                }
                 this._envs.push(env);
             }
+
             return env;
         }
         return undefined;
@@ -156,6 +288,6 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
 
 export function createNativeEnvironmentsApi(finder: NativePythonFinder): IDiscoveryAPI {
     const native = new NativePythonEnvironments(finder);
-
+    native.triggerRefresh().ignoreErrors();
     return native;
 }
