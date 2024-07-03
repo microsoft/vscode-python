@@ -6,6 +6,7 @@ import pathlib
 import socket
 import sys
 import sysconfig
+
 import pytest
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
@@ -17,9 +18,10 @@ os.environ[path_var_name] = (
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
-from testing_tools import process_json_util  # noqa: E402
-from testing_tools import socket_manager  # noqa: E402
-
+from testing_tools import (  # noqa: E402
+    process_json_util,
+    socket_manager,
+)
 
 # This script handles running pytest via pytest.main(). It is called via run in the
 # pytest execution adapter and gets the test_ids to run via stdin and the rest of the

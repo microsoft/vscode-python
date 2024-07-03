@@ -8,8 +8,8 @@ import os
 import pathlib
 import socket
 import sys
-import traceback
 import sysconfig
+import traceback
 import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Tuple, Type, Union
@@ -27,12 +27,12 @@ sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
 from testing_tools import process_json_util, socket_manager  # noqa: E402
 from unittestadapter.pvsc_utils import (  # noqa: E402
+    EOTPayloadDict,
+    ExecutionPayloadDict,
+    TestExecutionStatus,
     VSCodeUnittestError,
     parse_unittest_args,
     send_post_request,
-    ExecutionPayloadDict,
-    EOTPayloadDict,
-    TestExecutionStatus,
 )
 
 ErrorType = Union[Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]]

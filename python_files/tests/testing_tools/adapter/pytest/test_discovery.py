@@ -15,6 +15,7 @@ import unittest
 
 import _pytest.doctest
 import pytest
+
 from testing_tools.adapter import info
 from testing_tools.adapter import util as adapter_util
 from testing_tools.adapter.pytest import _discovery

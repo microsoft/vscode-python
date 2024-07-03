@@ -1,7 +1,8 @@
-import time
-import sys
-import os
 import mimetypes
+import os
+import sys
+import time
+
 from tensorboard import program
 
 

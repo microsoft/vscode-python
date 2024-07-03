@@ -1,6 +1,5 @@
 import os
 
-
 from .helpers import TEST_DATA_PATH, find_test_line_number, get_absolute_test_id
 
 # This file contains the expected output dictionaries for tests discovery and is used in test_discovery.py.

@@ -3,9 +3,10 @@
 
 import unittest
 
-from ....util import Stub, StubProxy
 from testing_tools.adapter.errors import UnsupportedCommandError
 from testing_tools.adapter.pytest._cli import add_subparser
+
+from ....util import Stub, StubProxy
 
 
 class StubSubparsers(StubProxy):

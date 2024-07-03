@@ -4,16 +4,16 @@
 import os
 import pathlib
 import sys
-from unittest.mock import patch
 from typing import Dict, Optional
+from unittest.mock import patch
 
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from unittestadapter.pvsc_utils import ExecutionPayloadDict  # noqa: E402
 from unittestadapter.execution import run_tests  # noqa: E402
+from unittestadapter.pvsc_utils import ExecutionPayloadDict  # noqa: E402
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 

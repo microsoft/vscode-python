@@ -11,7 +11,6 @@ import shlex
 import sys
 import unittest
 
-
 # Pytest 3.7 and later uses pathlib/pathlib2 for path resolution.
 try:
     from pathlib import Path
@@ -19,9 +18,9 @@ except ImportError:
     from pathlib2 import Path  # type: ignore (for Pylance)
 
 from testing_tools.adapter.util import (
+    fix_fileid,
     fix_path,
     fix_relpath,
-    fix_fileid,
     shlex_unsplit,
 )
 
@@ -31,6 +30,7 @@ class FilePathTests(unittest.TestCase):
     def test_isolated_imports(self):
         import testing_tools.adapter
         from testing_tools.adapter import util
+
         from . import test_functional
 
         ignored = {

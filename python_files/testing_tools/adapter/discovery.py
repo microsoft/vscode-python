@@ -5,9 +5,8 @@ from __future__ import absolute_import, print_function
 
 import re
 
-from .util import fix_fileid, DIRNAME, NORMCASE
 from .info import ParentInfo
-
+from .util import DIRNAME, NORMCASE, fix_fileid
 
 FILE_ID_RE = re.compile(
     r"""

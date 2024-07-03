@@ -13,12 +13,12 @@ sys.path.append(os.fspath(script_dir))
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402
+    DiscoveryPayloadDict,
+    EOTPayloadDict,
     VSCodeUnittestError,
     build_test_tree,
     parse_unittest_args,
     send_post_request,
-    DiscoveryPayloadDict,
-    EOTPayloadDict,
 )
 
 

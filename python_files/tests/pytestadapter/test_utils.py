@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import pathlib
-import tempfile
 import os
+import pathlib
 import sys
+import tempfile
 
 from .helpers import (  # noqa: E402
     TEST_DATA_PATH,

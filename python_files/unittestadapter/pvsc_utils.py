@@ -10,15 +10,15 @@ import os
 import pathlib
 import sys
 import unittest
-from typing import List, Optional, Tuple, Union, Dict, Literal, TypedDict
-
+from typing import Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import socket_manager  # noqa: E402
 from typing_extensions import NotRequired  # noqa: E402
+
+from testing_tools import socket_manager  # noqa: E402
 
 # Types
 

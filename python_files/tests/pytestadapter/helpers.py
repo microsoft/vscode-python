@@ -11,8 +11,8 @@ import subprocess
 import sys
 import tempfile
 import threading
-from typing import Any, Dict, List, Optional, Tuple
 import uuid
+from typing import Any, Dict, List, Optional, Tuple
 
 if sys.platform == "win32":
     from namedpipe import NPopen

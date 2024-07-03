@@ -7,9 +7,9 @@ import os
 import pathlib
 import subprocess
 import sys
+from typing import Dict, List, Optional, Union
 
 import pytest
-from typing import Dict, List, Optional, Union
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.parent / "installed_check.py"
 TEST_DATA = pathlib.Path(__file__).parent / "test_data"

@@ -1,7 +1,6 @@
 import subprocess
 import sys
 
-
 linter_settings = {
     "pylint": {
         "args": ["--reports=n", "--output-format=json"],

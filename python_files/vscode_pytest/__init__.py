@@ -7,7 +7,16 @@ import os
 import pathlib
 import sys
 import traceback
-
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    List,
+    Literal,
+    Optional,
+    TypedDict,
+    Union,
+)
 
 import pytest
 
@@ -15,16 +24,6 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import socket_manager  # noqa: E402
-from typing import (  # noqa: E402
-    Any,
-    Dict,
-    List,
-    Optional,
-    Union,
-    TypedDict,
-    Literal,
-    Generator,
-)
 
 
 class TestData(TypedDict):

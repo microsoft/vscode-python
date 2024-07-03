@@ -4,10 +4,11 @@
 import json
 import unittest
 
-from ...util import StubProxy
-from testing_tools.adapter.util import fix_path, fix_relpath
-from testing_tools.adapter.info import SingleTestInfo, SingleTestPath, ParentInfo
+from testing_tools.adapter.info import ParentInfo, SingleTestInfo, SingleTestPath
 from testing_tools.adapter.report import report_discovered
+from testing_tools.adapter.util import fix_path, fix_relpath
+
+from ...util import StubProxy
 
 
 class StubSender(StubProxy):
