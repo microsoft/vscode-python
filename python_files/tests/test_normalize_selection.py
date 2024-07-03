@@ -10,7 +10,7 @@ import textwrap
 import normalizeSelection
 
 
-class TestNormalizationScript(object):
+class TestNormalizationScript:
     """Unit tests for the normalization script."""
 
     def test_basic_normalization(self):

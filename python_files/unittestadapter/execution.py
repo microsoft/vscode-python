@@ -6,7 +6,6 @@ import enum
 import json
 import os
 import pathlib
-import socket
 import sys
 import sysconfig
 import traceback
@@ -54,17 +53,17 @@ class TestOutcomeEnum(str, enum.Enum):
 class UnittestTestResult(unittest.TextTestResult):
     def __init__(self, *args, **kwargs):
         self.formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
-        super(UnittestTestResult, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def startTest(self, test: unittest.TestCase):  # noqa: N802
-        super(UnittestTestResult, self).startTest(test)
+        super().startTest(test)
 
     def addError(  # noqa: N802
         self,
         test: unittest.TestCase,
         err: ErrorType,
     ):
-        super(UnittestTestResult, self).addError(test, err)
+        super().addError(test, err)
         self.formatResult(test, TestOutcomeEnum.error, err)
 
     def addFailure(  # noqa: N802
@@ -72,23 +71,23 @@ class UnittestTestResult(unittest.TextTestResult):
         test: unittest.TestCase,
         err: ErrorType,
     ):
-        super(UnittestTestResult, self).addFailure(test, err)
+        super().addFailure(test, err)
         self.formatResult(test, TestOutcomeEnum.failure, err)
 
     def addSuccess(self, test: unittest.TestCase):  # noqa: N802
-        super(UnittestTestResult, self).addSuccess(test)
+        super().addSuccess(test)
         self.formatResult(test, TestOutcomeEnum.success)
 
     def addSkip(self, test: unittest.TestCase, reason: str):  # noqa: N802
-        super(UnittestTestResult, self).addSkip(test, reason)
+        super().addSkip(test, reason)
         self.formatResult(test, TestOutcomeEnum.skipped)
 
     def addExpectedFailure(self, test: unittest.TestCase, err: ErrorType):  # noqa: N802
-        super(UnittestTestResult, self).addExpectedFailure(test, err)
+        super().addExpectedFailure(test, err)
         self.formatResult(test, TestOutcomeEnum.expected_failure, err)
 
     def addUnexpectedSuccess(self, test: unittest.TestCase):  # noqa: N802
-        super(UnittestTestResult, self).addUnexpectedSuccess(test)
+        super().addUnexpectedSuccess(test)
         self.formatResult(test, TestOutcomeEnum.unexpected_success)
 
     def addSubTest(  # noqa: N802
@@ -97,7 +96,7 @@ class UnittestTestResult(unittest.TextTestResult):
         subtest: unittest.TestCase,
         err: Union[ErrorType, None],
     ):
-        super(UnittestTestResult, self).addSubTest(test, subtest, err)
+        super().addSubTest(test, subtest, err)
         self.formatResult(
             test,
             TestOutcomeEnum.subtest_failure if err else TestOutcomeEnum.subtest_success,
@@ -319,7 +318,7 @@ if __name__ == "__main__":
                 except json.JSONDecodeError:
                     # JSON decoding error, the complete JSON object is not yet received
                     continue
-    except socket.error as e:
+    except OSError as e:
         msg = f"Error: Could not connect to RUN_TEST_IDS_PIPE: {e}"
         print(msg)
         raise VSCodeUnittestError(msg)

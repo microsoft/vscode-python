@@ -34,8 +34,7 @@ def generate_test_cases(suite):
         if isinstance(test, unittest.TestCase):
             yield test
         else:
-            for test_case in generate_test_cases(test):
-                yield test_case
+            yield from generate_test_cases(test)
 
 
 try:

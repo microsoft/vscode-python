@@ -32,7 +32,7 @@ except ModuleNotFoundError:
     import _thread as thread
 
 
-class _TestOutput(object):
+class _TestOutput:
     """file like object which redirects output to the repl window."""
 
     errors = "strict"
@@ -79,7 +79,7 @@ class _TestOutput(object):
         return getattr(self.old_out, name)
 
 
-class _TestOutputBuffer(object):
+class _TestOutputBuffer:
     def __init__(self, old_buffer, is_stdout):
         self.buffer = old_buffer
         self.is_stdout = is_stdout
@@ -101,7 +101,7 @@ class _TestOutputBuffer(object):
         return self.buffer.seek(pos, whence)
 
 
-class _IpcChannel(object):
+class _IpcChannel:
     def __init__(self, socket, callback):
         self.socket = socket
         self.seq = 0
@@ -140,36 +140,36 @@ _channel = None
 
 class VsTestResult(unittest.TextTestResult):
     def startTest(self, test):  # noqa: N802
-        super(VsTestResult, self).startTest(test)
+        super().startTest(test)
         if _channel is not None:
             _channel.send_event(name="start", test=test.id())
 
     def addError(self, test, err):  # noqa: N802
-        super(VsTestResult, self).addError(test, err)
+        super().addError(test, err)
         self.sendResult(test, "error", err)
 
     def addFailure(self, test, err):  # noqa: N802
-        super(VsTestResult, self).addFailure(test, err)
+        super().addFailure(test, err)
         self.sendResult(test, "failed", err)
 
     def addSuccess(self, test):  # noqa: N802
-        super(VsTestResult, self).addSuccess(test)
+        super().addSuccess(test)
         self.sendResult(test, "passed")
 
     def addSkip(self, test, reason):  # noqa: N802
-        super(VsTestResult, self).addSkip(test, reason)
+        super().addSkip(test, reason)
         self.sendResult(test, "skipped")
 
     def addExpectedFailure(self, test, err):  # noqa: N802
-        super(VsTestResult, self).addExpectedFailure(test, err)
+        super().addExpectedFailure(test, err)
         self.sendResult(test, "failed-expected", err)
 
     def addUnexpectedSuccess(self, test):  # noqa: N802
-        super(VsTestResult, self).addUnexpectedSuccess(test)
+        super().addUnexpectedSuccess(test)
         self.sendResult(test, "passed-unexpected")
 
     def addSubTest(self, test, subtest, err):  # noqa: N802
-        super(VsTestResult, self).addSubTest(test, subtest, err)
+        super().addSubTest(test, subtest, err)
         self.sendResult(test, "subtest-passed" if err is None else "subtest-failed", err, subtest)
 
     def sendResult(self, test, outcome, trace=None, subtest=None):  # noqa: N802
@@ -291,7 +291,7 @@ def main():
             sleep(0.1)
         try:
             debugger_helper = windll["Microsoft.PythonTools.Debugger.Helper.x86.dll"]
-        except WindowsError:
+        except OSError:
             debugger_helper = windll["Microsoft.PythonTools.Debugger.Helper.x64.dll"]
         is_tracing = c_char.in_dll(debugger_helper, "isTracing")
         while True:

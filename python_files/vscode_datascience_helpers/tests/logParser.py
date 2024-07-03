@@ -63,7 +63,7 @@ def split_by_pid(testlog):
                     # See if we've created a log for this pid or not
                     if pid not in pids:
                         pids.add(pid)
-                        log_file = "{}_{}.log".format(base_file, pid)
+                        log_file = f"{base_file}_{pid}.log"
                         print("Writing to new log: " + log_file)
                         logs[pid] = Path(log_file).open(mode="w")
 

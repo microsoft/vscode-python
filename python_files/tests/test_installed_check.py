@@ -41,8 +41,7 @@ def run_on_file(
             os.fspath(SCRIPT_PATH),
             os.fspath(file_path),
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=True,
         env=env,
     )

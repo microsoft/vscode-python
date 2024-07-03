@@ -15,7 +15,7 @@ PIP_VERSION = "latest"  # Can be "latest", or specific version "23.1.2"
 
 
 def _get_package_data():
-    json_uri = "https://pypi.org/pypi/{0}/json".format(PIP_PACKAGE)
+    json_uri = f"https://pypi.org/pypi/{PIP_PACKAGE}/json"
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
     with url_lib.urlopen(json_uri) as response:

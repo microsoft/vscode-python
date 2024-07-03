@@ -11,7 +11,7 @@ from ....util import Stub, StubProxy
 
 class StubSubparsers(StubProxy):
     def __init__(self, stub=None, name="subparsers"):
-        super(StubSubparsers, self).__init__(stub, name)
+        super().__init__(stub, name)
 
     def add_parser(self, name):
         self.add_call("add_parser", None, {"name": name})
@@ -20,7 +20,7 @@ class StubSubparsers(StubProxy):
 
 class StubArgParser(StubProxy):
     def __init__(self, stub=None):
-        super(StubArgParser, self).__init__(stub, "argparser")
+        super().__init__(stub, "argparser")
 
     def add_argument(self, *args, **kwargs):
         self.add_call("add_argument", args, kwargs)

@@ -18,7 +18,7 @@ def main(logdir):
     tb = program.TensorBoard()
     tb.configure(bind_all=False, logdir=logdir)
     url = tb.launch()
-    sys.stdout.write("TensorBoard started at %s\n" % (url))
+    sys.stdout.write(f"TensorBoard started at {url}\n")
     sys.stdout.flush()
 
     while True:
@@ -33,5 +33,5 @@ def main(logdir):
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         logdir = str(sys.argv[1])
-        sys.stdout.write("Starting TensorBoard with logdir %s" % (logdir))
+        sys.stdout.write(f"Starting TensorBoard with logdir {logdir}")
         main(logdir)

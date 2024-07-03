@@ -3,7 +3,6 @@
 import json
 import os
 import pathlib
-import socket
 import sys
 import sysconfig
 
@@ -63,7 +62,7 @@ if __name__ == "__main__":
                     continue
                 except UnicodeDecodeError:
                     continue
-    except socket.error as e:
+    except OSError as e:
         print(f"Error: Could not connect to runTestIdsPort: {e}")
         print("Error: Could not connect to runTestIdsPort")
     try:

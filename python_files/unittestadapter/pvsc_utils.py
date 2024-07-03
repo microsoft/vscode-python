@@ -90,8 +90,7 @@ def get_test_case(suite):
         if isinstance(test, unittest.TestCase):
             yield test
         else:
-            for test_case in get_test_case(test):
-                yield test_case
+            yield from get_test_case(test)
 
 
 def get_source_line(obj) -> str:

@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import print_function, unicode_literals
 
 try:
     from io import StringIO
@@ -38,7 +37,7 @@ def unique(collection, key):
 
 class StubPyTest(util.StubProxy):
     def __init__(self, stub=None):
-        super(StubPyTest, self).__init__(stub, "pytest")
+        super().__init__(stub, "pytest")
         self.return_main = 0
 
     def main(self, args, plugins):
@@ -50,7 +49,7 @@ class StubPlugin(util.StubProxy):
     _started = True
 
     def __init__(self, stub=None, tests=None):
-        super(StubPlugin, self).__init__(stub, "plugin")
+        super().__init__(stub, "plugin")
         if tests is None:
             tests = StubDiscoveredTests(self.stub)
         self._tests = tests
@@ -69,7 +68,7 @@ class StubDiscoveredTests(util.StubProxy):
     NOT_FOUND = object()
 
     def __init__(self, stub=None):
-        super(StubDiscoveredTests, self).__init__(stub, "discovered")
+        super().__init__(stub, "discovered")
         self.return_items = []
         self.return_parents = []
 
@@ -93,12 +92,12 @@ class StubDiscoveredTests(util.StubProxy):
         self.add_call("add_test", None, {"test": test, "parents": parents})
 
 
-class FakeFunc(object):
+class FakeFunc:
     def __init__(self, name):
         self.__name__ = name
 
 
-class FakeMarker(object):
+class FakeMarker:
     def __init__(self, name):
         self.name = name
 
@@ -108,7 +107,7 @@ class StubPytestItem(util.StubProxy):
     _hasfunc = True
 
     def __init__(self, stub=None, **attrs):
-        super(StubPytestItem, self).__init__(stub, "pytest.Item")
+        super().__init__(stub, "pytest.Item")
         if attrs.get("function") is None:
             attrs.pop("function", None)
             self._hasfunc = False
@@ -154,7 +153,7 @@ class StubSubtypedItem(StubPytestItem):
         return self
 
     def __init__(self, *args, **kwargs):
-        super(StubSubtypedItem, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if "nodeid" in self.__dict__:
             self._nodeid = self.__dict__.pop("nodeid")
 
@@ -183,7 +182,7 @@ def create_stub_doctest_item(*args, **kwargs):
 
 class StubPytestSession(util.StubProxy):
     def __init__(self, stub=None):
-        super(StubPytestSession, self).__init__(stub, "pytest.Session")
+        super().__init__(stub, "pytest.Session")
 
     def __getattr__(self, name):
         self.add_call(name + " (attr)", None, None)
@@ -196,7 +195,7 @@ class StubPytestSession(util.StubProxy):
 
 class StubPytestConfig(util.StubProxy):
     def __init__(self, stub=None):
-        super(StubPytestConfig, self).__init__(stub, "pytest.Config")
+        super().__init__(stub, "pytest.Config")
 
     def __getattr__(self, name):
         self.add_call(name + " (attr)", None, None)
@@ -644,7 +643,7 @@ class CollectorTests(unittest.TestCase):
                             func="SpamTests.test_one",
                             sub=None,
                         ),
-                        source="{}:{}".format(relfile1, 13),
+                        source=f"{relfile1}:{13}",
                         markers=None,
                         parentid="./test_spam.py::SpamTests",
                     ),
@@ -668,7 +667,7 @@ class CollectorTests(unittest.TestCase):
                             func="SpamTests.test_other",
                             sub=None,
                         ),
-                        source="{}:{}".format(relfile1, 20),
+                        source=f"{relfile1}:{20}",
                         markers=None,
                         parentid="./test_spam.py::SpamTests",
                     ),
@@ -691,7 +690,7 @@ class CollectorTests(unittest.TestCase):
                             func="test_all",
                             sub=None,
                         ),
-                        source="{}:{}".format(relfile1, 145),
+                        source=f"{relfile1}:{145}",
                         markers=None,
                         parentid="./test_spam.py",
                     ),
@@ -715,7 +714,7 @@ class CollectorTests(unittest.TestCase):
                             func="test_each",
                             sub=["[10-10]"],
                         ),
-                        source="{}:{}".format(relfile1, 274),
+                        source=f"{relfile1}:{274}",
                         markers=None,
                         parentid="./test_spam.py::test_each",
                     ),
@@ -747,7 +746,7 @@ class CollectorTests(unittest.TestCase):
                             func="All.BasicTests.test_first",
                             sub=None,
                         ),
-                        source="{}:{}".format(adapter_util.fix_relpath(relfile2), 32),
+                        source=f"{adapter_util.fix_relpath(relfile2)}:{32}",
                         markers=None,
                         parentid="./x/y/z/test_eggs.py::All::BasicTests",
                     ),
@@ -784,7 +783,7 @@ class CollectorTests(unittest.TestCase):
                             func="All.BasicTests.test_each",
                             sub=["[1+2-3]"],
                         ),
-                        source="{}:{}".format(adapter_util.fix_relpath(relfile2), 63),
+                        source=f"{adapter_util.fix_relpath(relfile2)}:{63}",
                         markers=["expected-failure", "skip", "skip-if"],
                         parentid="./x/y/z/test_eggs.py::All::BasicTests::test_each",
                     ),
@@ -840,7 +839,7 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -913,7 +912,7 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(doctestfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(doctestfile), 1),
+                            source=f"{adapter_util.fix_relpath(doctestfile)}:{1}",
                             markers=[],
                             parentid="./x/test_doctest.txt",
                         ),
@@ -938,7 +937,7 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 1),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{1}",
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
@@ -963,7 +962,7 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
@@ -988,7 +987,7 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 28),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{28}",
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
@@ -1049,7 +1048,7 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=["[a-[b]-c]"],
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests::test_spam",
                         ),
@@ -1111,7 +1110,7 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.Ham.Eggs.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests::Ham::Eggs",
                         ),
@@ -1462,7 +1461,7 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=[],
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -1518,7 +1517,7 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=[],
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -1586,7 +1585,7 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(srcfile), 13),
+                            source=f"{adapter_util.fix_relpath(srcfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
@@ -1612,7 +1611,7 @@ class CollectorTests(unittest.TestCase):
                                 func="test_ham",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(srcfile), 4),
+                            source=f"{adapter_util.fix_relpath(srcfile)}:{4}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py",
                         ),

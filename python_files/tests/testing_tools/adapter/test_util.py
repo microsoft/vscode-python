@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import absolute_import, print_function
 
 import ntpath
 import os
@@ -88,19 +87,19 @@ class FilePathTests(unittest.TestCase):
         ]
         for path, expected in tests:
             pathsep = ntpath.sep
-            with self.subTest(r"fixed for \: {!r}".format(path)):
+            with self.subTest(rf"fixed for \: {path!r}"):
                 fixed = fix_path(path, _pathsep=pathsep)
                 self.assertEqual(fixed, expected)
 
             pathsep = posixpath.sep
-            with self.subTest("unchanged for /: {!r}".format(path)):
+            with self.subTest(f"unchanged for /: {path!r}"):
                 unchanged = fix_path(path, _pathsep=pathsep)
                 self.assertEqual(unchanged, path)
 
         # no path -> "."
         for path in ["", None]:
             for pathsep in [ntpath.sep, posixpath.sep]:
-                with self.subTest(r"fixed for {}: {!r}".format(pathsep, path)):
+                with self.subTest(rf"fixed for {pathsep}: {path!r}"):
                     fixed = fix_path(path, _pathsep=pathsep)
                     self.assertEqual(fixed, ".")
 
@@ -116,7 +115,7 @@ class FilePathTests(unittest.TestCase):
         )
         for path in paths:
             for pathsep in [ntpath.sep, posixpath.sep]:
-                with self.subTest(r"unchanged for {}: {!r}".format(pathsep, path)):
+                with self.subTest(rf"unchanged for {pathsep}: {path!r}"):
                     unchanged = fix_path(path, _pathsep=pathsep)
                     self.assertEqual(unchanged, path)
 
@@ -200,7 +199,7 @@ class FilePathTests(unittest.TestCase):
         )
         for fileid, _os_path, expected in tests:
             pathsep = _os_path.sep
-            with self.subTest(r"for {}: {!r}".format(pathsep, fileid)):
+            with self.subTest(rf"for {pathsep}: {fileid!r}"):
                 fixed = fix_fileid(
                     fileid,
                     _path_isabs=_os_path.isabs,
@@ -259,7 +258,7 @@ class FilePathTests(unittest.TestCase):
         )
         for fileid, rootdir, _os_path, expected in tests:
             pathsep = _os_path.sep
-            with self.subTest(r"for {} (with rootdir {!r}): {!r}".format(pathsep, rootdir, fileid)):
+            with self.subTest(rf"for {pathsep} (with rootdir {rootdir!r}): {fileid!r}"):
                 fixed = fix_fileid(
                     fileid,
                     rootdir,

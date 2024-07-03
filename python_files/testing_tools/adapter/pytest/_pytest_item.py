@@ -91,7 +91,6 @@ When parsing an item, we make use of the following attributes:
 * own_markers
 """  # noqa: D205
 
-from __future__ import absolute_import, print_function
 
 import sys
 
@@ -112,7 +111,7 @@ def should_never_reach_here(item, **extra):
     print("and paste the following output there.")
     print()
     for field, info in _summarize_item(item):
-        print("{}: {}".format(field, info))
+        print(f"{field}: {info}")
     if extra:
         print()
         print("extra info:")
@@ -166,7 +165,7 @@ def parse_item(
         (parentid, parents, fileid, testfunc, _) = _parse_node_id(
             item.nodeid[: -len(parameterized)], kind
         )
-        nodeid = "{}{}".format(parentid, parameterized)
+        nodeid = f"{parentid}{parameterized}"
         parents = [(parentid, item.originalname, kind)] + parents
         name = parameterized[1:-1] or "<empty>"
     else:
@@ -311,7 +310,7 @@ def _get_location(
         lineno = -1  # i.e. "unknown"
 
     # from pytest, line numbers are 0-based
-    location = "{}:{}".format(srcfile, int(lineno) + 1)
+    location = f"{srcfile}:{int(lineno) + 1}"
     return location, fullname
 
 
@@ -580,7 +579,7 @@ def _summarize_item(item):
             else:
                 yield field, getattr(item, field, "<???>")
         except Exception as exc:
-            yield field, "<error {!r}>".format(exc)
+            yield field, f"<error {exc!r}>"
 
 
 def _debug_item(item, showsummary=False):
@@ -602,7 +601,7 @@ def _debug_item(item, showsummary=False):
             "markers",
             "props",
         ):
-            print("  {:12} {}".format(key, summary[key]))
+            print(f"  {key:12} {summary[key]}")
         print()
 
     return summary

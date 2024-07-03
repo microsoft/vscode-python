@@ -8,7 +8,7 @@ class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
     """Where to find a single test."""
 
     def __new__(cls, root, relfile, func, sub=None):
-        self = super(SingleTestPath, cls).__new__(
+        self = super().__new__(
             cls,
             str(root) if root else None,
             str(relfile) if relfile else None,
@@ -30,7 +30,7 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
     KINDS = ("folder", "file", "suite", "function", "subtest")
 
     def __new__(cls, id, kind, name, root=None, relpath=None, parentid=None):
-        self = super(ParentInfo, cls).__new__(
+        self = super().__new__(
             cls,
             id=str(id) if id else None,
             kind=str(kind) if kind else None,
@@ -47,14 +47,14 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
         if self.kind is None:
             raise TypeError("missing kind")
         if self.kind not in self.KINDS:
-            raise ValueError("unsupported kind {!r}".format(self.kind))
+            raise ValueError(f"unsupported kind {self.kind!r}")
         if self.name is None:
             raise TypeError("missing name")
         if self.root is None:
             if self.parentid is not None or self.kind != "folder":
                 raise TypeError("missing root")
             if self.relpath is not None:
-                raise TypeError("unexpected relpath {}".format(self.relpath))
+                raise TypeError(f"unexpected relpath {self.relpath}")
         elif self.parentid is None:
             raise TypeError("missing parentid")
         elif self.relpath is None and self.kind in ("folder", "file"):
@@ -68,7 +68,7 @@ class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parenti
     KINDS = ("function", "doctest")
 
     def __new__(cls, id, name, path, source, markers, parentid, kind="function"):
-        self = super(SingleTestInfo, cls).__new__(
+        self = super().__new__(
             cls,
             str(id) if id else None,
             str(name) if name else None,
@@ -92,17 +92,17 @@ class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parenti
         else:
             srcfile, _, lineno = self.source.rpartition(":")
             if not srcfile or not lineno or int(lineno) < 0:
-                raise ValueError("bad source {!r}".format(self.source))
+                raise ValueError(f"bad source {self.source!r}")
         if self.markers:
             badmarkers = [m for m in self.markers if m not in self.MARKERS]
             if badmarkers:
-                raise ValueError("unsupported markers {!r}".format(badmarkers))
+                raise ValueError(f"unsupported markers {badmarkers!r}")
         if self.parentid is None:
             raise TypeError("missing parentid")
         if self.kind is None:
             raise TypeError("missing kind")
         elif self.kind not in self.KINDS:
-            raise ValueError("unsupported kind {!r}".format(self.kind))
+            raise ValueError(f"unsupported kind {self.kind!r}")
 
     @property
     def root(self):

@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import absolute_import, print_function
 
 import sys
 
@@ -37,19 +36,15 @@ def discover(
         pass
     elif ec != 0:
         print(
-            "equivalent command: {} -m pytest {}".format(
-                sys.executable, util.shlex_unsplit(pytestargs)
-            )
+            f"equivalent command: {sys.executable} -m pytest {util.shlex_unsplit(pytestargs)}"
         )
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
-        raise Exception("pytest discovery failed (exit code {})".format(ec))
+        raise Exception(f"pytest discovery failed (exit code {ec})")
     if not _plugin._started:
         print(
-            "equivalent command: {} -m pytest {}".format(
-                sys.executable, util.shlex_unsplit(pytestargs)
-            )
+            f"equivalent command: {sys.executable} -m pytest {util.shlex_unsplit(pytestargs)}"
         )
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
@@ -72,7 +67,7 @@ def _adjust_pytest_args(pytestargs):
     return pytestargs
 
 
-class TestCollector(object):
+class TestCollector:
     """This is a pytest plugin that collects the discovered tests."""
 
     @classmethod

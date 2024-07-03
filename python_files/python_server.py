@@ -15,7 +15,7 @@ USER_GLOBALS = {}
 
 def send_message(msg: str):
     length_msg = len(msg)
-    STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode(encoding="utf-8"))
+    STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode())
     STDOUT.buffer.flush()
 
 
