@@ -321,7 +321,7 @@ if __name__ == "__main__":
     except OSError as e:
         msg = f"Error: Could not connect to RUN_TEST_IDS_PIPE: {e}"
         print(msg)
-        raise VSCodeUnittestError(msg)
+        raise VSCodeUnittestError(msg) from e
 
     try:
         if raw_json and "params" in raw_json:
@@ -348,9 +348,9 @@ if __name__ == "__main__":
                 "result": None,
             }
             send_post_request(payload, test_run_pipe)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         msg = "Error: Could not parse test ids from stdin"
         print(msg)
-        raise VSCodeUnittestError(msg)
+        raise VSCodeUnittestError(msg) from exc
     eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
     send_post_request(eot_payload, test_run_pipe)

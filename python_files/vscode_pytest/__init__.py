@@ -470,7 +470,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 ERRORS.append(
                     f"unable to find original name for {test_case.name} with parameterization detected."
                 )
-                raise VSCodePytestError("Unable to find original name for parameterized test case")
+                raise VSCodePytestError(
+                    "Unable to find original name for parameterized test case"
+                ) from None
             except KeyError:
                 function_test_node: TestNode = create_parameterized_function_node(
                     function_name, get_node_path(test_case), parent_id
@@ -775,7 +777,7 @@ def get_node_path(node: Any) -> pathlib.Path:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
                 f"\n SYMLINK_PATH: {SYMLINK_PATH}, \n node path: {node_path}, \n cwd: {pathlib.Path.cwd()}"
-            )
+            ) from e
     return node_path
 
 
@@ -866,7 +868,7 @@ def send_post_request(
                 file=sys.stderr,
             )
             __writer = None
-            raise VSCodePytestError(error_msg)
+            raise VSCodePytestError(error_msg) from error
 
     rpc = {
         "jsonrpc": "2.0",

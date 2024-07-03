@@ -210,7 +210,6 @@ def inner_for_loop_component():
 
 def test_dict_comprehension():
     """Having the mouse cursor on the first line, and pressing shift+enter should return the whole dictionary comp, respecting user's code style."""
-    importlib.reload
     src = textwrap.dedent(
         """\
         my_dict_comp = {temp_mover:

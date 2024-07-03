@@ -151,7 +151,9 @@ class FilePathTests(unittest.TestCase):
             with self.subTest((path, _os_path.sep)):
                 fixed = fix_relpath(
                     path,
-                    _fix_path=(lambda p: fix_path(p, _pathsep=_os_path.sep)),
+                    # Capture the loop variants as default parameters to make sure they
+                    # don't change between iterations.
+                    _fix_path=(lambda p, _sep=_os_path.sep: fix_path(p, _pathsep=_sep)),
                     _path_isabs=_os_path.isabs,
                     _pathsep=_os_path.sep,
                 )

@@ -42,7 +42,7 @@ def test_import_error():
             ):  # You can add other types if needed
                 assert len(error_content) == 2
             else:
-                assert False
+                pytest.fail()
 
 
 def test_syntax_error(tmp_path):
@@ -78,7 +78,7 @@ def test_syntax_error(tmp_path):
             ):  # You can add other types if needed
                 assert len(error_content) == 2
             else:
-                assert False
+                pytest.fail()
 
 
 def test_parameterized_error_collect():
@@ -103,7 +103,7 @@ def test_parameterized_error_collect():
             ):  # You can add other types if needed
                 assert len(error_content) == 2
             else:
-                assert False
+                pytest.fail()
 
 
 @pytest.mark.parametrize(

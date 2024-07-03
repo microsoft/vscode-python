@@ -21,8 +21,8 @@ def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
         subprocess.run(args, cwd=os.getcwd(), check=True)
-    except subprocess.CalledProcessError:
-        raise MicroVenvError(error_message)
+    except subprocess.CalledProcessError as exc:
+        raise MicroVenvError(error_message) from exc
 
 
 def parse_args(argv: Sequence[str]) -> argparse.Namespace:

@@ -59,8 +59,8 @@ def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
         subprocess.run(args, cwd=os.getcwd(), check=True)
-    except subprocess.CalledProcessError:
-        raise VenvError(error_message)
+    except subprocess.CalledProcessError as exc:
+        raise VenvError(error_message) from exc
 
 
 def get_conda_env_path(name: str) -> str:

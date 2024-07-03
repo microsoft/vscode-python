@@ -90,8 +90,8 @@ def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
         subprocess.run(args, cwd=os.getcwd(), check=True)
-    except subprocess.CalledProcessError:
-        raise VenvError(error_message)
+    except subprocess.CalledProcessError as exc:
+        raise VenvError(error_message) from exc
 
 
 def get_venv_path(name: str) -> str:
@@ -153,8 +153,8 @@ def download_pip_pyz(name: str):
                 data = response.read()
                 out_file.write(data)
                 out_file.flush()
-    except Exception:
-        raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED")
+    except Exception as exc:
+        raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED") from exc
 
 
 def install_pip(name: str):

@@ -86,7 +86,7 @@ def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
         raise ValueError(
             f"Major version [{major}] must be the current year [{current_year}].",
             f"If changing major version after new year's, change to {current_year}.1.0",
-            f"Minor version must be updated based on release or pre-release channel.",
+            "Minor version must be updated based on release or pre-release channel.",
         )
 
     if args.release and not is_even(minor):

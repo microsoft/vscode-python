@@ -37,6 +37,7 @@ ignore = [
 line-length = 100
 exclude = [
     "tests/testing_tools/adapter/.data",
+    "tests/pytestadapter/.data",
     "tests/unittestadapter/.data",
     "lib",
 ]
@@ -58,7 +59,7 @@ select = [
   "UP",  # pyupgrade
   "YTT",  # flake8-2020
   "ASYNC",  # flake8-async
-  #"B",  # flake8-bugbear
+  "B",  # flake8-bugbear
   #"A",  # flake8-builtins
   #"C",  # flake8-comprehensions
   #"DTZ",  # flake8-dasetimez

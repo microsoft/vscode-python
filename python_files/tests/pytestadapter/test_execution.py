@@ -104,7 +104,7 @@ def test_syntax_error_execution(tmp_path):
             ):  # You can add other types if needed
                 assert len(error_content) == 1
             else:
-                assert False
+                pytest.fail()
 
 
 def test_bad_id_error_execution():
@@ -126,7 +126,7 @@ def test_bad_id_error_execution():
             ):  # You can add other types if needed
                 assert len(error_content) == 1
             else:
-                assert False
+                pytest.fail()
 
 
 @pytest.mark.parametrize(

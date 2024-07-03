@@ -329,7 +329,7 @@ def send_post_request(
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
             __writer = None
-            raise VSCodeUnittestError(error_msg)
+            raise VSCodeUnittestError(error_msg) from error
 
     rpc = {
         "jsonrpc": "2.0",

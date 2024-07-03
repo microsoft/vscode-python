@@ -362,7 +362,7 @@ class DiscoverTests(unittest.TestCase):
         pytest.return_main = 2
         plugin = StubPlugin(stub)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception):  # noqa: B017
             _discovery.discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(
