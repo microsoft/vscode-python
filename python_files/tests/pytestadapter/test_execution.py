@@ -36,7 +36,7 @@ def test_config_file():
     assert actual
     actual_list: List[Dict[str, Any]] = actual
     assert len(actual_list) == len(expected_const)
-    actual_result_dict = dict()
+    actual_result_dict = {}
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
@@ -56,7 +56,7 @@ def test_rootdir_specified():
     assert actual
     actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
-    actual_result_dict = dict()
+    actual_result_dict = {}
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
@@ -258,7 +258,7 @@ def test_pytest_execution(test_ids, expected_const):
     assert actual
     actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
-    actual_result_dict = dict()
+    actual_result_dict = {}
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
@@ -309,7 +309,7 @@ def test_symlink_run():
                 assert actual_item.get("cwd") == os.fspath(
                     destination
                 ), f"CWD does not match: {os.fspath(destination)}"
-                actual_result_dict = dict()
+                actual_result_dict = {}
                 actual_result_dict.update(actual_item["result"])
                 assert actual_result_dict == expected_const
             except AssertionError as e:

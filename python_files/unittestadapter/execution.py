@@ -52,7 +52,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 class UnittestTestResult(unittest.TextTestResult):
     def __init__(self, *args, **kwargs):
-        self.formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
+        self.formatted: Dict[str, Dict[str, Union[str, None]]] = {}
         super().__init__(*args, **kwargs)
 
     def startTest(self, test: unittest.TestCase):  # noqa: N802

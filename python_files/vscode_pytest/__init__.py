@@ -57,8 +57,8 @@ class VSCodePytestError(Exception):
 
 ERRORS = []
 IS_DISCOVERY = False
-map_id_to_path = dict()
-collected_tests_so_far = list()
+map_id_to_path = {}
+collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 

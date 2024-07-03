@@ -82,12 +82,12 @@ def report_discovered(
     kwargs = {}
     if pretty:
         # human-formatted
-        kwargs = dict(
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "),
+        kwargs = {
+            "sort_keys": True,
+            "indent": 4,
+            "separators": (",", ": "),
             # ...
-        )
+        }
     serialized = json.dumps(data, **kwargs)
 
     _send(serialized)
