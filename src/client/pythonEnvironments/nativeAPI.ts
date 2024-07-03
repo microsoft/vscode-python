@@ -18,7 +18,9 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
 import { cache } from '../common/utils/decorators';
-import { traceError } from '../logging';
+import { traceError, traceLog } from '../logging';
+import { StopWatch } from '../common/utils/stopWatch';
+import { FileChangeType } from '../common/platform/fileSystemWatcher';
 
 function makeExecutablePath(prefix?: string): string {
     if (!prefix) {
@@ -212,6 +214,8 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     }
 
     triggerRefresh(_query?: PythonLocatorQuery, _options?: TriggerRefreshOptions): Promise<void> {
+        const stopwatch = new StopWatch();
+        traceLog('Native locator: Refresh started');
         if (this.refreshState === ProgressReportStage.discoveryStarted && this._refreshPromise?.promise) {
             return this._refreshPromise?.promise;
         }
@@ -247,6 +251,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
             } catch (error) {
                 this._refreshPromise?.reject(error);
             } finally {
+                traceLog(`Native locator: Refresh finished in ${stopwatch.elapsedTime} ms`);
                 this.refreshState = ProgressReportStage.discoveryFinished;
                 this._refreshPromise = undefined;
                 this._onProgress.fire({ stage: this.refreshState });
@@ -269,10 +274,12 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         if (native) {
             const env = toPythonEnvInfo(this.finder, native);
             if (env) {
-                if (this._envs.find((item) => item.executable.filename === env.executable.filename)) {
+                const old = this._envs.find((item) => item.executable.filename === env.executable.filename);
+                if (old) {
                     this._envs = this._envs.filter((item) => item.executable.filename !== env.executable.filename);
                 }
                 this._envs.push(env);
+                this._onChanged.fire({ type: FileChangeType.Changed, old, new: env });
             }
 
             return env;
