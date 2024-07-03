@@ -229,7 +229,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                 for await (const native of this.finder.refresh()) {
                     try {
                         if (validEnv(this.finder, native)) {
-                            if (native.version === undefined) {
+                            if (!native.version) {
                                 this.resolveEnv(native.executable ?? native.prefix).ignoreErrors();
                             } else {
                                 const version = parseVersion(native.version);
