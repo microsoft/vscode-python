@@ -266,7 +266,7 @@ def main():
     parser.add_option("--uc", "--catch", type="str", help="Catch control-C and display results")
     (opts, _) = parser.parse_args()
 
-    sys.path[0] = os.getcwd()
+    sys.path[0] = os.getcwd()  # noqa: PTH109
     if opts.result_port:
         try:
             signal.signal(signal.SIGUSR1, signal_handler)
@@ -320,7 +320,9 @@ def main():
             loader = unittest.TestLoader()
             # opts.us will be passed in
             suites = loader.discover(
-                opts.us, pattern=os.path.basename(opts.testFile), top_level_dir=opts.ut
+                opts.us,
+                pattern=os.path.basename(opts.testFile),  # noqa: PTH119
+                top_level_dir=opts.ut,
             )
             suite = None
             tests = None

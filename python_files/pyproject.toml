@@ -61,7 +61,7 @@ select = [
   "SIM",  # flake8-simplify
   "TCH",  # flake8-type-checking
   "ARG",  # flake8-unused-argument
-  #"PTH",  # flake8-pathlib
+  "PTH",  # flake8-pathlib
   #"ERA",  # eradicate
   #"PD",  # pandas-vet
   #"PGH",  # pygrep-hooks

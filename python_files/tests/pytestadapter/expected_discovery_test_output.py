@@ -849,10 +849,10 @@ root_with_config_expected_output = {
             "children": [
                 {
                     "name": "test_a_function",
-                    "path": os.fspath(os.path.join(tests_path, "test_a.py")),
+                    "path": os.fspath(os.path.join(tests_path, "test_a.py")),  # noqa: PTH118
                     "lineno": find_test_line_number(
                         "test_a_function",
-                        os.path.join(tests_path, "test_a.py"),
+                        os.path.join(tests_path, "test_a.py"),  # noqa: PTH118
                     ),
                     "type_": "test",
                     "id_": get_absolute_test_id("tests/test_a.py::test_a_function", tests_a_path),
@@ -868,10 +868,10 @@ root_with_config_expected_output = {
             "children": [
                 {
                     "name": "test_b_function",
-                    "path": os.fspath(os.path.join(tests_path, "test_b.py")),
+                    "path": os.fspath(os.path.join(tests_path, "test_b.py")),  # noqa: PTH118
                     "lineno": find_test_line_number(
                         "test_b_function",
-                        os.path.join(tests_path, "test_b.py"),
+                        os.path.join(tests_path, "test_b.py"),  # noqa: PTH118
                     ),
                     "type_": "test",
                     "id_": get_absolute_test_id("tests/test_b.py::test_b_function", tests_b_path),
@@ -1032,7 +1032,7 @@ symlink_expected_discovery_output = {
                             "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_A),
                             "lineno": find_test_line_number(
                                 "test_a_function",
-                                os.path.join(tests_path, "test_a.py"),
+                                os.path.join(tests_path, "test_a.py"),  # noqa: PTH118
                             ),
                             "type_": "test",
                             "id_": get_absolute_test_id(
@@ -1057,7 +1057,7 @@ symlink_expected_discovery_output = {
                             "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_B),
                             "lineno": find_test_line_number(
                                 "test_b_function",
-                                os.path.join(tests_path, "test_b.py"),
+                                os.path.join(tests_path, "test_b.py"),  # noqa: PTH118
                             ),
                             "type_": "test",
                             "id_": get_absolute_test_id(

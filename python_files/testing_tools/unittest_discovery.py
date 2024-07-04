@@ -8,7 +8,7 @@ import unittest
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
 top_level_dir = sys.argv[3] if len(sys.argv) >= 4 else None
-sys.path.insert(0, os.getcwd())
+sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
 
 def get_sourceline(obj):
