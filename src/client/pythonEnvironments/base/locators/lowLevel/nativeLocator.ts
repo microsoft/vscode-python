@@ -92,7 +92,7 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
             if (data.executable) {
                 const arch = (data.arch || '').toLowerCase();
                 const env: BasicEnvInfo = {
-                    kind: this.finder.categoryToKind(data.category),
+                    kind: this.finder.categoryToKind(data.kind),
                     executablePath: data.executable ? data.executable : '',
                     envPath: data.prefix ? data.prefix : undefined,
                     version: data.version ? parseVersion(data.version) : undefined,

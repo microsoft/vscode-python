@@ -443,50 +443,49 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
         const nativeCondaEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Conda,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda,
         ).length;
         const nativeCustomEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Custom,
         ).length;
         const nativeMicrosoftStoreEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.MicrosoftStore,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.MicrosoftStore,
         ).length;
         const nativeOtherGlobalEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherGlobal,
         ).length;
         const nativeOtherVirtualEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherVirtual,
         ).length;
         const nativePipEnvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pipenv,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Pipenv,
         ).length;
         const nativePoetryEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Poetry,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Poetry,
         ).length;
         const nativePyenvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pyenv,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Pyenv,
         ).length;
         const nativeSystemEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.System,
         ).length;
         const nativeUnknownEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Unknown,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Unknown,
         ).length;
-        const nativeVenvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Venv,
-        ).length;
+        const nativeVenvEnvs = nativeEnvs.filter((e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Venv)
+            .length;
         const nativeVirtualEnvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnv,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.VirtualEnv,
         ).length;
         const nativeVirtualEnvWrapperEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnvWrapper,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.VirtualEnvWrapper,
         ).length;
         const nativeGlobal = nativeEnvs.filter(
             (e) =>
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal ||
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System ||
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom ||
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherGlobal ||
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.System ||
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Custom ||
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherVirtual,
         ).length;
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
@@ -582,7 +581,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 if (!resolvedEnv) {
                     return;
                 }
-                const kind = this.nativeFinder.categoryToKind(e.category);
+                const kind = this.nativeFinder.categoryToKind(e.kind);
                 const nativeVersion = e.version ? parseVersion(e.version) : undefined;
                 if (
                     nativeVersion &&
