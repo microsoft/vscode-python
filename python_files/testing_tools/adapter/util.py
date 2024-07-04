@@ -124,7 +124,7 @@ def fix_fileid(
     fileid,
     rootdir=None,
     # *,
-    normalize=False,
+    normalize=False,  # noqa: FBT002
     strictpathsep=None,
     _pathsep=PATH_SEP,
     **kwargs,

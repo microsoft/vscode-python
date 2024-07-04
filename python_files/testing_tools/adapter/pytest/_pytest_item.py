@@ -576,7 +576,7 @@ def _summarize_item(item):
             yield field, f"<error {exc!r}>"
 
 
-def _debug_item(item, showsummary=False):
+def _debug_item(item, showsummary=False):  # noqa: FBT002
     item._debugging = True  # noqa: SLF001
     try:
         summary = dict(_summarize_item(item))

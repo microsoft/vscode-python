@@ -9,8 +9,8 @@ def report_discovered(
     tests,
     parents,
     # *,
-    pretty=False,
-    simple=False,
+    pretty=False,  # noqa: FBT002
+    simple=False,  # noqa: FBT002
     _send=print,
     **_ignored,
 ):

@@ -410,7 +410,7 @@ class DiscoverTests(unittest.TestCase):
                 _discovery.discover(
                     [],
                     hidestdio=True,
-                    _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
+                    _pytest_main=fake_pytest_main(stub, False, pytest_stdout),  # noqa: FBT003
                     _plugin=plugin,
                 )
             finally:
@@ -438,7 +438,7 @@ class DiscoverTests(unittest.TestCase):
             _discovery.discover(
                 [],
                 hidestdio=True,
-                _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                _pytest_main=fake_pytest_main(stub, True, pytest_stdout),  # noqa: FBT003
                 _plugin=plugin,
             )
             captured = sys.stdout.read()
@@ -466,7 +466,7 @@ class DiscoverTests(unittest.TestCase):
             _discovery.discover(
                 [],
                 hidestdio=False,
-                _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
+                _pytest_main=fake_pytest_main(stub, False, pytest_stdout),  # noqa: FBT003
                 _plugin=plugin,
             )
         finally:
@@ -492,7 +492,7 @@ class DiscoverTests(unittest.TestCase):
                 _discovery.discover(
                     [],
                     hidestdio=False,
-                    _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                    _pytest_main=fake_pytest_main(stub, True, pytest_stdout),  # noqa: FBT003
                     _plugin=plugin,
                 )
             finally:

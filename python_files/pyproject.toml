@@ -48,7 +48,7 @@ select = [
     "E4", "E7", "E9",  # pycodestyle (errors)
     "EXE",  # flake8-executable
     "F",  # Pyflakes
-    #"FBT",  # flake8-boolean-trap
+    "FBT",  # flake8-boolean-trap
     #"FLY",  # flynt
     #"FURB",  # refurb
     "I",  # isort

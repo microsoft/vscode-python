@@ -34,7 +34,7 @@ def parse_args():
     return ns, remainder
 
 
-def main(pytestargs, markers=None, specific=False):
+def main(pytestargs, markers=None, specific=False):  # noqa: FBT002
     sys.path.insert(1, TESTING_TOOLS_ROOT)
     sys.path.insert(1, DEBUG_ADAPTER_ROOT)
 

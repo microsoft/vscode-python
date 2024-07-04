@@ -12,7 +12,7 @@ from ._pytest_item import parse_item
 
 def discover(
     pytestargs=None,
-    hidestdio=False,
+    hidestdio=False,  # noqa: FBT002
     # *,
     _pytest_main=pytest.main,
     _plugin=None,
