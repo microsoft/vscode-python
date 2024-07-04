@@ -1,10 +1,10 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from typing import namedtuple
+from typing import NamedTuple
 
 
-class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
+class SingleTestPath(NamedTuple("TestPath", "root relfile func sub")):
     """Where to find a single test."""
 
     def __new__(cls, root, relfile, func, sub=None):
@@ -26,7 +26,7 @@ class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
         # self.sub may be None.
 
 
-class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid")):
+class ParentInfo(NamedTuple("ParentInfo", "id kind name root relpath parentid")):
     KINDS = ("folder", "file", "suite", "function", "subtest")
 
     def __new__(cls, id, kind, name, root=None, relpath=None, parentid=None):  # noqa: A002
@@ -61,7 +61,7 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
             raise TypeError("missing relpath")
 
 
-class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parentid kind")):
+class SingleTestInfo(NamedTuple("TestInfo", "id name path source markers parentid kind")):
     """Info for a single test."""
 
     MARKERS = ("skip", "skip-if", "expected-failure")
