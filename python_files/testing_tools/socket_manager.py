@@ -20,7 +20,7 @@ class PipeManager:
 
     def connect(self):
         if sys.platform == "win32":
-            self._writer = open(self.name, "w", encoding="utf-8")
+            self._writer = open(self.name, "w", encoding="utf-8")  # noqa: SIM115
             # reader created in read method
         else:
             self._socket = _SOCKET(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -65,7 +65,7 @@ class PipeManager:
         if sys.platform == "win32":
             # returns a string automatically from read
             if not hasattr(self, "_reader"):
-                self._reader = open(self.name, encoding="utf-8")
+                self._reader = open(self.name, encoding="utf-8")  # noqa: SIM115
             return self._reader.read(bufsize)
         else:
             # receive bytes and convert to string

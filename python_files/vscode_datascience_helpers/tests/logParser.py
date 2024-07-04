@@ -48,31 +48,33 @@ def split_by_pid(testlog):
     pids = set()
     logs = {}
     pid = None
-    with p.open() as f:
-        for line in read_strip_lines(f):
-            stripped = ansi_escape.sub("", line.strip())
-            if len(stripped) > 0:
-                # Pull out the pid
-                match = pid_regex.match(stripped)
+    try:
+        with p.open() as f:
+            for line in read_strip_lines(f):
+                stripped = ansi_escape.sub("", line.strip())
+                if len(stripped) > 0:
+                    # Pull out the pid
+                    match = pid_regex.match(stripped)
 
-                # Pids are at least two digits
-                if match and len(match.group(1)) > 2:
-                    # Pid is found
-                    pid = int(match.group(1))
+                    # Pids are at least two digits
+                    if match and len(match.group(1)) > 2:
+                        # Pid is found
+                        pid = int(match.group(1))
 
-                    # See if we've created a log for this pid or not
-                    if pid not in pids:
-                        pids.add(pid)
-                        log_file = f"{base_file}_{pid}.log"
-                        print("Writing to new log: " + log_file)
-                        logs[pid] = Path(log_file).open(mode="w")
+                        # See if we've created a log for this pid or not
+                        if pid not in pids:
+                            pids.add(pid)
+                            log_file = f"{base_file}_{pid}.log"
+                            print("Writing to new log: " + log_file)
+                            logs[pid] = Path(log_file).open(mode="w")  # noqa: SIM115
 
-                # Add this line to the log
-                if pid is not None:
-                    logs[pid].write(line)
-    # Close all of the open logs
-    for key in logs:
-        logs[key].close()
+                    # Add this line to the log
+                    if pid is not None:
+                        logs[pid].write(line)
+    finally:
+        # Close all of the open logs
+        for key in logs:
+            logs[key].close()
 
 
 def do_work(args):
