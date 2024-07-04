@@ -28,7 +28,7 @@ export interface NativeEnvInfo {
     displayName?: string;
     name?: string;
     executable?: string;
-    category: string;
+    kind: string;
     version?: string;
     prefix?: string;
     manager?: NativeEnvManagerInfo;
