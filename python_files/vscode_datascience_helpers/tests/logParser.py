@@ -43,7 +43,6 @@ def print_test_output(testlog):
 
 def split_by_pid(testlog):
     # Split testlog into prefixed logs based on pid
-    base_file = os.path.splitext(testlog[0])[0]
     p = Path(testlog[0])
     pids = set()
     logs = {}
@@ -64,9 +63,9 @@ def split_by_pid(testlog):
                         # See if we've created a log for this pid or not
                         if pid not in pids:
                             pids.add(pid)
-                            log_file = f"{base_file}_{pid}.log"
+                            log_file = p.with_name(f"{p.stem}_{pid}.log")
                             print("Writing to new log: " + log_file)
-                            logs[pid] = Path(log_file).open(mode="w")  # noqa: SIM115
+                            logs[pid] = log_file.open(mode="w")  # noqa: SIM115
 
                     # Add this line to the log
                     if pid is not None:

@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-# ruff:noqa: PT009
+# ruff:noqa: PT009, PTH100, PTH118, PTH120, PTH123
 
 import ntpath
 import os

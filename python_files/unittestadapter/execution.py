@@ -190,9 +190,9 @@ def run_tests(
     failfast: Optional[bool],
     locals_: Optional[bool] = None,
 ) -> ExecutionPayloadDict:
-    cwd = os.path.abspath(start_dir)
+    cwd = os.path.abspath(start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
-        parent_dir = os.path.dirname(start_dir)
+        parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
     else:
         sys.path.insert(0, cwd)
@@ -204,8 +204,8 @@ def run_tests(
         # If it's a file, split path and file name.
         start_dir = cwd
         if cwd.endswith(".py"):
-            start_dir = os.path.dirname(cwd)
-            pattern = os.path.basename(cwd)
+            start_dir = os.path.dirname(cwd)  # noqa: PTH120
+            pattern = os.path.basename(cwd)  # noqa: PTH119
 
         if failfast is None:
             failfast = False
@@ -257,7 +257,7 @@ atexit.register(lambda: __socket.close() if __socket else None)
 
 def send_run_data(raw_data, test_run_pipe):
     status = raw_data["outcome"]
-    cwd = os.path.abspath(START_DIR)
+    cwd = os.path.abspath(START_DIR)  # noqa: PTH100
     test_id = raw_data["subtest"] or raw_data["test"]
     test_dict = {}
     test_dict[test_id] = raw_data
@@ -333,7 +333,7 @@ if __name__ == "__main__":
                 )
         else:
             # No test ids received from buffer
-            cwd = os.path.abspath(start_dir)
+            cwd = os.path.abspath(start_dir)  # noqa: PTH100
             status = TestExecutionStatus.error
             payload: ExecutionPayloadDict = {
                 "cwd": cwd,

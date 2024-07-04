@@ -81,8 +81,8 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     # check if --rootdir is in the args
     for arg in args:
         if "--rootdir=" in arg:
-            rootdir = arg.split("--rootdir=")[1]
-            if not os.path.exists(rootdir):
+            rootdir = pathlib.Path(arg.split("--rootdir=")[1])
+            if not rootdir.exists():
                 raise VSCodePytestError(
                     f"The path set in the argument --rootdir={rootdir} does not exist."
                 )
@@ -90,12 +90,12 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
             # Check if the rootdir is a symlink or a child of a symlink to the current cwd.
             is_symlink = False
 
-            if os.path.islink(rootdir):
+            if rootdir.is_symlink():
                 is_symlink = True
                 print(
                     f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink."
                 )
-            elif pathlib.Path(os.path.realpath(rootdir)) != rootdir:
+            elif rootdir.resolve() != rootdir:
                 print("Plugin info[vscode-pytest]: Checking if rootdir is a child of a symlink.")
                 is_symlink = has_symlink_parent(rootdir)
             if is_symlink:
@@ -103,7 +103,7 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
                     f"Plugin info[vscode-pytest]: rootdir argument, {rootdir}, is identified as a symlink or child of a symlink, adjusting pytest paths accordingly.",
                 )
                 global SYMLINK_PATH
-                SYMLINK_PATH = pathlib.Path(rootdir)
+                SYMLINK_PATH = rootdir
 
 
 def pytest_internalerror(excrepr, excinfo):  # noqa: ARG001
@@ -168,7 +168,7 @@ def has_symlink_parent(current_path):
     # Iterate over all parent directories
     for parent in curr_path.parents:
         # Check if the parent directory is a symlink
-        if os.path.islink(parent):
+        if parent.is_symlink():
             print(f"Symlink found at: {parent}")
             return True
     return False
@@ -768,7 +768,7 @@ def get_node_path(node: Any) -> pathlib.Path:
                 # get the relative path between the cwd and the node path (as the node path is not a symlink).
                 rel_path = node_path.relative_to(pathlib.Path.cwd())
                 # combine the difference between the cwd and the node path with the symlink path
-                return pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
+                return pathlib.Path(SYMLINK_PATH, rel_path)
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
