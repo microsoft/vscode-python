@@ -58,6 +58,7 @@ select = [
     "PT006", "PT007", "PT009", "PT012", "PT014", "PT015", "PT016", "PT017", "PT018", "PT019",
     "PT020", "PT021", "PT022", "PT024", "PT025", "PT026", "PT027",
     "PYI",  # flake8-pyi
+    "Q",  # flake8-quotes
     "RET502", "RET503", "RET504",  # flake8-return
     "RSE",  # flake8-raise
     "RUF",  # Ruff-specific rules

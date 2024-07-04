@@ -75,7 +75,7 @@ def handle_response(request_id):
                 elif message_json["method"] == "exit":
                     sys.exit(0)
 
-        except Exception:
+        except Exception:  # noqa: PERF203
             print_log(traceback.format_exc())
 
 
@@ -167,5 +167,5 @@ if __name__ == "__main__":
                 elif request_json["method"] == "exit":
                     sys.exit(0)
 
-        except Exception:
+        except Exception:  # noqa: PERF203
             print_log(traceback.format_exc())

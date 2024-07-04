@@ -200,14 +200,7 @@ def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
 
 def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
-    process_args: List[str] = [
-        sys.executable,
-        "-m",
-        "pytest",
-        "-p",
-        "vscode_pytest",
-        "-s",
-    ] + args
+    process_args: List[str] = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]
 
     # Generate pipe name, pipe name specific per OS type.
     pipe_name = generate_random_pipe_name("pytest-discovery-test")
