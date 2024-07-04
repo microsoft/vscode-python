@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-# ruff:noqa: PYI024
+# ruff:noqa: PYI024, SLOT002
 
 from collections import namedtuple
 
