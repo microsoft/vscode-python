@@ -31,7 +31,7 @@ def test_import_error():
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+            assert all(item in actual_item for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
 
@@ -67,7 +67,7 @@ def test_syntax_error(tmp_path):
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+            assert all(item in actual_item for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
 
@@ -92,7 +92,7 @@ def test_parameterized_error_collect():
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+            assert all(item in actual_item for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
 
@@ -186,7 +186,7 @@ def test_pytest_collect(file, expected_const):
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
-        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
         assert (
             actual_item.get("status") == "success"
         ), f"Status is not 'success', error is: {actual_item.get('error')}"
@@ -225,7 +225,7 @@ def test_symlink_root_dir():
             try:
                 # Check if all requirements
                 assert all(
-                    item in actual_item.keys() for item in ("status", "cwd", "error")
+                    item in actual_item for item in ("status", "cwd", "error")
                 ), "Required keys are missing"
                 assert actual_item.get("status") == "success", "Status is not 'success'"
                 assert actual_item.get("cwd") == os.fspath(
@@ -256,7 +256,7 @@ def test_pytest_root_dir():
     if actual_list is not None:
         actual_item = actual_list.pop(0)
 
-        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "root")
         assert is_same_tree(
@@ -283,7 +283,7 @@ def test_pytest_config_file():
     if actual_list is not None:
         actual_item = actual_list.pop(0)
 
-        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "root")
         assert is_same_tree(
@@ -314,7 +314,7 @@ def test_config_sub_folder():
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
-        assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
         assert actual_item.get("status") == "success"
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH / "config_sub_folder")
         assert actual_item.get("tests") is not None

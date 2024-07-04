@@ -133,9 +133,8 @@ class StubPytestItem(util.StubProxy):
     def __getattr__(self, name):
         if not self._debugging:
             self.add_call(name + " (attr)", None, None)
-        if name == "function":
-            if not self._hasfunc:
-                raise AttributeError(name)
+        if name == "function" and not self._hasfunc:
+            raise AttributeError(name)
 
         def func(*args, **kwargs):
             self.add_call(name, args or None, kwargs or None)
