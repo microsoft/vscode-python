@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 
 import json
-import os
 import pathlib
 import urllib.request as url_lib
 
@@ -23,12 +22,12 @@ def _get_package_data():
 
 
 def _download_and_save(root, version):
-    root = os.getcwd() if root is None or root == "." else root
+    root = pathlib.Path.getcwd() if root is None or root == "." else pathlib.Path(root)
     url = f"https://raw.githubusercontent.com/pypa/get-pip/{version}/public/get-pip.py"
     print(url)
     with url_lib.urlopen(url) as response:
         data = response.read()
-        get_pip_file = pathlib.Path(root) / "get-pip.py"
+        get_pip_file = root / "get-pip.py"
         get_pip_file.write_bytes(data)
 
 

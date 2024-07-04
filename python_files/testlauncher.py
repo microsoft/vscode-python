@@ -27,7 +27,7 @@ def run(cwd, test_runner, args):
     testRunner -- test runner to be used `pytest`
     args -- arguments passed into the test runner
     """
-    sys.path[0] = os.getcwd()
+    sys.path[0] = os.getcwd()  # noqa: PTH109
     os.chdir(cwd)
 
     try:

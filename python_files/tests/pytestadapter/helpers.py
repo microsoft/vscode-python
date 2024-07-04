@@ -41,7 +41,7 @@ def text_to_python_file(text_file_path: pathlib.Path):
         yield python_file
     finally:
         if python_file:
-            os.unlink(os.fspath(python_file))
+            python_file.unlink()
 
 
 @contextlib.contextmanager
@@ -284,7 +284,7 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
     test_file_path: The path to the test file where the test is located.
     """
     test_file_unique_id: str = "test_marker--" + test_name.split("[")[0]
-    with open(test_file_path) as f:
+    with open(test_file_path) as f:  # noqa: PTH123
         for i, line in enumerate(f):
             if test_file_unique_id in line:
                 return str(i + 1)
@@ -312,9 +312,9 @@ def generate_random_pipe_name(prefix=""):
     # For Unix-like systems, use either the XDG_RUNTIME_DIR or a temporary directory.
     xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
     if xdg_runtime_dir:
-        return os.path.join(xdg_runtime_dir, f"{prefix}-{random_suffix}.sock")
+        return os.path.join(xdg_runtime_dir, f"{prefix}-{random_suffix}.sock")  # noqa: PTH118
     else:
-        return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}.sock")
+        return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}.sock")  # noqa: PTH118
 
 
 class UnixPipeServer:
@@ -330,9 +330,9 @@ class UnixPipeServer:
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             # Ensure the socket does not already exist
             try:
-                os.unlink(self.name)
+                os.unlink(self.name)  # noqa: PTH108
             except OSError:
-                if os.path.exists(self.name):
+                if os.path.exists(self.name):  # noqa: PTH110
                     raise
 
     def start(self):
