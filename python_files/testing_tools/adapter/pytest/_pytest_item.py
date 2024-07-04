@@ -325,11 +325,7 @@ def _matches_relfile(
     testroot = _normcase(testroot)
     srcfile = _normcase(srcfile)
     relfile = _normcase(relfile)
-    if srcfile == relfile:
-        return True
-    elif srcfile == relfile[len(_pathsep) + 1 :]:
-        return True
-    elif srcfile == testroot + relfile[1:]:
+    if srcfile == relfile or srcfile == relfile[len(_pathsep) + 1 :] or srcfile == testroot + relfile[1:]:
         return True
     else:
         return False

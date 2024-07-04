@@ -58,6 +58,7 @@ select = [
   "RSE",  # flake8-raise
   "RET502", "RET503", "RET504",  # flake8-return
   "SLF",  # flake8-self
+  "SIM102",
   #"SIM",  # flake8-simplify
   "TCH",  # flake8-type-checking
   "ARG",  # flake8-unused-argument

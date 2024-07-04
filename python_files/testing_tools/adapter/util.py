@@ -83,9 +83,8 @@ def fix_relpath(
     path = _fix_path(path)
     if path in (".", ".."):
         return path
-    if not _path_isabs(path):
-        if not path.startswith("." + _pathsep):
-            path = "." + _pathsep + path
+    if not _path_isabs(path) and not path.startswith("." + _pathsep):
+        path = "." + _pathsep + path
     return path
 
 
@@ -258,9 +257,7 @@ except ImportError:
     def _quote_arg(arg):
         parts = None
         for i, c in enumerate(arg):
-            if c.isspace():
-                pass
-            elif c == '"':
+            if c.isspace() or c == '"':
                 pass
             elif c == "'":
                 c = "'\"'\"'"
