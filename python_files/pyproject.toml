@@ -55,8 +55,8 @@ select = [
   # flake8-pytest-style
   "PT006", "PT007", "PT009", "PT012", "PT014", "PT015", "PT016", "PT017", "PT018", "PT019",
   "PT020", "PT021", "PT022", "PT024", "PT025", "PT026", "PT027",
-  #"RSE",  # flake8-raise
-  #"RET502", "RET503", "RET504",  # flake8-return
+  "RSE",  # flake8-raise
+  "RET502", "RET503", "RET504",  # flake8-return
   #"SLF",  # flake8-self
   #"SIM",  # flake8-simplify
   #"TCH",  # flake8-type-checking
