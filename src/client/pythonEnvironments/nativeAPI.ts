@@ -153,7 +153,7 @@ function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): 
     if (!validEnv(finder, nativeEnv)) {
         return undefined;
     }
-    const kind = finder.categoryToKind(nativeEnv.category);
+    const kind = finder.categoryToKind(nativeEnv.kind);
     const arch = toArch(nativeEnv.arch);
     const version: PythonVersion = parseVersion(nativeEnv.version ?? '');
     const name = getName(nativeEnv, kind);
@@ -230,18 +230,27 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                     try {
                         if (validEnv(this.finder, native)) {
                             if (!native.version) {
-                                this.resolveEnv(native.executable ?? native.prefix)
-                                    .then(() => {
-                                        const env = toPythonEnvInfo(this.finder, native);
-                                        if (env) {
-                                            this._envs.push(env);
-                                            this._onChanged.fire({
-                                                type: FileChangeType.Created,
-                                                new: env,
-                                            });
-                                        }
-                                    })
-                                    .ignoreErrors();
+                                if (
+                                    this.finder.categoryToKind(native.kind) === PythonEnvKind.Conda &&
+                                    !native.executable
+                                ) {
+                                    // This is a conda env without python, no point trying to resolve this.
+                                    // TODO: we still need to add this to this._envs
+                                    traceError(`Unhandled Conda environment without python: ${native.prefix}`);
+                                } else {
+                                    this.resolveEnv(native.executable ?? native.prefix)
+                                        .then(() => {
+                                            const env = toPythonEnvInfo(this.finder, native);
+                                            if (env) {
+                                                this._envs.push(env);
+                                                this._onChanged.fire({
+                                                    type: FileChangeType.Created,
+                                                    new: env,
+                                                });
+                                            }
+                                        })
+                                        .ignoreErrors();
+                                }
                             } else {
                                 const version = parseVersion(native.version);
                                 if (version.micro < 0 || version.minor < 0 || version.major < 0) {
