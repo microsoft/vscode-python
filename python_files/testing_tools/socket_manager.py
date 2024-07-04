@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import contextlib
 import socket
 import sys
 
@@ -111,8 +112,6 @@ class SocketManager:
 
     def close(self):
         if self.socket:
-            try:
+            with contextlib.suppress(Exception):
                 self.socket.shutdown(socket.SHUT_RDWR)
-            except Exception:
-                pass
             self.socket.close()
