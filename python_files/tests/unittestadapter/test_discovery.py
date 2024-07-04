@@ -23,7 +23,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(
-    "args, expected",
+    ("args", "expected"),
     [
         (
             ["-s", "something", "-p", "other*", "-t", "else"],

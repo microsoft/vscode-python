@@ -77,7 +77,7 @@ class ExecutionPayloadDict(TypedDict):
 class EOTPayloadDict(TypedDict):
     """A dictionary that is used to send a end of transmission post request to the server."""
 
-    command_type: Union[Literal["discovery"], Literal["execution"]]
+    command_type: Literal["discovery", "execution"]
     eot: bool
 
 

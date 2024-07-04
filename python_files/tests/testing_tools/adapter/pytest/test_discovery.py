@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+# ruff:noqa: PT009, PT027
 
 try:
     from io import StringIO
@@ -220,94 +220,67 @@ def generate_parse_item(pathsep):
     def _fix_fileid(*args):
         return adapter_util.fix_fileid(
             *args,
-            **{
-                # dependency injection
-                "_normcase": normcase,
-                "_pathsep": pathsep,
-            },
+            _normcase=normcase,
+            _pathsep=pathsep,
         )
 
     def _normalize_test_id(*args):
         return pytest_item._normalize_test_id(
             *args,
-            **{
-                # dependency injection
-                "_fix_fileid": _fix_fileid,
-                "_pathsep": pathsep,
-            },
+            _fix_fileid=_fix_fileid,
+            _pathsep=pathsep,
         )
 
     def _iter_nodes(*args):
         return pytest_item._iter_nodes(
             *args,
-            **{
-                # dependency injection
-                "_normalize_test_id": _normalize_test_id,
-                "_normcase": normcase,
-                "_pathsep": pathsep,
-            },
+            _normalize_test_id=_normalize_test_id,
+            _normcase=normcase,
+            _pathsep=pathsep,
         )
 
     def _parse_node_id(*args):
         return pytest_item._parse_node_id(
             *args,
-            **{
-                # dependency injection
-                "_iter_nodes": _iter_nodes,
-            },
+            _iter_nodes=_iter_nodes,
         )
 
     ##########
     def _split_fspath(*args):
         return pytest_item._split_fspath(
             *args,
-            **{
-                # dependency injection
-                "_normcase": normcase,
-            },
+            _normcase=normcase,
         )
 
     ##########
     def _matches_relfile(*args):
         return pytest_item._matches_relfile(
             *args,
-            **{
-                # dependency injection
-                "_normcase": normcase,
-                "_pathsep": pathsep,
-            },
+            _normcase=normcase,
+            _pathsep=pathsep,
         )
 
     def _is_legacy_wrapper(*args):
         return pytest_item._is_legacy_wrapper(
             *args,
-            **{
-                # dependency injection
-                "_pathsep": pathsep,
-            },
+            _pathsep=pathsep,
         )
 
     def _get_location(*args):
         return pytest_item._get_location(
             *args,
-            **{
-                # dependency injection
-                "_matches_relfile": _matches_relfile,
-                "_is_legacy_wrapper": _is_legacy_wrapper,
-                "_pathsep": pathsep,
-            },
+            _matches_relfile=_matches_relfile,
+            _is_legacy_wrapper=_is_legacy_wrapper,
+            _pathsep=pathsep,
         )
 
     ##########
     def _parse_item(item):
         return pytest_item.parse_item(
             item,
-            **{
-                # dependency injection
-                "_parse_node_id": _parse_node_id,
-                "_split_fspath": _split_fspath,
-                "_get_location": _get_location,
-            },
+            _parse_node_id=_parse_node_id,
+            _split_fspath=_split_fspath,
+            _get_location=_get_location,
         )
 
     return _parse_item

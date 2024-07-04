@@ -25,7 +25,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(
-    "directory, pattern, expected",
+    ("directory", "pattern", "expected"),
     [
         (
             ".",

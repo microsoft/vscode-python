@@ -110,7 +110,7 @@ def test_subtest_run(mock_send_run_data) -> None:
 
 
 @pytest.mark.parametrize(
-    "test_ids, pattern, cwd, expected_outcome",
+    ("test_ids", "pattern", "cwd", "expected_outcome"),
     [
         (
             [
@@ -241,7 +241,8 @@ def test_failed_tests(mock_send_run_data):
         assert id_result is not None
         assert "outcome" in id_result
         assert id_result["outcome"] == "failure"
-        assert "message" and "traceback" in id_result
+        assert "message" in id_result
+        assert "traceback" in id_result
         assert "2 not greater than 3" in str(id_result["message"]) or "1 == 1" in str(
             id_result["traceback"]
         )
@@ -272,7 +273,8 @@ def test_unknown_id(mock_send_run_data):
     assert id_result is not None
     assert "outcome" in id_result
     assert id_result["outcome"] == "error"
-    assert "message" and "traceback" in id_result
+    assert "message" in id_result
+    assert "traceback" in id_result
 
 
 def test_incorrect_path():

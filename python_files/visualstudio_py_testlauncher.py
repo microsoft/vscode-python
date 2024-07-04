@@ -207,7 +207,7 @@ class ExitCommand(Exception):  # noqa: N818
 
 
 def signal_handler(signal, frame):
-    raise ExitCommand()
+    raise ExitCommand
 
 
 def main():

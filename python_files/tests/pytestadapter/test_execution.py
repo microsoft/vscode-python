@@ -104,7 +104,7 @@ def test_syntax_error_execution(tmp_path):
             ):  # You can add other types if needed
                 assert len(error_content) == 1
             else:
-                pytest.fail()
+                pytest.fail(f"{error_content!r} is None or not a list, str, or tuple")
 
 
 def test_bad_id_error_execution():
@@ -123,14 +123,14 @@ def test_bad_id_error_execution():
             error_content = actual_item.get("error")
             if error_content is not None and isinstance(
                 error_content, (list, tuple, str)
-            ):  # You can add other types if needed
+            ):  # You can add other types if needed.
                 assert len(error_content) == 1
             else:
-                pytest.fail()
+                pytest.fail(f"{error_content!r} is None or not a list, str, or tuple")
 
 
 @pytest.mark.parametrize(
-    "test_ids, expected_const",
+    ("test_ids", "expected_const"),
     [
         (
             [

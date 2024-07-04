@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
+# ruff:noqa: PT009, PT027
 
 import unittest
 

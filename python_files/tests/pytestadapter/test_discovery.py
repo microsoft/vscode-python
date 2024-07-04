@@ -42,7 +42,7 @@ def test_import_error():
             ):  # You can add other types if needed
                 assert len(error_content) == 2
             else:
-                pytest.fail()
+                pytest.fail(f"{error_content} is None or not a list, str, or tuple")
 
 
 def test_syntax_error(tmp_path):
@@ -78,7 +78,7 @@ def test_syntax_error(tmp_path):
             ):  # You can add other types if needed
                 assert len(error_content) == 2
             else:
-                pytest.fail()
+                pytest.fail(f"{error_content} is None or not a list, str, or tuple")
 
 
 def test_parameterized_error_collect():
@@ -103,11 +103,11 @@ def test_parameterized_error_collect():
             ):  # You can add other types if needed
                 assert len(error_content) == 2
             else:
-                pytest.fail()
+                pytest.fail(f"{error_content} is None or not a list, str, or tuple")
 
 
 @pytest.mark.parametrize(
-    "file, expected_const",
+    ("file", "expected_const"),
     [
         (
             "test_param_span_class.py",
@@ -120,10 +120,6 @@ def test_parameterized_error_collect():
         (
             "same_function_new_class_param.py",
             expected_discovery_test_output.same_function_new_class_param_expected_output,
-        ),
-        (
-            "test_multi_class_nest.py",
-            expected_discovery_test_output.nested_classes_expected_test_output,
         ),
         (
             "unittest_skiptest_file_level.py",
