@@ -48,6 +48,7 @@ select = [
     "F",  # Pyflakes
     "I",  # isort
     "INP",  # flake8-no-pep420
+    "LOG",  # flake8-logging
     "N",  # pep8-naming
     "NPY",  # NumPy-specific rules
     "PD",  # pandas-vet
