@@ -49,7 +49,7 @@ select = [
     "EXE",  # flake8-executable
     "F",  # Pyflakes
     "FBT",  # flake8-boolean-trap
-    #"FLY",  # flynt
+    "FLY",  # flynt
     #"FURB",  # refurb
     "I",  # isort
     #"ISC",  # flake8-implicit-str-concat
