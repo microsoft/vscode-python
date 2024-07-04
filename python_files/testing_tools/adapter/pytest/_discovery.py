@@ -79,7 +79,7 @@ class TestCollector:
     # Relevant plugin hooks:
     #  https://docs.pytest.org/en/latest/reference.html#collection-hooks
 
-    def pytest_collection_modifyitems(self, session, config, items):
+    def pytest_collection_modifyitems(self, session, config, items):  # noqa: ARG002
         self._started = True
         self._tests.reset()
         for item in items:

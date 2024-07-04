@@ -63,7 +63,7 @@ TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
 
-def pytest_load_initial_conftests(early_config, parser, args):
+def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
@@ -106,7 +106,7 @@ def pytest_load_initial_conftests(early_config, parser, args):
                 SYMLINK_PATH = pathlib.Path(rootdir)
 
 
-def pytest_internalerror(excrepr, excinfo):
+def pytest_internalerror(excrepr, excinfo):  # noqa: ARG001
     """A pytest hook that is called when an internal error occurs.
 
     Keyword arguments:
@@ -218,7 +218,7 @@ def create_test_outcome(
     outcome: str,
     message: Union[str, None],
     traceback: Union[str, None],
-    subtype: Optional[str] = None,
+    subtype: Optional[str] = None,  # noqa: ARG001
 ) -> TestOutcome:
     """A function that creates a TestOutcome object."""
     return TestOutcome(
@@ -238,7 +238,7 @@ class TestRunResultDict(Dict[str, Dict[str, TestOutcome]]):
 
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
-def pytest_report_teststatus(report, config):
+def pytest_report_teststatus(report, config):  # noqa: ARG001
     """A pytest hook that is called when a test is called.
 
     It is called 3 times per test, during setup, call, and teardown.
@@ -293,7 +293,7 @@ ERROR_MESSAGE_CONST = {
 
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
-def pytest_runtest_protocol(item, nextitem):
+def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
     map_id_to_path[item.nodeid] = get_node_path(item)
     skipped = check_skipped_wrapper(item)
     if skipped:

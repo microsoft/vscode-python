@@ -60,7 +60,7 @@ select = [
   "SLF",  # flake8-self
   "SIM",  # flake8-simplify
   "TCH",  # flake8-type-checking
-  #"ARG",  # flake8-unused-argument
+  "ARG",  # flake8-unused-argument
   #"PTH",  # flake8-pathlib
   #"ERA",  # eradicate
   #"PD",  # pandas-vet

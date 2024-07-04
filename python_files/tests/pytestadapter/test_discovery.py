@@ -45,7 +45,7 @@ def test_import_error():
                 pytest.fail(f"{error_content} is None or not a list, str, or tuple")
 
 
-def test_syntax_error(tmp_path):
+def test_syntax_error(tmp_path):  # noqa: ARG001
     """Test pytest discovery on a file that has a syntax error.
 
     Copies the contents of a .txt file to a .py file in the temporary directory

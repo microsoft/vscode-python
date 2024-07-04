@@ -206,7 +206,7 @@ class ExitCommand(Exception):  # noqa: N818
     pass
 
 
-def signal_handler(signal, frame):
+def signal_handler(signal, frame):  # noqa: ARG001
     raise ExitCommand
 
 

@@ -17,7 +17,7 @@ class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
             [str(s) for s in sub] if sub else None,
         )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # noqa: ARG002
         if self.root is None:
             raise TypeError("missing id")
         if self.relfile is None:
@@ -40,7 +40,7 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
             parentid=str(parentid) if parentid else None,
         )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # noqa: ARG002
         if self.id is None:
             raise TypeError("missing id")
         if self.kind is None:
@@ -78,7 +78,7 @@ class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parenti
             str(kind) if kind else None,
         )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):  # noqa: ARG002
         if self.id is None:
             raise TypeError("missing id")
         if self.name is None:

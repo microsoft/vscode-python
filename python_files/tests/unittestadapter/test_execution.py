@@ -4,7 +4,7 @@
 import os
 import pathlib
 import sys
-from typing import Dict, Optional
+from typing import TYPE_CHECKING, Dict, Optional
 from unittest.mock import patch
 
 import pytest
@@ -13,7 +13,9 @@ script_dir = pathlib.Path(__file__).parent.parent.parent
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
 from unittestadapter.execution import run_tests  # noqa: E402
-from unittestadapter.pvsc_utils import ExecutionPayloadDict  # noqa: E402
+
+if TYPE_CHECKING:
+    from unittestadapter.pvsc_utils import ExecutionPayloadDict
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
@@ -75,7 +77,7 @@ def test_single_ids_run(mock_send_run_data):
         assert id_result["outcome"] == "success"
 
 
-def test_subtest_run(mock_send_run_data) -> None:
+def test_subtest_run(mock_send_run_data) -> None:  # noqa: ARG001
     """This test runs on a the test_subtest which has a single method, test_even, that uses unittest subtest.
 
     The actual result of run should return a dict payload with 6 entry for the 6 subtests.
@@ -182,7 +184,7 @@ def test_subtest_run(mock_send_run_data) -> None:
         ),
     ],
 )
-def test_multiple_ids_run(mock_send_run_data, test_ids, pattern, cwd, expected_outcome) -> None:
+def test_multiple_ids_run(mock_send_run_data, test_ids, pattern, cwd, expected_outcome) -> None:  # noqa: ARG001
     """
     The following are all successful tests of different formats.
 
@@ -213,7 +215,7 @@ def test_multiple_ids_run(mock_send_run_data, test_ids, pattern, cwd, expected_o
     assert True
 
 
-def test_failed_tests(mock_send_run_data):
+def test_failed_tests(mock_send_run_data):  # noqa: ARG001
     """This test runs on a single file `test_fail` with two tests that fail."""
     os.environ["TEST_RUN_PIPE"] = "fake"
     test_ids = [
@@ -249,7 +251,7 @@ def test_failed_tests(mock_send_run_data):
     assert True
 
 
-def test_unknown_id(mock_send_run_data):
+def test_unknown_id(mock_send_run_data):  # noqa: ARG001
     """This test runs on a unknown test_id, therefore it should return an error as the outcome as it attempts to find the given test."""
     os.environ["TEST_RUN_PIPE"] = "fake"
     test_ids = ["unknown_id"]

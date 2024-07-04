@@ -141,7 +141,7 @@ def check_exact_exist(top_level_nodes, start_line, end_line):
     return exact_nodes
 
 
-def traverse_file(whole_file_content, start_line, end_line, was_highlighted):
+def traverse_file(whole_file_content, start_line, end_line, was_highlighted):  # noqa: ARG001
     """Intended to traverse through a user's given file content and find, collect all appropriate lines that should be sent to the REPL in case of smart selection.
 
     This could be exact statement such as just a single line print statement,

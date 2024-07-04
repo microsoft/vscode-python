@@ -333,7 +333,7 @@ def _matches_relfile(
 
 
 def _is_legacy_wrapper(
-    srcfile,
+    srcfile,  # noqa: ARG001
     # *,
     _pathsep=PATH_SEP,
     _pyversion=sys.version_info,
