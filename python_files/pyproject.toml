@@ -62,8 +62,7 @@ select = [
   "TCH",  # flake8-type-checking
   "ARG",  # flake8-unused-argument
   "PTH",  # flake8-pathlib
-  #"ERA",  # eradicate
-  #"PD",  # pandas-vet
+  "PD",  # pandas-vet
   #"PGH",  # pygrep-hooks
   #"NPY",  # NymPy-specific rules
   #"PERF",  # Perflint
