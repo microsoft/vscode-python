@@ -75,7 +75,7 @@ select = [
     "SLOT",  # flake8-slots
     "TCH",  # flake8-type-checking
     "UP",  # pyupgrade
-    #"W",  # pycodestyle (warnings)
+    "W",  # pycodestyle (warnings)
     "YTT",  # flake8-2020
     ]
 
