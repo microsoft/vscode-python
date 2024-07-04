@@ -1,15 +1,3 @@
-[tool.black]
-exclude = '''
-
-(
-  /(
-    .data
-    | .vscode
-    | lib
-  )/
-)
-'''
-
 [tool.pyright]
 exclude = ['lib']
 extraPaths = ['lib/python', 'lib/jedilsp']
@@ -36,9 +24,7 @@ ignore = [
 [tool.ruff]
 line-length = 100
 exclude = [
-    "tests/testing_tools/adapter/.data",
-    "tests/pytestadapter/.data",
-    "tests/unittestadapter/.data",
+    "**/.data",
     "lib",
 ]
 
