@@ -248,9 +248,7 @@ def main():
         help="connect to port on localhost and send test results",
     )
     parser.add_option("--us", type="str", help="Directory to start discovery")
-    parser.add_option(
-        "--up", type="str", help="Pattern to match test files (test*.py default)"
-    )
+    parser.add_option("--up", type="str", help="Pattern to match test files (test*.py default)")
     parser.add_option(
         "--ut",
         type="str",

@@ -35,7 +35,7 @@ docstring-code-format = true
 # Ruff's defaults are F and a subset of E.
 # https://docs.astral.sh/ruff/rules/#rules
 # Compatible w/ ruff formatter. https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
-# Up-to-date as of Ruff 0.1.11 (2024-01-02).
+# Up-to-date as of Ruff 0.5.0.
 select = [
     "A",  # flake8-builtins
     "ARG",  # flake8-unused-argument
@@ -52,7 +52,6 @@ select = [
     "FLY",  # flynt
     "FURB",  # refurb
     "I",  # isort
-    "ISC",  # flake8-implicit-str-concat
     "INP",  # flake8-no-pep420
     "INT",  # flake8-gettext
     "LOG",  # flake8-logging
