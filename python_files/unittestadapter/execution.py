@@ -124,10 +124,7 @@ class UnittestTestResult(unittest.TextTestResult):
             tb = "".join(formatted)
             # Remove the 'Traceback (most recent call last)'
             formatted = formatted[1:]
-        if subtest:
-            test_id = subtest.id()
-        else:
-            test_id = test.id()
+        test_id = subtest.id() if subtest else test.id()
 
         result = {
             "test": test.id(),
@@ -261,10 +258,7 @@ atexit.register(lambda: __socket.close() if __socket else None)
 def send_run_data(raw_data, test_run_pipe):
     status = raw_data["outcome"]
     cwd = os.path.abspath(START_DIR)
-    if raw_data["subtest"]:
-        test_id = raw_data["subtest"]
-    else:
-        test_id = raw_data["test"]
+    test_id = raw_data["subtest"] or raw_data["test"]
     test_dict = {}
     test_dict[test_id] = raw_data
     payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
