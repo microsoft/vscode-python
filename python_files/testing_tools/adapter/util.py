@@ -83,8 +83,9 @@ def fix_relpath(
     path = _fix_path(path)
     if path in (".", ".."):
         return path
-    if not _path_isabs(path) and not path.startswith("." + _pathsep):
-        path = "." + _pathsep + path
+    if not _path_isabs(path):
+        if not path.startswith("." + _pathsep):
+            path = "." + _pathsep + path
     return path
 
 
@@ -195,6 +196,26 @@ def _replace_fd(file, target):
 
 
 @contextlib.contextmanager
+def _replace_stdout(target):
+    orig = sys.stdout
+    sys.stdout = target
+    try:
+        yield orig
+    finally:
+        sys.stdout = orig
+
+
+@contextlib.contextmanager
+def _replace_stderr(target):
+    orig = sys.stderr
+    sys.stderr = target
+    try:
+        yield orig
+    finally:
+        sys.stderr = orig
+
+
+@contextlib.contextmanager
 def _temp_io():
     sio = StringIO()
     with tempfile.TemporaryFile("r+") as tmp:
@@ -209,10 +230,12 @@ def _temp_io():
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
-    with _temp_io() as (sio, fileobj):  # noqa: SIM117
-        with _replace_fd(sys.stdout, fileobj), contextlib.replace_stdout(fileobj):
-            with _replace_fd(sys.stderr, fileobj), contextlib.replace_stderr(fileobj):
-                yield sio
+    with _temp_io() as (sio, fileobj):
+        with _replace_fd(sys.stdout, fileobj):
+            with _replace_stdout(fileobj):
+                with _replace_fd(sys.stderr, fileobj):
+                    with _replace_stderr(fileobj):
+                        yield sio
 
 
 #############################
@@ -235,7 +258,9 @@ except ImportError:
     def _quote_arg(arg):
         parts = None
         for i, c in enumerate(arg):
-            if c.isspace() or c == '"':
+            if c.isspace():
+                pass
+            elif c == '"':
                 pass
             elif c == "'":
                 c = "'\"'\"'"

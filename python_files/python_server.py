@@ -100,10 +100,11 @@ def execute(request, user_globals):
     str_output = CustomIO("<stdout>", encoding="utf-8")
     str_error = CustomIO("<stderr>", encoding="utf-8")
 
-    with redirect_io("stdout", str_output), redirect_io("stderr", str_error):
-        str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
-        with redirect_io("stdin", str_input):
-            exec_user_input(request["params"], user_globals)
+    with redirect_io("stdout", str_output):
+        with redirect_io("stderr", str_error):
+            str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
+            with redirect_io("stdin", str_input):
+                exec_user_input(request["params"], user_globals)
     send_response(str_output.get_value(), request["id"])
 
 

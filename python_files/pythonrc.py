@@ -44,7 +44,11 @@ class PS1:
 
     # str will get called for every prompt with exit code to show success/failure
     def __str__(self):
-        exit_code = int(bool(self.hooks.failure_flag))
+        exit_code = 0
+        if self.hooks.failure_flag:
+            exit_code = 1
+        else:
+            exit_code = 0
         self.hooks.failure_flag = False
         # Guide following official VS Code doc for shell integration sequence:
         result = ""

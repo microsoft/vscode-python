@@ -326,12 +326,14 @@ def check_skipped_wrapper(item):
     Keyword arguments:
     item -- the pytest item object.
     """
-    if item.own_markers and check_skipped_condition(item):
-        return True
+    if item.own_markers:
+        if check_skipped_condition(item):
+            return True
     parent = item.parent
     while isinstance(parent, pytest.Class):
-        if parent.own_markers and check_skipped_condition(parent):
-            return True
+        if parent.own_markers:
+            if check_skipped_condition(parent):
+                return True
         parent = parent.parent
     return False
 

@@ -36,7 +36,9 @@ def parse_args(argv: Optional[Sequence[str]] = None):
 def parse_requirements(line: str) -> Optional[Requirement]:
     try:
         req = Requirement(line.strip("\\"))
-        if req.marker is None or req.marker.evaluate():
+        if req.marker is None:
+            return req
+        elif req.marker.evaluate():
             return req
     except Exception:
         pass

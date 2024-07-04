@@ -325,11 +325,14 @@ def _matches_relfile(
     testroot = _normcase(testroot)
     srcfile = _normcase(srcfile)
     relfile = _normcase(relfile)
-    return bool(
-        srcfile == relfile
-        or srcfile == relfile[len(_pathsep) + 1 :]
-        or srcfile == testroot + relfile[1:]
-    )
+    if srcfile == relfile:
+        return True
+    elif srcfile == relfile[len(_pathsep) + 1 :]:
+        return True
+    elif srcfile == testroot + relfile[1:]:
+        return True
+    else:
+        return False
 
 
 def _is_legacy_wrapper(
@@ -343,7 +346,11 @@ def _is_legacy_wrapper(
     In Python 2 unittest's decorators (e.g. unittest.skip) do not wrap
     properly, so we must manually unwrap them.
     """
-    return False
+    if _pyversion > (3,):
+        return False
+    if (_pathsep + "unittest" + _pathsep + "case.py") not in srcfile:
+        return False
+    return True
 
 
 def _unwrap_decorator(func):
