@@ -50,7 +50,7 @@ select = [
     "F",  # Pyflakes
     "FBT",  # flake8-boolean-trap
     "FLY",  # flynt
-    #"FURB",  # refurb
+    "FURB",  # refurb
     "I",  # isort
     #"ISC",  # flake8-implicit-str-concat
     "INP",  # flake8-no-pep420
