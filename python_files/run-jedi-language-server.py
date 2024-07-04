@@ -5,7 +5,7 @@ import sys
 # Add the lib path to our sys path so jedi_language_server can find its references
 extension_dir = pathlib.Path(__file__).parent.parent
 EXTENSION_ROOT = os.fsdecode(extension_dir)
-sys.path.insert(0, os.fsdecode(EXTENSION_ROOT / "python_files" / "lib" / "jedilsp"))
+sys.path.insert(0, os.fsdecode(extension_dir / "python_files" / "lib" / "jedilsp"))
 del extension_dir
 
 
