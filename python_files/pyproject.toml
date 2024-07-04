@@ -64,7 +64,7 @@ select = [
   "PTH",  # flake8-pathlib
   "PD",  # pandas-vet
   "NPY",  # NumPy-specific rules
-  #"PERF",  # Perflint
+  "PERF",  # Perflint
   #"RUF",  # Ruff-specific rules
 ]
 
