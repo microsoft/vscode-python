@@ -63,8 +63,7 @@ select = [
   "ARG",  # flake8-unused-argument
   "PTH",  # flake8-pathlib
   "PD",  # pandas-vet
-  #"PGH",  # pygrep-hooks
-  #"NPY",  # NymPy-specific rules
+  "NPY",  # NumPy-specific rules
   #"PERF",  # Perflint
   #"RUF",  # Ruff-specific rules
 ]
