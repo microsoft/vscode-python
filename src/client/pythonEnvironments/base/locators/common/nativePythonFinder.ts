@@ -22,13 +22,13 @@ const untildify = require('untildify');
 
 const PYTHON_ENV_TOOLS_PATH = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
+    : '/Users/donjayamanne/Development/vsc/python-environment-tools/target/debug/pet';
 
 export interface NativeEnvInfo {
     displayName?: string;
     name?: string;
     executable?: string;
-    kind: string;
+    kind?: string;
     version?: string;
     prefix?: string;
     manager?: NativeEnvManagerInfo;
@@ -294,7 +294,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
         disposable.add(
             this.connection.onNotification('environment', (data: NativeEnvInfo) => {
                 this.outputChannel.info(`Discovered env: ${data.executable || data.prefix}`);
-                this.outputChannel.trace(`Discovered env info:\n ${JSON.stringify(data, undefined, 4)}`);
                 // We know that in the Python extension if either Version of Prefix is not provided by locator
                 // Then we end up resolving the information.
                 // Lets do that here,
@@ -311,7 +310,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
                         })
                         .then((environment) => {
                             this.outputChannel.info(`Resolved ${environment.executable}`);
-                            this.outputChannel.trace(`Environment resolved:\n ${JSON.stringify(data, undefined, 4)}`);
                             discovered.fire(environment);
                         })
                         .catch((ex) => this.outputChannel.error(`Error in Resolving ${JSON.stringify(data)}`, ex));
