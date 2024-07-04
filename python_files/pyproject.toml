@@ -57,7 +57,7 @@ select = [
   "PT020", "PT021", "PT022", "PT024", "PT025", "PT026", "PT027",
   "RSE",  # flake8-raise
   "RET502", "RET503", "RET504",  # flake8-return
-  #"SLF",  # flake8-self
+  "SLF",  # flake8-self
   #"SIM",  # flake8-simplify
   #"TCH",  # flake8-type-checking
   #"ARG",  # flake8-unused-argument

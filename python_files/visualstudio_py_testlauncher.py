@@ -329,8 +329,8 @@ def main():
                 tests = suites
             else:
                 # Run a specific test class or test method
-                for test_suite in suites._tests:
-                    for cls in test_suite._tests:
+                for test_suite in suites._tests:  # noqa: SLF001
+                    for cls in test_suite._tests:  # noqa: SLF001
                         with contextlib.suppress(Exception):
                             for m in cls._tests:
                                 test_id = m.id()

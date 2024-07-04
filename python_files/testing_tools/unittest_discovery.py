@@ -44,10 +44,10 @@ try:
     print("start")  # Don't remove this line
     loader_errors = []
     for s in generate_test_cases(suite):
-        tm = getattr(s, s._testMethodName)
+        tm = getattr(s, s._testMethodName)  # noqa: SLF001
         test_id = s.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            loader_errors.append(s._exception)
+            loader_errors.append(s._exception)  # noqa: SLF001
         else:
             print(test_id.replace(".", ":") + ":" + get_sourceline(tm))
 except Exception:

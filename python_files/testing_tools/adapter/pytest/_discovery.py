@@ -40,15 +40,15 @@ def discover(
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception(f"pytest discovery failed (exit code {ec})")
-    if not _plugin._started:
+    if not _plugin._started:  # noqa: SLF001
         print(f"equivalent command: {sys.executable} -m pytest {util.shlex_unsplit(pytestargs)}")
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception("pytest discovery did not start")
     return (
-        _plugin._tests.parents,
-        list(_plugin._tests),
+        _plugin._tests.parents,  # noqa: SLF001
+        list(_plugin._tests),  # noqa: SLF001
     )
 
 

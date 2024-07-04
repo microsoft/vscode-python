@@ -197,7 +197,7 @@ def build_test_tree(
     for test_case in get_test_case(suite):
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            error.append(str(test_case._exception))  # type: ignore
+            error.append(str(test_case._exception))  # type: ignore  # noqa: SLF001
         elif test_id.startswith("unittest.loader.ModuleSkipped"):
             components = test_id.split(".")
             class_name = f"{components[-1]}.py"
@@ -234,7 +234,7 @@ def build_test_tree(
             )
 
             # Get test line number.
-            test_method = getattr(test_case, test_case._testMethodName)
+            test_method = getattr(test_case, test_case._testMethodName)  # noqa: SLF001
             lineno = get_source_line(test_method)
 
             # Add test node.

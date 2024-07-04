@@ -582,11 +582,11 @@ def _summarize_item(item):
 
 
 def _debug_item(item, showsummary=False):
-    item._debugging = True
+    item._debugging = True  # noqa: SLF001
     try:
         summary = dict(_summarize_item(item))
     finally:
-        item._debugging = False
+        item._debugging = False  # noqa: SLF001
 
     if showsummary:
         print(item.nodeid)
