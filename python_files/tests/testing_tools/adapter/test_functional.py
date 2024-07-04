@@ -42,7 +42,7 @@ def _run_adapter(cmd, tool, *cliargs, **kwargs):
     hidestdio = kwargs.pop("hidestdio", True)
     assert not kwargs or tuple(kwargs) == ("stderr",)
     kwds = kwargs
-    argv = [sys.executable, SCRIPT, cmd, tool, "--"] + list(cliargs)
+    argv = [sys.executable, SCRIPT, cmd, tool, "--", *cliargs]
     if not hidestdio:
         argv.insert(4, "--no-hide-stdio")
         kwds["stderr"] = subprocess.STDOUT

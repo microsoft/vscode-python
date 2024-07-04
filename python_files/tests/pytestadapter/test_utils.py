@@ -6,7 +6,7 @@ import pathlib
 import sys
 import tempfile
 
-from .helpers import (  # noqa: E402
+from .helpers import (
     TEST_DATA_PATH,
 )
 

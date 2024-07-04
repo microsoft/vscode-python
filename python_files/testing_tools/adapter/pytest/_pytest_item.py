@@ -165,7 +165,7 @@ def parse_item(
             item.nodeid[: -len(parameterized)], kind
         )
         nodeid = f"{parentid}{parameterized}"
-        parents = [(parentid, item.originalname, kind)] + parents
+        parents = [(parentid, item.originalname, kind), *parents]
         name = parameterized[1:-1] or "<empty>"
     else:
         (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(item.nodeid, kind)
@@ -333,7 +333,7 @@ def _matches_relfile(
 
 
 def _is_legacy_wrapper(
-    srcfile,  # noqa: ARG001
+    srcfile,
     # *,
     _pathsep=PATH_SEP,
     _pyversion=sys.version_info,
@@ -572,7 +572,7 @@ def _summarize_item(item):
                 yield field, dir(item)
             else:
                 yield field, getattr(item, field, "<???>")
-        except Exception as exc:
+        except Exception as exc:  # noqa: PERF203
             yield field, f"<error {exc!r}>"
 
 

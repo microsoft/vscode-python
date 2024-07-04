@@ -1,3 +1,4 @@
+import contextlib
 import mimetypes
 import os
 import sys
@@ -21,11 +22,9 @@ def main(logdir):
     sys.stdout.write(f"TensorBoard started at {url}\n")
     sys.stdout.flush()
 
-    while True:
-        try:
+    with contextlib.suppress(KeyboardInterrupt):
+        while True:
             time.sleep(60)
-        except KeyboardInterrupt:
-            break
     sys.stdout.write("TensorBoard is shutting down")
     sys.stdout.flush()
 

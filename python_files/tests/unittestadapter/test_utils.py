@@ -58,8 +58,7 @@ def test_simple_test_cases(directory, pattern, expected) -> None:
     suite = loader.discover(start_dir, pattern)
 
     # Iterate on get_test_case and save the test id.
-    for test in get_test_case(suite):
-        actual.append(test.id())
+    actual = [test.id() for test in get_test_case(suite)]
 
     assert expected == actual
 

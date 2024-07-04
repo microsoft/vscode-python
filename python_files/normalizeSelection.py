@@ -133,12 +133,11 @@ min_key = None
 
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
-    exact_nodes = []
-    for node in top_level_nodes:
-        if node.lineno == start_line and node.end_lineno == end_line:
-            exact_nodes.append(node)
-
-    return exact_nodes
+    return [
+        node
+        for node in top_level_nodes
+        if node.lineno == start_line and node.end_lineno == end_line
+    ]
 
 
 def traverse_file(whole_file_content, start_line, end_line, was_highlighted):  # noqa: ARG001
@@ -190,8 +189,7 @@ def traverse_file(whole_file_content, start_line, end_line, was_highlighted):  #
             ast.ExceptHandler,
         )
         if isinstance(node, ast_types_with_nodebody) and isinstance(node.body, Iterable):
-            for child_nodes in node.body:
-                top_level_nodes.append(child_nodes)
+            top_level_nodes.extend(node.body)
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 

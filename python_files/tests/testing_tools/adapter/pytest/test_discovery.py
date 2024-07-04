@@ -302,9 +302,7 @@ def fake_pytest_main(stub, use_fd, pytest_stdout):
 
 
 class DiscoverTests(unittest.TestCase):
-    DEFAULT_ARGS = [
-        "--collect-only",
-    ]
+    DEFAULT_ARGS = ["--collect-only"]  # noqa: RUF012
 
     def test_basic(self):
         stub = util.Stub()

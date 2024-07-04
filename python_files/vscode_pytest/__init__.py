@@ -529,7 +529,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 file_nodes_dict[test_case.parent] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: Dict[str, TestNode] = {}
-    for _, file_node in file_nodes_dict.items():
+    for file_node in file_nodes_dict.values():
         # Iterate through all the files that exist and construct them into nested folders.
         root_folder_node: TestNode
         try:

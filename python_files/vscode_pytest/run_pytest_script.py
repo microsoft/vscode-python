@@ -68,7 +68,7 @@ if __name__ == "__main__":
     try:
         test_ids_from_buffer = raw_json.get("params")
         if test_ids_from_buffer:
-            arg_array = ["-p", "vscode_pytest"] + args + test_ids_from_buffer
+            arg_array = ["-p", "vscode_pytest", *args, *test_ids_from_buffer]
             print("Running pytest with args: " + str(arg_array))
             pytest.main(arg_array)
         else:
@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 "Error: No test ids received from stdin, could be an error or a run request without ids provided.",
             )
             print("Running pytest with no test ids as args. Args being used: ", args)
-            arg_array = ["-p", "vscode_pytest"] + args
+            arg_array = ["-p", "vscode_pytest", *args]
             pytest.main(arg_array)
     except json.JSONDecodeError:
         print(

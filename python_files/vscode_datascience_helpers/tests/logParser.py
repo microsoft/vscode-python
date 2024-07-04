@@ -65,7 +65,7 @@ def split_by_pid(testlog):
                             pids.add(pid)
                             log_file = p.with_name(f"{p.stem}_{pid}.log")
                             print("Writing to new log:", os.fsdecode(log_file))
-                            logs[pid] = log_file.open(mode="w")  # noqa: SIM115
+                            logs[pid] = log_file.open(mode="w")
 
                     # Add this line to the log
                     if pid is not None:

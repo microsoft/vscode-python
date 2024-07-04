@@ -222,7 +222,7 @@ def build_test_tree(
                 )
 
             # Find/build file node.
-            path_components = [top_level_directory] + folders + [py_filename]
+            path_components = [top_level_directory, *folders, py_filename]
             file_path = os.fsdecode(pathlib.PurePath("/".join(path_components)))
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node

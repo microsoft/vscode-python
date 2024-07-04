@@ -7,9 +7,9 @@ from typing import Any, Dict, List, Optional
 
 import pytest
 
-from tests.tree_comparison_helper import is_same_tree  # noqa: E402
+from tests.tree_comparison_helper import is_same_tree
 
-from . import expected_discovery_test_output, helpers  # noqa: E402
+from . import expected_discovery_test_output, helpers
 
 
 def test_import_error():

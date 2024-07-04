@@ -65,7 +65,7 @@ select = [
   "PD",  # pandas-vet
   "NPY",  # NumPy-specific rules
   "PERF",  # Perflint
-  #"RUF",  # Ruff-specific rules
+  "RUF",  # Ruff-specific rules
 ]
 
 [tool.ruff.lint.pydocstyle]
