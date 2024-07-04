@@ -91,7 +91,6 @@ When parsing an item, we make use of the following attributes:
 * own_markers
 """  # noqa: D205
 
-
 import sys
 
 import _pytest.doctest
