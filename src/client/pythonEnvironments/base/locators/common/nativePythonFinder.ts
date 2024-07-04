@@ -49,7 +49,7 @@ export interface NativeEnvManagerInfo {
 export interface NativeGlobalPythonFinder extends Disposable {
     resolve(executable: string): Promise<NativeEnvInfo>;
     refresh(): AsyncIterable<NativeEnvInfo>;
-    categoryToKind(category: string): PythonEnvKind;
+    categoryToKind(category?: string): PythonEnvKind;
 }
 
 interface NativeLog {
@@ -79,7 +79,10 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         return environment;
     }
 
-    categoryToKind(category: string): PythonEnvKind {
+    categoryToKind(category?: string): PythonEnvKind {
+        if (!category) {
+            return PythonEnvKind.Unknown;
+        }
         switch (category.toLowerCase()) {
             case 'conda':
                 return PythonEnvKind.Conda;
@@ -109,8 +112,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                 return PythonEnvKind.VirtualEnvWrapper;
             case 'windowsstore':
                 return PythonEnvKind.MicrosoftStore;
-            case 'unknown':
-                return PythonEnvKind.Unknown;
             default: {
                 this.outputChannel.info(`Unknown Python Environment category '${category}' from Native Locator.`);
                 return PythonEnvKind.Unknown;
