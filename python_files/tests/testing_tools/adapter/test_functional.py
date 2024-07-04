@@ -65,7 +65,7 @@ def fix_source(tests, testid, srcfile, lineno):
 
 def sorted_object(obj):
     if isinstance(obj, dict):
-        return sorted((key, sorted_object(obj[key])) for key in obj.keys())
+        return sorted((key, sorted_object(obj[key])) for key in obj)
     if isinstance(obj, list):
         return sorted(sorted_object(x) for x in obj)
     else:
