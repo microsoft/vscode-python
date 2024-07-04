@@ -63,7 +63,7 @@ select = [
   "A",  # flake8-builtins
   "C4",  # flake8-comprehensions
   "DTZ",  # flake8-dasetimez
-  #"INP",  # flake8-no-pep420
+  "INP",  # flake8-no-pep420
   #"PIE",  # flake8-pie
   #"PYI",  # flake8-pyi
   # flake8-pytest-style

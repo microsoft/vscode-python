@@ -1,4 +1,4 @@
-import argparse
+import argparse  # noqa: N999
 import os
 import re
 from io import TextIOWrapper
