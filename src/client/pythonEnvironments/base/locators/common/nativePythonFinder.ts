@@ -71,14 +71,11 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     }
 
     public async resolve(executable: string): Promise<NativeEnvInfo> {
-        const { environment, duration } = await this.connection.sendRequest<{
-            duration: number;
-            environment: NativeEnvInfo;
-        }>('resolve', {
+        const environment = await this.connection.sendRequest<NativeEnvInfo>('resolve', {
             executable,
         });
 
-        this.outputChannel.info(`Resolved Python Environment ${environment.executable} in ${duration}ms`);
+        this.outputChannel.info(`Resolved Python Environment ${environment.executable}`);
         return environment;
     }
 
@@ -303,11 +300,11 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                     // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
                     // HACK = TEMPORARY WORK AROUND, TO GET STUFF WORKING
                     const promise = this.connection
-                        .sendRequest<{ duration: number; environment: NativeEnvInfo }>('resolve', {
+                        .sendRequest<NativeEnvInfo>('resolve', {
                             executable: data.executable,
                         })
-                        .then(({ environment, duration }) => {
-                            this.outputChannel.info(`Resolved ${environment.executable} in ${duration}ms`);
+                        .then((environment) => {
+                            this.outputChannel.info(`Resolved ${environment.executable}`);
                             this.outputChannel.trace(`Environment resolved:\n ${JSON.stringify(data, undefined, 4)}`);
                             discovered.fire(environment);
                         })
