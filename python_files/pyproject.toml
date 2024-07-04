@@ -37,36 +37,36 @@ docstring-code-format = true
 # Compatible w/ ruff formatter. https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
 # Up-to-date as of Ruff 0.1.11 (2024-01-02).
 select = [
-  "F",  # Pyflakes
-  "E4", "E7", "E9",  # pycodestyle
-  "I",  # isort
-  "N",  # pep8-naming
-  "D2", "D400", "D403", "D419",  # pydocstyle
-  "UP",  # pyupgrade
-  "YTT",  # flake8-2020
-  "ASYNC",  # flake8-async
-  "B",  # flake8-bugbear
-  "A",  # flake8-builtins
-  "C4",  # flake8-comprehensions
-  "DTZ",  # flake8-dasetimez
-  "INP",  # flake8-no-pep420
-  "PIE",  # flake8-pie
-  "PYI",  # flake8-pyi
-  # flake8-pytest-style
-  "PT006", "PT007", "PT009", "PT012", "PT014", "PT015", "PT016", "PT017", "PT018", "PT019",
-  "PT020", "PT021", "PT022", "PT024", "PT025", "PT026", "PT027",
-  "RSE",  # flake8-raise
-  "RET502", "RET503", "RET504",  # flake8-return
-  "SLF",  # flake8-self
-  "SIM",  # flake8-simplify
-  "TCH",  # flake8-type-checking
-  "ARG",  # flake8-unused-argument
-  "PTH",  # flake8-pathlib
-  "PD",  # pandas-vet
-  "NPY",  # NumPy-specific rules
-  "PERF",  # Perflint
-  "RUF",  # Ruff-specific rules
-]
+    "A",  # flake8-builtins
+    "ARG",  # flake8-unused-argument
+    "ASYNC",  # flake8-async
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "D2", "D400", "D403", "D419",  # pydocstyle
+    "DTZ",  # flake8-dasetimez
+    "E4", "E7", "E9",  # pycodestyle
+    "F",  # Pyflakes
+    "I",  # isort
+    "INP",  # flake8-no-pep420
+    "N",  # pep8-naming
+    "NPY",  # NumPy-specific rules
+    "PD",  # pandas-vet
+    "PERF",  # Perflint
+    "PIE",  # flake8-pie
+    "PTH",  # flake8-pathlib
+    # flake8-pytest-style
+    "PT006", "PT007", "PT009", "PT012", "PT014", "PT015", "PT016", "PT017", "PT018", "PT019",
+    "PT020", "PT021", "PT022", "PT024", "PT025", "PT026", "PT027",
+    "PYI",  # flake8-pyi
+    "RET502", "RET503", "RET504",  # flake8-return
+    "RSE",  # flake8-raise
+    "RUF",  # Ruff-specific rules
+    "SLF",  # flake8-self
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "UP",  # pyupgrade
+    "YTT",  # flake8-2020
+    ]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
