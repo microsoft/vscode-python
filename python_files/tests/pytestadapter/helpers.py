@@ -295,8 +295,7 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
 def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
     """Get the absolute test id by joining the testPath with the test_id."""
     split_id = test_id.split("::")[1:]
-    absolute_test_id = "::".join([str(test_path), *split_id])
-    return absolute_test_id
+    return "::".join([str(test_path), *split_id])
 
 
 def generate_random_pipe_name(prefix=""):

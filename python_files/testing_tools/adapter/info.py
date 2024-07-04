@@ -9,14 +9,13 @@ class SingleTestPath(namedtuple("TestPath", "root relfile func sub")):
     """Where to find a single test."""
 
     def __new__(cls, root, relfile, func, sub=None):
-        self = super().__new__(
+        return super().__new__(
             cls,
             str(root) if root else None,
             str(relfile) if relfile else None,
             str(func) if func else None,
             [str(s) for s in sub] if sub else None,
         )
-        return self
 
     def __init__(self, *args, **kwargs):
         if self.root is None:
@@ -31,7 +30,7 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
     KINDS = ("folder", "file", "suite", "function", "subtest")
 
     def __new__(cls, id, kind, name, root=None, relpath=None, parentid=None):  # noqa: A002
-        self = super().__new__(
+        return super().__new__(
             cls,
             id=str(id) if id else None,
             kind=str(kind) if kind else None,
@@ -40,7 +39,6 @@ class ParentInfo(namedtuple("ParentInfo", "id kind name root relpath parentid"))
             relpath=str(relpath) if relpath else None,
             parentid=str(parentid) if parentid else None,
         )
-        return self
 
     def __init__(self, *args, **kwargs):
         if self.id is None:
@@ -69,7 +67,7 @@ class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parenti
     KINDS = ("function", "doctest")
 
     def __new__(cls, id, name, path, source, markers, parentid, kind="function"):  # noqa: A002
-        self = super().__new__(
+        return super().__new__(
             cls,
             str(id) if id else None,
             str(name) if name else None,
@@ -79,7 +77,6 @@ class SingleTestInfo(namedtuple("TestInfo", "id name path source markers parenti
             str(parentid) if parentid else None,
             str(kind) if kind else None,
         )
-        return self
 
     def __init__(self, *args, **kwargs):
         if self.id is None:

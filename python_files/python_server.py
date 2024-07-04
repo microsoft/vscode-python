@@ -50,8 +50,7 @@ def custom_input(prompt=""):
         if content_length:
             message_text = STDIN.read(content_length)
             message_json = json.loads(message_text)
-            our_user_input = message_json["result"]["userInput"]
-            return our_user_input
+            return message_json["result"]["userInput"]
     except Exception:
         print_log(traceback.format_exc())
 

@@ -46,8 +46,7 @@ def main(pytestargs, markers=None, specific=False):
         pytestargs.insert(0, marker)
         pytestargs.insert(0, "-m")
 
-    ec = pytest.main(pytestargs)
-    return ec
+    return pytest.main(pytestargs)
 
 
 if __name__ == "__main__":

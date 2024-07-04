@@ -187,8 +187,7 @@ def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
     testPath -- the path to the file the test is located in, as a pathlib.Path object.
     """
     split_id = test_id.split("::")[1:]
-    absolute_test_id = "::".join([str(test_path), *split_id])
-    return absolute_test_id
+    return "::".join([str(test_path), *split_id])
 
 
 def pytest_keyboard_interrupt(excinfo):
@@ -761,18 +760,17 @@ def get_node_path(node: Any) -> pathlib.Path:
     if SYMLINK_PATH and not isinstance(node, pytest.Session):
         # Get relative between the cwd (resolved path) and the node path.
         try:
-            # check to see if the node path contains the symlink root already
+            # Check to see if the node path contains the symlink root already
             common_path = os.path.commonpath([SYMLINK_PATH, node_path])
             if common_path == os.fsdecode(SYMLINK_PATH):
-                # node path is already relative to the SYMLINK_PATH root therefore return
+                # The node path is already relative to the SYMLINK_PATH root therefore return
                 return node_path
             else:
-                # if the node path is not a symlink, then we need to calculate the equivalent symlink path
-                # get the relative path between the cwd and the node path (as the node path is not a symlink)
+                # If the node path is not a symlink, then we need to calculate the equivalent symlink path
+                # get the relative path between the cwd and the node path (as the node path is not a symlink).
                 rel_path = node_path.relative_to(pathlib.Path.cwd())
                 # combine the difference between the cwd and the node path with the symlink path
-                sym_path = pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
-                return sym_path
+                return pathlib.Path(os.path.join(SYMLINK_PATH, rel_path))
         except Exception as e:
             raise VSCodePytestError(
                 f"Error occurred while calculating symlink equivalent from node path: {e}"
