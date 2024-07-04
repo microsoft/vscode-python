@@ -52,7 +52,7 @@ select = [
     "FLY",  # flynt
     "FURB",  # refurb
     "I",  # isort
-    #"ISC",  # flake8-implicit-str-concat
+    "ISC",  # flake8-implicit-str-concat
     "INP",  # flake8-no-pep420
     #"INT",  # flake8-gettext
     "LOG",  # flake8-logging
