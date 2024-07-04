@@ -56,7 +56,7 @@ def _get_statements(selection):
         # Also, not all AST objects can have decorators.
         if hasattr(node, "decorator_list") and sys.version_info >= (3, 8):
             # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
-            line_end -= len(node.decorator_list)
+            line_end -= len(getattr(node, "decorator_list"))  # noqa: B009
         ends.append(line_end)
     ends.append(len(lines))
 
@@ -73,7 +73,7 @@ def _get_statements(selection):
         # Special handling of decorators similar to what's above.
         if hasattr(node, "decorator_list") and sys.version_info >= (3, 8):
             # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
-            start -= len(node.decorator_list)
+            start -= len(getattr(node, "decorator_list"))  # noqa: B009
         block = "\n".join(lines[start:end])
 
         # If the block is multiline, add an extra newline character at its end.
