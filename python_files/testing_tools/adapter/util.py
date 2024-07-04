@@ -229,7 +229,7 @@ def _temp_io():
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
-    with _temp_io() as (sio, fileobj):
+    with _temp_io() as (sio, fileobj):  # noqa: SIM117
         with _replace_fd(sys.stdout, fileobj):
             with _replace_stdout(fileobj):
                 with _replace_fd(sys.stderr, fileobj):

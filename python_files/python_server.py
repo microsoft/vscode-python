@@ -99,12 +99,15 @@ def check_valid_command(request):
 def execute(request, user_globals):
     str_output = CustomIO("<stdout>", encoding="utf-8")
     str_error = CustomIO("<stderr>", encoding="utf-8")
+    str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
 
-    with redirect_io("stdout", str_output):
-        with redirect_io("stderr", str_error):
-            str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
-            with redirect_io("stdin", str_input):
-                exec_user_input(request["params"], user_globals)
+    with contextlib.redirect_stdout(str_output), contextlib.redirect_stderr(str_error):
+        original_stdin = sys.stdin
+        try:
+            sys.stdin = str_input
+            exec_user_input(request["params"], user_globals)
+        finally:
+            sys.stdin = original_stdin
     send_response(str_output.get_value(), request["id"])
 
 
@@ -138,15 +141,6 @@ class CustomIO(io.TextIOWrapper):
         """Returns value from the buffer as string."""
         self.seek(0)
         return self.read()
-
-
-@contextlib.contextmanager
-def redirect_io(stream: str, new_stream):
-    """Redirect stdio streams to a custom stream."""
-    old_stream = getattr(sys, stream)
-    setattr(sys, stream, new_stream)
-    yield
-    setattr(sys, stream, old_stream)
 
 
 def get_headers():
