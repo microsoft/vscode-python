@@ -1397,6 +1397,46 @@ export interface IEventNamePropertyMapping {
         missingNativeOtherGlobalEnvs?: number;
     };
     /**
+     * Telemetry event sent when Native finder fails to find some conda envs.
+     */
+    /* __GDPR__
+       "native_finder_missing_conda_envs" : {
+        "missing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "rootPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaManagerNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "missingEnvDirsFromSysRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingEnvDirsFromUserRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingEnvDirsFromOtherRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromSysRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromUserRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromOtherRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+       }
+     */
+    [EventName.NATIVE_FINDER_MISSING_CONDA_ENVS]: {
+        /**
+         * Number of missing conda environments.
+         */
+        missing: number;
+        /**
+         * Whether a conda exe was provided by the user.
+         */
+        userProvidedCondaExe?: boolean;
+        rootPrefixNotFound?: boolean;
+        condaPrefixNotFound?: boolean;
+        condaManagerNotFound?: boolean;
+        sysRcNotFound?: boolean;
+        userRcNotFound?: boolean;
+        otherRcNotFound?: boolean;
+        missingEnvDirsFromSysRc?: number;
+        missingEnvDirsFromUserRc?: number;
+        missingEnvDirsFromOtherRc?: number;
+        missingFromSysRcEnvDirs?: number;
+        missingFromUserRcEnvDirs?: number;
+        missingFromOtherRcEnvDirs?: number;
+    };
+    /**
      * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.
      */
     /* __GDPR__
