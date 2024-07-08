@@ -23,7 +23,7 @@ const untildify = require('untildify');
 
 const PYTHON_ENV_TOOLS_PATH = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
-    : '/Users/donjayamanne/Development/vsc/python-environment-tools/target/debug/pet';
+    : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
