@@ -17,7 +17,7 @@ import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/custo
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
 import { PythonEnvKind } from '../../info';
-import { sendNativeTelemetry, type NativePythonTelemetry } from './nativePythonTelemetry';
+import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
 
 const untildify = require('untildify');
 
