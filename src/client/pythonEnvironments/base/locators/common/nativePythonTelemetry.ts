@@ -10,27 +10,34 @@ export type NativePythonTelemetry = MissingCondaEnvironments;
 export type MissingCondaEnvironments = {
     event: 'MissingCondaEnvironments';
     data: {
-        missing: number;
-        userProvidedCondaExe?: boolean;
-        rootPrefixNotFound?: boolean;
-        condaPrefixNotFound?: boolean;
-        condaManagerNotFound?: boolean;
-        sysRcNotFound?: boolean;
-        userRcNotFound?: boolean;
-        otherRcNotFound?: boolean;
-        missingEnvDirsFromSysRc?: number;
-        missingEnvDirsFromUserRc?: number;
-        missingEnvDirsFromOtherRc?: number;
-        missingFromSysRcEnvDirs?: number;
-        missingFromUserRcEnvDirs?: number;
-        missingFromOtherRcEnvDirs?: number;
+        missingCondaEnvironments: {
+            missing: number;
+            envDirsNotFound?: number;
+            userProvidedCondaExe?: boolean;
+            rootPrefixNotFound?: boolean;
+            condaPrefixNotFound?: boolean;
+            condaManagerNotFound?: boolean;
+            sysRcNotFound?: boolean;
+            userRcNotFound?: boolean;
+            otherRcNotFound?: boolean;
+            missingEnvDirsFromSysRc?: number;
+            missingEnvDirsFromUserRc?: number;
+            missingEnvDirsFromOtherRc?: number;
+            missingFromSysRcEnvDirs?: number;
+            missingFromUserRcEnvDirs?: number;
+            missingFromOtherRcEnvDirs?: number;
+        };
     };
 };
 
 export function sendNativeTelemetry(data: NativePythonTelemetry): void {
     switch (data.event) {
         case 'MissingCondaEnvironments': {
-            sendTelemetryEvent(EventName.NATIVE_FINDER_MISSING_CONDA_ENVS, undefined, data.data);
+            sendTelemetryEvent(
+                EventName.NATIVE_FINDER_MISSING_CONDA_ENVS,
+                undefined,
+                data.data.missingCondaEnvironments,
+            );
             break;
         }
         default: {

@@ -1402,6 +1402,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "native_finder_missing_conda_envs" : {
         "missing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "envDirsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "rootPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
@@ -1420,20 +1421,62 @@ export interface IEventNamePropertyMapping {
          */
         missing: number;
         /**
+         * Total number of env_dirs not found even after parsing the conda_rc files.
+         * This will tell us that we are either unable to parse some of the conda_rc files or there are other
+         * env_dirs that we are not able to find.
+         */
+        envDirsNotFound?: number;
+        /**
          * Whether a conda exe was provided by the user.
          */
         userProvidedCondaExe?: boolean;
+        /**
+         * Whether the user provided a conda executable.
+         */
         rootPrefixNotFound?: boolean;
+        /**
+         * Whether the conda prefix returned by conda was not found by us.
+         */
         condaPrefixNotFound?: boolean;
+        /**
+         * Whether we found a conda manager or not.
+         */
         condaManagerNotFound?: boolean;
+        /**
+         * Whether we failed to find the system rc path.
+         */
         sysRcNotFound?: boolean;
+        /**
+         * Whether we failed to find the user rc path.
+         */
         userRcNotFound?: boolean;
+        /**
+         * Number of config files (excluding sys and user rc) that were not found.
+         */
         otherRcNotFound?: boolean;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the sys config rc.
+         */
         missingEnvDirsFromSysRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the user config rc.
+         */
         missingEnvDirsFromUserRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the other config rc.
+         */
         missingEnvDirsFromOtherRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the sys config rc.
+         */
         missingFromSysRcEnvDirs?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the user config rc.
+         */
         missingFromUserRcEnvDirs?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the other config rc.
+         */
         missingFromOtherRcEnvDirs?: number;
     };
     /**
