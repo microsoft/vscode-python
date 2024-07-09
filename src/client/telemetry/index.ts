@@ -1151,6 +1151,8 @@ export interface IEventNamePropertyMapping {
         "condaInfoEnvsDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "condaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "nativeCondaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "invalidCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsWithoutPrefix" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "canSpawnCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
@@ -1236,6 +1238,14 @@ export interface IEventNamePropertyMapping {
          * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
          */
         nativeCondaEnvsInEnvDir?: number;
+        /**
+         * The number of conda interpreters without the `conda-meta` directory.
+         */
+        invalidCondaEnvs?: number;
+        /**
+         * The number of conda interpreters without the prefix.
+         */
+        condaEnvsWithoutPrefix?: number;
         /**
          * Conda exe can be spawned.
          */
