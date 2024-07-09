@@ -1145,8 +1145,15 @@ export interface IEventNamePropertyMapping {
         "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "nativeDuration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "envsWithDuplicatePrefixes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "envsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaInfoEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaInfoEnvsDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "nativeCondaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "canSpawnCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1207,6 +1214,36 @@ export interface IEventNamePropertyMapping {
          * The number of the interpreters discovered
          */
         interpreters?: number;
+        /**
+         * The number of the interpreters with duplicate prefixes
+         */
+        envsWithDuplicatePrefixes?: number;
+        /**
+         * The number of the interpreters returned by `conda info`
+         */
+        condaInfoEnvs?: number;
+        /**
+         * The number of the envs_dirs returned by `conda info`
+         */
+        condaInfoEnvsDirs?: number;
+        /**
+         * The number of conda interpreters that are in the one of the global conda env locations.
+         * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
+         */
+        condaEnvsInEnvDir?: number;
+        /**
+         * The number of native conda interpreters that are in the one of the global conda env locations.
+         * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
+         */
+        nativeCondaEnvsInEnvDir?: number;
+        /**
+         * Conda exe can be spawned.
+         */
+        canSpawnCondaExe?: boolean;
+        /**
+         * The number of the interpreters not found in disc.
+         */
+        envsNotFount?: number;
         /**
          * Whether or not we're using the native locator.
          */

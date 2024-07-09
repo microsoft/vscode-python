@@ -3,6 +3,7 @@
 
 import { Event, EventEmitter, workspace } from 'vscode';
 import '../../../../common/extensions';
+import * as path from 'path';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
@@ -28,6 +29,7 @@ import { createNativeGlobalPythonFinder, NativeEnvInfo } from '../common/nativeP
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
+import { Conda } from '../../../common/environmentManagers/conda';
 
 /**
  * A service which maintains the collection of known environments.
@@ -304,6 +306,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const nativeDuration = nativeStopWatch.elapsedTime;
         void this.sendNativeLocatorTelemetry(nativeEnvs);
         const missingEnvironments = {
+            envsWithDuplicatePrefixes: 0,
+            envsNotFound: 0,
+            condaEnvsInEnvDir: 0,
+            invalidCondaEnvs: 0,
+            condaEnvsWithoutPrefix: 0,
+            nativeCondaEnvsInEnvDir: 0,
             missingNativeCondaEnvs: 0,
             missingNativeCustomEnvs: 0,
             missingNativeMicrosoftStoreEnvs: 0,
@@ -320,6 +328,31 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             missingNativeOtherGlobalEnvs: 0,
         };
 
+        let canSpawnCondaExe: boolean | undefined;
+        let condaInfoEnvs: undefined | number;
+        let condaInfoEnvsDirs: undefined | number;
+        let envsDirs: string[] = [];
+        try {
+            const conda = await Conda.getConda();
+            const info = await conda?.getInfo();
+            canSpawnCondaExe = true;
+            condaInfoEnvs = info?.envs?.length;
+            // eslint-disable-next-line camelcase
+            condaInfoEnvsDirs = info?.envs_dirs?.length;
+            // eslint-disable-next-line camelcase
+            envsDirs = info?.envs_dirs || [];
+
+            nativeEnvs
+                .filter((e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda)
+                .forEach((e) => {
+                    if (e.prefix && envsDirs.some((d) => e.prefix && e.prefix.startsWith(d))) {
+                        missingEnvironments.nativeCondaEnvsInEnvDir += 1;
+                    }
+                });
+        } catch (ex) {
+            canSpawnCondaExe = false;
+        }
+        const prefixesSeenAlready = new Set<string>();
         await Promise.all(
             envs.map(async (env) => {
                 try {
@@ -332,9 +365,16 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     if (!exe || !(await pathExists(exe))) {
                         exe = (await pathExists(env.executable.sysPrefix)) ? env.executable.sysPrefix : '';
                     }
+                    if (env.executable.sysPrefix && prefixesSeenAlready.has(env.executable.sysPrefix)) {
+                        prefixesSeenAlready.add(env.executable.sysPrefix);
+                        missingEnvironments.envsWithDuplicatePrefixes += 1;
+                    }
                     // Lowercase for purposes of comparison (safe).
                     exe = exe.trim().toLowerCase();
                     if (!exe) {
+                        if (env.executable.filename || env.executable.sysPrefix) {
+                            missingEnvironments.envsNotFound += 1;
+                        }
                         return;
                     }
                     // If this exe is not found by the native locator, then it is missing.
@@ -357,6 +397,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         traceError(`Environment ${exe} is missing from native locator`);
                         switch (env.kind) {
                             case PythonEnvKind.Conda:
+                                if (
+                                    env.executable.sysPrefix &&
+                                    envsDirs.some((d) => env.executable.sysPrefix.startsWith(d))
+                                ) {
+                                    missingEnvironments.condaEnvsInEnvDir += 1;
+                                }
                                 missingEnvironments.missingNativeCondaEnvs += 1;
                                 break;
                             case PythonEnvKind.Custom:
@@ -419,7 +465,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
         ).length;
         const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
-        const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
+        const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda);
         const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
         const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
         const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
@@ -440,6 +486,22 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 e.kind === PythonEnvKind.Custom ||
                 e.kind === PythonEnvKind.OtherVirtual,
         ).length;
+
+        missingEnvironments.condaEnvsWithoutPrefix = condaEnvs.filter((e) => !e.executable.sysPrefix).length;
+
+        await Promise.all(
+            condaEnvs.map(async (e) => {
+                if (e.executable.sysPrefix) {
+                    const metadataFolder = path.join(e.executable.sysPrefix, 'conda-meta');
+                    if (!(await pathExists(metadataFolder))) {
+                        missingEnvironments.invalidCondaEnvs += 1;
+                    }
+                }
+            }),
+        );
+        missingEnvironments.invalidCondaEnvs = envs
+            .filter((e) => e.kind === PythonEnvKind.Conda)
+            .filter((e) => e.executable.sysPrefix && e.executable.sysPrefix).length;
 
         const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
         const nativeCondaEnvs = nativeEnvs.filter(
@@ -493,9 +555,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
+            condaInfoEnvs,
+            condaInfoEnvsDirs,
+            canSpawnCondaExe,
             environmentsWithoutPython,
             activeStateEnvs,
-            condaEnvs,
+            condaEnvs: condaEnvs.length,
             customEnvs,
             hatchEnvs,
             microsoftStoreEnvs,
