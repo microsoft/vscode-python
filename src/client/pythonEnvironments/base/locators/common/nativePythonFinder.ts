@@ -17,6 +17,7 @@ import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/custo
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
 import { PythonEnvKind } from '../../info';
+import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
 
 const untildify = require('untildify');
 
@@ -253,6 +254,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                         this.outputChannel.trace(data.message);
                 }
             }),
+            connection.onNotification('telemetry', (data: NativePythonTelemetry) => sendNativeTelemetry(data)),
             connection.onClose(() => {
                 disposables.forEach((d) => d.dispose());
             }),
