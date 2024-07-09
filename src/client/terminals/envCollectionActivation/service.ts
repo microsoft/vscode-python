@@ -182,6 +182,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
+        ///////////////////////////////////////////////////////////////////
         // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
             // But first, try some dummy commands to see if I can get any sort of exit code.
             const myTerm = window.createTerminal();
@@ -194,7 +195,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 //   }
                   window.onDidEndTerminalShellExecution(event => {
                     if (event.execution === execution) {
-                      console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here.
+                      console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here. -- failing to get exit code again
                       traceLog(
                         `HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`
                     );
@@ -203,6 +204,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                   });
                 }
               });
+            //////////////////////////////////////////////////////////////
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
