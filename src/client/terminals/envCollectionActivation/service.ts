@@ -182,6 +182,27 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
+        // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+            // But first, try some dummy commands to see if I can get any sort of exit code.
+            const myTerm = window.createTerminal();
+            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+                if (terminal === myTerm) {
+                  const execution = shellIntegration.executeCommand('echo "Hello world"');
+                //   const stream = execution.read();
+                //   for await(const data of stream) {
+                //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+                //   }
+                  window.onDidEndTerminalShellExecution(event => {
+                    if (event.execution === execution) {
+                      console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here.
+                      traceLog(
+                        `HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`
+                    );
+                      let temp = event.exitCode;
+                    }
+                  });
+                }
+              });
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
@@ -203,23 +224,27 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 resource,
                 shell,
             );
-            // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
-            // But first, try some dummy commands to see if I can get any sort of exit code.
-            const myTerm = window.createTerminal();
-            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-                if (terminal === myTerm) {
-                  const execution = shellIntegration.executeCommand('echo "Hello world"');
-                  window.onDidEndTerminalShellExecution(event => {
-                    if (event.execution === execution) {
-                      console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined...
-                      traceLog(
-                        `HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`
-                    );
-                      let temp = event.exitCode;
-                    }
-                  });
-                }
-              });
+            // // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+            // // But first, try some dummy commands to see if I can get any sort of exit code.
+            // const myTerm = window.createTerminal();
+            // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+            //     if (terminal === myTerm) {
+            //       const execution = shellIntegration.executeCommand('echo "Hello world"');
+            //     //   const stream = execution.read();
+            //     //   for await(const data of stream) {
+            //     //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+            //     //   }
+            //       window.onDidEndTerminalShellExecution(event => {
+            //         if (event.execution === execution) {
+            //           console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
+            //           traceLog(
+            //             `HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`
+            //         );
+            //           let temp = event.exitCode;
+            //         }
+            //       });
+            //     }
+            //   });
         ////////////////////////////
         const processEnv = normCaseKeys(this.processEnvVars);
 
