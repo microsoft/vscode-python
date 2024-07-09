@@ -5,7 +5,7 @@ import { traceError } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 
-export type NativePythonTelemetry = MissingCondaEnvironments;
+export type NativePythonTelemetry = MissingCondaEnvironments | MissingPoetryEnvironments;
 
 export type MissingCondaEnvironments = {
     event: 'MissingCondaEnvironments';
@@ -30,6 +30,24 @@ export type MissingCondaEnvironments = {
     };
 };
 
+export type MissingPoetryEnvironments = {
+    event: 'MissingPoetryEnvironments';
+    data: {
+        missingPoetryEnvironments: {
+            missing: number;
+            missingInPath: number;
+            userProvidedPoetryExe?: boolean;
+            poetryExeNotFound?: boolean;
+            globalConfigNotFound?: boolean;
+            cacheDirNotFound?: boolean;
+            cacheDirIsDifferent?: boolean;
+            virtualenvsPathNotFound?: boolean;
+            virtualenvsPathIsDifferent?: boolean;
+            inProjectIsDifferent?: boolean;
+        };
+    };
+};
+
 export function sendNativeTelemetry(data: NativePythonTelemetry): void {
     switch (data.event) {
         case 'MissingCondaEnvironments': {
@@ -40,8 +58,16 @@ export function sendNativeTelemetry(data: NativePythonTelemetry): void {
             );
             break;
         }
+        case 'MissingPoetryEnvironments': {
+            sendTelemetryEvent(
+                EventName.NATIVE_FINDER_MISSING_POETRY_ENVS,
+                undefined,
+                data.data.missingPoetryEnvironments,
+            );
+            break;
+        }
         default: {
-            traceError(`Unhandled Telemetry Event type ${data.event}`);
+            traceError(`Unhandled Telemetry Event type ${JSON.stringify(data)}`);
         }
     }
 }
