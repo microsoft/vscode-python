@@ -3,7 +3,7 @@
 
 import { Event, EventEmitter, workspace } from 'vscode';
 import '../../../../common/extensions';
-import * as path from 'path';
+import * as fsPath from 'path';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
@@ -492,7 +492,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         await Promise.all(
             condaEnvs.map(async (e) => {
                 if (e.executable.sysPrefix) {
-                    const metadataFolder = path.join(e.executable.sysPrefix, 'conda-meta');
+                    const metadataFolder = fsPath.join(e.executable.sysPrefix, 'conda-meta');
                     if (!(await pathExists(metadataFolder))) {
                         missingEnvironments.invalidCondaEnvs += 1;
                     }
