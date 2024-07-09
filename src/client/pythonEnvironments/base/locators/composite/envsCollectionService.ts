@@ -328,14 +328,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             missingNativeOtherGlobalEnvs: 0,
         };
 
-        let canSpawnCondaExe: boolean | undefined;
+        let canSpawnConda: boolean | undefined;
         let condaInfoEnvs: undefined | number;
         let condaInfoEnvsDirs: undefined | number;
         let envsDirs: string[] = [];
         try {
             const conda = await Conda.getConda();
             const info = await conda?.getInfo();
-            canSpawnCondaExe = true;
+            canSpawnConda = true;
             condaInfoEnvs = info?.envs?.length;
             // eslint-disable-next-line camelcase
             condaInfoEnvsDirs = info?.envs_dirs?.length;
@@ -350,7 +350,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     }
                 });
         } catch (ex) {
-            canSpawnCondaExe = false;
+            canSpawnConda = false;
         }
         const prefixesSeenAlready = new Set<string>();
         await Promise.all(
@@ -557,7 +557,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             interpreters: this.cache.getAllEnvs().length,
             condaInfoEnvs,
             condaInfoEnvsDirs,
-            canSpawnCondaExe,
+            canSpawnConda,
             environmentsWithoutPython,
             activeStateEnvs,
             condaEnvs: condaEnvs.length,
