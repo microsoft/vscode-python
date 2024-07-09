@@ -76,7 +76,7 @@ select = [
     "UP",  # pyupgrade
     "W",  # pycodestyle (warnings)
     "YTT",  # flake8-2020
-    ]
+]
 
 [tool.ruff.lint.pydocstyle]
 convention = "pep257"
