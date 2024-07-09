@@ -197,7 +197,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     if (event.execution === execution) {
                         console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here, flaky. -->  failing to get exit code again
                         traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
-                        const temp = event.exitCode;
+                        // const temp = event.exitCode;
                     }
                 });
             }
@@ -238,7 +238,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                         if (event.execution === execution) {
                             console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
                             traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
-                            const temp = event.exitCode;
+                            // const temp = event.exitCode;
                         }
                     });
                 }
