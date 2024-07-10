@@ -3,7 +3,6 @@
 
 import { Event, EventEmitter, workspace } from 'vscode';
 import '../../../../common/extensions';
-import * as fsPath from 'path';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
@@ -29,7 +28,7 @@ import { createNativeGlobalPythonFinder, NativeEnvInfo } from '../common/nativeP
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
-import { Conda } from '../../../common/environmentManagers/conda';
+import { Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
 
 /**
  * A service which maintains the collection of known environments.
@@ -310,6 +309,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             envsNotFound: 0,
             condaEnvsInEnvDir: 0,
             invalidCondaEnvs: 0,
+            prefixNotExistsCondaEnvs: 0,
             condaEnvsWithoutPrefix: 0,
             nativeCondaEnvsInEnvDir: 0,
             missingNativeCondaEnvs: 0,
@@ -366,9 +366,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         exe = (await pathExists(env.executable.sysPrefix)) ? env.executable.sysPrefix : '';
                     }
                     if (env.executable.sysPrefix && prefixesSeenAlready.has(env.executable.sysPrefix)) {
-                        prefixesSeenAlready.add(env.executable.sysPrefix);
                         missingEnvironments.envsWithDuplicatePrefixes += 1;
                     }
+                    prefixesSeenAlready.add(env.executable.sysPrefix);
                     // Lowercase for purposes of comparison (safe).
                     exe = exe.trim().toLowerCase();
                     if (!exe) {
@@ -491,17 +491,14 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         await Promise.all(
             condaEnvs.map(async (e) => {
-                if (e.executable.sysPrefix) {
-                    const metadataFolder = fsPath.join(e.executable.sysPrefix, 'conda-meta');
-                    if (!(await pathExists(metadataFolder))) {
-                        missingEnvironments.invalidCondaEnvs += 1;
-                    }
+                if (e.executable.sysPrefix && !(await pathExists(e.executable.sysPrefix))) {
+                    missingEnvironments.prefixNotExistsCondaEnvs += 1;
+                }
+                if (e.executable.filename && (await isCondaEnvironment(e.executable.filename))) {
+                    missingEnvironments.invalidCondaEnvs += 1;
                 }
             }),
         );
-        missingEnvironments.invalidCondaEnvs = envs
-            .filter((e) => e.kind === PythonEnvKind.Conda)
-            .filter((e) => e.executable.sysPrefix && e.executable.sysPrefix).length;
 
         const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
         const nativeCondaEnvs = nativeEnvs.filter(
@@ -552,6 +549,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
+            telVer: 1,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,

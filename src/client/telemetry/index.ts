@@ -1141,6 +1141,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_discovery" : {
+        "telVer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "workspaceFolderCount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "nativeDuration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1152,6 +1153,7 @@ export interface IEventNamePropertyMapping {
         "condaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "nativeCondaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "invalidCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "prefixNotExistsCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "condaEnvsWithoutPrefix" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
@@ -1205,6 +1207,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
         /**
+         * Version of this telemetry.
+         */
+        telVer?: number;
+        /**
          * Number of workspaces.
          */
         workspaceFolderCount?: number;
@@ -1242,6 +1248,10 @@ export interface IEventNamePropertyMapping {
          * The number of conda interpreters without the `conda-meta` directory.
          */
         invalidCondaEnvs?: number;
+        /**
+         * The number of conda interpreters that have prefix that doesn't exist on disc.
+         */
+        prefixNotExistsCondaEnvs?: number;
         /**
          * The number of conda interpreters without the prefix.
          */
