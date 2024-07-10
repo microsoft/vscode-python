@@ -28,6 +28,7 @@ import { createNativeGlobalPythonFinder, NativeEnvInfo } from '../common/nativeP
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
+import { Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
 
 /**
  * A service which maintains the collection of known environments.
@@ -304,6 +305,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const nativeDuration = nativeStopWatch.elapsedTime;
         void this.sendNativeLocatorTelemetry(nativeEnvs);
         const missingEnvironments = {
+            envsWithDuplicatePrefixes: 0,
+            envsNotFound: 0,
+            condaEnvsInEnvDir: 0,
+            invalidCondaEnvs: 0,
+            prefixNotExistsCondaEnvs: 0,
+            condaEnvsWithoutPrefix: 0,
+            nativeCondaEnvsInEnvDir: 0,
             missingNativeCondaEnvs: 0,
             missingNativeCustomEnvs: 0,
             missingNativeMicrosoftStoreEnvs: 0,
@@ -320,6 +328,50 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             missingNativeOtherGlobalEnvs: 0,
         };
 
+        let canSpawnConda: boolean | undefined;
+        let condaInfoEnvs: undefined | number;
+        let condaInfoEnvsInvalid = 0;
+        let condaInfoEnvsDuplicate = 0;
+        let condaInfoEnvsInvalidPrefix = 0;
+        let condaInfoEnvsDirs: undefined | number;
+        let envsDirs: string[] = [];
+        try {
+            const conda = await Conda.getConda();
+            const info = await conda?.getInfo();
+            canSpawnConda = true;
+            condaInfoEnvs = info?.envs?.length;
+            // eslint-disable-next-line camelcase
+            condaInfoEnvsDirs = info?.envs_dirs?.length;
+            // eslint-disable-next-line camelcase
+            envsDirs = info?.envs_dirs || [];
+
+            const duplicate = new Set<string>();
+            Promise.all(
+                (info?.envs || []).map(async (e) => {
+                    if (duplicate.has(e)) {
+                        condaInfoEnvsDuplicate += 1;
+                        return;
+                    }
+                    duplicate.add(e);
+                    if (!(await pathExists(e))) {
+                        condaInfoEnvsInvalidPrefix += 1;
+                    }
+                    if (!(await isCondaEnvironment(e))) {
+                        condaInfoEnvsInvalid += 1;
+                    }
+                }),
+            );
+            nativeEnvs
+                .filter((e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda)
+                .forEach((e) => {
+                    if (e.prefix && envsDirs.some((d) => e.prefix && e.prefix.startsWith(d))) {
+                        missingEnvironments.nativeCondaEnvsInEnvDir += 1;
+                    }
+                });
+        } catch (ex) {
+            canSpawnConda = false;
+        }
+        const prefixesSeenAlready = new Set<string>();
         await Promise.all(
             envs.map(async (env) => {
                 try {
@@ -332,9 +384,16 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     if (!exe || !(await pathExists(exe))) {
                         exe = (await pathExists(env.executable.sysPrefix)) ? env.executable.sysPrefix : '';
                     }
+                    if (env.executable.sysPrefix && prefixesSeenAlready.has(env.executable.sysPrefix)) {
+                        missingEnvironments.envsWithDuplicatePrefixes += 1;
+                    }
+                    prefixesSeenAlready.add(env.executable.sysPrefix);
                     // Lowercase for purposes of comparison (safe).
                     exe = exe.trim().toLowerCase();
                     if (!exe) {
+                        if (env.executable.filename || env.executable.sysPrefix) {
+                            missingEnvironments.envsNotFound += 1;
+                        }
                         return;
                     }
                     // If this exe is not found by the native locator, then it is missing.
@@ -357,6 +416,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         traceError(`Environment ${exe} is missing from native locator`);
                         switch (env.kind) {
                             case PythonEnvKind.Conda:
+                                if (
+                                    env.executable.sysPrefix &&
+                                    envsDirs.some((d) => env.executable.sysPrefix.startsWith(d))
+                                ) {
+                                    missingEnvironments.condaEnvsInEnvDir += 1;
+                                }
                                 missingEnvironments.missingNativeCondaEnvs += 1;
                                 break;
                             case PythonEnvKind.Custom:
@@ -419,7 +484,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
         ).length;
         const activeStateEnvs = envs.filter((e) => e.kind === PythonEnvKind.ActiveState).length;
-        const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda).length;
+        const condaEnvs = envs.filter((e) => e.kind === PythonEnvKind.Conda);
         const customEnvs = envs.filter((e) => e.kind === PythonEnvKind.Custom).length;
         const hatchEnvs = envs.filter((e) => e.kind === PythonEnvKind.Hatch).length;
         const microsoftStoreEnvs = envs.filter((e) => e.kind === PythonEnvKind.MicrosoftStore).length;
@@ -441,62 +506,81 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 e.kind === PythonEnvKind.OtherVirtual,
         ).length;
 
+        missingEnvironments.condaEnvsWithoutPrefix = condaEnvs.filter((e) => !e.executable.sysPrefix).length;
+
+        await Promise.all(
+            condaEnvs.map(async (e) => {
+                if (e.executable.sysPrefix && !(await pathExists(e.executable.sysPrefix))) {
+                    missingEnvironments.prefixNotExistsCondaEnvs += 1;
+                }
+                if (e.executable.filename && (await isCondaEnvironment(e.executable.filename))) {
+                    missingEnvironments.invalidCondaEnvs += 1;
+                }
+            }),
+        );
+
         const nativeEnvironmentsWithoutPython = nativeEnvs.filter((e) => e.executable === undefined).length;
         const nativeCondaEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Conda,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda,
         ).length;
         const nativeCustomEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Custom,
         ).length;
         const nativeMicrosoftStoreEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.MicrosoftStore,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.MicrosoftStore,
         ).length;
         const nativeOtherGlobalEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherGlobal,
         ).length;
         const nativeOtherVirtualEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherVirtual,
         ).length;
         const nativePipEnvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pipenv,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Pipenv,
         ).length;
         const nativePoetryEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Poetry,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Poetry,
         ).length;
         const nativePyenvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Pyenv,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Pyenv,
         ).length;
         const nativeSystemEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.System,
         ).length;
         const nativeUnknownEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Unknown,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Unknown,
         ).length;
-        const nativeVenvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Venv,
-        ).length;
+        const nativeVenvEnvs = nativeEnvs.filter((e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Venv)
+            .length;
         const nativeVirtualEnvEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnv,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.VirtualEnv,
         ).length;
         const nativeVirtualEnvWrapperEnvs = nativeEnvs.filter(
-            (e) => this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.VirtualEnvWrapper,
+            (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.VirtualEnvWrapper,
         ).length;
         const nativeGlobal = nativeEnvs.filter(
             (e) =>
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherGlobal ||
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.System ||
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.Custom ||
-                this.nativeFinder.categoryToKind(e.category) === PythonEnvKind.OtherVirtual,
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherGlobal ||
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.System ||
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Custom ||
+                this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.OtherVirtual,
         ).length;
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
+            telVer: 2,
+            condaInfoEnvsInvalid,
+            condaInfoEnvsDuplicate,
+            condaInfoEnvsInvalidPrefix,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
+            condaInfoEnvs,
+            condaInfoEnvsDirs,
+            canSpawnConda,
             environmentsWithoutPython,
             activeStateEnvs,
-            condaEnvs,
+            condaEnvs: condaEnvs.length,
             customEnvs,
             hatchEnvs,
             microsoftStoreEnvs,
@@ -582,7 +666,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 if (!resolvedEnv) {
                     return;
                 }
-                const kind = this.nativeFinder.categoryToKind(e.category);
+                const kind = this.nativeFinder.categoryToKind(e.kind);
                 const nativeVersion = e.version ? parseVersion(e.version) : undefined;
                 if (
                     nativeVersion &&

@@ -13,12 +13,12 @@ sys.path.append(os.fspath(script_dir))
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402
+    DiscoveryPayloadDict,
+    EOTPayloadDict,
     VSCodeUnittestError,
     build_test_tree,
     parse_unittest_args,
     send_post_request,
-    DiscoveryPayloadDict,
-    EOTPayloadDict,
 )
 
 
@@ -56,9 +56,9 @@ def discover_tests(
         "status": "error",
     }
     """
-    cwd = os.path.abspath(start_dir)
+    cwd = os.path.abspath(start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
-        parent_dir = os.path.dirname(start_dir)
+        parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
     else:
         sys.path.insert(0, cwd)
@@ -75,7 +75,7 @@ def discover_tests(
             top_level_dir = start_dir
 
         # Get abspath of top level directory for build_test_tree.
-        top_level_dir = os.path.abspath(top_level_dir)
+        top_level_dir = os.path.abspath(top_level_dir)  # noqa: PTH100
 
         tests, error = build_test_tree(suite, top_level_dir)  # test tree built successfully here.
 

@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import print_function
 
 import json
 
@@ -10,8 +9,8 @@ def report_discovered(
     tests,
     parents,
     # *,
-    pretty=False,
-    simple=False,
+    pretty=False,  # noqa: FBT002
+    simple=False,  # noqa: FBT002
     _send=print,
     **_ignored,
 ):
@@ -83,12 +82,12 @@ def report_discovered(
     kwargs = {}
     if pretty:
         # human-formatted
-        kwargs = dict(
-            sort_keys=True,
-            indent=4,
-            separators=(",", ": "),
+        kwargs = {
+            "sort_keys": True,
+            "indent": 4,
+            "separators": (",", ": "),
             # ...
-        )
+        }
     serialized = json.dumps(data, **kwargs)
 
     _send(serialized)

@@ -1141,12 +1141,26 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_discovery" : {
+        "telVer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "workspaceFolderCount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "nativeDuration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaInfoEnvsInvalid" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaInfoEnvsDuplicate" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaInfoEnvsInvalidPrefix" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "envsWithDuplicatePrefixes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "envsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaInfoEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaInfoEnvsDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "nativeCondaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "invalidCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "prefixNotExistsCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsWithoutPrefix" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "canSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1196,6 +1210,22 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
         /**
+         * Version of this telemetry.
+         */
+        telVer?: number;
+        /**
+         * Number of invalid envs returned by `conda info`
+         */
+        condaInfoEnvsInvalid?: number;
+        /**
+         * Number of duplicate envs returned by `conda info`
+         */
+        condaInfoEnvsDuplicate?: number;
+        /**
+         * Number of envs with invalid prefix returned by `conda info`
+         */
+        condaInfoEnvsInvalidPrefix?: number;
+        /**
          * Number of workspaces.
          */
         workspaceFolderCount?: number;
@@ -1207,6 +1237,48 @@ export interface IEventNamePropertyMapping {
          * The number of the interpreters discovered
          */
         interpreters?: number;
+        /**
+         * The number of the interpreters with duplicate prefixes
+         */
+        envsWithDuplicatePrefixes?: number;
+        /**
+         * The number of the interpreters returned by `conda info`
+         */
+        condaInfoEnvs?: number;
+        /**
+         * The number of the envs_dirs returned by `conda info`
+         */
+        condaInfoEnvsDirs?: number;
+        /**
+         * The number of conda interpreters that are in the one of the global conda env locations.
+         * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
+         */
+        condaEnvsInEnvDir?: number;
+        /**
+         * The number of native conda interpreters that are in the one of the global conda env locations.
+         * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
+         */
+        nativeCondaEnvsInEnvDir?: number;
+        /**
+         * The number of conda interpreters without the `conda-meta` directory.
+         */
+        invalidCondaEnvs?: number;
+        /**
+         * The number of conda interpreters that have prefix that doesn't exist on disc.
+         */
+        prefixNotExistsCondaEnvs?: number;
+        /**
+         * The number of conda interpreters without the prefix.
+         */
+        condaEnvsWithoutPrefix?: number;
+        /**
+         * Conda exe can be spawned.
+         */
+        canSpawnConda?: boolean;
+        /**
+         * The number of the interpreters not found in disc.
+         */
+        envsNotFount?: number;
         /**
          * Whether or not we're using the native locator.
          */
@@ -1395,6 +1467,148 @@ export interface IEventNamePropertyMapping {
          * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
          */
         missingNativeOtherGlobalEnvs?: number;
+    };
+    /**
+     * Telemetry event sent when Native finder fails to find some conda envs.
+     */
+    /* __GDPR__
+       "native_finder_missing_conda_envs" : {
+        "missing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "envDirsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "rootPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaManagerNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "missingEnvDirsFromSysRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingEnvDirsFromUserRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingEnvDirsFromOtherRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromSysRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromUserRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromOtherRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+       }
+     */
+    [EventName.NATIVE_FINDER_MISSING_CONDA_ENVS]: {
+        /**
+         * Number of missing conda environments.
+         */
+        missing: number;
+        /**
+         * Total number of env_dirs not found even after parsing the conda_rc files.
+         * This will tell us that we are either unable to parse some of the conda_rc files or there are other
+         * env_dirs that we are not able to find.
+         */
+        envDirsNotFound?: number;
+        /**
+         * Whether a conda exe was provided by the user.
+         */
+        userProvidedCondaExe?: boolean;
+        /**
+         * Whether the user provided a conda executable.
+         */
+        rootPrefixNotFound?: boolean;
+        /**
+         * Whether the conda prefix returned by conda was not found by us.
+         */
+        condaPrefixNotFound?: boolean;
+        /**
+         * Whether we found a conda manager or not.
+         */
+        condaManagerNotFound?: boolean;
+        /**
+         * Whether we failed to find the system rc path.
+         */
+        sysRcNotFound?: boolean;
+        /**
+         * Whether we failed to find the user rc path.
+         */
+        userRcNotFound?: boolean;
+        /**
+         * Number of config files (excluding sys and user rc) that were not found.
+         */
+        otherRcNotFound?: boolean;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the sys config rc.
+         */
+        missingEnvDirsFromSysRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the user config rc.
+         */
+        missingEnvDirsFromUserRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the other config rc.
+         */
+        missingEnvDirsFromOtherRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the sys config rc.
+         */
+        missingFromSysRcEnvDirs?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the user config rc.
+         */
+        missingFromUserRcEnvDirs?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the other config rc.
+         */
+        missingFromOtherRcEnvDirs?: number;
+    };
+    /**
+     * Telemetry event sent when Native finder fails to find some conda envs.
+     */
+    /* __GDPR__
+       "native_finder_missing_poetry_envs" : {
+        "missing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingInPath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "userProvidedPoetryExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "poetryExeNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "globalConfigNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "cacheDirNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "cacheDirIsDifferent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "virtualenvsPathNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "virtualenvsPathIsDifferent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "inProjectIsDifferent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+       }
+     */
+    [EventName.NATIVE_FINDER_MISSING_POETRY_ENVS]: {
+        /**
+         * Number of missing poetry environments.
+         */
+        missing: number;
+        /**
+         * Total number of missing envs, where the envs are created in the virtualenvs_path directory.
+         */
+        missingInPath: number;
+        /**
+         * Whether a poetry exe was provided by the user.
+         */
+        userProvidedPoetryExe?: boolean;
+        /**
+         * Whether poetry exe was not found.
+         */
+        poetryExeNotFound?: boolean;
+        /**
+         * Whether poetry config was not found.
+         */
+        globalConfigNotFound?: boolean;
+        /**
+         * Whether cache_dir was not found.
+         */
+        cacheDirNotFound?: boolean;
+        /**
+         * Whether cache_dir found was different from that returned by poetry exe.
+         */
+        cacheDirIsDifferent?: boolean;
+        /**
+         * Whether virtualenvs.path was not found.
+         */
+        virtualenvsPathNotFound?: boolean;
+        /**
+         * Whether virtualenvs.path found was different from that returned by poetry exe.
+         */
+        virtualenvsPathIsDifferent?: boolean;
+        /**
+         * Whether virtualenvs.in-project found was different from that returned by poetry exe.
+         */
+        inProjectIsDifferent?: boolean;
     };
     /**
      * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.

@@ -2,20 +2,16 @@
 # Licensed under the MIT License.
 
 # Replace the "." entry.
-import os.path
+import os
+import pathlib
 import sys
 
 sys.path.insert(
     1,
-    os.path.dirname(  # python_files
-        os.path.dirname(  # python_files/testing_tools
-            os.path.abspath(__file__)  # this file
-        )
-    ),
+    os.fsdecode(pathlib.Path(__file__).parent.parent),
 )
 
-from testing_tools.adapter.__main__ import parse_args, main
-
+from testing_tools.adapter.__main__ import main, parse_args
 
 if __name__ == "__main__":
     tool, cmd, subargs, toolargs = parse_args()

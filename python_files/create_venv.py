@@ -89,9 +89,9 @@ def venv_exists(name: str) -> bool:
 def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
-        subprocess.run(args, cwd=os.getcwd(), check=True)
-    except subprocess.CalledProcessError:
-        raise VenvError(error_message)
+        subprocess.run(args, cwd=os.getcwd(), check=True)  # noqa: PTH109
+    except subprocess.CalledProcessError as exc:
+        raise VenvError(error_message) from exc
 
 
 def get_venv_path(name: str) -> str:
@@ -136,10 +136,9 @@ def upgrade_pip(venv_path: str) -> None:
 
 def add_gitignore(name: str) -> None:
     git_ignore = CWD / name / ".gitignore"
-    if not file_exists(git_ignore):
-        print("Creating: " + os.fspath(git_ignore))
-        with open(git_ignore, "w") as f:
-            f.write("*")
+    if git_ignore.is_file():
+        print("Creating:", os.fspath(git_ignore))
+        git_ignore.write_text("*")
 
 
 def download_pip_pyz(name: str):
@@ -148,13 +147,10 @@ def download_pip_pyz(name: str):
 
     try:
         with url_lib.urlopen(url) as response:
-            pip_pyz_path = os.fspath(CWD / name / "pip.pyz")
-            with open(pip_pyz_path, "wb") as out_file:
-                data = response.read()
-                out_file.write(data)
-                out_file.flush()
-    except Exception:
-        raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED")
+            pip_pyz_path = CWD / name / "pip.pyz"
+            pip_pyz_path.write_bytes(data=response.read())
+    except Exception as exc:
+        raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED") from exc
 
 
 def install_pip(name: str):

@@ -10,16 +10,16 @@ import textwrap
 import normalizeSelection
 
 
-class TestNormalizationScript(object):
+class TestNormalizationScript:
     """Unit tests for the normalization script."""
 
-    def test_basicNormalization(self):
+    def test_basic_normalization(self):
         src = 'print("this is a test")'
         expected = src + "\n"
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_moreThanOneLine(self):
+    def test_more_than_one_line(self):
         src = textwrap.dedent(
             """\
             # Some rando comment
@@ -38,7 +38,7 @@ class TestNormalizationScript(object):
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_withHangingIndent(self):
+    def test_with_hanging_indent(self):
         src = textwrap.dedent(
             """\
             x = 22
@@ -64,7 +64,7 @@ class TestNormalizationScript(object):
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_clearOutExtraneousNewlines(self):
+    def test_clear_out_extraneous_newlines(self):
         src = textwrap.dedent(
             """\
             value_x = 22
@@ -88,7 +88,7 @@ class TestNormalizationScript(object):
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_clearOutExtraLinesAndWhitespace(self):
+    def test_clear_out_extra_lines_and_whitespace(self):
         src = textwrap.dedent(
             """\
             if True:
@@ -115,13 +115,13 @@ class TestNormalizationScript(object):
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_partialSingleLine(self):
+    def test_partial_single_line(self):
         src = "   print('foo')"
         expected = textwrap.dedent(src) + "\n"
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_multiLineWithIndent(self):
+    def test_multiline_with_indent(self):
         src = """\
 
         if (x > 0
@@ -146,7 +146,7 @@ class TestNormalizationScript(object):
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_multiLineWithComment(self):
+    def test_multiline_with_comment(self):
         src = textwrap.dedent(
             """\
 
@@ -172,7 +172,7 @@ class TestNormalizationScript(object):
         result = normalizeSelection.normalize_lines(src)
         assert result == expected
 
-    def test_multilineException(self):
+    def test_multiline_exception(self):
         src = textwrap.dedent(
             """\
 

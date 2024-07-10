@@ -32,7 +32,7 @@ except ModuleNotFoundError:
     import _thread as thread
 
 
-class _TestOutput(object):
+class _TestOutput:
     """file like object which redirects output to the repl window."""
 
     errors = "strict"
@@ -40,7 +40,7 @@ class _TestOutput(object):
     def __init__(self, old_out, is_stdout):
         self.is_stdout = is_stdout
         self.old_out = old_out
-        if sys.version >= "3." and hasattr(old_out, "buffer"):
+        if sys.version_info[0] >= 3 and hasattr(old_out, "buffer"):
             self.buffer = _TestOutputBuffer(old_out.buffer, is_stdout)
 
     def flush(self):
@@ -79,7 +79,7 @@ class _TestOutput(object):
         return getattr(self.old_out, name)
 
 
-class _TestOutputBuffer(object):
+class _TestOutputBuffer:
     def __init__(self, old_buffer, is_stdout):
         self.buffer = old_buffer
         self.is_stdout = is_stdout
@@ -101,7 +101,7 @@ class _TestOutputBuffer(object):
         return self.buffer.seek(pos, whence)
 
 
-class _IpcChannel(object):
+class _IpcChannel:
     def __init__(self, socket, callback):
         self.socket = socket
         self.seq = 0
@@ -109,12 +109,12 @@ class _IpcChannel(object):
         self.lock = thread.allocate_lock()
         self._closed = False
         # start the testing reader thread loop
-        self.test_thread_id = thread.start_new_thread(self.readSocket, ())
+        self.test_thread_id = thread.start_new_thread(self.read_socket, ())
 
     def close(self):
         self._closed = True
 
-    def readSocket(self):
+    def read_socket(self):
         try:
             self.socket.recv(1024)
             self.callback()
@@ -139,40 +139,40 @@ _channel = None
 
 
 class VsTestResult(unittest.TextTestResult):
-    def startTest(self, test):
-        super(VsTestResult, self).startTest(test)
+    def startTest(self, test):  # noqa: N802
+        super().startTest(test)
         if _channel is not None:
             _channel.send_event(name="start", test=test.id())
 
-    def addError(self, test, err):
-        super(VsTestResult, self).addError(test, err)
+    def addError(self, test, err):  # noqa: N802
+        super().addError(test, err)
         self.sendResult(test, "error", err)
 
-    def addFailure(self, test, err):
-        super(VsTestResult, self).addFailure(test, err)
+    def addFailure(self, test, err):  # noqa: N802
+        super().addFailure(test, err)
         self.sendResult(test, "failed", err)
 
-    def addSuccess(self, test):
-        super(VsTestResult, self).addSuccess(test)
+    def addSuccess(self, test):  # noqa: N802
+        super().addSuccess(test)
         self.sendResult(test, "passed")
 
-    def addSkip(self, test, reason):
-        super(VsTestResult, self).addSkip(test, reason)
+    def addSkip(self, test, reason):  # noqa: N802
+        super().addSkip(test, reason)
         self.sendResult(test, "skipped")
 
-    def addExpectedFailure(self, test, err):
-        super(VsTestResult, self).addExpectedFailure(test, err)
+    def addExpectedFailure(self, test, err):  # noqa: N802
+        super().addExpectedFailure(test, err)
         self.sendResult(test, "failed-expected", err)
 
-    def addUnexpectedSuccess(self, test):
-        super(VsTestResult, self).addUnexpectedSuccess(test)
+    def addUnexpectedSuccess(self, test):  # noqa: N802
+        super().addUnexpectedSuccess(test)
         self.sendResult(test, "passed-unexpected")
 
-    def addSubTest(self, test, subtest, err):
-        super(VsTestResult, self).addSubTest(test, subtest, err)
+    def addSubTest(self, test, subtest, err):  # noqa: N802
+        super().addSubTest(test, subtest, err)
         self.sendResult(test, "subtest-passed" if err is None else "subtest-failed", err, subtest)
 
-    def sendResult(self, test, outcome, trace=None, subtest=None):
+    def sendResult(self, test, outcome, trace=None, subtest=None):  # noqa: N802
         if _channel is not None:
             tb = None
             message = None
@@ -195,19 +195,19 @@ class VsTestResult(unittest.TextTestResult):
             _channel.send_event("result", **result)
 
 
-def stopTests():
+def stop_tests():
     try:
         os.kill(os.getpid(), signal.SIGUSR1)
     except Exception:
         os.kill(os.getpid(), signal.SIGTERM)
 
 
-class ExitCommand(Exception):
+class ExitCommand(Exception):  # noqa: N818
     pass
 
 
-def signal_handler(signal, frame):
-    raise ExitCommand()
+def signal_handler(signal, frame):  # noqa: ARG001
+    raise ExitCommand
 
 
 def main():
@@ -248,9 +248,7 @@ def main():
         help="connect to port on localhost and send test results",
     )
     parser.add_option("--us", type="str", help="Directory to start discovery")
-    parser.add_option(
-        "--up", type="str", help="Pattern to match test files (" "test*.py" " default)"
-    )
+    parser.add_option("--up", type="str", help="Pattern to match test files (test*.py default)")
     parser.add_option(
         "--ut",
         type="str",
@@ -266,14 +264,16 @@ def main():
     parser.add_option("--uc", "--catch", type="str", help="Catch control-C and display results")
     (opts, _) = parser.parse_args()
 
-    sys.path[0] = os.getcwd()
+    sys.path[0] = os.getcwd()  # noqa: PTH109
     if opts.result_port:
         try:
             signal.signal(signal.SIGUSR1, signal_handler)
         except Exception:
             with contextlib.suppress(Exception):
                 signal.signal(signal.SIGTERM, signal_handler)
-        _channel = _IpcChannel(socket.create_connection(("127.0.0.1", opts.result_port)), stopTests)
+        _channel = _IpcChannel(
+            socket.create_connection(("127.0.0.1", opts.result_port)), stop_tests
+        )
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
 
@@ -289,11 +289,11 @@ def main():
             sleep(0.1)
         try:
             debugger_helper = windll["Microsoft.PythonTools.Debugger.Helper.x86.dll"]
-        except WindowsError:
+        except OSError:
             debugger_helper = windll["Microsoft.PythonTools.Debugger.Helper.x64.dll"]
-        isTracing = c_char.in_dll(debugger_helper, "isTracing")
+        is_tracing = c_char.in_dll(debugger_helper, "isTracing")
         while True:
-            if isTracing.value != 0:
+            if is_tracing.value != 0:
                 break
             sleep(0.1)
 
@@ -318,7 +318,9 @@ def main():
             loader = unittest.TestLoader()
             # opts.us will be passed in
             suites = loader.discover(
-                opts.us, pattern=os.path.basename(opts.testFile), top_level_dir=opts.ut
+                opts.us,
+                pattern=os.path.basename(opts.testFile),  # noqa: PTH119
+                top_level_dir=opts.ut,
             )
             suite = None
             tests = None
@@ -327,14 +329,14 @@ def main():
                 tests = suites
             else:
                 # Run a specific test class or test method
-                for test_suite in suites._tests:
-                    for cls in test_suite._tests:
+                for test_suite in suites._tests:  # noqa: SLF001
+                    for cls in test_suite._tests:  # noqa: SLF001
                         with contextlib.suppress(Exception):
                             for m in cls._tests:
-                                testId = m.id()
-                                if testId.startswith(opts.tests[0]):
+                                test_id = m.id()
+                                if test_id.startswith(opts.tests[0]):
                                     suite = cls
-                                if testId in opts.tests:
+                                if test_id in opts.tests:
                                     if tests is None:
                                         tests = unittest.TestSuite([m])
                                     else:

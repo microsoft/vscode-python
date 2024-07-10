@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-from __future__ import print_function, unicode_literals
+# ruff:noqa: PT009, PT027, SLF001
 
 try:
     from io import StringIO
@@ -15,6 +14,7 @@ import unittest
 
 import _pytest.doctest
 import pytest
+
 from testing_tools.adapter import info
 from testing_tools.adapter import util as adapter_util
 from testing_tools.adapter.pytest import _discovery
@@ -37,7 +37,7 @@ def unique(collection, key):
 
 class StubPyTest(util.StubProxy):
     def __init__(self, stub=None):
-        super(StubPyTest, self).__init__(stub, "pytest")
+        super().__init__(stub, "pytest")
         self.return_main = 0
 
     def main(self, args, plugins):
@@ -49,7 +49,7 @@ class StubPlugin(util.StubProxy):
     _started = True
 
     def __init__(self, stub=None, tests=None):
-        super(StubPlugin, self).__init__(stub, "plugin")
+        super().__init__(stub, "plugin")
         if tests is None:
             tests = StubDiscoveredTests(self.stub)
         self._tests = tests
@@ -68,7 +68,7 @@ class StubDiscoveredTests(util.StubProxy):
     NOT_FOUND = object()
 
     def __init__(self, stub=None):
-        super(StubDiscoveredTests, self).__init__(stub, "discovered")
+        super().__init__(stub, "discovered")
         self.return_items = []
         self.return_parents = []
 
@@ -92,12 +92,12 @@ class StubDiscoveredTests(util.StubProxy):
         self.add_call("add_test", None, {"test": test, "parents": parents})
 
 
-class FakeFunc(object):
+class FakeFunc:
     def __init__(self, name):
         self.__name__ = name
 
 
-class FakeMarker(object):
+class FakeMarker:
     def __init__(self, name):
         self.name = name
 
@@ -107,7 +107,7 @@ class StubPytestItem(util.StubProxy):
     _hasfunc = True
 
     def __init__(self, stub=None, **attrs):
-        super(StubPytestItem, self).__init__(stub, "pytest.Item")
+        super().__init__(stub, "pytest.Item")
         if attrs.get("function") is None:
             attrs.pop("function", None)
             self._hasfunc = False
@@ -133,9 +133,8 @@ class StubPytestItem(util.StubProxy):
     def __getattr__(self, name):
         if not self._debugging:
             self.add_call(name + " (attr)", None, None)
-        if name == "function":
-            if not self._hasfunc:
-                raise AttributeError(name)
+        if name == "function" and not self._hasfunc:
+            raise AttributeError(name)
 
         def func(*args, **kwargs):
             self.add_call(name, args or None, kwargs or None)
@@ -153,7 +152,7 @@ class StubSubtypedItem(StubPytestItem):
         return self
 
     def __init__(self, *args, **kwargs):
-        super(StubSubtypedItem, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if "nodeid" in self.__dict__:
             self._nodeid = self.__dict__.pop("nodeid")
 
@@ -182,7 +181,7 @@ def create_stub_doctest_item(*args, **kwargs):
 
 class StubPytestSession(util.StubProxy):
     def __init__(self, stub=None):
-        super(StubPytestSession, self).__init__(stub, "pytest.Session")
+        super().__init__(stub, "pytest.Session")
 
     def __getattr__(self, name):
         self.add_call(name + " (attr)", None, None)
@@ -195,7 +194,7 @@ class StubPytestSession(util.StubProxy):
 
 class StubPytestConfig(util.StubProxy):
     def __init__(self, stub=None):
-        super(StubPytestConfig, self).__init__(stub, "pytest.Config")
+        super().__init__(stub, "pytest.Config")
 
     def __getattr__(self, name):
         self.add_call(name + " (attr)", None, None)
@@ -220,94 +219,67 @@ def generate_parse_item(pathsep):
     def _fix_fileid(*args):
         return adapter_util.fix_fileid(
             *args,
-            **dict(
-                # dependency injection
-                _normcase=normcase,
-                _pathsep=pathsep,
-            ),
+            _normcase=normcase,
+            _pathsep=pathsep,
         )
 
     def _normalize_test_id(*args):
         return pytest_item._normalize_test_id(
             *args,
-            **dict(
-                # dependency injection
-                _fix_fileid=_fix_fileid,
-                _pathsep=pathsep,
-            ),
+            _fix_fileid=_fix_fileid,
+            _pathsep=pathsep,
         )
 
     def _iter_nodes(*args):
         return pytest_item._iter_nodes(
             *args,
-            **dict(
-                # dependency injection
-                _normalize_test_id=_normalize_test_id,
-                _normcase=normcase,
-                _pathsep=pathsep,
-            ),
+            _normalize_test_id=_normalize_test_id,
+            _normcase=normcase,
+            _pathsep=pathsep,
         )
 
     def _parse_node_id(*args):
         return pytest_item._parse_node_id(
             *args,
-            **dict(
-                # dependency injection
-                _iter_nodes=_iter_nodes,
-            ),
+            _iter_nodes=_iter_nodes,
         )
 
     ##########
     def _split_fspath(*args):
         return pytest_item._split_fspath(
             *args,
-            **dict(
-                # dependency injection
-                _normcase=normcase,
-            ),
+            _normcase=normcase,
         )
 
     ##########
     def _matches_relfile(*args):
         return pytest_item._matches_relfile(
             *args,
-            **dict(
-                # dependency injection
-                _normcase=normcase,
-                _pathsep=pathsep,
-            ),
+            _normcase=normcase,
+            _pathsep=pathsep,
         )
 
     def _is_legacy_wrapper(*args):
         return pytest_item._is_legacy_wrapper(
             *args,
-            **dict(
-                # dependency injection
-                _pathsep=pathsep,
-            ),
+            _pathsep=pathsep,
         )
 
     def _get_location(*args):
         return pytest_item._get_location(
             *args,
-            **dict(
-                # dependency injection
-                _matches_relfile=_matches_relfile,
-                _is_legacy_wrapper=_is_legacy_wrapper,
-                _pathsep=pathsep,
-            ),
+            _matches_relfile=_matches_relfile,
+            _is_legacy_wrapper=_is_legacy_wrapper,
+            _pathsep=pathsep,
         )
 
     ##########
     def _parse_item(item):
         return pytest_item.parse_item(
             item,
-            **dict(
-                # dependency injection
-                _parse_node_id=_parse_node_id,
-                _split_fspath=_split_fspath,
-                _get_location=_get_location,
-            ),
+            _parse_node_id=_parse_node_id,
+            _split_fspath=_split_fspath,
+            _get_location=_get_location,
         )
 
     return _parse_item
@@ -330,9 +302,7 @@ def fake_pytest_main(stub, use_fd, pytest_stdout):
 
 
 class DiscoverTests(unittest.TestCase):
-    DEFAULT_ARGS = [
-        "--collect-only",
-    ]
+    DEFAULT_ARGS = ["--collect-only"]  # noqa: RUF012
 
     def test_basic(self):
         stub = util.Stub()
@@ -362,7 +332,7 @@ class DiscoverTests(unittest.TestCase):
         pytest.return_main = 2
         plugin = StubPlugin(stub)
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception):  # noqa: B017
             _discovery.discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(
@@ -440,7 +410,7 @@ class DiscoverTests(unittest.TestCase):
                 _discovery.discover(
                     [],
                     hidestdio=True,
-                    _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
+                    _pytest_main=fake_pytest_main(stub, False, pytest_stdout),  # noqa: FBT003
                     _plugin=plugin,
                 )
             finally:
@@ -468,7 +438,7 @@ class DiscoverTests(unittest.TestCase):
             _discovery.discover(
                 [],
                 hidestdio=True,
-                _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                _pytest_main=fake_pytest_main(stub, True, pytest_stdout),  # noqa: FBT003
                 _plugin=plugin,
             )
             captured = sys.stdout.read()
@@ -496,7 +466,7 @@ class DiscoverTests(unittest.TestCase):
             _discovery.discover(
                 [],
                 hidestdio=False,
-                _pytest_main=fake_pytest_main(stub, False, pytest_stdout),
+                _pytest_main=fake_pytest_main(stub, False, pytest_stdout),  # noqa: FBT003
                 _plugin=plugin,
             )
         finally:
@@ -522,7 +492,7 @@ class DiscoverTests(unittest.TestCase):
                 _discovery.discover(
                     [],
                     hidestdio=False,
-                    _pytest_main=fake_pytest_main(stub, True, pytest_stdout),
+                    _pytest_main=fake_pytest_main(stub, True, pytest_stdout),  # noqa: FBT003
                     _plugin=plugin,
                 )
             finally:
@@ -628,13 +598,13 @@ class CollectorTests(unittest.TestCase):
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         ("./test_spam.py::SpamTests", "SpamTests", "suite"),
                         ("./test_spam.py", "test_spam.py", "file"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id="./test_spam.py::SpamTests::test_one",
                         name="test_one",
                         path=info.SingleTestPath(
@@ -643,22 +613,22 @@ class CollectorTests(unittest.TestCase):
                             func="SpamTests.test_one",
                             sub=None,
                         ),
-                        source="{}:{}".format(relfile1, 13),
+                        source=f"{relfile1}:{13}",
                         markers=None,
                         parentid="./test_spam.py::SpamTests",
                     ),
-                ),
+                },
             ),
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         ("./test_spam.py::SpamTests", "SpamTests", "suite"),
                         ("./test_spam.py", "test_spam.py", "file"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id="./test_spam.py::SpamTests::test_other",
                         name="test_other",
                         path=info.SingleTestPath(
@@ -667,21 +637,21 @@ class CollectorTests(unittest.TestCase):
                             func="SpamTests.test_other",
                             sub=None,
                         ),
-                        source="{}:{}".format(relfile1, 20),
+                        source=f"{relfile1}:{20}",
                         markers=None,
                         parentid="./test_spam.py::SpamTests",
                     ),
-                ),
+                },
             ),
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         ("./test_spam.py", "test_spam.py", "file"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id="./test_spam.py::test_all",
                         name="test_all",
                         path=info.SingleTestPath(
@@ -690,22 +660,22 @@ class CollectorTests(unittest.TestCase):
                             func="test_all",
                             sub=None,
                         ),
-                        source="{}:{}".format(relfile1, 145),
+                        source=f"{relfile1}:{145}",
                         markers=None,
                         parentid="./test_spam.py",
                     ),
-                ),
+                },
             ),
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         ("./test_spam.py::test_each", "test_each", "function"),
                         ("./test_spam.py", "test_spam.py", "file"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id="./test_spam.py::test_each[10-10]",
                         name="10-10",
                         path=info.SingleTestPath(
@@ -714,17 +684,17 @@ class CollectorTests(unittest.TestCase):
                             func="test_each",
                             sub=["[10-10]"],
                         ),
-                        source="{}:{}".format(relfile1, 274),
+                        source=f"{relfile1}:{274}",
                         markers=None,
                         parentid="./test_spam.py::test_each",
                     ),
-                ),
+                },
             ),
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (
                             "./x/y/z/test_eggs.py::All::BasicTests",
                             "BasicTests",
@@ -737,7 +707,7 @@ class CollectorTests(unittest.TestCase):
                         ("./x", "x", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id="./x/y/z/test_eggs.py::All::BasicTests::test_first",
                         name="test_first",
                         path=info.SingleTestPath(
@@ -746,17 +716,17 @@ class CollectorTests(unittest.TestCase):
                             func="All.BasicTests.test_first",
                             sub=None,
                         ),
-                        source="{}:{}".format(adapter_util.fix_relpath(relfile2), 32),
+                        source=f"{adapter_util.fix_relpath(relfile2)}:{32}",
                         markers=None,
                         parentid="./x/y/z/test_eggs.py::All::BasicTests",
                     ),
-                ),
+                },
             ),
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (
                             "./x/y/z/test_eggs.py::All::BasicTests::test_each",
                             "test_each",
@@ -774,7 +744,7 @@ class CollectorTests(unittest.TestCase):
                         ("./x", "x", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id="./x/y/z/test_eggs.py::All::BasicTests::test_each[1+2-3]",
                         name="1+2-3",
                         path=info.SingleTestPath(
@@ -783,11 +753,11 @@ class CollectorTests(unittest.TestCase):
                             func="All.BasicTests.test_each",
                             sub=["[1+2-3]"],
                         ),
-                        source="{}:{}".format(adapter_util.fix_relpath(relfile2), 63),
+                        source=f"{adapter_util.fix_relpath(relfile2)}:{63}",
                         markers=["expected-failure", "skip", "skip-if"],
                         parentid="./x/y/z/test_eggs.py::All::BasicTests::test_each",
                     ),
-                ),
+                },
             ),
         ]
         self.assertEqual(stub.calls, expected)
@@ -821,8 +791,8 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py::SpamTests", "SpamTests", "suite"),
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
@@ -830,7 +800,7 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
                             path=info.SingleTestPath(
@@ -839,11 +809,11 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
-                    ),
+                    },
                 ),
             ],
         )
@@ -898,13 +868,13 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/test_doctest.txt", "test_doctest.txt", "file"),
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/test_doctest.txt::test_doctest.txt",
                             name="test_doctest.txt",
                             path=info.SingleTestPath(
@@ -912,24 +882,24 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(doctestfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(doctestfile), 1),
+                            source=f"{adapter_util.fix_relpath(doctestfile)}:{1}",
                             markers=[],
                             parentid="./x/test_doctest.txt",
                         ),
-                    ),
+                    },
                 ),
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
                             ("./x/y", "y", "folder"),
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs",
                             name="test_eggs",
                             path=info.SingleTestPath(
@@ -937,24 +907,24 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 1),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{1}",
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
-                    ),
+                    },
                 ),
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
                             ("./x/y", "y", "folder"),
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam",
                             name="test_eggs.TestSpam",
                             path=info.SingleTestPath(
@@ -962,24 +932,24 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
-                    ),
+                    },
                 ),
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
                             ("./x/y", "y", "folder"),
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_eggs.TestSpam.TestEggs",
                             name="test_eggs.TestSpam.TestEggs",
                             path=info.SingleTestPath(
@@ -987,11 +957,11 @@ class CollectorTests(unittest.TestCase):
                                 relfile=adapter_util.fix_relpath(relfile),
                                 func=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 28),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{28}",
                             markers=[],
                             parentid="./x/y/z/test_eggs.py",
                         ),
-                    ),
+                    },
                 ),
             ],
         )
@@ -1025,8 +995,8 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             (
                                 "./x/y/z/test_eggs.py::SpamTests::test_spam",
                                 "test_spam",
@@ -1039,7 +1009,7 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam[a-[b]-c]",
                             name="a-[b]-c",
                             path=info.SingleTestPath(
@@ -1048,11 +1018,11 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=["[a-[b]-c]"],
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests::test_spam",
                         ),
-                    ),
+                    },
                 ),
             ],
         )
@@ -1086,8 +1056,8 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             (
                                 "./x/y/z/test_eggs.py::SpamTests::Ham::Eggs",
                                 "Eggs",
@@ -1101,7 +1071,7 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::Ham::Eggs::test_spam",
                             name="test_spam",
                             path=info.SingleTestPath(
@@ -1110,11 +1080,11 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.Ham.Eggs.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests::Ham::Eggs",
                         ),
-                    ),
+                    },
                 ),
             ],
         )
@@ -1184,8 +1154,8 @@ class CollectorTests(unittest.TestCase):
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/Y/Z/test_Eggs.py::SpamTests", "SpamTests", "suite"),
                         (r"./X/Y/Z/test_Eggs.py", "test_Eggs.py", "file"),
                         (r"./X/Y/Z", "Z", "folder"),
@@ -1193,7 +1163,7 @@ class CollectorTests(unittest.TestCase):
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/Y/Z/test_Eggs.py::SpamTests::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1206,7 +1176,7 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/Y/Z/test_Eggs.py::SpamTests",
                     ),
-                ),
+                },
             ),
             # permutations
             # (*all* the IDs use "/")
@@ -1215,13 +1185,13 @@ class CollectorTests(unittest.TestCase):
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_a.py", "test_a.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_a.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1234,19 +1204,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_a.py",
                     ),
-                ),
+                },
             ),
             # /, \, /
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_b.py", "test_b.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_b.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1259,19 +1229,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_b.py",
                     ),
-                ),
+                },
             ),
             # /, /, \
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_c.py", "test_c.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_c.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1284,19 +1254,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_c.py",
                     ),
-                ),
+                },
             ),
             # /, /, /
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_d.py", "test_d.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_d.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1309,19 +1279,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_d.py",
                     ),
-                ),
+                },
             ),
             # \, \, \
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_e.py", "test_e.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_e.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1334,19 +1304,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_e.py",
                     ),
-                ),
+                },
             ),
             # \, \, /
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_f.py", "test_f.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_f.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1359,19 +1329,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_f.py",
                     ),
-                ),
+                },
             ),
             # \, /, \
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_g.py", "test_g.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_g.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1384,19 +1354,19 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_g.py",
                     ),
-                ),
+                },
             ),
             # \, /, /
             (
                 "discovered.add_test",
                 None,
-                dict(
-                    parents=[
+                {
+                    "parents": [
                         (r"./X/test_h.py", "test_h.py", "file"),
                         (r"./X", "X", "folder"),
                         (".", testroot, "folder"),
                     ],
-                    test=info.SingleTestInfo(
+                    "test": info.SingleTestInfo(
                         id=r"./X/test_h.py::test_spam",
                         name="test_spam",
                         path=info.SingleTestPath(
@@ -1409,7 +1379,7 @@ class CollectorTests(unittest.TestCase):
                         markers=None,
                         parentid=r"./X/test_h.py",
                     ),
-                ),
+                },
             ),
         ]
         self.assertEqual(stub.calls, expected)
@@ -1443,8 +1413,8 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py::SpamTests", "SpamTests", "suite"),
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
@@ -1452,7 +1422,7 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
                             path=info.SingleTestPath(
@@ -1461,11 +1431,11 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=[],
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
-                    ),
+                    },
                 ),
             ],
         )
@@ -1499,8 +1469,8 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py::SpamTests", "SpamTests", "suite"),
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
@@ -1508,7 +1478,7 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
                             path=info.SingleTestPath(
@@ -1517,11 +1487,11 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=[],
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(relfile), 13),
+                            source=f"{adapter_util.fix_relpath(relfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
-                    ),
+                    },
                 ),
             ],
         )
@@ -1567,8 +1537,8 @@ class CollectorTests(unittest.TestCase):
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py::SpamTests", "SpamTests", "suite"),
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
@@ -1576,7 +1546,7 @@ class CollectorTests(unittest.TestCase):
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::SpamTests::test_spam",
                             name="test_spam",
                             path=info.SingleTestPath(
@@ -1585,24 +1555,24 @@ class CollectorTests(unittest.TestCase):
                                 func="SpamTests.test_spam",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(srcfile), 13),
+                            source=f"{adapter_util.fix_relpath(srcfile)}:{13}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py::SpamTests",
                         ),
-                    ),
+                    },
                 ),
                 (
                     "discovered.add_test",
                     None,
-                    dict(
-                        parents=[
+                    {
+                        "parents": [
                             ("./x/y/z/test_eggs.py", "test_eggs.py", "file"),
                             ("./x/y/z", "z", "folder"),
                             ("./x/y", "y", "folder"),
                             ("./x", "x", "folder"),
                             (".", testroot, "folder"),
                         ],
-                        test=info.SingleTestInfo(
+                        "test": info.SingleTestInfo(
                             id="./x/y/z/test_eggs.py::test_ham",
                             name="test_ham",
                             path=info.SingleTestPath(
@@ -1611,11 +1581,11 @@ class CollectorTests(unittest.TestCase):
                                 func="test_ham",
                                 sub=None,
                             ),
-                            source="{}:{}".format(adapter_util.fix_relpath(srcfile), 4),
+                            source=f"{adapter_util.fix_relpath(srcfile)}:{4}",
                             markers=None,
                             parentid="./x/y/z/test_eggs.py",
                         ),
-                    ),
+                    },
                 ),
             ],
         )

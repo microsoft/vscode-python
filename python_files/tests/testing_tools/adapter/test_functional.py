@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-from __future__ import absolute_import, unicode_literals
+# ruff:noqa: PT009, PT027, PTH109, PTH118, PTH120
 
 import json
 import os
@@ -43,30 +42,14 @@ def _run_adapter(cmd, tool, *cliargs, **kwargs):
     hidestdio = kwargs.pop("hidestdio", True)
     assert not kwargs or tuple(kwargs) == ("stderr",)
     kwds = kwargs
-    argv = [sys.executable, SCRIPT, cmd, tool, "--"] + list(cliargs)
+    argv = [sys.executable, SCRIPT, cmd, tool, "--", *cliargs]
     if not hidestdio:
         argv.insert(4, "--no-hide-stdio")
         kwds["stderr"] = subprocess.STDOUT
     argv.append("--cache-clear")
     print("running {!r}".format(" ".join(arg.rpartition(CWD + "/")[-1] for arg in argv)))
-    output = subprocess.check_output(argv, universal_newlines=True, **kwds)
-    return output
 
-
-def fix_test_order(tests):
-    if sys.version_info >= (3, 6):
-        return tests
-    fixed = []
-    curfile = None
-    group = []
-    for test in tests:
-        if (curfile or "???") not in test["id"]:
-            fixed.extend(sorted(group, key=lambda t: t["id"]))
-            group = []
-            curfile = test["id"].partition(".py::")[0] + ".py"
-        group.append(test)
-    fixed.extend(sorted(group, key=lambda t: t["id"]))
-    return fixed
+    return subprocess.check_output(argv, universal_newlines=True, **kwds)
 
 
 def fix_source(tests, testid, srcfile, lineno):
@@ -74,17 +57,17 @@ def fix_source(tests, testid, srcfile, lineno):
         if test["id"] == testid:
             break
     else:
-        raise KeyError("test {!r} not found".format(testid))
+        raise KeyError(f"test {testid!r} not found")
     if not srcfile:
         srcfile = test["source"].rpartition(":")[0]
-    test["source"] = fix_path("{}:{}".format(srcfile, lineno))
+    test["source"] = fix_path(f"{srcfile}:{lineno}")
 
 
 def sorted_object(obj):
     if isinstance(obj, dict):
-        return sorted((key, sorted_object(obj[key])) for key in obj.keys())
+        return sorted((key, sorted_object(obj[key])) for key in obj)
     if isinstance(obj, list):
-        return sorted((sorted_object(x) for x in obj))
+        return sorted(sorted_object(x) for x in obj)
     else:
         return obj
 
@@ -98,7 +81,7 @@ class PytestTests(unittest.TestCase):
     def setUp(self):
         if PATH_SEP is not os.path.sep:
             raise unittest.SkipTest("functional tests require unmodified env")
-        super(PytestTests, self).setUp()
+        super().setUp()
 
     def complex(self, testroot):
         results = COMPLEX.copy()
@@ -150,19 +133,11 @@ class PytestTests(unittest.TestCase):
     def test_discover_complex_default(self):
         projroot, testroot = resolve_testroot("complex")
         expected = self.complex(projroot)
-        expected[0]["tests"] = fix_test_order(expected[0]["tests"])
-        if sys.version_info < (3,):
-            decorated = [
-                "./tests/test_unittest.py::MyTests::test_skipped",
-                "./tests/test_unittest.py::MyTests::test_maybe_skipped",
-                "./tests/test_unittest.py::MyTests::test_maybe_not_skipped",
-            ]
-            for testid in decorated:
-                fix_source(expected[0]["tests"], testid, None, 0)
+        expected[0]["tests"] = expected[0]["tests"]
 
         out = run_adapter("discover", "pytest", "--rootdir", projroot, testroot)
         result = json.loads(out)
-        result[0]["tests"] = fix_test_order(result[0]["tests"])
+        result[0]["tests"] = result[0]["tests"]
 
         self.maxDiff = None
         self.assertEqual(sorted_object(result), sorted_object(expected))
@@ -232,21 +207,13 @@ class PytestTests(unittest.TestCase):
                 "parentid": "./mod.py",
             },
         ] + expected[0]["tests"]
-        expected[0]["tests"] = fix_test_order(expected[0]["tests"])
-        if sys.version_info < (3,):
-            decorated = [
-                "./tests/test_unittest.py::MyTests::test_skipped",
-                "./tests/test_unittest.py::MyTests::test_maybe_skipped",
-                "./tests/test_unittest.py::MyTests::test_maybe_not_skipped",
-            ]
-            for testid in decorated:
-                fix_source(expected[0]["tests"], testid, None, 0)
+        expected[0]["tests"] = expected[0]["tests"]
 
         out = run_adapter(
             "discover", "pytest", "--rootdir", projroot, "--doctest-modules", projroot
         )
         result = json.loads(out)
-        result[0]["tests"] = fix_test_order(result[0]["tests"])
+        result[0]["tests"] = result[0]["tests"]
 
         self.maxDiff = None
         self.assertEqual(sorted_object(result), sorted_object(expected))

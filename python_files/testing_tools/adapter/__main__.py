@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import absolute_import
 
 import argparse
 import sys
@@ -85,14 +84,14 @@ def main(
 ):
     try:
         tool = _tools[toolname]
-    except KeyError:
-        raise UnsupportedToolError(toolname)
+    except KeyError as exc:
+        raise UnsupportedToolError(toolname) from exc
 
     try:
         run = tool[cmdname]
         report_result = _reporters[cmdname]
-    except KeyError:
-        raise UnsupportedCommandError(cmdname)
+    except KeyError as exc:
+        raise UnsupportedCommandError(cmdname) from exc
 
     parents, result = run(toolargs, **subargs)
     report_result(result, parents, **subargs)

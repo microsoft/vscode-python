@@ -23,7 +23,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(
-    "args, expected",
+    ("args", "expected"),
     [
         (
             ["-s", "something", "-p", "other*", "-t", "else"],
@@ -71,18 +71,14 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
     ],
 )
 def test_parse_unittest_args(args: List[str], expected: List[str]) -> None:
-    """The parse_unittest_args function should return values for the start_dir, pattern, and top_level_dir arguments
-    when passed as command-line options, and ignore unrecognized arguments.
-    """
+    """The parse_unittest_args function should return values for the start_dir, pattern, and top_level_dir arguments when passed as command-line options, and ignore unrecognized arguments."""
     actual = parse_unittest_args(args)
 
     assert actual == expected
 
 
 def test_simple_discovery() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
-    if unittest discovery was performed successfully.
-    """
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree if unittest discovery was performed successfully."""
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_simple*"
     file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH / "discovery_simple.py"))
@@ -134,9 +130,7 @@ def test_simple_discovery() -> None:
 
 
 def test_simple_discovery_with_top_dir_calculated() -> None:
-    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree
-    if unittest discovery was performed successfully.
-    """
+    """The discover_tests function should return a dictionary with a "success" status, no errors, and a test tree if unittest discovery was performed successfully."""
     start_dir = "."
     pattern = "discovery_simple*"
     file_path = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH / "discovery_simple.py"))
@@ -190,9 +184,7 @@ def test_simple_discovery_with_top_dir_calculated() -> None:
 
 
 def test_empty_discovery() -> None:
-    """The discover_tests function should return a dictionary with a "success" status,  no errors, and no test tree
-    if unittest discovery was performed successfully but no tests were found.
-    """
+    """The discover_tests function should return a dictionary with a "success" status,  no errors, and no test tree if unittest discovery was performed successfully but no tests were found."""
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "discovery_empty*"
 
@@ -204,9 +196,7 @@ def test_empty_discovery() -> None:
 
 
 def test_error_discovery() -> None:
-    """The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors
-    if unittest discovery failed at some point.
-    """
+    """The discover_tests function should return a dictionary with an "error" status, the discovered tests, and a list of errors if unittest discovery failed at some point."""
     # Discover tests in .data/discovery_error/.
     start_path = pathlib.PurePath(TEST_DATA_PATH / "discovery_error")
     start_dir = os.fsdecode(start_path)
@@ -262,6 +252,7 @@ def test_error_discovery() -> None:
 
 def test_unit_skip() -> None:
     """The discover_tests function should return a dictionary with a "success" status, no errors, and test tree.
+
     if unittest discovery was performed and found a test in one file marked as skipped and another file marked as skipped.
     """
     start_dir = os.fsdecode(TEST_DATA_PATH / "unittest_skip")

@@ -8,7 +8,7 @@ import unittest
 start_dir = sys.argv[1]
 pattern = sys.argv[2]
 top_level_dir = sys.argv[3] if len(sys.argv) >= 4 else None
-sys.path.insert(0, os.getcwd())
+sys.path.insert(0, os.getcwd())  # noqa: PTH109
 
 
 def get_sourceline(obj):
@@ -34,8 +34,7 @@ def generate_test_cases(suite):
         if isinstance(test, unittest.TestCase):
             yield test
         else:
-            for test_case in generate_test_cases(test):
-                yield test_case
+            yield from generate_test_cases(test)
 
 
 try:
@@ -45,12 +44,12 @@ try:
     print("start")  # Don't remove this line
     loader_errors = []
     for s in generate_test_cases(suite):
-        tm = getattr(s, s._testMethodName)
-        testId = s.id()
-        if testId.startswith("unittest.loader._FailedTest"):
-            loader_errors.append(s._exception)
+        tm = getattr(s, s._testMethodName)  # noqa: SLF001
+        test_id = s.id()
+        if test_id.startswith("unittest.loader._FailedTest"):
+            loader_errors.append(s._exception)  # noqa: SLF001
         else:
-            print(testId.replace(".", ":") + ":" + get_sourceline(tm))
+            print(test_id.replace(".", ":") + ":" + get_sourceline(tm))
 except Exception:
     print("=== exception start ===")
     traceback.print_exc()
