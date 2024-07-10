@@ -44,7 +44,8 @@ import { IShellIntegrationService, ITerminalDeactivateService, ITerminalEnvVarCo
 import { ProgressService } from '../../common/application/progressService';
 
 @injectable()
-export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
+export class TerminalEnvVarCollectionService extends Disposable
+    implements IExtensionActivationService, ITerminalEnvVarCollectionService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
@@ -70,6 +71,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private separator: string;
 
+    private _shellIntegrationDisposableMap = this.register(new DisposableMap());
+
+    // problem: when extension is disposed, we want terminal env collection service to be disposed. When that is disposed, we want the listeners disposed as well
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -87,7 +91,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IEnvironmentVariablesProvider)
         private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
-        this.separator = platform.osType === OSType.Windows ? ';' : ':';
+        super();
+        this.this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
     }
 
@@ -186,9 +191,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
-        // /// ////////////////////////////////////////////////////////////////
-        // // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
-        // // But first, try some dummy commands to see if I can get any sort of exit code.
+        /// ////////////////////////////////////////////////////////////////
+        // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+        // But first, try some dummy commands to see if I can get any sort of exit code.
         // const myTerm = window.createTerminal();
         // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
         //     if (terminal === myTerm) {
@@ -206,7 +211,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         //         });
         //     }
         // });
-        // /// ///////////////////////////////////////////////////////////
+        /// ///////////////////////////////////////////////////////////
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
@@ -231,37 +236,35 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
             // But first, try some dummy commands to see if I can get any sort of exit code.
             const myTerm = window.createTerminal();
-            const xterm = new HeadlessTerminal({
-                allowProposedApi: true,
-            });
-            window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-                if (terminal === myTerm) {
-                    if (this._trackedTerminals.has(terminal)) {
-                        return;
-                    }
-                    this._trackedTerminals.add(terminal);
-                    const execution = shellIntegration.executeCommand('echo "Hello world"');
-                    window.onDidEndTerminalShellExecution((event) => {
-                        if (event.execution === execution) {
-                            console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
-                            traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
-                            // const temp = event.exitCode;
-                            const buffer = xterm.buffer.active;
-                            const lines: string[] = [];
-                            for (let y = 0; y < buffer.length; y += 1) {
-                                lines.push(buffer.getLine(y)!.translateToString(true));
+
+            map.set(
+                terminal,
+                window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+                    // can fire multiple times for single terminal ---> ATM when shell integration status changes, when its activated or working directory changes.
+                    // listen to this once per terminal. Dispose once its done
+
+                    if (terminal === myTerm) {
+                        const dispoable = map.get(terminal);
+                        disposable.dispose();
+                        map.delete(terminal);
+                        const execution = shellIntegration.executeCommand('echo "Hello world"');
+
+                        //   const stream = execution.read();
+                        //   for await(const data of stream) {
+                        //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+                        //   }
+                        window.onDidEndTerminalShellExecution((event) => {
+                            if (event.execution === execution) {
+                                console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
+                                traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
+                                // const temp = event.exitCode;
                             }
-                            traceLog(`xterm-headless content\n\`\`\`\n${lines.join('\n').trim()}\n\`\`\``);
-                        }
-                    });
-                    const stream = execution.read();
-                    for await (const data of stream) {
-                        xterm.write(data);
-                        traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+                        });
                     }
-                }
-            });
+                }),
+            );
         }
+
         /// /////////////////////////
         const processEnv = normCaseKeys(this.processEnvVars);
 
