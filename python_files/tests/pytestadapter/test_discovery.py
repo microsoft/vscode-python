@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 import json
 import os
+import subprocess
 import sys
 from typing import Any, Dict, List, Optional
 
@@ -10,6 +11,32 @@ import pytest
 from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output, helpers  # noqa: E402
+
+
+@pytest.fixture
+def pluggy_version_resource_setup_teardown():
+    # Setup to switch plugin versions
+    subprocess.run(["pip", "install", "pluggy==1.1.0"])
+    yield
+    # switch back to a newer version
+    subprocess.run(["pip", "install", "pluggy==1.2.0"])
+    print("Tearing down pluggy version")
+
+
+def test_pluggy_old_version(pluggy_version_resource_setup_teardown):
+    print("Running test_example")
+    try:
+        helpers.runner(
+            [
+                os.fspath(helpers.TEST_DATA_PATH / "simple_pytest.py"),
+                "--collect-only",
+            ]
+        )
+        assert True
+    except Exception as e:
+        print(f"Exception: {e}")
+        assert False
+    # If an error or assertion failure occurs above, the teardown will still execute.
 
 
 def test_import_error():
@@ -23,6 +50,7 @@ def test_import_error():
     Keyword arguments:
     tmp_path -- pytest fixture that creates a temporary directory.
     """
+    subprocess.run(["pip", "install", "pluggy==1.1.0"])
     file_path = helpers.TEST_DATA_PATH / "error_pytest_import.txt"
     with helpers.text_to_python_file(file_path) as p:
         actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
