@@ -898,9 +898,6 @@ def pluggy_version():
 # pluggy version 1.1.0 and before use hookwrapper so convert this arg to wrapper to ensure compatibility for all versions <=1.1.0.
 def compat_hookimpl(*args, **kwargs):
     if pluggy_version() <= "1.1.0":
-        print(
-            f"pluggy version is, {pluggy_version()}, since this is <= 1.1.0, convert wrapper arg to hookwrapper if it exists for compatibility."
-        )
         arg_exists = kwargs.pop("wrapper", False)
         kwargs["hookwrapper"] = arg_exists
     return pluggy.HookimplMarker("pytest")(*args, **kwargs)
