@@ -24,10 +24,11 @@ export function createReplController(
             exec.start(Date.now());
             try {
                 const result = await server.execute(cell.document.getText());
-
-                exec.replaceOutput([
-                    new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result, 'text/plain')]),
-                ]);
+                if (result !== '') {
+                    exec.replaceOutput([
+                        new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result, 'text/plain')]),
+                    ]);
+                }
                 exec.end(true);
             } catch (err) {
                 const error = err as Error;
