@@ -87,7 +87,7 @@
                 "description": "%walkthrough.pythonWelcome.description%",
                 "when": "workspacePlatform != webworker",
                 "steps": [
-                   {
+                    {
                         "id": "python.createPythonFolder",
                         "title": "%walkthrough.step.python.createPythonFolder.title%",
                         "description": "%walkthrough.step.python.createPythonFolder.description%",
@@ -1514,6 +1514,7 @@
     "dependencies": {
         "@iarna/toml": "^2.2.5",
         "@vscode/extension-telemetry": "^0.8.4",
+        "@xterm/headless": "^5.5.0",
         "arch": "^2.1.0",
         "fs-extra": "^10.0.1",
         "glob": "^7.2.0",

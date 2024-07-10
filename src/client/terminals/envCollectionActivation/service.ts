@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { Terminal as HeadlessTerminal } from '@xterm/headless';
 import { inject, injectable } from 'inversify';
 import {
     MarkdownString,
@@ -10,6 +11,7 @@ import {
     EnvironmentVariableScope,
     EnvironmentVariableMutatorOptions,
     ProgressLocation,
+    Terminal,
     window,
 } from 'vscode';
 import { pathExists } from 'fs-extra';
@@ -167,6 +169,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         this.progressService.hideProgress();
     }
 
+    private _trackedTerminals: Set<Terminal> = new Set();
+
     private async _applyCollectionImpl(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
@@ -182,27 +186,27 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
-        /// ////////////////////////////////////////////////////////////////
-        // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
-        // But first, try some dummy commands to see if I can get any sort of exit code.
-        const myTerm = window.createTerminal();
-        window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-            if (terminal === myTerm) {
-                const execution = shellIntegration.executeCommand('echo "Hello world"');
-                //   const stream = execution.read();
-                //   for await(const data of stream) {
-                //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
-                //   }
-                window.onDidEndTerminalShellExecution((event) => {
-                    if (event.execution === execution) {
-                        console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here, flaky. -->  failing to get exit code again
-                        traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
-                        // const temp = event.exitCode;
-                    }
-                });
-            }
-        });
-        /// ///////////////////////////////////////////////////////////
+        // /// ////////////////////////////////////////////////////////////////
+        // // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+        // // But first, try some dummy commands to see if I can get any sort of exit code.
+        // const myTerm = window.createTerminal();
+        // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+        //     if (terminal === myTerm) {
+        //         const execution = shellIntegration.executeCommand('echo "Hello world"');
+        //         //   const stream = execution.read();
+        //         //   for await(const data of stream) {
+        //         //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+        //         //   }
+        //         window.onDidEndTerminalShellExecution((event) => {
+        //             if (event.execution === execution) {
+        //                 console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here, flaky. -->  failing to get exit code again
+        //                 traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
+        //                 // const temp = event.exitCode;
+        //             }
+        //         });
+        //     }
+        // });
+        // /// ///////////////////////////////////////////////////////////
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
@@ -227,20 +231,34 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
             // But first, try some dummy commands to see if I can get any sort of exit code.
             const myTerm = window.createTerminal();
+            const xterm = new HeadlessTerminal({
+                allowProposedApi: true,
+            });
             window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
                 if (terminal === myTerm) {
+                    if (this._trackedTerminals.has(terminal)) {
+                        return;
+                    }
+                    this._trackedTerminals.add(terminal);
                     const execution = shellIntegration.executeCommand('echo "Hello world"');
-                    //   const stream = execution.read();
-                    //   for await(const data of stream) {
-                    //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
-                    //   }
                     window.onDidEndTerminalShellExecution((event) => {
                         if (event.execution === execution) {
                             console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
                             traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
                             // const temp = event.exitCode;
+                            const buffer = xterm.buffer.active;
+                            const lines: string[] = [];
+                            for (let y = 0; y < buffer.length; y += 1) {
+                                lines.push(buffer.getLine(y)!.translateToString(true));
+                            }
+                            traceLog(`xterm-headless content\n\`\`\`\n${lines.join('\n').trim()}\n\`\`\``);
                         }
                     });
+                    const stream = execution.read();
+                    for await (const data of stream) {
+                        xterm.write(data);
+                        traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+                    }
                 }
             });
         }
