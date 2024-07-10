@@ -330,6 +330,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         let canSpawnConda: boolean | undefined;
         let condaInfoEnvs: undefined | number;
+        let condaInfoEnvsInvalid = 0;
+        let condaInfoEnvsDuplicate = 0;
+        let condaInfoEnvsInvalidPrefix = 0;
         let condaInfoEnvsDirs: undefined | number;
         let envsDirs: string[] = [];
         try {
@@ -342,6 +345,22 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             // eslint-disable-next-line camelcase
             envsDirs = info?.envs_dirs || [];
 
+            const duplicate = new Set<string>();
+            Promise.all(
+                (info?.envs || []).map(async (e) => {
+                    if (duplicate.has(e)) {
+                        condaInfoEnvsDuplicate += 1;
+                        return;
+                    }
+                    duplicate.add(e);
+                    if (!(await pathExists(e))) {
+                        condaInfoEnvsInvalidPrefix += 1;
+                    }
+                    if (!(await isCondaEnvironment(e))) {
+                        condaInfoEnvsInvalid += 1;
+                    }
+                }),
+            );
             nativeEnvs
                 .filter((e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda)
                 .forEach((e) => {
@@ -549,7 +568,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
-            telVer: 1,
+            telVer: 2,
+            condaInfoEnvsInvalid,
+            condaInfoEnvsDuplicate,
+            condaInfoEnvsInvalidPrefix,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
