@@ -1157,6 +1157,7 @@ export interface IEventNamePropertyMapping {
         "condaRcs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "nativeCondaRcs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "condaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsInTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "nativeCondaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "invalidCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
         "prefixNotExistsCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
@@ -1165,8 +1166,11 @@ export interface IEventNamePropertyMapping {
         "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "canSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "nativeCanSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
-        "condaRootPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
-        "condaDefaultPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaRootPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1212,6 +1216,10 @@ export interface IEventNamePropertyMapping {
         "missingNativeVirtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "missingNativeVirtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "missingNativeOtherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+        "nativeCondaRcsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+        "nativeCondaEnvDirsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+        "nativeCondaEnvDirsNotFoundHasEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+        "nativeCondaEnvDirsNotFoundHasEnvsInTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
@@ -1223,6 +1231,10 @@ export interface IEventNamePropertyMapping {
          * Number of invalid envs returned by `conda info`
          */
         condaInfoEnvsInvalid?: number;
+        /**
+         * Number of conda envs found in the environments.txt file.
+         */
+        condaEnvsInTxt?: number;
         /**
          * Number of duplicate envs returned by `conda info`
          */
@@ -1268,6 +1280,22 @@ export interface IEventNamePropertyMapping {
          */
         nativeCondaRcs?: number;
         /**
+         * The number of the conda rc files returned by `conda info` that weren't found by native locator.
+         */
+        nativeCondaRcsNotFound?: number;
+        /**
+         * The number of the conda env_dirs returned by `conda info` that weren't found by native locator.
+         */
+        nativeCondaEnvDirsNotFound?: number;
+        /**
+         * The number of envs in the env_dirs contained in the count for `nativeCondaEnvDirsNotFound`
+         */
+        nativeCondaEnvDirsNotFoundHasEnvs?: number;
+        /**
+         * The number of envs from environments.txt that are in the env_dirs contained in the count for `nativeCondaEnvDirsNotFound`
+         */
+        nativeCondaEnvDirsNotFoundHasEnvsInTxt?: number;
+        /**
          * The number of conda interpreters that are in the one of the global conda env locations.
          * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
          */
@@ -1283,10 +1311,22 @@ export interface IEventNamePropertyMapping {
          */
         condaRootPrefixFoundInInfoNotInNative?: boolean;
         /**
+         * The conda root prefix is found in the conda exe path.
+         */
+        condaRootPrefixInCondaExePath?: boolean;
+        /**
          * A conda env found that matches the root_prefix returned by `conda info`
          * However a corresponding conda env not found by native locator.
          */
         condaDefaultPrefixFoundInInfoNotInNative?: boolean;
+        /**
+         * The conda root prefix is found in the conda exe path.
+         */
+        condaDefaultPrefixInCondaExePath?: boolean;
+        /**
+         * User provided a path to the conda exe
+         */
+        userProvidedCondaExe?: boolean;
         /**
          * The number of conda interpreters without the `conda-meta` directory.
          */

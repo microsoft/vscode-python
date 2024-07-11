@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fsPath from 'path';
 import { Event, EventEmitter, workspace } from 'vscode';
 import '../../../../common/extensions';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
@@ -28,7 +29,13 @@ import { createNativeGlobalPythonFinder, NativeEnvInfo } from '../common/nativeP
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
-import { Conda, isCondaEnvironment } from '../../../common/environmentManagers/conda';
+import {
+    Conda,
+    CONDAPATH_SETTING_KEY,
+    getCondaEnvironmentsTxt,
+    isCondaEnvironment,
+} from '../../../common/environmentManagers/conda';
+import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
 
 /**
  * A service which maintains the collection of known environments.
@@ -307,12 +314,8 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const missingEnvironments = {
             envsWithDuplicatePrefixes: 0,
             envsNotFound: 0,
-            condaEnvsInEnvDir: 0,
-            invalidCondaEnvs: 0,
-            prefixNotExistsCondaEnvs: 0,
-            condaEnvsWithoutPrefix: 0,
-            nativeCondaEnvsInEnvDir: 0,
             missingNativeCondaEnvs: 0,
+            missingNativeCondaEnvsFromTxt: 0,
             missingNativeCustomEnvs: 0,
             missingNativeMicrosoftStoreEnvs: 0,
             missingNativeGlobalEnvs: 0,
@@ -328,99 +331,220 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             missingNativeOtherGlobalEnvs: 0,
         };
 
-        let canSpawnConda: boolean | undefined;
-        let condaInfoEnvs: undefined | number;
-        let condaInfoEnvsInvalid = 0;
-        let condaInfoEnvsDuplicate = 0;
-        let condaInfoEnvsInvalidPrefix = 0;
-        let condaInfoEnvsDirs = 0;
         let envsDirs: string[] = [];
-        let condaRcs: number | undefined;
-        let condaRootPrefixFoundInInfoNotInNative: undefined | boolean;
-        let condaDefaultPrefixFoundInInfoNotInNative: undefined | boolean;
-        try {
-            const conda = await Conda.getConda();
-            const info = await conda?.getInfo();
-            canSpawnConda = !!info;
-            condaInfoEnvs = info?.envs?.length;
-            // eslint-disable-next-line camelcase
-            envsDirs = info?.envs_dirs || [];
+
+        type CondaTelemetry = {
+            condaInfoEnvs: number;
+            condaEnvsInEnvDir: number;
+            prefixNotExistsCondaEnvs: number;
+            condaEnvsWithoutPrefix: number;
+            condaRootPrefixFoundInInfoNotInNative?: boolean;
+            condaRootPrefixInCondaExePath?: boolean;
+            condaDefaultPrefixFoundInInfoNotInNative?: boolean;
+            condaDefaultPrefixInCondaExePath?: boolean;
+            canSpawnConda?: boolean;
+            nativeCanSpawnConda?: boolean;
+            userProvidedCondaExe?: boolean;
+            condaInfoEnvsInvalid: number;
+            invalidCondaEnvs: number;
+            condaInfoEnvsDuplicate: number;
+            condaInfoEnvsInvalidPrefix: number;
+            condaInfoEnvsDirs: number;
+            nativeCondaEnvsInEnvDir: number;
+            nativeCondaInfoEnvsDirs?: number;
+            condaRcs?: number;
+            nativeCondaRcs?: number;
+            condaEnvsInTxt?: number;
+            nativeCondaRcsNotFound: number;
+            nativeCondaEnvDirsNotFound: number;
+            nativeCondaEnvDirsNotFoundHasEnvs: number;
+            nativeCondaEnvDirsNotFoundHasEnvsInTxt: number;
+        };
+
+        const userProvidedCondaExe = fsPath
+            .normalize((getConfiguration('python').get<string>(CONDAPATH_SETTING_KEY) || '').trim())
+            .toLowerCase();
+        const condaTelemetry: CondaTelemetry = {
+            condaEnvsInEnvDir: 0,
+            condaInfoEnvs: 0,
+            prefixNotExistsCondaEnvs: 0,
+            condaEnvsWithoutPrefix: 0,
+            nativeCondaEnvsInEnvDir: 0,
+            userProvidedCondaExe: userProvidedCondaExe.length > 0,
+            condaInfoEnvsInvalid: 0,
+            invalidCondaEnvs: 0,
+            condaInfoEnvsDuplicate: 0,
+            condaInfoEnvsInvalidPrefix: 0,
+            condaInfoEnvsDirs: 0,
+            nativeCondaRcsNotFound: 0,
+            nativeCondaEnvDirsNotFound: 0,
+            nativeCondaEnvDirsNotFoundHasEnvs: 0,
+            nativeCondaEnvDirsNotFoundHasEnvsInTxt: 0,
+        };
+
+        // Get conda telemetry
+        {
+            const [info, nativeCondaInfo, condaEnvsInEnvironmentsTxt] = await Promise.all([
+                Conda.getConda()
+                    .catch((ex) => traceError('Failed to get conda info', ex))
+                    .then((conda) => conda?.getInfo()),
+                this.nativeFinder
+                    .getCondaInfo()
+                    .catch((ex) => traceError(`Failed to get conda info from native locator`, ex)),
+                getCondaEnvironmentsTxt()
+                    .then(async (items) => {
+                        const validEnvs = new Set<string>();
+                        await Promise.all(
+                            items.map(async (e) => {
+                                if ((await pathExists(e)) && (await isCondaEnvironment(e))) {
+                                    validEnvs.add(fsPath.normalize(e).toLowerCase());
+                                }
+                            }),
+                        );
+                        return Array.from(validEnvs);
+                    })
+                    .catch((ex) => traceError(`Failed to get conda envs from environments.txt`, ex))
+                    .then((items) => items || []),
+            ]);
+
+            if (nativeCondaInfo) {
+                condaTelemetry.nativeCanSpawnConda = nativeCondaInfo.canSpawnConda;
+                condaTelemetry.nativeCondaInfoEnvsDirs = new Set(nativeCondaInfo.envDirs).size;
+                condaTelemetry.nativeCondaRcs = new Set(nativeCondaInfo.condaRcs).size;
+            }
+            condaTelemetry.condaEnvsInTxt = condaEnvsInEnvironmentsTxt.length;
+            condaTelemetry.canSpawnConda = !!info;
+
+            // Conda info rcs
             const condaRcFiles = new Set<string>();
             await Promise.all(
                 // eslint-disable-next-line camelcase
                 [info?.rc_path, info?.user_rc_path, info?.sys_rc_path, ...(info?.config_files || [])].map(
                     async (rc) => {
                         if (rc && (await pathExists(rc))) {
-                            condaRcFiles.add(rc);
+                            condaRcFiles.add(fsPath.normalize(rc).toLowerCase());
                         }
                     },
                 ),
             ).catch(noop);
-            condaRcs = condaRcFiles.size;
+            const condaRcs = Array.from(condaRcFiles);
+            condaTelemetry.condaRcs = condaRcs.length;
+
+            // Find the condarcs that were not found by native finder.
+            const nativeCondaRcs = (nativeCondaInfo?.condaRcs || []).map((rc) => fsPath.normalize(rc).toLowerCase());
+            condaTelemetry.nativeCondaRcsNotFound = condaRcs.filter((rc) => !nativeCondaRcs.includes(rc)).length;
+
+            // Conda info envs
+            const validCondaInfoEnvs = new Set<string>();
             const duplicate = new Set<string>();
+            // Duplicate, invalid conda environments.
             Promise.all(
                 (info?.envs || []).map(async (e) => {
                     if (duplicate.has(e)) {
-                        condaInfoEnvsDuplicate += 1;
+                        condaTelemetry.condaInfoEnvsDuplicate += 1;
                         return;
                     }
                     duplicate.add(e);
                     if (!(await pathExists(e))) {
-                        condaInfoEnvsInvalidPrefix += 1;
+                        condaTelemetry.condaInfoEnvsInvalidPrefix += 1;
+                        return;
                     }
                     if (!(await isCondaEnvironment(e))) {
-                        condaInfoEnvsInvalid += 1;
+                        condaTelemetry.condaInfoEnvsInvalid += 1;
+                        return;
                     }
+                    validCondaInfoEnvs.add(fsPath.normalize(e).toLowerCase());
                 }),
             );
+            const condaInfoEnvs = Array.from(validCondaInfoEnvs);
+            condaTelemetry.condaInfoEnvs = validCondaInfoEnvs.size;
+
+            // Conda env_dirs
+            const validEnvDirs = new Set<string>();
             Promise.all(
-                envsDirs.map(async (e) => {
+                // eslint-disable-next-line camelcase
+                (info?.envs_dirs || []).map(async (e) => {
                     if (await pathExists(e)) {
-                        condaInfoEnvsDirs += 1;
+                        validEnvDirs.add(e);
                     }
                 }),
             );
-            nativeEnvs
-                .filter((e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda)
-                .forEach((e) => {
-                    if (e.prefix && envsDirs.some((d) => e.prefix && e.prefix.startsWith(d))) {
-                        missingEnvironments.nativeCondaEnvsInEnvDir += 1;
-                    }
-                });
+            condaTelemetry.condaInfoEnvsDirs = validEnvDirs.size;
+            envsDirs = Array.from(validEnvDirs).map((e) => fsPath.normalize(e).toLowerCase());
+
+            const nativeCondaEnvs = nativeEnvs.filter(
+                (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda,
+            );
+
+            // Find the env_dirs that were not found by native finder.
+            const nativeCondaEnvDirs = (nativeCondaInfo?.envDirs || []).map((envDir) =>
+                fsPath.normalize(envDir).toLowerCase(),
+            );
+            const nativeCondaEnvPrefix = nativeCondaEnvs
+                .filter((e) => e.prefix)
+                .map((e) => fsPath.normalize(e.prefix || '').toLowerCase());
+
+            envsDirs.forEach((envDir) => {
+                if (
+                    !nativeCondaEnvDirs.includes(envDir) &&
+                    !nativeCondaEnvDirs.includes(fsPath.join(envDir, 'envs')) &&
+                    // If we have a native conda env from this env dir, then we're good.
+                    !nativeCondaEnvPrefix.some((prefix) => prefix.startsWith(envDir))
+                ) {
+                    condaTelemetry.nativeCondaEnvDirsNotFound += 1;
+
+                    // Find what conda envs returned by `conda info` belong to this envdir folder.
+                    // And find which of those envs do not exist in native conda envs
+                    condaInfoEnvs.forEach((env) => {
+                        if (env.startsWith(envDir)) {
+                            condaTelemetry.nativeCondaEnvDirsNotFoundHasEnvs += 1;
+
+                            // Check if this env was in the environments.txt file.
+                            if (condaEnvsInEnvironmentsTxt.includes(env)) {
+                                condaTelemetry.nativeCondaEnvDirsNotFoundHasEnvsInTxt += 1;
+                            }
+                        }
+                    });
+                }
+            });
+
+            // How many envs are in environments.txt that were not found by native locator.
+            missingEnvironments.missingNativeCondaEnvsFromTxt = condaEnvsInEnvironmentsTxt.filter(
+                (env) => !nativeCondaEnvPrefix.some((prefix) => prefix === env),
+            ).length;
+
+            // How many envs found by native locator & conda info are in the env dirs.
+            condaTelemetry.condaEnvsInEnvDir = condaInfoEnvs.filter((e) =>
+                envsDirs.some((d) => e.startsWith(d)),
+            ).length;
+            condaTelemetry.nativeCondaEnvsInEnvDir = nativeCondaEnvs.filter((e) =>
+                nativeCondaEnvDirs.some((d) => (e.prefix || '').startsWith(d)),
+            ).length;
 
             // Check if we have found the conda env that matches the `root_prefix` in the conda info.
             // eslint-disable-next-line camelcase
-            const rootPrefix = (info?.root_prefix || '').toLowerCase();
-            if (rootPrefix) {
-                // Check if we have a conda env that matches this prefix.
-                if (
-                    envs.some(
-                        (e) => e.executable.sysPrefix.toLowerCase() === rootPrefix && e.kind === PythonEnvKind.Conda,
-                    )
-                ) {
-                    condaRootPrefixFoundInInfoNotInNative = nativeEnvs.some(
-                        (e) => e.prefix?.toLowerCase() === rootPrefix.toLowerCase(),
-                    );
-                }
+            let rootPrefix = info?.root_prefix || '';
+            if (rootPrefix && (await pathExists(rootPrefix)) && (await isCondaEnvironment(rootPrefix))) {
+                rootPrefix = fsPath.normalize(rootPrefix).toLowerCase();
+                condaTelemetry.condaRootPrefixInCondaExePath = userProvidedCondaExe.startsWith(rootPrefix);
+                // Check if we have a conda env that matches this prefix but not found in native envs.
+                condaTelemetry.condaRootPrefixFoundInInfoNotInNative =
+                    condaInfoEnvs.some((env) => env === rootPrefix) &&
+                    !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix);
             }
+
             // eslint-disable-next-line camelcase
-            const defaultPrefix = (info?.default_prefix || '').toLowerCase();
-            if (rootPrefix) {
-                // Check if we have a conda env that matches this prefix.
-                if (
-                    envs.some(
-                        (e) => e.executable.sysPrefix.toLowerCase() === defaultPrefix && e.kind === PythonEnvKind.Conda,
-                    )
-                ) {
-                    condaDefaultPrefixFoundInInfoNotInNative = nativeEnvs.some(
-                        (e) => e.prefix?.toLowerCase() === defaultPrefix.toLowerCase(),
-                    );
-                }
+            let defaultPrefix = info?.default_prefix || '';
+            if (defaultPrefix && (await pathExists(defaultPrefix)) && (await isCondaEnvironment(defaultPrefix))) {
+                defaultPrefix = fsPath.normalize(defaultPrefix).toLowerCase();
+                condaTelemetry.condaDefaultPrefixInCondaExePath = userProvidedCondaExe.startsWith(defaultPrefix);
+                // Check if we have a conda env that matches this prefix but not found in native envs.
+                condaTelemetry.condaDefaultPrefixFoundInInfoNotInNative =
+                    condaInfoEnvs.some((env) => env === defaultPrefix) &&
+                    !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix);
             }
-        } catch (ex) {
-            canSpawnConda = false;
         }
-        const nativeCondaInfoPromise = this.nativeFinder.getCondaInfo();
+
         const prefixesSeenAlready = new Set<string>();
         await Promise.all(
             envs.map(async (env) => {
@@ -466,12 +590,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                         traceError(`Environment ${exe} is missing from native locator`);
                         switch (env.kind) {
                             case PythonEnvKind.Conda:
-                                if (
-                                    env.executable.sysPrefix &&
-                                    envsDirs.some((d) => env.executable.sysPrefix.startsWith(d))
-                                ) {
-                                    missingEnvironments.condaEnvsInEnvDir += 1;
-                                }
                                 missingEnvironments.missingNativeCondaEnvs += 1;
                                 break;
                             case PythonEnvKind.Custom:
@@ -530,22 +648,6 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             }),
         ).catch((ex) => traceError('Failed to send telemetry for missing environments', ex));
 
-        const nativeCondaInfo = await nativeCondaInfoPromise.catch((ex) =>
-            traceError(`Failed to get conda info from native locator`, ex),
-        );
-
-        type CondaTelemetry = {
-            nativeCanSpawnConda?: boolean;
-            nativeCondaInfoEnvsDirs?: number;
-            nativeCondaRcs?: number;
-        };
-
-        const condaTelemetry: CondaTelemetry = {};
-        if (nativeCondaInfo) {
-            condaTelemetry.nativeCanSpawnConda = nativeCondaInfo.canSpawnConda;
-            condaTelemetry.nativeCondaInfoEnvsDirs = new Set(nativeCondaInfo.envDirs).size;
-            condaTelemetry.nativeCondaRcs = new Set(nativeCondaInfo.condaRcs).size;
-        }
         const environmentsWithoutPython = envs.filter(
             (e) => getEnvPath(e.executable.filename, e.location).pathType === 'envFolderPath',
         ).length;
@@ -572,15 +674,15 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 e.kind === PythonEnvKind.OtherVirtual,
         ).length;
 
-        missingEnvironments.condaEnvsWithoutPrefix = condaEnvs.filter((e) => !e.executable.sysPrefix).length;
+        condaTelemetry.condaEnvsWithoutPrefix = condaEnvs.filter((e) => !e.executable.sysPrefix).length;
 
         await Promise.all(
             condaEnvs.map(async (e) => {
                 if (e.executable.sysPrefix && !(await pathExists(e.executable.sysPrefix))) {
-                    missingEnvironments.prefixNotExistsCondaEnvs += 1;
+                    condaTelemetry.prefixNotExistsCondaEnvs += 1;
                 }
                 if (e.executable.filename && !(await isCondaEnvironment(e.executable.filename))) {
-                    missingEnvironments.invalidCondaEnvs += 1;
+                    condaTelemetry.invalidCondaEnvs += 1;
                 }
             }),
         );
@@ -634,19 +736,10 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
-            telVer: 3,
-            condaRcs,
-            condaInfoEnvsInvalid,
-            condaInfoEnvsDuplicate,
-            condaInfoEnvsInvalidPrefix,
-            condaRootPrefixFoundInInfoNotInNative,
-            condaDefaultPrefixFoundInInfoNotInNative,
+            telVer: 4,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
-            condaInfoEnvs,
-            condaInfoEnvsDirs,
-            canSpawnConda,
             environmentsWithoutPython,
             activeStateEnvs,
             condaEnvs: condaEnvs.length,
