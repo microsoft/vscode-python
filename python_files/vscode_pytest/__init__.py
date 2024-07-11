@@ -7,7 +7,8 @@ import os
 import pathlib
 import sys
 import traceback
-import pluggy
+
+# import pluggy
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
