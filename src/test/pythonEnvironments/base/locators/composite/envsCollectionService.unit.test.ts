@@ -29,6 +29,10 @@ import { OSType, getOSType } from '../../../../common';
 import * as nativeFinder from '../../../../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 
 class MockNativePythonFinder implements nativeFinder.NativeGlobalPythonFinder {
+    getCondaInfo(): Promise<nativeFinder.NativeCondaInfo> {
+        throw new Error('Method not implemented.');
+    }
+
     categoryToKind(_category: string): PythonEnvKind {
         throw new Error('Method not implemented.');
     }

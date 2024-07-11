@@ -47,10 +47,17 @@ export interface NativeEnvManagerInfo {
     version?: string;
 }
 
+export type NativeCondaInfo = {
+    canSpawnConda: boolean;
+    condaRcs: string[];
+    envDirs: string[];
+};
+
 export interface NativeGlobalPythonFinder extends Disposable {
     resolve(executable: string): Promise<NativeEnvInfo>;
     refresh(): AsyncIterable<NativeEnvInfo>;
     categoryToKind(category?: string): PythonEnvKind;
+    getCondaInfo(): Promise<NativeCondaInfo>;
 }
 
 interface NativeLog {
@@ -360,6 +367,10 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         } catch (ex) {
             this.outputChannel.error('Refresh error', ex);
         }
+    }
+
+    async getCondaInfo(): Promise<NativeCondaInfo> {
+        return this.connection.sendRequest<NativeCondaInfo>('condaInfo');
     }
 }
 
