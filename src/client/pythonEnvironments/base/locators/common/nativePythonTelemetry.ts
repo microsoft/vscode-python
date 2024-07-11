@@ -5,7 +5,7 @@ import { traceError } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 
-export type NativePythonTelemetry = MissingCondaEnvironments | MissingPoetryEnvironments;
+export type NativePythonTelemetry = MissingCondaEnvironments | MissingPoetryEnvironments | RefreshPerformance;
 
 export type MissingCondaEnvironments = {
     event: 'MissingCondaEnvironments';
@@ -48,6 +48,37 @@ export type MissingPoetryEnvironments = {
     };
 };
 
+export type RefreshPerformance = {
+    event: 'RefreshPerformance';
+    data: {
+        refreshPerformance: {
+            total: number;
+            breakdown: {
+                Locators: number;
+                Path: number;
+                GlobalVirtualEnvs: number;
+                Workspaces: number;
+            };
+            locators: {
+                Conda?: number;
+                Homebrew?: number;
+                LinuxGlobalPython?: number;
+                MacCmdLineTools?: number;
+                MacPythonOrg?: number;
+                MacXCode?: number;
+                PipEnv?: number;
+                Poetry?: number;
+                PyEnv?: number;
+                Venv?: number;
+                VirtualEnv?: number;
+                VirtualEnvWrapper?: number;
+                WindowsRegistry?: number;
+                WindowsStore?: number;
+            };
+        };
+    };
+};
+
 export function sendNativeTelemetry(data: NativePythonTelemetry): void {
     switch (data.event) {
         case 'MissingCondaEnvironments': {
@@ -64,6 +95,30 @@ export function sendNativeTelemetry(data: NativePythonTelemetry): void {
                 undefined,
                 data.data.missingPoetryEnvironments,
             );
+            break;
+        }
+        case 'RefreshPerformance': {
+            sendTelemetryEvent(EventName.NATIVE_FINDER_PERF, undefined, {
+                duration: data.data.refreshPerformance.total,
+                breakdownGlobalVirtualEnvs: data.data.refreshPerformance.breakdown.GlobalVirtualEnvs,
+                breakdownLocators: data.data.refreshPerformance.breakdown.Locators,
+                breakdownPath: data.data.refreshPerformance.breakdown.Path,
+                breakdownWorkspaces: data.data.refreshPerformance.breakdown.Workspaces,
+                locatorConda: data.data.refreshPerformance.locators.Conda,
+                locatorHomebrew: data.data.refreshPerformance.locators.Homebrew,
+                locatorLinuxGlobalPython: data.data.refreshPerformance.locators.LinuxGlobalPython,
+                locatorMacCmdLineTools: data.data.refreshPerformance.locators.MacCmdLineTools,
+                locatorMacPythonOrg: data.data.refreshPerformance.locators.MacPythonOrg,
+                locatorMacXCode: data.data.refreshPerformance.locators.MacXCode,
+                locatorPipEnv: data.data.refreshPerformance.locators.PipEnv,
+                locatorPoetry: data.data.refreshPerformance.locators.Poetry,
+                locatorPyEnv: data.data.refreshPerformance.locators.PyEnv,
+                locatorVenv: data.data.refreshPerformance.locators.Venv,
+                locatorVirtualEnv: data.data.refreshPerformance.locators.VirtualEnv,
+                locatorVirtualEnvWrapper: data.data.refreshPerformance.locators.VirtualEnvWrapper,
+                locatorWindowsRegistry: data.data.refreshPerformance.locators.WindowsRegistry,
+                locatorWindowsStore: data.data.refreshPerformance.locators.WindowsStore,
+            });
             break;
         }
         default: {
