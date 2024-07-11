@@ -29,7 +29,7 @@ export function createReplController(
                         new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result, 'text/plain')]),
                     ]);
                 }
-                exec.end(true);
+                exec.end(!result.startsWith('Traceback (most recent call last):'));
             } catch (err) {
                 const error = err as Error;
                 exec.replaceOutput([
