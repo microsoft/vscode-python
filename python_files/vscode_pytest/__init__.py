@@ -891,20 +891,20 @@ def send_post_request(
         )
 
 
-def pluggy_version():
-    return pluggy.__version__
+# def pluggy_version():
+#     return pluggy.__version__
 
 
-# pluggy version 1.1.0 and before use hookwrapper so convert this arg to wrapper to ensure compatibility for all versions <=1.1.0.
-def compat_hookimpl(*args, **kwargs):
-    if pluggy_version() <= "1.1.0":
-        arg_exists = kwargs.pop("wrapper", False)
-        kwargs["hookwrapper"] = arg_exists
-    return pluggy.HookimplMarker("pytest")(*args, **kwargs)
+# # pluggy version 1.1.0 and before use hookwrapper so convert this arg to wrapper to ensure compatibility for all versions <=1.1.0.
+# def compat_hookimpl(*args, **kwargs):
+#     if pluggy_version() <= "1.1.0":
+#         arg_exists = kwargs.pop("wrapper", False)
+#         kwargs["hookwrapper"] = arg_exists
+#     return pluggy.HookimplMarker("pytest")(*args, **kwargs)
 
 
 class DeferPlugin:
-    @compat_hookimpl(wrapper=True)
+    @pytest.hookimpl(hookwrapper=True)
     def pytest_xdist_auto_num_workers(self, config: pytest.Config) -> Generator[None, int, int]:
         """determine how many workers to use based on how many tests were selected in the test explorer"""
         return min((yield), len(config.option.file_or_dir))
