@@ -6,7 +6,10 @@ import sys
 import traceback
 import uuid
 from typing import Dict, List, Optional, Union
+import debugpy
 
+debugpy.connect(5678)
+debugpy.breakpoint()
 STDIN = sys.stdin
 STDOUT = sys.stdout
 STDERR = sys.stderr
@@ -23,8 +26,16 @@ def print_log(msg: str):
     send_message(json.dumps({"jsonrpc": "2.0", "method": "log", "params": msg}))
 
 
-def send_response(response: str, response_id: int):
-    send_message(json.dumps({"jsonrpc": "2.0", "id": response_id, "result": response}))
+def send_response(response: str, response_id: int, execution_status: bool = True):
+    send_message(
+        json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "result": f"Execution status: {execution_status!s}, Response: {response}",
+            }
+        )
+    )
 
 
 def send_request(params: Optional[Union[List, Dict]] = None):
@@ -105,13 +116,15 @@ def execute(request, user_globals):
         original_stdin = sys.stdin
         try:
             sys.stdin = str_input
-            exec_user_input(request["params"], user_globals)
+            execution_status = exec_user_input(request["params"], user_globals)
         finally:
             sys.stdin = original_stdin
-    send_response(str_output.get_value(), request["id"])
+
+    send_response(str_output.get_value(), request["id"], execution_status)
+    # send_response(str_output.get_value(), request["id"])
 
 
-def exec_user_input(user_input, user_globals):
+def exec_user_input(user_input, user_globals) -> bool:
     user_input = user_input[0] if isinstance(user_input, list) else user_input
 
     try:
@@ -119,10 +132,13 @@ def exec_user_input(user_input, user_globals):
         retval = callable_(user_input, user_globals)
         if retval is not None:
             print(retval)
+        return True
     except KeyboardInterrupt:
         print(traceback.format_exc())
+        return False
     except Exception:
         print(traceback.format_exc())
+        return False
 
 
 class CustomIO(io.TextIOWrapper):

@@ -24,12 +24,24 @@ export function createReplController(
             exec.start(Date.now());
             try {
                 const result = await server.execute(cell.document.getText());
-                if (result !== '') {
-                    exec.replaceOutput([
-                        new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result, 'text/plain')]),
-                    ]);
+
+                const regex = /Execution status: (True|False), Response: ([\s\S]*)/;
+                const match = result.match(regex);
+
+                if (result !== '' && match) {
+                    if (match[2] !== '') {
+                        // Only append output if there is something to show.
+                        exec.replaceOutput([
+                            new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(match[2], 'text/plain')]),
+                        ]);
+                    }
+                    // Properly update execution status
+                    exec.end(match[1] === 'True');
                 }
-                exec.end(!result.startsWith('Traceback (most recent call last):'));
+
+                if (!match) {
+                    exec.end(false);
+                }
             } catch (err) {
                 const error = err as Error;
                 exec.replaceOutput([
