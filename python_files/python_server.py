@@ -6,10 +6,7 @@ import sys
 import traceback
 import uuid
 from typing import Dict, List, Optional, Union
-import debugpy
 
-debugpy.connect(5678)
-debugpy.breakpoint()
 STDIN = sys.stdin
 STDOUT = sys.stdout
 STDERR = sys.stderr
