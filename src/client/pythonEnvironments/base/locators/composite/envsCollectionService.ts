@@ -438,7 +438,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             const validCondaInfoEnvs = new Set<string>();
             const duplicate = new Set<string>();
             // Duplicate, invalid conda environments.
-            Promise.all(
+            await Promise.all(
                 (info?.envs || []).map(async (e) => {
                     if (duplicate.has(e)) {
                         condaTelemetry.condaInfoEnvsDuplicate += 1;
@@ -461,7 +461,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
             // Conda env_dirs
             const validEnvDirs = new Set<string>();
-            Promise.all(
+            await Promise.all(
                 // eslint-disable-next-line camelcase
                 (info?.envs_dirs || []).map(async (e) => {
                     if (await pathExists(e)) {
