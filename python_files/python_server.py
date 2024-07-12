@@ -29,7 +29,7 @@ def send_response(response: str, response_id: int, execution_status: bool = True
             {
                 "jsonrpc": "2.0",
                 "id": response_id,
-                "result": f"Execution status: {execution_status!s}, Response: {response}",
+                "result": {"status": execution_status, "output": response},
             }
         )
     )
