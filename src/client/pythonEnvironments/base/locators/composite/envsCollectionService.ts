@@ -736,7 +736,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
-            telVer: 4,
+            telVer: 5,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
