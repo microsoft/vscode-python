@@ -1,7 +1,6 @@
 // Create test suite and test cases for the `replUtils` module
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
-import { It, Mock } from 'typemoq';
 import * as sinon from 'sinon';
 import { expect } from 'chai';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -17,7 +16,8 @@ suite('REPL - register native repl command', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let executionHelper: TypeMoq.IMock<ICodeExecutionHelper>;
     let getSendToNativeREPLSettingStub: sinon.SinonStub;
-    let registerCommandSpy: sinon.SinonSpy;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let registerCommandSpy: sinon.SinonSpy; // Need this for getSendToNativeREPLSetting test
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -56,8 +56,8 @@ suite('REPL - register native repl command', () => {
     });
 
     test('Ensure getSendToNativeREPLSetting is called', async () => {
-        const disposable = TypeMoq.Mock.ofType<Disposable>();
-        const disposableArray: Disposable[] = [disposable.object];
+        // const disposable = TypeMoq.Mock.ofType<Disposable>();
+        // const disposableArray: Disposable[] = [disposable.object];
 
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
