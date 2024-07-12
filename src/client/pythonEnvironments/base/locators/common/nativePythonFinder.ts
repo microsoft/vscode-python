@@ -51,6 +51,9 @@ export type NativeCondaInfo = {
     canSpawnConda: boolean;
     condaRcs: string[];
     envDirs: string[];
+    environmentsTxt?: string;
+    environmentsTxtExists?: boolean;
+    environmentsFromTxt: string[];
 };
 
 export interface NativeGlobalPythonFinder extends Disposable {

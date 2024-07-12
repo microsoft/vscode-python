@@ -359,6 +359,9 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             nativeCondaEnvDirsNotFound: number;
             nativeCondaEnvDirsNotFoundHasEnvs: number;
             nativeCondaEnvDirsNotFoundHasEnvsInTxt: number;
+            nativeCondaEnvTxtSame?: boolean;
+            nativeCondaEnvTxtExists?: boolean;
+            nativeCondaEnvsFromTxt: number;
         };
 
         const userProvidedCondaExe = fsPath
@@ -380,11 +383,12 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             nativeCondaEnvDirsNotFound: 0,
             nativeCondaEnvDirsNotFoundHasEnvs: 0,
             nativeCondaEnvDirsNotFoundHasEnvsInTxt: 0,
+            nativeCondaEnvsFromTxt: 0,
         };
 
         // Get conda telemetry
         {
-            const [info, nativeCondaInfo, condaEnvsInEnvironmentsTxt] = await Promise.all([
+            const [info, nativeCondaInfo, condaEnvsInEnvironmentsTxt, envTxt] = await Promise.all([
                 Conda.getConda()
                     .catch((ex) => traceError('Failed to get conda info', ex))
                     .then((conda) => conda?.getInfo()),
@@ -405,12 +409,20 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                     })
                     .catch((ex) => traceError(`Failed to get conda envs from environments.txt`, ex))
                     .then((items) => items || []),
+                getCondaEnvironmentsTxt().catch(noop),
             ]);
 
+            const environmentsTxt =
+                Array.isArray(envTxt) && envTxt.length ? fsPath.normalize(envTxt[0]).toLowerCase() : undefined;
             if (nativeCondaInfo) {
                 condaTelemetry.nativeCanSpawnConda = nativeCondaInfo.canSpawnConda;
                 condaTelemetry.nativeCondaInfoEnvsDirs = new Set(nativeCondaInfo.envDirs).size;
                 condaTelemetry.nativeCondaRcs = new Set(nativeCondaInfo.condaRcs).size;
+
+                const nativeEnvTxt = fsPath.normalize(nativeCondaInfo.environmentsTxt || '').toLowerCase();
+                condaTelemetry.nativeCondaEnvTxtExists = nativeCondaInfo.environmentsTxtExists == true;
+                condaTelemetry.nativeCondaEnvsFromTxt = (nativeCondaInfo.environmentsFromTxt || []).length;
+                condaTelemetry.nativeCondaEnvTxtSame = nativeEnvTxt === environmentsTxt;
             }
             condaTelemetry.condaEnvsInTxt = condaEnvsInEnvironmentsTxt.length;
             condaTelemetry.canSpawnConda = !!info;
@@ -736,7 +748,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
-            telVer: 5,
+            telVer: 6,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
