@@ -420,7 +420,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 condaTelemetry.nativeCondaRcs = new Set(nativeCondaInfo.condaRcs).size;
 
                 const nativeEnvTxt = fsPath.normalize(nativeCondaInfo.environmentsTxt || '').toLowerCase();
-                condaTelemetry.nativeCondaEnvTxtExists = nativeCondaInfo.environmentsTxtExists == true;
+                condaTelemetry.nativeCondaEnvTxtExists = nativeCondaInfo.environmentsTxtExists === true;
                 condaTelemetry.nativeCondaEnvsFromTxt = (nativeCondaInfo.environmentsFromTxt || []).length;
                 condaTelemetry.nativeCondaEnvTxtSame = nativeEnvTxt === environmentsTxt;
             }
