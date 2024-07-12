@@ -118,7 +118,6 @@ def execute(request, user_globals):
             sys.stdin = original_stdin
 
     send_response(str_output.get_value(), request["id"], execution_status)
-    # send_response(str_output.get_value(), request["id"])
 
 
 def exec_user_input(user_input, user_globals) -> bool:
