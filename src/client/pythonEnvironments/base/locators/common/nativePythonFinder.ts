@@ -49,6 +49,7 @@ export interface NativeEnvManagerInfo {
 
 export type NativeCondaInfo = {
     canSpawnConda: boolean;
+    userProvidedEnvFound?: boolean;
     condaRcs: string[];
     envDirs: string[];
     environmentsTxt?: string;

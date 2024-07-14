@@ -344,6 +344,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
             condaDefaultPrefixInCondaExePath?: boolean;
             canSpawnConda?: boolean;
             nativeCanSpawnConda?: boolean;
+            userProvidedEnvFound?: boolean;
             userProvidedCondaExe?: boolean;
             condaInfoEnvsInvalid: number;
             invalidCondaEnvs: number;
@@ -418,6 +419,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
                 condaTelemetry.nativeCanSpawnConda = nativeCondaInfo.canSpawnConda;
                 condaTelemetry.nativeCondaInfoEnvsDirs = new Set(nativeCondaInfo.envDirs).size;
                 condaTelemetry.nativeCondaRcs = new Set(nativeCondaInfo.condaRcs).size;
+                condaTelemetry.userProvidedEnvFound = nativeCondaInfo.userProvidedEnvFound;
 
                 const nativeEnvTxt = fsPath.normalize(nativeCondaInfo.environmentsTxt || '').toLowerCase();
                 condaTelemetry.nativeCondaEnvTxtExists = nativeCondaInfo.environmentsTxtExists === true;

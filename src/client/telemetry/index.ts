@@ -1165,7 +1165,8 @@ export interface IEventNamePropertyMapping {
         "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "canSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-        "nativeCanSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "nativeCanSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne"},
+        "userProvidedEnvFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaRootPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaRootPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaDefaultPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
@@ -1350,6 +1351,11 @@ export interface IEventNamePropertyMapping {
          * Conda exe can be spawned by native locator.
          */
         nativeCanSpawnConda?: boolean;
+        /**
+         * Conda env belonging to the conda exe provided by the user is found by native locator.
+         * I.e. even if the user didn't provide the path to the conda exe, the conda env is found by native locator.
+         */
+        userProvidedEnvFound?: boolean;
         /**
          * The number of the interpreters not found in disc.
          */
