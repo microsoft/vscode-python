@@ -7,8 +7,6 @@ import os
 import pathlib
 import sys
 import traceback
-
-# import pluggy
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
@@ -890,6 +888,7 @@ def send_post_request(
             f"Plugin error, exception thrown while attempting to send data[vscode-pytest]: {error} \n[vscode-pytest] data: \n{data}\n",
             file=sys.stderr,
         )
+
 
 class DeferPlugin:
     @pytest.hookimpl(hookwrapper=True)
