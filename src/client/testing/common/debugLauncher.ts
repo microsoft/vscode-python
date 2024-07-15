@@ -65,6 +65,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         debugManager.onDidTerminateDebugSession(() => {
             console.log('onDidTerminateDebugSession :', runInstance?.name);
             if (!callbackCalled) {
+                console.log('onDidTerminateDebugSession :', runInstance?.name, 'resolve');
                 deferred.resolve();
                 callback?.();
             }
