@@ -29,6 +29,15 @@ export function createReplController(
                 exec.replaceOutput([
                     new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result.output, 'text/plain')]),
                 ]);
+                // exec.replaceOutput([
+                //     new vscode.NotebookCellOutput([
+                //         vscode.NotebookCellOutputItem.error({
+                //             name: 'yo1',
+                //             message: 'yo2',
+                //             stack: 'yo3',
+                //         }),
+                //     ]),
+                // ]);
             }
 
             exec.end(result?.status);
