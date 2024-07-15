@@ -891,19 +891,6 @@ def send_post_request(
             file=sys.stderr,
         )
 
-
-# def pluggy_version():
-#     return pluggy.__version__
-
-
-# # pluggy version 1.1.0 and before use hookwrapper so convert this arg to wrapper to ensure compatibility for all versions <=1.1.0.
-# def compat_hookimpl(*args, **kwargs):
-#     if pluggy_version() <= "1.1.0":
-#         arg_exists = kwargs.pop("wrapper", False)
-#         kwargs["hookwrapper"] = arg_exists
-#     return pluggy.HookimplMarker("pytest")(*args, **kwargs)
-
-
 class DeferPlugin:
     @pytest.hookimpl(hookwrapper=True)
     def pytest_xdist_auto_num_workers(self, config: pytest.Config) -> Generator[None, int, int]:

@@ -2,7 +2,6 @@
 # Licensed under the MIT License.
 import json
 import os
-import subprocess
 import sys
 from typing import Any, Dict, List, Optional
 
