@@ -37,13 +37,8 @@ export function createReplController(
                             ]),
                         ]);
                     }
-                    // Properly update execution status
-                    exec.end(executionStatus);
                 }
-
-                if (!executionStatus) {
-                    exec.end(false);
-                }
+                exec.end(executionStatus);
             } catch (err) {
                 const error = err as Error;
                 exec.replaceOutput([
