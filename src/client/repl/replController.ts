@@ -23,22 +23,19 @@ export function createReplController(
             const exec = controller.createNotebookCellExecution(cell);
             exec.start(Date.now());
             try {
-                const result = JSON.stringify(await server.execute(cell.document.getText()));
-                const parsedResult = JSON.parse(result);
-                const executionStatus = parsedResult.status;
-                const executionOutput = parsedResult.output;
+                const result = await server.execute(cell.document.getText());
 
                 if (result) {
-                    if (executionOutput !== '') {
+                    if (result.output) {
                         // Only append output if there is something to show.
                         exec.replaceOutput([
                             new vscode.NotebookCellOutput([
-                                vscode.NotebookCellOutputItem.text(executionOutput, 'text/plain'),
+                                vscode.NotebookCellOutputItem.text(result.output, 'text/plain'),
                             ]),
                         ]);
                     }
                 }
-                exec.end(executionStatus);
+                exec.end(result.status);
             } catch (err) {
                 const error = err as Error;
                 exec.replaceOutput([

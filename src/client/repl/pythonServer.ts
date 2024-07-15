@@ -9,9 +9,13 @@ import { EventName } from '../telemetry/constants';
 
 const SERVER_PATH = path.join(EXTENSION_ROOT_DIR, 'python_files', 'python_server.py');
 let serverInstance: PythonServer | undefined;
+export interface ExecutionResult {
+    status: boolean;
+    output: string;
+}
 
 export interface PythonServer extends Disposable {
-    execute(code: string): Promise<string>;
+    execute(code: string): Promise<ExecutionResult>;
     interrupt(): void;
     input(): void;
     checkValidCommand(code: string): Promise<boolean>;
@@ -52,7 +56,7 @@ class PythonServerImpl implements Disposable {
     }
 
     @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)
-    public execute(code: string): Promise<string> {
+    public execute(code: string): Promise<ExecutionResult> {
         return this.connection.sendRequest('execute', code);
     }
 
