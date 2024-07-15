@@ -350,7 +350,8 @@
       "uselibrarycodefortypes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "variableinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "watchforlibrarychanges" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "unusablecompilerflags": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__

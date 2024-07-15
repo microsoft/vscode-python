@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2024.9.0-dev",
+    "version": "2024.11.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -1210,7 +1210,7 @@
                     "category": "Python",
                     "command": "python.analysis.restartLanguageServer",
                     "title": "%python.command.python.analysis.restartLanguageServer.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
+                    "when": "!virtualWorkspace && shellExecutionSupported && (editorLangId == python || notebookType == jupyter-notebook)"
                 },
                 {
                     "category": "Python",
@@ -1361,12 +1361,12 @@
                 {
                     "submenu": "python.run",
                     "group": "Python",
-                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted"
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && isWorkspaceTrusted && !inChat  && notebookType != jupyter-notebook"
                 },
                 {
                     "submenu": "python.runFileInteractive",
                     "group": "Jupyter2",
-                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && !isJupyterInstalled && isWorkspaceTrusted"
+                    "when": "editorLangId == python && !virtualWorkspace && shellExecutionSupported && !isJupyterInstalled && isWorkspaceTrusted && !inChat"
                 }
             ],
             "python.runFileInteractive": [

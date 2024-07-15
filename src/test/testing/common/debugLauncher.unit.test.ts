@@ -234,13 +234,6 @@ suite('Unit Tests - Debug Launcher', () => {
         }
         expected.workspaceFolder = workspaceFolders[0].uri.fsPath;
         expected.debugOptions = [];
-        if (expected.justMyCode === undefined) {
-            // Populate justMyCode using debugStdLib
-            expected.justMyCode = !expected.debugStdLib;
-        }
-        if (!expected.justMyCode) {
-            expected.debugOptions.push(DebugOptions.DebugStdLib);
-        }
         if (expected.stopOnEntry) {
             expected.debugOptions.push(DebugOptions.StopOnEntry);
         }
@@ -379,7 +372,6 @@ suite('Unit Tests - Debug Launcher', () => {
             envFile: 'some/dir/.env',
             redirectOutput: false,
             debugStdLib: true,
-            justMyCode: false,
             // added by LaunchConfigurationResolver:
             internalConsoleOptions: 'neverOpen',
             subProcess: true,
@@ -399,7 +391,6 @@ suite('Unit Tests - Debug Launcher', () => {
                 envFile: expected.envFile,
                 redirectOutput: expected.redirectOutput,
                 debugStdLib: expected.debugStdLib,
-                justMyCode: undefined,
             },
         ]);
 

@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-from __future__ import absolute_import, print_function
 
 import sys
 
@@ -13,7 +12,7 @@ from ._pytest_item import parse_item
 
 def discover(
     pytestargs=None,
-    hidestdio=False,
+    hidestdio=False,  # noqa: FBT002
     # *,
     _pytest_main=pytest.main,
     _plugin=None,
@@ -36,28 +35,20 @@ def discover(
         # Some tests where collected but with errors.
         pass
     elif ec != 0:
-        print(
-            "equivalent command: {} -m pytest {}".format(
-                sys.executable, util.shlex_unsplit(pytestargs)
-            )
-        )
+        print(f"equivalent command: {sys.executable} -m pytest {util.shlex_unsplit(pytestargs)}")
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
-        raise Exception("pytest discovery failed (exit code {})".format(ec))
-    if not _plugin._started:
-        print(
-            "equivalent command: {} -m pytest {}".format(
-                sys.executable, util.shlex_unsplit(pytestargs)
-            )
-        )
+        raise Exception(f"pytest discovery failed (exit code {ec})")
+    if not _plugin._started:  # noqa: SLF001
+        print(f"equivalent command: {sys.executable} -m pytest {util.shlex_unsplit(pytestargs)}")
         if hidestdio:
             print(stdio.getvalue(), file=sys.stderr)
             sys.stdout.flush()
         raise Exception("pytest discovery did not start")
     return (
-        _plugin._tests.parents,
-        list(_plugin._tests),
+        _plugin._tests.parents,  # noqa: SLF001
+        list(_plugin._tests),  # noqa: SLF001
     )
 
 
@@ -72,7 +63,7 @@ def _adjust_pytest_args(pytestargs):
     return pytestargs
 
 
-class TestCollector(object):
+class TestCollector:
     """This is a pytest plugin that collects the discovered tests."""
 
     @classmethod
@@ -88,7 +79,7 @@ class TestCollector(object):
     # Relevant plugin hooks:
     #  https://docs.pytest.org/en/latest/reference.html#collection-hooks
 
-    def pytest_collection_modifyitems(self, session, config, items):
+    def pytest_collection_modifyitems(self, session, config, items):  # noqa: ARG002
         self._started = True
         self._tests.reset()
         for item in items:

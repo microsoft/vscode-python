@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-from __future__ import absolute_import, print_function
+# ruff:noqa: PT009, PTH100, PTH118, PTH120, PTH123
 
 import ntpath
 import os
@@ -11,7 +10,6 @@ import shlex
 import sys
 import unittest
 
-
 # Pytest 3.7 and later uses pathlib/pathlib2 for path resolution.
 try:
     from pathlib import Path
@@ -19,9 +17,9 @@ except ImportError:
     from pathlib2 import Path  # type: ignore (for Pylance)
 
 from testing_tools.adapter.util import (
+    fix_fileid,
     fix_path,
     fix_relpath,
-    fix_fileid,
     shlex_unsplit,
 )
 
@@ -31,6 +29,7 @@ class FilePathTests(unittest.TestCase):
     def test_isolated_imports(self):
         import testing_tools.adapter
         from testing_tools.adapter import util
+
         from . import test_functional
 
         ignored = {
@@ -88,19 +87,19 @@ class FilePathTests(unittest.TestCase):
         ]
         for path, expected in tests:
             pathsep = ntpath.sep
-            with self.subTest(r"fixed for \: {!r}".format(path)):
+            with self.subTest(rf"fixed for \: {path!r}"):
                 fixed = fix_path(path, _pathsep=pathsep)
                 self.assertEqual(fixed, expected)
 
             pathsep = posixpath.sep
-            with self.subTest("unchanged for /: {!r}".format(path)):
+            with self.subTest(f"unchanged for /: {path!r}"):
                 unchanged = fix_path(path, _pathsep=pathsep)
                 self.assertEqual(unchanged, path)
 
         # no path -> "."
         for path in ["", None]:
             for pathsep in [ntpath.sep, posixpath.sep]:
-                with self.subTest(r"fixed for {}: {!r}".format(pathsep, path)):
+                with self.subTest(rf"fixed for {pathsep}: {path!r}"):
                     fixed = fix_path(path, _pathsep=pathsep)
                     self.assertEqual(fixed, ".")
 
@@ -116,7 +115,7 @@ class FilePathTests(unittest.TestCase):
         )
         for path in paths:
             for pathsep in [ntpath.sep, posixpath.sep]:
-                with self.subTest(r"unchanged for {}: {!r}".format(pathsep, path)):
+                with self.subTest(rf"unchanged for {pathsep}: {path!r}"):
                     unchanged = fix_path(path, _pathsep=pathsep)
                     self.assertEqual(unchanged, path)
 
@@ -152,7 +151,9 @@ class FilePathTests(unittest.TestCase):
             with self.subTest((path, _os_path.sep)):
                 fixed = fix_relpath(
                     path,
-                    _fix_path=(lambda p: fix_path(p, _pathsep=_os_path.sep)),
+                    # Capture the loop variants as default parameters to make sure they
+                    # don't change between iterations.
+                    _fix_path=(lambda p, _sep=_os_path.sep: fix_path(p, _pathsep=_sep)),
                     _path_isabs=_os_path.isabs,
                     _pathsep=_os_path.sep,
                 )
@@ -200,7 +201,7 @@ class FilePathTests(unittest.TestCase):
         )
         for fileid, _os_path, expected in tests:
             pathsep = _os_path.sep
-            with self.subTest(r"for {}: {!r}".format(pathsep, fileid)):
+            with self.subTest(rf"for {pathsep}: {fileid!r}"):
                 fixed = fix_fileid(
                     fileid,
                     _path_isabs=_os_path.isabs,
@@ -259,7 +260,7 @@ class FilePathTests(unittest.TestCase):
         )
         for fileid, rootdir, _os_path, expected in tests:
             pathsep = _os_path.sep
-            with self.subTest(r"for {} (with rootdir {!r}): {!r}".format(pathsep, rootdir, fileid)):
+            with self.subTest(rf"for {pathsep} (with rootdir {rootdir!r}): {fileid!r}"):
                 fixed = fix_fileid(
                     fileid,
                     rootdir,

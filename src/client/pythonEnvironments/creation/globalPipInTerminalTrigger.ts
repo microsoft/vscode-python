@@ -1,6 +1,4 @@
 import { Disposable, TerminalShellExecutionStartEvent } from 'vscode';
-import { CreateEnvOnPipInstallTrigger } from '../../common/experiments/groups';
-import { inExperiment } from '../common/externalDependencies';
 import {
     disableCreateEnvironmentTrigger,
     isGlobalPythonSelected,
@@ -27,7 +25,7 @@ function checkCommand(command: string): boolean {
 }
 
 export function registerTriggerForPipInTerminal(disposables: Disposable[]): void {
-    if (!shouldPromptToCreateEnv() || !inExperiment(CreateEnvOnPipInstallTrigger.experiment)) {
+    if (!shouldPromptToCreateEnv()) {
         return;
     }
 

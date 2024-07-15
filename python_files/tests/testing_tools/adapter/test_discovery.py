@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
-
-from __future__ import absolute_import, print_function
+# ruff:noqa: PT009, PT027
 
 import unittest
 
@@ -32,7 +31,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     func="test_each",
                     sub=["[10-10]"],
                 ),
-                source="{}:{}".format(relfile, 10),
+                source=f"{relfile}:{10}",
                 markers=None,
                 # missing "./":
                 parentid="test_spam.py::test_each",
@@ -46,7 +45,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     func="All.BasicTests.test_first",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile, 62),
+                source=f"{relfile}:{62}",
                 markers=None,
                 parentid="test_spam.py::All::BasicTests",
             ),
@@ -123,7 +122,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     func="test_each",
                     sub=["[10-10]"],
                 ),
-                source="{}:{}".format(relfile, 10),
+                source=f"{relfile}:{10}",
                 markers=None,
                 # missing "./", using pathsep:
                 parentid=relfile + "::test_each",
@@ -138,7 +137,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     func="All.BasicTests.test_first",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile, 61),
+                source=f"{relfile}:{61}",
                 markers=None,
                 # missing "./", using pathsep:
                 parentid=relfile + "::All::BasicTests",
@@ -247,7 +246,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                 func="test_spam",
             ),
             # missing "./":
-            source="{}:{}".format(relfile, 11),
+            source=f"{relfile}:{11}",
             markers=[],
             # missing "./":
             parentid=relfile,
@@ -303,7 +302,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=fix_relpath(relfile1),
                     func="test_spam",
                 ),
-                source="{}:{}".format(relfile1, 10),
+                source=f"{relfile1}:{10}",
                 markers=[],
                 # missing "./":
                 parentid=relfile1,
@@ -329,7 +328,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                         relfile=fix_relpath(relfile2),
                         func="BasicTests.test_first",
                     ),
-                    source="{}:{}".format(relfile2, 61),
+                    source=f"{relfile2}:{61}",
                     markers=[],
                     parentid=relfile2 + "::BasicTests",
                 ),
@@ -366,7 +365,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                         relfile=fix_relpath(relfile1),
                         func="test_spam",
                     ),
-                    source="{}:{}".format(relfile1, 10),
+                    source=f"{relfile1}:{10}",
                     markers=[],
                     parentid="./test_spam.py",
                 ),
@@ -379,7 +378,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                         relfile=fix_relpath(relfile2),
                         func="BasicTests.test_first",
                     ),
-                    source="{}:{}".format(relfile2, 61),
+                    source=f"{relfile2}:{61}",
                     markers=[],
                     parentid="./w/test_eggs.py::BasicTests",
                 ),
@@ -447,7 +446,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=doctestfile,
                     func=None,
                 ),
-                source="{}:{}".format(doctestfile, 0),
+                source=f"{doctestfile}:{0}",
                 markers=[],
                 parentid=doctestfile,
             ),
@@ -460,7 +459,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=relfile,
                     func=None,
                 ),
-                source="{}:{}".format(relfile, 0),
+                source=f"{relfile}:{0}",
                 markers=[],
                 parentid=relfile,
             ),
@@ -472,7 +471,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=relfile,
                     func=None,
                 ),
-                source="{}:{}".format(relfile, 12),
+                source=f"{relfile}:{12}",
                 markers=[],
                 parentid=relfile,
             ),
@@ -484,7 +483,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=relfile,
                     func=None,
                 ),
-                source="{}:{}".format(relfile, 27),
+                source=f"{relfile}:{27}",
                 markers=[],
                 parentid=relfile,
             ),
@@ -594,7 +593,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=relfile,
                     func="TestOuter.TestInner.test_spam",
                 ),
-                source="{}:{}".format(relfile, 10),
+                source=f"{relfile}:{10}",
                 markers=None,
                 parentid=relfile + "::TestOuter::TestInner",
             ),
@@ -606,7 +605,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile=relfile,
                     func="TestOuter.TestInner.test_eggs",
                 ),
-                source="{}:{}".format(relfile, 21),
+                source=f"{relfile}:{21}",
                 markers=None,
                 parentid=relfile + "::TestOuter::TestInner",
             ),

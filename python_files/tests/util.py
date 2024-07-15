@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 
 
-class Stub(object):
+class Stub:
     def __init__(self):
         self.calls = []
 
@@ -10,7 +10,7 @@ class Stub(object):
         self.calls.append((name, args, kwargs))
 
 
-class StubProxy(object):
+class StubProxy:
     def __init__(self, stub=None, name=None):
         self.name = name
         self.stub = stub if stub is not None else Stub()
@@ -22,5 +22,5 @@ class StubProxy(object):
     def add_call(self, funcname, *args, **kwargs):
         callname = funcname
         if self.name:
-            callname = "{}.{}".format(self.name, funcname)
+            callname = f"{self.name}.{funcname}"
         return self.stub.add_call(callname, *args, **kwargs)

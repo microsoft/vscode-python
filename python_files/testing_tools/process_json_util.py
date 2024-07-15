@@ -2,7 +2,7 @@
 # Licensed under the MIT License.
 import io
 import json
-from typing import List, Dict
+from typing import Dict, List
 
 CONTENT_LENGTH: str = "Content-Length:"
 

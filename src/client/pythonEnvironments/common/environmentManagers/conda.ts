@@ -44,6 +44,10 @@ export type CondaInfo = {
     root_prefix?: string; // eslint-disable-line camelcase
     conda_version?: string; // eslint-disable-line camelcase
     conda_shlvl?: number; // eslint-disable-line camelcase
+    config_files?: string[]; // eslint-disable-line camelcase
+    rc_path?: string; // eslint-disable-line camelcase
+    sys_rc_path?: string; // eslint-disable-line camelcase
+    user_rc_path?: string; // eslint-disable-line camelcase
 };
 
 type CondaEnvInfo = {

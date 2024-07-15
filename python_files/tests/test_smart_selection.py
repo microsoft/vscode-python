@@ -26,7 +26,7 @@ def test_part_dictionary():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 3, 3, False)
+    result = normalizeSelection.traverse_file(src, 3, 3, was_highlighted=False)
     assert result["normalized_smart_result"] == expected
 
 
@@ -53,7 +53,7 @@ def test_nested_loop():
 
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     assert result["normalized_smart_result"] == expected
 
 
@@ -84,7 +84,7 @@ def test_smart_shift_enter_multiple_statements():
         print("Mercedes")
         """
     )
-    result = normalizeSelection.traverse_file(src, 8, 8, False)
+    result = normalizeSelection.traverse_file(src, 8, 8, was_highlighted=False)
     assert result["normalized_smart_result"] == expected
 
 
@@ -128,7 +128,7 @@ def test_two_layer_dictionary():
         }
         """
     )
-    result = normalizeSelection.traverse_file(src, 6, 7, False)
+    result = normalizeSelection.traverse_file(src, 6, 7, was_highlighted=False)
 
     assert result["normalized_smart_result"] == expected
 
@@ -158,7 +158,7 @@ def test_run_whole_func():
 
         """
     )
-    result = normalizeSelection.traverse_file(src, 2, 2, False)
+    result = normalizeSelection.traverse_file(src, 2, 2, was_highlighted=False)
 
     assert result["normalized_smart_result"] == expected
 
@@ -183,18 +183,13 @@ def test_small_forloop():
 
     # Cover the whole for loop block with multiple inner statements
     # Make sure to contain all of the print statements included.
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["normalized_smart_result"] == expected
 
 
 def inner_for_loop_component():
-    """
-    Pressing shift+enter inside a for loop,
-    specifically on a viable expression
-    by itself, such as print(i)
-    should only return that exact expression
-    """
+    """Pressing shift+enter inside a for loop, specifically on a viable expression by itself, such as print(i) should only return that exact expression."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -203,7 +198,7 @@ def inner_for_loop_component():
             print("Please also send this print statement")
         """
     )
-    result = normalizeSelection.traverse_file(src, 2, 2, False)
+    result = normalizeSelection.traverse_file(src, 2, 2, was_highlighted=False)
     expected = textwrap.dedent(
         """\
             print(i)
@@ -214,13 +209,7 @@ def inner_for_loop_component():
 
 
 def test_dict_comprehension():
-    """
-    Having the mouse cursor on the first line,
-    and pressing shift+enter should return the
-    whole dictionary comp, respecting user's code style.
-    """
-
-    importlib.reload
+    """Having the mouse cursor on the first line, and pressing shift+enter should return the whole dictionary comp, respecting user's code style."""
     src = textwrap.dedent(
         """\
         my_dict_comp = {temp_mover:
@@ -235,17 +224,13 @@ def test_dict_comprehension():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["normalized_smart_result"] == expected
 
 
 def test_send_whole_generator():
-    """
-    Pressing shift+enter on the first line, which is the '('
-    should be returning the whole generator expression instead of just the '('
-    """
-
+    """Pressing shift+enter on the first line, which is the '(' should be returning the whole generator expression instead of just the '('."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -268,19 +253,13 @@ def test_send_whole_generator():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["normalized_smart_result"] == expected
 
 
 def test_multiline_lambda():
-    """
-    Shift+enter on part of the lambda expression
-    should return the whole lambda expression,
-    regardless of whether all the component of
-    lambda expression is on the same or not.
-    """
-
+    """Shift+enter on part of the lambda expression should return the whole lambda expression, regardless of whether all the component of lambda expression is on the same or not."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -298,15 +277,12 @@ def test_multiline_lambda():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     assert result["normalized_smart_result"] == expected
 
 
 def test_send_whole_class():
-    """
-    Shift+enter on a class definition
-    should send the whole class definition
-    """
+    """Shift+enter on a class definition should send the whole class definition."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -319,7 +295,7 @@ def test_send_whole_class():
         print("We should be here after running whole class")
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     expected = textwrap.dedent(
         """\
         class Stub(object):
@@ -334,11 +310,7 @@ def test_send_whole_class():
 
 
 def test_send_whole_if_statement():
-    """
-    Shift+enter on an if statement
-    should send the whole if statement
-    including statements inside and else.
-    """
+    """Shift+enter on an if statement should send the whole if statement including statements inside and else."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -359,7 +331,7 @@ def test_send_whole_if_statement():
 
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     assert result["normalized_smart_result"] == expected
 
 
@@ -384,5 +356,5 @@ def test_send_try():
 
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     assert result["normalized_smart_result"] == expected

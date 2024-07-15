@@ -1,11 +1,11 @@
-from typing import Dict, List, Optional, Union
-import sys
-import json
+import ast
 import contextlib
 import io
+import json
+import sys
 import traceback
 import uuid
-import ast
+from typing import Dict, List, Optional, Union
 
 STDIN = sys.stdin
 STDOUT = sys.stdout
@@ -15,7 +15,7 @@ USER_GLOBALS = {}
 
 def send_message(msg: str):
     length_msg = len(msg)
-    STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode(encoding="utf-8"))
+    STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode())
     STDOUT.buffer.flush()
 
 
@@ -50,15 +50,14 @@ def custom_input(prompt=""):
         if content_length:
             message_text = STDIN.read(content_length)
             message_json = json.loads(message_text)
-            our_user_input = message_json["result"]["userInput"]
-            return our_user_input
+            return message_json["result"]["userInput"]
     except Exception:
         print_log(traceback.format_exc())
 
 
 # Set input to our custom input
 USER_GLOBALS["input"] = custom_input
-input = custom_input
+input = custom_input  # noqa: A001
 
 
 def handle_response(request_id):
@@ -76,7 +75,7 @@ def handle_response(request_id):
                 elif message_json["method"] == "exit":
                     sys.exit(0)
 
-        except Exception:
+        except Exception:  # noqa: PERF203
             print_log(traceback.format_exc())
 
 
@@ -100,12 +99,15 @@ def check_valid_command(request):
 def execute(request, user_globals):
     str_output = CustomIO("<stdout>", encoding="utf-8")
     str_error = CustomIO("<stderr>", encoding="utf-8")
+    str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
 
-    with redirect_io("stdout", str_output):
-        with redirect_io("stderr", str_error):
-            str_input = CustomIO("<stdin>", encoding="utf-8", newline="\n")
-            with redirect_io("stdin", str_input):
-                exec_user_input(request["params"], user_globals)
+    with contextlib.redirect_stdout(str_output), contextlib.redirect_stderr(str_error):
+        original_stdin = sys.stdin
+        try:
+            sys.stdin = str_input
+            exec_user_input(request["params"], user_globals)
+        finally:
+            sys.stdin = original_stdin
     send_response(str_output.get_value(), request["id"])
 
 
@@ -113,8 +115,8 @@ def exec_user_input(user_input, user_globals):
     user_input = user_input[0] if isinstance(user_input, list) else user_input
 
     try:
-        callable = exec_function(user_input)
-        retval = callable(user_input, user_globals)
+        callable_ = exec_function(user_input)
+        retval = callable_(user_input, user_globals)
         if retval is not None:
             print(retval)
     except KeyboardInterrupt:
@@ -141,15 +143,6 @@ class CustomIO(io.TextIOWrapper):
         return self.read()
 
 
-@contextlib.contextmanager
-def redirect_io(stream: str, new_stream):
-    """Redirect stdio streams to a custom stream."""
-    old_stream = getattr(sys, stream)
-    setattr(sys, stream, new_stream)
-    yield
-    setattr(sys, stream, old_stream)
-
-
 def get_headers():
     headers = {}
     while line := STDIN.readline().strip():
@@ -174,5 +167,5 @@ if __name__ == "__main__":
                 elif request_json["method"] == "exit":
                     sys.exit(0)
 
-        except Exception:
+        except Exception:  # noqa: PERF203
             print_log(traceback.format_exc())

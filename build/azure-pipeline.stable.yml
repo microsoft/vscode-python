@@ -14,6 +14,12 @@ resources:
       ref: main
       endpoint: Monaco
 
+    - repository: python-environment-tools
+      type: github
+      name: microsoft/python-environment-tools
+      ref: release/latest
+      endpoint: Monaco
+
 parameters:
   - name: publishExtension
     displayName: 🚀 Publish Extension
@@ -25,7 +31,48 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src/client
+    sourceRepositoriesToScan:
+      include:
+        - repository: python-environment-tools
+      exclude:
+        - repository: translations
+
+    buildPlatforms:
+      - name: Linux
+        vsceTarget: 'web'
+      - name: Linux
+        packageArch: arm64
+        vsceTarget: linux-arm64
+      - name: Linux
+        packageArch: arm
+        vsceTarget: linux-armhf
+      - name: Linux
+        packageArch: x64
+        vsceTarget: linux-x64
+      - name: Linux
+        packageArch: arm64
+        vsceTarget: alpine-arm64
+      - name: Linux
+        packageArch: x64
+        vsceTarget: alpine-x64
+      - name: MacOS
+        packageArch: arm64
+        vsceTarget: darwin-arm64
+      - name: MacOS
+        packageArch: x64
+        vsceTarget: darwin-x64
+      - name: Windows
+        packageArch: arm
+        vsceTarget: win32-arm64
+      - name: Windows
+        packageArch: x64
+        vsceTarget: win32-x64
+
     buildSteps:
+      - checkout: self
+        displayName: Checkout Python Extension
+        path: ./s
+
       - task: NodeTool@0
         inputs:
           versionSpec: '18.17.1'
@@ -38,32 +85,45 @@ extends:
           architecture: 'x64'
         displayName: Select Python version
 
-      - script: npm ci
-        displayName: Install NPM dependencies
-
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
       - script: python -m pip install wheel nox
         displayName: Install wheel and nox
 
-      - script: |
-          nox --session install_python_libs
+      - script: npm ci
+        displayName: Install NPM dependencies
+
+      - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
-      - script: |
-          python ./build/update_ext_version.py --release --for-publishing
-        displayName: Update build number
-
-      - script: |
-          python ./build/update_package_file.py
+      - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
 
       - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
 
-      - script: gulp prePublishBundle
+      - script: npx gulp prePublishBundle
         displayName: Build
+
+      - checkout: python-environment-tools
+        displayName: Checkout python-environment-tools
+        path: ./s/python-env-tools
+
+      - script: nox --session azure_pet_build_before
+        displayName: Enable cargo config for azure
+
+      - template: azure-pipelines/extension/templates/steps/build-extension-rust-package.yml@templates
+        parameters:
+          vsceTarget: $(vsceTarget)
+          binaryName: pet
+          signing: true
+          workingDirectory: $(Build.SourcesDirectory)/python-env-tools
+          buildWasm: false
+          runTest: false
+
+      - script: nox --session azure_pet_build_after
+        displayName: Move bin to final location
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox
