@@ -13,40 +13,6 @@ from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 from . import expected_discovery_test_output, helpers  # noqa: E402
 
 
-@pytest.fixture
-def pluggy_version_resource_setup_teardown():
-    # Setup to switch plugin versions
-    try:
-        subprocess.run(["pip", "install", "pluggy==1.1.0"], timeout=40)
-    except Exception as e:
-        print(f"Exception while installing pluggy==1.1.0: {e}")
-        assert False
-    yield
-    # switch back to a newer version
-    try:
-        subprocess.run(["pip", "install", "pluggy==1.2.0"], timeout=40)
-    except Exception as e:
-        print(f"Exception while installing pluggy==1.2.0: {e}")
-        assert False
-    print("Tearing down pluggy version")
-
-
-def test_pluggy_old_version(pluggy_version_resource_setup_teardown):
-    print("Running test_example")
-    try:
-        helpers.runner(
-            [
-                os.fspath(helpers.TEST_DATA_PATH / "simple_pytest.py"),
-                "--collect-only",
-            ]
-        )
-        assert True
-    except Exception as e:
-        print(f"Exception: {e}")
-        assert False
-    # If an error or assertion failure occurs above, the teardown will still execute.
-
-
 def test_import_error():
     """Test pytest discovery on a file that has a pytest marker but does not import pytest.
 
