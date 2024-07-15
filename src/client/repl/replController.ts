@@ -25,16 +25,14 @@ export function createReplController(
             try {
                 const result = await server.execute(cell.document.getText());
 
-                if (result) {
-                    if (result.output) {
-                        // Only append output if there is something to show.
-                        exec.replaceOutput([
-                            new vscode.NotebookCellOutput([
-                                vscode.NotebookCellOutputItem.text(result.output, 'text/plain'),
-                            ]),
-                        ]);
-                    }
+                if (result.output) {
+                    exec.replaceOutput([
+                        new vscode.NotebookCellOutput([
+                            vscode.NotebookCellOutputItem.text(result.output, 'text/plain'),
+                        ]),
+                    ]);
                 }
+
                 exec.end(result.status);
             } catch (err) {
                 const error = err as Error;
