@@ -23,7 +23,7 @@ def print_log(msg: str):
     send_message(json.dumps({"jsonrpc": "2.0", "method": "log", "params": msg}))
 
 
-def send_response(response: str, response_id: int, execution_status: bool = True):
+def send_response(response: str, response_id: int, execution_status: bool = True):  # noqa: FBT001, FBT002
     send_message(
         json.dumps(
             {
