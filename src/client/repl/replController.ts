@@ -22,31 +22,16 @@ export function createReplController(
         for (const cell of cells) {
             const exec = controller.createNotebookCellExecution(cell);
             exec.start(Date.now());
-            try {
-                const result = await server.execute(cell.document.getText());
 
-                if (result?.output) {
-                    exec.replaceOutput([
-                        new vscode.NotebookCellOutput([
-                            vscode.NotebookCellOutputItem.text(result.output, 'text/plain'),
-                        ]),
-                    ]);
-                }
+            const result = await server.execute(cell.document.getText());
 
-                exec.end(result?.status);
-            } catch (err) {
-                const error = err as Error;
+            if (result?.output) {
                 exec.replaceOutput([
-                    new vscode.NotebookCellOutput([
-                        vscode.NotebookCellOutputItem.error({
-                            name: error.name,
-                            message: error.message,
-                            stack: error.stack,
-                        }),
-                    ]),
+                    new vscode.NotebookCellOutput([vscode.NotebookCellOutputItem.text(result.output, 'text/plain')]),
                 ]);
-                exec.end(false);
             }
+
+            exec.end(result?.status);
         }
     };
     disposables.push(controller);
