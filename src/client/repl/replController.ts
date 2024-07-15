@@ -25,7 +25,7 @@ export function createReplController(
             try {
                 const result = await server.execute(cell.document.getText());
 
-                if (result.output) {
+                if (result?.output) {
                     exec.replaceOutput([
                         new vscode.NotebookCellOutput([
                             vscode.NotebookCellOutputItem.text(result.output, 'text/plain'),
@@ -33,7 +33,7 @@ export function createReplController(
                     ]);
                 }
 
-                exec.end(result.status);
+                exec.end(result?.status);
             } catch (err) {
                 const error = err as Error;
                 exec.replaceOutput([

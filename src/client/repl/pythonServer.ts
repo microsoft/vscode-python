@@ -15,7 +15,7 @@ export interface ExecutionResult {
 }
 
 export interface PythonServer extends Disposable {
-    execute(code: string): Promise<ExecutionResult>;
+    execute(code: string): Promise<ExecutionResult | undefined>;
     interrupt(): void;
     input(): void;
     checkValidCommand(code: string): Promise<boolean>;
@@ -56,8 +56,15 @@ class PythonServerImpl implements Disposable {
     }
 
     @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)
-    public execute(code: string): Promise<ExecutionResult> {
-        return this.connection.sendRequest('execute', code);
+    public async execute(code: string): Promise<ExecutionResult | undefined> {
+        try {
+            const result = await this.connection.sendRequest('execute', code);
+            return result as ExecutionResult;
+        } catch (err) {
+            const error = err as Error;
+            traceError(`Error getting response from REPL server:`, error);
+        }
+        return undefined;
     }
 
     public interrupt(): void {
