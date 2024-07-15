@@ -17,6 +17,7 @@ from typing import (
     TypedDict,
     Union,
 )
+
 import pytest
 
 script_dir = pathlib.Path(__file__).parent.parent
