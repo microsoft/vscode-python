@@ -19,6 +19,7 @@ from typing import (
 )
 
 import pytest
+from pluggy import Result
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -889,13 +890,15 @@ def send_post_request(
 
 class DeferPlugin:
     @pytest.hookimpl(hookwrapper=True)
-    def pytest_xdist_auto_num_workers(self, config: pytest.Config) -> Generator[None, int, int]:
+    def pytest_xdist_auto_num_workers(
+        self, config: pytest.Config
+    ) -> Generator[None, Result[int], None]:
         """Determine how many workers to use based on how many tests were selected in the test explorer."""
-        result = min((yield), len(config.option.file_or_dir))
+        outcome = yield
+        result = min(outcome.get_result(), len(config.option.file_or_dir))
         if result == 1:
-            # setting it to 0 disables xdist, no point using xdist if there's only 1 test
-            return 0
-        return result
+            result = 0
+        outcome.force_result(result)
 
 
 def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
