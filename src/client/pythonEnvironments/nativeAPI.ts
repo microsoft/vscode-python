@@ -235,19 +235,12 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                                     !native.executable
                                 ) {
                                     // This is a conda env without python, no point trying to resolve this.
-                                    // TODO: we still need to add this to this._envs
-                                    traceError(`Unhandled Conda environment without python: ${native.prefix}`);
+                                    // There is nothing to resolve
+                                    this.addEnv(native);
                                 } else {
                                     this.resolveEnv(native.executable ?? native.prefix)
                                         .then(() => {
-                                            const env = toPythonEnvInfo(this.finder, native);
-                                            if (env) {
-                                                this._envs.push(env);
-                                                this._onChanged.fire({
-                                                    type: FileChangeType.Created,
-                                                    new: env,
-                                                });
-                                            }
+                                            this.addEnv(native);
                                         })
                                         .ignoreErrors();
                                 }
@@ -256,10 +249,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                                 if (version.micro < 0 || version.minor < 0 || version.major < 0) {
                                     this.resolveEnv(native.executable ?? native.prefix).ignoreErrors();
                                 } else {
-                                    const env = toPythonEnvInfo(this.finder, native);
-                                    if (env) {
-                                        this._envs.push(env);
-                                    }
+                                    this.addEnv(native);
                                 }
                             }
                         }
@@ -283,6 +273,22 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
 
     getEnvs(_query?: PythonLocatorQuery): PythonEnvInfo[] {
         return this._envs;
+    }
+
+    addEnv(native: NativeEnvInfo): void {
+        const info = toPythonEnvInfo(this.finder, native);
+        if (!info) {
+            return;
+        }
+        const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
+        if (old) {
+            this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
+            this._envs.push(info);
+            this._onChanged.fire({ type: FileChangeType.Changed, old, new: info });
+        } else {
+            this._envs.push(info);
+            this._onChanged.fire({ type: FileChangeType.Created, new: info });
+        }
     }
 
     @cache(30_000, true)
