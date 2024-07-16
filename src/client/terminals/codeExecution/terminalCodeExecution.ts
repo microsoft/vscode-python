@@ -17,11 +17,13 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { traceInfo } from '../../logging';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
+
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
     private replActive?: Promise<boolean>;
+
     constructor(
         @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
@@ -58,12 +60,14 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             await this.getTerminalService(resource).sendText(code);
         }
     }
+
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
         if (this.replActive && (await this.replActive)) {
             await terminalService.show();
             return;
         }
+
         this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
             let listener: IDisposable;
@@ -93,7 +97,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 }
                 resolve(true);
             });
-            terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
+
+            await terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
         });
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {

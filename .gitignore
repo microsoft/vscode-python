@@ -48,3 +48,4 @@ dist/**
 *.xlf
 package.nls.*.json
 l10n/
+python-env-tools/**

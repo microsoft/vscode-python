@@ -14,6 +14,7 @@ const KIND_NAMES: [PythonEnvKind, string][] = [
     [PythonEnvKind.Pyenv, 'pyenv'],
     [PythonEnvKind.Poetry, 'poetry'],
     [PythonEnvKind.Hatch, 'hatch'],
+    [PythonEnvKind.Pixi, 'pixi'],
     [PythonEnvKind.Custom, 'customGlobal'],
     [PythonEnvKind.OtherGlobal, 'otherGlobal'],
     [PythonEnvKind.Venv, 'venv'],

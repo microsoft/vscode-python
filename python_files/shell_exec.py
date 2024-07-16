@@ -16,7 +16,7 @@ shell_args = sys.argv[1:-1]
 
 print("Executing command in shell >> " + " ".join(shell_args))
 
-with open(lock_file, "w") as fp:
+with open(lock_file, "w") as fp:  # noqa: PTH123
     try:
         # Signal start of execution.
         fp.write("START\n")
@@ -36,7 +36,7 @@ with open(lock_file, "w") as fp:
         fp.flush()
         try:
             # ALso log the error for use from the other side.
-            with open(lock_file + ".error", "w") as fpError:
-                fpError.write(traceback.format_exc())
+            with open(lock_file + ".error", "w") as fp_error:  # noqa: PTH123
+                fp_error.write(traceback.format_exc())
         except Exception:
             pass

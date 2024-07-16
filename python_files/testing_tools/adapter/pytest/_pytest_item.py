@@ -89,9 +89,7 @@ When parsing an item, we make use of the following attributes:
     + __code__
     + __closure__
 * own_markers
-"""
-
-from __future__ import absolute_import, print_function
+"""  # noqa: D205
 
 import sys
 
@@ -112,7 +110,7 @@ def should_never_reach_here(item, **extra):
     print("and paste the following output there.")
     print()
     for field, info in _summarize_item(item):
-        print("{}: {}".format(field, info))
+        print(f"{field}: {info}")
     if extra:
         print()
         print("extra info:")
@@ -166,8 +164,8 @@ def parse_item(
         (parentid, parents, fileid, testfunc, _) = _parse_node_id(
             item.nodeid[: -len(parameterized)], kind
         )
-        nodeid = "{}{}".format(parentid, parameterized)
-        parents = [(parentid, item.originalname, kind)] + parents
+        nodeid = f"{parentid}{parameterized}"
+        parents = [(parentid, item.originalname, kind), *parents]
         name = parameterized[1:-1] or "<empty>"
     else:
         (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(item.nodeid, kind)
@@ -311,7 +309,7 @@ def _get_location(
         lineno = -1  # i.e. "unknown"
 
     # from pytest, line numbers are 0-based
-    location = "{}:{}".format(srcfile, int(lineno) + 1)
+    location = f"{srcfile}:{int(lineno) + 1}"
     return location, fullname
 
 
@@ -327,14 +325,11 @@ def _matches_relfile(
     testroot = _normcase(testroot)
     srcfile = _normcase(srcfile)
     relfile = _normcase(relfile)
-    if srcfile == relfile:
-        return True
-    elif srcfile == relfile[len(_pathsep) + 1 :]:
-        return True
-    elif srcfile == testroot + relfile[1:]:
-        return True
-    else:
-        return False
+    return bool(
+        srcfile == relfile
+        or srcfile == relfile[len(_pathsep) + 1 :]
+        or srcfile == testroot + relfile[1:]
+    )
 
 
 def _is_legacy_wrapper(
@@ -350,9 +345,7 @@ def _is_legacy_wrapper(
     """
     if _pyversion > (3,):
         return False
-    if (_pathsep + "unittest" + _pathsep + "case.py") not in srcfile:
-        return False
-    return True
+    return not _pathsep + "unittest" + _pathsep + "case.py" not in srcfile
 
 
 def _unwrap_decorator(func):
@@ -579,16 +572,16 @@ def _summarize_item(item):
                 yield field, dir(item)
             else:
                 yield field, getattr(item, field, "<???>")
-        except Exception as exc:
-            yield field, "<error {!r}>".format(exc)
+        except Exception as exc:  # noqa: PERF203
+            yield field, f"<error {exc!r}>"
 
 
-def _debug_item(item, showsummary=False):
-    item._debugging = True
+def _debug_item(item, showsummary=False):  # noqa: FBT002
+    item._debugging = True  # noqa: SLF001
     try:
         summary = dict(_summarize_item(item))
     finally:
-        item._debugging = False
+        item._debugging = False  # noqa: SLF001
 
     if showsummary:
         print(item.nodeid)
@@ -602,7 +595,7 @@ def _debug_item(item, showsummary=False):
             "markers",
             "props",
         ):
-            print("  {:12} {}".format(key, summary[key]))
+            print(f"  {key:12} {summary[key]}")
         print()
 
     return summary

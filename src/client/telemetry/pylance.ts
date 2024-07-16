@@ -28,6 +28,7 @@
       "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "method" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "modulehash" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "moduleversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "resultLength" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true }
    }
 */
@@ -349,7 +350,8 @@
       "uselibrarycodefortypes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "variableinlaytypehints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "watchforlibrarychanges" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "unusablecompilerflags": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__

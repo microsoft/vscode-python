@@ -8,9 +8,10 @@ import { assert, use as chaiUse } from 'chai';
 import { Diagnostic, TextDocument, Range, Uri, WorkspaceConfiguration, ConfigurationScope } from 'vscode';
 import * as rawProcessApis from '../../../../client/common/process/rawProcessApis';
 import { getInstalledPackagesDiagnostics } from '../../../../client/pythonEnvironments/creation/common/installCheckUtils';
-import { IInterpreterPathService } from '../../../../client/common/types';
 import * as workspaceApis from '../../../../client/common/vscodeApis/workspaceApis';
 import { SpawnOptions } from '../../../../client/common/process/types';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
 chaiUse(chaiAsPromised);
 
@@ -38,14 +39,17 @@ const MISSING_PACKAGES: Diagnostic[] = [
 
 suite('Install check diagnostics tests', () => {
     let plainExecStub: sinon.SinonStub;
-    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+    let interpreterService: typemoq.IMock<IInterpreterService>;
     let getConfigurationStub: sinon.SinonStub;
     let configMock: typemoq.IMock<WorkspaceConfiguration>;
 
     setup(() => {
         configMock = typemoq.Mock.ofType<WorkspaceConfiguration>();
         plainExecStub = sinon.stub(rawProcessApis, 'plainExec');
-        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        interpreterService = typemoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'python' } as unknown) as PythonEnvironment));
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         getConfigurationStub.callsFake((section?: string, _scope?: ConfigurationScope | null) => {
             if (section === 'python') {
@@ -66,7 +70,7 @@ suite('Install check diagnostics tests', () => {
             .verifiable(typemoq.Times.atLeastOnce());
         plainExecStub.resolves({ stdout: MISSING_PACKAGES_STR, stderr: '' });
         const someFile = getSomeRequirementFile();
-        const result = await getInstalledPackagesDiagnostics(interpreterPathService.object, someFile.object);
+        const result = await getInstalledPackagesDiagnostics(interpreterService.object, someFile.object);
 
         assert.deepStrictEqual(result, MISSING_PACKAGES);
         configMock.verifyAll();
@@ -79,7 +83,7 @@ suite('Install check diagnostics tests', () => {
             .verifiable(typemoq.Times.atLeastOnce());
         plainExecStub.resolves({ stdout: '', stderr: '' });
         const someFile = getSomeRequirementFile();
-        const result = await getInstalledPackagesDiagnostics(interpreterPathService.object, someFile.object);
+        const result = await getInstalledPackagesDiagnostics(interpreterService.object, someFile.object);
 
         assert.deepStrictEqual(result, []);
         configMock.verifyAll();
@@ -104,7 +108,7 @@ suite('Install check diagnostics tests', () => {
                 return { stdout: '', stderr: '' };
             });
             const someFile = getSomeRequirementFile();
-            const result = await getInstalledPackagesDiagnostics(interpreterPathService.object, someFile.object);
+            const result = await getInstalledPackagesDiagnostics(interpreterService.object, someFile.object);
 
             assert.deepStrictEqual(result, []);
             assert.deepStrictEqual(severity, expected);

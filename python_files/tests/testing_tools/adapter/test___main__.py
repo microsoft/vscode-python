@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+# ruff:noqa: PT009, PT027
 
 import unittest
 
@@ -15,7 +16,7 @@ from ...util import Stub, StubProxy
 
 class StubTool(StubProxy):
     def __init__(self, name, stub=None):
-        super(StubTool, self).__init__(stub, name)
+        super().__init__(stub, name)
         self.return_discover = None
 
     def discover(self, args, **kwargs):
@@ -27,7 +28,7 @@ class StubTool(StubProxy):
 
 class StubReporter(StubProxy):
     def __init__(self, stub=None):
-        super(StubReporter, self).__init__(stub, "reporter")
+        super().__init__(stub, "reporter")
 
     def report(self, tests, parents, **kwargs):
         self.add_call("report", (tests, parents), kwargs or None)

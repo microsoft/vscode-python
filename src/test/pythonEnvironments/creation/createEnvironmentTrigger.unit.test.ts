@@ -15,7 +15,7 @@ import {
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as commandApis from '../../../client/common/vscodeApis/commandApis';
 import { Commands } from '../../../client/common/constants';
-import { CreateEnv } from '../../../client/common/utils/localize';
+import { Common, CreateEnv } from '../../../client/common/utils/localize';
 
 suite('Create Environment Trigger', () => {
     let shouldPromptToCreateEnvStub: sinon.SinonStub;
@@ -29,7 +29,6 @@ suite('Create Environment Trigger', () => {
     let getWorkspaceFolderStub: sinon.SinonStub;
     let executeCommandStub: sinon.SinonStub;
     let disableCreateEnvironmentTriggerStub: sinon.SinonStub;
-    let disableWorkspaceCreateEnvironmentTriggerStub: sinon.SinonStub;
 
     const workspace1 = {
         uri: Uri.file(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'workspace1')),
@@ -54,10 +53,6 @@ suite('Create Environment Trigger', () => {
 
         executeCommandStub = sinon.stub(commandApis, 'executeCommand');
         disableCreateEnvironmentTriggerStub = sinon.stub(triggerUtils, 'disableCreateEnvironmentTrigger');
-        disableWorkspaceCreateEnvironmentTriggerStub = sinon.stub(
-            triggerUtils,
-            'disableWorkspaceCreateEnvironmentTrigger',
-        );
     });
 
     teardown(() => {
@@ -208,7 +203,6 @@ suite('Create Environment Trigger', () => {
 
         sinon.assert.notCalled(executeCommandStub);
         sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
-        sinon.assert.notCalled(disableWorkspaceCreateEnvironmentTriggerStub);
     });
 
     test('Should show prompt if all conditions met: User clicks create', async () => {
@@ -232,10 +226,9 @@ suite('Create Environment Trigger', () => {
 
         sinon.assert.calledOnceWithExactly(executeCommandStub, Commands.Create_Environment);
         sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
-        sinon.assert.notCalled(disableWorkspaceCreateEnvironmentTriggerStub);
     });
 
-    test('Should show prompt if all conditions met: User clicks disable global', async () => {
+    test("Should show prompt if all conditions met: User clicks don't show again", async () => {
         shouldPromptToCreateEnvStub.returns(true);
         hasVenvStub.resolves(false);
         hasPrefixCondaEnvStub.resolves(false);
@@ -243,7 +236,7 @@ suite('Create Environment Trigger', () => {
         hasKnownFilesStub.resolves(false);
         isGlobalPythonSelectedStub.resolves(true);
 
-        showInformationMessageStub.resolves(CreateEnv.Trigger.disableCheck);
+        showInformationMessageStub.resolves(Common.doNotShowAgain);
         await triggerCreateEnvironmentCheck(CreateEnvironmentCheckKind.Workspace, workspace1.uri);
 
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
@@ -256,30 +249,5 @@ suite('Create Environment Trigger', () => {
 
         sinon.assert.notCalled(executeCommandStub);
         sinon.assert.calledOnce(disableCreateEnvironmentTriggerStub);
-        sinon.assert.notCalled(disableWorkspaceCreateEnvironmentTriggerStub);
-    });
-
-    test('Should show prompt if all conditions met: User clicks disable workspace', async () => {
-        shouldPromptToCreateEnvStub.returns(true);
-        hasVenvStub.resolves(false);
-        hasPrefixCondaEnvStub.resolves(false);
-        hasRequirementFilesStub.resolves(true);
-        hasKnownFilesStub.resolves(false);
-        isGlobalPythonSelectedStub.resolves(true);
-
-        showInformationMessageStub.resolves(CreateEnv.Trigger.disableCheckWorkspace);
-        await triggerCreateEnvironmentCheck(CreateEnvironmentCheckKind.Workspace, workspace1.uri);
-
-        sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(hasVenvStub);
-        sinon.assert.calledOnce(hasPrefixCondaEnvStub);
-        sinon.assert.calledOnce(hasRequirementFilesStub);
-        sinon.assert.calledOnce(hasKnownFilesStub);
-        sinon.assert.calledOnce(isGlobalPythonSelectedStub);
-        sinon.assert.calledOnce(showInformationMessageStub);
-
-        sinon.assert.notCalled(executeCommandStub);
-        sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
-        sinon.assert.calledOnce(disableWorkspaceCreateEnvironmentTriggerStub);
     });
 });

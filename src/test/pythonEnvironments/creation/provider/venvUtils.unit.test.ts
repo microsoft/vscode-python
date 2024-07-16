@@ -64,6 +64,18 @@ suite('Venv Utils test', () => {
         assert.deepStrictEqual(actual, []);
     });
 
+    test('Toml found with no project table', async () => {
+        findFilesStub.resolves([]);
+        pathExistsStub.resolves(true);
+        readFileStub.resolves(
+            '[tool.poetry]\nname = "spam"\nversion = "2020.0.0"\n[build-system]\nrequires = ["setuptools ~= 58.0", "cython ~= 0.29.0"]',
+        );
+
+        const actual = await pickPackagesToInstall(workspace1);
+        assert.isTrue(showQuickPickWithBackStub.notCalled);
+        assert.deepStrictEqual(actual, []);
+    });
+
     test('Toml found with no optional deps', async () => {
         findFilesStub.resolves([]);
         pathExistsStub.resolves(true);

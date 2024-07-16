@@ -1,12 +1,13 @@
 import importlib
 import sys
 from unittest.mock import Mock
+
 import pythonrc
 
 
 def test_decoration_success():
     importlib.reload(pythonrc)
-    ps1 = pythonrc.ps1()
+    ps1 = pythonrc.PS1()
 
     ps1.hooks.failure_flag = False
     result = str(ps1)
@@ -21,7 +22,7 @@ def test_decoration_success():
 
 def test_decoration_failure():
     importlib.reload(pythonrc)
-    ps1 = pythonrc.ps1()
+    ps1 = pythonrc.PS1()
 
     ps1.hooks.failure_flag = True
     result = str(ps1)
@@ -36,10 +37,10 @@ def test_decoration_failure():
 
 def test_displayhook_call():
     importlib.reload(pythonrc)
-    pythonrc.ps1()
+    pythonrc.PS1()
     mock_displayhook = Mock()
 
-    hooks = pythonrc.repl_hooks()
+    hooks = pythonrc.REPLHooks()
     hooks.original_displayhook = mock_displayhook
 
     hooks.my_displayhook("mock_value")
@@ -49,10 +50,10 @@ def test_displayhook_call():
 
 def test_excepthook_call():
     importlib.reload(pythonrc)
-    pythonrc.ps1()
+    pythonrc.PS1()
     mock_excepthook = Mock()
 
-    hooks = pythonrc.repl_hooks()
+    hooks = pythonrc.REPLHooks()
     hooks.original_excepthook = mock_excepthook
 
     hooks.my_excepthook("mock_type", "mock_value", "mock_traceback")

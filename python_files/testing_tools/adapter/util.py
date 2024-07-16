@@ -83,9 +83,8 @@ def fix_relpath(
     path = _fix_path(path)
     if path in (".", ".."):
         return path
-    if not _path_isabs(path):
-        if not path.startswith("." + _pathsep):
-            path = "." + _pathsep + path
+    if not _path_isabs(path) and not path.startswith("." + _pathsep):
+        path = "." + _pathsep + path
     return path
 
 
@@ -125,7 +124,7 @@ def fix_fileid(
     fileid,
     rootdir=None,
     # *,
-    normalize=False,
+    normalize=False,  # noqa: FBT002
     strictpathsep=None,
     _pathsep=PATH_SEP,
     **kwargs,
@@ -171,10 +170,7 @@ def fix_fileid(
 
 @contextlib.contextmanager
 def _replace_fd(file, target):
-    """
-    Temporarily replace the file descriptor for `file`,
-    for which sys.stdout or sys.stderr is passed.
-    """
+    """Temporarily replace the file descriptor for `file`, for which sys.stdout or sys.stderr is passed."""
     try:
         fd = file.fileno()
     except (AttributeError, io.UnsupportedOperation):
@@ -233,7 +229,7 @@ def _temp_io():
 @contextlib.contextmanager
 def hide_stdio():
     """Swallow stdout and stderr."""
-    with _temp_io() as (sio, fileobj):
+    with _temp_io() as (sio, fileobj):  # noqa: SIM117
         with _replace_fd(sys.stdout, fileobj):
             with _replace_stdout(fileobj):
                 with _replace_fd(sys.stderr, fileobj):
@@ -261,9 +257,7 @@ except ImportError:
     def _quote_arg(arg):
         parts = None
         for i, c in enumerate(arg):
-            if c.isspace():
-                pass
-            elif c == '"':
+            if c.isspace() or c == '"':
                 pass
             elif c == "'":
                 c = "'\"'\"'"

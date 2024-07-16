@@ -11,13 +11,18 @@ import type { SemVer } from 'semver';
 import { IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../common/types';
-import { getDebugpyPackagePath } from '../debugger/extension/adapter/remoteLaunchers';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
-import { ICondaService, IInterpreterDisplay, IInterpreterStatusbarVisibilityFilter } from '../interpreter/contracts';
-import { PythonEnvironment } from '../pythonEnvironments/info';
+import {
+    ICondaService,
+    IInterpreterDisplay,
+    IInterpreterService,
+    IInterpreterStatusbarVisibilityFilter,
+} from '../interpreter/contracts';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
+import { getDebugpyPath } from '../debugger/pythonDebugger';
+import type { Environment } from '../api/types';
 
 type PythonApiForJupyterExtension = {
     /**
@@ -25,7 +30,7 @@ type PythonApiForJupyterExtension = {
      */
     getActivatedEnvironmentVariables(
         resource: Resource,
-        interpreter?: PythonEnvironment,
+        interpreter: Environment,
         allowExceptions?: boolean,
     ): Promise<NodeJS.ProcessEnv | undefined>;
     getKnownSuggestions(resource: Resource): IInterpreterQuickPickItem[];
@@ -82,6 +87,7 @@ export class JupyterExtensionIntegration {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IContextKeyManager) private readonly contextManager: IContextKeyManager,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
     ) {}
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
@@ -94,14 +100,17 @@ export class JupyterExtensionIntegration {
         jupyterExtensionApi.registerPythonApi({
             getActivatedEnvironmentVariables: async (
                 resource: Resource,
-                interpreter?: PythonEnvironment,
+                env: Environment,
                 allowExceptions?: boolean,
-            ) => this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions),
+            ) => {
+                const interpreter = await this.interpreterService.getInterpreterDetails(env.path);
+                return this.envActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions);
+            },
             getSuggestions: async (resource: Resource): Promise<IInterpreterQuickPickItem[]> =>
                 this.interpreterSelector.getAllSuggestions(resource),
             getKnownSuggestions: (resource: Resource): IInterpreterQuickPickItem[] =>
                 this.interpreterSelector.getSuggestions(resource),
-            getDebuggerPath: async () => dirname(getDebugpyPackagePath()),
+            getDebuggerPath: async () => dirname(await getDebugpyPath()),
             getInterpreterPathSelectedForJupyterServer: () =>
                 this.globalState.get<string | undefined>('INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER'),
             registerInterpreterStatusFilter: this.interpreterDisplay.registerVisibilityFilter.bind(

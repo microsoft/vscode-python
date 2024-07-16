@@ -145,14 +145,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
-        if (debugConfiguration.justMyCode === undefined) {
-            // Populate justMyCode using debugStdLib
-            debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
-        }
         const debugOptions = debugConfiguration.debugOptions!;
-        if (!debugConfiguration.justMyCode) {
-            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.DebugStdLib);
-        }
         if (debugConfiguration.stopOnEntry) {
             LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.StopOnEntry);
         }

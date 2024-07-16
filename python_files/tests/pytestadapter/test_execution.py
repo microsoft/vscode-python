@@ -2,15 +2,19 @@
 # Licensed under the MIT License.
 import json
 import os
+import pathlib
 import shutil
+import sys
 from typing import Any, Dict, List
 
 import pytest
-import sys
 
-from tests.pytestadapter import expected_execution_test_output
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
 
-from .helpers import (
+from tests.pytestadapter import expected_execution_test_output  # noqa: E402
+
+from .helpers import (  # noqa: E402
     TEST_DATA_PATH,
     create_symlink,
     get_absolute_test_id,
@@ -31,12 +35,11 @@ def test_config_file():
     expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
     actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
     assert len(actual_list) == len(expected_const)
-    actual_result_dict = dict()
+    actual_result_dict = {}
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
+            assert all(item in actual_item for item in ("status", "cwd", "result"))
             assert actual_item.get("status") == "success"
             assert actual_item.get("cwd") == os.fspath(new_cwd)
             actual_result_dict.update(actual_item["result"])
@@ -51,13 +54,12 @@ def test_rootdir_specified():
     actual = runner_with_cwd(args, new_cwd)
     expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
-    actual_result_dict = dict()
+    actual_result_dict = {}
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
+            assert all(item in actual_item for item in ("status", "cwd", "result"))
             assert actual_item.get("status") == "success"
             assert actual_item.get("cwd") == os.fspath(new_cwd)
             actual_result_dict.update(actual_item["result"])
@@ -89,11 +91,11 @@ def test_syntax_error_execution(tmp_path):
     shutil.copyfile(file_path, p)
     actual = runner(["error_syntax_discover.py::test_function"])
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+            assert all(item in actual_item for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             error_content = actual_item.get("error")
@@ -102,7 +104,7 @@ def test_syntax_error_execution(tmp_path):
             ):  # You can add other types if needed
                 assert len(error_content) == 1
             else:
-                assert False
+                pytest.fail(f"{error_content!r} is None or not a list, str, or tuple")
 
 
 def test_bad_id_error_execution():
@@ -112,24 +114,23 @@ def test_bad_id_error_execution():
     """
     actual = runner(["not/a/real::test_id"])
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "error"))
+            assert all(item in actual_item for item in ("status", "cwd", "error"))
             assert actual_item.get("status") == "error"
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             error_content = actual_item.get("error")
             if error_content is not None and isinstance(
                 error_content, (list, tuple, str)
-            ):  # You can add other types if needed
+            ):  # You can add other types if needed.
                 assert len(error_content) == 1
             else:
-                assert False
+                pytest.fail(f"{error_content!r} is None or not a list, str, or tuple")
 
 
 @pytest.mark.parametrize(
-    "test_ids, expected_const",
+    ("test_ids", "expected_const"),
     [
         (
             [
@@ -199,20 +200,20 @@ def test_bad_id_error_execution():
             expected_execution_test_output.dual_level_nested_folder_execution_expected_output,
         ),
         (
-            ["folder_a/folder_b/folder_a/test_nest.py::test_function"],
+            ["folder_a/folder_b/folder_a/test_nest.py::test_function"],  ##
             expected_execution_test_output.double_nested_folder_expected_execution_output,
         ),
         (
             [
-                "parametrize_tests.py::test_adding[3+5-8]",
-                "parametrize_tests.py::test_adding[2+4-6]",
-                "parametrize_tests.py::test_adding[6+9-16]",
+                "parametrize_tests.py::TestClass::test_adding[3+5-8]",  ##
+                "parametrize_tests.py::TestClass::test_adding[2+4-6]",
+                "parametrize_tests.py::TestClass::test_adding[6+9-16]",
             ],
             expected_execution_test_output.parametrize_tests_expected_execution_output,
         ),
         (
             [
-                "parametrize_tests.py::test_adding[3+5-8]",
+                "parametrize_tests.py::TestClass::test_adding[3+5-8]",
             ],
             expected_execution_test_output.single_parametrize_tests_expected_execution_output,
         ),
@@ -230,8 +231,8 @@ def test_bad_id_error_execution():
 )
 def test_pytest_execution(test_ids, expected_const):
     """
-    Test that pytest discovery works as expected where run pytest is always successful
-    but the actual test results are both successes and failures.:
+    Test that pytest discovery works as expected where run pytest is always successful, but the actual test results are both successes and failures.
+
     1: skip_tests_execution_expected_output: test run on a file with skipped tests.
     2. error_raised_exception_execution_expected_output: test run on a file that raises an exception.
     3. uf_execution_expected_output: unittest tests run on multiple files.
@@ -255,13 +256,12 @@ def test_pytest_execution(test_ids, expected_const):
     args = test_ids
     actual = runner(args)
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
-    assert actual_list.pop(-1).get("eot")
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
-    actual_result_dict = dict()
+    actual_result_dict = {}
     if actual_list is not None:
         for actual_item in actual_list:
-            assert all(item in actual_item.keys() for item in ("status", "cwd", "result"))
+            assert all(item in actual_item for item in ("status", "cwd", "result"))
             assert actual_item.get("status") == "success"
             assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
             actual_result_dict.update(actual_item["result"])
@@ -277,8 +277,8 @@ def test_pytest_execution(test_ids, expected_const):
 
 
 def test_symlink_run():
-    """
-    Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+    """Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
+
     Discovery should succeed and testids should be relative to the symlinked root directory.
     """
     with create_symlink(TEST_DATA_PATH, "root", "symlink_folder") as (
@@ -299,18 +299,17 @@ def test_symlink_run():
         assert actual
         actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
-            assert actual_list.pop(-1).get("eot")
             actual_item = actual_list.pop(0)
             try:
                 # Check if all requirements
                 assert all(
-                    item in actual_item.keys() for item in ("status", "cwd", "result")
+                    item in actual_item for item in ("status", "cwd", "result")
                 ), "Required keys are missing"
                 assert actual_item.get("status") == "success", "Status is not 'success'"
                 assert actual_item.get("cwd") == os.fspath(
                     destination
                 ), f"CWD does not match: {os.fspath(destination)}"
-                actual_result_dict = dict()
+                actual_result_dict = {}
                 actual_result_dict.update(actual_item["result"])
                 assert actual_result_dict == expected_const
             except AssertionError as e:

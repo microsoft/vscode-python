@@ -21,12 +21,11 @@ def split_lines(source):
 
 
 def _get_statements(selection):
-    """
-    Process a multiline selection into a list of its top-level statements.
+    """Process a multiline selection into a list of its top-level statements.
+
     This will remove empty newlines around and within the selection, dedent it,
     and split it using the result of `ast.parse()`.
     """
-
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
     lines = (line for line in split_lines(selection) if line.strip() != "")
 
@@ -57,7 +56,7 @@ def _get_statements(selection):
         # Also, not all AST objects can have decorators.
         if hasattr(node, "decorator_list") and sys.version_info >= (3, 8):
             # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
-            line_end -= len(getattr(node, "decorator_list"))
+            line_end -= len(getattr(node, "decorator_list"))  # noqa: B009
         ends.append(line_end)
     ends.append(len(lines))
 
@@ -74,7 +73,7 @@ def _get_statements(selection):
         # Special handling of decorators similar to what's above.
         if hasattr(node, "decorator_list") and sys.version_info >= (3, 8):
             # Using getattr instead of node.decorator_list or pyright will complain about an unknown member.
-            start -= len(getattr(node, "decorator_list"))
+            start -= len(getattr(node, "decorator_list"))  # noqa: B009
         block = "\n".join(lines[start:end])
 
         # If the block is multiline, add an extra newline character at its end.
@@ -134,18 +133,16 @@ min_key = None
 
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
-    exact_nodes = []
-    for node in top_level_nodes:
-        if node.lineno == start_line and node.end_lineno == end_line:
-            exact_nodes.append(node)
+    return [
+        node
+        for node in top_level_nodes
+        if node.lineno == start_line and node.end_lineno == end_line
+    ]
 
-    return exact_nodes
 
+def traverse_file(whole_file_content, start_line, end_line, was_highlighted):  # noqa: ARG001
+    """Intended to traverse through a user's given file content and find, collect all appropriate lines that should be sent to the REPL in case of smart selection.
 
-def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
-    """
-    Intended to traverse through a user's given file content and find, collect all appropriate lines
-    that should be sent to the REPL in case of smart selection.
     This could be exact statement such as just a single line print statement,
     or a multiline dictionary, or differently styled multi-line list comprehension, etc.
     Then call the normalize_lines function to normalize our smartly selected code block.
@@ -153,7 +150,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
     parsed_file_content = None
 
     try:
-        parsed_file_content = ast.parse(wholeFileContent)
+        parsed_file_content = ast.parse(whole_file_content)
     except Exception:
         # Handle case where user is attempting to run code where file contains deprecated Python code.
         # Let typescript side know and show warning message.
@@ -192,8 +189,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
             ast.ExceptHandler,
         )
         if isinstance(node, ast_types_with_nodebody) and isinstance(node.body, Iterable):
-            for child_nodes in node.body:
-                top_level_nodes.append(child_nodes)
+            top_level_nodes.extend(node.body)
 
     exact_nodes = check_exact_exist(top_level_nodes, start_line, end_line)
 
@@ -202,7 +198,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         which_line_next = 0
         for same_line_node in exact_nodes:
             should_run_top_blocks.append(same_line_node)
-            smart_code += f"{ast.get_source_segment(wholeFileContent, same_line_node)}\n"
+            smart_code += f"{ast.get_source_segment(whole_file_content, same_line_node)}\n"
             which_line_next = get_next_block_lineno(should_run_top_blocks)
         return {
             "normalized_smart_result": smart_code,
@@ -216,7 +212,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
         if start_line == top_node.lineno and end_line == top_node.end_lineno:
             should_run_top_blocks.append(top_node)
 
-            smart_code += f"{ast.get_source_segment(wholeFileContent, top_node)}\n"
+            smart_code += f"{ast.get_source_segment(whole_file_content, top_node)}\n"
             break  # If we found exact match, don't waste computation in parsing extra nodes.
         elif start_line >= top_node.lineno and end_line <= top_node.end_lineno:
             # Case to apply smart selection for multiple line.
@@ -231,7 +227,7 @@ def traverse_file(wholeFileContent, start_line, end_line, was_highlighted):
 
             should_run_top_blocks.append(top_node)
 
-            smart_code += str(ast.get_source_segment(wholeFileContent, top_node))
+            smart_code += str(ast.get_source_segment(whole_file_content, top_node))
             smart_code += "\n"
 
     normalized_smart_result = normalize_lines(smart_code)
@@ -262,7 +258,7 @@ if __name__ == "__main__":
     raw = stdin.read()
     contents = json.loads(raw.decode("utf-8"))
     # Empty highlight means user has not explicitly selected specific text.
-    empty_Highlight = contents.get("emptyHighlight", False)
+    empty_highlight = contents.get("emptyHighlight", False)
 
     # We also get the activeEditor selection start line and end line from the typescript VS Code side.
     # Remember to add 1 to each of the received since vscode starts line counting from 0 .
@@ -273,12 +269,12 @@ if __name__ == "__main__":
     data = None
     which_line_next = 0
 
-    if empty_Highlight and contents.get("smartSendSettingsEnabled"):
+    if empty_highlight and contents.get("smartSendSettingsEnabled"):
         result = traverse_file(
             contents["wholeFileContent"],
             vscode_start_line,
             vscode_end_line,
-            not empty_Highlight,
+            not empty_highlight,
         )
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]

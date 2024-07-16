@@ -25,7 +25,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 
 
 @pytest.mark.parametrize(
-    "directory, pattern, expected",
+    ("directory", "pattern", "expected"),
     [
         (
             ".",
@@ -49,7 +49,6 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 )
 def test_simple_test_cases(directory, pattern, expected) -> None:
     """The get_test_case fuction should return tests from all test suites."""
-
     actual = []
 
     # Discover tests in .data/<directory>.
@@ -59,15 +58,13 @@ def test_simple_test_cases(directory, pattern, expected) -> None:
     suite = loader.discover(start_dir, pattern)
 
     # Iterate on get_test_case and save the test id.
-    for test in get_test_case(suite):
-        actual.append(test.id())
+    actual = [test.id() for test in get_test_case(suite)]
 
     assert expected == actual
 
 
 def test_get_existing_child_node() -> None:
     """The get_child_node fuction should return the child node of a test tree if it exists."""
-
     tree: TestNode = {
         "name": "root",
         "path": "foo",
@@ -110,12 +107,11 @@ def test_get_existing_child_node() -> None:
     tree_copy = tree.copy()
 
     # Check that the tree didn't get mutated by get_child_node.
-    assert is_same_tree(tree, tree_copy)
+    assert is_same_tree(tree, tree_copy, ["id_", "lineno", "name"])
 
 
 def test_no_existing_child_node() -> None:
     """The get_child_node fuction should add a child node to a test tree and return it if it does not exist."""
-
     tree: TestNode = {
         "name": "root",
         "path": "foo",
@@ -164,7 +160,7 @@ def test_no_existing_child_node() -> None:
     tree_after["children"] = tree_after["children"][:-1]
 
     # Check that all pre-existing items in the tree didn't get mutated by get_child_node.
-    assert is_same_tree(tree_before, tree_after)
+    assert is_same_tree(tree_before, tree_after, ["id_", "lineno", "name"])
 
     # Check for the added node.
     last_child = tree["children"][-1]
@@ -172,10 +168,7 @@ def test_no_existing_child_node() -> None:
 
 
 def test_build_simple_tree() -> None:
-    """The build_test_tree function should build and return a test tree from discovered test suites,
-    and an empty list of errors if there are none in the discovered data.
-    """
-
+    """The build_test_tree function should build and return a test tree from discovered test suites, and an empty list of errors if there are none in the discovered data."""
     # Discovery tests in utils_simple_tree.py.
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "utils_simple_tree*"
@@ -226,16 +219,12 @@ def test_build_simple_tree() -> None:
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert is_same_tree(expected, tests)
+    assert is_same_tree(expected, tests, ["id_", "lineno", "name"])
     assert not errors
 
 
 def test_build_decorated_tree() -> None:
-    """The build_test_tree function should build and return a test tree from discovered test suites,
-    with correct line numbers for decorated test,
-    and an empty list of errors if there are none in the discovered data.
-    """
-
+    """The build_test_tree function should build and return a test tree from discovered test suites, with correct line numbers for decorated test, and an empty list of errors if there are none in the discovered data."""
     # Discovery tests in utils_decorated_tree.py.
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "utils_decorated_tree*"
@@ -286,14 +275,12 @@ def test_build_decorated_tree() -> None:
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert is_same_tree(expected, tests)
+    assert is_same_tree(expected, tests, ["id_", "lineno", "name"])
     assert not errors
 
 
 def test_build_empty_tree() -> None:
-    """The build_test_tree function should return None if there are no discovered test suites,
-    and an empty list of errors if there are none in the discovered data."""
-
+    """The build_test_tree function should return None if there are no discovered test suites, and an empty list of errors if there are none in the discovered data."""
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "does_not_exist*"
 

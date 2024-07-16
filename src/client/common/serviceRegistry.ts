@@ -89,6 +89,7 @@ import { ContextKeyManager } from './application/contextKeyManager';
 import { CreatePythonFileCommandHandler } from './application/commands/createPythonFile';
 import { RequireJupyterPrompt } from '../jupyter/requireJupyterPrompt';
 import { isWindows } from './platform/platformService';
+import { PixiActivationCommandProvider } from './terminal/environmentActivationProviders/pixiActivationProvider';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, isWindows());
@@ -160,6 +161,11 @@ export function registerTypes(serviceManager: IServiceManager): void {
         ITerminalActivationCommandProvider,
         CondaActivationCommandProvider,
         TerminalActivationProviders.conda,
+    );
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
+        PixiActivationCommandProvider,
+        TerminalActivationProviders.pixi,
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,

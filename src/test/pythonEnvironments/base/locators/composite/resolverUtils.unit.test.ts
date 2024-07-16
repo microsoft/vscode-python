@@ -153,6 +153,8 @@ suite('Resolver Utils', () => {
                 kind: PythonEnvKind.MicrosoftStore,
                 distro: { org: 'Microsoft' },
                 source: [PythonEnvSource.PathEnvVar],
+                identifiedUsingNativeLocator: undefined,
+                pythonRunCommand: undefined,
                 ...createExpectedInterpreterInfo(python38path),
             };
             setEnvDisplayString(expected);
@@ -175,6 +177,8 @@ suite('Resolver Utils', () => {
                 kind: PythonEnvKind.MicrosoftStore,
                 distro: { org: 'Microsoft' },
                 source: [PythonEnvSource.PathEnvVar],
+                identifiedUsingNativeLocator: undefined,
+                pythonRunCommand: undefined,
                 ...createExpectedInterpreterInfo(python38path),
             };
             setEnvDisplayString(expected);
@@ -239,6 +243,8 @@ suite('Resolver Utils', () => {
                 distro: { org: '' },
                 searchLocation: undefined,
                 source: [],
+                identifiedUsingNativeLocator: undefined,
+                pythonRunCommand: undefined,
             };
             info.type = PythonEnvType.Conda;
             setEnvDisplayString(info);
@@ -351,6 +357,8 @@ suite('Resolver Utils', () => {
                 searchLocation: Uri.file(location),
                 source: [],
                 type: PythonEnvType.Virtual,
+                identifiedUsingNativeLocator: undefined,
+                pythonRunCommand: undefined,
             };
             setEnvDisplayString(info);
             return info;
@@ -406,6 +414,8 @@ suite('Resolver Utils', () => {
                 distro: { org: '' },
                 searchLocation: undefined,
                 source: [],
+                identifiedUsingNativeLocator: undefined,
+                pythonRunCommand: undefined,
             };
             setEnvDisplayString(info);
             return info;

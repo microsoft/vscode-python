@@ -6,11 +6,12 @@
 import { PythonEnvKind, PythonEnvSource } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator, PythonLocatorQuery, IEmitter } from '../../locator';
 import { getRegistryInterpreters } from '../../../common/windowsUtils';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo } from '../../../../logging';
 import { isMicrosoftStoreDir } from '../../../common/environmentManagers/microsoftStoreEnv';
 import { PythonEnvsChangedEvent } from '../../watcher';
 import { DiscoveryUsingWorkers } from '../../../../common/experiments/groups';
 import { inExperiment } from '../../../common/externalDependencies';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 export const WINDOWS_REG_PROVIDER_ID = 'windows-registry';
 
@@ -42,13 +43,15 @@ async function* iterateEnvsLazily(changed: IEmitter<PythonEnvsChangedEvent>): IP
 }
 
 async function loadAllEnvs(changed: IEmitter<PythonEnvsChangedEvent>) {
-    traceVerbose('Searching for windows registry interpreters');
-    await getRegistryInterpreters();
+    const stopWatch = new StopWatch();
+    traceInfo('Searching for windows registry interpreters');
     changed.fire({ providerId: WINDOWS_REG_PROVIDER_ID });
-    traceVerbose('Finished searching for windows registry interpreters');
+    traceInfo(`Finished searching for windows registry interpreters: ${stopWatch.elapsedTime} milliseconds`);
 }
 
 async function* iterateEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+    const stopWatch = new StopWatch();
+    traceInfo('Searching for windows registry interpreters');
     const interpreters = await getRegistryInterpreters(); // Value should already be loaded at this point, so this returns immediately.
     for (const interpreter of interpreters) {
         try {
@@ -68,5 +71,5 @@ async function* iterateEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
             traceError(`Failed to process environment: ${interpreter}`, ex);
         }
     }
-    traceVerbose('Finished searching for windows registry interpreters');
+    traceInfo(`Finished searching for windows registry interpreters: ${stopWatch.elapsedTime} milliseconds`);
 }

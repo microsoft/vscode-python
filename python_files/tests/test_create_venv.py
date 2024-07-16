@@ -168,7 +168,7 @@ def test_toml_args(extras, expected):
 
     actual = []
 
-    def run_process(args, error_message):
+    def run_process(args, error_message):  # noqa: ARG001
         nonlocal actual
         actual = args[1:]
 
@@ -201,7 +201,7 @@ def test_requirements_args(extras, expected):
 
     actual = []
 
-    def run_process(args, error_message):
+    def run_process(args, error_message):  # noqa: ARG001
         nonlocal actual
         actual.append(args)
 

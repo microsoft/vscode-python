@@ -1,13 +1,15 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+# ruff:noqa: PT009
 
 import json
 import unittest
 
-from ...util import StubProxy
-from testing_tools.adapter.util import fix_path, fix_relpath
-from testing_tools.adapter.info import SingleTestInfo, SingleTestPath, ParentInfo
+from testing_tools.adapter.info import ParentInfo, SingleTestInfo, SingleTestPath
 from testing_tools.adapter.report import report_discovered
+from testing_tools.adapter.util import fix_path, fix_relpath
+
+from ...util import StubProxy
 
 
 class StubSender(StubProxy):
@@ -34,7 +36,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=relfile,
                     func="test_spam",
                 ),
-                source="{}:{}".format(relfile, 10),
+                source=f"{relfile}:{10}",
                 markers=[],
                 parentid="file#1",
             ),
@@ -71,7 +73,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     {
                         "id": "test#1",
                         "name": "test_spam",
-                        "source": "{}:{}".format(relfile, 10),
+                        "source": f"{relfile}:{10}",
                         "markers": [],
                         "parentid": "file#1",
                     }
@@ -105,7 +107,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=relfile1,
                     func="test_spam",
                 ),
-                source="{}:{}".format(relfile1, 10),
+                source=f"{relfile1}:{10}",
                 markers=[],
                 parentid=relfileid1,
             ),
@@ -142,7 +144,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     {
                         "id": relfileid1 + "::test_spam",
                         "name": "test_spam",
-                        "source": "{}:{}".format(relfile1, 10),
+                        "source": f"{relfile1}:{10}",
                         "markers": [],
                         "parentid": relfileid1,
                     }
@@ -164,7 +166,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                         relfile=relfile2,
                         func="BasicTests.test_first",
                     ),
-                    source="{}:{}".format(relfile2, 61),
+                    source=f"{relfile2}:{61}",
                     markers=[],
                     parentid=relfileid2 + "::BasicTests",
                 ),
@@ -233,7 +235,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                         {
                             "id": relfileid2 + "::BasicTests::test_first",
                             "name": "test_first",
-                            "source": "{}:{}".format(relfile2, 61),
+                            "source": f"{relfile2}:{61}",
                             "markers": [],
                             "parentid": relfileid2 + "::BasicTests",
                         }
@@ -287,7 +289,7 @@ class ReportDiscoveredTests(unittest.TestCase):
           test_spam.py
               SpamTests
                 test_okay
-        """
+        """  # noqa: D205, D400
         stub = StubSender()
         testroot = fix_path("/a/b/c")
         relfileid1 = "./test_ham.py"
@@ -305,7 +307,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid1),
                     func="MySuite.test_x1",
                 ),
-                source="{}:{}".format(fix_path(relfileid1), 10),
+                source=f"{fix_path(relfileid1)}:{10}",
                 markers=None,
                 parentid=relfileid1 + "::MySuite",
             ),
@@ -317,7 +319,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid1),
                     func="MySuite.test_x2",
                 ),
-                source="{}:{}".format(fix_path(relfileid1), 21),
+                source=f"{fix_path(relfileid1)}:{21}",
                 markers=None,
                 parentid=relfileid1 + "::MySuite",
             ),
@@ -329,7 +331,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid2),
                     func="SpamTests.test_okay",
                 ),
-                source="{}:{}".format(fix_path(relfileid2), 17),
+                source=f"{fix_path(relfileid2)}:{17}",
                 markers=None,
                 parentid=relfileid2 + "::SpamTests",
             ),
@@ -341,7 +343,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid3),
                     func="test_ham1",
                 ),
-                source="{}:{}".format(fix_path(relfileid3), 8),
+                source=f"{fix_path(relfileid3)}:{8}",
                 markers=None,
                 parentid=relfileid3,
             ),
@@ -353,7 +355,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid3),
                     func="HamTests.test_uh_oh",
                 ),
-                source="{}:{}".format(fix_path(relfileid3), 19),
+                source=f"{fix_path(relfileid3)}:{19}",
                 markers=["expected-failure"],
                 parentid=relfileid3 + "::HamTests",
             ),
@@ -365,7 +367,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid3),
                     func="HamTests.test_whoa",
                 ),
-                source="{}:{}".format(fix_path(relfileid3), 35),
+                source=f"{fix_path(relfileid3)}:{35}",
                 markers=None,
                 parentid=relfileid3 + "::HamTests",
             ),
@@ -378,7 +380,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MoreHam.test_yay",
                     sub=["[1-2]"],
                 ),
-                source="{}:{}".format(fix_path(relfileid3), 57),
+                source=f"{fix_path(relfileid3)}:{57}",
                 markers=None,
                 parentid=relfileid3 + "::MoreHam::test_yay",
             ),
@@ -391,7 +393,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MoreHam.test_yay",
                     sub=["[1-2]", "[3=4]"],
                 ),
-                source="{}:{}".format(fix_path(relfileid3), 72),
+                source=f"{fix_path(relfileid3)}:{72}",
                 markers=None,
                 parentid=relfileid3 + "::MoreHam::test_yay[1-2]",
             ),
@@ -403,7 +405,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid4),
                     func="SpamTests.test_okay",
                 ),
-                source="{}:{}".format(fix_path(relfileid4), 15),
+                source=f"{fix_path(relfileid4)}:{15}",
                 markers=None,
                 parentid=relfileid4 + "::SpamTests",
             ),
@@ -415,7 +417,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid5),
                     func="SpamTests.test_okay",
                 ),
-                source="{}:{}".format(fix_path(relfileid5), 12),
+                source=f"{fix_path(relfileid5)}:{12}",
                 markers=None,
                 parentid=relfileid5 + "::SpamTests",
             ),
@@ -427,7 +429,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     relfile=fix_path(relfileid6),
                     func="SpamTests.test_okay",
                 ),
-                source="{}:{}".format(fix_path(relfileid6), 27),
+                source=f"{fix_path(relfileid6)}:{27}",
                 markers=None,
                 parentid=relfileid6 + "::SpamTests",
             ),
@@ -731,77 +733,77 @@ class ReportDiscoveredTests(unittest.TestCase):
                     {
                         "id": relfileid1 + "::MySuite::test_x1",
                         "name": "test_x1",
-                        "source": "{}:{}".format(fix_path(relfileid1), 10),
+                        "source": f"{fix_path(relfileid1)}:{10}",
                         "markers": [],
                         "parentid": relfileid1 + "::MySuite",
                     },
                     {
                         "id": relfileid1 + "::MySuite::test_x2",
                         "name": "test_x2",
-                        "source": "{}:{}".format(fix_path(relfileid1), 21),
+                        "source": f"{fix_path(relfileid1)}:{21}",
                         "markers": [],
                         "parentid": relfileid1 + "::MySuite",
                     },
                     {
                         "id": relfileid2 + "::SpamTests::test_okay",
                         "name": "test_okay",
-                        "source": "{}:{}".format(fix_path(relfileid2), 17),
+                        "source": f"{fix_path(relfileid2)}:{17}",
                         "markers": [],
                         "parentid": relfileid2 + "::SpamTests",
                     },
                     {
                         "id": relfileid3 + "::test_ham1",
                         "name": "test_ham1",
-                        "source": "{}:{}".format(fix_path(relfileid3), 8),
+                        "source": f"{fix_path(relfileid3)}:{8}",
                         "markers": [],
                         "parentid": relfileid3,
                     },
                     {
                         "id": relfileid3 + "::HamTests::test_uh_oh",
                         "name": "test_uh_oh",
-                        "source": "{}:{}".format(fix_path(relfileid3), 19),
+                        "source": f"{fix_path(relfileid3)}:{19}",
                         "markers": ["expected-failure"],
                         "parentid": relfileid3 + "::HamTests",
                     },
                     {
                         "id": relfileid3 + "::HamTests::test_whoa",
                         "name": "test_whoa",
-                        "source": "{}:{}".format(fix_path(relfileid3), 35),
+                        "source": f"{fix_path(relfileid3)}:{35}",
                         "markers": [],
                         "parentid": relfileid3 + "::HamTests",
                     },
                     {
                         "id": relfileid3 + "::MoreHam::test_yay[1-2]",
                         "name": "test_yay[1-2]",
-                        "source": "{}:{}".format(fix_path(relfileid3), 57),
+                        "source": f"{fix_path(relfileid3)}:{57}",
                         "markers": [],
                         "parentid": relfileid3 + "::MoreHam::test_yay",
                     },
                     {
                         "id": relfileid3 + "::MoreHam::test_yay[1-2][3-4]",
                         "name": "test_yay[1-2][3-4]",
-                        "source": "{}:{}".format(fix_path(relfileid3), 72),
+                        "source": f"{fix_path(relfileid3)}:{72}",
                         "markers": [],
                         "parentid": relfileid3 + "::MoreHam::test_yay[1-2]",
                     },
                     {
                         "id": relfileid4 + "::SpamTests::test_okay",
                         "name": "test_okay",
-                        "source": "{}:{}".format(fix_path(relfileid4), 15),
+                        "source": f"{fix_path(relfileid4)}:{15}",
                         "markers": [],
                         "parentid": relfileid4 + "::SpamTests",
                     },
                     {
                         "id": relfileid5 + "::SpamTests::test_okay",
                         "name": "test_okay",
-                        "source": "{}:{}".format(fix_path(relfileid5), 12),
+                        "source": f"{fix_path(relfileid5)}:{12}",
                         "markers": [],
                         "parentid": relfileid5 + "::SpamTests",
                     },
                     {
                         "id": relfileid6 + "::SpamTests::test_okay",
                         "name": "test_okay",
-                        "source": "{}:{}".format(fix_path(relfileid6), 27),
+                        "source": f"{fix_path(relfileid6)}:{27}",
                         "markers": [],
                         "parentid": relfileid6 + "::SpamTests",
                     },
@@ -833,7 +835,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MySuite.test_spam_1",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile, 10),
+                source=f"{relfile}:{10}",
                 markers=None,
                 parentid="suite#1",
             ),
@@ -897,7 +899,7 @@ class ReportDiscoveredTests(unittest.TestCase):
           test_spam.py
               SpamTests
                 test_okay
-        """
+        """  # noqa: D205, D400
         stub = StubSender()
         testroot1 = fix_path("/a/b/c")
         relfile1 = fix_path("./test_ham.py")
@@ -918,7 +920,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MySuite.test_x1",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile1, 10),
+                source=f"{relfile1}:{10}",
                 markers=None,
                 parentid="suite#1",
             ),
@@ -931,7 +933,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MySuite.test_x2",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile1, 21),
+                source=f"{relfile1}:{21}",
                 markers=None,
                 parentid="suite#1",
             ),
@@ -945,7 +947,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="SpamTests.test_okay",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile2, 17),
+                source=f"{relfile2}:{17}",
                 markers=None,
                 parentid="suite#2",
             ),
@@ -958,7 +960,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="test_ham1",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile3, 8),
+                source=f"{relfile3}:{8}",
                 markers=None,
                 parentid="file#3",
             ),
@@ -971,7 +973,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="HamTests.test_uh_oh",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile3, 19),
+                source=f"{relfile3}:{19}",
                 markers=["expected-failure"],
                 parentid="suite#3",
             ),
@@ -984,7 +986,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="HamTests.test_whoa",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile3, 35),
+                source=f"{relfile3}:{35}",
                 markers=None,
                 parentid="suite#3",
             ),
@@ -997,7 +999,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MoreHam.test_yay",
                     sub=["sub1"],
                 ),
-                source="{}:{}".format(relfile3, 57),
+                source=f"{relfile3}:{57}",
                 markers=None,
                 parentid="suite#4",
             ),
@@ -1010,7 +1012,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="MoreHam.test_yay",
                     sub=["sub2", "sub3"],
                 ),
-                source="{}:{}".format(relfile3, 72),
+                source=f"{relfile3}:{72}",
                 markers=None,
                 parentid="suite#3",
             ),
@@ -1023,7 +1025,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="SpamTests.test_okay",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile4, 15),
+                source=f"{relfile4}:{15}",
                 markers=None,
                 parentid="suite#5",
             ),
@@ -1036,7 +1038,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="SpamTests.test_okay",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile5, 12),
+                source=f"{relfile5}:{12}",
                 markers=None,
                 parentid="suite#6",
             ),
@@ -1049,7 +1051,7 @@ class ReportDiscoveredTests(unittest.TestCase):
                     func="SpamTests.test_okay",
                     sub=None,
                 ),
-                source="{}:{}".format(relfile6, 27),
+                source=f"{relfile6}:{27}",
                 markers=None,
                 parentid="suite#7",
             ),

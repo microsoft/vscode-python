@@ -46,6 +46,8 @@ export class InterpreterPathCommand implements IExtensionSingleActivationService
             workspaceFolderUri = undefined;
         }
 
-        return (await this.interpreterService.getActiveInterpreter(workspaceFolderUri))?.path ?? 'python';
+        const interpreterPath =
+            (await this.interpreterService.getActiveInterpreter(workspaceFolderUri))?.path ?? 'python';
+        return interpreterPath.toCommandArgumentForPythonExt();
     }
 }

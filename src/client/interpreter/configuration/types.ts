@@ -58,6 +58,7 @@ export interface ISpecialQuickPickItem extends QuickPickItem {
 
 export const IInterpreterComparer = Symbol('IInterpreterComparer');
 export interface IInterpreterComparer {
+    initialize(resource: Resource): Promise<void>;
     compare(a: PythonEnvironment, b: PythonEnvironment): number;
     getRecommended(interpreters: PythonEnvironment[], resource: Resource): PythonEnvironment | undefined;
 }

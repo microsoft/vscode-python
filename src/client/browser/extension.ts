@@ -108,7 +108,7 @@ async function runPylance(
             middleware,
         };
 
-        const client = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+        const client = new LanguageClient('python', 'Python Language Server', worker, clientOptions);
         languageClient = client;
 
         context.subscriptions.push(

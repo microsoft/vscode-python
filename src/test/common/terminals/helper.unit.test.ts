@@ -32,6 +32,7 @@ import { IComponentAdapter } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { PixiActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pixiActivationProvider';
 
 suite('Terminal Service helpers', () => {
     let helper: TerminalHelper;
@@ -46,6 +47,7 @@ suite('Terminal Service helpers', () => {
     let nushellActivationProvider: ITerminalActivationCommandProvider;
     let pyenvActivationProvider: ITerminalActivationCommandProvider;
     let pipenvActivationProvider: ITerminalActivationCommandProvider;
+    let pixiActivationProvider: ITerminalActivationCommandProvider;
     let pythonSettings: PythonSettings;
     let shellDetectorIdentifyTerminalShell: sinon.SinonStub<[(Terminal | undefined)?], TerminalShellType>;
     let mockDetector: IShellDetector;
@@ -72,6 +74,7 @@ suite('Terminal Service helpers', () => {
         nushellActivationProvider = mock(Nushell);
         pyenvActivationProvider = mock(PyEnvActivationCommandProvider);
         pipenvActivationProvider = mock(PipEnvActivationCommandProvider);
+        pixiActivationProvider = mock(PixiActivationCommandProvider);
         pythonSettings = mock(PythonSettings);
         shellDetectorIdentifyTerminalShell = sinon.stub(ShellDetector.prototype, 'identifyTerminalShell');
         helper = new TerminalHelper(
@@ -86,6 +89,7 @@ suite('Terminal Service helpers', () => {
             instance(nushellActivationProvider),
             instance(pyenvActivationProvider),
             instance(pipenvActivationProvider),
+            instance(pixiActivationProvider),
             [instance(mockDetector)],
         );
     }

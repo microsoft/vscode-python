@@ -12,7 +12,7 @@ import { ILanguageServerOutputChannel } from './activation/types';
 import { PythonExtension } from './api/types';
 import { isTestExecution, PYTHON_LANGUAGE } from './common/constants';
 import { IConfigurationService, Resource } from './common/types';
-import { getDebugpyLauncherArgs, getDebugpyPackagePath } from './debugger/extension/adapter/remoteLaunchers';
+import { getDebugpyLauncherArgs } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
 import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
@@ -22,6 +22,7 @@ import { buildEnvironmentApi } from './environmentApi';
 import { ApiForPylance } from './pylanceApi';
 import { getTelemetryReporter } from './telemetry';
 import { TensorboardExtensionIntegration } from './tensorBoard/tensorboardIntegration';
+import { getDebugpyPath } from './debugger/pythonDebugger';
 
 export function buildApi(
     ready: Promise<void>,
@@ -122,7 +123,7 @@ export function buildApi(
                 });
             },
             async getDebuggerPackagePath(): Promise<string | undefined> {
-                return getDebugpyPackagePath();
+                return getDebugpyPath();
             },
         },
         settings: {

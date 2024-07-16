@@ -7,15 +7,15 @@ import type * as vscodeTypes from 'vscode';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
 import type { TerminalShellType } from '../common/terminal/types';
-import { StopWatch } from '../common/utils/stopWatch';
 import { isPromise } from '../common/utils/async';
+import { StopWatch } from '../common/utils/stopWatch';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
 import {
-    TensorBoardPromptSelection,
-    TensorBoardEntrypointTrigger,
-    TensorBoardSessionStartResult,
     TensorBoardEntrypoint,
+    TensorBoardEntrypointTrigger,
+    TensorBoardPromptSelection,
+    TensorBoardSessionStartResult,
 } from '../tensorBoard/constants';
 import { EventName } from './constants';
 import type { TestTool } from './types';
@@ -762,8 +762,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "execution_code" : {
-          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.EXECUTION_CODE]: {
@@ -794,7 +794,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "execution_django" : {
-          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "scope" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.EXECUTION_DJANGO]: {
@@ -886,7 +886,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "environment_without_python_selected" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" }
        }
      */
     [EventName.ENVIRONMENT_WITHOUT_PYTHON_SELECTED]: never | undefined;
@@ -903,7 +903,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when 'Enter interpreter path' button is clicked.
      */
     /* __GDPR__
-       "select_interpreter_enter_button" : { "owner": "karrtikr" }
+       "select_interpreter_enter_button" : { "owner": "karthiknadig" }
      */
     [EventName.SELECT_INTERPRETER_ENTER_BUTTON]: never | undefined;
     /**
@@ -911,7 +911,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_enter_choice" : {
-          "choice" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "choice" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
     */
     [EventName.SELECT_INTERPRETER_ENTER_CHOICE]: {
@@ -927,7 +927,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_selected" : {
-          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.SELECT_INTERPRETER_SELECTED]: {
@@ -941,7 +941,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the user select to either enter or find the interpreter from the quickpick.
      */
     /* __GDPR__
-       "select_interpreter_enter_or_find" : { "owner": "karrtikr" }
+       "select_interpreter_enter_or_find" : { "owner": "karthiknadig" }
      */
 
     [EventName.SELECT_INTERPRETER_ENTER_OR_FIND]: never | undefined;
@@ -950,7 +950,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "select_interpreter_entered_exists" : {
-          "discovered" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
+          "discovered" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
     [EventName.SELECT_INTERPRETER_ENTERED_EXISTS]: {
@@ -966,8 +966,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_environments_api" : {
-          "extensionId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false , "owner": "karrtikr"},
-          "apiName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false, "owner": "karrtikr" }
+          "extensionId" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false , "owner": "karthiknadig"},
+          "apiName" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": false, "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_ENVIRONMENTS_API]: {
@@ -985,10 +985,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_INTERPRETER]: {
@@ -1013,8 +1013,8 @@ export interface IEventNamePropertyMapping {
     };
     /* __GDPR__
        "python_interpreter.activation_environment_variables" : {
-          "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
+          "hasenvvars" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES]: {
@@ -1036,11 +1036,11 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_activation_for_running_code" : {
-          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE]: {
@@ -1080,11 +1080,11 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_activation_for_terminal" : {
-          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "hascommands" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+          "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL]: {
@@ -1124,7 +1124,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_auto_selection" : {
-          "usecachedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "usecachedinterpreter" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
 
@@ -1141,20 +1141,767 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_discovery" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
-          "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "karrtikr"},
-          "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+        "telVer" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "workspaceFolderCount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeDuration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaInfoEnvsInvalid" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaInfoEnvsDuplicate" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaInfoEnvsInvalidPrefix" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "interpreters" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "envsWithDuplicatePrefixes" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "envsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaInfoEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaInfoEnvsDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "nativeCondaInfoEnvsDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaRcs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "nativeCondaRcs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsInTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "nativeCondaEnvsInEnvDir" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "invalidCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "prefixNotExistsCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "condaEnvsWithoutPrefix" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true , "owner": "donjayamanne"},
+        "environmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "usingNativeLocator" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "canSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "nativeCanSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne"},
+        "userProvidedEnvFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "hatchEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "microsoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "otherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "otherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "pipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "poetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "pyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "systemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "unknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "venvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "virtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "virtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "global" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeEnvironmentsWithoutPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCustomEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeMicrosoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeOtherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeOtherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativePipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativePoetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativePyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeSystemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeUnknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeVenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeVirtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeVirtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeGlobal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeCustomEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeMicrosoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeOtherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativePipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativePoetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativePyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeSystemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeUnknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeVenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeVirtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeVirtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingNativeOtherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaRcsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaEnvDirsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaEnvDirsNotFoundHasEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaEnvDirsNotFoundHasEnvsInTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaEnvTxtSame" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "nativeCondaEnvsFromTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "nativeCondaEnvTxtExists" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
        }
      */
     [EventName.PYTHON_INTERPRETER_DISCOVERY]: {
+        /**
+         * Version of this telemetry.
+         */
+        telVer?: number;
+        /**
+         * Number of invalid envs returned by `conda info`
+         */
+        condaInfoEnvsInvalid?: number;
+        /**
+         * Number of conda envs found in the environments.txt file.
+         */
+        condaEnvsInTxt?: number;
+        /**
+         * Number of duplicate envs returned by `conda info`
+         */
+        condaInfoEnvsDuplicate?: number;
+        /**
+         * Number of envs with invalid prefix returned by `conda info`
+         */
+        condaInfoEnvsInvalidPrefix?: number;
+        /**
+         * Number of workspaces.
+         */
+        workspaceFolderCount?: number;
+        /**
+         * Time taken to discover using native locator.
+         */
+        nativeDuration?: number;
         /**
          * The number of the interpreters discovered
          */
         interpreters?: number;
         /**
+         * The number of the interpreters with duplicate prefixes
+         */
+        envsWithDuplicatePrefixes?: number;
+        /**
+         * The number of the interpreters returned by `conda info`
+         */
+        condaInfoEnvs?: number;
+        /**
+         * The number of the envs_dirs returned by `conda info`
+         */
+        condaInfoEnvsDirs?: number;
+        /**
+         * The number of the envs_dirs returned by native locator.
+         */
+        nativeCondaInfoEnvsDirs?: number;
+        /**
+         * The number of the conda rc files found using conda info
+         */
+        condaRcs?: number;
+        /**
+         * The number of the conda rc files found using native locator.
+         */
+        nativeCondaRcs?: number;
+        /**
+         * The number of the conda rc files returned by `conda info` that weren't found by native locator.
+         */
+        nativeCondaRcsNotFound?: number;
+        /**
+         * The number of the conda env_dirs returned by `conda info` that weren't found by native locator.
+         */
+        nativeCondaEnvDirsNotFound?: number;
+        /**
+         * The number of envs in the env_dirs contained in the count for `nativeCondaEnvDirsNotFound`
+         */
+        nativeCondaEnvDirsNotFoundHasEnvs?: number;
+        /**
+         * The number of envs from environments.txt that are in the env_dirs contained in the count for `nativeCondaEnvDirsNotFound`
+         */
+        nativeCondaEnvDirsNotFoundHasEnvsInTxt?: number;
+        /**
+         * The number of conda interpreters that are in the one of the global conda env locations.
+         * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
+         */
+        condaEnvsInEnvDir?: number;
+        /**
+         * The number of native conda interpreters that are in the one of the global conda env locations.
+         * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
+         */
+        nativeCondaEnvsInEnvDir?: number;
+        /**
+         * A conda env found that matches the root_prefix returned by `conda info`
+         * However a corresponding conda env not found by native locator.
+         */
+        condaRootPrefixFoundInInfoNotInNative?: boolean;
+        /**
+         * The conda root prefix is found in the conda exe path.
+         */
+        condaRootPrefixInCondaExePath?: boolean;
+        /**
+         * A conda env found that matches the root_prefix returned by `conda info`
+         * However a corresponding conda env not found by native locator.
+         */
+        condaDefaultPrefixFoundInInfoNotInNative?: boolean;
+        /**
+         * The conda root prefix is found in the conda exe path.
+         */
+        condaDefaultPrefixInCondaExePath?: boolean;
+        /**
+         * User provided a path to the conda exe
+         */
+        userProvidedCondaExe?: boolean;
+        /**
+         * The number of conda interpreters without the `conda-meta` directory.
+         */
+        invalidCondaEnvs?: number;
+        /**
+         * The number of conda interpreters that have prefix that doesn't exist on disc.
+         */
+        prefixNotExistsCondaEnvs?: number;
+        /**
+         * The number of conda interpreters without the prefix.
+         */
+        condaEnvsWithoutPrefix?: number;
+        /**
+         * Conda exe can be spawned.
+         */
+        canSpawnConda?: boolean;
+        /**
+         * Conda exe can be spawned by native locator.
+         */
+        nativeCanSpawnConda?: boolean;
+        /**
+         * Conda env belonging to the conda exe provided by the user is found by native locator.
+         * I.e. even if the user didn't provide the path to the conda exe, the conda env is found by native locator.
+         */
+        userProvidedEnvFound?: boolean;
+        /**
+         * The number of the interpreters not found in disc.
+         */
+        envsNotFount?: number;
+        /**
+         * Whether or not we're using the native locator.
+         */
+        usingNativeLocator?: boolean;
+        /**
          * The number of environments discovered not containing an interpreter
          */
         environmentsWithoutPython?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        activeStateEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        condaEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        customEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        hatchEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        microsoftStoreEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        otherGlobalEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        otherVirtualEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        pipEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        poetryEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        pyenvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        systemEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        unknownEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        venvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        virtualEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type
+         */
+        virtualEnvWrapperEnvs?: number;
+        /**
+         * Number of all known Globals (System, Custom, GlobalCustom, etc)
+         */
+        global?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeEnvironmentsWithoutPython?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeCondaEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeCustomEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeMicrosoftStoreEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeOtherGlobalEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeOtherVirtualEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativePipEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativePoetryEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativePyenvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeSystemEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeUnknownEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeVenvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeVirtualEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type found by native finder
+         */
+        nativeVirtualEnvWrapperEnvs?: number;
+        /**
+         * Number of all known Globals (System, Custom, GlobalCustom, etc)
+         */
+        nativeGlobal?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeCondaEnvs?: number;
+        /**
+         * Whether the env txt found by native locator is the same as that found by pythonn ext.
+         */
+        nativeCondaEnvTxtSame?: boolean;
+        /**
+         * Number of environments found from env txt by native locator.
+         */
+        nativeCondaEnvsFromTxt?: number;
+        /**
+         * Whether the env txt found by native locator exists.
+         */
+        nativeCondaEnvTxtExists?: boolean;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeCustomEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeMicrosoftStoreEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeGlobalEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeOtherVirtualEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativePipEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativePoetryEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativePyenvEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeSystemEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeUnknownEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeVenvEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeVirtualEnvEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeVirtualEnvWrapperEnvs?: number;
+        /**
+         * Number of environments of a specific type missing in Native Locator (compared to the Stable Locator).
+         */
+        missingNativeOtherGlobalEnvs?: number;
+    };
+    /**
+     * Telemetry event sent when Native finder fails to find some conda envs.
+     */
+    /* __GDPR__
+       "native_finder_missing_conda_envs" : {
+        "missing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "envDirsNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "rootPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaPrefixNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaManagerNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "missingEnvDirsFromSysRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingEnvDirsFromUserRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingEnvDirsFromOtherRc" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromSysRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromUserRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingFromOtherRcEnvDirs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+       }
+     */
+    [EventName.NATIVE_FINDER_MISSING_CONDA_ENVS]: {
+        /**
+         * Number of missing conda environments.
+         */
+        missing: number;
+        /**
+         * Total number of env_dirs not found even after parsing the conda_rc files.
+         * This will tell us that we are either unable to parse some of the conda_rc files or there are other
+         * env_dirs that we are not able to find.
+         */
+        envDirsNotFound?: number;
+        /**
+         * Whether a conda exe was provided by the user.
+         */
+        userProvidedCondaExe?: boolean;
+        /**
+         * Whether the user provided a conda executable.
+         */
+        rootPrefixNotFound?: boolean;
+        /**
+         * Whether the conda prefix returned by conda was not found by us.
+         */
+        condaPrefixNotFound?: boolean;
+        /**
+         * Whether we found a conda manager or not.
+         */
+        condaManagerNotFound?: boolean;
+        /**
+         * Whether we failed to find the system rc path.
+         */
+        sysRcNotFound?: boolean;
+        /**
+         * Whether we failed to find the user rc path.
+         */
+        userRcNotFound?: boolean;
+        /**
+         * Number of config files (excluding sys and user rc) that were not found.
+         */
+        otherRcNotFound?: boolean;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the sys config rc.
+         */
+        missingEnvDirsFromSysRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the user config rc.
+         */
+        missingEnvDirsFromUserRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the other config rc.
+         */
+        missingEnvDirsFromOtherRc?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the sys config rc.
+         */
+        missingFromSysRcEnvDirs?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the user config rc.
+         */
+        missingFromUserRcEnvDirs?: number;
+        /**
+         * Number of conda envs that were not found by us, and the envs belong to env_dirs in the other config rc.
+         */
+        missingFromOtherRcEnvDirs?: number;
+    };
+    /**
+     * Telemetry event sent when Native finder fails to find some conda envs.
+     */
+    /* __GDPR__
+       "native_finder_missing_poetry_envs" : {
+        "missing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "missingInPath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "userProvidedPoetryExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "poetryExeNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "globalConfigNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "cacheDirNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "cacheDirIsDifferent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "virtualenvsPathNotFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "virtualenvsPathIsDifferent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "inProjectIsDifferent" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
+       }
+     */
+    [EventName.NATIVE_FINDER_MISSING_POETRY_ENVS]: {
+        /**
+         * Number of missing poetry environments.
+         */
+        missing: number;
+        /**
+         * Total number of missing envs, where the envs are created in the virtualenvs_path directory.
+         */
+        missingInPath: number;
+        /**
+         * Whether a poetry exe was provided by the user.
+         */
+        userProvidedPoetryExe?: boolean;
+        /**
+         * Whether poetry exe was not found.
+         */
+        poetryExeNotFound?: boolean;
+        /**
+         * Whether poetry config was not found.
+         */
+        globalConfigNotFound?: boolean;
+        /**
+         * Whether cache_dir was not found.
+         */
+        cacheDirNotFound?: boolean;
+        /**
+         * Whether cache_dir found was different from that returned by poetry exe.
+         */
+        cacheDirIsDifferent?: boolean;
+        /**
+         * Whether virtualenvs.path was not found.
+         */
+        virtualenvsPathNotFound?: boolean;
+        /**
+         * Whether virtualenvs.path found was different from that returned by poetry exe.
+         */
+        virtualenvsPathIsDifferent?: boolean;
+        /**
+         * Whether virtualenvs.in-project found was different from that returned by poetry exe.
+         */
+        inProjectIsDifferent?: boolean;
+    };
+    /**
+     * Telemetry containing performance metrics for Native Finder.
+     */
+    /* __GDPR__
+       "native_finder_perf" : {
+        "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "breakdownLocators" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "breakdownPath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "breakdownGlobalVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "breakdownWorkspaces" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorHomebrew" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorLinuxGlobalPython" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorMacCmdLineTools" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorMacPythonOrg" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorMacXCode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorPipEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorPoetry" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorPyEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorVenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorVirtualEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorVirtualEnvWrapper" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorWindowsRegistry" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorWindowsStore" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+       }
+     */
+    [EventName.NATIVE_FINDER_PERF]: {
+        /**
+         * Total duration to find envs using native locator.
+         */
+        duration: number;
+        breakdownLocators?: number;
+        breakdownPath?: number;
+        breakdownGlobalVirtualEnvs?: number;
+        breakdownWorkspaces?: number;
+        locatorConda?: number;
+        locatorHomebrew?: number;
+        locatorLinuxGlobalPython?: number;
+        locatorMacCmdLineTools?: number;
+        locatorMacPythonOrg?: number;
+        locatorMacXCode?: number;
+        locatorPipEnv?: number;
+        locatorPoetry?: number;
+        locatorPyEnv?: number;
+        locatorVenv?: number;
+        locatorVirtualEnv?: number;
+        locatorVirtualEnvWrapper?: number;
+        locatorWindowsRegistry?: number;
+        locatorWindowsStore?: number;
+    };
+    /**
+     * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.
+     */
+    /* __GDPR__
+       "python_interpreter_discovery_native" : {
+            "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsCustomEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsMicrosoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsOtherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsPipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsPoetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsPyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsSystemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsUnknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsVenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsVirtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsVirtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidVersionsOtherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixCustomEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixMicrosoftStoreEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixOtherVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixPipEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixPoetryEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixPyenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixSystemEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixUnknownEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixVenvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixVirtualEnvEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixVirtualEnvWrapperEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+            "invalidSysPrefixOtherGlobalEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+       }
+     */
+    [EventName.PYTHON_INTERPRETER_DISCOVERY_INVALID_NATIVE]: {
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsCondaEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsCustomEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsMicrosoftStoreEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsGlobalEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsOtherVirtualEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsPipEnvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsPoetryEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsPyenvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsSystemEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsUnknownEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsVenvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsVirtualEnvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsVirtualEnvWrapperEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid version from Native Locator.
+         */
+        invalidVersionsOtherGlobalEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixCondaEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixCustomEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixMicrosoftStoreEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixGlobalEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixOtherVirtualEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixPipEnvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixPoetryEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixPyenvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixSystemEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixUnknownEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixVenvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixVirtualEnvEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixVirtualEnvWrapperEnvs?: number;
+        /**
+         * Number of Python envs of a particular type that have invalid sys prefix from Native Locator.
+         */
+        invalidSysPrefixOtherGlobalEnvs?: number;
     };
     /**
      * Telemetry event sent with details when user clicks the prompt with the following message:
@@ -1163,7 +1910,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "conda_inherit_env_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.CONDA_INHERIT_ENV_PROMPT]: {
@@ -1180,7 +1927,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "conda_inherit_env_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.TERMINAL_DEACTIVATE_PROMPT]: {
@@ -1195,7 +1942,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "require_jupyter_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.REQUIRE_JUPYTER_PROMPT]: {
@@ -1213,7 +1960,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "activated_conda_env_launch" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.ACTIVATED_CONDA_ENV_LAUNCH]: {
@@ -1229,7 +1976,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_interpreter_activate_environment_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT]: {
@@ -1248,7 +1995,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "python_not_installed_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.PYTHON_NOT_INSTALLED_PROMPT]: {
@@ -1340,8 +2087,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "language_server_trigger_time" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" },
-          "triggerTime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" },
+          "triggerTime" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" }
        }
      */
     [EventName.LANGUAGE_SERVER_TRIGGER_TIME]: {
@@ -1455,7 +2202,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "repl" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karrtikr" }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" }
        }
      */
     [EventName.REPL]: never | undefined;
@@ -1500,7 +2247,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "activate_env_in_current_terminal" : {
-          "isterminalvisible" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+          "isterminalvisible" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
@@ -1514,10 +2261,10 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "terminal.create" : {
-         "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-         "triggeredby" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-         "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-         "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+         "terminal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+         "triggeredby" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+         "pythonversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+         "interpretertype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
        }
      */
     [EventName.TERMINAL_CREATE]: {
@@ -1676,11 +2423,11 @@ export interface IEventNamePropertyMapping {
     */
     /* __GDPR__
       "terminal_shell_identification" : {
-         "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
-         "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-         "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-         "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" },
-         "hasshellinenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karrtikr" }
+         "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+         "terminalprovided" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+         "shellidentificationsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+         "hascustomshell" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
+         "hasshellinenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
       }
     */
     [EventName.TERMINAL_SHELL_IDENTIFICATION]: {
@@ -1698,8 +2445,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "activate_env_to_get_env_vars_failed" : {
-          "ispossiblycondaenv" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" },
-          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karrtikr" }
+          "ispossiblycondaenv" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" },
+          "terminal" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
     [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
@@ -2006,7 +2753,7 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation conditions is triggered.
      */
     /* __GDPR__
-       "environemt.check.trigger" : {
+       "environment.check.trigger" : {
           "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
@@ -2023,13 +2770,20 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a check for environment creation condition is computed.
      */
     /* __GDPR__
-       "environemt.check.result" : {
+       "environment.check.result" : {
           "result" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "karthiknadig" }
        }
      */
     [EventName.ENVIRONMENT_CHECK_RESULT]: {
         result: 'criteria-met' | 'criteria-not-met' | 'already-ran' | 'turned-off' | 'no-uri';
     };
+    /**
+     * Telemetry event sent when `pip install` was called from a global env in a shell where shell inegration is supported.
+     */
+    /* __GDPR__
+       "environment.terminal.global_pip" : { "owner": "karthiknadig" }
+     */
+    [EventName.ENVIRONMENT_TERMINAL_GLOBAL_PIP]: never | undefined;
     /* __GDPR__
             "query-expfeature" : {
                 "owner": "luabud",

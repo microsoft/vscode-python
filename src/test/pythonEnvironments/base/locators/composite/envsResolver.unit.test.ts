@@ -57,7 +57,11 @@ suite('Python envs locator - Environments Resolver', () => {
     /**
      * Returns the expected environment to be returned by Environment info service
      */
-    function createExpectedEnvInfo(env: PythonEnvInfo, expectedDisplay: string): PythonEnvInfo {
+    function createExpectedEnvInfo(
+        env: PythonEnvInfo,
+        expectedDisplay: string,
+        expectedDetailedDisplay: string,
+    ): PythonEnvInfo {
         const updatedEnv = cloneDeep(env);
         updatedEnv.version = {
             ...parseVersion('3.8.3-final'),
@@ -67,7 +71,9 @@ suite('Python envs locator - Environments Resolver', () => {
         updatedEnv.executable.sysPrefix = 'path';
         updatedEnv.arch = Architecture.x64;
         updatedEnv.display = expectedDisplay;
-        updatedEnv.detailedDisplayName = expectedDisplay;
+        updatedEnv.detailedDisplayName = expectedDetailedDisplay;
+        updatedEnv.identifiedUsingNativeLocator = updatedEnv.identifiedUsingNativeLocator ?? undefined;
+        updatedEnv.pythonRunCommand = updatedEnv.pythonRunCommand ?? undefined;
         if (env.kind === PythonEnvKind.Conda) {
             env.type = PythonEnvType.Conda;
         }
@@ -82,6 +88,7 @@ suite('Python envs locator - Environments Resolver', () => {
         location = '',
         display: string | undefined = undefined,
         type?: PythonEnvType,
+        detailedDisplay?: string,
     ): PythonEnvInfo {
         return {
             name,
@@ -94,13 +101,15 @@ suite('Python envs locator - Environments Resolver', () => {
                 mtime: -1,
             },
             display,
-            detailedDisplayName: display,
+            detailedDisplayName: detailedDisplay ?? display,
             version,
             arch: Architecture.Unknown,
             distro: { org: '' },
             searchLocation: Uri.file(location),
             source: [],
             type,
+            identifiedUsingNativeLocator: undefined,
+            pythonRunCommand: undefined,
         };
     }
     suite('iterEnvs()', () => {
@@ -134,8 +143,9 @@ suite('Python envs locator - Environments Resolver', () => {
                 undefined,
                 'win1',
                 path.join(testVirtualHomeDir, '.venvs', 'win1'),
-                "Python ('win1': venv)",
+                "Python ('win1')",
                 PythonEnvType.Virtual,
+                "Python ('win1': venv)",
             );
             const envsReturnedByParentLocator = [env1];
             const parentLocator = new SimpleLocator<BasicEnvInfo>(envsReturnedByParentLocator);
@@ -170,7 +180,11 @@ suite('Python envs locator - Environments Resolver', () => {
             const envs = await getEnvsWithUpdates(iterator);
 
             assertEnvsEqual(envs, [
-                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
+                createExpectedEnvInfo(
+                    resolvedEnvReturnedByBasicResolver,
+                    "Python 3.8.3 ('win1')",
+                    "Python 3.8.3 ('win1': venv)",
+                ),
             ]);
         });
 
@@ -237,7 +251,11 @@ suite('Python envs locator - Environments Resolver', () => {
 
             // Assert
             assertEnvsEqual(envs, [
-                createExpectedEnvInfo(resolvedUpdatedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
+                createExpectedEnvInfo(
+                    resolvedUpdatedEnvReturnedByBasicResolver,
+                    "Python 3.8.3 ('win1')",
+                    "Python 3.8.3 ('win1': venv)",
+                ),
             ]);
             didUpdate.dispose();
         });
@@ -377,7 +395,11 @@ suite('Python envs locator - Environments Resolver', () => {
 
             assertEnvEqual(
                 expected,
-                createExpectedEnvInfo(resolvedEnvReturnedByBasicResolver, "Python 3.8.3 ('win1': venv)"),
+                createExpectedEnvInfo(
+                    resolvedEnvReturnedByBasicResolver,
+                    "Python 3.8.3 ('win1')",
+                    "Python 3.8.3 ('win1': venv)",
+                ),
             );
         });
 

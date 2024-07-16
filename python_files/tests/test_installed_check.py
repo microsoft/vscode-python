@@ -7,9 +7,9 @@ import os
 import pathlib
 import subprocess
 import sys
+from typing import Dict, List, Optional, Union
 
 import pytest
-from typing import Dict, List, Optional, Union
 
 SCRIPT_PATH = pathlib.Path(__file__).parent.parent / "installed_check.py"
 TEST_DATA = pathlib.Path(__file__).parent / "test_data"
@@ -21,12 +21,12 @@ def generate_file(base_file: pathlib.Path):
     basename = "pyproject.toml" if "pyproject" in base_file.name else "requirements.txt"
     fullpath = base_file.parent / basename
     if fullpath.exists():
-        os.unlink(os.fspath(fullpath))
+        fullpath.unlink()
     fullpath.write_text(base_file.read_text(encoding="utf-8"))
     try:
         yield fullpath
     finally:
-        os.unlink(str(fullpath))
+        fullpath.unlink()
 
 
 def run_on_file(
@@ -41,8 +41,7 @@ def run_on_file(
             os.fspath(SCRIPT_PATH),
             os.fspath(file_path),
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        capture_output=True,
         check=True,
         env=env,
     )

@@ -12,22 +12,16 @@ import { IConfigurationService, ITestOutputChannel } from '../../../common/types
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
-import {
-    DataReceivedEvent,
-    DiscoveredTestPayload,
-    ITestDiscoveryAdapter,
-    ITestResultResolver,
-    ITestServer,
-} from '../common/types';
+import { DiscoveredTestPayload, EOTTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
 import {
     MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
     createEOTPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
-    argsToMap,
-    addArgIfNotExist,
-    mapToArgs,
+    startDiscoveryNamedPipe,
+    addValueIfKeyNotExist,
+    hasSymlinkParent,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 
@@ -36,7 +30,6 @@ import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
  */
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
-        public testServer: ITestServer,
         public configSettings: IConfigurationService,
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
@@ -44,42 +37,52 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     ) {}
 
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        const uuid = this.testServer.createUUID(uri.fsPath);
         const deferredTillEOT: Deferred<void> = createDeferred<void>();
-        const dataReceivedDisposable = this.testServer.onDiscoveryDataReceived(async (e: DataReceivedEvent) => {
-            this.resultResolver?.resolveDiscovery(JSON.parse(e.data), deferredTillEOT);
+
+        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
+            this.resultResolver?.resolveDiscovery(data, deferredTillEOT);
         });
-        const disposeDataReceiver = function (testServer: ITestServer) {
-            traceInfo(`Disposing data receiver for ${uri.fsPath} and deleting UUID; pytest discovery.`);
-            testServer.deleteUUID(uuid);
-            dataReceivedDisposable.dispose();
-        };
+
         try {
-            await this.runPytestDiscovery(uri, uuid, executionFactory);
+            await this.runPytestDiscovery(uri, name, deferredTillEOT, executionFactory);
         } finally {
             await deferredTillEOT.promise;
-            traceVerbose(`deferredTill EOT resolved for ${uri.fsPath}`);
-            disposeDataReceiver(this.testServer);
+            traceVerbose('deferredTill EOT resolved');
+            dispose();
         }
         // this is only a placeholder to handle function overloading until rewrite is finished
         const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
         return discoveryPayload;
     }
 
-    async runPytestDiscovery(uri: Uri, uuid: string, executionFactory?: IPythonExecutionFactory): Promise<void> {
+    async runPytestDiscovery(
+        uri: Uri,
+        discoveryPipeName: string,
+        deferredTillEOT: Deferred<void>,
+        executionFactory?: IPythonExecutionFactory,
+    ): Promise<void> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
-        let pytestArgsMap = argsToMap(settings.testing.pytestArgs);
+        let { pytestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         // check for symbolic path
-        const stats = fs.lstatSync(cwd);
+        const stats = await fs.promises.lstat(cwd);
+        const resolvedPath = await fs.promises.realpath(cwd);
+        let isSymbolicLink = false;
         if (stats.isSymbolicLink()) {
+            isSymbolicLink = true;
+            traceWarn('The cwd is a symbolic link.');
+        } else if (resolvedPath !== cwd) {
             traceWarn(
-                "The cwd is a symbolic link, adding '--rootdir' to pytestArgsMap only if it doesn't already exist.",
+                'The cwd resolves to a different path, checking if it has a symbolic link somewhere in its path.',
             );
-            pytestArgsMap = addArgIfNotExist(pytestArgsMap, '--rootdir', cwd);
+            isSymbolicLink = await hasSymlinkParent(cwd);
+        }
+        if (isSymbolicLink) {
+            traceWarn("Symlink found, adding '--rootdir' to pytestArgs only if it doesn't already exist. cwd: ", cwd);
+            pytestArgs = addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
         }
 
         // get and edit env vars
@@ -90,13 +93,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const pythonPathParts: string[] = mutableEnv.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
-        mutableEnv.TEST_UUID = uuid.toString();
-        mutableEnv.TEST_PORT = this.testServer.getPort().toString();
-        traceInfo(
-            `All environment variables set for pytest discovery for workspace ${uri.fsPath}: ${JSON.stringify(
-                mutableEnv,
-            )} \n`,
-        );
+        mutableEnv.TEST_RUN_PIPE = discoveryPipeName;
+        traceInfo(`All environment variables set for pytest discovery: ${JSON.stringify(mutableEnv)}`);
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,
@@ -111,7 +109,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(mapToArgs(pytestArgsMap));
+        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
         traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
@@ -145,16 +143,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}. Creating and sending error discovery payload`,
                 );
-                // if the child process exited with a non-zero exit code, then we need to send the error payload.
-                this.testServer.triggerDiscoveryDataReceivedEvent({
-                    uuid,
-                    data: JSON.stringify(createDiscoveryErrorPayload(code, signal, cwd)),
-                });
-                // then send a EOT payload
-                this.testServer.triggerDiscoveryDataReceivedEvent({
-                    uuid,
-                    data: JSON.stringify(createEOTPayload(true)),
-                });
+                this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd), deferredTillEOT);
+                this.resultResolver?.resolveDiscovery(createEOTPayload(false), deferredTillEOT);
             }
             // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
             // due to the sync reading of the output.

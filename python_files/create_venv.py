@@ -36,6 +36,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         default=None,
         help="Install additional dependencies from sources like `pyproject.toml` into the virtual environment.",
     )
+
     parser.add_argument(
         "--extras",
         action="append",
@@ -49,6 +50,7 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         default=False,
         help="Add .gitignore to the newly created virtual environment.",
     )
+
     parser.add_argument(
         "--name",
         default=VENV_NAME,
@@ -57,12 +59,14 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
         metavar="NAME",
         action="store",
     )
+
     parser.add_argument(
         "--stdin",
         action="store_true",
         default=False,
         help="Read arguments from stdin.",
     )
+
     return parser.parse_args(argv)
 
 
@@ -71,19 +75,23 @@ def is_installed(module: str) -> bool:
 
 
 def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
-    return os.path.exists(path)
+    return pathlib.Path(path).exists()
 
 
 def venv_exists(name: str) -> bool:
-    return os.path.exists(CWD / name) and file_exists(get_venv_path(name))
+    return (
+        (CWD / name).exists()
+        and (CWD / name / "pyvenv.cfg").exists()
+        and file_exists(get_venv_path(name))
+    )
 
 
 def run_process(args: Sequence[str], error_message: str) -> None:
     try:
         print("Running: " + " ".join(args))
-        subprocess.run(args, cwd=os.getcwd(), check=True)
-    except subprocess.CalledProcessError:
-        raise VenvError(error_message)
+        subprocess.run(args, cwd=os.getcwd(), check=True)  # noqa: PTH109
+    except subprocess.CalledProcessError as exc:
+        raise VenvError(error_message) from exc
 
 
 def get_venv_path(name: str) -> str:
@@ -128,10 +136,9 @@ def upgrade_pip(venv_path: str) -> None:
 
 def add_gitignore(name: str) -> None:
     git_ignore = CWD / name / ".gitignore"
-    if not file_exists(git_ignore):
-        print("Creating: " + os.fspath(git_ignore))
-        with open(git_ignore, "w") as f:
-            f.write("*")
+    if git_ignore.is_file():
+        print("Creating:", os.fspath(git_ignore))
+        git_ignore.write_text("*")
 
 
 def download_pip_pyz(name: str):
@@ -140,13 +147,10 @@ def download_pip_pyz(name: str):
 
     try:
         with url_lib.urlopen(url) as response:
-            pip_pyz_path = os.fspath(CWD / name / "pip.pyz")
-            with open(pip_pyz_path, "wb") as out_file:
-                data = response.read()
-                out_file.write(data)
-                out_file.flush()
-    except Exception:
-        raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED")
+            pip_pyz_path = CWD / name / "pip.pyz"
+            pip_pyz_path.write_bytes(data=response.read())
+    except Exception as exc:
+        raise VenvError("CREATE_VENV.DOWNLOAD_PIP_FAILED") from exc
 
 
 def install_pip(name: str):

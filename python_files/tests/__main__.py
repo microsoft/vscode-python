@@ -34,7 +34,7 @@ def parse_args():
     return ns, remainder
 
 
-def main(pytestargs, markers=None, specific=False):
+def main(pytestargs, markers=None, specific=False):  # noqa: FBT002
     sys.path.insert(1, TESTING_TOOLS_ROOT)
     sys.path.insert(1, DEBUG_ADAPTER_ROOT)
 
@@ -46,8 +46,7 @@ def main(pytestargs, markers=None, specific=False):
         pytestargs.insert(0, marker)
         pytestargs.insert(0, "-m")
 
-    ec = pytest.main(pytestargs)
-    return ec
+    return pytest.main(pytestargs)
 
 
 if __name__ == "__main__":

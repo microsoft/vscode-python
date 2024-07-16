@@ -20,6 +20,7 @@ import {
 } from './proposed.createEnvApis';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { CreateEnvironmentOptionsInternal } from './types';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -64,7 +65,9 @@ export function registerCreateEnvironmentFeatures(
     disposables.push(
         registerCommand(
             Commands.Create_Environment,
-            (options?: CreateEnvironmentOptions): Promise<CreateEnvironmentResult | undefined> => {
+            (
+                options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
+            ): Promise<CreateEnvironmentResult | undefined> => {
                 const providers = _createEnvironmentProviders.getAll();
                 return handleCreateEnvironmentCommand(providers, options);
             },
