@@ -13,16 +13,6 @@ STDERR = sys.stderr
 USER_GLOBALS = {}
 
 
-class ErrorResponse:
-    def __init__(self, message: str, name, stack):
-        self.message = message
-        self.name = name
-        self.stack = stack
-
-    def get_dict(self):
-        return {"message": self.message, "name": self.name, "stack": self.stack}
-
-
 def _send_message(msg: str):
     length_msg = len(msg)
     STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode())
@@ -41,15 +31,11 @@ def send_response(
     response: str,
     response_id: int,
     execution_status: bool = True,  # noqa: FBT001, FBT002
-    error: ErrorResponse = None,
 ):
-    if error:
-        send_message(
-            id=response_id,
-            result={"status": execution_status, "output": response, error: error.get_dict()},
-        )
-    else:
-        send_message(id=response_id, result={"status": execution_status, "output": response})
+    send_message(
+        id=response_id,
+        result={"status": execution_status, "output": response},
+    )
 
 
 def send_request(params: Optional[Union[List, Dict]] = None):
