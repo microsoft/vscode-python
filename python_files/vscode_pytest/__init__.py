@@ -899,5 +899,13 @@ class DeferPlugin:
 
 
 def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
-    if manager.hasplugin("xdist") and not isinstance(plugin, DeferPlugin):
-        manager.register(DeferPlugin())
+    plugin_name = "vscode_xdist"
+    if (
+        # only register the plugin if xdist is enabled:
+        manager.hasplugin("xdist")
+        # prevent infinite recursion:
+        and not isinstance(plugin, DeferPlugin)
+        # prevent this plugin from being registered multiple times:
+        and not manager.hasplugin(plugin_name)
+    ):
+        manager.register(DeferPlugin(), name=plugin_name)
