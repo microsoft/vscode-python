@@ -26,7 +26,7 @@ function makeExecutablePath(prefix?: string): string {
     if (!prefix) {
         return process.platform === 'win32' ? 'python.exe' : 'python';
     }
-    return process.platform === 'win32' ? `${prefix}\\python.exe` : `${prefix}/bin/python`;
+    return process.platform === 'win32' ? path.join(prefix, 'python.exe') : path.join(prefix, 'python');
 }
 
 function toArch(a: string | undefined): Architecture {
@@ -157,7 +157,9 @@ function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): 
     const arch = toArch(nativeEnv.arch);
     const version: PythonVersion = parseVersion(nativeEnv.version ?? '');
     const name = getName(nativeEnv, kind);
-    const displayName = nativeEnv.version ? getDisplayName(version, kind, arch, name) : 'Python';
+    const displayName = nativeEnv.version
+        ? getDisplayName(version, kind, arch, name)
+        : nativeEnv.displayName ?? 'Python';
 
     return {
         name,
@@ -227,31 +229,41 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         setImmediate(async () => {
             try {
                 for await (const native of this.finder.refresh()) {
+                    if (!validEnv(this.finder, native)) {
+                        // eslint-disable-next-line no-continue
+                        continue;
+                    }
                     try {
-                        if (validEnv(this.finder, native)) {
-                            if (!native.version) {
-                                if (
-                                    this.finder.categoryToKind(native.kind) === PythonEnvKind.Conda &&
-                                    !native.executable
-                                ) {
-                                    // This is a conda env without python, no point trying to resolve this.
-                                    // There is nothing to resolve
-                                    this.addEnv(native);
-                                } else {
-                                    this.resolveEnv(native.executable ?? native.prefix)
-                                        .then(() => {
-                                            this.addEnv(native);
-                                        })
-                                        .ignoreErrors();
-                                }
-                            } else {
-                                const version = parseVersion(native.version);
-                                if (version.micro < 0 || version.minor < 0 || version.major < 0) {
-                                    this.resolveEnv(native.executable ?? native.prefix).ignoreErrors();
-                                } else {
-                                    this.addEnv(native);
-                                }
-                            }
+                        const envPath = native.executable ?? native.prefix;
+                        const version = native.version ? parseVersion(native.version) : undefined;
+
+                        if (this.finder.categoryToKind(native.kind) === PythonEnvKind.Conda && !native.executable) {
+                            // This is a conda env without python, no point trying to resolve this.
+                            // There is nothing to resolve
+                            this.addEnv(native);
+                        } else if (
+                            envPath &&
+                            (!version || version.major < 0 || version.minor < 0 || version.micro < 0)
+                        ) {
+                            // We have a path, but no version info, try to resolve the environment.
+                            this.finder
+                                .resolve(envPath)
+                                .then((env) => {
+                                    if (env) {
+                                        this.addEnv(env);
+                                    }
+                                })
+                                .ignoreErrors();
+                        } else if (
+                            envPath &&
+                            version &&
+                            version.major >= 0 &&
+                            version.minor >= 0 &&
+                            version.micro >= 0
+                        ) {
+                            this.addEnv(native);
+                        } else {
+                            traceError(`Failed to process environment: ${JSON.stringify(native)}`);
                         }
                     } catch (err) {
                         traceError(`Failed to process environment: ${err}`);
