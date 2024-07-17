@@ -9,7 +9,7 @@ import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
-import { normalizePath } from '../../../common/externalDependencies';
+import { normalizePath, readFile } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
 import { getEnvPath } from '../../info/env';
 import {
@@ -33,13 +33,9 @@ import {
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
-import {
-    Conda,
-    CONDAPATH_SETTING_KEY,
-    getCondaEnvironmentsTxt,
-    isCondaEnvironment,
-} from '../../../common/environmentManagers/conda';
+import { Conda, CONDAPATH_SETTING_KEY, isCondaEnvironment } from '../../../common/environmentManagers/conda';
 import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
+import { getUserHomeDir } from '../../../../common/utils/platform';
 
 /**
  * A service which maintains the collection of known environments.
@@ -526,7 +522,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
         // Intent is to capture time taken for discovery of all envs to complete the first time.
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, elapsedTime, {
-            telVer: 6,
+            telVer: 7,
             nativeDuration,
             workspaceFolderCount: (workspace.workspaceFolders || []).length,
             interpreters: this.cache.getAllEnvs().length,
@@ -763,6 +759,8 @@ type CondaTelemetry = {
     condaDefaultPrefixFoundInInfoAfterFind?: boolean;
     condaDefaultPrefixFoundInInfoAfterFindKind?: string;
     condaDefaultPrefixInCondaExePath?: boolean;
+    condaDefaultPrefixFoundInTxt?: boolean;
+    condaRootPrefixFoundInTxt?: boolean;
     canSpawnConda?: boolean;
     nativeCanSpawnConda?: boolean;
     userProvidedEnvFound?: boolean;
@@ -786,6 +784,14 @@ type CondaTelemetry = {
     nativeCondaEnvsFromTxt: number;
     missingNativeCondaEnvsFromTxt: number;
 };
+
+async function getCondaEnvironmentsTxt(): Promise<string | undefined> {
+    const homeDir = getUserHomeDir();
+    if (!homeDir) {
+        return undefined;
+    }
+    return fsPath.join(homeDir, '.conda', 'environments.txt');
+}
 
 async function getCondaTelemetry(
     nativeFinder: NativePythonFinder,
@@ -816,29 +822,35 @@ async function getCondaTelemetry(
         missingNativeCondaEnvsFromTxt: 0,
     };
 
-    const [info, nativeCondaInfo, condaEnvsInEnvironmentsTxt, envTxt] = await Promise.all([
+    const [info, nativeCondaInfo, condaEnvsInEnvironmentsTxt, environmentsTxt] = await Promise.all([
         Conda.getConda()
             .catch((ex) => traceError('Failed to get conda info', ex))
             .then((conda) => conda?.getInfo()),
         nativeFinder.getCondaInfo().catch((ex) => traceError(`Failed to get conda info from native locator`, ex)),
         getCondaEnvironmentsTxt()
-            .then(async (items) => {
-                const validEnvs = new Set<string>();
+            .then(async (txtFile) => {
+                if (!txtFile) {
+                    return [];
+                }
+                const envs: string[] = [];
+                const lines = await readFile(txtFile)
+                    .catch(() => '')
+                    .then((c) => c.splitLines({ trim: true, removeEmptyEntries: true }));
+
                 await Promise.all(
-                    items.map(async (e) => {
-                        if ((await pathExists(e)) && (await isCondaEnvironment(e))) {
-                            validEnvs.add(fsPath.normalize(e));
+                    lines.map(async (line) => {
+                        if ((await pathExists(line)) && (await isCondaEnvironment(line))) {
+                            envs.push(line);
                         }
                     }),
                 );
-                return Array.from(validEnvs);
+                return envs;
             })
             .catch((ex) => traceError(`Failed to get conda envs from environments.txt`, ex))
             .then((items) => items || []),
         getCondaEnvironmentsTxt().catch(noop),
     ]);
 
-    const environmentsTxt = Array.isArray(envTxt) && envTxt.length ? envTxt[0] : undefined;
     if (nativeCondaInfo) {
         condaTelemetry.nativeCanSpawnConda = nativeCondaInfo.canSpawnConda;
         condaTelemetry.nativeCondaInfoEnvsDirs = new Set(nativeCondaInfo.envDirs).size;
@@ -957,6 +969,9 @@ async function getCondaTelemetry(
         condaTelemetry.condaRootPrefixFoundInInfoNotInNative =
             condaInfoEnvs.some((env) => env === rootPrefix) &&
             !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '') === rootPrefix);
+        condaTelemetry.condaRootPrefixFoundInTxt = condaEnvsInEnvironmentsTxt.some(
+            (e) => e.toLowerCase() === rootPrefix.toLowerCase(),
+        );
 
         if (condaTelemetry.condaRootPrefixFoundInInfoNotInNative) {
             // Verify we are able to discover this environment as a conda env using native finder.
@@ -977,6 +992,9 @@ async function getCondaTelemetry(
         condaTelemetry.condaDefaultPrefixFoundInInfoNotInNative =
             condaInfoEnvs.some((env) => env === defaultPrefix) &&
             !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '') === defaultPrefix);
+        condaTelemetry.condaDefaultPrefixFoundInTxt = condaEnvsInEnvironmentsTxt.some(
+            (e) => e.toLowerCase() === rootPrefix.toLowerCase(),
+        );
 
         if (condaTelemetry.condaDefaultPrefixFoundInInfoNotInNative) {
             // Verify we are able to discover this environment as a conda env using native finder.
