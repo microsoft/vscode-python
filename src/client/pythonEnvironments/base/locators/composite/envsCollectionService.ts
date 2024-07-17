@@ -964,7 +964,9 @@ async function getCondaTelemetry(
     let rootPrefix = info?.root_prefix || '';
     if (rootPrefix && (await pathExists(rootPrefix)) && (await isCondaEnvironment(rootPrefix))) {
         rootPrefix = fsPath.normalize(rootPrefix);
-        condaTelemetry.condaRootPrefixInCondaExePath = userProvidedCondaExe.startsWith(rootPrefix);
+        condaTelemetry.condaRootPrefixInCondaExePath = userProvidedCondaExe
+            .toLowerCase()
+            .startsWith(rootPrefix.toLowerCase());
         // Check if we have a conda env that matches this prefix but not found in native envs.
         condaTelemetry.condaRootPrefixFoundInInfoNotInNative =
             condaInfoEnvs.some((env) => env === rootPrefix) &&
@@ -987,7 +989,9 @@ async function getCondaTelemetry(
     let defaultPrefix = info?.default_prefix || '';
     if (defaultPrefix && (await pathExists(defaultPrefix)) && (await isCondaEnvironment(defaultPrefix))) {
         defaultPrefix = fsPath.normalize(defaultPrefix);
-        condaTelemetry.condaDefaultPrefixInCondaExePath = userProvidedCondaExe.startsWith(defaultPrefix);
+        condaTelemetry.condaDefaultPrefixInCondaExePath = userProvidedCondaExe
+            .toLowerCase()
+            .startsWith(defaultPrefix.toLowerCase());
         // Check if we have a conda env that matches this prefix but not found in native envs.
         condaTelemetry.condaDefaultPrefixFoundInInfoNotInNative =
             condaInfoEnvs.some((env) => env === defaultPrefix) &&
