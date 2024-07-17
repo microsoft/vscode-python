@@ -23,7 +23,7 @@ const untildify = require('untildify');
 
 const PYTHON_ENV_TOOLS_PATH = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
-    : '/Users/donjayamanne/Development/vsc/python-environment-tools/target/debug/pet';
+    : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
 
 export interface NativeEnvInfo {
     displayName?: string;
@@ -361,7 +361,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             environmentDirectories: getCustomVirtualEnvDirs(),
             condaExecutable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
             poetryExecutable: getPythonSettingAndUntildify<string>('poetryPath'),
-            // cacheDirectory: '/Users/donjayamanne/Development/vsc/python-environment-tools/temp',
         };
         // No need to send a configuration request, is there are no changes.
         if (JSON.stringify(options) === JSON.stringify(this.lastConfiguration || {})) {
