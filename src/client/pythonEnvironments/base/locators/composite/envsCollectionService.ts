@@ -333,7 +333,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const nativeCondaEnvs = nativeEnvs.filter(
             (e) => this.nativeFinder.categoryToKind(e.kind) === PythonEnvKind.Conda,
         );
-        const condaTelemetry = await getCondaTelemetry(this.nativeFinder, nativeCondaEnvs);
+        const condaTelemetry = await getCondaTelemetry(this.nativeFinder, nativeCondaEnvs, nativeEnvs);
         const prefixesSeenAlready = new Set<string>();
         await Promise.all(
             envs.map(async (env) => {
@@ -751,13 +751,19 @@ type CondaTelemetry = {
     condaEnvsInEnvDir: number;
     prefixNotExistsCondaEnvs: number;
     condaEnvsWithoutPrefix: number;
+    condaDefaultPrefixEnvsAfterFind?: number;
+    condaRootPrefixEnvsAfterFind?: number;
     condaRootPrefixFoundInInfoNotInNative?: boolean;
     condaRootPrefixFoundInInfoAfterFind?: boolean;
     condaRootPrefixFoundInInfoAfterFindKind?: string;
+    condaRootPrefixFoundAsPrefixOfAnother?: string;
+    condaRootPrefixFoundAsAnotherKind?: string;
     condaRootPrefixInCondaExePath?: boolean;
     condaDefaultPrefixFoundInInfoNotInNative?: boolean;
     condaDefaultPrefixFoundInInfoAfterFind?: boolean;
     condaDefaultPrefixFoundInInfoAfterFindKind?: string;
+    condaDefaultPrefixFoundAsAnotherKind?: string;
+    condaDefaultPrefixFoundAsPrefixOfAnother?: string;
     condaDefaultPrefixInCondaExePath?: boolean;
     condaDefaultPrefixFoundInTxt?: boolean;
     condaRootPrefixFoundInTxt?: boolean;
@@ -796,6 +802,7 @@ async function getCondaEnvironmentsTxt(): Promise<string | undefined> {
 async function getCondaTelemetry(
     nativeFinder: NativePythonFinder,
     nativeCondaEnvs: NativeEnvInfo[],
+    nativeEnvs: NativeEnvInfo[],
 ): Promise<CondaTelemetry> {
     let envsDirs: string[] = [];
     const userProvidedCondaExe = fsPath.normalize(
@@ -969,8 +976,8 @@ async function getCondaTelemetry(
             .startsWith(rootPrefix.toLowerCase());
         // Check if we have a conda env that matches this prefix but not found in native envs.
         condaTelemetry.condaRootPrefixFoundInInfoNotInNative =
-            condaInfoEnvs.some((env) => env === rootPrefix) &&
-            !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '') === rootPrefix);
+            condaInfoEnvs.some((env) => env.toLowerCase() === rootPrefix.toLowerCase()) &&
+            !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix.toLowerCase());
         condaTelemetry.condaRootPrefixFoundInTxt = condaEnvsInEnvironmentsTxt.some(
             (e) => e.toLowerCase() === rootPrefix.toLowerCase(),
         );
@@ -979,9 +986,21 @@ async function getCondaTelemetry(
             // Verify we are able to discover this environment as a conda env using native finder.
             const rootPrefixEnvs = await nativeFinder.find(rootPrefix);
             // Did we find an env with the same prefix?
-            const rootPrefixEnv = rootPrefixEnvs.find((e) => fsPath.normalize(e.prefix || '') === rootPrefix);
+            const rootPrefixEnv = rootPrefixEnvs.find(
+                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix.toLowerCase(),
+            );
+            condaTelemetry.condaRootPrefixEnvsAfterFind = rootPrefixEnvs.length;
             condaTelemetry.condaRootPrefixFoundInInfoAfterFind = !!rootPrefixEnv;
             condaTelemetry.condaRootPrefixFoundInInfoAfterFindKind = rootPrefixEnv?.kind;
+            condaTelemetry.condaRootPrefixFoundAsAnotherKind = nativeEnvs.find(
+                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix.toLowerCase(),
+            )?.kind;
+            condaTelemetry.condaRootPrefixFoundAsPrefixOfAnother = nativeEnvs.find((e) =>
+                fsPath
+                    .normalize(e.prefix || '')
+                    .toLowerCase()
+                    .startsWith(rootPrefix.toLowerCase()),
+            )?.kind;
         }
     }
 
@@ -994,8 +1013,10 @@ async function getCondaTelemetry(
             .startsWith(defaultPrefix.toLowerCase());
         // Check if we have a conda env that matches this prefix but not found in native envs.
         condaTelemetry.condaDefaultPrefixFoundInInfoNotInNative =
-            condaInfoEnvs.some((env) => env === defaultPrefix) &&
-            !nativeCondaEnvs.some((e) => fsPath.normalize(e.prefix || '') === defaultPrefix);
+            condaInfoEnvs.some((env) => env.toLowerCase() === defaultPrefix.toLowerCase()) &&
+            !nativeCondaEnvs.some(
+                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix.toLowerCase(),
+            );
         condaTelemetry.condaDefaultPrefixFoundInTxt = condaEnvsInEnvironmentsTxt.some(
             (e) => e.toLowerCase() === rootPrefix.toLowerCase(),
         );
@@ -1004,9 +1025,21 @@ async function getCondaTelemetry(
             // Verify we are able to discover this environment as a conda env using native finder.
             const defaultPrefixEnvs = await nativeFinder.find(defaultPrefix);
             // Did we find an env with the same prefix?
-            const defaultPrefixEnv = defaultPrefixEnvs.find((e) => fsPath.normalize(e.prefix || '') === defaultPrefix);
+            const defaultPrefixEnv = defaultPrefixEnvs.find(
+                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix.toLowerCase(),
+            );
+            condaTelemetry.condaDefaultPrefixEnvsAfterFind = defaultPrefixEnvs.length;
             condaTelemetry.condaDefaultPrefixFoundInInfoAfterFind = !!defaultPrefixEnv;
             condaTelemetry.condaDefaultPrefixFoundInInfoAfterFindKind = defaultPrefixEnv?.kind;
+            condaTelemetry.condaDefaultPrefixFoundAsAnotherKind = nativeEnvs.find(
+                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix.toLowerCase(),
+            )?.kind;
+            condaTelemetry.condaDefaultPrefixFoundAsPrefixOfAnother = nativeEnvs.find((e) =>
+                fsPath
+                    .normalize(e.prefix || '')
+                    .toLowerCase()
+                    .startsWith(defaultPrefix.toLowerCase()),
+            )?.kind;
         }
     }
 
