@@ -23,7 +23,7 @@ const untildify = require('untildify');
 
 const PYTHON_ENV_TOOLS_PATH = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
-    : path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet');
+    : '/Users/donjayamanne/Development/vsc/python-environment-tools/target/debug/pet';
 
 export interface NativeEnvInfo {
     displayName?: string;
@@ -62,6 +62,7 @@ export interface NativeGlobalPythonFinder extends Disposable {
     refresh(): AsyncIterable<NativeEnvInfo>;
     categoryToKind(category?: string): PythonEnvKind;
     getCondaInfo(): Promise<NativeCondaInfo>;
+    find(searchPath: string): Promise<NativeEnvInfo[]>;
 }
 
 interface NativeLog {
@@ -360,6 +361,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             environmentDirectories: getCustomVirtualEnvDirs(),
             condaExecutable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
             poetryExecutable: getPythonSettingAndUntildify<string>('poetryPath'),
+            // cacheDirectory: '/Users/donjayamanne/Development/vsc/python-environment-tools/temp',
         };
         // No need to send a configuration request, is there are no changes.
         if (JSON.stringify(options) === JSON.stringify(this.lastConfiguration || {})) {
@@ -376,6 +378,10 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     async getCondaInfo(): Promise<NativeCondaInfo> {
         return this.connection.sendRequest<NativeCondaInfo>('condaInfo');
     }
+
+    public async find(searchPath: string): Promise<NativeEnvInfo[]> {
+        return this.connection.sendRequest<NativeEnvInfo[]>('find', { searchPath });
+    }
 }
 
 type ConfigurationOptions = {
@@ -387,6 +393,7 @@ type ConfigurationOptions = {
     environmentDirectories: string[];
     condaExecutable: string | undefined;
     poetryExecutable: string | undefined;
+    cacheDirectory?: string;
 };
 /**
  * Gets all custom virtual environment locations to look for environments.

@@ -1168,8 +1168,12 @@ export interface IEventNamePropertyMapping {
         "nativeCanSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne"},
         "userProvidedEnvFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaRootPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundInInfoAfterFind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundInInfoAfterFindKind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaRootPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaDefaultPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInInfoAfterFind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInInfoAfterFindKind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaDefaultPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1313,7 +1317,16 @@ export interface IEventNamePropertyMapping {
          * A conda env found that matches the root_prefix returned by `conda info`
          * However a corresponding conda env not found by native locator.
          */
-        condaRootPrefixFoundInInfoNotInNative?: boolean;
+        condaDefaultPrefixFoundInInfoAfterFind?: boolean;
+        condaDefaultPrefixFoundInInfoAfterFindKind?: string;
+        /**
+         * Whether we were able to identify the conda root prefix in the conda exe path as a conda env using `find` in native finder API.
+         */
+        condaRootPrefixFoundInInfoAfterFind?: boolean;
+        /**
+         * Type of python env detected for the conda root prefix.
+         */
+        condaRootPrefixFoundInInfoAfterFindKind?: string;
         /**
          * The conda root prefix is found in the conda exe path.
          */
