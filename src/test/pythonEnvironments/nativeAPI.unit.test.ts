@@ -125,11 +125,6 @@ suite('Native Python API', () => {
 
     setup(() => {
         mockFinder = typemoq.Mock.ofType<NativePythonFinder>();
-
-        mockFinder
-            .setup((f) => f.categoryToKind(typemoq.It.isAny()))
-            .returns((category: PythonEnvironmentKind) => categoryToKind(category));
-
         api = nativeAPI.createNativeEnvironmentsApi(mockFinder.object);
     });
 

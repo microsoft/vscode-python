@@ -13,7 +13,12 @@ import {
     TriggerRefreshOptions,
 } from './base/locator';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
-import { isNativeInfoEnvironment, NativeEnvInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
+import {
+    categoryToKind,
+    isNativeInfoEnvironment,
+    NativeEnvInfo,
+    NativePythonFinder,
+} from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
@@ -153,7 +158,7 @@ function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): 
     if (!validEnv(nativeEnv)) {
         return undefined;
     }
-    const kind = finder.categoryToKind(nativeEnv.kind);
+    const kind = categoryToKind(nativeEnv.kind, finder.logger());
     const arch = toArch(nativeEnv.arch);
     const version: PythonVersion = parseVersion(nativeEnv.version ?? '');
     const name = getName(nativeEnv, kind);
@@ -237,7 +242,10 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                         const envPath = native.executable ?? native.prefix;
                         const version = native.version ? parseVersion(native.version) : undefined;
 
-                        if (this.finder.categoryToKind(native.kind) === PythonEnvKind.Conda && !native.executable) {
+                        if (
+                            categoryToKind(native.kind, this.finder.logger()) === PythonEnvKind.Conda &&
+                            !native.executable
+                        ) {
                             // This is a conda env without python, no point trying to resolve this.
                             // There is nothing to resolve
                             this.addEnv(native);

@@ -100,7 +100,6 @@ export interface NativePythonFinder extends Disposable {
      * @param executable
      */
     resolve(executable: string): Promise<NativeEnvInfo>;
-    categoryToKind(category?: PythonEnvironmentKind): PythonEnvKind;
     /**
      * Used only for telemetry.
      */
@@ -169,10 +168,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
 
         this.outputChannel.info(`Resolved Python Environment ${environment.executable}`);
         return environment;
-    }
-
-    categoryToKind(category?: PythonEnvironmentKind): PythonEnvKind {
-        return categoryToKind(category, this.outputChannel);
     }
 
     async *refresh(options?: PythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo> {
@@ -483,7 +478,7 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
 let _finder: NativePythonFinder | undefined;
 export function getNativePythonFinder(): NativePythonFinder {
     if (!_finder) {
-        _finder = new NativeGlobalPythonFinderImpl();
+        _finder = new NativePythonFinderImpl();
     }
     return _finder;
 }
