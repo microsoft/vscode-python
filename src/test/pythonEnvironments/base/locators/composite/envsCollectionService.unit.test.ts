@@ -37,10 +37,6 @@ class MockNativePythonFinder implements nativeFinder.NativePythonFinder {
         throw new Error('Method not implemented.');
     }
 
-    categoryToKind(_category: nativeFinder.PythonEnvironmentKind): PythonEnvKind {
-        throw new Error('Method not implemented.');
-    }
-
     resolve(_executable: string): Promise<nativeFinder.NativeEnvInfo> {
         throw new Error('Method not implemented.');
     }

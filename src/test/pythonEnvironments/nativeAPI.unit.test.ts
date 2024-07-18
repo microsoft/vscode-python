@@ -9,14 +9,13 @@ import * as sinon from 'sinon';
 import * as nativeAPI from '../../client/pythonEnvironments/nativeAPI';
 import { IDiscoveryAPI } from '../../client/pythonEnvironments/base/locator';
 import {
-    categoryToKind,
     NativeEnvInfo,
     NativePythonFinder,
-    PythonEnvironmentKind,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 import { Architecture } from '../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../../client/pythonEnvironments/base/info';
 import { isWindows } from '../../client/common/platform/platformService';
+import { NativePythonEnvironmentKind } from '../../client/pythonEnvironments/base/locators/common/nativePythonUtils';
 
 suite('Native Python API', () => {
     let api: IDiscoveryAPI;
@@ -26,7 +25,7 @@ suite('Native Python API', () => {
         displayName: 'Basic Python',
         name: 'basic_python',
         executable: '/usr/bin/python',
-        kind: PythonEnvironmentKind.LinuxGlobal,
+        kind: NativePythonEnvironmentKind.LinuxGlobal,
         version: `3.12.0`,
         prefix: '/usr/bin',
     };
@@ -35,7 +34,7 @@ suite('Native Python API', () => {
         displayName: 'Basic Python',
         name: 'basic_python',
         executable: '/usr/bin/python',
-        kind: PythonEnvironmentKind.LinuxGlobal,
+        kind: NativePythonEnvironmentKind.LinuxGlobal,
         version: undefined, // this is intentionally set to trigger resolve
         prefix: '/usr/bin',
     };
@@ -58,7 +57,7 @@ suite('Native Python API', () => {
         displayName: 'Conda Python',
         name: 'conda_python',
         executable: '/home/user/.conda/envs/conda_python/python',
-        kind: PythonEnvironmentKind.Conda,
+        kind: NativePythonEnvironmentKind.Conda,
         version: `3.12.0`,
         prefix: '/home/user/.conda/envs/conda_python',
     };
@@ -67,7 +66,7 @@ suite('Native Python API', () => {
         displayName: 'Conda Python',
         name: 'conda_python',
         executable: '/home/user/.conda/envs/conda_python/python',
-        kind: PythonEnvironmentKind.Conda,
+        kind: NativePythonEnvironmentKind.Conda,
         version: undefined, // this is intentionally set to test conda without python
         prefix: '/home/user/.conda/envs/conda_python',
     };
@@ -76,7 +75,7 @@ suite('Native Python API', () => {
         displayName: 'Conda Python',
         name: 'conda_python',
         executable: undefined, // this is intentionally set to test env with no executable
-        kind: PythonEnvironmentKind.Conda,
+        kind: NativePythonEnvironmentKind.Conda,
         version: undefined, // this is intentionally set to test conda without python
         prefix: '/home/user/.conda/envs/conda_python',
     };

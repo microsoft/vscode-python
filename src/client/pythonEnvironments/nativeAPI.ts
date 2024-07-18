@@ -13,7 +13,7 @@ import {
     TriggerRefreshOptions,
 } from './base/locator';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
-import { isNativeInfoEnvironment, NativeEnvInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
+import { isNativeEnvInfo, NativeEnvInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
@@ -150,7 +150,7 @@ function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
     return '';
 }
 
-function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
+function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
     if (!validEnv(nativeEnv)) {
         return undefined;
     }
@@ -230,7 +230,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         setImmediate(async () => {
             try {
                 for await (const native of this.finder.refresh()) {
-                    if (!isNativeInfoEnvironment(native) || !validEnv(native)) {
+                    if (!isNativeEnvInfo(native) || !validEnv(native)) {
                         // eslint-disable-next-line no-continue
                         continue;
                     }
@@ -289,7 +289,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     }
 
     addEnv(native: NativeEnvInfo): void {
-        const info = toPythonEnvInfo(this.finder, native);
+        const info = toPythonEnvInfo(native);
         if (!info) {
             return;
         }
@@ -311,7 +311,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         }
         const native = await this.finder.resolve(envPath);
         if (native) {
-            const env = toPythonEnvInfo(this.finder, native);
+            const env = toPythonEnvInfo(native);
             if (env) {
                 const old = this._envs.find((item) => item.executable.filename === env.executable.filename);
                 if (old) {

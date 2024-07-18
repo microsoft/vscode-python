@@ -7,6 +7,8 @@ import * as typemoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
 import {
     getNativePythonFinder,
+    isNativeEnvInfo,
+    NativeEnvInfo,
     NativePythonFinder,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 import * as windowsApis from '../../client/common/vscodeApis/windowApis';
@@ -66,7 +68,7 @@ suite('Native Python Finder', () => {
         assert.isNotEmpty(envs);
 
         // pick and env without version
-        let env = envs.find((e) => !e.version);
+        let env: NativeEnvInfo | undefined = envs.filter((e) => isNativeEnvInfo(e)).find((e) => !e.version);
         if (!env) {
             [env] = envs;
             env.version = undefined;

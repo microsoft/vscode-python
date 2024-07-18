@@ -27,7 +27,7 @@ import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watche
 import { IEnvsCollectionCache } from './envsCollectionCache';
 import {
     getNativePythonFinder,
-    isNativeInfoEnvironment,
+    isNativeEnvInfo,
     NativeEnvInfo,
     NativePythonFinder,
 } from '../common/nativePythonFinder';
@@ -300,7 +300,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const executablesFoundByNativeLocator = new Set<string>();
         const nativeStopWatch = new StopWatch();
         for await (const data of this.nativeFinder.refresh()) {
-            if (isNativeInfoEnvironment(data)) {
+            if (isNativeEnvInfo(data)) {
                 nativeEnvs.push(data);
                 if (data.executable) {
                     // Lowercase for purposes of comparison (safe).
@@ -973,7 +973,7 @@ async function getCondaTelemetry(
             const rootPrefixEnvs = await flattenIterable(nativeFinder.refresh([Uri.file(rootPrefix)]));
             // Did we find an env with the same prefix?
             const rootPrefixEnv = rootPrefixEnvs
-                .filter(isNativeInfoEnvironment)
+                .filter(isNativeEnvInfo)
                 .find((e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix.toLowerCase());
             condaTelemetry.condaRootPrefixEnvsAfterFind = rootPrefixEnvs.length;
             condaTelemetry.condaRootPrefixFoundInInfoAfterFind = !!rootPrefixEnv;
@@ -1012,7 +1012,7 @@ async function getCondaTelemetry(
             const defaultPrefixEnvs = await flattenIterable(nativeFinder.refresh([Uri.file(defaultPrefix)]));
             // Did we find an env with the same prefix?
             const defaultPrefixEnv = defaultPrefixEnvs
-                .filter(isNativeInfoEnvironment)
+                .filter(isNativeEnvInfo)
                 .find((e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix.toLowerCase());
             condaTelemetry.condaDefaultPrefixEnvsAfterFind = defaultPrefixEnvs.length;
             condaTelemetry.condaDefaultPrefixFoundInInfoAfterFind = !!defaultPrefixEnv;

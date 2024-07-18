@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, EventEmitter, Event, Uri, LogOutputChannel } from 'vscode';
+import { Disposable, EventEmitter, Event, Uri } from 'vscode';
 import * as ch from 'child_process';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
@@ -17,7 +17,7 @@ import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/custo
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
 import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
-import { traceError } from '../../../../logging';
+import { NativePythonEnvironmentKind } from './nativePythonUtils';
 
 const untildify = require('untildify');
 
@@ -29,7 +29,7 @@ export interface NativeEnvInfo {
     displayName?: string;
     name?: string;
     executable?: string;
-    kind?: PythonEnvironmentKind;
+    kind?: NativePythonEnvironmentKind;
     version?: string;
     prefix?: string;
     manager?: NativeEnvManagerInfo;
@@ -41,32 +41,13 @@ export interface NativeEnvInfo {
     symlinks?: string[];
 }
 
-export enum PythonEnvironmentKind {
-    Conda = 'Conda',
-    Homebrew = 'Homebrew',
-    Pyenv = 'Pyenv',
-    GlobalPaths = 'GlobalPaths',
-    PyenvVirtualEnv = 'PyenvVirtualEnv',
-    Pipenv = 'Pipenv',
-    Poetry = 'Poetry',
-    MacPythonOrg = 'MacPythonOrg',
-    MacCommandLineTools = 'MacCommandLineTools',
-    LinuxGlobal = 'LinuxGlobal',
-    MacXCode = 'MacXCode',
-    Venv = 'Venv',
-    VirtualEnv = 'VirtualEnv',
-    VirtualEnvWrapper = 'VirtualEnvWrapper',
-    WindowsStore = 'WindowsStore',
-    WindowsRegistry = 'WindowsRegistry',
-}
-
 export interface NativeEnvManagerInfo {
     tool: string;
     executable: string;
     version?: string;
 }
 
-export function isNativeInfoEnvironment(info: NativeEnvInfo | NativeEnvManagerInfo): info is NativeEnvInfo {
+export function isNativeEnvInfo(info: NativeEnvInfo | NativeEnvManagerInfo): info is NativeEnvInfo {
     if ((info as NativeEnvManagerInfo).tool) {
         return false;
     }
@@ -91,9 +72,9 @@ export interface NativePythonFinder extends Disposable {
      *
      * If a Uri is provided, then it will search for python environments in that location (ignoring workspaces).
      * Uri can be a file or a folder.
-     * If a PythonEnvironmentKind is provided, then it will search for python environments of that kind (ignoring workspaces).
+     * If a NativePythonEnvironmentKind is provided, then it will search for python environments of that kind (ignoring workspaces).
      */
-    refresh(options?: PythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo | NativeEnvManagerInfo>;
+    refresh(options?: NativePythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo | NativeEnvManagerInfo>;
     /**
      * Will spawn the provided Python executable and return information about the environment.
      * @param executable
@@ -105,48 +86,12 @@ export interface NativePythonFinder extends Disposable {
     getCondaInfo(): Promise<NativeCondaInfo>;
 }
 
-const mapping = new Map<PythonEnvironmentKind, PythonEnvKind>([
-    [PythonEnvironmentKind.Conda, PythonEnvKind.Conda],
-    [PythonEnvironmentKind.GlobalPaths, PythonEnvKind.OtherGlobal],
-    [PythonEnvironmentKind.Pyenv, PythonEnvKind.Pyenv],
-    [PythonEnvironmentKind.PyenvVirtualEnv, PythonEnvKind.Pyenv],
-    [PythonEnvironmentKind.Pipenv, PythonEnvKind.Pipenv],
-    [PythonEnvironmentKind.Poetry, PythonEnvKind.Poetry],
-    [PythonEnvironmentKind.VirtualEnv, PythonEnvKind.VirtualEnv],
-    [PythonEnvironmentKind.VirtualEnvWrapper, PythonEnvKind.VirtualEnvWrapper],
-    [PythonEnvironmentKind.Venv, PythonEnvKind.Venv],
-    [PythonEnvironmentKind.WindowsRegistry, PythonEnvKind.System],
-    [PythonEnvironmentKind.WindowsStore, PythonEnvKind.MicrosoftStore],
-    [PythonEnvironmentKind.Homebrew, PythonEnvKind.System],
-    [PythonEnvironmentKind.LinuxGlobal, PythonEnvKind.System],
-    [PythonEnvironmentKind.MacCommandLineTools, PythonEnvKind.System],
-    [PythonEnvironmentKind.MacPythonOrg, PythonEnvKind.System],
-    [PythonEnvironmentKind.MacXCode, PythonEnvKind.System],
-]);
-
-export function categoryToKind(category?: PythonEnvironmentKind, logger?: LogOutputChannel): PythonEnvKind {
-    if (!category) {
-        return PythonEnvKind.Unknown;
-    }
-    const kind = mapping.get(category);
-    if (kind) {
-        return kind;
-    }
-
-    if (logger) {
-        logger.error(`Unknown Python Environment category '${category}' from Native Locator.`);
-    } else {
-        traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
-    }
-    return PythonEnvKind.Unknown;
-}
-
 interface NativeLog {
     level: string;
     message: string;
 }
 
-class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePythonFinder {
+class NativePythonFinderImpl extends DisposableBase implements NativePythonFinder {
     private readonly connection: rpc.MessageConnection;
 
     private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
@@ -169,7 +114,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
         return environment;
     }
 
-    async *refresh(options?: PythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo> {
+    async *refresh(options?: NativePythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo> {
         if (this.firstRefreshResults) {
             // If this is the first time we are refreshing,
             // Then get the results from the first refresh.
@@ -315,7 +260,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
     }
 
     private doRefresh(
-        options?: PythonEnvironmentKind | Uri[],
+        options?: NativePythonEnvironmentKind | Uri[],
     ): { completed: Promise<void>; discovered: Event<NativeEnvInfo | NativeEnvManagerInfo> } {
         const disposable = this._register(new DisposableStore());
         const discovered = disposable.add(new EventEmitter<NativeEnvInfo | NativeEnvManagerInfo>());
@@ -377,7 +322,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
         );
 
         type RefreshOptions = {
-            searchKind?: PythonEnvironmentKind;
+            searchKind?: NativePythonEnvironmentKind;
             searchPaths?: string[];
         };
 
