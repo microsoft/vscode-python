@@ -257,6 +257,13 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
+      - name: Rust Tool Chain setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Native Binaries
+        run: nox --session native_build
+        shell: bash
+
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
