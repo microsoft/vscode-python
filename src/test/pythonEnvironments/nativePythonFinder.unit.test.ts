@@ -58,7 +58,7 @@ suite('Native Python Finder', () => {
         assert.isNotEmpty(envs);
     });
 
-    test('Resolve should return python environments with version and prefix', async () => {
+    test('Resolve should return python environments with version', async () => {
         const envs = [];
         for await (const env of finder.refresh()) {
             envs.push(env);
@@ -68,10 +68,14 @@ suite('Native Python Finder', () => {
         assert.isNotEmpty(envs);
 
         // pick and env without version
-        let env: NativeEnvInfo | undefined = envs.filter((e) => isNativeEnvInfo(e)).find((e) => !e.version);
-        if (!env) {
-            [env] = envs;
+        const env: NativeEnvInfo | undefined = envs
+            .filter((e) => isNativeEnvInfo(e))
+            .find((e) => e.version && e.version.length > 0 && (e.executable || (e as NativeEnvInfo).prefix));
+
+        if (env) {
             env.version = undefined;
+        } else {
+            assert.fail('Expected at least one env with valid version');
         }
 
         const envPath = env.executable ?? env.prefix;
