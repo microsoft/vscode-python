@@ -417,6 +417,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
             environmentDirectories: getCustomVirtualEnvDirs(),
             condaExecutable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
             poetryExecutable: getPythonSettingAndUntildify<string>('poetryPath'),
+            // We don't use pipenvPath as it is not used for discovery
         };
         // No need to send a configuration request, is there are no changes.
         if (JSON.stringify(options) === JSON.stringify(this.lastConfiguration || {})) {
