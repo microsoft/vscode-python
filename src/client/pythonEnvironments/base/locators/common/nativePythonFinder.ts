@@ -163,6 +163,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
     }
 
     public async resolve(executable: string): Promise<NativeEnvInfo> {
+        await this.configure();
         const environment = await this.connection.sendRequest<NativeEnvInfo>('resolve', {
             executable,
         });
@@ -437,10 +438,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
 
     async getCondaInfo(): Promise<NativeCondaInfo> {
         return this.connection.sendRequest<NativeCondaInfo>('condaInfo');
-    }
-
-    public async find(searchPath: string): Promise<NativeEnvInfo[]> {
-        return this.connection.sendRequest<NativeEnvInfo[]>('find', { searchPath });
     }
 }
 
