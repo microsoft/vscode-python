@@ -16,7 +16,6 @@ import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
-import { PythonEnvKind } from '../../info';
 import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
 import { traceError } from '../../../../logging';
 
