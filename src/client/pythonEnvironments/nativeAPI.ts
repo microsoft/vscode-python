@@ -13,7 +13,7 @@ import {
     TriggerRefreshOptions,
 } from './base/locator';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
-import { NativeEnvInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
+import { isNativeInfoEnvironment, NativeEnvInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
@@ -102,9 +102,9 @@ function getDisplayName(version: PythonVersion, kind: PythonEnvKind, arch: Archi
     return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr}`;
 }
 
-function validEnv(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): boolean {
+function validEnv(nativeEnv: NativeEnvInfo): boolean {
     if (nativeEnv.prefix === undefined && nativeEnv.executable === undefined) {
-        finder.logger().error(`Invalid environment [native]: ${JSON.stringify(nativeEnv)}`);
+        traceError(`Invalid environment [native]: ${JSON.stringify(nativeEnv)}`);
         return false;
     }
     return true;
@@ -150,7 +150,7 @@ function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
 }
 
 function toPythonEnvInfo(finder: NativePythonFinder, nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
-    if (!validEnv(finder, nativeEnv)) {
+    if (!validEnv(nativeEnv)) {
         return undefined;
     }
     const kind = finder.categoryToKind(nativeEnv.kind);
@@ -229,7 +229,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         setImmediate(async () => {
             try {
                 for await (const native of this.finder.refresh()) {
-                    if (!validEnv(this.finder, native)) {
+                    if (!isNativeInfoEnvironment(native) || !validEnv(native)) {
                         // eslint-disable-next-line no-continue
                         continue;
                     }

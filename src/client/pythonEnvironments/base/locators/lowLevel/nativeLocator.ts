@@ -10,7 +10,7 @@ import { Conda } from '../../../common/environmentManagers/conda';
 import { traceError } from '../../../../logging';
 import type { KnownEnvironmentTools } from '../../../../api/types';
 import { setPyEnvBinary } from '../../../common/environmentManagers/pyenv';
-import { NativePythonFinder, getNativePythonFinder } from '../common/nativePythonFinder';
+import { NativePythonFinder, getNativePythonFinder, isNativeInfoEnvironment } from '../common/nativePythonFinder';
 import { disposeAll } from '../../../../common/utils/resourceLifecycle';
 import { Architecture } from '../../../../common/utils/platform';
 
@@ -74,37 +74,39 @@ export class NativeLocator implements ILocator<BasicEnvInfo>, IDisposable {
         const disposable = new Disposable(() => disposeAll(disposables));
         this.disposables.push(disposable);
         for await (const data of this.finder.refresh()) {
-            if (data.manager) {
-                switch (toolToKnownEnvironmentTool(data.manager.tool)) {
-                    case 'Conda': {
-                        Conda.setConda(data.manager.executable);
-                        break;
-                    }
-                    case 'Pyenv': {
-                        setPyEnvBinary(data.manager.executable);
-                        break;
-                    }
-                    default: {
-                        break;
+            if (isNativeInfoEnvironment(data)) {
+                if (data.manager) {
+                    switch (toolToKnownEnvironmentTool(data.manager.tool)) {
+                        case 'Conda': {
+                            Conda.setConda(data.manager.executable);
+                            break;
+                        }
+                        case 'Pyenv': {
+                            setPyEnvBinary(data.manager.executable);
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
                     }
                 }
-            }
-            if (data.executable) {
-                const arch = (data.arch || '').toLowerCase();
-                const env: BasicEnvInfo = {
-                    kind: this.finder.categoryToKind(data.kind),
-                    executablePath: data.executable ? data.executable : '',
-                    envPath: data.prefix ? data.prefix : undefined,
-                    version: data.version ? parseVersion(data.version) : undefined,
-                    name: data.name ? data.name : '',
-                    displayName: data.displayName ? data.displayName : '',
-                    searchLocation: data.project ? Uri.file(data.project) : undefined,
-                    identifiedUsingNativeLocator: true,
-                    arch:
-                        // eslint-disable-next-line no-nested-ternary
-                        arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
-                };
-                yield env;
+                if (data.executable) {
+                    const arch = (data.arch || '').toLowerCase();
+                    const env: BasicEnvInfo = {
+                        kind: this.finder.categoryToKind(data.kind),
+                        executablePath: data.executable ? data.executable : '',
+                        envPath: data.prefix ? data.prefix : undefined,
+                        version: data.version ? parseVersion(data.version) : undefined,
+                        name: data.name ? data.name : '',
+                        displayName: data.displayName ? data.displayName : '',
+                        searchLocation: data.project ? Uri.file(data.project) : undefined,
+                        identifiedUsingNativeLocator: true,
+                        arch:
+                            // eslint-disable-next-line no-nested-ternary
+                            arch === 'x64' ? Architecture.x64 : arch === 'x86' ? Architecture.x86 : undefined,
+                    };
+                    yield env;
+                }
             }
         }
     }

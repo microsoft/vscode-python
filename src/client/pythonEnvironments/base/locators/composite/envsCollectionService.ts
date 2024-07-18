@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as fsPath from 'path';
-import { Event, EventEmitter, workspace } from 'vscode';
+import { Event, EventEmitter, Uri, workspace } from 'vscode';
 import '../../../../common/extensions';
-import { createDeferred, Deferred } from '../../../../common/utils/async';
+import { createDeferred, Deferred, flattenIterable } from '../../../../common/utils/async';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -25,7 +25,12 @@ import {
 import { getQueryFilter } from '../../locatorUtils';
 import { PythonEnvCollectionChangedEvent, PythonEnvsWatcher } from '../../watcher';
 import { IEnvsCollectionCache } from './envsCollectionCache';
-import { getNativePythonFinder, NativeEnvInfo, NativePythonFinder } from '../common/nativePythonFinder';
+import {
+    getNativePythonFinder,
+    isNativeInfoEnvironment,
+    NativeEnvInfo,
+    NativePythonFinder,
+} from '../common/nativePythonFinder';
 import { pathExists } from '../../../../common/platform/fs-paths';
 import { noop } from '../../../../common/utils/misc';
 import { parseVersion } from '../../info/pythonVersion';
@@ -294,16 +299,18 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         const executablesFoundByNativeLocator = new Set<string>();
         const nativeStopWatch = new StopWatch();
         for await (const data of this.nativeFinder.refresh()) {
-            nativeEnvs.push(data);
-            if (data.executable) {
+            if (isNativeInfoEnvironment(data)) {
+                nativeEnvs.push(data);
+                if (data.executable) {
+                    // Lowercase for purposes of comparison (safe).
+                    executablesFoundByNativeLocator.add(data.executable.toLowerCase());
+                } else if (data.prefix) {
+                    // Lowercase for purposes of comparison (safe).
+                    executablesFoundByNativeLocator.add(data.prefix.toLowerCase());
+                }
                 // Lowercase for purposes of comparison (safe).
-                executablesFoundByNativeLocator.add(data.executable.toLowerCase());
-            } else if (data.prefix) {
-                // Lowercase for purposes of comparison (safe).
-                executablesFoundByNativeLocator.add(data.prefix.toLowerCase());
+                (data.symlinks || []).forEach((exe) => executablesFoundByNativeLocator.add(exe.toLowerCase()));
             }
-            // Lowercase for purposes of comparison (safe).
-            (data.symlinks || []).forEach((exe) => executablesFoundByNativeLocator.add(exe.toLowerCase()));
         }
         const nativeDuration = nativeStopWatch.elapsedTime;
         void this.sendNativeLocatorTelemetry(nativeEnvs);
@@ -980,11 +987,11 @@ async function getCondaTelemetry(
 
         if (condaTelemetry.condaRootPrefixFoundInInfoNotInNative) {
             // Verify we are able to discover this environment as a conda env using native finder.
-            const rootPrefixEnvs = await nativeFinder.find(rootPrefix);
+            const rootPrefixEnvs = await flattenIterable(nativeFinder.refresh([Uri.file(rootPrefix)]));
             // Did we find an env with the same prefix?
-            const rootPrefixEnv = rootPrefixEnvs.find(
-                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix.toLowerCase(),
-            );
+            const rootPrefixEnv = rootPrefixEnvs
+                .filter(isNativeInfoEnvironment)
+                .find((e) => fsPath.normalize(e.prefix || '').toLowerCase() === rootPrefix.toLowerCase());
             condaTelemetry.condaRootPrefixEnvsAfterFind = rootPrefixEnvs.length;
             condaTelemetry.condaRootPrefixFoundInInfoAfterFind = !!rootPrefixEnv;
             condaTelemetry.condaRootPrefixFoundInInfoAfterFindKind = rootPrefixEnv?.kind;
@@ -1019,11 +1026,11 @@ async function getCondaTelemetry(
 
         if (condaTelemetry.condaDefaultPrefixFoundInInfoNotInNative) {
             // Verify we are able to discover this environment as a conda env using native finder.
-            const defaultPrefixEnvs = await nativeFinder.find(defaultPrefix);
+            const defaultPrefixEnvs = await flattenIterable(nativeFinder.refresh([Uri.file(defaultPrefix)]));
             // Did we find an env with the same prefix?
-            const defaultPrefixEnv = defaultPrefixEnvs.find(
-                (e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix.toLowerCase(),
-            );
+            const defaultPrefixEnv = defaultPrefixEnvs
+                .filter(isNativeInfoEnvironment)
+                .find((e) => fsPath.normalize(e.prefix || '').toLowerCase() === defaultPrefix.toLowerCase());
             condaTelemetry.condaDefaultPrefixEnvsAfterFind = defaultPrefixEnvs.length;
             condaTelemetry.condaDefaultPrefixFoundInInfoAfterFind = !!defaultPrefixEnv;
             condaTelemetry.condaDefaultPrefixFoundInInfoAfterFindKind = defaultPrefixEnv?.kind;

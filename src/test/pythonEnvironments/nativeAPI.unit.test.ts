@@ -9,8 +9,10 @@ import * as sinon from 'sinon';
 import * as nativeAPI from '../../client/pythonEnvironments/nativeAPI';
 import { IDiscoveryAPI } from '../../client/pythonEnvironments/base/locator';
 import {
+    categoryToKind,
     NativeEnvInfo,
     NativePythonFinder,
+    PythonEnvironmentKind,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 import { Architecture } from '../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../../client/pythonEnvironments/base/info';
@@ -24,7 +26,7 @@ suite('Native Python API', () => {
         displayName: 'Basic Python',
         name: 'basic_python',
         executable: '/usr/bin/python',
-        kind: 'system',
+        kind: PythonEnvironmentKind.LinuxGlobal,
         version: `3.12.0`,
         prefix: '/usr/bin',
     };
@@ -33,7 +35,7 @@ suite('Native Python API', () => {
         displayName: 'Basic Python',
         name: 'basic_python',
         executable: '/usr/bin/python',
-        kind: 'system',
+        kind: PythonEnvironmentKind.LinuxGlobal,
         version: undefined, // this is intentionally set to trigger resolve
         prefix: '/usr/bin',
     };
@@ -56,7 +58,7 @@ suite('Native Python API', () => {
         displayName: 'Conda Python',
         name: 'conda_python',
         executable: '/home/user/.conda/envs/conda_python/python',
-        kind: 'conda',
+        kind: PythonEnvironmentKind.Conda,
         version: `3.12.0`,
         prefix: '/home/user/.conda/envs/conda_python',
     };
@@ -65,7 +67,7 @@ suite('Native Python API', () => {
         displayName: 'Conda Python',
         name: 'conda_python',
         executable: '/home/user/.conda/envs/conda_python/python',
-        kind: 'conda',
+        kind: PythonEnvironmentKind.Conda,
         version: undefined, // this is intentionally set to test conda without python
         prefix: '/home/user/.conda/envs/conda_python',
     };
@@ -74,7 +76,7 @@ suite('Native Python API', () => {
         displayName: 'Conda Python',
         name: 'conda_python',
         executable: undefined, // this is intentionally set to test env with no executable
-        kind: 'conda',
+        kind: PythonEnvironmentKind.Conda,
         version: undefined, // this is intentionally set to test conda without python
         prefix: '/home/user/.conda/envs/conda_python',
     };
@@ -126,41 +128,7 @@ suite('Native Python API', () => {
 
         mockFinder
             .setup((f) => f.categoryToKind(typemoq.It.isAny()))
-            .returns((category: string) => {
-                switch (category.toLowerCase()) {
-                    case 'conda':
-                        return PythonEnvKind.Conda;
-                    case 'system':
-                    case 'homebrew':
-                    case 'macpythonorg':
-                    case 'maccommandlinetools':
-                    case 'macxcode':
-                    case 'windowsregistry':
-                    case 'linuxglobal':
-                        return PythonEnvKind.System;
-                    case 'globalpaths':
-                        return PythonEnvKind.OtherGlobal;
-                    case 'pyenv':
-                        return PythonEnvKind.Pyenv;
-                    case 'poetry':
-                        return PythonEnvKind.Poetry;
-                    case 'pipenv':
-                        return PythonEnvKind.Pipenv;
-                    case 'pyenvvirtualenv':
-                        return PythonEnvKind.VirtualEnv;
-                    case 'venv':
-                        return PythonEnvKind.Venv;
-                    case 'virtualenv':
-                        return PythonEnvKind.VirtualEnv;
-                    case 'virtualenvwrapper':
-                        return PythonEnvKind.VirtualEnvWrapper;
-                    case 'windowsstore':
-                        return PythonEnvKind.MicrosoftStore;
-                    default: {
-                        return PythonEnvKind.Unknown;
-                    }
-                }
-            });
+            .returns((category: PythonEnvironmentKind) => categoryToKind(category));
 
         api = nativeAPI.createNativeEnvironmentsApi(mockFinder.object);
     });

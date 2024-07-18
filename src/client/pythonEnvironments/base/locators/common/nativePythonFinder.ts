@@ -18,6 +18,7 @@ import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
 import { PythonEnvKind } from '../../info';
 import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
+import { traceError } from '../../../../logging';
 
 const untildify = require('untildify');
 
@@ -29,7 +30,7 @@ export interface NativeEnvInfo {
     displayName?: string;
     name?: string;
     executable?: string;
-    kind?: string;
+    kind?: PythonEnvironmentKind;
     version?: string;
     prefix?: string;
     manager?: NativeEnvManagerInfo;
@@ -41,10 +42,36 @@ export interface NativeEnvInfo {
     symlinks?: string[];
 }
 
+export enum PythonEnvironmentKind {
+    Conda = 'Conda',
+    Homebrew = 'Homebrew',
+    Pyenv = 'Pyenv',
+    GlobalPaths = 'GlobalPaths',
+    PyenvVirtualEnv = 'PyenvVirtualEnv',
+    Pipenv = 'Pipenv',
+    Poetry = 'Poetry',
+    MacPythonOrg = 'MacPythonOrg',
+    MacCommandLineTools = 'MacCommandLineTools',
+    LinuxGlobal = 'LinuxGlobal',
+    MacXCode = 'MacXCode',
+    Venv = 'Venv',
+    VirtualEnv = 'VirtualEnv',
+    VirtualEnvWrapper = 'VirtualEnvWrapper',
+    WindowsStore = 'WindowsStore',
+    WindowsRegistry = 'WindowsRegistry',
+}
+
 export interface NativeEnvManagerInfo {
     tool: string;
     executable: string;
     version?: string;
+}
+
+export function isNativeInfoEnvironment(info: NativeEnvInfo | NativeEnvManagerInfo): info is NativeEnvInfo {
+    if ((info as NativeEnvManagerInfo).tool) {
+        return false;
+    }
+    return true;
 }
 
 export type NativeCondaInfo = {
@@ -58,12 +85,62 @@ export type NativeCondaInfo = {
 };
 
 export interface NativePythonFinder extends Disposable {
+    /**
+     * Refresh the list of python environments.
+     * Returns an async iterable that can be used to iterate over the list of python environments.
+     * Internally this will take all of the current workspace folders and search for python environments.
+     *
+     * If a Uri is provided, then it will search for python environments in that location (ignoring workspaces).
+     * Uri can be a file or a folder.
+     * If a PythonEnvironmentKind is provided, then it will search for python environments of that kind (ignoring workspaces).
+     */
+    refresh(options?: PythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo | NativeEnvManagerInfo>;
+    /**
+     * Will spawn the provided Python executable and return information about the environment.
+     * @param executable
+     */
     resolve(executable: string): Promise<NativeEnvInfo>;
-    refresh(): AsyncIterable<NativeEnvInfo>;
-    categoryToKind(category?: string): PythonEnvKind;
-    logger(): LogOutputChannel;
+    categoryToKind(category?: PythonEnvironmentKind): PythonEnvKind;
+    /**
+     * Used only for telemetry.
+     */
     getCondaInfo(): Promise<NativeCondaInfo>;
-    find(searchPath: string): Promise<NativeEnvInfo[]>;
+}
+
+const mapping = new Map<PythonEnvironmentKind, PythonEnvKind>([
+    [PythonEnvironmentKind.Conda, PythonEnvKind.Conda],
+    [PythonEnvironmentKind.GlobalPaths, PythonEnvKind.OtherGlobal],
+    [PythonEnvironmentKind.Pyenv, PythonEnvKind.Pyenv],
+    [PythonEnvironmentKind.PyenvVirtualEnv, PythonEnvKind.Pyenv],
+    [PythonEnvironmentKind.Pipenv, PythonEnvKind.Pipenv],
+    [PythonEnvironmentKind.Poetry, PythonEnvKind.Poetry],
+    [PythonEnvironmentKind.VirtualEnv, PythonEnvKind.VirtualEnv],
+    [PythonEnvironmentKind.VirtualEnvWrapper, PythonEnvKind.VirtualEnvWrapper],
+    [PythonEnvironmentKind.Venv, PythonEnvKind.Venv],
+    [PythonEnvironmentKind.WindowsRegistry, PythonEnvKind.System],
+    [PythonEnvironmentKind.WindowsStore, PythonEnvKind.MicrosoftStore],
+    [PythonEnvironmentKind.Homebrew, PythonEnvKind.System],
+    [PythonEnvironmentKind.LinuxGlobal, PythonEnvKind.System],
+    [PythonEnvironmentKind.MacCommandLineTools, PythonEnvKind.System],
+    [PythonEnvironmentKind.MacPythonOrg, PythonEnvKind.System],
+    [PythonEnvironmentKind.MacXCode, PythonEnvKind.System],
+]);
+
+export function categoryToKind(category?: PythonEnvironmentKind, logger?: LogOutputChannel): PythonEnvKind {
+    if (!category) {
+        return PythonEnvKind.Unknown;
+    }
+    const kind = mapping.get(category);
+    if (kind) {
+        return kind;
+    }
+
+    if (logger) {
+        logger.error(`Unknown Python Environment category '${category}' from Native Locator.`);
+    } else {
+        traceError(`Unknown Python Environment category '${category}' from Native Locator.`);
+    }
+    return PythonEnvKind.Unknown;
 }
 
 interface NativeLog {
@@ -94,47 +171,11 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
         return environment;
     }
 
-    categoryToKind(category?: string): PythonEnvKind {
-        if (!category) {
-            return PythonEnvKind.Unknown;
-        }
-        switch (category.toLowerCase()) {
-            case 'conda':
-                return PythonEnvKind.Conda;
-            case 'system':
-            case 'homebrew':
-            case 'macpythonorg':
-            case 'maccommandlinetools':
-            case 'macxcode':
-            case 'windowsregistry':
-            case 'linuxglobal':
-                return PythonEnvKind.System;
-            case 'globalpaths':
-                return PythonEnvKind.OtherGlobal;
-            case 'pyenv':
-                return PythonEnvKind.Pyenv;
-            case 'poetry':
-                return PythonEnvKind.Poetry;
-            case 'pipenv':
-                return PythonEnvKind.Pipenv;
-            case 'pyenvvirtualenv':
-                return PythonEnvKind.VirtualEnv;
-            case 'venv':
-                return PythonEnvKind.Venv;
-            case 'virtualenv':
-                return PythonEnvKind.VirtualEnv;
-            case 'virtualenvwrapper':
-                return PythonEnvKind.VirtualEnvWrapper;
-            case 'windowsstore':
-                return PythonEnvKind.MicrosoftStore;
-            default: {
-                this.outputChannel.info(`Unknown Python Environment category '${category}' from Native Locator.`);
-                return PythonEnvKind.Unknown;
-            }
-        }
+    categoryToKind(category?: PythonEnvironmentKind): PythonEnvKind {
+        return categoryToKind(category, this.outputChannel);
     }
 
-    async *refresh(): AsyncIterable<NativeEnvInfo> {
+    async *refresh(options?: PythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo> {
         if (this.firstRefreshResults) {
             // If this is the first time we are refreshing,
             // Then get the results from the first refresh.
@@ -143,12 +184,12 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
             this.firstRefreshResults = undefined;
             yield* results;
         } else {
-            const result = this.doRefresh();
+            const result = this.doRefresh(options);
             let completed = false;
             void result.completed.finally(() => {
                 completed = true;
             });
-            const envs: NativeEnvInfo[] = [];
+            const envs: (NativeEnvInfo | NativeEnvManagerInfo)[] = [];
             let discovered = createDeferred();
             const disposable = result.discovered((data) => {
                 envs.push(data);
@@ -171,10 +212,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
             } while (!completed);
             disposable.dispose();
         }
-    }
-
-    logger(): LogOutputChannel {
-        return this.outputChannel;
     }
 
     refreshFirstTime() {
@@ -283,9 +320,11 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
         return connection;
     }
 
-    private doRefresh(): { completed: Promise<void>; discovered: Event<NativeEnvInfo> } {
+    private doRefresh(
+        options?: PythonEnvironmentKind | Uri[],
+    ): { completed: Promise<void>; discovered: Event<NativeEnvInfo | NativeEnvManagerInfo> } {
         const disposable = this._register(new DisposableStore());
-        const discovered = disposable.add(new EventEmitter<NativeEnvInfo>());
+        const discovered = disposable.add(new EventEmitter<NativeEnvInfo | NativeEnvManagerInfo>());
         const completed = createDeferred<void>();
         const pendingPromises: Promise<void>[] = [];
 
@@ -306,6 +345,8 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
             notifyUponCompletion();
         };
 
+        // Assumption is server will ensure there's only one refresh at a time.
+        // Perhaps we should have a request Id or the like to map the results back to the `refresh` request.
         disposable.add(
             this.connection.onNotification('environment', (data: NativeEnvInfo) => {
                 this.outputChannel.info(`Discovered env: ${data.executable || data.prefix}`);
@@ -334,11 +375,28 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativePytho
                 }
             }),
         );
+        disposable.add(
+            this.connection.onNotification('manager', (data: NativeEnvManagerInfo) => {
+                this.outputChannel.info(`Discovered manager: (${data.tool}) ${data.executable}`);
+                discovered.fire(data);
+            }),
+        );
 
+        type RefreshOptions = {
+            searchKind?: PythonEnvironmentKind;
+            searchPaths?: string[];
+        };
+
+        const refreshOptions: RefreshOptions = {};
+        if (options && Array.isArray(options) && options.length > 0) {
+            refreshOptions.searchPaths = options.map((item) => item.fsPath);
+        } else if (options && typeof options === 'string') {
+            refreshOptions.searchKind = options;
+        }
         trackPromiseAndNotifyOnCompletion(
             this.configure().then(() =>
                 this.connection
-                    .sendRequest<{ duration: number }>('refresh')
+                    .sendRequest<{ duration: number }>('refresh', refreshOptions)
                     .then(({ duration }) => this.outputChannel.info(`Refresh completed in ${duration}ms`))
                     .catch((ex) => this.outputChannel.error('Refresh error', ex)),
             ),
