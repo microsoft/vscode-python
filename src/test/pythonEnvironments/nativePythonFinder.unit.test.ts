@@ -42,6 +42,10 @@ suite('Native Python Finder', () => {
         sinon.restore();
     });
 
+    suiteTeardown(() => {
+        finder.dispose();
+    });
+
     test('Refresh should return python environments', async () => {
         const envs = [];
         for await (const env of finder.refresh()) {
