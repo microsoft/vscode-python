@@ -41,6 +41,7 @@ suite('Native Python API', () => {
 
     const expectedBasicEnv: PythonEnvInfo = {
         arch: Architecture.Unknown,
+        id: '/usr/bin/python',
         detailedDisplayName: "Python 3.12.0 ('basic_python')",
         display: "Python 3.12.0 ('basic_python')",
         distro: { org: '' },
@@ -89,6 +90,7 @@ suite('Native Python API', () => {
         detailedDisplayName: "Python 3.12.0 ('conda_python')",
         display: "Python 3.12.0 ('conda_python')",
         distro: { org: '' },
+        id: '/home/user/.conda/envs/conda_python/python',
         executable: {
             filename: '/home/user/.conda/envs/conda_python/python',
             sysPrefix: '/home/user/.conda/envs/conda_python',
@@ -108,6 +110,7 @@ suite('Native Python API', () => {
         detailedDisplayName: 'Conda Python',
         display: 'Conda Python',
         distro: { org: '' },
+        id: exePath,
         executable: {
             filename: exePath,
             sysPrefix: '/home/user/.conda/envs/conda_python',

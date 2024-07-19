@@ -169,7 +169,7 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
         kind,
         id: executable,
         executable: {
-            filename: nativeEnv.executable ?? makeExecutablePath(nativeEnv.prefix),
+            filename: executable,
             sysPrefix: nativeEnv.prefix ?? '',
             ctime: -1,
             mtime: -1,
