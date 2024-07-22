@@ -79,6 +79,8 @@ export type RefreshPerformance = {
     };
 };
 
+let refreshTelemetrySent = false;
+
 export function sendNativeTelemetry(data: NativePythonTelemetry): void {
     switch (data.event) {
         case 'MissingCondaEnvironments': {
@@ -98,26 +100,30 @@ export function sendNativeTelemetry(data: NativePythonTelemetry): void {
             break;
         }
         case 'RefreshPerformance': {
-            sendTelemetryEvent(EventName.NATIVE_FINDER_PERF, undefined, {
+            if (refreshTelemetrySent) {
+                break;
+            }
+            refreshTelemetrySent = true;
+            sendTelemetryEvent(EventName.NATIVE_FINDER_PERF, {
                 duration: data.data.refreshPerformance.total,
                 breakdownGlobalVirtualEnvs: data.data.refreshPerformance.breakdown.GlobalVirtualEnvs,
                 breakdownLocators: data.data.refreshPerformance.breakdown.Locators,
                 breakdownPath: data.data.refreshPerformance.breakdown.Path,
                 breakdownWorkspaces: data.data.refreshPerformance.breakdown.Workspaces,
-                locatorConda: data.data.refreshPerformance.locators.Conda,
-                locatorHomebrew: data.data.refreshPerformance.locators.Homebrew,
-                locatorLinuxGlobalPython: data.data.refreshPerformance.locators.LinuxGlobalPython,
-                locatorMacCmdLineTools: data.data.refreshPerformance.locators.MacCmdLineTools,
-                locatorMacPythonOrg: data.data.refreshPerformance.locators.MacPythonOrg,
-                locatorMacXCode: data.data.refreshPerformance.locators.MacXCode,
-                locatorPipEnv: data.data.refreshPerformance.locators.PipEnv,
-                locatorPoetry: data.data.refreshPerformance.locators.Poetry,
-                locatorPyEnv: data.data.refreshPerformance.locators.PyEnv,
-                locatorVenv: data.data.refreshPerformance.locators.Venv,
-                locatorVirtualEnv: data.data.refreshPerformance.locators.VirtualEnv,
-                locatorVirtualEnvWrapper: data.data.refreshPerformance.locators.VirtualEnvWrapper,
-                locatorWindowsRegistry: data.data.refreshPerformance.locators.WindowsRegistry,
-                locatorWindowsStore: data.data.refreshPerformance.locators.WindowsStore,
+                locatorConda: data.data.refreshPerformance.locators.Conda || 0,
+                locatorHomebrew: data.data.refreshPerformance.locators.Homebrew || 0,
+                locatorLinuxGlobalPython: data.data.refreshPerformance.locators.LinuxGlobalPython || 0,
+                locatorMacCmdLineTools: data.data.refreshPerformance.locators.MacCmdLineTools || 0,
+                locatorMacPythonOrg: data.data.refreshPerformance.locators.MacPythonOrg || 0,
+                locatorMacXCode: data.data.refreshPerformance.locators.MacXCode || 0,
+                locatorPipEnv: data.data.refreshPerformance.locators.PipEnv || 0,
+                locatorPoetry: data.data.refreshPerformance.locators.Poetry || 0,
+                locatorPyEnv: data.data.refreshPerformance.locators.PyEnv || 0,
+                locatorVenv: data.data.refreshPerformance.locators.Venv || 0,
+                locatorVirtualEnv: data.data.refreshPerformance.locators.VirtualEnv || 0,
+                locatorVirtualEnvWrapper: data.data.refreshPerformance.locators.VirtualEnvWrapper || 0,
+                locatorWindowsRegistry: data.data.refreshPerformance.locators.WindowsRegistry || 0,
+                locatorWindowsStore: data.data.refreshPerformance.locators.WindowsStore || 0,
             });
             break;
         }
