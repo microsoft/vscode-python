@@ -13,15 +13,22 @@ import {
     TriggerRefreshOptions,
 } from './base/locator';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
-import { isNativeEnvInfo, NativeEnvInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
+import {
+    isNativeEnvInfo,
+    NativeEnvInfo,
+    NativeEnvManagerInfo,
+    NativePythonFinder,
+} from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
 import { cache } from '../common/utils/decorators';
-import { traceError, traceLog } from '../logging';
+import { traceError, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind } from './base/locators/common/nativePythonUtils';
+import { setCondaBinary } from './common/environmentManagers/conda';
+import { setPyEnvBinary } from './common/environmentManagers/pyenv';
 
 function makeExecutablePath(prefix?: string): string {
     if (!prefix) {
@@ -232,44 +239,10 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         setImmediate(async () => {
             try {
                 for await (const native of this.finder.refresh()) {
-                    if (!isNativeEnvInfo(native) || !validEnv(native)) {
-                        // eslint-disable-next-line no-continue
-                        continue;
-                    }
-                    try {
-                        const envPath = native.executable ?? native.prefix;
-                        const version = native.version ? parseVersion(native.version) : undefined;
-
-                        if (categoryToKind(native.kind) === PythonEnvKind.Conda && !native.executable) {
-                            // This is a conda env without python, no point trying to resolve this.
-                            // There is nothing to resolve
-                            this.addEnv(native);
-                        } else if (
-                            envPath &&
-                            (!version || version.major < 0 || version.minor < 0 || version.micro < 0)
-                        ) {
-                            // We have a path, but no version info, try to resolve the environment.
-                            this.finder
-                                .resolve(envPath)
-                                .then((env) => {
-                                    if (env) {
-                                        this.addEnv(env);
-                                    }
-                                })
-                                .ignoreErrors();
-                        } else if (
-                            envPath &&
-                            version &&
-                            version.major >= 0 &&
-                            version.minor >= 0 &&
-                            version.micro >= 0
-                        ) {
-                            this.addEnv(native);
-                        } else {
-                            traceError(`Failed to process environment: ${JSON.stringify(native)}`);
-                        }
-                    } catch (err) {
-                        traceError(`Failed to process environment: ${err}`);
+                    if (isNativeEnvInfo(native)) {
+                        this.processEnv(native);
+                    } else {
+                        this.processEnvManager(native);
                     }
                 }
                 this._refreshPromise?.resolve();
@@ -284,6 +257,57 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         });
 
         return this._refreshPromise?.promise;
+    }
+
+    private processEnv(native: NativeEnvInfo): void {
+        if (!validEnv(native)) {
+            return;
+        }
+
+        try {
+            const envPath = native.executable ?? native.prefix;
+            const version = native.version ? parseVersion(native.version) : undefined;
+
+            if (categoryToKind(native.kind) === PythonEnvKind.Conda && !native.executable) {
+                // This is a conda env without python, no point trying to resolve this.
+                // There is nothing to resolve
+                this.addEnv(native);
+            } else if (envPath && (!version || version.major < 0 || version.minor < 0 || version.micro < 0)) {
+                // We have a path, but no version info, try to resolve the environment.
+                this.finder
+                    .resolve(envPath)
+                    .then((env) => {
+                        if (env) {
+                            this.addEnv(env);
+                        }
+                    })
+                    .ignoreErrors();
+            } else if (envPath && version && version.major >= 0 && version.minor >= 0 && version.micro >= 0) {
+                this.addEnv(native);
+            } else {
+                traceError(`Failed to process environment: ${JSON.stringify(native)}`);
+            }
+        } catch (err) {
+            traceError(`Failed to process environment: ${err}`);
+        }
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    private processEnvManager(native: NativeEnvManagerInfo) {
+        const tool = native.tool.toLowerCase();
+        switch (tool) {
+            case 'conda':
+                traceLog(`Conda environment manager found at: ${native.executable}`);
+                setCondaBinary(native.executable);
+                break;
+            case 'pyenv':
+                traceLog(`Pyenv environment manager found at: ${native.executable}`);
+                setPyEnvBinary(native.executable);
+                break;
+            default:
+                traceWarn(`Unknown environment manager: ${native.tool}`);
+                break;
+        }
     }
 
     getEnvs(_query?: PythonLocatorQuery): PythonEnvInfo[] {

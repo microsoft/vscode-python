@@ -10,16 +10,21 @@ import * as nativeAPI from '../../client/pythonEnvironments/nativeAPI';
 import { IDiscoveryAPI } from '../../client/pythonEnvironments/base/locator';
 import {
     NativeEnvInfo,
+    NativeEnvManagerInfo,
     NativePythonFinder,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 import { Architecture } from '../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../../client/pythonEnvironments/base/info';
 import { isWindows } from '../../client/common/platform/platformService';
 import { NativePythonEnvironmentKind } from '../../client/pythonEnvironments/base/locators/common/nativePythonUtils';
+import * as condaApi from '../../client/pythonEnvironments/common/environmentManagers/conda';
+import * as pyenvApi from '../../client/pythonEnvironments/common/environmentManagers/pyenv';
 
 suite('Native Python API', () => {
     let api: IDiscoveryAPI;
     let mockFinder: typemoq.IMock<NativePythonFinder>;
+    let setCondaBinaryStub: sinon.SinonStub;
+    let setPyEnvBinaryStub: sinon.SinonStub;
 
     const basicEnv: NativeEnvInfo = {
         displayName: 'Basic Python',
@@ -128,6 +133,9 @@ suite('Native Python API', () => {
     setup(() => {
         mockFinder = typemoq.Mock.ofType<NativePythonFinder>();
         api = nativeAPI.createNativeEnvironmentsApi(mockFinder.object);
+
+        setCondaBinaryStub = sinon.stub(condaApi, 'setCondaBinary');
+        setPyEnvBinaryStub = sinon.stub(pyenvApi, 'setPyEnvBinary');
     });
 
     teardown(() => {
@@ -247,5 +255,41 @@ suite('Native Python API', () => {
 
         await api.triggerRefresh();
         assert.isUndefined(api.getRefreshPromise());
+    });
+
+    test('Setting conda binary', async () => {
+        const condaMgr: NativeEnvManagerInfo = {
+            tool: 'Conda',
+            executable: '/usr/bin/conda',
+        };
+        mockFinder
+            .setup((f) => f.refresh())
+            .returns(() => {
+                async function* generator() {
+                    yield* [condaMgr];
+                }
+                return generator();
+            })
+            .verifiable(typemoq.Times.once());
+        await api.triggerRefresh();
+        assert.isTrue(setCondaBinaryStub.calledOnceWith(condaMgr.executable));
+    });
+
+    test('Setting pyenv binary', async () => {
+        const pyenvMgr: NativeEnvManagerInfo = {
+            tool: 'PyEnv',
+            executable: '/usr/bin/pyenv',
+        };
+        mockFinder
+            .setup((f) => f.refresh())
+            .returns(() => {
+                async function* generator() {
+                    yield* [pyenvMgr];
+                }
+                return generator();
+            })
+            .verifiable(typemoq.Times.once());
+        await api.triggerRefresh();
+        assert.isTrue(setPyEnvBinaryStub.calledOnceWith(pyenvMgr.executable));
     });
 });
