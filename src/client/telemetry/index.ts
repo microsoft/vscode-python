@@ -1762,7 +1762,6 @@ export interface IEventNamePropertyMapping {
         /**
          * Total duration to find envs using native locator.
          */
-        duration: number;
         breakdownLocators?: number;
         breakdownPath?: number;
         breakdownGlobalVirtualEnvs?: number;
