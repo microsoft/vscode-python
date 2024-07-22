@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType, PythonVersion } from './base/info';
 import {
     GetRefreshEnvironmentsOptions,
@@ -28,6 +28,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind } from './base/locators/common/nativePythonUtils';
 import { setCondaBinary } from './common/environmentManagers/conda';
+import { createPythonWatcher } from './base/locators/common/pythonWatcher';
 import { setPyEnvBinary } from './common/environmentManagers/pyenv';
 
 function makeExecutablePath(prefix?: string): string {
@@ -209,12 +210,23 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
 
     private _envs: PythonEnvInfo[] = [];
 
+    private _disposables: Disposable[] = [];
+
     constructor(private readonly finder: NativePythonFinder) {
         this._onProgress = new EventEmitter<ProgressNotificationEvent>();
         this._onChanged = new EventEmitter<PythonEnvCollectionChangedEvent>();
+
         this.onProgress = this._onProgress.event;
         this.onChanged = this._onChanged.event;
+
         this.refreshState = ProgressReportStage.idle;
+        this._disposables.push(this._onProgress, this._onChanged);
+
+        this.initializeWatcher();
+    }
+
+    dispose(): void {
+        this._disposables.forEach((d) => d.dispose());
     }
 
     refreshState: ProgressReportStage;
@@ -354,9 +366,23 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return undefined;
     }
 
-    dispose(): void {
-        this._onProgress.dispose();
-        this._onChanged.dispose();
+    private initializeWatcher(): void {
+        const watcher = createPythonWatcher();
+        this._disposables.push(
+            watcher,
+            watcher.onDidGlobalEnvChanged((e) => this.pathEventHandler(e.type, e.uri)),
+        );
+    }
+
+    private pathEventHandler(e: FileChangeType, uri: Uri): void {}
+
+    private workspaceEventHandler(e: FileChangeType, uri: string): void {
+        if (e === FileChangeType.Deleted) {
+            this._envs = this._envs.filter((item) => item.location !== uri);
+            this._onChanged.fire({ type: FileChangeType.Deleted, old: undefined, new: undefined });
+        } else {
+            this.triggerRefresh().ignoreErrors();
+        }
     }
 }
 
