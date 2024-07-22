@@ -10,6 +10,7 @@ import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 export interface PythonWorkspaceEnvEvent {
     type: FileChangeType;
     workspaceFolder: WorkspaceFolder;
+    executable: string;
 }
 
 export interface PythonGlobalEnvEvent {
@@ -94,7 +95,7 @@ class PythonWatcherImpl implements PythonWatcher {
     private fireWorkspaceEvent(type: FileChangeType, wf: WorkspaceFolder, uri: Uri) {
         const uriWorkspace = getWorkspaceFolder(uri);
         if (uriWorkspace && arePathsSame(uriWorkspace.uri.fsPath, wf.uri.fsPath)) {
-            this._onDidWorkspaceEnvChanged.fire({ type, workspaceFolder: wf });
+            this._onDidWorkspaceEnvChanged.fire({ type, workspaceFolder: wf, executable: uri.fsPath });
         }
     }
 
