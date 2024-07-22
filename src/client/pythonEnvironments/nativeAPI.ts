@@ -13,7 +13,12 @@ import {
     TriggerRefreshOptions,
 } from './base/locator';
 import { PythonEnvCollectionChangedEvent } from './base/watcher';
-import { isNativeEnvInfo, NativeEnvInfo, NativeEnvManagerInfo, NativePythonFinder } from './base/locators/common/nativePythonFinder';
+import {
+    isNativeEnvInfo,
+    NativeEnvInfo,
+    NativeEnvManagerInfo,
+    NativePythonFinder,
+} from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
@@ -22,9 +27,13 @@ import { traceError, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind } from './base/locators/common/nativePythonUtils';
-import { setCondaBinary, PythonWorkspaceEnvEvent } from './common/environmentManagers/conda';
-import { createPythonWatcher } from './base/locators/common/pythonWatcher';
+import { setCondaBinary } from './common/environmentManagers/conda';
 import { setPyEnvBinary } from './common/environmentManagers/pyenv';
+import {
+    createPythonWatcher,
+    PythonGlobalEnvEvent,
+    PythonWorkspaceEnvEvent,
+} from './base/locators/common/pythonWatcher';
 import { getWorkspaceFolders, onDidChangeWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 
 function makeExecutablePath(prefix?: string): string {
@@ -402,7 +411,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     private initializeWatcher(): void {
         const watcher = createPythonWatcher();
         this._disposables.push(
-            watcher.onDidGlobalEnvChanged((e) => this.pathEventHandler(e.type, e.uri)),
+            watcher.onDidGlobalEnvChanged((e) => this.pathEventHandler(e)),
             watcher.onDidWorkspaceEnvChanged(async (e) => {
                 await this.workspaceEventHandler(e);
             }),
@@ -416,16 +425,23 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         getWorkspaceFolders()?.forEach((wf) => watcher.watchWorkspace(wf));
     }
 
-    private pathEventHandler(e: FileChangeType, uri: Uri): void {}
+    private pathEventHandler(e: PythonGlobalEnvEvent): void {
+        if (e.type === FileChangeType.Created || e.type === FileChangeType.Changed) {
+            if (e.uri.fsPath.endsWith('environment.txt')) {
+            }
+        } else {
+            // handle removal
+        }
+    }
 
     private async workspaceEventHandler(e: PythonWorkspaceEnvEvent): Promise<void> {
-        if (e.type === FileChangeType.Created || e. === FileChangeType.Changed) {
-            const native = await this.finder.resolve(executable);
+        if (e.type === FileChangeType.Created || e.type === FileChangeType.Changed) {
+            const native = await this.finder.resolve(e.executable);
             if (native) {
                 this.addEnv(native);
             }
         } else {
-            this.removeEnv(executable);
+            this.removeEnv(e.executable);
         }
     }
 }
