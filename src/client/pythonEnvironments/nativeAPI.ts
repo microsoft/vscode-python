@@ -360,7 +360,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     }
 }
 
-export function createNativeEnvironmentsApi(finder: NativePythonFinder): IDiscoveryAPI {
+export function createNativeEnvironmentsApi(finder: NativePythonFinder): IDiscoveryAPI & Disposable {
     const native = new NativePythonEnvironments(finder);
     native.triggerRefresh().ignoreErrors();
     return native;
