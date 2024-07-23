@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Disposable, Event, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType, PythonVersion } from './base/info';
 import {
     GetRefreshEnvironmentsOptions,
@@ -26,7 +26,7 @@ import { cache } from '../common/utils/decorators';
 import { traceError, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
-import { categoryToKind } from './base/locators/common/nativePythonUtils';
+import { categoryToKind, NativePythonEnvironmentKind } from './base/locators/common/nativePythonUtils';
 import { setCondaBinary } from './common/environmentManagers/conda';
 import { setPyEnvBinary } from './common/environmentManagers/pyenv';
 import {
@@ -257,47 +257,13 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
 
         setImmediate(async () => {
             try {
+                const before = this._envs.map((env) => env.executable.filename);
                 for await (const native of this.finder.refresh()) {
-                    if (!isNativeEnvInfo(native) || !validEnv(native)) {
-                        // eslint-disable-next-line no-continue
-                        continue;
-                    }
-                    try {
-                        const envPath = native.executable ?? native.prefix;
-                        const version = native.version ? parseVersion(native.version) : undefined;
-
-                        if (categoryToKind(native.kind) === PythonEnvKind.Conda && !native.executable) {
-                            // This is a conda env without python, no point trying to resolve this.
-                            // There is nothing to resolve
-                            this.addEnv(native);
-                        } else if (
-                            envPath &&
-                            (!version || version.major < 0 || version.minor < 0 || version.micro < 0)
-                        ) {
-                            // We have a path, but no version info, try to resolve the environment.
-                            this.finder
-                                .resolve(envPath)
-                                .then((env) => {
-                                    if (env) {
-                                        this.addEnv(env);
-                                    }
-                                })
-                                .ignoreErrors();
-                        } else if (
-                            envPath &&
-                            version &&
-                            version.major >= 0 &&
-                            version.minor >= 0 &&
-                            version.micro >= 0
-                        ) {
-                            this.addEnv(native);
-                        } else {
-                            traceError(`Failed to process environment: ${JSON.stringify(native)}`);
-                        }
-                    } catch (err) {
-                        traceError(`Failed to process environment: ${err}`);
-                    }
+                    this.processNative(native);
                 }
+                const after = this._envs.map((env) => env.executable.filename);
+                const envsToRemove = before.filter((item) => !after.includes(item));
+                envsToRemove.forEach((item) => this.removeEnv(item));
                 this._refreshPromise?.resolve();
             } catch (error) {
                 this._refreshPromise?.reject(error);
@@ -310,6 +276,14 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         });
 
         return this._refreshPromise?.promise;
+    }
+
+    private processNative(native: NativeEnvInfo | NativeEnvManagerInfo): void {
+        if (isNativeEnvInfo(native)) {
+            this.processEnv(native);
+        } else {
+            this.processEnvManager(native);
+        }
     }
 
     private processEnv(native: NativeEnvInfo): void {
@@ -369,17 +343,16 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
 
     private addEnv(native: NativeEnvInfo): PythonEnvInfo | undefined {
         const info = toPythonEnvInfo(native);
-        if (!info) {
-            return;
-        }
-        const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
-        if (old) {
-            this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
-            this._envs.push(info);
-            this._onChanged.fire({ type: FileChangeType.Changed, old, new: info });
-        } else {
-            this._envs.push(info);
-            this._onChanged.fire({ type: FileChangeType.Created, new: info });
+        if (info) {
+            const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
+            if (old) {
+                this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
+                this._envs.push(info);
+                this._onChanged.fire({ type: FileChangeType.Changed, old, new: info });
+            } else {
+                this._envs.push(info);
+                this._onChanged.fire({ type: FileChangeType.Created, new: info });
+            }
         }
 
         return info;
@@ -425,12 +398,21 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         getWorkspaceFolders()?.forEach((wf) => watcher.watchWorkspace(wf));
     }
 
-    private pathEventHandler(e: PythonGlobalEnvEvent): void {
+    private async pathEventHandler(e: PythonGlobalEnvEvent): Promise<void> {
         if (e.type === FileChangeType.Created || e.type === FileChangeType.Changed) {
             if (e.uri.fsPath.endsWith('environment.txt')) {
+                const before = this._envs
+                    .filter((env) => env.kind === PythonEnvKind.Conda)
+                    .map((env) => env.executable.filename);
+                for await (const native of this.finder.refresh(NativePythonEnvironmentKind.Conda)) {
+                    this.processNative(native);
+                }
+                const after = this._envs
+                    .filter((env) => env.kind === PythonEnvKind.Conda)
+                    .map((env) => env.executable.filename);
+                const envsToRemove = before.filter((item) => !after.includes(item));
+                envsToRemove.forEach((item) => this.removeEnv(item));
             }
-        } else {
-            // handle removal
         }
     }
 
