@@ -20,6 +20,7 @@ import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis
 import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
 import { NativePythonEnvironmentKind } from './nativePythonUtils';
 import type { IExtensionContext } from '../../../../common/types';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 const untildify = require('untildify');
 
@@ -99,6 +100,12 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
     private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
 
     private readonly outputChannel = this._register(createLogOutputChannel('Python Locator', { log: true }));
+
+    private initialRefreshMetrics = {
+        timeToSpawn: 0,
+        timeToConfigure: 0,
+        timeToRefresh: 0,
+    };
 
     constructor(private readonly cacheDirectory?: Uri) {
         super();
@@ -199,7 +206,9 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
         const writable = new PassThrough();
         const disposables: Disposable[] = [];
         try {
+            const stopWatch = new StopWatch();
             const proc = ch.spawn(PYTHON_ENV_TOOLS_PATH, ['server'], { env: process.env });
+            this.initialRefreshMetrics.timeToSpawn = stopWatch.elapsedTime;
             proc.stdout.pipe(readable, { end: false });
             proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
             writable.pipe(proc.stdin, { end: false });
@@ -251,7 +260,9 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
                         this.outputChannel.trace(data.message);
                 }
             }),
-            connection.onNotification('telemetry', (data: NativePythonTelemetry) => sendNativeTelemetry(data)),
+            connection.onNotification('telemetry', (data: NativePythonTelemetry) =>
+                sendNativeTelemetry(data, this.initialRefreshMetrics),
+            ),
             connection.onClose(() => {
                 disposables.forEach((d) => d.dispose());
             }),
@@ -269,6 +280,7 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
         const discovered = disposable.add(new EventEmitter<NativeEnvInfo | NativeEnvManagerInfo>());
         const completed = createDeferred<void>();
         const pendingPromises: Promise<void>[] = [];
+        const stopWatch = new StopWatch();
 
         const notifyUponCompletion = () => {
             const initialCount = pendingPromises.length;
@@ -339,7 +351,10 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
             this.configure().then(() =>
                 this.connection
                     .sendRequest<{ duration: number }>('refresh', refreshOptions)
-                    .then(({ duration }) => this.outputChannel.info(`Refresh completed in ${duration}ms`))
+                    .then(({ duration }) => {
+                        this.outputChannel.info(`Refresh completed in ${duration}ms`);
+                        this.initialRefreshMetrics.timeToRefresh = stopWatch.elapsedTime;
+                    })
                     .catch((ex) => this.outputChannel.error('Refresh error', ex)),
             ),
         );
@@ -371,8 +386,10 @@ class NativePythonFinderImpl extends DisposableBase implements NativePythonFinde
             return;
         }
         try {
+            const stopWatch = new StopWatch();
             this.lastConfiguration = options;
             await this.connection.sendRequest('configure', options);
+            this.initialRefreshMetrics.timeToConfigure = stopWatch.elapsedTime;
         } catch (ex) {
             this.outputChannel.error('Refresh error', ex);
         }

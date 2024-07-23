@@ -81,7 +81,14 @@ export type RefreshPerformance = {
 
 let refreshTelemetrySent = false;
 
-export function sendNativeTelemetry(data: NativePythonTelemetry): void {
+export function sendNativeTelemetry(
+    data: NativePythonTelemetry,
+    initialRefreshMetrics: {
+        timeToSpawn: number;
+        timeToConfigure: number;
+        timeToRefresh: number;
+    },
+): void {
     switch (data.event) {
         case 'MissingCondaEnvironments': {
             sendTelemetryEvent(
@@ -124,6 +131,9 @@ export function sendNativeTelemetry(data: NativePythonTelemetry): void {
                 locatorVirtualEnvWrapper: data.data.refreshPerformance.locators.VirtualEnvWrapper || 0,
                 locatorWindowsRegistry: data.data.refreshPerformance.locators.WindowsRegistry || 0,
                 locatorWindowsStore: data.data.refreshPerformance.locators.WindowsStore || 0,
+                timeToSpawn: initialRefreshMetrics.timeToSpawn,
+                timeToConfigure: initialRefreshMetrics.timeToConfigure,
+                timeToRefresh: initialRefreshMetrics.timeToRefresh,
             });
             break;
         }
