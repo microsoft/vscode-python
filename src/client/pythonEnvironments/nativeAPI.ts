@@ -20,7 +20,7 @@ import {
     NativePythonFinder,
 } from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { Architecture } from '../common/utils/platform';
+import { Architecture, getUserHomeDir } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
 import { cache } from '../common/utils/decorators';
 import { traceError, traceLog, traceWarn } from '../logging';
@@ -397,6 +397,10 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         );
 
         getWorkspaceFolders()?.forEach((wf) => watcher.watchWorkspace(wf));
+        const home = getUserHomeDir();
+        if (home) {
+            watcher.watchPath(Uri.file(path.join(home, '.conda', 'environments.txt')));
+        }
     }
 
     private async pathEventHandler(e: PythonGlobalEnvEvent): Promise<void> {
