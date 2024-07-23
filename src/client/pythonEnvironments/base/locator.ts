@@ -134,7 +134,7 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
      */
     providerId?: string;
     /**
-     * If provided, results area limited to this env.
+     * If provided, results are limited to this env.
      */
     envPath?: string;
 };

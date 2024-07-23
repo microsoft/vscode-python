@@ -38,7 +38,7 @@ export interface PythonWatcher extends Disposable {
  * │   └── Scripts or bin
  * │       └── python or python.exe <--- This is what we are looking for.
  */
-const WORKSPACE_PATTERN = isWindows() ? '{,*/,*/Scripts/,*/scripts/}python.exe' : '{,*/,*/bin/}python';
+const WORKSPACE_PATTERN = isWindows() ? '**/python.exe' : '**/python';
 
 class PythonWatcherImpl implements PythonWatcher {
     private disposables: Disposable[] = [];

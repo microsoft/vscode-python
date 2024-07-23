@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Disposable, Event, EventEmitter, WorkspaceFoldersChangeEvent } from 'vscode';
+import { Disposable, Event, EventEmitter, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType, PythonVersion } from './base/info';
 import {
     GetRefreshEnvironmentsOptions,
@@ -165,7 +165,7 @@ function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
     return '';
 }
 
-function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
+function toPythonEnvInfo(nativeEnv: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
     if (!validEnv(nativeEnv)) {
         return undefined;
     }
@@ -203,6 +203,7 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
         detailedDisplayName: displayName,
         display: displayName,
         type: getEnvType(kind),
+        searchLocation,
     };
 }
 
@@ -341,8 +342,8 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return this._envs;
     }
 
-    private addEnv(native: NativeEnvInfo): PythonEnvInfo | undefined {
-        const info = toPythonEnvInfo(native);
+    private addEnv(native: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
+        const info = toPythonEnvInfo(native, searchLocation);
         if (info) {
             const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
             if (old) {
@@ -351,7 +352,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                 this._onChanged.fire({ type: FileChangeType.Changed, old, new: info });
             } else {
                 this._envs.push(info);
-                this._onChanged.fire({ type: FileChangeType.Created, new: info });
+                this._onChanged.fire({ type: FileChangeType.Created, new: info, searchLocation });
             }
         }
 
@@ -420,7 +421,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         if (e.type === FileChangeType.Created || e.type === FileChangeType.Changed) {
             const native = await this.finder.resolve(e.executable);
             if (native) {
-                this.addEnv(native);
+                this.addEnv(native, e.workspaceFolder.uri);
             }
         } else {
             this.removeEnv(e.executable);
