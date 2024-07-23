@@ -48,15 +48,16 @@ function toArch(a: string | undefined): Architecture {
     }
 }
 
-function getLocation(nativeEnv: NativeEnvInfo): string {
-    if (nativeEnv.prefix) {
-        return nativeEnv.prefix;
-    }
+function getLocation(nativeEnv: NativeEnvInfo, executable: string): string {
     if (nativeEnv.executable) {
         return nativeEnv.executable;
     }
-    // We should not get here: either prefix or executable should always be available
-    return '';
+
+    if (nativeEnv.prefix) {
+        return nativeEnv.prefix;
+    }
+
+    return executable;
 }
 
 function kindToShortString(kind: PythonEnvKind): string | undefined {
@@ -172,7 +173,7 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
     const executable = nativeEnv.executable ?? makeExecutablePath(nativeEnv.prefix);
     return {
         name,
-        location: getLocation(nativeEnv),
+        location: getLocation(nativeEnv, executable),
         kind,
         id: executable,
         executable: {
