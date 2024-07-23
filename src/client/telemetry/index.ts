@@ -1764,28 +1764,95 @@ export interface IEventNamePropertyMapping {
     [EventName.NATIVE_FINDER_PERF]: {
         /**
          * Total duration to find envs using native locator.
+         * This is the time from the perspective of the Native Locator.
+         * I.e. starting from the time the request to refresh was received until the end of the refresh.
          */
         duration: number;
+        /**
+         * Time taken by all locators to find the environments.
+         * I.e. time for Conda + Poetry + Pyenv, etc (note: all of them run in parallel).
+         */
         breakdownLocators?: number;
+        /**
+         * Time taken to find Python environments in the paths found in the PATH env variable.
+         */
         breakdownPath?: number;
+        /**
+         * Time taken to find Python environments in the global virtual env locations.
+         */
         breakdownGlobalVirtualEnvs?: number;
+        /**
+         * Time taken to find Python environments in the workspaces.
+         */
         breakdownWorkspaces?: number;
+        /**
+         * Time taken to find all global Conda environments.
+         */
         locatorConda?: number;
+        /**
+         * Time taken to find all Homebrew environments.
+         */
         locatorHomebrew?: number;
+        /**
+         * Time taken to find all global Python environments on Linux.
+         */
         locatorLinuxGlobalPython?: number;
+        /**
+         * Time taken to find all Python environments belonging to Mac Command Line Tools .
+         */
         locatorMacCmdLineTools?: number;
+        /**
+         * Time taken to find all Python environments belonging to Mac Python Org.
+         */
         locatorMacPythonOrg?: number;
+        /**
+         * Time taken to find all Python environments belonging to Mac XCode.
+         */
         locatorMacXCode?: number;
+        /**
+         * Time taken to find all Pipenv environments.
+         */
         locatorPipEnv?: number;
+        /**
+         * Time taken to find all Poetry environments.
+         */
         locatorPoetry?: number;
+        /**
+         * Time taken to find all Pyenv environments.
+         */
         locatorPyEnv?: number;
+        /**
+         * Time taken to find all Venv environments.
+         */
         locatorVenv?: number;
+        /**
+         * Time taken to find all VirtualEnv environments.
+         */
         locatorVirtualEnv?: number;
+        /**
+         * Time taken to find all VirtualEnvWrapper environments.
+         */
         locatorVirtualEnvWrapper?: number;
+        /**
+         * Time taken to find all Windows Registry environments.
+         */
         locatorWindowsRegistry?: number;
+        /**
+         * Time taken to find all Windows Store environments.
+         */
         locatorWindowsStore?: number;
+        /**
+         * Total time taken to spawn the Native Python finder process.
+         */
         timeToSpawn?: number;
+        /**
+         * Total time taken to configure the Native Python finder process.
+         */
         timeToConfigure?: number;
+        /**
+         * Total time taken to refresh the Environments (from perspective of Python extension).
+         * Time = total time taken to process the `refresh` request.
+         */
         timeToRefresh?: number;
     };
     /**
