@@ -258,10 +258,13 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         setImmediate(async () => {
             try {
                 const before = this._envs.map((env) => env.executable.filename);
+                const after: string[] = [];
                 for await (const native of this.finder.refresh()) {
-                    this.processNative(native);
+                    const exe = this.processNative(native);
+                    if (exe) {
+                        after.push(exe);
+                    }
                 }
-                const after = this._envs.map((env) => env.executable.filename);
                 const envsToRemove = before.filter((item) => !after.includes(item));
                 envsToRemove.forEach((item) => this.removeEnv(item));
                 this._refreshPromise?.resolve();
@@ -278,45 +281,48 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return this._refreshPromise?.promise;
     }
 
-    private processNative(native: NativeEnvInfo | NativeEnvManagerInfo): void {
+    private processNative(native: NativeEnvInfo | NativeEnvManagerInfo): string | undefined {
         if (isNativeEnvInfo(native)) {
-            this.processEnv(native);
-        } else {
-            this.processEnvManager(native);
+            return this.processEnv(native);
         }
+        this.processEnvManager(native);
+
+        return undefined;
     }
 
-    private processEnv(native: NativeEnvInfo): void {
+    private processEnv(native: NativeEnvInfo): string | undefined {
         if (!validEnv(native)) {
-            return;
+            return undefined;
         }
 
         try {
-            const envPath = native.executable ?? native.prefix;
             const version = native.version ? parseVersion(native.version) : undefined;
 
             if (categoryToKind(native.kind) === PythonEnvKind.Conda && !native.executable) {
                 // This is a conda env without python, no point trying to resolve this.
                 // There is nothing to resolve
-                this.addEnv(native);
-            } else if (envPath && (!version || version.major < 0 || version.minor < 0 || version.micro < 0)) {
+                return this.addEnv(native)?.executable.filename;
+            }
+            if (native.executable && (!version || version.major < 0 || version.minor < 0 || version.micro < 0)) {
                 // We have a path, but no version info, try to resolve the environment.
                 this.finder
-                    .resolve(envPath)
+                    .resolve(native.executable)
                     .then((env) => {
                         if (env) {
                             this.addEnv(env);
                         }
                     })
                     .ignoreErrors();
-            } else if (envPath && version && version.major >= 0 && version.minor >= 0 && version.micro >= 0) {
-                this.addEnv(native);
-            } else {
-                traceError(`Failed to process environment: ${JSON.stringify(native)}`);
+                return native.executable;
             }
+            if (native.executable && version && version.major >= 0 && version.minor >= 0 && version.micro >= 0) {
+                return this.addEnv(native)?.executable.filename;
+            }
+            traceError(`Failed to process environment: ${JSON.stringify(native)}`);
         } catch (err) {
             traceError(`Failed to process environment: ${err}`);
         }
+        return undefined;
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -348,7 +354,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
             if (old) {
                 this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
                 this._envs.push(info);
-                this._onChanged.fire({ type: FileChangeType.Changed, old, new: info });
+                this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
             } else {
                 this._envs.push(info);
                 this._onChanged.fire({ type: FileChangeType.Created, new: info, searchLocation });
