@@ -1737,7 +1737,7 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "native_finder_perf" : {
-        "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "totalDuration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "breakdownLocators" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "breakdownPath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "breakdownGlobalVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1767,7 +1767,7 @@ export interface IEventNamePropertyMapping {
          * This is the time from the perspective of the Native Locator.
          * I.e. starting from the time the request to refresh was received until the end of the refresh.
          */
-        duration: number;
+        totalDuration: number;
         /**
          * Time taken by all locators to find the environments.
          * I.e. time for Conda + Poetry + Pyenv, etc (note: all of them run in parallel).

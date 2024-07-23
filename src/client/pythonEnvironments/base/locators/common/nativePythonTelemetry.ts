@@ -112,7 +112,7 @@ export function sendNativeTelemetry(
             }
             refreshTelemetrySent = true;
             sendTelemetryEvent(EventName.NATIVE_FINDER_PERF, {
-                duration: data.data.refreshPerformance.total,
+                totalDuration: data.data.refreshPerformance.total,
                 breakdownGlobalVirtualEnvs: data.data.refreshPerformance.breakdown.GlobalVirtualEnvs,
                 breakdownLocators: data.data.refreshPerformance.breakdown.Locators,
                 breakdownPath: data.data.refreshPerformance.breakdown.Path,
