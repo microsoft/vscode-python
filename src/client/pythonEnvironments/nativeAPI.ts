@@ -57,6 +57,7 @@ function getLocation(nativeEnv: NativeEnvInfo, executable: string): string {
         return nativeEnv.prefix;
     }
 
+    // This is a path to a generated executable. Needed for backwards compatibility.
     return executable;
 }
 
