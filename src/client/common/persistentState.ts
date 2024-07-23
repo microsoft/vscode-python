@@ -19,6 +19,7 @@ import {
 } from './types';
 import { cache } from './utils/decorators';
 import { noop } from './utils/misc';
+import { clearCacheDirectory } from '../pythonEnvironments/base/locators/common/nativePythonFinder';
 
 let _workspaceState: Memento | undefined;
 const _workspaceKeys: string[] = [];
@@ -126,6 +127,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
         @inject(ICommandManager) private cmdManager?: ICommandManager,
+        @inject(IExtensionContext) private context: IExtensionContext,
     ) {}
 
     public async activate(): Promise<void> {
@@ -180,6 +182,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     }
 
     private async cleanAllPersistentStates(): Promise<void> {
+        const clearCacheDirPromise = clearCacheDirectory(this.context).catch();
         await Promise.all(
             this._globalKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createGlobalPersistentState(keyContent.key);
@@ -194,6 +197,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         );
         await this._globalKeysStorage.updateValue([]);
         await this._workspaceKeysStorage.updateValue([]);
+        await clearCacheDirPromise;
         this.cmdManager?.executeCommand('workbench.action.reloadWindow').then(noop);
     }
 }

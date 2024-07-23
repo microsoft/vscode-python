@@ -59,7 +59,7 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
     initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
 
     if (shouldUseNativeLocator()) {
-        const finder = getNativePythonFinder();
+        const finder = getNativePythonFinder(ext.context);
         ext.disposables.push(finder);
         const api = createNativeEnvironmentsApi(finder);
         ext.disposables.push(api);
@@ -153,6 +153,7 @@ async function createLocator(
         await createCollectionCache(ext),
         // This is shared.
         resolvingLocator,
+        ext.context,
     );
     return caching;
 }

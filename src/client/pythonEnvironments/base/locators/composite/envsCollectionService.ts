@@ -38,6 +38,7 @@ import { Conda, CONDAPATH_SETTING_KEY, isCondaEnvironment } from '../../../commo
 import { getConfiguration } from '../../../../common/vscodeApis/workspaceApis';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { categoryToKind } from '../common/nativePythonUtils';
+import type { IExtensionContext } from '../../../../common/types';
 
 /**
  * A service which maintains the collection of known environments.
@@ -57,7 +58,7 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
 
     private readonly progress = new EventEmitter<ProgressNotificationEvent>();
 
-    private nativeFinder = getNativePythonFinder();
+    private readonly nativeFinder: NativePythonFinder;
 
     public refreshState = ProgressReportStage.discoveryFinished;
 
@@ -70,8 +71,13 @@ export class EnvsCollectionService extends PythonEnvsWatcher<PythonEnvCollection
         return this.progressPromises.get(stage)?.promise;
     }
 
-    constructor(private readonly cache: IEnvsCollectionCache, private readonly locator: IResolvingLocator) {
+    constructor(
+        private readonly cache: IEnvsCollectionCache,
+        private readonly locator: IResolvingLocator,
+        context?: IExtensionContext,
+    ) {
         super();
+        this.nativeFinder = getNativePythonFinder(context);
         this.locator.onChanged((event) => {
             const query: PythonLocatorQuery | undefined = event.providerId
                 ? { providerId: event.providerId, envPath: event.envPath }
