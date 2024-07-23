@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { traceError } from '../logging';
@@ -127,7 +127,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
         @inject(ICommandManager) private cmdManager?: ICommandManager,
-        @inject(IExtensionContext) private context: IExtensionContext,
+        @inject(IExtensionContext) @optional() private context?: IExtensionContext,
     ) {}
 
     public async activate(): Promise<void> {
@@ -182,7 +182,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     }
 
     private async cleanAllPersistentStates(): Promise<void> {
-        const clearCacheDirPromise = clearCacheDirectory(this.context).catch();
+        const clearCacheDirPromise = this.context ? clearCacheDirectory(this.context).catch() : Promise.resolve();
         await Promise.all(
             this._globalKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createGlobalPersistentState(keyContent.key);
