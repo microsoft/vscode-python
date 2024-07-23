@@ -19,12 +19,17 @@ import { isWindows } from '../../client/common/platform/platformService';
 import { NativePythonEnvironmentKind } from '../../client/pythonEnvironments/base/locators/common/nativePythonUtils';
 import * as condaApi from '../../client/pythonEnvironments/common/environmentManagers/conda';
 import * as pyenvApi from '../../client/pythonEnvironments/common/environmentManagers/pyenv';
+import * as pw from '../../client/pythonEnvironments/base/locators/common/pythonWatcher';
+import * as ws from '../../client/common/vscodeApis/workspaceApis';
 
 suite('Native Python API', () => {
     let api: IDiscoveryAPI;
     let mockFinder: typemoq.IMock<NativePythonFinder>;
     let setCondaBinaryStub: sinon.SinonStub;
     let setPyEnvBinaryStub: sinon.SinonStub;
+    let createPythonWatcherStub: sinon.SinonStub;
+    let mockWatcher: typemoq.IMock<pw.PythonWatcher>;
+    let getWorkspaceFoldersStub: sinon.SinonStub;
 
     const basicEnv: NativeEnvInfo = {
         displayName: 'Basic Python',
@@ -131,11 +136,22 @@ suite('Native Python API', () => {
     };
 
     setup(() => {
-        mockFinder = typemoq.Mock.ofType<NativePythonFinder>();
-        api = nativeAPI.createNativeEnvironmentsApi(mockFinder.object);
-
         setCondaBinaryStub = sinon.stub(condaApi, 'setCondaBinary');
         setPyEnvBinaryStub = sinon.stub(pyenvApi, 'setPyEnvBinary');
+        getWorkspaceFoldersStub = sinon.stub(ws, 'getWorkspaceFolders');
+        getWorkspaceFoldersStub.returns([]);
+
+        createPythonWatcherStub = sinon.stub(pw, 'createPythonWatcher');
+        mockWatcher = typemoq.Mock.ofType<pw.PythonWatcher>();
+        createPythonWatcherStub.returns(mockWatcher.object);
+
+        mockWatcher.setup((w) => w.watchWorkspace(typemoq.It.isAny())).returns(() => undefined);
+        mockWatcher.setup((w) => w.watchPath(typemoq.It.isAny(), typemoq.It.isAny())).returns(() => undefined);
+        mockWatcher.setup((w) => w.unwatchWorkspace(typemoq.It.isAny())).returns(() => undefined);
+        mockWatcher.setup((w) => w.unwatchPath(typemoq.It.isAny())).returns(() => undefined);
+
+        mockFinder = typemoq.Mock.ofType<NativePythonFinder>();
+        api = nativeAPI.createNativeEnvironmentsApi(mockFinder.object);
     });
 
     teardown(() => {

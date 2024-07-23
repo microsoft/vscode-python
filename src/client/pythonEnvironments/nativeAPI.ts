@@ -165,7 +165,7 @@ function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
     return '';
 }
 
-function toPythonEnvInfo(nativeEnv: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
+function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
     if (!validEnv(nativeEnv)) {
         return undefined;
     }
@@ -203,7 +203,6 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo, searchLocation?: Uri): Python
         detailedDisplayName: displayName,
         display: displayName,
         type: getEnvType(kind),
-        searchLocation,
     };
 }
 
@@ -343,7 +342,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     }
 
     private addEnv(native: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
-        const info = toPythonEnvInfo(native, searchLocation);
+        const info = toPythonEnvInfo(native);
         if (info) {
             const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
             if (old) {
