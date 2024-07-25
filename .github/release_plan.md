@@ -8,18 +8,18 @@ Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commi
 
 |   Month   | Primary   | Secondary   |
 |:----------|:----------|:------------|
-✅ | ~~January~~   | ~~Eleanor~~   | ~~Karthik~~     |
-✅ | ~~February~~  | ~~Kartik~~    | ~~Anthony~~     |
-✅| ~~March~~     | ~~Karthik~~   | ~~Eleanor~~     |
-✅| ~~April~~     | ~~Paula~~     | ~~Eleanor~~      |
-| May       | Anthony   | Karthik     |
-| June      | Eleanor   | Paula       |
+| ~~January~~   | ~~Eleanor~~   | ~~Karthik~~     |
+| ~~February~~  | ~~Kartik~~    | ~~Anthony~~     |
+| ~~March~~     | ~~Karthik~~   | ~~Eleanor~~     |
+| ~~April~~     | ~~Paula~~     | ~~Eleanor~~      |
+| ~~May~~     | ~~Anthony~~     | ~~Karthik~~      |
+| ~~June~~     | ~~Karthik~~     | ~~Eleanor~~      |
 | July      | Anthony   | Karthik     |
 | August    | Paula     | Anthony      |
 | September | Anthony   | Eleanor     |
 | October   | Paula     | Karthik     |
 | November  | Eleanor    | Paula     |
-| December  | Karthik   | Anthony     |
+| December  | Eleanor   | Anthony     |
 
 Paula: 3 primary, 2 secondary
 Eleanor: 3 primary (2 left), 3 secondary (2 left)
