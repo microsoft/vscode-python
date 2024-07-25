@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+from __future__ import annotations
+
 import atexit
 import json
 import os
@@ -15,17 +17,19 @@ from typing import (
     Literal,
     Optional,
     TypedDict,
+    TYPE_CHECKING,
     Union,
 )
 
 import pytest
-from pluggy import Result
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import socket_manager  # noqa: E402
 
+if TYPE_CHECKING:
+    from pluggy import Result
 
 class TestData(TypedDict):
     """A general class that all test objects inherit from."""
