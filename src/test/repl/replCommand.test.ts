@@ -19,6 +19,7 @@ suite('REPL - register native repl command', () => {
     // @ts-ignore: TS6133
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let registerCommandSpy: sinon.SinonSpy; // Need this for getSendToNativeREPLSetting test #ignore unused variable error on this line // @ts-ignore: TS6133
+    let executeInTerminalStub: sinon.SinonStub;
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -30,7 +31,8 @@ suite('REPL - register native repl command', () => {
 
         getSendToNativeREPLSettingStub = sinon.stub(replUtils, 'getSendToNativeREPLSetting');
         getSendToNativeREPLSettingStub.returns(false);
-
+        executeInTerminalStub = sinon.stub(replUtils, 'executeInTerminal');
+        executeInTerminalStub.returns(Promise.resolve());
         registerCommandSpy = sinon.spy(commandManager.object, 'registerCommand');
     });
 
@@ -84,5 +86,35 @@ suite('REPL - register native repl command', () => {
         await commandHandler!();
 
         sinon.assert.calledOnce(getSendToNativeREPLSettingStub);
+    });
+
+    test('Ensure executeInTerminal is called when getSendToNativeREPLSetting returns false', async () => {
+        getSendToNativeREPLSettingStub.returns(false);
+
+        let commandHandler: undefined | (() => Promise<void>);
+        commandManager
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .setup((c) => c.registerCommand as any)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .returns(() => (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                if (command === Commands.Exec_In_REPL) {
+                    commandHandler = callback;
+                }
+                // eslint-disable-next-line no-void
+                return { dispose: () => void 0 };
+            });
+        replCommands.registerReplCommands(
+            [TypeMoq.Mock.ofType<Disposable>().object],
+            interpreterService.object,
+            executionHelper.object,
+            commandManager.object,
+        );
+
+        expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
+
+        await commandHandler!();
+
+        // Check to see if executeInTerminal was called
+        sinon.assert.calledOnce(executeInTerminalStub);
     });
 });
