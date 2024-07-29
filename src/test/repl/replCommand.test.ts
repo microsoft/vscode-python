@@ -11,7 +11,6 @@ import * as replUtils from '../../client/repl/replUtils';
 import * as nativeRepl from '../../client/repl/nativeRepl';
 import { Commands } from '../../client/common/constants';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-// import { executeInTerminal, getActiveInterpreter, getSendToNativeREPLSetting } from '../../client/repl/replUtils';
 
 suite('REPL - register native repl command', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -20,7 +19,7 @@ suite('REPL - register native repl command', () => {
     let getSendToNativeREPLSettingStub: sinon.SinonStub;
     // @ts-ignore: TS6133
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    let registerCommandSpy: sinon.SinonSpy; // Need this for getSendToNativeREPLSetting test #ignore unused variable error on this line // @ts-ignore: TS6133
+    let registerCommandSpy: sinon.SinonSpy;
     let executeInTerminalStub: sinon.SinonStub;
     let getNativeReplStub: sinon.SinonStub;
     setup(() => {
@@ -30,7 +29,6 @@ suite('REPL - register native repl command', () => {
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         executionHelper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
-        // Define the registerCommand method on the mock object
         commandManager
             .setup((cm) => cm.registerCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => TypeMoq.Mock.ofType<Disposable>().object);
