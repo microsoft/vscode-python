@@ -16,6 +16,7 @@ suite('REPL - register native repl command', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let executionHelper: TypeMoq.IMock<ICodeExecutionHelper>;
     let getSendToNativeREPLSettingStub: sinon.SinonStub;
+    // @ts-ignore: TS6133
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let registerCommandSpy: sinon.SinonSpy; // Need this for getSendToNativeREPLSetting test #ignore unused variable error on this line // @ts-ignore: TS6133
     setup(() => {
