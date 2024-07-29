@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as typemoq from 'typemoq';
+import { interfaces } from 'inversify';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { IServiceManager } from '../../client/ioc/types';
 import { TerminalAutoActivation } from '../../client/terminals/activation';
@@ -44,7 +45,7 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            typemoq.It.is((v) => args[0] === v),
+                            typemoq.It.is((v: interfaces.ServiceIdentifier<unknown>) => args[0] === v),
                             typemoq.It.is((value) => args[1] === value),
                         ),
                     )
@@ -53,7 +54,7 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            typemoq.It.is((v) => args[0] === v),
+                            typemoq.It.is((v: interfaces.ServiceIdentifier<unknown>) => args[0] === v),
                             typemoq.It.is((value) => args[1] === value),
 
                             typemoq.It.isValue((args[2] as unknown) as string),
@@ -64,9 +65,9 @@ suite('Terminal - Service Registry', () => {
         });
         services
             .setup((s) =>
-                s.addBinding(
-                    typemoq.It.is((v) => ITerminalEnvVarCollectionService === v),
-                    typemoq.It.is((value) => IExtensionActivationService === value),
+                s.addSingleton(
+                    typemoq.It.is((v: interfaces.ServiceIdentifier<unknown>) => v === IExtensionActivationService),
+                    typemoq.It.is((value) => value === (IExtensionActivationService as unknown)),
                 ),
             )
             .verifiable(typemoq.Times.once());

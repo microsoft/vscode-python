@@ -136,7 +136,7 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon
             .stub(fs.promises, 'readdir' as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-            .callsFake(async (filePath: fs.PathLike, options?: { withFileTypes?: boolean }) => {
+            .callsFake(async (filePath: unknown, options?: { withFileTypes?: boolean } | unknown) => {
                 if (typeof filePath !== 'string') {
                     throw new Error(`expected path to be string, got ${typeof path}`);
                 }
@@ -147,7 +147,7 @@ suite('Conda and its environments are located correctly', () => {
                 }
 
                 const names = Object.keys(dir);
-                if (!options?.withFileTypes) {
+                if (!(options as { withFileTypes?: boolean })?.withFileTypes) {
                     return names;
                 }
 
@@ -171,7 +171,7 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon
             .stub(fsapi, 'readFile' as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-            .callsFake(async (filePath: string | Buffer | number, encoding: string) => {
+            .callsFake(async (filePath: unknown, encoding: unknown) => {
                 if (typeof filePath !== 'string') {
                     throw new Error(`expected filePath to be string, got ${typeof filePath}`);
                 } else if (encoding !== 'utf8') {

@@ -83,6 +83,7 @@ export enum ModuleInstallFlags {
     updateDependencies = 2,
     reInstall = 4,
     installPipIfRequired = 8,
+    default = 0,
 }
 
 export type InstallOptions = {
