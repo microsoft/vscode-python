@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSessionOptions, TestRun } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSessionOptions, TestRun, DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -9,7 +9,7 @@ import { DebuggerTypeName, PythonDebuggerTypeName } from '../../debugger/constan
 import { IDebugConfigurationResolver } from '../../debugger/extension/configuration/types';
 import { DebugPurpose, LaunchRequestArguments } from '../../debugger/types';
 import { IServiceContainer } from '../../ioc/types';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { TestProvider } from '../types';
 import { ITestDebugLauncher, LaunchOptions } from './types';
 import { getConfigurationsForWorkspace } from '../../debugger/extension/configuration/launch.json/launchJsonReader';
@@ -35,17 +35,19 @@ export class DebugLauncher implements ITestDebugLauncher {
     public async launchDebugger(options: LaunchOptions, callback?: () => void, runInstance?: TestRun): Promise<void> {
         const deferred = createDeferred<void>();
         console.log('launch debugger', runInstance?.name);
+        let hasCallbackBeenCalled = false;
         if (options.token && options.token.isCancellationRequested) {
+            hasCallbackBeenCalled = true;
             return undefined;
             deferred.resolve();
             callback?.();
         }
-        let callbackCalled = false;
+
         options.token?.onCancellationRequested(() => {
             console.log('onCancellationRequested', runInstance?.name);
             deferred.resolve();
             callback?.();
-            callbackCalled = true;
+            hasCallbackBeenCalled = true;
         });
 
         const workspaceFolder = DebugLauncher.resolveWorkspaceFolder(options.cwd);
@@ -60,12 +62,21 @@ export class DebugLauncher implements ITestDebugLauncher {
             testRun: runInstance,
         };
 
-        debugManager.startDebugging(workspaceFolder, launchArgs, debugSessionOptions);
+        let activatedDebugSession: DebugSession | undefined;
+        debugManager.startDebugging(workspaceFolder, launchArgs, debugSessionOptions).then(() => {
+            traceVerbose(`Debug session started. runInstance: ${runInstance?.name}`);
+            // Save the debug session after it is started so we can check if it is the one that was terminated.
+            activatedDebugSession = debugManager.activeDebugSession;
+        });
 
-        debugManager.onDidTerminateDebugSession(() => {
-            console.log('onDidTerminateDebugSession :', runInstance?.name);
-            if (!callbackCalled) {
-                console.log('onDidTerminateDebugSession :', runInstance?.name, 'resolve');
+        debugManager.onDidTerminateDebugSession((session) => {
+            traceVerbose(`Debug session terminated. sessionId: ${session.id}, runInstance: ${runInstance?.name}`);
+            // Only resolve no callback has been made and the session is the one that was started.
+            if (
+                !hasCallbackBeenCalled &&
+                activatedDebugSession !== undefined &&
+                session.id === activatedDebugSession?.id
+            ) {
                 deferred.resolve();
                 callback?.();
             }
