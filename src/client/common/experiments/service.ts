@@ -85,6 +85,7 @@ export class ExperimentService implements IExperimentService {
         this.experimentationService = getExperimentationService(
             PVSC_EXTENSION_ID,
             this.appEnvironment.packageJson.version!,
+            // @ts-ignore - we're using a custom TargetPopulation enum
             targetPopulation,
             telemetryReporter,
             this.experiments.storage,
