@@ -24,9 +24,9 @@ suite('REPL - register native repl command', () => {
     let getNativeReplStub: sinon.SinonStub;
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService
-            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        // interpreterService
+        //     .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+        //     .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         executionHelper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager
@@ -42,9 +42,19 @@ suite('REPL - register native repl command', () => {
 
     teardown(() => {
         sinon.restore();
+        // disposables.forEach((disposable) => {
+        //     if (disposable) {
+        //         disposable.dispose();
+        //     }
+        // });
+
+        // disposables = [];
     });
 
     test('Ensure repl command is registered', async () => {
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         const disposableArray: Disposable[] = [disposable.object];
 
@@ -63,6 +73,9 @@ suite('REPL - register native repl command', () => {
     });
 
     test('Ensure getSendToNativeREPLSetting is called', async () => {
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         // const disposable = TypeMoq.Mock.ofType<Disposable>();
         // const disposableArray: Disposable[] = [disposable.object];
 
@@ -93,6 +106,9 @@ suite('REPL - register native repl command', () => {
     });
 
     test('Ensure executeInTerminal is called when getSendToNativeREPLSetting returns false', async () => {
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         getSendToNativeREPLSettingStub.returns(false);
 
         let commandHandler: undefined | (() => Promise<void>);
@@ -123,6 +139,9 @@ suite('REPL - register native repl command', () => {
     });
 
     test('Ensure we call getNativeREPL() when interpreter exist', async () => {
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         getSendToNativeREPLSettingStub.returns(true);
         getNativeReplStub = sinon.stub(nativeRepl, 'getNativeRepl');
 
@@ -149,5 +168,42 @@ suite('REPL - register native repl command', () => {
 
         await commandHandler!('uri');
         sinon.assert.calledOnce(getNativeReplStub);
+    });
+
+    test('Ensure we do not call getNativeREPL() when interpreter does not exist', async () => {
+        getNativeReplStub = sinon.stub(nativeRepl, 'getNativeRepl');
+        getSendToNativeREPLSettingStub.returns(true);
+
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+
+        let commandHandler: undefined | ((uri: string) => Promise<void>);
+        commandManager
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .setup((c) => c.registerCommand as any)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .returns(() => (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                if (command === Commands.Exec_In_REPL) {
+                    commandHandler = callback;
+                }
+                // eslint-disable-next-line no-void
+                return { dispose: () => void 0 };
+            });
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+
+        replCommands.registerReplCommands(
+            [TypeMoq.Mock.ofType<Disposable>().object],
+            interpreterService.object,
+            executionHelper.object,
+            commandManager.object,
+        );
+
+        expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
+
+        await commandHandler!('uri');
+        sinon.assert.notCalled(getNativeReplStub);
     });
 });
