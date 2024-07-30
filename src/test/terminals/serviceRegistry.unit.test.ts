@@ -65,9 +65,12 @@ suite('Terminal - Service Registry', () => {
         });
         services
             .setup((s) =>
-                s.addSingleton(
+                s.addBinding(
                     typemoq.It.is((v: interfaces.ServiceIdentifier<unknown>) => v === IExtensionActivationService),
-                    typemoq.It.is((value) => value === (IExtensionActivationService as unknown)),
+                    typemoq.It.is(
+                        (value: interfaces.ServiceIdentifier<unknown>) =>
+                            value === (IExtensionActivationService as unknown),
+                    ),
                 ),
             )
             .verifiable(typemoq.Times.once());
