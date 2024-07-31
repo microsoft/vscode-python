@@ -34,7 +34,6 @@ export class DebugLauncher implements ITestDebugLauncher {
 
     public async launchDebugger(options: LaunchOptions, callback?: () => void, runInstance?: TestRun): Promise<void> {
         const deferred = createDeferred<void>();
-        console.log('launch debugger', runInstance?.name);
         let hasCallbackBeenCalled = false;
         if (options.token && options.token.isCancellationRequested) {
             hasCallbackBeenCalled = true;
@@ -44,7 +43,6 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
 
         options.token?.onCancellationRequested(() => {
-            console.log('onCancellationRequested', runInstance?.name);
             deferred.resolve();
             callback?.();
             hasCallbackBeenCalled = true;
