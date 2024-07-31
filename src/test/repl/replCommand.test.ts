@@ -22,11 +22,10 @@ suite('REPL - register native repl command', () => {
     let registerCommandSpy: sinon.SinonSpy;
     let executeInTerminalStub: sinon.SinonStub;
     let getNativeReplStub: sinon.SinonStub;
+    let disposable: TypeMoq.IMock<Disposable>;
+    let disposableArray: Disposable[] = [];
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        // interpreterService
-        //     .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-        //     .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         executionHelper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         commandManager
@@ -38,25 +37,25 @@ suite('REPL - register native repl command', () => {
         executeInTerminalStub = sinon.stub(replUtils, 'executeInTerminal');
         executeInTerminalStub.returns(Promise.resolve());
         registerCommandSpy = sinon.spy(commandManager.object, 'registerCommand');
+        disposable = TypeMoq.Mock.ofType<Disposable>();
+        disposableArray = [disposable.object];
     });
 
     teardown(() => {
         sinon.restore();
-        // disposables.forEach((disposable) => {
-        //     if (disposable) {
-        //         disposable.dispose();
-        //     }
-        // });
+        disposableArray.forEach((d) => {
+            if (d) {
+                d.dispose();
+            }
+        });
 
-        // disposables = [];
+        disposableArray = [];
     });
 
     test('Ensure repl command is registered', async () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
-        const disposable = TypeMoq.Mock.ofType<Disposable>();
-        const disposableArray: Disposable[] = [disposable.object];
 
         await replCommands.registerReplCommands(
             disposableArray,
@@ -65,7 +64,6 @@ suite('REPL - register native repl command', () => {
             commandManager.object,
         );
 
-        // Check to see if the command was registered
         commandManager.verify(
             (c) => c.registerCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.atLeastOnce(),
@@ -76,8 +74,6 @@ suite('REPL - register native repl command', () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
-        // const disposable = TypeMoq.Mock.ofType<Disposable>();
-        // const disposableArray: Disposable[] = [disposable.object];
 
         let commandHandler: undefined | (() => Promise<void>);
         commandManager
@@ -92,7 +88,7 @@ suite('REPL - register native repl command', () => {
                 return { dispose: () => void 0 };
             });
         replCommands.registerReplCommands(
-            [TypeMoq.Mock.ofType<Disposable>().object],
+            disposableArray,
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
@@ -124,7 +120,7 @@ suite('REPL - register native repl command', () => {
                 return { dispose: () => void 0 };
             });
         replCommands.registerReplCommands(
-            [TypeMoq.Mock.ofType<Disposable>().object],
+            disposableArray,
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
@@ -134,7 +130,6 @@ suite('REPL - register native repl command', () => {
 
         await commandHandler!();
 
-        // Check to see if executeInTerminal was called
         sinon.assert.calledOnce(executeInTerminalStub);
     });
 
@@ -158,7 +153,7 @@ suite('REPL - register native repl command', () => {
                 return { dispose: () => void 0 };
             });
         replCommands.registerReplCommands(
-            [TypeMoq.Mock.ofType<Disposable>().object],
+            disposableArray,
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
@@ -195,7 +190,7 @@ suite('REPL - register native repl command', () => {
             .returns(() => Promise.resolve(undefined));
 
         replCommands.registerReplCommands(
-            [TypeMoq.Mock.ofType<Disposable>().object],
+            disposableArray,
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
