@@ -40,7 +40,9 @@ NOTE: the number of this release is in the issue title and can be substituted in
 
 -   [ ] checkout to `main` on your local machine and run `git fetch` to ensure your local is up to date with the remote repo.
 -   [ ] Create a new branch called  **`bump-release-[YYYY.minor]`**.
--   [ ] Ensure that the `release\latest` branch on `pet` is up to date with the latest changes from `main` (https://github.com/microsoft/python-environment-tools)
+-   [ ] Update `pet`:
+    -  [ ] Go to the [pet](https://github.com/microsoft/python-environment-tools) repo and check `main` and latest `release/*` branch. If there are new changes in `main` then create a branch called `release/YYYY.minor` (matching python extension release `major.minor`).
+    -  [ ] Update `build\azure-pipeline.stable.yml` to point to the latest `release/YYYY.minor` for `python-environment-tools`.
 -   [ ] Change the version in `package.json` to the next **even** number and switch the `-dev` to `-rc`. (🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` at this point which update the version number **only**)_. (🤖)
 -   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team.
