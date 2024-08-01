@@ -395,3 +395,11 @@
       "index_count" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
 */
+/**
+ * Telemetry event sent when LSP server crashes
+ */
+/* __GDPR__
+"language_server_crash" : {
+   "oom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" }
+}
+*/
