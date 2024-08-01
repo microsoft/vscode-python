@@ -128,28 +128,11 @@ suite('Unit Tests - Debug Launcher', () => {
 
         const deferred = createDeferred<void>();
 
-        // debugService
-        //     .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
-        //     .returns(
-        //         async (_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration): Promise<boolean> => {
-        //             await Promise.resolve(undefined as any);
-        //             // Add your logic here
-        //             deferred.resolve();
-        //             console.log('Debugging finished');
-        //             return true;
-        //         },
-        //     )
-        //     .verifiable(TypeMoq.Times.once());
         debugService
             .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
             .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
                 return Promise.resolve(undefined as any);
             });
-
-        // debugService.object.startDebugging(workspaceFolder, expected).then((result) => {
-        //     console.log('startDebugging has finished with result:', result);
-        //     // Add any additional logic you want to execute after startDebugging finishes
-        // });
 
         debugService
             .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
@@ -177,17 +160,6 @@ suite('Unit Tests - Debug Launcher', () => {
                 return undefined as any;
             })
             .verifiable(TypeMoq.Times.once());
-
-        // debugService
-        //     .setup((d) => d.onDidTerminateDebugSession(TypeMoq.It.isAny()))
-        //     .returns((callback) => {
-        //         return {
-        //             dispose: () => {
-        //                 callback(debugSessionInstance);
-        //             },
-        //         };
-        //     })
-        //     .verifiable(TypeMoq.Times.once());
     }
     function createWorkspaceFolder(folderPath: string): WorkspaceFolder {
         return {
