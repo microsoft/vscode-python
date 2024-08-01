@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import { Terminal as HeadlessTerminal } from '@xterm/headless';
 import { inject, injectable } from 'inversify';
 import {
     MarkdownString,
@@ -10,6 +11,8 @@ import {
     EnvironmentVariableScope,
     EnvironmentVariableMutatorOptions,
     ProgressLocation,
+    Terminal,
+    window,
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
@@ -41,7 +44,8 @@ import { IShellIntegrationService, ITerminalDeactivateService, ITerminalEnvVarCo
 import { ProgressService } from '../../common/application/progressService';
 
 @injectable()
-export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
+export class TerminalEnvVarCollectionService extends Disposable
+    implements IExtensionActivationService, ITerminalEnvVarCollectionService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
@@ -67,6 +71,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
 
     private separator: string;
 
+    private _shellIntegrationDisposableMap = this.register(new DisposableMap());
+
+    // problem: when extension is disposed, we want terminal env collection service to be disposed. When that is disposed, we want the listeners disposed as well
     constructor(
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
@@ -84,7 +91,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IEnvironmentVariablesProvider)
         private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
-        this.separator = platform.osType === OSType.Windows ? ';' : ':';
+        super();
+        this.this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
     }
 
@@ -166,6 +174,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         this.progressService.hideProgress();
     }
 
+    private _trackedTerminals: Set<Terminal> = new Set();
+
     private async _applyCollectionImpl(resource: Resource, shell = this.applicationEnvironment.shell): Promise<void> {
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
@@ -181,6 +191,27 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             undefined,
             shell,
         );
+        /// ////////////////////////////////////////////////////////////////
+        // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+        // But first, try some dummy commands to see if I can get any sort of exit code.
+        // const myTerm = window.createTerminal();
+        // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+        //     if (terminal === myTerm) {
+        //         const execution = shellIntegration.executeCommand('echo "Hello world"');
+        //         //   const stream = execution.read();
+        //         //   for await(const data of stream) {
+        //         //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+        //         //   }
+        //         window.onDidEndTerminalShellExecution((event) => {
+        //             if (event.execution === execution) {
+        //                 console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here, flaky. -->  failing to get exit code again
+        //                 traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
+        //                 // const temp = event.exitCode;
+        //             }
+        //         });
+        //     }
+        // });
+        /// ///////////////////////////////////////////////////////////
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
         if (!env) {
@@ -202,7 +233,39 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 resource,
                 shell,
             );
+            // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+            // But first, try some dummy commands to see if I can get any sort of exit code.
+            const myTerm = window.createTerminal();
+
+            map.set(
+                terminal,
+                window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+                    // can fire multiple times for single terminal ---> ATM when shell integration status changes, when its activated or working directory changes.
+                    // listen to this once per terminal. Dispose once its done
+
+                    if (terminal === myTerm) {
+                        const dispoable = map.get(terminal);
+                        disposable.dispose();
+                        map.delete(terminal);
+                        const execution = shellIntegration.executeCommand('echo "Hello world"');
+
+                        //   const stream = execution.read();
+                        //   for await(const data of stream) {
+                        //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+                        //   }
+                        window.onDidEndTerminalShellExecution((event) => {
+                            if (event.execution === execution) {
+                                console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
+                                traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
+                                // const temp = event.exitCode;
+                            }
+                        });
+                    }
+                }),
+            );
         }
+
+        /// /////////////////////////
         const processEnv = normCaseKeys(this.processEnvVars);
 
         // PS1 in some cases is a shell variable (not an env variable) so "env" might not contain it, calculate it in that case.
