@@ -10,7 +10,7 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import * as fs from 'fs-extra';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
-import { CancellationTokenSource, DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
+import { CancellationTokenSource, DebugConfiguration, DebugSession, Uri, WorkspaceFolder } from 'vscode';
 import { IInvalidPythonPathInDebuggerService } from '../../../client/application/diagnostics/types';
 import { IApplicationShell, IDebugService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
@@ -30,6 +30,7 @@ import { TestProvider } from '../../../client/testing/types';
 import { isOs, OSType } from '../../common';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import * as util from '../../../client/testing/testController/common/utils';
+import { createDeferred } from '../../../client/common/utils/async';
 
 use(chaiAsPromised);
 
@@ -125,20 +126,68 @@ suite('Unit Tests - Debug Launcher', () => {
             .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(expected.env));
 
+        const deferred = createDeferred<void>();
+
+        // debugService
+        //     .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
+        //     .returns(
+        //         async (_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration): Promise<boolean> => {
+        //             await Promise.resolve(undefined as any);
+        //             // Add your logic here
+        //             deferred.resolve();
+        //             console.log('Debugging finished');
+        //             return true;
+        //         },
+        //     )
+        //     .verifiable(TypeMoq.Times.once());
         debugService
             .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
             .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
                 return Promise.resolve(undefined as any);
-            })
+            });
+
+        // debugService.object.startDebugging(workspaceFolder, expected).then((result) => {
+        //     console.log('startDebugging has finished with result:', result);
+        //     // Add any additional logic you want to execute after startDebugging finishes
+        // });
+
+        debugService
+            .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
+            .returns(() => {
+                deferred.resolve();
+                return undefined as any;
+            });
+
+        // create a fake debug session that the debug service will return on terminate
+        const fakeDebugSession = TypeMoq.Mock.ofType<DebugSession>();
+        fakeDebugSession.setup((ds) => ds.id).returns(() => 'id-val');
+        const debugSessionInstance = fakeDebugSession.object;
+
+        debugService
+            .setup((d) => d.activeDebugSession)
+            .returns(() => debugSessionInstance)
             .verifiable(TypeMoq.Times.once());
 
         debugService
             .setup((d) => d.onDidTerminateDebugSession(TypeMoq.It.isAny()))
             .returns((callback) => {
-                callback();
+                deferred.promise.then(() => {
+                    callback(debugSessionInstance);
+                });
                 return undefined as any;
             })
             .verifiable(TypeMoq.Times.once());
+
+        // debugService
+        //     .setup((d) => d.onDidTerminateDebugSession(TypeMoq.It.isAny()))
+        //     .returns((callback) => {
+        //         return {
+        //             dispose: () => {
+        //                 callback(debugSessionInstance);
+        //             },
+        //         };
+        //     })
+        //     .verifiable(TypeMoq.Times.once());
     }
     function createWorkspaceFolder(folderPath: string): WorkspaceFolder {
         return {

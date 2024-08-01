@@ -176,14 +176,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     traceError('Debug launcher is not defined');
                     throw new Error('Debug launcher is not defined');
                 }
-                await debugLauncher.launchDebugger(
-                    launchOptions,
-                    () => {
-                        serverDispose(); // this will resolve the deferredTillAllServerClose
-                        deferredTillEOT?.resolve();
-                    },
-                    runInstance,
-                );
+                await debugLauncher.launchDebugger(launchOptions, () => {
+                    serverDispose(); // this will resolve the deferredTillAllServerClose
+                    deferredTillEOT?.resolve();
+                });
             } else {
                 // This means it is running the test
                 traceInfo(`Running unittests for workspace ${cwd} with arguments: ${args}\r\n`);
