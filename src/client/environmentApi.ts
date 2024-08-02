@@ -9,7 +9,7 @@ import { Architecture } from './common/utils/platform';
 import { IServiceContainer } from './ioc/types';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironments/base/info';
 import { getEnvPath } from './pythonEnvironments/base/info/env';
-import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
+import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
 import { traceError, traceVerbose } from './logging';
 import { isParentPath, normCasePath } from './common/platform/fs-paths';
@@ -147,6 +147,11 @@ export function buildEnvironmentApi(
             .ignoreErrors();
     }
     disposables.push(
+        discoveryApi.onProgress((e) => {
+            if (e.stage === ProgressReportStage.discoveryFinished) {
+                knownCache = initKnownCache();
+            }
+        }),
         discoveryApi.onChanged((e) => {
             const env = e.new ?? e.old;
             if (!env || !filterUsingVSCodeContext(env)) {

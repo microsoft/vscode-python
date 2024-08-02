@@ -1168,10 +1168,22 @@ export interface IEventNamePropertyMapping {
         "nativeCanSpawnConda" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne"},
         "userProvidedEnvFound" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaRootPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundAsAnotherKind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundAsPrefixOfAnother" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundAsPrefixOfAnother" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundInTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInTxt" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundInInfoAfterFind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundInInfoAfterFindKind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixFoundAsAnotherKind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaRootPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaDefaultPrefixFoundInInfoNotInNative" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInInfoAfterFind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaDefaultPrefixFoundInInfoAfterFindKind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "condaDefaultPrefixInCondaExePath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
         "userProvidedCondaExe" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
+        "condaRootPrefixEnvsAfterFind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "condaDefaultPrefixEnvsAfterFind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "activeStateEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "condaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "customEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1309,11 +1321,28 @@ export interface IEventNamePropertyMapping {
          * Global conda envs locations are returned by `conda info` in the `envs_dirs` setting.
          */
         nativeCondaEnvsInEnvDir?: number;
+        condaRootPrefixEnvsAfterFind?: number;
+        condaDefaultPrefixEnvsAfterFind?: number;
         /**
          * A conda env found that matches the root_prefix returned by `conda info`
          * However a corresponding conda env not found by native locator.
          */
-        condaRootPrefixFoundInInfoNotInNative?: boolean;
+        condaDefaultPrefixFoundInInfoAfterFind?: boolean;
+        condaRootPrefixFoundInTxt?: boolean;
+        condaDefaultPrefixFoundInTxt?: boolean;
+        condaDefaultPrefixFoundInInfoAfterFindKind?: string;
+        condaRootPrefixFoundAsAnotherKind?: string;
+        condaRootPrefixFoundAsPrefixOfAnother?: string;
+        condaDefaultPrefixFoundAsAnotherKind?: string;
+        condaDefaultPrefixFoundAsPrefixOfAnother?: string;
+        /**
+         * Whether we were able to identify the conda root prefix in the conda exe path as a conda env using `find` in native finder API.
+         */
+        condaRootPrefixFoundInInfoAfterFind?: boolean;
+        /**
+         * Type of python env detected for the conda root prefix.
+         */
+        condaRootPrefixFoundInInfoAfterFindKind?: string;
         /**
          * The conda root prefix is found in the conda exe path.
          */
@@ -1709,6 +1738,7 @@ export interface IEventNamePropertyMapping {
     /* __GDPR__
        "native_finder_perf" : {
         "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "totalDuration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "breakdownLocators" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "breakdownPath" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "breakdownGlobalVirtualEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1726,38 +1756,111 @@ export interface IEventNamePropertyMapping {
         "locatorVirtualEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorVirtualEnvWrapper" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorWindowsRegistry" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
-        "locatorWindowsStore" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
+        "locatorWindowsStore" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "timeToSpawn" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "timeToConfigure" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "timeToRefresh" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" }
        }
      */
     [EventName.NATIVE_FINDER_PERF]: {
         /**
          * Total duration to find envs using native locator.
+         * This is the time from the perspective of the Native Locator.
+         * I.e. starting from the time the request to refresh was received until the end of the refresh.
          */
-        duration: number;
+        totalDuration: number;
+        /**
+         * Time taken by all locators to find the environments.
+         * I.e. time for Conda + Poetry + Pyenv, etc (note: all of them run in parallel).
+         */
         breakdownLocators?: number;
+        /**
+         * Time taken to find Python environments in the paths found in the PATH env variable.
+         */
         breakdownPath?: number;
+        /**
+         * Time taken to find Python environments in the global virtual env locations.
+         */
         breakdownGlobalVirtualEnvs?: number;
+        /**
+         * Time taken to find Python environments in the workspaces.
+         */
         breakdownWorkspaces?: number;
+        /**
+         * Time taken to find all global Conda environments.
+         */
         locatorConda?: number;
+        /**
+         * Time taken to find all Homebrew environments.
+         */
         locatorHomebrew?: number;
+        /**
+         * Time taken to find all global Python environments on Linux.
+         */
         locatorLinuxGlobalPython?: number;
+        /**
+         * Time taken to find all Python environments belonging to Mac Command Line Tools .
+         */
         locatorMacCmdLineTools?: number;
+        /**
+         * Time taken to find all Python environments belonging to Mac Python Org.
+         */
         locatorMacPythonOrg?: number;
+        /**
+         * Time taken to find all Python environments belonging to Mac XCode.
+         */
         locatorMacXCode?: number;
+        /**
+         * Time taken to find all Pipenv environments.
+         */
         locatorPipEnv?: number;
+        /**
+         * Time taken to find all Poetry environments.
+         */
         locatorPoetry?: number;
+        /**
+         * Time taken to find all Pyenv environments.
+         */
         locatorPyEnv?: number;
+        /**
+         * Time taken to find all Venv environments.
+         */
         locatorVenv?: number;
+        /**
+         * Time taken to find all VirtualEnv environments.
+         */
         locatorVirtualEnv?: number;
+        /**
+         * Time taken to find all VirtualEnvWrapper environments.
+         */
         locatorVirtualEnvWrapper?: number;
+        /**
+         * Time taken to find all Windows Registry environments.
+         */
         locatorWindowsRegistry?: number;
+        /**
+         * Time taken to find all Windows Store environments.
+         */
         locatorWindowsStore?: number;
+        /**
+         * Total time taken to spawn the Native Python finder process.
+         */
+        timeToSpawn?: number;
+        /**
+         * Total time taken to configure the Native Python finder process.
+         */
+        timeToConfigure?: number;
+        /**
+         * Total time taken to refresh the Environments (from perspective of Python extension).
+         * Time = total time taken to process the `refresh` request.
+         */
+        timeToRefresh?: number;
     };
     /**
      * Telemetry event sent when discovery of all python environments using the native locator(virtualenv, conda, pipenv etc.) finishes.
      */
     /* __GDPR__
-       "python_interpreter_discovery_native" : {
+       "python_interpreter_discovery_invalid_native" : {
             "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
             "invalidVersionsCondaEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
             "invalidVersionsCustomEnvs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },

@@ -28,12 +28,12 @@ import { assertEnvEqual, assertEnvsEqual, createFile, deleteFile } from '../envT
 import { OSType, getOSType } from '../../../../common';
 import * as nativeFinder from '../../../../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
 
-class MockNativePythonFinder implements nativeFinder.NativeGlobalPythonFinder {
-    getCondaInfo(): Promise<nativeFinder.NativeCondaInfo> {
+class MockNativePythonFinder implements nativeFinder.NativePythonFinder {
+    find(_searchPath: string): Promise<nativeFinder.NativeEnvInfo[]> {
         throw new Error('Method not implemented.');
     }
 
-    categoryToKind(_category: string): PythonEnvKind {
+    getCondaInfo(): Promise<nativeFinder.NativeCondaInfo> {
         throw new Error('Method not implemented.');
     }
 
@@ -56,7 +56,7 @@ class MockNativePythonFinder implements nativeFinder.NativeGlobalPythonFinder {
 }
 
 suite('Python envs locator - Environments Collection', async () => {
-    let createNativeGlobalPythonFinderStub: sinon.SinonStub;
+    let getNativePythonFinderStub: sinon.SinonStub;
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
 
@@ -168,8 +168,8 @@ suite('Python envs locator - Environments Collection', async () => {
     }
 
     setup(async () => {
-        createNativeGlobalPythonFinderStub = sinon.stub(nativeFinder, 'createNativeGlobalPythonFinder');
-        createNativeGlobalPythonFinderStub.returns(new MockNativePythonFinder());
+        getNativePythonFinderStub = sinon.stub(nativeFinder, 'getNativePythonFinder');
+        getNativePythonFinderStub.returns(new MockNativePythonFinder());
         storage = [];
         const parentLocator = new SimpleLocator(getLocatorEnvs());
         const cache = await createCollectionCache({

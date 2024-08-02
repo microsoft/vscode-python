@@ -253,6 +253,13 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
 
+      - name: Rust Tool Chain setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Native Binaries
+        run: nox --session native_build
+        shell: bash
+
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
@@ -511,6 +518,17 @@ jobs:
         with:
           requirements-file: './python_files/jedilsp_requirements/requirements.txt'
           options: '-t ./python_files/lib/jedilsp --implementation py'
+
+      - name: Install build pre-requisite
+        run: python -m pip install wheel nox
+        shell: bash
+
+      - name: Rust Tool Chain setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Native Binaries
+        run: nox --session native_build
+        shell: bash
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt

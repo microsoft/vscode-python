@@ -3,6 +3,7 @@
 
 import { Disposable, EventEmitter, Event, Uri } from 'vscode';
 import * as ch from 'child_process';
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { PassThrough } from 'stream';
@@ -16,8 +17,10 @@ import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
 import { createLogOutputChannel } from '../../../../common/vscodeApis/windowApis';
-import { PythonEnvKind } from '../../info';
 import { sendNativeTelemetry, NativePythonTelemetry } from './nativePythonTelemetry';
+import { NativePythonEnvironmentKind } from './nativePythonUtils';
+import type { IExtensionContext } from '../../../../common/types';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 const untildify = require('untildify');
 
@@ -29,7 +32,7 @@ export interface NativeEnvInfo {
     displayName?: string;
     name?: string;
     executable?: string;
-    kind: string;
+    kind?: NativePythonEnvironmentKind;
     version?: string;
     prefix?: string;
     manager?: NativeEnvManagerInfo;
@@ -47,6 +50,13 @@ export interface NativeEnvManagerInfo {
     version?: string;
 }
 
+export function isNativeEnvInfo(info: NativeEnvInfo | NativeEnvManagerInfo): info is NativeEnvInfo {
+    if ((info as NativeEnvManagerInfo).tool) {
+        return false;
+    }
+    return true;
+}
+
 export type NativeCondaInfo = {
     canSpawnConda: boolean;
     userProvidedEnvFound?: boolean;
@@ -57,10 +67,25 @@ export type NativeCondaInfo = {
     environmentsFromTxt: string[];
 };
 
-export interface NativeGlobalPythonFinder extends Disposable {
+export interface NativePythonFinder extends Disposable {
+    /**
+     * Refresh the list of python environments.
+     * Returns an async iterable that can be used to iterate over the list of python environments.
+     * Internally this will take all of the current workspace folders and search for python environments.
+     *
+     * If a Uri is provided, then it will search for python environments in that location (ignoring workspaces).
+     * Uri can be a file or a folder.
+     * If a NativePythonEnvironmentKind is provided, then it will search for python environments of that kind (ignoring workspaces).
+     */
+    refresh(options?: NativePythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo | NativeEnvManagerInfo>;
+    /**
+     * Will spawn the provided Python executable and return information about the environment.
+     * @param executable
+     */
     resolve(executable: string): Promise<NativeEnvInfo>;
-    refresh(): AsyncIterable<NativeEnvInfo>;
-    categoryToKind(category?: string): PythonEnvKind;
+    /**
+     * Used only for telemetry.
+     */
     getCondaInfo(): Promise<NativeCondaInfo>;
 }
 
@@ -69,14 +94,20 @@ interface NativeLog {
     message: string;
 }
 
-class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGlobalPythonFinder {
+class NativePythonFinderImpl extends DisposableBase implements NativePythonFinder {
     private readonly connection: rpc.MessageConnection;
 
     private firstRefreshResults: undefined | (() => AsyncGenerator<NativeEnvInfo, void, unknown>);
 
     private readonly outputChannel = this._register(createLogOutputChannel('Python Locator', { log: true }));
 
-    constructor() {
+    private initialRefreshMetrics = {
+        timeToSpawn: 0,
+        timeToConfigure: 0,
+        timeToRefresh: 0,
+    };
+
+    constructor(private readonly cacheDirectory?: Uri) {
         super();
         this.connection = this.start();
         void this.configure();
@@ -84,6 +115,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
     }
 
     public async resolve(executable: string): Promise<NativeEnvInfo> {
+        await this.configure();
         const environment = await this.connection.sendRequest<NativeEnvInfo>('resolve', {
             executable,
         });
@@ -92,47 +124,7 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         return environment;
     }
 
-    categoryToKind(category?: string): PythonEnvKind {
-        if (!category) {
-            return PythonEnvKind.Unknown;
-        }
-        switch (category.toLowerCase()) {
-            case 'conda':
-                return PythonEnvKind.Conda;
-            case 'system':
-            case 'homebrew':
-            case 'macpythonorg':
-            case 'maccommandlinetools':
-            case 'macxcode':
-            case 'windowsregistry':
-            case 'linuxglobal':
-                return PythonEnvKind.System;
-            case 'globalpaths':
-                return PythonEnvKind.OtherGlobal;
-            case 'pyenv':
-                return PythonEnvKind.Pyenv;
-            case 'poetry':
-                return PythonEnvKind.Poetry;
-            case 'pipenv':
-                return PythonEnvKind.Pipenv;
-            case 'pyenvvirtualenv':
-                return PythonEnvKind.VirtualEnv;
-            case 'venv':
-                return PythonEnvKind.Venv;
-            case 'virtualenv':
-                return PythonEnvKind.VirtualEnv;
-            case 'virtualenvwrapper':
-                return PythonEnvKind.VirtualEnvWrapper;
-            case 'windowsstore':
-                return PythonEnvKind.MicrosoftStore;
-            default: {
-                this.outputChannel.info(`Unknown Python Environment category '${category}' from Native Locator.`);
-                return PythonEnvKind.Unknown;
-            }
-        }
-    }
-
-    async *refresh(): AsyncIterable<NativeEnvInfo> {
+    async *refresh(options?: NativePythonEnvironmentKind | Uri[]): AsyncIterable<NativeEnvInfo> {
         if (this.firstRefreshResults) {
             // If this is the first time we are refreshing,
             // Then get the results from the first refresh.
@@ -141,12 +133,12 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             this.firstRefreshResults = undefined;
             yield* results;
         } else {
-            const result = this.doRefresh();
+            const result = this.doRefresh(options);
             let completed = false;
             void result.completed.finally(() => {
                 completed = true;
             });
-            const envs: NativeEnvInfo[] = [];
+            const envs: (NativeEnvInfo | NativeEnvManagerInfo)[] = [];
             let discovered = createDeferred();
             const disposable = result.discovered((data) => {
                 envs.push(data);
@@ -214,7 +206,9 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         const writable = new PassThrough();
         const disposables: Disposable[] = [];
         try {
+            const stopWatch = new StopWatch();
             const proc = ch.spawn(PYTHON_ENV_TOOLS_PATH, ['server'], { env: process.env });
+            this.initialRefreshMetrics.timeToSpawn = stopWatch.elapsedTime;
             proc.stdout.pipe(readable, { end: false });
             proc.stderr.on('data', (data) => this.outputChannel.error(data.toString()));
             writable.pipe(proc.stdin, { end: false });
@@ -266,7 +260,9 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                         this.outputChannel.trace(data.message);
                 }
             }),
-            connection.onNotification('telemetry', (data: NativePythonTelemetry) => sendNativeTelemetry(data)),
+            connection.onNotification('telemetry', (data: NativePythonTelemetry) =>
+                sendNativeTelemetry(data, this.initialRefreshMetrics),
+            ),
             connection.onClose(() => {
                 disposables.forEach((d) => d.dispose());
             }),
@@ -277,11 +273,14 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
         return connection;
     }
 
-    private doRefresh(): { completed: Promise<void>; discovered: Event<NativeEnvInfo> } {
+    private doRefresh(
+        options?: NativePythonEnvironmentKind | Uri[],
+    ): { completed: Promise<void>; discovered: Event<NativeEnvInfo | NativeEnvManagerInfo> } {
         const disposable = this._register(new DisposableStore());
-        const discovered = disposable.add(new EventEmitter<NativeEnvInfo>());
+        const discovered = disposable.add(new EventEmitter<NativeEnvInfo | NativeEnvManagerInfo>());
         const completed = createDeferred<void>();
         const pendingPromises: Promise<void>[] = [];
+        const stopWatch = new StopWatch();
 
         const notifyUponCompletion = () => {
             const initialCount = pendingPromises.length;
@@ -300,10 +299,11 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             notifyUponCompletion();
         };
 
+        // Assumption is server will ensure there's only one refresh at a time.
+        // Perhaps we should have a request Id or the like to map the results back to the `refresh` request.
         disposable.add(
             this.connection.onNotification('environment', (data: NativeEnvInfo) => {
                 this.outputChannel.info(`Discovered env: ${data.executable || data.prefix}`);
-                this.outputChannel.trace(`Discovered env info:\n ${JSON.stringify(data, undefined, 4)}`);
                 // We know that in the Python extension if either Version of Prefix is not provided by locator
                 // Then we end up resolving the information.
                 // Lets do that here,
@@ -320,7 +320,6 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                         })
                         .then((environment) => {
                             this.outputChannel.info(`Resolved ${environment.executable}`);
-                            this.outputChannel.trace(`Environment resolved:\n ${JSON.stringify(data, undefined, 4)}`);
                             discovered.fire(environment);
                         })
                         .catch((ex) => this.outputChannel.error(`Error in Resolving ${JSON.stringify(data)}`, ex));
@@ -330,12 +329,32 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
                 }
             }),
         );
+        disposable.add(
+            this.connection.onNotification('manager', (data: NativeEnvManagerInfo) => {
+                this.outputChannel.info(`Discovered manager: (${data.tool}) ${data.executable}`);
+                discovered.fire(data);
+            }),
+        );
 
+        type RefreshOptions = {
+            searchKind?: NativePythonEnvironmentKind;
+            searchPaths?: string[];
+        };
+
+        const refreshOptions: RefreshOptions = {};
+        if (options && Array.isArray(options) && options.length > 0) {
+            refreshOptions.searchPaths = options.map((item) => item.fsPath);
+        } else if (options && typeof options === 'string') {
+            refreshOptions.searchKind = options;
+        }
         trackPromiseAndNotifyOnCompletion(
             this.configure().then(() =>
                 this.connection
-                    .sendRequest<{ duration: number }>('refresh')
-                    .then(({ duration }) => this.outputChannel.info(`Refresh completed in ${duration}ms`))
+                    .sendRequest<{ duration: number }>('refresh', refreshOptions)
+                    .then(({ duration }) => {
+                        this.outputChannel.info(`Refresh completed in ${duration}ms`);
+                        this.initialRefreshMetrics.timeToRefresh = stopWatch.elapsedTime;
+                    })
                     .catch((ex) => this.outputChannel.error('Refresh error', ex)),
             ),
         );
@@ -360,14 +379,17 @@ class NativeGlobalPythonFinderImpl extends DisposableBase implements NativeGloba
             environmentDirectories: getCustomVirtualEnvDirs(),
             condaExecutable: getPythonSettingAndUntildify<string>(CONDAPATH_SETTING_KEY),
             poetryExecutable: getPythonSettingAndUntildify<string>('poetryPath'),
+            cacheDirectory: this.cacheDirectory?.fsPath,
         };
         // No need to send a configuration request, is there are no changes.
         if (JSON.stringify(options) === JSON.stringify(this.lastConfiguration || {})) {
             return;
         }
         try {
+            const stopWatch = new StopWatch();
             this.lastConfiguration = options;
             await this.connection.sendRequest('configure', options);
+            this.initialRefreshMetrics.timeToConfigure = stopWatch.elapsedTime;
         } catch (ex) {
             this.outputChannel.error('Refresh error', ex);
         }
@@ -387,6 +409,7 @@ type ConfigurationOptions = {
     environmentDirectories: string[];
     condaExecutable: string | undefined;
     poetryExecutable: string | undefined;
+    cacheDirectory?: string;
 };
 /**
  * Gets all custom virtual environment locations to look for environments.
@@ -413,6 +436,20 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
     return value;
 }
 
-export function createNativeGlobalPythonFinder(): NativeGlobalPythonFinder {
-    return new NativeGlobalPythonFinderImpl();
+let _finder: NativePythonFinder | undefined;
+export function getNativePythonFinder(context?: IExtensionContext): NativePythonFinder {
+    if (!_finder) {
+        const cacheDirectory = context ? getCacheDirectory(context) : undefined;
+        _finder = new NativePythonFinderImpl(cacheDirectory);
+    }
+    return _finder;
+}
+
+export function getCacheDirectory(context: IExtensionContext): Uri {
+    return Uri.joinPath(context.globalStorageUri, 'pythonLocator');
+}
+
+export async function clearCacheDirectory(context: IExtensionContext): Promise<void> {
+    const cacheDirectory = getCacheDirectory(context);
+    await fs.emptyDir(cacheDirectory.fsPath).catch(noop);
 }

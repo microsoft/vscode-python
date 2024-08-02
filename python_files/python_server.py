@@ -13,28 +13,38 @@ STDERR = sys.stderr
 USER_GLOBALS = {}
 
 
-def send_message(msg: str):
+def _send_message(msg: str):
     length_msg = len(msg)
     STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode())
     STDOUT.buffer.flush()
 
 
+def send_message(**kwargs):
+    _send_message(json.dumps({"jsonrpc": "2.0", **kwargs}))
+
+
 def print_log(msg: str):
-    send_message(json.dumps({"jsonrpc": "2.0", "method": "log", "params": msg}))
+    send_message(method="log", params=msg)
 
 
-def send_response(response: str, response_id: int):
-    send_message(json.dumps({"jsonrpc": "2.0", "id": response_id, "result": response}))
+def send_response(
+    response: str,
+    response_id: int,
+    execution_status: bool = True,  # noqa: FBT001, FBT002
+):
+    send_message(
+        id=response_id,
+        result={"status": execution_status, "output": response},
+    )
 
 
 def send_request(params: Optional[Union[List, Dict]] = None):
     request_id = uuid.uuid4().hex
     if params is None:
-        send_message(json.dumps({"jsonrpc": "2.0", "id": request_id, "method": "input"}))
+        send_message(id=request_id, method="input")
     else:
-        send_message(
-            json.dumps({"jsonrpc": "2.0", "id": request_id, "method": "input", "params": params})
-        )
+        send_message(id=request_id, method="input", params=params)
+
     return request_id
 
 
@@ -105,13 +115,14 @@ def execute(request, user_globals):
         original_stdin = sys.stdin
         try:
             sys.stdin = str_input
-            exec_user_input(request["params"], user_globals)
+            execution_status = exec_user_input(request["params"], user_globals)
         finally:
             sys.stdin = original_stdin
-    send_response(str_output.get_value(), request["id"])
+
+    send_response(str_output.get_value(), request["id"], execution_status)
 
 
-def exec_user_input(user_input, user_globals):
+def exec_user_input(user_input, user_globals) -> bool:
     user_input = user_input[0] if isinstance(user_input, list) else user_input
 
     try:
@@ -119,10 +130,13 @@ def exec_user_input(user_input, user_globals):
         retval = callable_(user_input, user_globals)
         if retval is not None:
             print(retval)
+        return True
     except KeyboardInterrupt:
         print(traceback.format_exc())
+        return False
     except Exception:
         print(traceback.format_exc())
+        return False
 
 
 class CustomIO(io.TextIOWrapper):

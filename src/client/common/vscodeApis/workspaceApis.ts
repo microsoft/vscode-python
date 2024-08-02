@@ -59,3 +59,23 @@ export function onDidChangeTextDocument(handler: (e: vscode.TextDocumentChangeEv
 export function onDidChangeConfiguration(handler: (e: vscode.ConfigurationChangeEvent) => unknown): vscode.Disposable {
     return vscode.workspace.onDidChangeConfiguration(handler);
 }
+
+export function createFileSystemWatcher(
+    globPattern: vscode.GlobPattern,
+    ignoreCreateEvents?: boolean,
+    ignoreChangeEvents?: boolean,
+    ignoreDeleteEvents?: boolean,
+): vscode.FileSystemWatcher {
+    return vscode.workspace.createFileSystemWatcher(
+        globPattern,
+        ignoreCreateEvents,
+        ignoreChangeEvents,
+        ignoreDeleteEvents,
+    );
+}
+
+export function onDidChangeWorkspaceFolders(
+    handler: (e: vscode.WorkspaceFoldersChangeEvent) => unknown,
+): vscode.Disposable {
+    return vscode.workspace.onDidChangeWorkspaceFolders(handler);
+}

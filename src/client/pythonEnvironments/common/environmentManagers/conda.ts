@@ -615,3 +615,7 @@ export class Conda {
         return true;
     }
 }
+
+export function setCondaBinary(executable: string): void {
+    Conda.setConda(executable);
+}

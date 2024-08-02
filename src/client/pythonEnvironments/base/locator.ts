@@ -68,6 +68,7 @@ export interface IPythonEnvsIterator<I = PythonEnvInfo> extends IAsyncIterableIt
 }
 
 export enum ProgressReportStage {
+    idle = 'idle',
     discoveryStarted = 'discoveryStarted',
     allPathsDiscovered = 'allPathsDiscovered',
     discoveryFinished = 'discoveryFinished',
@@ -133,7 +134,7 @@ export type PythonLocatorQuery = BasicPythonLocatorQuery & {
      */
     providerId?: string;
     /**
-     * If provided, results area limited to this env.
+     * If provided, results are limited to this env.
      */
     envPath?: string;
 };
