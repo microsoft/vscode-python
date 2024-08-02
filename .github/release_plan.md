@@ -114,6 +114,7 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 -   [ ] Create a branch against  **`release/YYYY.minor`** called **`release-[YYYY.minor.point]`**.
 -   [ ] Bump the point version number in the `package.json` to the next `YYYY.minor.point`
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` only relating to the new version number)_ . (🤖)
+-   [ ] If Point Release is due to an issue in `pet`. Update `build\azure-pipeline.stable.yml` to point to the branch `release/YYYY.minor` for `python-environment-tools` with the fix or decided by the team.
 -   [ ] Create a PR from this branch against `release/YYYY.minor`
 -   [ ]  **Rebase** and merge this PR into the release branch
 -   [ ] Create a draft GitHub release for the release notes (🤖) ❄️
