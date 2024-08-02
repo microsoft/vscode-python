@@ -17,7 +17,7 @@ resources:
     - repository: python-environment-tools
       type: github
       name: microsoft/python-environment-tools
-      ref: release/latest
+      ref: release/2024.10
       endpoint: Monaco
 
 parameters:
