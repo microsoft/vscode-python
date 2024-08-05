@@ -84,14 +84,16 @@ export class NativeRepl implements Disposable {
      * Function that opens interactive repl, selects kernel, and send/execute code to the native repl.
      * @param code
      */
-    public async sendToNativeRepl(code: string): Promise<void> {
+    public async sendToNativeRepl(code?: string): Promise<void> {
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument);
         this.notebookDocument = notebookEditor.notebook;
 
         if (this.notebookDocument) {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
             await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
-            await executeNotebookCell(this.notebookDocument, code);
+            if (code) {
+                await executeNotebookCell(this.notebookDocument, code);
+            }
         }
     }
 }

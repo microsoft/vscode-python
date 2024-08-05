@@ -16,6 +16,35 @@ import {
 } from './replUtils';
 
 /**
+ * Register Start Native REPL command in the command palette
+ *
+ * @param disposables
+ * @param interpreterService
+ * @param commandManager
+ * @returns Promise<void>
+ */
+export async function registerStartNativeReplCommand(
+    disposables: Disposable[],
+    interpreterService: IInterpreterService,
+    commandManager: ICommandManager,
+): Promise<void> {
+    disposables.push(
+        commandManager.registerCommand(Commands.Start_Native_REPL, async (uri: Uri) => {
+            const interpreter = await getActiveInterpreter(uri, interpreterService);
+            if (interpreter) {
+                if (interpreter) {
+                    const nativeRepl = getNativeRepl(interpreter, disposables);
+                    const activeEditor = window.activeTextEditor;
+                    if (activeEditor) {
+                        await nativeRepl.sendToNativeRepl();
+                    }
+                }
+            }
+        }),
+    );
+}
+
+/**
  * Registers REPL command for shift+enter if sendToNativeREPL setting is enabled.
  * @param disposables
  * @param interpreterService
