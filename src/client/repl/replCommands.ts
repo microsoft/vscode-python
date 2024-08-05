@@ -34,10 +34,7 @@ export async function registerStartNativeReplCommand(
             if (interpreter) {
                 if (interpreter) {
                     const nativeRepl = getNativeRepl(interpreter, disposables);
-                    const activeEditor = window.activeTextEditor;
-                    if (activeEditor) {
-                        await nativeRepl.sendToNativeRepl();
-                    }
+                    await nativeRepl.sendToNativeRepl();
                 }
             }
         }),
