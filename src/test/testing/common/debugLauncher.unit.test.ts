@@ -131,14 +131,8 @@ suite('Unit Tests - Debug Launcher', () => {
         debugService
             .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
             .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
-                return Promise.resolve(undefined as any);
-            });
-
-        debugService
-            .setup((d) => d.onDidStartDebugSession(TypeMoq.It.isAny()))
-            .returns(() => {
                 deferred.resolve();
-                return undefined as any;
+                return Promise.resolve(undefined as any);
             });
 
         // create a fake debug session that the debug service will return on terminate

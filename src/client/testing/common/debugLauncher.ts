@@ -61,12 +61,6 @@ export class DebugLauncher implements ITestDebugLauncher {
             // Save the debug session after it is started so we can check if it is the one that was terminated.
             activatedDebugSession = debugManager.activeDebugSession;
         });
-
-        debugManager.onDidStartDebugSession(() => {
-            // duplicate of above for different scenarios
-            activatedDebugSession = debugManager.activeDebugSession;
-        });
-
         debugManager.onDidTerminateDebugSession((session) => {
             traceVerbose(`Debug session terminated. sessionId: ${session.id}`);
             // Only resolve no callback has been made and the session is the one that was started.
