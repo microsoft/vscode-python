@@ -41,8 +41,6 @@ extends:
     sourceRepositoriesToScan:
       include:
         - repository: python-environment-tools
-      exclude:
-        - repository: translations
 
     buildPlatforms:
       - name: Linux
