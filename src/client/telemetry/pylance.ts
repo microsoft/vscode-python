@@ -399,7 +399,7 @@
  * Telemetry event sent when LSP server crashes
  */
 /* __GDPR__
-"language_server_crash" : {
+"language_server.crash" : {
    "oom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" }
 }
 */
