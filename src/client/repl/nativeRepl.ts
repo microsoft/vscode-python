@@ -91,7 +91,7 @@ export class NativeRepl implements Disposable {
             } else {
                 // Show choices of workspaces for user to choose from.
                 const selection = (await showQuickPick(workspacesQuickPickItems, {
-                    placeHolder: 'Select a desired workspace to set for REPL',
+                    placeHolder: 'Select current working directory for new REPL',
                     matchOnDescription: true,
                     ignoreFocusOut: true,
                 })) as QuickPickItem;
