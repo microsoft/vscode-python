@@ -11,7 +11,7 @@ import {
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
-import { showQuickPickWithBack } from '../common/vscodeApis/windowApis';
+import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer, PythonServer } from './pythonServer';
@@ -90,7 +90,7 @@ export class NativeRepl implements Disposable {
                 this.cwd = workspacesQuickPickItems[0].description;
             } else {
                 // Show choices of workspaces for user to choose from.
-                const selection = (await showQuickPickWithBack(workspacesQuickPickItems, {
+                const selection = (await showQuickPick(workspacesQuickPickItems, {
                     placeHolder: 'Select a desired workspace to set for REPL',
                     matchOnDescription: true,
                     ignoreFocusOut: true,
