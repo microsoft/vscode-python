@@ -24,6 +24,8 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
+from django_runner import django_execution_runner  # noqa: E402
+
 from testing_tools import process_json_util, socket_manager  # noqa: E402
 from unittestadapter.pvsc_utils import (  # noqa: E402
     EOTPayloadDict,
@@ -321,16 +323,25 @@ if __name__ == "__main__":
         if raw_json and "params" in raw_json:
             test_ids_from_buffer = raw_json["params"]
             if test_ids_from_buffer:
-                # Perform test execution.
-                payload = run_tests(
-                    start_dir,
-                    test_ids_from_buffer,
-                    pattern,
-                    top_level_dir,
-                    verbosity,
-                    failfast,
-                    locals_,
-                )
+                # Check to see if we are running django tests.
+                manage_py_path = os.environ.get("MANAGE_PY_PATH")
+                print("DJANGO_TEST_ENABLED = ", manage_py_path)
+                if manage_py_path:
+                    # run django runner
+                    print("running django runner")
+                    django_execution_runner(start_dir, manage_py_path)
+                else:
+                    print("running unittest runner")
+                    # Perform test execution.
+                    payload = run_tests(
+                        start_dir,
+                        test_ids_from_buffer,
+                        pattern,
+                        top_level_dir,
+                        verbosity,
+                        failfast,
+                        locals_,
+                    )
         else:
             # No test ids received from buffer
             cwd = os.path.abspath(start_dir)  # noqa: PTH100

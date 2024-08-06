@@ -1,12 +1,24 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import subprocess
 import os
 import pathlib
 import sys
 import traceback
 import unittest
 from typing import List, Optional
+
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
+
+from django_runner import django_execution_runner  # noqa: E402
+
+
+print(sys.path)
+sys.path.append("/Users/eleanorboyd/vscode-python/.venv/lib/python3.10/site-packages")
+import debugpy
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -20,6 +32,9 @@ from unittestadapter.pvsc_utils import (  # noqa: E402
     parse_unittest_args,
     send_post_request,
 )
+
+debugpy.connect(5678)
+debugpy.breakpoint()
 
 
 def discover_tests(
@@ -118,6 +133,48 @@ if __name__ == "__main__":
         print(error_msg, file=sys.stderr)
         raise VSCodeUnittestError(error_msg)
 
+    # if django build discovery run command for this
+    # CustomTestRunner2
+    # manage_py_path = os.environ.get("MANAGE_PY_PATH")
+    # print("DJANGO_TEST_ENABLED = ", manage_py_path)
+    # payload = None
+    if True:
+        # # run django runner
+        # print("running django runner")
+        # custom_test_runner_dir = pathlib.Path(__file__).parent
+        # sys.path.insert(0, custom_test_runner_dir)
+        # subprocess.run(
+        #     [
+        #         sys.executable,
+        #         "manage.py",
+        #         "test",
+        #         "--testrunner",
+        #         "django_new.CustomTestRunner2",
+        #     ],
+        #     check=True,
+        # )
+        try:
+            custom_test_runner_dir = pathlib.Path(__file__).parent
+            sys.path.append(custom_test_runner_dir)
+            custom_test_runner = "django_test_runner.CustomTestRunner"
+
+            django_execution_runner(start_dir)
+
+            # Build command to run 'python manage.py test'.
+            python_executable = sys.executable
+            command = [
+                python_executable,
+                "manage.py",  # switch for manage.py path
+                "test",
+                "--testrunner=${custom_test_runner}",
+                "--verbosity=2",
+            ]
+            subprocess.run(" ".join(command), shell=True, check=True)
+        except Exception as e:
+            error_msg = "Error configuring Django test runner: {e}"
+            print(error_msg, file=sys.stderr)
+            raise VSCodeUnittestError(error_msg)
+    # else:
     # Perform test discovery.
     payload = discover_tests(start_dir, pattern, top_level_dir)
     # Post this discovery payload.
