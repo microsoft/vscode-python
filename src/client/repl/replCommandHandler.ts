@@ -24,7 +24,7 @@ export async function openInteractiveREPL(
     notebookDocument: NotebookDocument | undefined,
 ): Promise<NotebookEditor> {
     let notebookEditor: NotebookEditor | undefined;
-    // TODO: Need to set proper working directory when user attempts  to open native REPL
+
     // Case where NotebookDocument (REPL document already exists in the tab)
     if (notebookDocument) {
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
