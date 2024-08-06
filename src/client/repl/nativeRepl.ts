@@ -72,7 +72,7 @@ export class NativeRepl implements Disposable {
      * which directory we should set in context of native REPL.
      */
     private async setReplDirectory(): Promise<void> {
-        // TODO: Figure out uri via workspaceFolder as uri parameter always
+        // Figure out uri via workspaceFolder as uri parameter always
         // seem to be undefined from parameter when trying to access from replCommands.ts
         const workspaces: readonly WorkspaceFolder[] | undefined = getWorkspaceFolders();
 
@@ -82,6 +82,9 @@ export class NativeRepl implements Disposable {
                 label: workspace.name,
                 description: workspace.uri.fsPath,
             }));
+
+            // TODO: Handle case where there is no workspace. (Empty workspace scenario)
+
             if (workspacesQuickPickItems.length === 1) {
                 this.cwd = workspacesQuickPickItems[0].description;
             } else {
