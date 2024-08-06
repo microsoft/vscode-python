@@ -89,12 +89,14 @@ class PythonServerImpl implements Disposable {
     }
 }
 
-export function createPythonServer(interpreter: string[]): PythonServer {
+export function createPythonServer(interpreter: string[], cwd?: string): PythonServer {
     if (serverInstance) {
         return serverInstance;
     }
 
-    const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH]);
+    const pythonServer = ch.spawn(interpreter[0], [...interpreter.slice(1), SERVER_PATH], {
+        cwd, // Launch with correct workspace directory
+    });
 
     pythonServer.stderr.on('data', (data) => {
         traceError(data.toString());

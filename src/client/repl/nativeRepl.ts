@@ -1,32 +1,51 @@
 // Native Repl class that holds instance of pythonServer and replController
 
-import { NotebookController, NotebookControllerAffinity, NotebookDocument, TextEditor, workspace } from 'vscode';
+import {
+    NotebookController,
+    NotebookControllerAffinity,
+    NotebookDocument,
+    QuickPickItem,
+    TextEditor,
+    workspace,
+    WorkspaceFolder,
+} from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
+import { showQuickPickWithBack } from '../common/vscodeApis/windowApis';
+import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer, PythonServer } from './pythonServer';
 import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from './replCommandHandler';
 import { createReplController } from './replController';
 
 export class NativeRepl implements Disposable {
-    private pythonServer: PythonServer;
+    // Adding ! since it will get initialized in create method, not the constructor.
+    private pythonServer!: PythonServer;
 
-    private interpreter: PythonEnvironment;
+    private cwd: string | undefined;
+
+    private interpreter!: PythonEnvironment;
 
     private disposables: Disposable[] = [];
 
-    private replController: NotebookController;
+    private replController!: NotebookController;
 
     private notebookDocument: NotebookDocument | undefined;
 
     // TODO: In the future, could also have attribute of URI for file specific REPL.
-    constructor(interpreter: PythonEnvironment) {
-        this.interpreter = interpreter;
-
-        this.pythonServer = createPythonServer([interpreter.path as string]);
-        this.replController = this.setReplController();
-
+    private constructor() {
         this.watchNotebookClosed();
+    }
+
+    // Static async factory method to handle asynchronous initialization
+    public static async create(interpreter: PythonEnvironment): Promise<NativeRepl> {
+        const instance = new NativeRepl();
+        instance.interpreter = interpreter;
+        await instance.setReplDirectory();
+        instance.pythonServer = createPythonServer([interpreter.path as string], instance.cwd);
+        instance.replController = instance.setReplController();
+
+        return instance;
     }
 
     dispose(): void {
@@ -48,12 +67,42 @@ export class NativeRepl implements Disposable {
     }
 
     /**
+     * Function that set up desired directory for REPL.
+     * If there is multiple workspaces, prompt the user to choose
+     * which directory we should set in context of native REPL.
+     */
+    private async setReplDirectory(): Promise<void> {
+        // TODO: Figure out uri via workspaceFolder as uri parameter always
+        // seem to be undefined from parameter when trying to access from replCommands.ts
+        const workspaces: readonly WorkspaceFolder[] | undefined = getWorkspaceFolders();
+
+        if (workspaces) {
+            // eslint-disable-next-line no-shadow
+            const workspacesQuickPickItems: QuickPickItem[] = workspaces.map((workspace) => ({
+                label: workspace.name,
+                description: workspace.uri.fsPath,
+            }));
+            if (workspacesQuickPickItems.length === 1) {
+                this.cwd = workspacesQuickPickItems[0].description;
+            } else {
+                // Show choices of workspaces for user to choose from.
+                const selection = (await showQuickPickWithBack(workspacesQuickPickItems, {
+                    placeHolder: 'Select a desired workspace to set for REPL',
+                    matchOnDescription: true,
+                    ignoreFocusOut: true,
+                })) as QuickPickItem;
+                this.cwd = selection?.description;
+            }
+        }
+    }
+
+    /**
      * Function that check if NotebookController for REPL exists, and returns it in Singleton manner.
      * @returns NotebookController
      */
     public setReplController(): NotebookController {
         if (!this.replController) {
-            return createReplController(this.interpreter.path, this.disposables);
+            return createReplController(this.interpreter!.path, this.disposables, this.cwd);
         }
         return this.replController;
     }
@@ -105,9 +154,9 @@ let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of UR
  * @param interpreter
  * @returns Native REPL instance
  */
-export function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): NativeRepl {
+export async function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): Promise<NativeRepl> {
     if (!nativeRepl) {
-        nativeRepl = new NativeRepl(interpreter);
+        nativeRepl = await NativeRepl.create(interpreter);
         disposables.push(nativeRepl);
     }
     return nativeRepl;

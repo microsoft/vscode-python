@@ -33,7 +33,7 @@ export async function registerStartNativeReplCommand(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
             if (interpreter) {
                 if (interpreter) {
-                    const nativeRepl = getNativeRepl(interpreter, disposables);
+                    const nativeRepl = await getNativeRepl(interpreter, disposables);
                     await nativeRepl.sendToNativeRepl();
                 }
             }
@@ -65,7 +65,7 @@ export async function registerReplCommands(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
-                const nativeRepl = getNativeRepl(interpreter, disposables);
+                const nativeRepl = await getNativeRepl(interpreter, disposables);
                 const activeEditor = window.activeTextEditor;
                 if (activeEditor) {
                     const code = await getSelectedTextToExecute(activeEditor);
@@ -102,7 +102,7 @@ export async function registerReplExecuteOnEnter(
                 return;
             }
 
-            const nativeRepl = getNativeRepl(interpreter, disposables);
+            const nativeRepl = await getNativeRepl(interpreter, disposables);
             const completeCode = await nativeRepl?.checkUserInputCompleteCode(window.activeTextEditor);
             const editor = window.activeTextEditor;
 

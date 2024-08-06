@@ -4,8 +4,9 @@ import { createPythonServer } from './pythonServer';
 export function createReplController(
     interpreterPath: string,
     disposables: vscode.Disposable[],
+    cwd?: string,
 ): vscode.NotebookController {
-    const server = createPythonServer([interpreterPath]);
+    const server = createPythonServer([interpreterPath], cwd);
     disposables.push(server);
 
     const controller = vscode.notebooks.createNotebookController('pythonREPL', 'interactive', 'Python REPL');
