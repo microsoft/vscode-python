@@ -13,7 +13,7 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from django_runner import django_execution_runner  # noqa: E402
+from django_runner import django_discovery_runner, django_execution_runner  # noqa: E402
 
 
 print(sys.path)
@@ -33,8 +33,8 @@ from unittestadapter.pvsc_utils import (  # noqa: E402
     send_post_request,
 )
 
-debugpy.connect(5678)
-debugpy.breakpoint()
+# debugpy.connect(5678)
+# debugpy.breakpoint()
 
 
 def discover_tests(
@@ -135,50 +135,21 @@ if __name__ == "__main__":
 
     # if django build discovery run command for this
     # CustomTestRunner2
-    # manage_py_path = os.environ.get("MANAGE_PY_PATH")
-    # print("DJANGO_TEST_ENABLED = ", manage_py_path)
-    # payload = None
+    manage_py_path = os.environ.get("MANAGE_PY_PATH")
+    print("DJANGO_TEST_ENABLED = ", manage_py_path)
     if True:
-        # # run django runner
-        # print("running django runner")
-        # custom_test_runner_dir = pathlib.Path(__file__).parent
-        # sys.path.insert(0, custom_test_runner_dir)
-        # subprocess.run(
-        #     [
-        #         sys.executable,
-        #         "manage.py",
-        #         "test",
-        #         "--testrunner",
-        #         "django_new.CustomTestRunner2",
-        #     ],
-        #     check=True,
-        # )
         try:
-            custom_test_runner_dir = pathlib.Path(__file__).parent
-            sys.path.append(custom_test_runner_dir)
-            custom_test_runner = "django_test_runner.CustomTestRunner"
-
-            django_execution_runner(start_dir)
-
-            # Build command to run 'python manage.py test'.
-            python_executable = sys.executable
-            command = [
-                python_executable,
-                "manage.py",  # switch for manage.py path
-                "test",
-                "--testrunner=${custom_test_runner}",
-                "--verbosity=2",
-            ]
-            subprocess.run(" ".join(command), shell=True, check=True)
+            # this will run and send directly from the runner
+            django_discovery_runner(start_dir, manage_py_path)
         except Exception as e:
-            error_msg = "Error configuring Django test runner: {e}"
+            error_msg = f"Error configuring Django test runner: {e}"
             print(error_msg, file=sys.stderr)
-            raise VSCodeUnittestError(error_msg)
-    # else:
-    # Perform test discovery.
-    payload = discover_tests(start_dir, pattern, top_level_dir)
-    # Post this discovery payload.
-    send_post_request(payload, test_run_pipe)
-    # Post EOT token.
-    eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
+            raise VSCodeUnittestError(error_msg)  # noqa: B904
+    else:
+        # Perform test discovery.
+        payload = discover_tests(start_dir, pattern, top_level_dir)
+        # Post this discovery payload.
+        send_post_request(payload, test_run_pipe)
+        # Post EOT token.
+        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
+        send_post_request(eot_payload, test_run_pipe)

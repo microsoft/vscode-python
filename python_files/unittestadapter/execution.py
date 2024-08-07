@@ -19,6 +19,17 @@ os.environ[path_var_name] = (
     sysconfig.get_paths()["scripts"] + os.pathsep + os.environ[path_var_name]
 )
 
+print(sys.path)
+sys.path.append("/Users/eleanorboyd/vscode-python/.venv/lib/python3.10/site-packages")
+import debugpy
+
+script_dir = pathlib.Path(__file__).parent.parent
+sys.path.append(os.fspath(script_dir))
+
+
+# debugpy.connect(5678)
+# debugpy.breakpoint()
+
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -326,10 +337,11 @@ if __name__ == "__main__":
                 # Check to see if we are running django tests.
                 manage_py_path = os.environ.get("MANAGE_PY_PATH")
                 print("DJANGO_TEST_ENABLED = ", manage_py_path)
+                manage_py_path = "/Users/eleanorboyd/testingFiles/django-polls/manage.py"
                 if manage_py_path:
                     # run django runner
                     print("running django runner")
-                    django_execution_runner(start_dir, manage_py_path)
+                    django_execution_runner(start_dir, manage_py_path, test_ids_from_buffer)
                 else:
                     print("running unittest runner")
                     # Perform test execution.
@@ -342,6 +354,8 @@ if __name__ == "__main__":
                         failfast,
                         locals_,
                     )
+                    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+                    send_post_request(eot_payload, test_run_pipe)
         else:
             # No test ids received from buffer
             cwd = os.path.abspath(start_dir)  # noqa: PTH100
@@ -353,9 +367,11 @@ if __name__ == "__main__":
                 "result": None,
             }
             send_post_request(payload, test_run_pipe)
+            eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+            send_post_request(eot_payload, test_run_pipe)
     except json.JSONDecodeError as exc:
         msg = "Error: Could not parse test ids from stdin"
         print(msg)
         raise VSCodeUnittestError(msg) from exc
-    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
+        eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+        send_post_request(eot_payload, test_run_pipe)
