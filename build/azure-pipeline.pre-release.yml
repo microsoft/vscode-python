@@ -18,13 +18,6 @@ resources:
       ref: kanadig/fix-signing
       endpoint: Monaco
 
-    - repository: python-environment-tools
-      type: github
-      name: microsoft/python-environment-tools
-      ref: main
-      endpoint: Monaco
-
-
 parameters:
   - name: publishExtension
     displayName: 🚀 Publish Extension
@@ -38,9 +31,6 @@ extends:
     ghCreateTag: false
     standardizedVersioning: true
     l10nSourcePaths: ./src/client
-    sourceRepositoriesToScan:
-      include:
-        - repository: python-environment-tools
 
     buildPlatforms:
       - name: Linux
@@ -74,10 +64,6 @@ extends:
         vsceTarget: win32-x64
 
     buildSteps:
-      - checkout: self
-        displayName: Checkout Python Extension
-        path: ./s
-
       - task: NodeTool@0
         inputs:
           versionSpec: '18.17.1'
@@ -102,9 +88,6 @@ extends:
       - script: nox --session install_python_libs
         displayName: Install Jedi, get-pip, etc
 
-        # - script: python ./build/update_ext_version.py --for-publishing
-        #   displayName: Update build number
-
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
 
@@ -114,9 +97,12 @@ extends:
       - script: npx gulp prePublishBundle
         displayName: Build
 
-      - checkout: python-environment-tools
+      - script: nox --session azure_pet_checkout
         displayName: Checkout python-environment-tools
-        path: ./s/python-env-tools
+        env:
+            PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)/python-env-tools
+            PYTHON_ENV_TOOLS_REF: main
+            PYTHON_ENV_TOOLS_TEMP: $(Agent.TempDirectory)
 
       - script: nox --session azure_pet_build_before
         displayName: Enable cargo config for azure
