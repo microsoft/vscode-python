@@ -68,14 +68,12 @@ def azure_pet_checkout(session: nox.Session):
     branch = os.getenv("PYTHON_ENV_TOOLS_REF", "main")
 
     # dest dir should be <vscode-python repo root>/python-env-tools
-    dest_dir = pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_DEST")).resolve()
-    if dest_dir.exists():
-        shutil.rmtree(os.fspath(dest_dir))
+    dest_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_DEST")) / "python-env-tools").resolve()
 
     # temp dir should be <agent temp dir>
-    temp_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_TEMP")) / str(uuid.uuid4())).resolve()
+    temp_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_TEMP")) / "python-env-tools").resolve()
     session.log(f"Cloning python-environment-tools to {temp_dir}")
-    temp_dir.mkdir(0o766, parents=True)
+    temp_dir.mkdir(0o766, parents=True, exist_ok=True)
 
     try:
         with session.cd(temp_dir):

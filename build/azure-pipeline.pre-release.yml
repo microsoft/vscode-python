@@ -101,7 +101,7 @@ extends:
       - script: nox --session azure_pet_checkout
         displayName: Checkout python-environment-tools
         env:
-            PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)/python-env-tools
+            PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)
             PYTHON_ENV_TOOLS_REF: main
             PYTHON_ENV_TOOLS_TEMP: $(Agent.TempDirectory)
 
