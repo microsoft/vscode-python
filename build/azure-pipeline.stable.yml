@@ -25,6 +25,7 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src/client
+    needsTools: true
 
     buildPlatforms:
       - name: Linux
