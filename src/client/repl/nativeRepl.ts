@@ -83,7 +83,6 @@ export class NativeRepl implements Disposable {
                 description: workspace.uri.fsPath,
             }));
 
-            // TODO: Handle case where there is no workspace.
             if (workspacesQuickPickItems.length === 0) {
                 this.cwd = process.cwd(); // Yields '/' on no workspace scenario.
             } else if (workspacesQuickPickItems.length === 1) {
