@@ -39,13 +39,13 @@ export class NativeRepl implements Disposable {
 
     // Static async factory method to handle asynchronous initialization
     public static async create(interpreter: PythonEnvironment): Promise<NativeRepl> {
-        const instance = new NativeRepl();
-        instance.interpreter = interpreter;
-        await instance.setReplDirectory();
-        instance.pythonServer = createPythonServer([interpreter.path as string], instance.cwd);
-        instance.replController = instance.setReplController();
+        const nativeRepl = new NativeRepl();
+        nativeRepl.interpreter = interpreter;
+        await nativeRepl.setReplDirectory();
+        nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
+        nativeRepl.replController = nativeRepl.setReplController();
 
-        return instance;
+        return nativeRepl;
     }
 
     dispose(): void {
