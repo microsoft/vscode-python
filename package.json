@@ -344,7 +344,7 @@
             {
                 "category": "Python",
                 "command": "python.startREPL",
-                "title": "%python.command.python.startREPL.title%"
+                "title": "%python.command.python.startTerminalREPL.title%"
             },
             {
                 "category": "Python",
@@ -1333,7 +1333,7 @@
                 {
                     "category": "Python",
                     "command": "python.startREPL",
-                    "title": "%python.command.python.startREPL.title%",
+                    "title": "%python.command.python.startTerminalREPL.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {

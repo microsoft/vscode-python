@@ -1,5 +1,5 @@
 {
-    "python.command.python.startREPL.title": "Start Terminal REPL",
+    "python.command.python.startTerminalREPL.title": "Start Terminal REPL",
     "python.command.python.startNativeREPL.title": "Start Native Python REPL",
     "python.command.python.createEnvironment.title": "Create Environment...",
     "python.command.python.createNewFile.title": "New Python File",
