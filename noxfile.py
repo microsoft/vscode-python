@@ -75,6 +75,7 @@ def azure_pet_checkout(session: nox.Session):
     # temp dir should be <agent temp dir>
     temp_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_TEMP")) / str(uuid.uuid4())).resolve()
     session.log(f"Cloning python-environment-tools to {temp_dir}")
+    temp_dir.mkdir(0o766, parents=True)
 
     try:
         with session.cd(temp_dir):
