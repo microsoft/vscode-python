@@ -14,6 +14,7 @@ import {
     insertNewLineToREPLInput,
     isMultiLineText,
 } from './replUtils';
+import { registerCommand } from '../common/vscodeApis/commandApis';
 
 /**
  * Register Start Native REPL command in the command palette
@@ -26,10 +27,9 @@ import {
 export async function registerStartNativeReplCommand(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
-    commandManager: ICommandManager,
 ): Promise<void> {
     disposables.push(
-        commandManager.registerCommand(Commands.Start_Native_REPL, async (uri: Uri) => {
+        registerCommand(Commands.Start_Native_REPL, async (uri: Uri) => {
             const interpreter = await getActiveInterpreter(uri, interpreterService);
             if (interpreter) {
                 if (interpreter) {
