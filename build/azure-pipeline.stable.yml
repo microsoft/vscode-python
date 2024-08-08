@@ -14,12 +14,6 @@ resources:
       ref: main
       endpoint: Monaco
 
-    - repository: python-environment-tools
-      type: github
-      name: microsoft/python-environment-tools
-      ref: release/latest
-      endpoint: Monaco
-
 parameters:
   - name: publishExtension
     displayName: 🚀 Publish Extension
@@ -31,11 +25,7 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src/client
-    sourceRepositoriesToScan:
-      include:
-        - repository: python-environment-tools
-      exclude:
-        - repository: translations
+    needsTools: true
 
     buildPlatforms:
       - name: Linux
@@ -69,10 +59,6 @@ extends:
         vsceTarget: win32-x64
 
     buildSteps:
-      - checkout: self
-        displayName: Checkout Python Extension
-        path: ./s
-
       - task: NodeTool@0
         inputs:
           versionSpec: '18.17.1'
@@ -106,9 +92,12 @@ extends:
       - script: npx gulp prePublishBundle
         displayName: Build
 
-      - checkout: python-environment-tools
+      - script: nox --session azure_pet_checkout
         displayName: Checkout python-environment-tools
-        path: ./s/python-env-tools
+        env:
+            PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)
+            PYTHON_ENV_TOOLS_REF: release/2024.12
+            PYTHON_ENV_TOOLS_TEMP: $(Agent.TempDirectory)
 
       - script: nox --session azure_pet_build_before
         displayName: Enable cargo config for azure
