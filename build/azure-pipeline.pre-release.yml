@@ -15,7 +15,7 @@ resources:
     - repository: templates
       type: github
       name: microsoft/vscode-engineering
-      ref: kanadig/fix-signing
+      ref: main
       endpoint: Monaco
 
 parameters:
