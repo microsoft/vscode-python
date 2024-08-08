@@ -5,7 +5,6 @@ import os
 import pathlib
 import subprocess
 import sys
-import traceback
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))

@@ -8,11 +8,7 @@ import traceback
 import unittest
 from typing import List, Optional
 
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
-
-from django_handler import django_discovery_runner  # noqa: E402
+from django_handler import django_discovery_runner
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -75,6 +71,10 @@ def discover_tests(
     try:
         loader = unittest.TestLoader()
         suite = loader.discover(start_dir, pattern, top_level_dir)
+
+        # If the top level directory is not provided, then use the start directory.
+        if top_level_dir is None:
+            top_level_dir = start_dir
 
         # Get abspath of top level directory for build_test_tree.
         top_level_dir = os.path.abspath(top_level_dir)  # noqa: PTH100

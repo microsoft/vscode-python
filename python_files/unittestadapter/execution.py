@@ -318,30 +318,28 @@ if __name__ == "__main__":
         raise VSCodeUnittestError(msg) from e
 
     try:
-        if raw_json and "params" in raw_json:
+        if raw_json and "params" in raw_json and raw_json["params"]:
             test_ids_from_buffer = raw_json["params"]
-            if test_ids_from_buffer:
-                # Check to see if we are running django tests.
-                manage_py_path = os.environ.get("MANAGE_PY_PATH")
-                if manage_py_path:
-                    # run django runner
-                    args = argv[index + 1 :] or []
-                    django_execution_runner(manage_py_path, test_ids_from_buffer, args)
-                    # the django run subprocesses sends the eot payload.
-                else:
-                    print("running unittest runner")
-                    # Perform test execution.
-                    payload = run_tests(
-                        start_dir,
-                        test_ids_from_buffer,
-                        pattern,
-                        top_level_dir,
-                        verbosity,
-                        failfast,
-                        locals_,
-                    )
-                    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-                    send_post_request(eot_payload, test_run_pipe)
+            # Check to see if we are running django tests.
+            manage_py_path = os.environ.get("MANAGE_PY_PATH")
+            if manage_py_path:
+                # run django runner
+                args = argv[index + 1 :] or []
+                django_execution_runner(manage_py_path, test_ids_from_buffer, args)
+                # the django run subprocesses sends the eot payload.
+            else:
+                # Perform test execution.
+                payload = run_tests(
+                    start_dir,
+                    test_ids_from_buffer,
+                    pattern,
+                    top_level_dir,
+                    verbosity,
+                    failfast,
+                    locals_,
+                )
+                eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+                send_post_request(eot_payload, test_run_pipe)
         else:
             # No test ids received from buffer
             cwd = os.path.abspath(start_dir)  # noqa: PTH100

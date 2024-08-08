@@ -6,11 +6,9 @@ import os
 import pathlib
 import sys
 
-print("PATH!", sys.path)
-from django.test.runner import DiscoverRunner
-
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
+
 from typing import TYPE_CHECKING  # noqa: E402
 
 from execution import UnittestTestResult  # noqa: E402
@@ -21,6 +19,14 @@ from pvsc_utils import (  # noqa: E402
     build_test_tree,
     send_post_request,
 )
+
+try:
+    from django.test.runner import DiscoverRunner
+except ImportError:
+    raise ImportError(  # noqa: B904
+        "Django module not found. Please only use the environment variable MANAGE_PY_PATH if you want to use Django."
+    )
+
 
 if TYPE_CHECKING:
     import unittest
