@@ -19,23 +19,10 @@ os.environ[path_var_name] = (
     sysconfig.get_paths()["scripts"] + os.pathsep + os.environ[path_var_name]
 )
 
-print(sys.path)
-sys.path.append("/Users/eleanorboyd/vscode-python/.venv/lib/python3.10/site-packages")
-import debugpy
-
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
-
-# debugpy.connect(5678)
-# debugpy.breakpoint()
-
-
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
-
-from django_runner import django_execution_runner  # noqa: E402
+from django_handler import django_execution_runner  # noqa: E402
 
 from testing_tools import process_json_util, socket_manager  # noqa: E402
 from unittestadapter.pvsc_utils import (  # noqa: E402
@@ -336,12 +323,11 @@ if __name__ == "__main__":
             if test_ids_from_buffer:
                 # Check to see if we are running django tests.
                 manage_py_path = os.environ.get("MANAGE_PY_PATH")
-                print("DJANGO_TEST_ENABLED = ", manage_py_path)
-                manage_py_path = "/Users/eleanorboyd/testingFiles/django-polls/manage.py"
                 if manage_py_path:
                     # run django runner
-                    print("running django runner")
-                    django_execution_runner(start_dir, manage_py_path, test_ids_from_buffer)
+                    args = argv[index + 1 :] or []
+                    django_execution_runner(manage_py_path, test_ids_from_buffer, args)
+                    # the django run subprocesses sends the eot payload.
                 else:
                     print("running unittest runner")
                     # Perform test execution.
@@ -373,5 +359,3 @@ if __name__ == "__main__":
         msg = "Error: Could not parse test ids from stdin"
         print(msg)
         raise VSCodeUnittestError(msg) from exc
-        eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-        send_post_request(eot_payload, test_run_pipe)

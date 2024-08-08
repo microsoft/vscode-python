@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import subprocess
 import os
 import pathlib
 import sys
@@ -13,12 +12,7 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from django_runner import django_discovery_runner, django_execution_runner  # noqa: E402
-
-
-print(sys.path)
-sys.path.append("/Users/eleanorboyd/vscode-python/.venv/lib/python3.10/site-packages")
-import debugpy
+from django_handler import django_discovery_runner  # noqa: E402
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -32,9 +26,6 @@ from unittestadapter.pvsc_utils import (  # noqa: E402
     parse_unittest_args,
     send_post_request,
 )
-
-# debugpy.connect(5678)
-# debugpy.breakpoint()
 
 
 def discover_tests(
@@ -85,10 +76,6 @@ def discover_tests(
         loader = unittest.TestLoader()
         suite = loader.discover(start_dir, pattern, top_level_dir)
 
-        # If the top level directory is not provided, then use the start directory.
-        if top_level_dir is None:
-            top_level_dir = start_dir
-
         # Get abspath of top level directory for build_test_tree.
         top_level_dir = os.path.abspath(top_level_dir)  # noqa: PTH100
 
@@ -133,20 +120,23 @@ if __name__ == "__main__":
         print(error_msg, file=sys.stderr)
         raise VSCodeUnittestError(error_msg)
 
-    # if django build discovery run command for this
-    # CustomTestRunner2
     manage_py_path = os.environ.get("MANAGE_PY_PATH")
-    print("DJANGO_TEST_ENABLED = ", manage_py_path)
-    if True:
+    if manage_py_path:
+        # Django configuration requires manage.py path to enable.
+        print(
+            f"MANAGE_PY_PATH is set, running Django discovery with path to manage.py as: ${manage_py_path}"
+        )
         try:
-            # this will run and send directly from the runner
-            django_discovery_runner(start_dir, manage_py_path)
+            # collect args for Django discovery runner.
+            args = argv[index + 1 :] or []
+            django_discovery_runner(manage_py_path, args)
+            # eot payload sent within Django runner.
         except Exception as e:
             error_msg = f"Error configuring Django test runner: {e}"
             print(error_msg, file=sys.stderr)
             raise VSCodeUnittestError(error_msg)  # noqa: B904
     else:
-        # Perform test discovery.
+        # Perform regular unittest test discovery.
         payload = discover_tests(start_dir, pattern, top_level_dir)
         # Post this discovery payload.
         send_post_request(payload, test_run_pipe)
