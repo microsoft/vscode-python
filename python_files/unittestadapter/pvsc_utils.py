@@ -301,7 +301,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 def send_post_request(
     payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict],
-    test_run_pipe: str,
+    test_run_pipe: str | None,
 ):
     """
     Sends a post request to the server.

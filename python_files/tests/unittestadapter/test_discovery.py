@@ -299,8 +299,8 @@ DISCOVERY_SCRIPT: str = os.fsdecode(PYTHON_FILES_PATH / "unittestadapter" / "dis
 
 
 def test_simple_django_collect():
-    data_path: str = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "simple_django"))
-    manage_py_path: str = os.fsdecode(pathlib.PurePath(data_path, "manage.py"))
+    data_path: pathlib.Path = pathlib.Path(TEST_DATA_PATH, "simple_django")
+    manage_py_path: str = os.fsdecode(pathlib.Path(data_path, "manage.py"))
 
     actual = helpers.runner_with_cwd_env(
         [
@@ -315,7 +315,7 @@ def test_simple_django_collect():
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
-        assert all(item in actual_item for item in ("status", "cwd", "error"))
+        assert all(item in actual_item for item in ("status", "cwd"))
         assert (
             actual_item.get("status") == "success"
         ), f"Status is not 'success', error is: {actual_item.get('error')}"

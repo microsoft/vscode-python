@@ -304,7 +304,7 @@ def test_incorrect_path():
 
 def test_basic_run_django():
     """This test runs on a simple django project with three tests, two of which pass and one that fails."""
-    data_path: str = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "simple_django"))
+    data_path: pathlib.Path = pathlib.Path(TEST_DATA_PATH, "simple_django")
     manage_py_path: str = os.fsdecode(pathlib.PurePath(data_path, "manage.py"))
     execution_script: pathlib.Path = (
         pathlib.Path(__file__).parent / "django_test_execution_script.py"

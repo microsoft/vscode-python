@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 from django.utils import timezone
 from django.test import TestCase
 from .models import Question

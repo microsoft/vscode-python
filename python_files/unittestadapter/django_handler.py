@@ -27,7 +27,7 @@ def django_discovery_runner(manage_py_path: str, args: list[str]) -> None:
     try:
         # Get path to the custom_test_runner.py parent folder, add to sys.path and new environment used for subprocess.
         custom_test_runner_dir = pathlib.Path(__file__).parent
-        sys.path.insert(0, custom_test_runner_dir)
+        sys.path.insert(0, os.fspath(custom_test_runner_dir))
         env = os.environ.copy()
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = os.fspath(custom_test_runner_dir) + os.pathsep + env["PYTHONPATH"]
@@ -78,7 +78,7 @@ def django_execution_runner(manage_py_path: str, test_ids: list[str], args: list
     try:
         # Get path to the custom_test_runner.py parent folder, add to sys.path.
         custom_test_runner_dir: pathlib.Path = pathlib.Path(__file__).parent
-        sys.path.insert(0, custom_test_runner_dir)
+        sys.path.insert(0, os.fspath(custom_test_runner_dir))
         env: dict[str, str] = os.environ.copy()
         if "PYTHONPATH" in env:
             env["PYTHONPATH"] = os.fspath(custom_test_runner_dir) + os.pathsep + env["PYTHONPATH"]
@@ -111,7 +111,7 @@ def django_execution_runner(manage_py_path: str, test_ids: list[str], args: list
         if subprocess_execution.returncode not in (0, 1):
             try:
                 print("ERROR NUM", subprocess_execution.returncode)
-                test_run_pipe = os.getenv("TEST_RUN_PIPE")
+                test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
                 eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
                 send_post_request(eot_payload, test_run_pipe)
             except Exception:

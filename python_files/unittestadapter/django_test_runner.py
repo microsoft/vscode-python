@@ -37,7 +37,7 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
 
     def run_tests(self, test_labels, **kwargs):
         eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-        test_run_pipe: str = os.getenv("TEST_RUN_PIPE")
+        test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
         if not test_run_pipe:
             error_msg = (
                 "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
@@ -58,7 +58,6 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
                 "cwd": os.fspath(top_level_dir),
                 "status": "success",
                 "tests": None,
-                "error": None,
             }
             payload["tests"] = tests if tests is not None else None
             if len(error):
@@ -93,7 +92,7 @@ class CustomExecutionTestRunner(DiscoverRunner):
 
     def suite_result(self, suite, result, **kwargs):
         # After run finishes, send EOT token.
-        test_run_pipe: str = os.getenv("TEST_RUN_PIPE")
+        test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
         if not test_run_pipe:
             print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.", file=sys.stderr)
             raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
