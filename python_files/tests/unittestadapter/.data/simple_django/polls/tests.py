@@ -31,7 +31,7 @@ class QuestionModelTests(TestCase):
         """
         time = timezone.now()
         question = Question.objects.create(pub_date=time, question_text="What's new?")
-        retrieved_question = Question.objects.get(id=question.question_text)
+        retrieved_question = Question.objects.get(question_text=question.question_text)
         self.assertEqual(question, retrieved_question)
         self.assertEqual(retrieved_question.question_text, "What's new?")
         self.assertEqual(retrieved_question.pub_date, time)
