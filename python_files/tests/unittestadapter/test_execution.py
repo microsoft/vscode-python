@@ -10,13 +10,12 @@ from unittest.mock import patch
 import pytest
 
 sys.path.append(os.fspath(pathlib.Path(__file__).parent))
-sys.path.append(os.fspath(pathlib.Path(__file__).parent.parent.parent))
 
 python_files_path = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, os.fspath(python_files_path))
 sys.path.insert(0, os.fspath(python_files_path / "lib" / "python"))
 
-from python_files.tests.pytestadapter import helpers  # noqa: E402
-
+from tests.pytestadapter import helpers  # noqa: E402
 from unittestadapter.execution import run_tests  # noqa: E402
 
 if TYPE_CHECKING:

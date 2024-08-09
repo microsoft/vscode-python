@@ -14,8 +14,7 @@ from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
-from python_files.tests.pytestadapter import helpers  # noqa: E402
-
+from tests.pytestadapter import helpers  # noqa: E402
 from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
 from . import expected_discovery_test_output  # noqa: E402

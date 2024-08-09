@@ -23,8 +23,8 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                ("question_text", models.CharField(max_length=200)),
-                ("pub_date", models.DateTimeField(verbose_name="date published")),
+                ("question_text", models.CharField(max_length=200, default="")),
+                ("pub_date", models.DateTimeField(verbose_name="date published", auto_now_add=True)),
             ],
         ),
         migrations.CreateModel(

@@ -13,7 +13,7 @@ class QuestionModelTests(TestCase):
         is in the future.
         """
         time = timezone.now() + datetime.timedelta(days=30)
-        future_question = Question(pub_date=time)
+        future_question = Question.objects.create(pub_date=time)
         self.assertIs(future_question.was_published_recently(), False)
 
     def test_was_published_recently_with_future_question_2(self):
@@ -22,7 +22,7 @@ class QuestionModelTests(TestCase):
         is in the future.
         """
         time = timezone.now() + datetime.timedelta(days=30)
-        future_question = Question(pub_date=time)
+        future_question = Question.objects.create(pub_date=time)
         self.assertIs(future_question.was_published_recently(), True)
 
     def test_question_creation_and_retrieval(self):

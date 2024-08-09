@@ -2,8 +2,12 @@
 # Licensed under the MIT License.
 
 from django.apps import AppConfig
+from django.utils.functional import cached_property
 
 
 class PollsConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
+    @cached_property
+    def default_auto_field(self):
+        return "django.db.models.BigAutoField"
+
     name = "polls"
