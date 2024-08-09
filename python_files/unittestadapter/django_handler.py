@@ -6,7 +6,7 @@ import pathlib
 import subprocess
 import sys
 
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
@@ -119,4 +119,4 @@ def django_execution_runner(manage_py_path: str, test_ids: list[str], args: list
                     "Connection failure, likely means failure in Django subprocess run, see specific error output above."
                 )
     except Exception as e:
-        raise VSCodeUnittestError(f"Error during Django test execution: {e}")  # noqa: B904
+        print(f"Error during Django test execution: {e}", file=sys.stderr)

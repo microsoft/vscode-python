@@ -200,10 +200,23 @@ def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
 
 def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[str, Any]]]:
     """Run the pytest discovery and return the JSON data from the server."""
-    process_args: List[str] = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]
+    return runner_with_cwd_env(args, path, {})
+
+
+def runner_with_cwd_env(
+    args: List[str], path: pathlib.Path, env_add: Dict[str, str]
+) -> Optional[List[Dict[str, Any]]]:
+    """Run the pytest discovery and return the JSON data from the server."""
+    process_args: List[str]
+    pipe_name: str
+    if "MANAGE_PY_PATH" in env_add:
+        process_args = [sys.executable, *args]
+        pipe_name = generate_random_pipe_name("unittest-discovery-test")
+    else:
+        process_args = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]
+        pipe_name = generate_random_pipe_name("pytest-discovery-test")
 
     # Generate pipe name, pipe name specific per OS type.
-    pipe_name = generate_random_pipe_name("pytest-discovery-test")
 
     # Windows design
     if sys.platform == "win32":
@@ -244,6 +257,8 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
                 "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
             }
         )
+        if env_add:
+            env.update(env_add)
         server = UnixPipeServer(pipe_name)
         server.start()
 
@@ -255,10 +270,11 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
         )
         t1.start()
 
-        t2 = threading.Thread(
+        t2: threading.Thread = threading.Thread(
             target=_run_test_code,
             args=(process_args, env, path, completed),
         )
+
         t2.start()
 
         t1.join()

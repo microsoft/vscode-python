@@ -4,9 +4,10 @@
 import os
 import pathlib
 import sys
-from typing import List
+from typing import Any, Dict, List
 
 import pytest
+from python_files.tests.pytestadapter import helpers
 
 from unittestadapter.discovery import discover_tests
 from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
@@ -290,3 +291,45 @@ def test_complex_tree() -> None:
         expected_discovery_test_output.complex_tree_expected_output,
         ["id_", "lineno", "name"],
     )
+
+
+TEST_DATA_PATH: pathlib.Path = pathlib.Path(__file__).parent / ".data"
+PYTHON_FILES_PATH: pathlib.Path = pathlib.Path(__file__).parent.parent.parent
+DISCOVERY_SCRIPT: str = os.fsdecode(PYTHON_FILES_PATH / "unittestadapter" / "discovery.py")
+
+
+def test_simple_django_collect():
+    data_path: str = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "simple_django"))
+    manage_py_path: str = os.fsdecode(pathlib.PurePath(data_path, "manage.py"))
+
+    actual = helpers.runner_with_cwd_env(
+        [
+            DISCOVERY_SCRIPT,
+            "--udiscovery",
+        ],
+        data_path,
+        {"MANAGE_PY_PATH": manage_py_path},
+    )
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
+        assert (
+            actual_item.get("status") == "success"
+        ), f"Status is not 'success', error is: {actual_item.get('error')}"
+        assert actual_item.get("cwd") == data_path
+        assert len(actual_item["tests"]["children"]) == 1
+        assert actual_item["tests"]["children"][0]["children"][0]["id_"] == os.fsdecode(
+            pathlib.PurePath(TEST_DATA_PATH, "simple_django", "polls", "tests.py")
+        )
+        assert (
+            len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 2
+        )
+        assert (
+            actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"][0][
+                "runID"
+            ]
+            == "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question"
+        )

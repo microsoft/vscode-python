@@ -4,13 +4,17 @@
 import os
 import pathlib
 import sys
-from typing import TYPE_CHECKING, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from unittest.mock import patch
 
 import pytest
+from python_files.tests.pytestadapter import helpers
 
-script_dir = pathlib.Path(__file__).parent.parent.parent
-sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
+sys.path.append(os.fspath(pathlib.Path(__file__).parent))
+sys.path.append(os.fspath(pathlib.Path(__file__).parent.parent.parent))
+
+python_files_path = pathlib.Path(__file__).parent.parent.parent
+sys.path.insert(0, os.fspath(python_files_path / "lib" / "python"))
 
 from unittestadapter.execution import run_tests  # noqa: E402
 
@@ -296,3 +300,45 @@ def test_incorrect_path():
     assert all(item in actual for item in ("cwd", "status", "error"))
     assert actual["status"] == "error"
     assert actual["cwd"] == os.fspath(TEST_DATA_PATH / "unknown_folder")
+
+
+def test_basic_run_django():
+    """This test runs on a simple django project with three tests, two of which pass and one that fails."""
+    data_path: str = os.fsdecode(pathlib.PurePath(TEST_DATA_PATH, "simple_django"))
+    manage_py_path: str = os.fsdecode(pathlib.PurePath(data_path, "manage.py"))
+    execution_script: pathlib.Path = (
+        pathlib.Path(__file__).parent / "django_test_execution_script.py"
+    )
+
+    test_ids = [
+        "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question",
+        "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question_2",
+        "polls.tests.QuestionModelTests.test_question_creation_and_retrieval",
+    ]
+    script_str = os.fsdecode(execution_script)
+    actual = helpers.runner_with_cwd_env(
+        [script_str, manage_py_path, *test_ids],
+        data_path,
+        {"MANAGE_PY_PATH": manage_py_path},
+    )
+    assert actual
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+    actual_result_dict = {}
+    assert len(actual_list) == 3
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(item in actual_item for item in ("status", "cwd", "result"))
+            assert actual_item.get("cwd") == data_path
+            actual_result_dict.update(actual_item["result"])
+    for test_id in test_ids:
+        assert test_id in actual_result_dict
+        id_result = actual_result_dict[test_id]
+        assert id_result is not None
+        assert "outcome" in id_result
+        if (
+            test_id
+            == "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question_2"
+        ):
+            assert id_result["outcome"] == "failure"
+        else:
+            assert id_result["outcome"] == "success"

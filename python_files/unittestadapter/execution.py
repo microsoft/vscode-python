@@ -19,7 +19,7 @@ os.environ[path_var_name] = (
     sysconfig.get_paths()["scripts"] + os.pathsep + os.environ[path_var_name]
 )
 
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
 
 from django_handler import django_execution_runner  # noqa: E402

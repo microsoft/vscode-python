@@ -8,10 +8,10 @@ import traceback
 import unittest
 from typing import List, Optional
 
-from django_handler import django_discovery_runner
-
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
+
+from django_handler import django_discovery_runner  # noqa: E402
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402

@@ -58,6 +58,7 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
                 "cwd": os.fspath(top_level_dir),
                 "status": "success",
                 "tests": None,
+                "error": None,
             }
             payload["tests"] = tests if tests is not None else None
             if len(error):
