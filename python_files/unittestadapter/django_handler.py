@@ -5,6 +5,7 @@ import os
 import pathlib
 import subprocess
 import sys
+from typing import List
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
@@ -17,7 +18,7 @@ from pvsc_utils import (  # noqa: E402
 )
 
 
-def django_discovery_runner(manage_py_path: str, args: list[str]) -> None:
+def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
     # Attempt a small amount of validation on the manage.py path.
     try:
         pathlib.Path(manage_py_path)
@@ -68,7 +69,7 @@ def django_discovery_runner(manage_py_path: str, args: list[str]) -> None:
         raise VSCodeUnittestError(f"Error during Django discovery: {e}")  # noqa: B904
 
 
-def django_execution_runner(manage_py_path: str, test_ids: list[str], args: list[str]) -> None:
+def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List[str]) -> None:
     # Attempt a small amount of validation on the manage.py path.
     try:
         pathlib.Path(manage_py_path)
@@ -86,7 +87,7 @@ def django_execution_runner(manage_py_path: str, test_ids: list[str], args: list
             env["PYTHONPATH"] = os.fspath(custom_test_runner_dir)
 
         # Build command to run 'python manage.py test'.
-        command: list[str] = [
+        command: List[str] = [
             sys.executable,
             manage_py_path,
             "test",
