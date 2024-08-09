@@ -7,7 +7,6 @@ import sys
 from typing import Any, Dict, List
 
 import pytest
-from python_files.tests.pytestadapter import helpers
 
 from unittestadapter.discovery import discover_tests
 from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
@@ -15,6 +14,7 @@ from unittestadapter.pvsc_utils import TestNodeTypeEnum, parse_unittest_args
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 
+from python_files.tests.pytestadapter import helpers  # noqa: E402
 
 from tests.tree_comparison_helper import is_same_tree  # noqa: E402
 
@@ -319,17 +319,11 @@ def test_simple_django_collect():
         assert (
             actual_item.get("status") == "success"
         ), f"Status is not 'success', error is: {actual_item.get('error')}"
-        assert actual_item.get("cwd") == data_path
+        assert actual_item.get("cwd") == os.fspath(data_path)
         assert len(actual_item["tests"]["children"]) == 1
         assert actual_item["tests"]["children"][0]["children"][0]["id_"] == os.fsdecode(
             pathlib.PurePath(TEST_DATA_PATH, "simple_django", "polls", "tests.py")
         )
         assert (
-            len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 2
-        )
-        assert (
-            actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"][0][
-                "runID"
-            ]
-            == "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question"
+            len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 3
         )

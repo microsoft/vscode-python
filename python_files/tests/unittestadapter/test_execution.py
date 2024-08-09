@@ -8,13 +8,14 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from unittest.mock import patch
 
 import pytest
-from python_files.tests.pytestadapter import helpers
 
 sys.path.append(os.fspath(pathlib.Path(__file__).parent))
 sys.path.append(os.fspath(pathlib.Path(__file__).parent.parent.parent))
 
 python_files_path = pathlib.Path(__file__).parent.parent.parent
 sys.path.insert(0, os.fspath(python_files_path / "lib" / "python"))
+
+from python_files.tests.pytestadapter import helpers  # noqa: E402
 
 from unittestadapter.execution import run_tests  # noqa: E402
 
@@ -328,7 +329,7 @@ def test_basic_run_django():
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item for item in ("status", "cwd", "result"))
-            assert actual_item.get("cwd") == data_path
+            assert actual_item.get("cwd") == os.fspath(data_path)
             actual_result_dict.update(actual_item["result"])
     for test_id in test_ids:
         assert test_id in actual_result_dict
