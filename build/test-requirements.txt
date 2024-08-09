@@ -24,3 +24,6 @@ freezegun
 
 # testing custom pytest plugin require the use of named pipes
 namedpipe; platform_system == "Windows"
+
+# typing for Django files
+django-stubs
