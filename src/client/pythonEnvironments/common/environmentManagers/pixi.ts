@@ -208,8 +208,6 @@ export class Pixi {
             traceWarn(`Failed to get pixi version`);
             return undefined;
         }
-
-        return undefined;
     }
 
     /**
