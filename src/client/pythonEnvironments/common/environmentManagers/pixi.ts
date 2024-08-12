@@ -169,16 +169,22 @@ export class Pixi {
      */
     @cache(1_000, true, 1_000)
     public async getPixiInfo(cwd: string): Promise<PixiInfo | undefined> {
-        const infoOutput = await exec(this.command, ['info', '--json'], {
-            cwd,
-            throwOnStdErr: false,
-        }).catch(traceError);
-        if (!infoOutput) {
+        try {
+            const infoOutput = await exec(this.command, ['info', '--json'], {
+                cwd,
+                throwOnStdErr: false,
+            });
+
+            if (!infoOutput || !infoOutput.stdout) {
+                return undefined;
+            }
+
+            const pixiInfo: PixiInfo = JSON.parse(infoOutput.stdout);
+            return pixiInfo;
+        } catch (error) {
+            traceError(`Failed to get pixi info for ${cwd}`, error);
             return undefined;
         }
-
-        const pixiInfo: PixiInfo = JSON.parse(infoOutput.stdout);
-        return pixiInfo;
     }
 
     /**
@@ -186,14 +192,24 @@ export class Pixi {
      */
     @cache(30_000, true, 10_000)
     public async getVersion(): Promise<string | undefined> {
-        const versionOutput = await exec(this.command, ['--version'], {
-            throwOnStdErr: false,
-        }).catch(traceError);
-        if (!versionOutput) {
+        try {
+            const versionOutput = await exec(this.command, ['--version'], {
+                throwOnStdErr: false,
+            });
+            if (!versionOutput || !versionOutput.stdout) {
+                return undefined;
+            }
+
+            const versionParts = versionOutput.stdout.split(' ');
+            if (versionParts.length < 2) {
+                return undefined;
+            }
+
+            return versionParts[1].trim();
+        } catch (error) {
+            traceError(`Failed to get pixi version`, error);
             return undefined;
         }
-
-        return versionOutput.stdout.split(' ')[1].trim();
     }
 
     /**
