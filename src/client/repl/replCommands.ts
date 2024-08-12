@@ -64,7 +64,6 @@ export async function registerReplCommands(
                 await executeInTerminal();
                 return;
             }
-            sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
