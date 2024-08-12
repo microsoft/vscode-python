@@ -295,13 +295,24 @@ export async function getPixiEnvironmentFromInterpreter(
 
     // Usually the pixi environments are stored under `<projectDir>/.pixi/envs/<environment>/`. So,
     // we walk backwards to determine the project directory.
-    const envName = path.basename(prefix);
-    const envsDir = path.dirname(prefix);
-    const dotPixiDir = path.dirname(envsDir);
-    const pixiProjectDir = path.dirname(dotPixiDir);
+    let envName: string | undefined;
+    let envsDir: string;
+    let dotPixiDir: string;
+    let pixiProjectDir: string;
+    let pixiInfo: PixiInfo | undefined;
 
-    // Invoke pixi to get information about the pixi project
-    const pixiInfo = await pixi.getPixiInfo(pixiProjectDir);
+    try {
+        envName = path.basename(prefix);
+        envsDir = path.dirname(prefix);
+        dotPixiDir = path.dirname(envsDir);
+        pixiProjectDir = path.dirname(dotPixiDir);
+
+        // Invoke pixi to get information about the pixi project
+        pixiInfo = await pixi.getPixiInfo(pixiProjectDir);
+    } catch (error) {
+        traceWarn('Error processing paths or getting Pixi Info:', error);
+    }
+
     if (!pixiInfo || !pixiInfo.project_info) {
         traceWarn(`failed to determine pixi project information for the interpreter at ${interpreterPath}`);
         return undefined;
