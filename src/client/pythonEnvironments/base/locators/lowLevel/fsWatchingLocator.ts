@@ -32,7 +32,7 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
         names = fs.readdirSync(dirname);
     } catch (err) {
         const exception = err as NodeJS.ErrnoException;
-        traceWarn('Reading directory failed', dirname);
+        traceWarn('Reading directory failed', exception);
         if (exception.code === 'ENOENT') {
             // Treat a missing directory as unwatchable since it can lead to CPU load issues:
             // https://github.com/microsoft/vscode-python/issues/18459
