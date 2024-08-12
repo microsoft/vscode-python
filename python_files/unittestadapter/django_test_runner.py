@@ -113,12 +113,5 @@ class CustomExecutionTestRunner(DiscoverRunner):
         return kwargs
 
     def suite_result(self, suite, result, **kwargs):
-        # After run finishes, send EOT token.
-        test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
-        if not test_run_pipe:
-            print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.", file=sys.stderr)
-            raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
-        eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-        send_post_request(eot_payload, test_run_pipe)
         # call super to finish the suite result as Django intends.
         return super().suite_result(suite, result, **kwargs)
