@@ -205,7 +205,7 @@ export class Pixi {
             }
             return versionParts[1].trim();
         } catch (error) {
-            traceWarn(`Failed to get pixi version`);
+            traceWarn(`Failed to get pixi version`, error);
             return undefined;
         }
     }
