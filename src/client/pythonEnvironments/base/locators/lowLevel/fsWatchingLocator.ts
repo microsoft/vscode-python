@@ -6,7 +6,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { FileChangeType, watchLocationForPattern } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
-import { traceError, traceVerbose, traceWarn } from '../../../../logging';
+import { traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import {
     PythonEnvStructure,
@@ -117,7 +117,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             // that might be watched due to a glob are not checked.
             const unwatchable = await checkDirWatchable(root);
             if (unwatchable) {
-                traceError(`Dir "${root}" is not watchable (${unwatchable})`);
+                traceWarn(`Dir "${root}" is not watchable (${unwatchable})`);
                 return undefined;
             }
             return root;

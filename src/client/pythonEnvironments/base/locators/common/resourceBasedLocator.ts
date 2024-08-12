@@ -4,7 +4,7 @@
 import { IDisposable } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { Disposables } from '../../../../common/utils/resourceLifecycle';
-import { traceWarn } from '../../../../logging';
+import { traceError, traceWarn } from '../../../../logging';
 import { arePathsSame, isVirtualWorkspace } from '../../../common/externalDependencies';
 import { getEnvPath } from '../../info/env';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
