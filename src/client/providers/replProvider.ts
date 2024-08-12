@@ -28,7 +28,7 @@ export class ReplProvider implements Disposable {
         this.disposables.push(disposable);
     }
 
-    @captureTelemetry(EventName.REPL)
+    @captureTelemetry(EventName.REPL, { replType: 'Terminal' })
     private async commandHandler() {
         const resource = this.activeResourceService.getActiveResource();
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);

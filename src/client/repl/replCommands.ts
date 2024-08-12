@@ -15,6 +15,8 @@ import {
     isMultiLineText,
 } from './replUtils';
 import { registerCommand } from '../common/vscodeApis/commandApis';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 
 /**
  * Register Start Native REPL command in the command palette
@@ -30,6 +32,7 @@ export async function registerStartNativeReplCommand(
 ): Promise<void> {
     disposables.push(
         registerCommand(Commands.Start_Native_REPL, async (uri: Uri) => {
+            sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
             const interpreter = await getActiveInterpreter(uri, interpreterService);
             if (interpreter) {
                 if (interpreter) {
@@ -61,7 +64,7 @@ export async function registerReplCommands(
                 await executeInTerminal();
                 return;
             }
-
+            sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {

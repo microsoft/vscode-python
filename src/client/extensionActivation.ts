@@ -53,6 +53,7 @@ import { logAndNotifyOnLegacySettings } from './logging/settingLogs';
 import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
+import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -108,6 +109,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     );
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
     const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
+    registerTriggerForTerminalREPL(ext.disposables);
     registerStartNativeReplCommand(ext.disposables, interpreterService);
     registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);
     registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager);

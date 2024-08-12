@@ -2305,10 +2305,15 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "repl" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "karthiknadig" }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "anthonykim1" }
        }
      */
-    [EventName.REPL]: never | undefined;
+    [EventName.REPL]: {
+        /**
+         * Whether the user launched the Terminal REPL or Native REPL
+         */
+        replType: 'Terminal' | 'Native';
+    };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
      */
