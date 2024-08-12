@@ -12,9 +12,7 @@ sys.path.append(os.fspath(script_dir))
 sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
 from pvsc_utils import (  # noqa: E402
-    EOTPayloadDict,
     VSCodeUnittestError,
-    send_post_request,
 )
 
 
@@ -57,14 +55,6 @@ def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
         if subprocess_discovery.returncode not in (0, 1):
             error_msg = "Django test discovery process exited with non-zero error code See stderr above for more details."
             print(error_msg, file=sys.stderr)
-            try:
-                test_run_pipe = os.getenv("TEST_RUN_PIPE")
-                eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-                send_post_request(eot_payload, test_run_pipe)
-            except Exception:
-                raise VSCodeUnittestError(  # noqa: B904
-                    "Connection failure, likely means failure in Django subprocess run, see specific error output above."
-                )
     except Exception as e:
         raise VSCodeUnittestError(f"Error during Django discovery: {e}")  # noqa: B904
 
@@ -110,14 +100,7 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
         print(subprocess_execution.stdout, file=sys.stdout)
         # Zero return code indicates success, 1 indicates test failures, so both are considered successful.
         if subprocess_execution.returncode not in (0, 1):
-            try:
-                print("ERROR NUM", subprocess_execution.returncode)
-                test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
-                eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-                send_post_request(eot_payload, test_run_pipe)
-            except Exception:
-                raise VSCodeUnittestError(  # noqa: B904
-                    "Connection failure, likely means failure in Django subprocess run, see specific error output above."
-                )
+            error_msg = "Django test execution process exited with non-zero error code See stderr above for more details."
+            print(error_msg, file=sys.stderr)
     except Exception as e:
         print(f"Error during Django test execution: {e}", file=sys.stderr)

@@ -2,6 +2,7 @@
 # Licensed under the MIT License.
 
 
+import atexit
 import os
 import pathlib
 import sys
@@ -32,11 +33,16 @@ if TYPE_CHECKING:
     import unittest
 
 
+def send_post_request_on_exit(command_type: str, test_run_pipe: str):
+    """Send an EOT token to indicate the end of the test run, registered to run at exit."""
+    eot_payload: EOTPayloadDict = {"command_type": command_type, "eot": True}
+    send_post_request(eot_payload, test_run_pipe)
+
+
 class CustomDiscoveryTestRunner(DiscoverRunner):
     """Custom test runner for Django to handle test DISCOVERY and building the test tree."""
 
     def run_tests(self, test_labels, **kwargs):
-        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
         test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
         if not test_run_pipe:
             error_msg = (
@@ -47,6 +53,10 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
             )
             print(error_msg, file=sys.stderr)
             raise VSCodeUnittestError(error_msg)
+        # register atexit to ensure EOT is sent in all scenarios.
+        atexit.register(
+            send_post_request_on_exit, command_type="discovery", test_run_pipe=test_run_pipe
+        )
         try:
             top_level_dir: pathlib.Path = pathlib.Path.cwd()
 
@@ -67,14 +77,12 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
             # Send discovery payload.
             send_post_request(payload, test_run_pipe)
             # Send EOT token.
-            send_post_request(eot_payload, test_run_pipe)
             return 0  # Skip actual test execution, return 0 as no tests were run.
         except Exception as e:
             error_msg = (
                 "DJANGO ERROR: An error occurred while discovering and building the test suite. "
                 f"Error: {e}\n"
             )
-            send_post_request(eot_payload, test_run_pipe)
             print(error_msg, file=sys.stderr)
             raise VSCodeUnittestError(error_msg)  # noqa: B904
 
@@ -84,6 +92,20 @@ class CustomExecutionTestRunner(DiscoverRunner):
 
     def get_test_runner_kwargs(self):
         """Override to provide custom test runner; resultclass."""
+        test_run_pipe: str | None = os.getenv("TEST_RUN_PIPE")
+        if not test_run_pipe:
+            error_msg = (
+                "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of Django trying to send data. "
+                "Please confirm this environment variable is not being changed or removed "
+                "as it is required for successful test discovery and execution."
+                f"TEST_RUN_PIPE = {test_run_pipe}\n"
+            )
+            print(error_msg, file=sys.stderr)
+            raise VSCodeUnittestError(error_msg)
+        # register atexit to ensure EOT is sent in all scenarios.
+        atexit.register(
+            send_post_request_on_exit, command_type="execution", test_run_pipe=test_run_pipe
+        )
         # Get existing kwargs
         kwargs = super().get_test_runner_kwargs()
         # Add custom resultclass, same resultclass as used in unittest.
