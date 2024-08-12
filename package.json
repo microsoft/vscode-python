@@ -24,8 +24,7 @@
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
-        "contribIssueReporter",
-        "terminalShellIntegration"
+        "contribIssueReporter"
     ],
     "author": {
         "name": "Microsoft Corporation"
