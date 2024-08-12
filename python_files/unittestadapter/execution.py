@@ -58,6 +58,25 @@ class UnittestTestResult(unittest.TextTestResult):
     def startTest(self, test: unittest.TestCase):  # noqa: N802
         super().startTest(test)
 
+    def stopTestRun(self):  # noqa: N802
+        super().stopTestRun()
+        # After stopping the test run, send EOT
+        test_run_pipe = os.getenv("TEST_RUN_PIPE")
+        manage_py_path = os.getenv("MANAGE_PY_PATH")
+        if manage_py_path:
+            # only send this if it is a Django run
+            if not test_run_pipe:
+                print(
+                    "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
+                    f"TEST_RUN_PIPE = {test_run_pipe}\n",
+                    file=sys.stderr,
+                )
+                raise VSCodeUnittestError(
+                    "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
+                )
+            eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+            send_post_request(eot_payload, test_run_pipe)
+
     def addError(  # noqa: N802
         self,
         test: unittest.TestCase,

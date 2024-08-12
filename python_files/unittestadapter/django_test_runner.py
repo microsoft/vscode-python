@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-
-import atexit
 import os
 import pathlib
 import sys
@@ -33,12 +31,6 @@ if TYPE_CHECKING:
     import unittest
 
 
-def send_post_request_on_exit(command_type: str, test_run_pipe: str):
-    """Send an EOT token to indicate the end of the test run, registered to run at exit."""
-    eot_payload: EOTPayloadDict = {"command_type": command_type, "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
-
-
 class CustomDiscoveryTestRunner(DiscoverRunner):
     """Custom test runner for Django to handle test DISCOVERY and building the test tree."""
 
@@ -53,10 +45,6 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
             )
             print(error_msg, file=sys.stderr)
             raise VSCodeUnittestError(error_msg)
-        # register atexit to ensure EOT is sent in all scenarios.
-        atexit.register(
-            send_post_request_on_exit, command_type="discovery", test_run_pipe=test_run_pipe
-        )
         try:
             top_level_dir: pathlib.Path = pathlib.Path.cwd()
 
@@ -77,6 +65,8 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
             # Send discovery payload.
             send_post_request(payload, test_run_pipe)
             # Send EOT token.
+            eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
+            send_post_request(eot_payload, test_run_pipe)
             return 0  # Skip actual test execution, return 0 as no tests were run.
         except Exception as e:
             error_msg = (
@@ -102,10 +92,6 @@ class CustomExecutionTestRunner(DiscoverRunner):
             )
             print(error_msg, file=sys.stderr)
             raise VSCodeUnittestError(error_msg)
-        # register atexit to ensure EOT is sent in all scenarios.
-        atexit.register(
-            send_post_request_on_exit, command_type="execution", test_run_pipe=test_run_pipe
-        )
         # Get existing kwargs
         kwargs = super().get_test_runner_kwargs()
         # Add custom resultclass, same resultclass as used in unittest.

@@ -229,6 +229,8 @@ def runner_with_cwd_env(
                     "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
                 }
             )
+            if env_add:
+                env.update(env_add)
 
             completed = threading.Event()
 
