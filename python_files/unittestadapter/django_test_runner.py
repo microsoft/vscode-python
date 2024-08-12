@@ -97,7 +97,3 @@ class CustomExecutionTestRunner(DiscoverRunner):
         # Add custom resultclass, same resultclass as used in unittest.
         kwargs["resultclass"] = UnittestTestResult
         return kwargs
-
-    def suite_result(self, suite, result, **kwargs):
-        # call super to finish the suite result as Django intends.
-        return super().suite_result(suite, result, **kwargs)

@@ -193,23 +193,28 @@ def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: thr
 
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
-    """Run the pytest discovery and return the JSON data from the server."""
+    """Run a subprocess and a named-pipe to listen for messages at the same time with threading."""
     print("\n Running python test subprocess with cwd set to: ", TEST_DATA_PATH)
     return runner_with_cwd(args, TEST_DATA_PATH)
 
 
 def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[str, Any]]]:
-    """Run the pytest discovery and return the JSON data from the server."""
+    """Run a subprocess and a named-pipe to listen for messages at the same time with threading."""
     return runner_with_cwd_env(args, path, {})
 
 
 def runner_with_cwd_env(
     args: List[str], path: pathlib.Path, env_add: Dict[str, str]
 ) -> Optional[List[Dict[str, Any]]]:
-    """Run the pytest discovery and return the JSON data from the server."""
+    """
+    Run a subprocess and a named-pipe to listen for messages at the same time with threading.
+
+    Includes environment variables to add to the test environment.
+    """
     process_args: List[str]
     pipe_name: str
     if "MANAGE_PY_PATH" in env_add:
+        # if we are running Django, generate unittest specific pipe name
         process_args = [sys.executable, *args]
         pipe_name = generate_random_pipe_name("unittest-discovery-test")
     else:
@@ -229,6 +234,7 @@ def runner_with_cwd_env(
                     "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
                 }
             )
+            # if additional environment variables are passed, add them to the environment
             if env_add:
                 env.update(env_add)
 
@@ -259,6 +265,7 @@ def runner_with_cwd_env(
                 "PYTHONPATH": os.fspath(pathlib.Path(__file__).parent.parent.parent),
             }
         )
+        # if additional environment variables are passed, add them to the environment
         if env_add:
             env.update(env_add)
         server = UnixPipeServer(pipe_name)
