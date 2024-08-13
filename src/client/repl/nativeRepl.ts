@@ -17,6 +17,8 @@ import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer, PythonServer } from './pythonServer';
 import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from './replCommandHandler';
 import { createReplController } from './replController';
+import { EventName } from '../telemetry/constants';
+import { sendTelemetryEvent } from '../telemetry';
 
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
@@ -159,6 +161,7 @@ let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of UR
  */
 export async function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): Promise<NativeRepl> {
     if (!nativeRepl) {
+        sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
         nativeRepl = await NativeRepl.create(interpreter);
         disposables.push(nativeRepl);
     }
