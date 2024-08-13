@@ -7,7 +7,7 @@ function checkREPLCommand(command: string): boolean {
     const lower = command.toLowerCase();
     // Cover cases for 'py', 'py -3' and 'py -3.x'.
     const replCommandRegex = /^py(?:\s-3(?:\.\d)?)?$/;
-    return lower.startsWith('python') || lower.startsWith('python3') || replCommandRegex.test(command);
+    return lower.startsWith('python') || replCommandRegex.test(command);
 }
 
 export function registerTriggerForTerminalREPL(disposables: Disposable[]): void {
