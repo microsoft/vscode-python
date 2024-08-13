@@ -4,10 +4,8 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 
 function checkREPLCommand(command: string): boolean {
-    const lower = command.toLowerCase();
-    // Cover cases for 'py', 'py -3' and 'py -3.x'.
-    const replCommandRegex = /^py(?:\s-3(?:\.\d)?)?$/;
-    return lower.startsWith('python') || replCommandRegex.test(command);
+    const lower = command.toLowerCase().trimStart();
+    return lower.startsWith('python ') || lower.startsWith('py ');
 }
 
 export function registerTriggerForTerminalREPL(disposables: Disposable[]): void {
