@@ -62,8 +62,7 @@ class UnittestTestResult(unittest.TextTestResult):
         super().stopTestRun()
         # After stopping the test run, send EOT
         test_run_pipe = os.getenv("TEST_RUN_PIPE")
-        manage_py_path = os.getenv("MANAGE_PY_PATH")
-        if manage_py_path:
+        if os.getenv("MANAGE_PY_PATH"):
             # only send this if it is a Django run
             if not test_run_pipe:
                 print(
@@ -340,9 +339,7 @@ if __name__ == "__main__":
         if raw_json and "params" in raw_json and raw_json["params"]:
             test_ids_from_buffer = raw_json["params"]
             # Check to see if we are running django tests.
-            manage_py_path = os.environ.get("MANAGE_PY_PATH")
-            if manage_py_path:
-                # run django runner
+            if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
                 args = argv[index + 1 :] or []
                 django_execution_runner(manage_py_path, test_ids_from_buffer, args)
                 # the django run subprocesses sends the eot payload.

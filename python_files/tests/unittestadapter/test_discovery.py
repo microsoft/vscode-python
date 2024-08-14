@@ -292,18 +292,16 @@ def test_complex_tree() -> None:
     )
 
 
-TEST_DATA_PATH: pathlib.Path = pathlib.Path(__file__).parent / ".data"
-PYTHON_FILES_PATH: pathlib.Path = pathlib.Path(__file__).parent.parent.parent
-DISCOVERY_SCRIPT: str = os.fsdecode(PYTHON_FILES_PATH / "unittestadapter" / "discovery.py")
-
-
 def test_simple_django_collect():
-    data_path: pathlib.Path = pathlib.Path(TEST_DATA_PATH, "simple_django")
+    test_data_path: pathlib.Path = pathlib.Path(__file__).parent / ".data"
+    python_files_path: pathlib.Path = pathlib.Path(__file__).parent.parent.parent
+    discovery_script_path: str = os.fsdecode(python_files_path / "unittestadapter" / "discovery.py")
+    data_path: pathlib.Path = test_data_path / "simple_django"
     manage_py_path: str = os.fsdecode(pathlib.Path(data_path, "manage.py"))
 
     actual = helpers.runner_with_cwd_env(
         [
-            DISCOVERY_SCRIPT,
+            discovery_script_path,
             "--udiscovery",
         ],
         data_path,
@@ -312,6 +310,7 @@ def test_simple_django_collect():
 
     assert actual
     actual_list: List[Dict[str, Any]] = actual
+    assert actual_list is not None
     if actual_list is not None:
         actual_item = actual_list.pop(0)
         assert all(item in actual_item for item in ("status", "cwd"))
@@ -321,7 +320,7 @@ def test_simple_django_collect():
         assert actual_item.get("cwd") == os.fspath(data_path)
         assert len(actual_item["tests"]["children"]) == 1
         assert actual_item["tests"]["children"][0]["children"][0]["id_"] == os.fsdecode(
-            pathlib.PurePath(TEST_DATA_PATH, "simple_django", "polls", "tests.py")
+            pathlib.PurePath(test_data_path, "simple_django", "polls", "tests.py")
         )
         assert (
             len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 3

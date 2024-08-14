@@ -120,8 +120,7 @@ if __name__ == "__main__":
         print(error_msg, file=sys.stderr)
         raise VSCodeUnittestError(error_msg)
 
-    manage_py_path = os.environ.get("MANAGE_PY_PATH")
-    if manage_py_path:
+    if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
         # Django configuration requires manage.py path to enable.
         print(
             f"MANAGE_PY_PATH is set, running Django discovery with path to manage.py as: ${manage_py_path}"

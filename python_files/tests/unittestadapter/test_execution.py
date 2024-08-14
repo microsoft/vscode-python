@@ -304,8 +304,8 @@ def test_incorrect_path():
 
 def test_basic_run_django():
     """This test runs on a simple django project with three tests, two of which pass and one that fails."""
-    data_path: pathlib.Path = pathlib.Path(TEST_DATA_PATH, "simple_django")
-    manage_py_path: str = os.fsdecode(pathlib.PurePath(data_path, "manage.py"))
+    data_path: pathlib.Path = TEST_DATA_PATH / "simple_django"
+    manage_py_path: str = os.fsdecode(data_path / "manage.py")
     execution_script: pathlib.Path = (
         pathlib.Path(__file__).parent / "django_test_execution_script.py"
     )
@@ -325,11 +325,10 @@ def test_basic_run_django():
     actual_list: List[Dict[str, Dict[str, Any]]] = actual
     actual_result_dict = {}
     assert len(actual_list) == 3
-    if actual_list is not None:
-        for actual_item in actual_list:
-            assert all(item in actual_item for item in ("status", "cwd", "result"))
-            assert actual_item.get("cwd") == os.fspath(data_path)
-            actual_result_dict.update(actual_item["result"])
+    for actual_item in actual_list:
+        assert all(item in actual_item for item in ("status", "cwd", "result"))
+        assert actual_item.get("cwd") == os.fspath(data_path)
+        actual_result_dict.update(actual_item["result"])
     for test_id in test_ids:
         assert test_id in actual_result_dict
         id_result = actual_result_dict[test_id]
