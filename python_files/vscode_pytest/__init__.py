@@ -386,7 +386,10 @@ def pytest_sessionfinish(session, exitstatus):
             }
             post_response(os.fsdecode(cwd), error_node)
         try:
-            session_node: TestNode | None = build_test_tree(session)
+            if hasattr(session, "tree"):
+                session_node = session.tree
+            else:
+                session_node: TestNode | None = build_test_tree(session)
             if not session_node:
                 raise VSCodePytestError(
                     "Something went wrong following pytest finish, \
