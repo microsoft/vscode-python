@@ -147,7 +147,7 @@ async function activateUnsafe(
                 TaskScope.Workspace,
                 'Default Task',
                 'pythonTask',
-                new ShellExecution('python joke.py'), // harded coded for now. joke.py is in my ext.host workspace.
+                new ShellExecution('python joke.py'), // Hard coded for now: joke.py is in my ext.host workspace. Could be any file in user's workspace.
                 '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
             ),
         ],
