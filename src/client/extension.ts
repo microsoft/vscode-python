@@ -147,8 +147,8 @@ async function activateUnsafe(
                 TaskScope.Workspace,
                 'Default Task',
                 'pythonTask',
-                new ShellExecution('echo Hello World'),
-                'myCustomMatcher', // Use the custom problem matcher defined in package.json
+                new ShellExecution('python joke.py'), // harded coded for now. joke.py is in my ext.host workspace.
+                '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
             ),
         ],
         resolveTask(_task: Task): Task | undefined {
