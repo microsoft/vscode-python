@@ -28,7 +28,7 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
-import { ProgressLocation, ProgressOptions, ShellExecution, Task, tasks, TaskScope, window } from 'vscode';
+import { commands, ProgressLocation, ProgressOptions, ShellExecution, Task, tasks, TaskScope, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
@@ -141,22 +141,46 @@ async function activateUnsafe(
     // register task provider for the workspace
 
     const taskProvider = tasks.registerTaskProvider('pythonTask', {
-        provideTasks: () => [
-            new Task(
-                { type: 'pythonTask', task: 'defaultTask' },
-                TaskScope.Workspace,
-                'Default Task',
-                'pythonTask',
-                new ShellExecution('python joke.py'), // Hard coded for now: joke.py is in my ext.host workspace. Could be any file in user's workspace.
-                '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
-            ),
-        ],
+        provideTasks: () => {
+            return Promise.resolve([
+                new Task(
+                    { type: 'pythonTask', task: 'defaultTask' },
+                    TaskScope.Workspace,
+                    'Default Task',
+                    'pythonTask',
+                    new ShellExecution('python joke.py'), // Hard coded for now: joke.py is in my ext.host workspace. Could be any file in user's workspace.
+                    '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
+                ),
+            ]);
+        },
+
         resolveTask(_task: Task): Task | undefined {
             return undefined;
         },
     });
 
     context.subscriptions.push(taskProvider);
+
+    commands.executeCommand('workbench.action.tasks.registerTaskDefinition', {
+        label: '$pythonCustomMatcher',
+        owner: 'python',
+        source: 'python',
+        fileLocation: 'autoDetect',
+        pattern: [
+            {
+                regexp: '^.*File \\"([^\\"]|.*)\\", line (\\d+).*',
+                file: 1,
+                line: 2,
+            },
+            {
+                regexp: '^.*raise.*$',
+            },
+            {
+                regexp: '^\\s*(.*)\\s*$',
+                message: 1,
+            },
+        ],
+    });
 
     //===============================================
     // activation ends here

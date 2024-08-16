@@ -96,7 +96,7 @@
                 }
               }
         ],
-        "problemMatcher": [
+        "problemMatcher":
             {
                 "name": "pythonCustomMatcher",
                 "owner": "python",
@@ -118,9 +118,9 @@
                         "message": 1
                     }
                 ]
-            }
+            },
 
-        ],
+
 
         "walkthroughs": [
             {
