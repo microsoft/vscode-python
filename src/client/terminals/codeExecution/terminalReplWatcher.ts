@@ -5,6 +5,7 @@ import { EventName } from '../../telemetry/constants';
 
 function checkREPLCommand(command: string): boolean {
     const lower = command.toLowerCase().trimStart();
+    console.log('why is lint failing');
     return lower.startsWith('python ') || lower.startsWith('py ');
 }
 
