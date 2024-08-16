@@ -28,7 +28,7 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
-import { ProgressLocation, ProgressOptions, window } from 'vscode';
+import { ProgressLocation, ProgressOptions, ShellExecution, Task, tasks, TaskScope, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
@@ -137,6 +137,26 @@ async function activateUnsafe(
     const activationPromise = (async () => {
         await Promise.all(nonBlocking);
     })();
+
+    // register task provider for the workspace
+
+    const taskProvider = tasks.registerTaskProvider('pythonTask', {
+        provideTasks: () => [
+            new Task(
+                { type: 'pythonTask', task: 'defaultTask' },
+                TaskScope.Workspace,
+                'Default Task',
+                'pythonTask',
+                new ShellExecution('echo Hello World'),
+                'myCustomMatcher', // Use the custom problem matcher defined in package.json
+            ),
+        ],
+        resolveTask(_task: Task): Task | undefined {
+            return undefined;
+        },
+    });
+
+    context.subscriptions.push(taskProvider);
 
     //===============================================
     // activation ends here

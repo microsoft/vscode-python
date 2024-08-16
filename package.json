@@ -73,12 +73,52 @@
         "workspaceContains:manage.py",
         "workspaceContains:app.py",
         "workspaceContains:.venv",
-        "workspaceContains:.conda"
+        "workspaceContains:.conda",
+        "onCommand:workbench.action.tasks.runTask"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
     "l10n": "./l10n",
     "contributes": {
+        "taskDefinitions": [
+            {
+                "type": "pythonTask",
+                "required": ["task"],
+                "properties": {
+                  "task": {
+                    "type": "string",
+                    "description": "The task to customize"
+                  },
+                  "file": {
+                    "type": "string",
+                    "description": "The file that provides the task. Can be omitted."
+                  }
+                }
+              }
+        ],
+        "problemMatchers": [
+            {
+                "name": "pythonCustomMatcher",
+                "owner": "python",
+                "fileLocation": "autoDetect",
+                "pattern": [
+                    {
+                        "regexp": "^.*File \\\"([^\\\"]|.*)\\\", line (\\d+).*",
+                        "file": 1,
+                        "line": 2
+                    },
+                    {
+                        "regexp": "^.*raise.*$"
+                    },
+                    {
+                        "regexp": "^\\s*(.*)\\s*$",
+                        "message": 1
+                    }
+                ]
+            }
+
+        ],
+
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
