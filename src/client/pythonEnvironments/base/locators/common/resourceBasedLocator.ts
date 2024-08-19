@@ -37,7 +37,7 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
         await this.ensureResourcesReady();
         // There is not need to wait for the watchers to get started.
         try {
-            await this.ensureWatchersReady();
+            this.ensureWatchersReady();
         } catch (ex) {
             traceWarn(`Failed to ensure watchers are ready for locator ${this.constructor.name}`, ex);
         }
