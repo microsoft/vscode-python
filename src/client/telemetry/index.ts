@@ -2305,7 +2305,8 @@ export interface IEventNamePropertyMapping {
      */
     /* __GDPR__
        "repl" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "anthonykim1" }
+           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "anthonykim1" },
+           "repltype" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "anthonykim1" }
        }
      */
     [EventName.REPL]: {
