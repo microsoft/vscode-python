@@ -75,8 +75,8 @@ class PythonServerImpl implements Disposable {
     }
 
     public async checkValidCommand(code: string): Promise<boolean> {
-        const completeCode = await this.connection.sendRequest('check_valid_command', code);
-        if (completeCode === 'True') {
+        const completeCode: ExecutionResult = await this.connection.sendRequest('check_valid_command', code);
+        if (completeCode.output === 'True') {
             return new Promise((resolve) => resolve(true));
         }
         return new Promise((resolve) => resolve(false));
