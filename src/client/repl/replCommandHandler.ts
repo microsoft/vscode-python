@@ -23,29 +23,23 @@ export async function openInteractiveREPL(
     notebookController: NotebookController,
     notebookDocument: NotebookDocument | undefined,
 ): Promise<NotebookEditor> {
-    let notebookEditor: NotebookEditor | undefined;
+    let viewColumn = ViewColumn.Beside;
 
     // Case where NotebookDocument (REPL document already exists in the tab)
     if (notebookDocument) {
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
-        const replViewColumn = existingReplViewColumn ?? ViewColumn.Beside;
-        notebookEditor = await window.showNotebookDocument(notebookDocument!, { viewColumn: replViewColumn });
+        viewColumn = existingReplViewColumn ?? viewColumn;
     } else if (!notebookDocument) {
-        // Case where NotebookDocument doesnt exist, open new REPL tab
-        const interactiveWindowObject = (await commands.executeCommand(
-            'interactive.open',
-            {
-                preserveFocus: true,
-                viewColumn: ViewColumn.Beside,
-            },
-            undefined,
-            notebookController.id,
-            'Python REPL',
-        )) as { notebookEditor: NotebookEditor };
-        notebookEditor = interactiveWindowObject.notebookEditor;
-        notebookDocument = interactiveWindowObject.notebookEditor.notebook;
+        // Case where NotebookDocument doesnt exist, create a blank one.
+        notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    return notebookEditor!;
+    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: true });
+    await commands.executeCommand('notebook.selectKernel', {
+        editor,
+        id: notebookController.id,
+    });
+
+    return editor;
 }
 
 /**
