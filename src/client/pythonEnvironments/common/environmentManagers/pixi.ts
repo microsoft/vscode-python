@@ -9,7 +9,7 @@ import { OSType, getOSType, getUserHomeDir } from '../../../common/utils/platfor
 import { exec, getPythonSetting, onDidChangePythonSetting, pathExists, pathExistsSync } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { isTestExecution } from '../../../common/constants';
-import { traceError, traceVerbose, traceWarn } from '../../../logging';
+import { traceVerbose, traceWarn } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 
 export const PIXITOOLPATH_SETTING_KEY = 'pixiToolPath';
@@ -119,7 +119,7 @@ export class Pixi {
                     yield customPixiToolPath;
                 }
             } catch (ex) {
-                traceError(`Failed to get pixi setting`, ex);
+                traceWarn(`Failed to get pixi setting`, ex);
             }
 
             // Check unqualified filename, in case it's on PATH.
@@ -182,7 +182,7 @@ export class Pixi {
             const pixiInfo: PixiInfo = JSON.parse(infoOutput.stdout);
             return pixiInfo;
         } catch (error) {
-            traceError(`Failed to get pixi info for ${cwd}`, error);
+            traceWarn(`Failed to get pixi info for ${cwd}`, error);
             return undefined;
         }
     }
@@ -199,15 +199,13 @@ export class Pixi {
             if (!versionOutput || !versionOutput.stdout) {
                 return undefined;
             }
-
             const versionParts = versionOutput.stdout.split(' ');
             if (versionParts.length < 2) {
                 return undefined;
             }
-
             return versionParts[1].trim();
         } catch (error) {
-            traceError(`Failed to get pixi version`, error);
+            traceVerbose(`Failed to get pixi version`, error);
             return undefined;
         }
     }
