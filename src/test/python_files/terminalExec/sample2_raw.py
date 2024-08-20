@@ -8,7 +8,6 @@ def add(x, y):
 
     """
     # Some comment
-
     return x + y
 
 
