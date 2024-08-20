@@ -26,6 +26,20 @@ def _get_statements(selection):
     This will remove empty newlines around and within the selection, dedent it,
     and split it using the result of `ast.parse()`.
     """
+    if '"""' in selection or "'''" in selection:
+        yield selection
+        return
+
+    # Check if the selection is a multiline string
+    try:
+        # Attempt to parse the selection as a string literal
+        literal = ast.literal_eval(selection)
+        if isinstance(literal, str):
+            yield selection
+            return
+    except (ValueError, SyntaxError):
+        pass
+
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
     lines = (line for line in split_lines(selection) if line.strip() != "")
 
