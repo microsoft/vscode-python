@@ -30,16 +30,6 @@ def _get_statements(selection):
         yield selection
         return
 
-    # Check if the selection is a multiline string
-    try:
-        # Attempt to parse the selection as a string literal
-        literal = ast.literal_eval(selection)
-        if isinstance(literal, str):
-            yield selection
-            return
-    except (ValueError, SyntaxError):
-        pass
-
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
     lines = (line for line in split_lines(selection) if line.strip() != "")
 
