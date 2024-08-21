@@ -337,6 +337,9 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                 traceLog(`Pyenv environment manager found at: ${native.executable}`);
                 setPyEnvBinary(native.executable);
                 break;
+            case 'poetry':
+                traceLog(`Poetry environment manager found at: ${native.executable}`);
+                break;
             default:
                 traceWarn(`Unknown environment manager: ${native.tool}`);
                 break;
