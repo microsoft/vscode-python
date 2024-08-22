@@ -13,6 +13,7 @@ import {
     ProgressLocation,
     Terminal,
     window,
+    Disposable,
 } from 'vscode';
 import { pathExists } from 'fs-extra';
 import { IExtensionActivationService } from '../../activation/types';
@@ -44,8 +45,9 @@ import { IShellIntegrationService, ITerminalDeactivateService, ITerminalEnvVarCo
 import { ProgressService } from '../../common/application/progressService';
 
 @injectable()
-export class TerminalEnvVarCollectionService extends Disposable
-    implements IExtensionActivationService, ITerminalEnvVarCollectionService {
+export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
+    // extends Disposable
+    // implements IExtensionActivationService, ITerminalEnvVarCollectionService {
     public readonly supportedWorkspaceTypes = {
         untrustedWorkspace: false,
         virtualWorkspace: false,
@@ -71,7 +73,7 @@ export class TerminalEnvVarCollectionService extends Disposable
 
     private separator: string;
 
-    private _shellIntegrationDisposableMap = this.register(new DisposableMap());
+    // private _shellIntegrationDisposableMap = this.register(new DisposableMap());
 
     // problem: when extension is disposed, we want terminal env collection service to be disposed. When that is disposed, we want the listeners disposed as well
     constructor(
@@ -91,8 +93,8 @@ export class TerminalEnvVarCollectionService extends Disposable
         @inject(IEnvironmentVariablesProvider)
         private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
-        super();
-        this.this.separator = platform.osType === OSType.Windows ? ';' : ':';
+        // super();
+        // this.this.separator = platform.osType === OSType.Windows ? ';' : ':';
         this.progressService = new ProgressService(this.shell);
     }
 
@@ -194,23 +196,26 @@ export class TerminalEnvVarCollectionService extends Disposable
         /// ////////////////////////////////////////////////////////////////
         // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
         // But first, try some dummy commands to see if I can get any sort of exit code.
-        // const myTerm = window.createTerminal();
-        // window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-        //     if (terminal === myTerm) {
-        //         const execution = shellIntegration.executeCommand('echo "Hello world"');
-        //         //   const stream = execution.read();
-        //         //   for await(const data of stream) {
-        //         //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
-        //         //   }
-        //         window.onDidEndTerminalShellExecution((event) => {
-        //             if (event.execution === execution) {
-        //                 console.log(`Command exited with code ${event.exitCode}`); // Finally getting exit code 0 if I place code here, flaky. -->  failing to get exit code again
-        //                 traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
-        //                 // const temp = event.exitCode;
-        //             }
-        //         });
-        //     }
-        // });
+        const myTerm = window.createTerminal();
+        window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+            if (terminal === myTerm) {
+                const execution = shellIntegration.executeCommand(
+                    'python /Users/anthonykim/Desktop/vscode-python/python_files/printEnvVariables.py',
+                );
+
+                //   const stream = execution.read();
+                //   for await(const data of stream) {
+                //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+                //   }
+                window.onDidEndTerminalShellExecution((event) => {
+                    if (event.execution === execution) {
+                        console.log(`Command exited with code ${event.exitCode}`);
+                        traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
+                        // const temp = event.exitCode;
+                    }
+                });
+            }
+        });
         /// ///////////////////////////////////////////////////////////
         const env = activatedEnv ? normCaseKeys(activatedEnv) : undefined;
         traceVerbose(`Activated environment variables for ${resource?.fsPath}`, env);
@@ -233,36 +238,36 @@ export class TerminalEnvVarCollectionService extends Disposable
                 resource,
                 shell,
             );
-            // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
-            // But first, try some dummy commands to see if I can get any sort of exit code.
-            const myTerm = window.createTerminal();
+            // // TODO: Try to get environment variable using shell integration API here -- using hidden terminal.
+            // // But first, try some dummy commands to see if I can get any sort of exit code.
+            // const myTerm = window.createTerminal();
 
-            map.set(
-                terminal,
-                window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
-                    // can fire multiple times for single terminal ---> ATM when shell integration status changes, when its activated or working directory changes.
-                    // listen to this once per terminal. Dispose once its done
+            // map.set(
+            //     terminal,
+            //     window.onDidChangeTerminalShellIntegration(async ({ terminal, shellIntegration }) => {
+            //         // can fire multiple times for single terminal ---> ATM when shell integration status changes, when its activated or working directory changes.
+            //         // listen to this once per terminal. Dispose once its done
 
-                    if (terminal === myTerm) {
-                        const dispoable = map.get(terminal);
-                        disposable.dispose();
-                        map.delete(terminal);
-                        const execution = shellIntegration.executeCommand('echo "Hello world"');
+            //         if (terminal === myTerm) {
+            //             const dispoable = map.get(terminal);
+            //             disposable.dispose();
+            //             map.delete(terminal);
+            //             const execution = shellIntegration.executeCommand('echo "Hello world"');
 
-                        //   const stream = execution.read();
-                        //   for await(const data of stream) {
-                        //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
-                        //   }
-                        window.onDidEndTerminalShellExecution((event) => {
-                            if (event.execution === execution) {
-                                console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
-                                traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
-                                // const temp = event.exitCode;
-                            }
-                        });
-                    }
-                }),
-            );
+            //             //   const stream = execution.read();
+            //             //   for await(const data of stream) {
+            //             //     traceLog(`HERE ${data} HERE I AM WITH THE DATA`);
+            //             //   }
+            //             window.onDidEndTerminalShellExecution((event) => {
+            //                 if (event.execution === execution) {
+            //                     console.log(`Command exited with code ${event.exitCode}`); // Keep getting undefined... --- placing this above gets me exit code 0.
+            //                     traceLog(`HERE ${event.exitCode} HERE I AM WITH THE EXIT CODE`);
+            //                     // const temp = event.exitCode;
+            //                 }
+            //             });
+            //         }
+            //     }),
+            // );
         }
 
         /// /////////////////////////
