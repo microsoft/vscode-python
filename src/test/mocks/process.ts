@@ -4,9 +4,9 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import * as TypeMoq from 'typemoq';
 import { ICurrentProcess } from '../../client/common/types';
 import { EnvironmentVariables } from '../../client/common/variables/types';
+import { createTypeMoq } from './helper';
 
 @injectable()
 export class MockProcess implements ICurrentProcess {
@@ -24,12 +24,12 @@ export class MockProcess implements ICurrentProcess {
 
     // eslint-disable-next-line class-methods-use-this
     public get stdout(): NodeJS.WriteStream {
-        return TypeMoq.Mock.ofType<NodeJS.WriteStream>().object;
+        return createTypeMoq<NodeJS.WriteStream>().object;
     }
 
     // eslint-disable-next-line class-methods-use-this
     public get stdin(): NodeJS.ReadStream {
-        return TypeMoq.Mock.ofType<NodeJS.ReadStream>().object;
+        return createTypeMoq<NodeJS.ReadStream>().object;
     }
 
     // eslint-disable-next-line class-methods-use-this

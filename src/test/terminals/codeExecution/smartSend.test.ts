@@ -1,9 +1,9 @@
 import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import { TextEditor, Selection, Position, TextDocument, Uri } from 'vscode';
-import * as fs from 'fs-extra';
 import { SemVer } from 'semver';
 import { assert, expect } from 'chai';
+import * as fs from '../../../client/common/platform/fs-paths';
 import {
     IActiveResourceService,
     IApplicationShell,

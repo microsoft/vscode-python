@@ -16,8 +16,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
-
-const untildify = require('untildify');
+import { untildify } from '../../../client/common/helpers';
 
 suite('Python Settings - pythonPath', () => {
     class CustomPythonSettings extends PythonSettings {

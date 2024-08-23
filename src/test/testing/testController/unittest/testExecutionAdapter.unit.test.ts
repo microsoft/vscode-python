@@ -55,7 +55,7 @@ suite('Unittest test execution adapter', () => {
             .returns(() => {
                 deferred4.resolve();
                 return {
-                    proc: mockProc,
+                    proc: mockProc as any,
                     out: output,
                     dispose: () => {
                         /* no-body */

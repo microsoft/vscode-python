@@ -3,9 +3,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
+import * as fs from '../../../../../client/common/platform/fs-paths';
 import * as platformUtils from '../../../../../client/common/utils/platform';
 import { CondaEnvironmentLocator } from '../../../../../client/pythonEnvironments/base/locators/lowLevel/condaLocator';
 import { sleep } from '../../../../core';

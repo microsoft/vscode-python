@@ -12,7 +12,7 @@ import { IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
 import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 type PathVar = 'Path' | 'PATH';
 const PATHS = getSearchPathEnvVarNames();

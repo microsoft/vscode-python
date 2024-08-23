@@ -8,7 +8,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import * as fs from 'fs-extra';
+import * as fs from '../../../client/common/platform/fs-paths';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { CancellationTokenSource, DebugConfiguration, DebugSession, Uri, WorkspaceFolder } from 'vscode';
 import { IInvalidPythonPathInDebuggerService } from '../../../client/application/diagnostics/types';
@@ -32,7 +32,7 @@ import { IEnvironmentActivationService } from '../../../client/interpreter/activ
 import * as util from '../../../client/testing/testController/common/utils';
 import { createDeferred } from '../../../client/common/utils/async';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Unit Tests - Debug Launcher', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;

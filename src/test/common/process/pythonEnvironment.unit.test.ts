@@ -17,7 +17,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { Conda } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
 import { OUTPUT_MARKER_SCRIPT } from '../../../client/common/process/internal/scripts';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('PythonEnvironment', () => {
     let processService: TypeMoq.IMock<IProcessService>;

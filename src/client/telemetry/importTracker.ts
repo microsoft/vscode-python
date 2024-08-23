@@ -49,7 +49,7 @@ const testExecution = isTestExecution();
 export class ImportTracker implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
-    private pendingChecks = new Map<string, NodeJS.Timer>();
+    private pendingChecks = new Map<string, NodeJS.Timeout>();
 
     private static sentMatches: Set<string> = new Set<string>();
 

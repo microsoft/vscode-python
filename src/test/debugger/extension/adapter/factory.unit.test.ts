@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs-extra';
+import * as fs from '../../../../client/common/platform/fs-paths';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import rewiremock from 'rewiremock';
@@ -30,7 +30,7 @@ import { ICommandManager } from '../../../../client/common/application/types';
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import * as pythonDebugger from '../../../../client/debugger/pythonDebugger';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Debugging - Adapter Factory', () => {
     let factory: IDebugAdapterDescriptorFactory;

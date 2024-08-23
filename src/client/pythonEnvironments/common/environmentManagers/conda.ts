@@ -1,6 +1,6 @@
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { lt, SemVer } from 'semver';
+import * as fsapi from '../../../common/platform/fs-paths';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 import {
     arePathsSame,

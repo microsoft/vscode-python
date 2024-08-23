@@ -4,11 +4,11 @@
 'use strict';
 
 import { expect } from 'chai';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Position, Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
+import * as fs from '../../../client/common/platform/fs-paths';
 import {
     IActiveResourceService,
     IApplicationShell,

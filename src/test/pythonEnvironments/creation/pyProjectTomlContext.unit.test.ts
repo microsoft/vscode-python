@@ -12,7 +12,7 @@ import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis'
 import { IDisposableRegistry } from '../../../client/common/types';
 import { registerPyProjectTomlFeatures } from '../../../client/pythonEnvironments/creation/pyProjectTomlContext';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 class FakeDisposable {
     public dispose() {

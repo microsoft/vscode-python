@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import * as fsextra from 'fs-extra';
+import * as fsextra from '../../../client/common/platform/fs-paths';
 import * as net from 'net';
 import * as path from 'path';
 import * as tmpMod from 'tmp';

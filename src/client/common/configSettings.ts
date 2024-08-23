@@ -38,8 +38,7 @@ import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
 import { getOSType, OSType } from './utils/platform';
 import { isWindows } from './platform/platformService';
-
-const untildify = require('untildify');
+import { untildify } from './helpers';
 
 export class PythonSettings implements IPythonSettings {
     private get onDidChange(): Event<ConfigurationChangeEvent | undefined> {

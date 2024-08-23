@@ -82,7 +82,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         // First call should show info once
 
         sinon.assert.calledOnce(showInformationMessageStub);
-        assert(prompter);
+        assert.ok(prompter);
 
         prompter!.onDidSendMessage!(ptvsdOutputEvent);
         // Can't use deferred promise here
@@ -104,7 +104,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
 
         const session = createSession();
         const prompter = await promptFactory.createDebugAdapterTracker(session);
-        assert(prompter);
+        assert.ok(prompter);
 
         prompter!.onDidSendMessage!(ptvsdOutputEvent);
         await deferred.promise;
@@ -130,7 +130,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
 
         const session = createSession();
         const prompter = await promptFactory.createDebugAdapterTracker(session);
-        assert(prompter);
+        assert.ok(prompter);
 
         prompter!.onDidSendMessage!(debugpyOutputEvent);
         // Can't use deferred promise here
@@ -168,7 +168,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
 
             const session = createSession();
             const prompter = await promptFactory.createDebugAdapterTracker(session);
-            assert(prompter);
+            assert.ok(prompter);
 
             prompter!.onDidSendMessage!(message);
             // Can't use deferred promise here

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fsapi from '../../../../client/common/platform/fs-paths';
 import * as platformUtils from '../../../../client/common/utils/platform';
 import { PythonReleaseLevel, PythonVersion } from '../../../../client/pythonEnvironments/base/info';
 import * as fileUtils from '../../../../client/pythonEnvironments/common/externalDependencies';

@@ -21,6 +21,7 @@ import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { createTypeMoq } from '../mocks/helper';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -45,16 +46,16 @@ suite('Installation - channel messages', () => {
         const serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
-        platform = TypeMoq.Mock.ofType<IPlatformService>();
+        platform = createTypeMoq<IPlatformService>();
         serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, platform.object);
 
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell = createTypeMoq<IApplicationShell>();
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
-        interpreters = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreters = createTypeMoq<IInterpreterService>();
         serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, interpreters.object);
 
-        const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
+        const moduleInstaller = createTypeMoq<IModuleInstaller>();
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, moduleInstaller.object);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,

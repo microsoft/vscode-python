@@ -233,7 +233,7 @@ suite('Terminal Provider', () => {
             try {
                 await terminalProvider.initialize(undefined);
             } catch (ex) {
-                assert(false, `No error should be thrown, ${ex}`);
+                assert.ok(false, `No error should be thrown, ${ex}`);
             }
         });
     });

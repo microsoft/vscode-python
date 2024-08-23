@@ -81,7 +81,7 @@ suite('pytest test discovery adapter', () => {
             .returns(() => {
                 deferred2.resolve();
                 return {
-                    proc: mockProc,
+                    proc: mockProc as any,
                     out: output,
                     dispose: () => {
                         /* no-body */

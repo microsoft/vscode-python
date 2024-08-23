@@ -12,7 +12,7 @@ import { IDisposableRegistry } from '../../../client/common/types';
 import { onCreateEnvironmentStarted } from '../../../client/pythonEnvironments/creation/createEnvApi';
 import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 suite('Create Environments Tests', () => {
     let showQuickPickStub: sinon.SinonStub;

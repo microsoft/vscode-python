@@ -18,7 +18,7 @@ import {
 } from '../../../client/pythonEnvironments/creation/installedPackagesDiagnostic';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 class FakeDisposable {
     public dispose() {

@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import * as vscode from 'vscode';
+import * as fs from '../platform/fs-paths';
 import { PVSC_EXTENSION_ID } from '../constants';
 
 export function getExtension<T = unknown>(extensionId: string): vscode.Extension<T> | undefined {

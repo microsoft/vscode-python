@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../common/application/types';
@@ -26,7 +26,7 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
-        @optional() public hasPromptBeenShownInCurrentSession: boolean = false,
+        public hasPromptBeenShownInCurrentSession: boolean = false,
     ) {}
 
     public async activate(resource: Uri): Promise<void> {

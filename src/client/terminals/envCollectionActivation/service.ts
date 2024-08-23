@@ -11,7 +11,7 @@ import {
     EnvironmentVariableMutatorOptions,
     ProgressLocation,
 } from 'vscode';
-import { pathExists } from 'fs-extra';
+import { pathExists, normCase } from '../../common/platform/fs-paths';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
@@ -35,7 +35,7 @@ import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
-import { normCase } from '../../common/platform/fs-paths';
+
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
 import { IShellIntegrationService, ITerminalDeactivateService, ITerminalEnvVarCollectionService } from '../types';
 import { ProgressService } from '../../common/application/progressService';

@@ -1,5 +1,5 @@
 import { spawnSync } from 'child_process';
-import * as fs from 'fs-extra';
+import * as fs from '../client/common/platform/fs-paths';
 import * as os from 'os';
 import * as path from 'path';
 import { downloadAndUnzipVSCode, resolveCliPathFromVSCodeExecutablePath, runTests } from '@vscode/test-electron';

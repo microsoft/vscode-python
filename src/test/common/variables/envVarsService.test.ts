@@ -14,7 +14,7 @@ import { EnvironmentVariablesService } from '../../../client/common/variables/en
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { getOSType } from '../../common';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 const envFilesFolderPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc', 'workspace4');
 

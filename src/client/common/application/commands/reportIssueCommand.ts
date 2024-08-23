@@ -3,11 +3,11 @@
 
 'use strict';
 
-import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { isEqual } from 'lodash';
+import * as fs from '../../platform/fs-paths';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from '../types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';

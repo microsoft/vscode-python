@@ -16,6 +16,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../client/ioc/types';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { createTypeMoq } from '../mocks/helper';
 
 suite('Installation - installation channels', () => {
     let serviceManager: ServiceManager;
@@ -71,7 +72,7 @@ suite('Installation - installation channels', () => {
         const installer1 = mockInstaller(true, '1');
         const installer2 = mockInstaller(true, '2');
 
-        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        const appShell = createTypeMoq<IApplicationShell>();
         serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -98,7 +99,7 @@ suite('Installation - installation channels', () => {
     });
 
     function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {
-        const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
+        const installer = createTypeMoq<IModuleInstaller>();
         installer
             .setup((x) => x.isSupported(TypeMoq.It.isAny()))
             .returns(

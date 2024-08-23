@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { inject, injectable, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
 import { traceError, traceVerbose } from '../../logging';
@@ -33,7 +33,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(ICurrentProcess) private process: ICurrentProcess,
-        @optional() private cacheDuration: number = CACHE_DURATION,
+        private cacheDuration: number = CACHE_DURATION,
     ) {
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();

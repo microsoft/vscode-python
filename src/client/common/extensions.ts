@@ -63,13 +63,6 @@ String.prototype.trimQuotes = function (this: string): string {
     return this.replace(/(^['"])|(['"]$)/g, '');
 };
 
-declare interface Promise<T> {
-    /**
-     * Catches task error and ignores them.
-     */
-    ignoreErrors(): Promise<void>;
-}
-
 /**
  * Explicitly tells that promise should be run asynchonously.
  */

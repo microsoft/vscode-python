@@ -5,7 +5,7 @@
 // IMPORTANT: Do not import anything from the 'client' folder in this file as that folder is not available during smoke tests.
 
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
+import * as fs from '../client/common/platform/fs-paths';
 import * as glob from 'glob';
 import * as path from 'path';
 import { coerce, SemVer } from 'semver';
@@ -50,7 +50,7 @@ export type PythonSettingKeys =
 
 async function disposePythonSettings() {
     if (!IS_SMOKE_TEST) {
-        const configSettings = await import('../client/common/configSettings');
+        const configSettings = await import('../client/common/configSettings.js');
         configSettings.PythonSettings.dispose();
     }
 }
@@ -224,7 +224,7 @@ export async function deleteFile(file: string) {
 
 export async function deleteFiles(globPattern: string) {
     const items = await new Promise<string[]>((resolve, reject) => {
-        glob(globPattern, (ex, files) => (ex ? reject(ex) : resolve(files)));
+        glob.default(globPattern, (ex, files) => (ex ? reject(ex) : resolve(files)));
     });
 
     return Promise.all(items.map((item) => fs.remove(item).catch(noop)));
@@ -292,7 +292,7 @@ export function correctPathForOsType(pathToCorrect: string, os?: OSType): string
  * @return `SemVer` version of the Python interpreter, or `undefined` if an error occurs.
  */
 export async function getPythonSemVer(procService?: IProcessService): Promise<SemVer | undefined> {
-    const proc = await import('../client/common/process/proc');
+    const proc = await import('../client/common/process/proc.js');
 
     const pythonProcRunner = procService ? procService : new proc.ProcessService();
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
@@ -508,7 +508,7 @@ export async function openFile(file: string): Promise<TextDocument> {
     const vscode = require('vscode') as typeof import('vscode');
     const textDocument = await vscode.workspace.openTextDocument(file);
     await vscode.window.showTextDocument(textDocument);
-    assert(vscode.window.activeTextEditor, 'No active editor');
+    assert.ok(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
 }
 

@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsextra from 'fs-extra';
 import * as path from 'path';
 import { FileStat, FileType, Uri } from 'vscode';
+import * as fsextra from '../client/common/platform/fs-paths';
 import { convertStat } from '../client/common/platform/fileSystem';
 import { createDeferred } from '../client/common/utils/async';
 

@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import * as fs from 'fs-extra';
 import { parse } from 'jsonc-parser';
 import { DebugConfiguration, Uri, WorkspaceFolder } from 'vscode';
+import * as fs from '../../../../common/platform/fs-paths';
 import { getConfiguration, getWorkspaceFolder } from '../../../../common/vscodeApis/workspaceApis';
 import { traceLog } from '../../../../logging';
 

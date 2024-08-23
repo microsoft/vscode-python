@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as fs from '../../../../../client/common/platform/fs-paths';
 import { FileChangeType } from '../../../../../client/common/platform/fileSystemWatcher';
 import { IDisposable } from '../../../../../client/common/types';
 import { createDeferred, Deferred, sleep } from '../../../../../client/common/utils/async';

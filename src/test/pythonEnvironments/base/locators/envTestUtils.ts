@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as assert from 'assert';
 import { exec } from 'child_process';
 import { cloneDeep, zip } from 'lodash';
 import { promisify } from 'util';
+import * as fsapi from '../../../../client/common/platform/fs-paths';
 import { PythonEnvInfo, PythonVersion, UNKNOWN_PYTHON_VERSION } from '../../../../client/pythonEnvironments/base/info';
 import { getEmptyVersion } from '../../../../client/pythonEnvironments/base/info/pythonVersion';
 import { BasicEnvInfo } from '../../../../client/pythonEnvironments/base/locator';

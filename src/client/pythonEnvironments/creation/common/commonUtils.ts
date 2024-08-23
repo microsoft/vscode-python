@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { WorkspaceFolder } from 'vscode';
+import * as fs from '../../../common/platform/fs-paths';
 import { Commands } from '../../../common/constants';
 import { Common } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';

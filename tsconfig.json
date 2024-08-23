@@ -4,7 +4,8 @@
         "paths": {
             "*": ["types/*"]
         },
-        "module": "commonjs",
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
         "target": "es2018",
         "outDir": "out",
         "lib": [

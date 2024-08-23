@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as fsapi from '../../common/platform/fs-paths';
 import { IWorkspaceService } from '../../common/application/types';
 import { ExecutionResult, IProcessServiceFactory, ShellOptions, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IConfigurationService, IExperimentService } from '../../common/types';
@@ -66,9 +66,6 @@ export function readFile(filePath: string): Promise<string> {
 export function readFileSync(filePath: string): string {
     return fsapi.readFileSync(filePath, 'utf-8');
 }
-
-// eslint-disable-next-line global-require
-export const untildify: (value: string) => string = require('untildify');
 
 /**
  * Returns true if given file path exists within the given parent directory, false otherwise.
@@ -161,7 +158,7 @@ export async function* getSubDirs(
     root: string,
     options?: { resolveSymlinks?: boolean },
 ): AsyncIterableIterator<string> {
-    const dirContents = await fsapi.promises.readdir(root, { withFileTypes: true });
+    const dirContents = await fsapi.readdir(root, { withFileTypes: true });
     const generators = dirContents.map((item) => {
         async function* generator() {
             const fullPath = path.join(root, item.name);

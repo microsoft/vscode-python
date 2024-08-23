@@ -10,7 +10,7 @@ import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
-import { pathExists, untildify } from '../../../common/externalDependencies';
+import { pathExists } from '../../../common/externalDependencies';
 import { getProjectDir, isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
     isVenvEnvironment,
@@ -21,6 +21,7 @@ import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { untildify } from '../../../../common/helpers';
 
 const DEFAULT_SEARCH_DEPTH = 2;
 /**

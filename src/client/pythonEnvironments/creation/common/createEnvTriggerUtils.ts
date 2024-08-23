@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import * as fsapi from 'fs-extra';
 import { ConfigurationTarget, Uri, WorkspaceFolder } from 'vscode';
+import * as fsapi from '../../../common/platform/fs-paths';
 import { getPipRequirementsFiles } from '../provider/venvUtils';
 import { getExtension } from '../../../common/vscodeApis/extensionsApi';
 import { PVSC_EXTENSION_ID } from '../../../common/constants';

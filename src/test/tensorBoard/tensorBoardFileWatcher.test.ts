@@ -1,7 +1,7 @@
 import { assert } from 'chai';
-import * as fse from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fse from '../../client/common/platform/fs-paths';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IExperimentService } from '../../client/common/types';
 import { TensorBoardFileWatcher } from '../../client/tensorBoard/tensorBoardFileWatcher';

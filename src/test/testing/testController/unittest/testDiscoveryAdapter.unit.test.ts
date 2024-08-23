@@ -54,7 +54,7 @@ suite('Unittest test discovery adapter', () => {
                 deferred.resolve();
                 console.log('execObservable is returning');
                 return {
-                    proc: mockProc,
+                    proc: mockProc as any,
                     out: output,
                     dispose: () => {
                         /* no-body */

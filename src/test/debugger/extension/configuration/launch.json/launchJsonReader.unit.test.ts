@@ -4,10 +4,10 @@
 'use strict';
 
 import * as sinon from 'sinon';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { assert } from 'chai';
+import * as fs from '../../../../../client/common/platform/fs-paths';
 import { getConfigurationsForWorkspace } from '../../../../../client/debugger/extension/configuration/launch.json/launchJsonReader';
 import * as vscodeApis from '../../../../../client/common/vscodeApis/workspaceApis';
 

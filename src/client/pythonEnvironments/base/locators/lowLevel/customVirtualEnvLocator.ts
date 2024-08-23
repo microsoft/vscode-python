@@ -9,12 +9,7 @@ import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
-import {
-    getPythonSetting,
-    onDidChangePythonSetting,
-    pathExists,
-    untildify,
-} from '../../../common/externalDependencies';
+import { getPythonSetting, onDidChangePythonSetting, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
     isVenvEnvironment,
@@ -25,6 +20,7 @@ import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { untildify } from '../../../../common/helpers';
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
  */

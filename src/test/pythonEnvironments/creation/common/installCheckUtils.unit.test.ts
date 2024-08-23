@@ -13,7 +13,7 @@ import { SpawnOptions } from '../../../../client/common/process/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../../client/pythonEnvironments/info';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 function getSomeRequirementFile(): typemoq.IMock<TextDocument> {
     const someFilePath = 'requirements.txt';

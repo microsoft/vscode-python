@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as fs from 'fs-extra';
+import * as fs from '../common/platform/fs-paths';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
 import { traceError, traceVerbose } from '../logging';

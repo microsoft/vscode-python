@@ -4,7 +4,7 @@
 'use strict';
 
 import { ChildProcess, spawn, SpawnOptions } from 'child_process';
-import * as fs from 'fs-extra';
+import * as fs from '../client/common/platform/fs-paths';
 import { AddressInfo, createServer, Server } from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../client/constants';

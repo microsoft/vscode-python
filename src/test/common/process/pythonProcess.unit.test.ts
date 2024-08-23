@@ -10,7 +10,7 @@ import { createPythonProcessService } from '../../../client/common/process/pytho
 import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { noop } from '../../core';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('PythonProcessService', () => {
     let processService: TypeMoq.IMock<IProcessService>;

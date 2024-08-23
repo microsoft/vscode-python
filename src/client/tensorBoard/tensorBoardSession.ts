@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as fs from 'fs-extra';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import {
@@ -24,6 +23,7 @@ import {
     window,
     workspace,
 } from 'vscode';
+import * as fs from '../common/platform/fs-paths';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { createPromiseFromCancellation } from '../common/cancellation';
 import { tensorboardLauncher } from '../common/process/internal/scripts';

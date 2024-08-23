@@ -24,7 +24,7 @@ import {
     CreateEnvironmentResult,
 } from '../../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 suite('venv Creation provider tests', () => {
     let venvProvider: CreateEnvironmentProvider;
@@ -198,6 +198,7 @@ suite('venv Creation provider tests', () => {
                 out: {
                     subscribe: (
                         _next?: (value: Output<string>) => void,
+                        // eslint-disable-next-line no-shadow
                         error?: (error: unknown) => void,
                         complete?: () => void,
                     ) => {

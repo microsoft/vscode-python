@@ -7,7 +7,8 @@
 // This is a hack, however for some reason the process running the tests do not exit.
 // The hack is to force it to die when tests are done, if this doesn't work we've got a bigger problem on our hands.
 
-import * as fs from 'fs-extra';
+import * as fs from '../../client/common/platform/fs-paths';
+
 import * as net from 'net';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import { Location, TestItem, TestMessage, TestRun } from 'vscode';
+import * as fsapi from '../../../common/platform/fs-paths';
 import { getRunIdFromRawData, getTestCaseNodes } from './testItemUtilities';
 import { TestData } from './types';
 import { fixLogLines } from './utils';

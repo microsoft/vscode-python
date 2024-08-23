@@ -46,8 +46,7 @@ import {
     ISpecialQuickPickItem,
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
-
-const untildify = require('untildify');
+import { untildify } from '../../../../common/helpers';
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 export type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;

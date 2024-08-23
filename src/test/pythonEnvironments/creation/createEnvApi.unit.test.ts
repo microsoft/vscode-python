@@ -15,7 +15,7 @@ import * as windowApis from '../../../client/common/vscodeApis/windowApis';
 import { handleCreateEnvironmentCommand } from '../../../client/pythonEnvironments/creation/createEnvironment';
 import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 suite('Create Environment APIs', () => {
     let registerCommandStub: sinon.SinonStub;

@@ -23,7 +23,7 @@ import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
 import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 const multirootPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc');
 const workspace4Path = Uri.file(path.join(multirootPath, 'workspace4'));

@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
+import * as fsapi from '../../../common/platform/fs-paths';
 import '../../../common/extensions';
 import { splitLines } from '../../../common/stringUtils';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';

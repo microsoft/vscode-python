@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as querystring from 'querystring';
 import { env, UIKind } from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
@@ -37,8 +37,8 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IExperimentService) private experiments: IExperimentService,
         @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
         @inject(IPlatformService) private platformService: IPlatformService,
-        @optional() private sampleSizePerOneHundredUsers: number = 10,
-        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY,
+        private sampleSizePerOneHundredUsers: number = 10,
+        private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY,
     ) {}
 
     public async activate(): Promise<void> {

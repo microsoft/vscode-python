@@ -21,6 +21,7 @@ import { PythonResultResolver } from '../../../client/testing/testController/com
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { createTypeMoq } from '../../mocks/helper';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: ITestResultResolver;
@@ -105,7 +106,7 @@ suite('End to End Tests: test adapters', () => {
 
         // create objects that were not injected
 
-        testOutputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        testOutputChannel = createTypeMoq<ITestOutputChannel>();
         testOutputChannel
             .setup((x) => x.append(typeMoq.It.isAny()))
             .callback((appendVal: any) => {

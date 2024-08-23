@@ -9,6 +9,7 @@ import * as platformUtils from '../../../../../client/common/utils/platform';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
 import { PythonEnvsChangedEvent } from '../../../../../client/pythonEnvironments/base/watcher';
+import * as helpers from '../../../../../client/common/helpers';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import {
     CustomVirtualEnvironmentLocator,
@@ -32,7 +33,7 @@ suite('CustomVirtualEnvironment Locator', () => {
     let untildify: sinon.SinonStub;
 
     setup(async () => {
-        untildify = sinon.stub(externalDependencies, 'untildify');
+        untildify = sinon.stub(helpers, 'untildify');
         untildify.callsFake((value: string) => value.replace('~', testVirtualHomeDir));
         getUserHomeDirStub = sinon.stub(platformUtils, 'getUserHomeDir');
         getUserHomeDirStub.returns(testVirtualHomeDir);

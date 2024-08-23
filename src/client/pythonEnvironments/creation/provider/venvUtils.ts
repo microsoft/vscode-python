@@ -2,7 +2,6 @@
 // Licensed under the MIT License
 
 import * as tomljs from '@iarna/toml';
-import * as fs from 'fs-extra';
 import { flatten, isArray } from 'lodash';
 import * as path from 'path';
 import {
@@ -15,6 +14,7 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
+import * as fs from '../../../common/platform/fs-paths';
 import { Common, CreateEnv } from '../../../common/utils/localize';
 import {
     MultiStepAction,

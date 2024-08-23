@@ -236,4 +236,8 @@ export class MockChildProcess extends EventEmitter {
         this.stdout?.destroy();
         return true;
     }
+
+    dispose(): void {
+        this.stdout?.destroy();
+    }
 }
