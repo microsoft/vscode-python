@@ -73,8 +73,7 @@
         "workspaceContains:manage.py",
         "workspaceContains:app.py",
         "workspaceContains:.venv",
-        "workspaceContains:.conda",
-        "onCommand:workbench.action.tasks.runTask"
+        "workspaceContains:.conda"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
