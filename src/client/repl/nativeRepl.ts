@@ -21,7 +21,6 @@ import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry';
 
 let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
-
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
     private pythonServer!: PythonServer;
@@ -35,6 +34,8 @@ export class NativeRepl implements Disposable {
     private replController!: NotebookController;
 
     private notebookDocument: NotebookDocument | undefined;
+
+    public newReplSession = true;
 
     // TODO: In the future, could also have attribute of URI for file specific REPL.
     private constructor() {
@@ -65,7 +66,7 @@ export class NativeRepl implements Disposable {
             workspace.onDidCloseNotebookDocument((nb) => {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
-                    nativeRepl = undefined;
+                    this.newReplSession = true;
                 }
             }),
         );
@@ -162,9 +163,12 @@ export class NativeRepl implements Disposable {
  */
 export async function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): Promise<NativeRepl> {
     if (!nativeRepl) {
-        sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
         nativeRepl = await NativeRepl.create(interpreter);
         disposables.push(nativeRepl);
+    }
+    if (nativeRepl.newReplSession) {
+        sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
+        nativeRepl.newReplSession = false;
     }
     return nativeRepl;
 }
