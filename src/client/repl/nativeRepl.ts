@@ -35,7 +35,7 @@ export class NativeRepl implements Disposable {
 
     private notebookDocument: NotebookDocument | undefined;
 
-    public newReplSession = true;
+    public newReplSession: boolean | undefined = true;
 
     // TODO: In the future, could also have attribute of URI for file specific REPL.
     private constructor() {
