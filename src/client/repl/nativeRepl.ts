@@ -166,7 +166,7 @@ export async function getNativeRepl(interpreter: PythonEnvironment, disposables:
         nativeRepl = await NativeRepl.create(interpreter);
         disposables.push(nativeRepl);
     }
-    if (nativeRepl.newReplSession) {
+    if (nativeRepl && nativeRepl.newReplSession) {
         sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
         nativeRepl.newReplSession = false;
     }
