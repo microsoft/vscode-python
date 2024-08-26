@@ -20,6 +20,8 @@ import { createReplController } from './replController';
 import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry';
 
+let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
+
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
     private pythonServer!: PythonServer;
@@ -63,6 +65,7 @@ export class NativeRepl implements Disposable {
             workspace.onDidCloseNotebookDocument((nb) => {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
+                    nativeRepl = undefined;
                 }
             }),
         );
@@ -151,8 +154,6 @@ export class NativeRepl implements Disposable {
         }
     }
 }
-
-let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
 
 /**
  * Get Singleton Native REPL Instance
