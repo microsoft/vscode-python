@@ -325,3 +325,22 @@ def test_simple_django_collect():
         assert (
             len(actual_item["tests"]["children"][0]["children"][0]["children"][0]["children"]) == 3
         )
+
+
+def test_django_bad_manage_py_path():
+    test_data_path: pathlib.Path = pathlib.Path(__file__).parent / ".data"
+    python_files_path: pathlib.Path = pathlib.Path(__file__).parent.parent.parent
+    discovery_script_path: str = os.fsdecode(python_files_path / "unittestadapter" / "discovery.py")
+    data_path: pathlib.Path = test_data_path / "simple_django"
+    data_path_wrong: pathlib.Path = test_data_path / "simple_django_wrong"
+    manage_py_path: str = os.fsdecode(pathlib.Path(data_path_wrong, "manage.py"))
+
+    with pytest.raises(RuntimeError):
+        helpers.runner_with_cwd_env(
+            [
+                discovery_script_path,
+                "--udiscovery",
+            ],
+            data_path,
+            {"MANAGE_PY_PATH": manage_py_path},
+        )
