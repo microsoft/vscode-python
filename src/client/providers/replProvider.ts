@@ -4,8 +4,6 @@ import { Commands } from '../common/constants';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
-import { captureTelemetry } from '../telemetry';
-import { EventName } from '../telemetry/constants';
 import { ICodeExecutionService } from '../terminals/types';
 
 export class ReplProvider implements Disposable {
@@ -28,7 +26,6 @@ export class ReplProvider implements Disposable {
         this.disposables.push(disposable);
     }
 
-    @captureTelemetry(EventName.REPL, { replType: 'Terminal' })
     private async commandHandler() {
         const resource = this.activeResourceService.getActiveResource();
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
