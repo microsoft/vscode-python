@@ -139,68 +139,57 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
     Created as a separate function for clarity in threading context.
     """
     # Windows design
-    while not completed.is_set():
-        listener.socket.settimeout(10)  # Set a timeout for the accept call
-        if sys.platform == "win32":
-            all_data: list = []
-            stream = listener.wait()
-            while not completed.is_set():
-                # Read data from collection
-                close = stream.closed
-                if close:
-                    break
-                data = stream.readlines()
-                if not data:
-                    if completed.is_set():
-                        break  # Exit loop if completed event is set
+    if sys.platform == "win32":
+        all_data: list = []
+        stream = listener.wait()
+        while True:
+            # Read data from collection
+            close = stream.closed
+            if close:
+                break
+            data = stream.readlines()
+            if not data:
+                if completed.is_set():
+                    break  # Exit loop if completed event is set
+            else:
+                try:
+                    # Attempt to accept another connection if the current one closes unexpectedly
+                    print("attempt another connection")
+                except socket.timeout:
+                    # On timeout, append all collected data to result and return
+                    # result.append("".join(all_data))
+                    return
+            data_decoded = "".join(data)
+            all_data.append(data_decoded)
+        # Append all collected data to result array
+        result.append("".join(all_data))
+    else:  # Unix design
+        connection, _ = listener.socket.accept()
+        listener.socket.settimeout(1)
+        all_data: list = []
+        while True:
+            # Reading from connection
+            data: bytes = connection.recv(1024 * 1024)
+            if not data:
+                if completed.is_set():
+                    break  # Exit loop if completed event is set
                 else:
                     try:
                         # Attempt to accept another connection if the current one closes unexpectedly
-                        print("attempt another connection")
+                        connection, _ = listener.socket.accept()
                     except socket.timeout:
                         # On timeout, append all collected data to result and return
-                        # result.append("".join(all_data))
+                        result.append("".join(all_data))
                         return
-                data_decoded = "".join(data)
-                all_data.append(data_decoded)
-            # Append all collected data to result array
-            result.append("".join(all_data))
-    else:  # Unix design
-        while not completed.is_set():
-            listener.socket.settimeout(10)  # Set a timeout for the accept call
-            connection, _ = listener.socket.accept()
-            listener.socket.settimeout(1)
-            all_data: list = []
-            while not completed.is_set():
-                # Reading from connection
-                data: bytes = connection.recv(1024 * 1024)
-                if not data:
-                    if completed.is_set():
-                        break  # Exit loop if completed event is set
-                    else:
-                        try:
-                            # Attempt to accept another connection if the current one closes unexpectedly
-                            connection, _ = listener.socket.accept()
-                        except socket.timeout:
-                            # On timeout, append all collected data to result and return
-                            result.append("".join(all_data))
-                            return
-                all_data.append(data.decode("utf-8"))
-            # Append all collected data to result array
+            all_data.append(data.decode("utf-8"))
+        # Append all collected data to result array
         result.append("".join(all_data))
 
 
 def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
-    try:
-        result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
-        if result.returncode != 0:
-            return "ERROR"
-        completed.set()
-        return result
-    except Exception:
-        return "ERROR"
-    finally:
-        completed.set()
+    result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
+    completed.set()
+    return result
 
 
 def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
@@ -299,9 +288,6 @@ def runner_with_cwd_env(
 
         t1.join()
         t2.join()
-
-        if result == [] or result[0] == "ERROR":
-            raise RuntimeError("Error occurred when running test code")
 
         return process_data_received(result[0]) if result else None
 
