@@ -12,6 +12,7 @@ import {
     workspace,
 } from 'vscode';
 import { getExistingReplViewColumn } from './replUtils';
+import { PVSC_EXTENSION_ID } from '../common/constants';
 
 /**
  * Function that opens/show REPL using IW UI.
@@ -33,10 +34,11 @@ export async function openInteractiveREPL(
         // Case where NotebookDocument doesnt exist, create a blank one.
         notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: true });
+    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: true, label: 'Python REPL' });
     await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,
+        extension: PVSC_EXTENSION_ID,
     });
 
     return editor;

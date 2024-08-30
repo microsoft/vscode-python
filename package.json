@@ -47,7 +47,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.94.0-20240913"
+        "vscode": "^1.93.0-20240415"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -1151,17 +1151,17 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "!accessibilityModeEnabled && config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive' && editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused"
+                "when": "!accessibilityModeEnabled && config.python.REPL.sendToNativeREPL && editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && isCompositeNotebook"
             },
             {
                 "command": "python.refreshTensorBoard",
