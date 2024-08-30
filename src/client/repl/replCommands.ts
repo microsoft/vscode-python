@@ -111,13 +111,13 @@ export async function registerReplExecuteOnEnter(
             if (editor) {
                 // Execute right away when complete code and Not multi-line
                 if (completeCode && !isMultiLineText(editor)) {
-                    await commands.executeCommand('interactive.execute');
+                    await commands.executeCommand('repl.execute');
                 } else {
                     insertNewLineToREPLInput(editor);
 
                     // Handle case when user enters on blank line, just trigger interactive.execute
                     if (editor && editor.document.lineAt(editor.selection.active.line).text === '') {
-                        await commands.executeCommand('interactive.execute');
+                        await commands.executeCommand('repl.execute');
                     }
                 }
             }

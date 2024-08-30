@@ -74,7 +74,7 @@ export async function executeNotebookCell(notebookDocument: NotebookDocument, co
     await addCellToNotebook(notebookDocument, code);
     // Execute the cell
     commands.executeCommand('notebook.cell.execute', {
-        ranges: [{ start: cellCount, end: cellCount + 1 }],
+        ranges: [{ start: cellCount - 1, end: cellCount }],
         document: notebookDocument.uri,
     });
 }
@@ -89,7 +89,7 @@ async function addCellToNotebook(notebookDocument: NotebookDocument, code: strin
     const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
     const { cellCount } = notebookDocument!;
     // Add new cell to interactive window document
-    const notebookEdit = NotebookEdit.insertCells(cellCount, [notebookCellData]);
+    const notebookEdit = NotebookEdit.insertCells(cellCount - 1, [notebookCellData]);
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
     await workspace.applyEdit(workspaceEdit);
