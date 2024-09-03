@@ -109,7 +109,7 @@ extends:
             project: 'Monaco'
             definition: 591
             buildVersionToDownload: 'latestFromBranch'
-            branchName: 'refs/heads/azure1' # TODO: change to main before merging to main
+            branchName: 'refs/heads/main'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(vsceTarget)'
             itemPattern: '(pet.exe|pet|ThirdPartyNotices.txt)'
