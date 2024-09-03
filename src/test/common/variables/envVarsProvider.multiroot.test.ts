@@ -4,7 +4,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -14,7 +14,6 @@ import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
-import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { clearPythonPathInWorkspaceFolder, isOs, OSType, updateSetting } from '../../common';
