@@ -31,7 +31,6 @@ extends:
     ghCreateTag: false
     standardizedVersioning: true
     l10nSourcePaths: ./src/client
-    needsTools: true
 
     buildPlatforms:
       - name: Linux
