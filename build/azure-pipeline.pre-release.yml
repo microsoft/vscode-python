@@ -112,7 +112,7 @@ extends:
             branchName: 'refs/heads/azure1' # TODO: change to main before merging to main
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(vsceTarget)'
-            itemPattern: '(pet.exe|pet)'
+            itemPattern: '(pet.exe|pet|ThirdPartyNotices.txt)'
 
       - bash: |
             chmod +x $(Build.SourcesDirectory)/python-env-tools/bin/pet*
