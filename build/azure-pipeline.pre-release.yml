@@ -98,15 +98,25 @@ extends:
       - script: npx gulp prePublishBundle
         displayName: Build
 
-      - script: nox --session azure_pet_checkout
-        displayName: Checkout python-environment-tools
-        env:
-            PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)
-            PYTHON_ENV_TOOLS_REF: main
-            PYTHON_ENV_TOOLS_TEMP: $(Agent.TempDirectory)
+      - bash: |
+            mkdir -p $(Build.SourcesDirectory)/python-env-tools/bin
+            chmod +x $(Build.SourcesDirectory)/python-env-tools/bin
+        displayName: Make Directory for python-env-tool binary
 
-      - script: nox --session azure_pet_build_before
-        displayName: Enable cargo config for azure
+      - task: DownloadPipelineArtifact@2
+        inputs:
+            buildType: 'specific'
+            project: 'Monaco'
+            definition: 591
+            buildVersionToDownload: 'latestFromBranch'
+            branchName: 'refs/heads/azure1' # TODO: change to main before merging to main
+            targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
+            artifactName: 'bin-$(vsceTarget)'
+            itemPattern: '(pet.exe|pet)'
+
+      - bash: |
+            chmod +x $(Build.SourcesDirectory)/python-env-tools/bin/pet*
+        displayName: Make pet executable
 
       - template: azure-pipelines/extension/templates/steps/build-extension-rust-package.yml@templates
         parameters:
