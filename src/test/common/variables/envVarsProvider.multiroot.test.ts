@@ -22,6 +22,7 @@ import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } fr
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
 import { UnitTestIocContainer } from '../../testing/serviceRegistry';
+import { createTypeMoq } from '../../mocks/helper';
 
 use(chaiAsPromised.default);
 
@@ -47,12 +48,21 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
         await ioc.registerMockInterpreterTypes();
-        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
-        ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
-            IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService),
-        );
+        const mockEnvironmentActivationService = createTypeMoq<IEnvironmentActivationService>();
+        mockEnvironmentActivationService
+            .setup((m) => m.getActivatedEnvironmentVariables(anything()))
+            .returns(() => Promise.resolve({}));
+        if (ioc.serviceManager.tryGet<IEnvironmentActivationService>(IEnvironmentActivationService)) {
+            ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
+                IEnvironmentActivationService,
+                mockEnvironmentActivationService.object,
+            );
+        } else {
+            ioc.serviceManager.addSingletonInstance(
+                IEnvironmentActivationService,
+                mockEnvironmentActivationService.object,
+            );
+        }
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);
