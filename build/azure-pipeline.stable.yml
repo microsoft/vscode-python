@@ -96,7 +96,7 @@ extends:
         displayName: Checkout python-environment-tools
         env:
             PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)
-            PYTHON_ENV_TOOLS_REF: release/2024.12
+            PYTHON_ENV_TOOLS_REF: release/2024.14
             PYTHON_ENV_TOOLS_TEMP: $(Agent.TempDirectory)
 
       - script: nox --session azure_pet_build_before
