@@ -71,6 +71,9 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
     if (type) {
         resolvedEnv.type = type;
     }
+    resolvedEnv.status = env.status ?? 1;
+    resolvedEnv.detail = env.detail ?? "";
+    resolvedEnv.level = env.level ?? 1;
     return resolvedEnv;
 }
 
@@ -148,16 +151,20 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
 }
 
 async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
-    const { executablePath, kind } = env;
+    const { executablePath, kind, status, level } = env;
+    console.log(`resolveSimpleEnv1: ${JSON.stringify(env)}`);
     const envInfo = buildEnvInfo({
         kind,
         version: await getPythonVersionFromPath(executablePath),
         executable: executablePath,
         type: PythonEnvType.Virtual,
+        status: status ?? 0,
+        level: level ?? 1,
     });
     const location = getEnvironmentDirFromPath(executablePath);
     envInfo.location = location;
     envInfo.name = path.basename(location);
+    console.log(`resolveSimpleEnv2: ${JSON.stringify(envInfo)}`);
     return envInfo;
 }
 

@@ -22,7 +22,6 @@
         "quickPickSortByLabel",
         "testObserver",
         "quickPickItemTooltip",
-        "saveEditor",
         "terminalDataWriteEvent"
     ],
     "author": {
@@ -324,6 +323,10 @@
             }
         ],
         "commands": [
+            {
+                "command": "pyspark.paramRegister.copy",
+                "title": "Pyspark ParamRegister Copy"
+            },
             {
                 "title": "%python.command.python.createNewFile.title%",
                 "shortTitle": "%python.menu.createNewFile.title%",
@@ -1555,6 +1558,7 @@
         "@vscode/extension-telemetry": "^0.8.4",
         "@vscode/jupyter-lsp-middleware": "^0.2.50",
         "arch": "^2.1.0",
+        "axios": "^1.7.4",
         "fs-extra": "^10.0.1",
         "glob": "^7.2.0",
         "hash.js": "^1.1.7",

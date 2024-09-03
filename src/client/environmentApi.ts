@@ -272,6 +272,7 @@ async function resolveEnvironment(path: string, discoveryApi: IDiscoveryAPI): Pr
 }
 
 export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment {
+    // console.log(`convertCompleteEnvInfo1: ${JSON.stringify(env)}`)
     const version = { ...env.version, sysVersion: env.version.sysVersion };
     let tool = convertKind(env.kind);
     if (env.type && !tool) {
@@ -292,11 +293,15 @@ export function convertCompleteEnvInfo(env: PythonEnvInfo): ResolvedEnvironment 
                   name: env.name === '' ? undefined : env.name,
                   folderUri: Uri.file(env.location),
                   workspaceFolder: getWorkspaceFolder(env.searchLocation),
+                  status: env.status ?? 0, // 如果status不存在， 则默认为0
+                  detail: env.detail ?? "",
+                  level: env.level ?? 1
               }
             : undefined,
         version: env.executable.filename === 'python' ? undefined : (version as ResolvedEnvironment['version']),
         tools: tool ? [tool] : [],
     };
+    // console.log(`convertCompleteEnvInfo2: ${JSON.stringify(resolvedEnv)}`)
     return resolvedEnv;
 }
 

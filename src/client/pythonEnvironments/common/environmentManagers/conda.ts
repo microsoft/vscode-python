@@ -46,9 +46,12 @@ export type CondaInfo = {
     conda_shlvl?: number; // eslint-disable-line camelcase
 };
 
-type CondaEnvInfo = {
+export type CondaEnvInfo = {
     prefix: string;
     name?: string;
+    status?: number;
+    detail?: string;
+    level?: number;
 };
 
 /**
@@ -470,6 +473,7 @@ export class Conda {
             envs.map(async (prefix) => ({
                 prefix,
                 name: await this.getName(prefix, info),
+                status: 1,
             })),
         );
     }

@@ -6,7 +6,7 @@ import { isTestExecution } from '../../../../common/constants';
 import { traceVerbose } from '../../../../logging';
 import { arePathsSame, getFileInfo, pathExists } from '../../../common/externalDependencies';
 import { PythonEnvInfo, PythonEnvKind } from '../../info';
-import { areEnvsDeepEqual, areSameEnv, getEnvPath } from '../../info/env';
+import {  areSameEnv, getEnvPath } from '../../info/env';
 import {
     BasicPythonEnvCollectionChangedEvent,
     PythonEnvCollectionChangedEvent,
@@ -93,52 +93,56 @@ export class PythonEnvInfoCache extends PythonEnvsWatcher<PythonEnvCollectionCha
          * we avoid the cost of running lstat. So simply remove envs which are no longer
          * valid.
          */
-        const areEnvsValid = await Promise.all(
-            this.envs.map(async (cachedEnv) => {
-                const { path } = getEnvPath(cachedEnv.executable.filename, cachedEnv.location);
-                if (await pathExists(path)) {
-                    if (envs && isCompleteList) {
-                        /**
-                         * Only consider a cached env to be valid if it's relevant. That means:
-                         * * It is relevant for some other workspace folder which is not opened currently.
-                         * * It is either reported in the latest complete discovery for this session.
-                         * * It is provided by the consumer themselves.
-                         */
-                        if (cachedEnv.searchLocation) {
-                            return true;
-                        }
-                        if (envs.some((env) => cachedEnv.id === env.id)) {
-                            return true;
-                        }
-                        if (Array.from(this.validatedEnvs.keys()).some((envId) => cachedEnv.id === envId)) {
-                            // These envs are provided by the consumer themselves, consider them valid.
-                            return true;
-                        }
-                    } else {
-                        return true;
-                    }
-                }
-                return false;
-            }),
-        );
-        const invalidIndexes = areEnvsValid
-            .map((isValid, index) => (isValid ? -1 : index))
-            .filter((i) => i !== -1)
-            .reverse(); // Reversed so indexes do not change when deleting
-        invalidIndexes.forEach((index) => {
-            const env = this.envs.splice(index, 1)[0];
-            traceVerbose(`Removing invalid env from cache ${env.id}`);
-            this.fire({ old: env, new: undefined });
-        });
         if (envs) {
-            // See if any env has updated after the last refresh and fire events.
-            envs.forEach((env) => {
-                const cachedEnv = this.envs.find((e) => e.id === env.id);
-                if (cachedEnv && !areEnvsDeepEqual(cachedEnv, env)) {
-                    this.updateEnv(cachedEnv, env, true);
-                }
-            });
+            this.envs = envs
         }
+        traceVerbose(`isCompleteList1: ${isCompleteList}`)
+        // const areEnvsValid = await Promise.all(
+        //     this.envs.map(async (cachedEnv) => {
+        //         const { path } = getEnvPath(cachedEnv.executable.filename, cachedEnv.location);
+        //         if (await pathExists(path)) {
+        //             if (envs && isCompleteList) {
+        //                 /**
+        //                  * Only consider a cached env to be valid if it's relevant. That means:
+        //                  * * It is relevant for some other workspace folder which is not opened currently.
+        //                  * * It is either reported in the latest complete discovery for this session.
+        //                  * * It is provided by the consumer themselves.
+        //                  */
+        //                 if (cachedEnv.searchLocation) {
+        //                     return true;
+        //                 }
+        //                 if (envs.some((env) => cachedEnv.id === env.id)) {
+        //                     return true;
+        //                 }
+        //                 if (Array.from(this.validatedEnvs.keys()).some((envId) => cachedEnv.id === envId)) {
+        //                     // These envs are provided by the consumer themselves, consider them valid.
+        //                     return true;
+        //                 }
+        //             } else {
+        //                 return true;
+        //             }
+        //         }
+        //         return false;
+        //     }),
+        // );
+        // const invalidIndexes = areEnvsValid
+        //     .map((isValid, index) => (isValid ? -1 : index))
+        //     .filter((i) => i !== -1)
+        //     .reverse(); // Reversed so indexes do not change when deleting
+        // invalidIndexes.forEach((index) => {
+        //     const env = this.envs.splice(index, 1)[0];
+        //     traceVerbose(`Removing invalid env from cache ${env.id}`);
+        //     this.fire({ old: env, new: undefined });
+        // });
+        // if (envs) {
+        //     // See if any env has updated after the last refresh and fire events.
+        //     envs.forEach((env) => {
+        //         const cachedEnv = this.envs.find((e) => e.id === env.id);
+        //         if (cachedEnv && !areEnvsDeepEqual(cachedEnv, env)) {
+        //             this.updateEnv(cachedEnv, env, true);
+        //         }
+        //     });
+        // }
     }
 
     public getAllEnvs(): PythonEnvInfo[] {

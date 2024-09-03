@@ -157,6 +157,9 @@ export type Environment = EnvironmentPath & {
                * Any specific workspace folder this environment is created for.
                */
               readonly workspaceFolder: WorkspaceFolder | undefined;
+              status: number;
+              readonly detail: string;
+              level: number;
           }
         | undefined;
     /**

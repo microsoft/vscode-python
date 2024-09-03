@@ -201,6 +201,9 @@ export type PythonEnvInfo = _PythonEnvInfo & {
     display?: string;
     detailedDisplayName?: string;
     searchLocation?: Uri;
+    status?: number; // 0: 项目空间同步过来，但未下载  1：本地创建/修改了，但未提交至项目空间 2：本地存在，且项目空间也在
+    detail?: string; // python env yml
+    level?: number; // 项目级别  0：公共， 1：项目
 };
 
 /**

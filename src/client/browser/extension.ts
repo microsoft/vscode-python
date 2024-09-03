@@ -58,6 +58,10 @@ export async function deactivate(): Promise<void> {
     }
 }
 
+export type PySparkParam = {
+    [key: string]: string
+}
+
 async function runPylance(
     context: vscode.ExtensionContext,
     pylanceExtension: vscode.Extension<PylanceApi>,

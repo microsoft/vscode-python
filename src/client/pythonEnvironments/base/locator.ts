@@ -144,6 +144,9 @@ export type BasicEnvInfo = {
     executablePath: string;
     source?: PythonEnvSource[];
     envPath?: string;
+    status?: number; // 如果status不存在， 则默认为0
+    detail?: string;
+    level?: number;
 };
 
 /**

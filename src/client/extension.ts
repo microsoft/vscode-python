@@ -28,7 +28,7 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
-import { ProgressLocation, ProgressOptions, window } from 'vscode';
+import { commands, ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
@@ -46,6 +46,8 @@ import { WorkspaceService } from './common/application/workspace';
 import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';
 import { buildProposedApi } from './proposedApi';
+import ContextManager from './pythonEnvironments/base/locators/composite/envsCollectionService';
+import { PySparkParam } from './browser/extension';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -63,6 +65,8 @@ export async function activate(context: IExtensionContext): Promise<PythonExtens
     let ready: Promise<void>;
     let serviceContainer: IServiceContainer;
     try {
+        // 设置 context
+        ContextManager.getInstance().setContext(context);
         const workspaceService = new WorkspaceService();
         context.subscriptions.push(
             workspaceService.onDidGrantWorkspaceTrust(async () => {
@@ -70,6 +74,25 @@ export async function activate(context: IExtensionContext): Promise<PythonExtens
                 await activate(context);
             }),
         );
+
+        let gatewayUri = "http://10.245.23.158:8080";
+        const runEnv = process.env.RUN_ENV;
+
+        if (runEnv === 'online') {
+            console.log('当前运行环境: online');
+            gatewayUri = "http://easdsp-gateway.msxf.lo";
+        } else {
+            console.log('当前运行环境: 非 online');
+        }
+        context.globalState.update('gateway.addr', gatewayUri);
+
+        context.subscriptions.push(
+            commands.registerCommand('pyspark.paramRegister.copy', (pySparkParam: PySparkParam) => {
+                console.log(`PySparkParam-python: ${JSON.stringify(pySparkParam)}`);
+                context.globalState.update('pyspark.paramRegister.copy', pySparkParam);
+            }),
+        );
+
         [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
     } catch (ex) {
         // We want to completely handle the error
