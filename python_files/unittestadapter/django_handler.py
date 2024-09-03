@@ -18,10 +18,8 @@ from pvsc_utils import (  # noqa: E402
 
 def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
     # Attempt a small amount of validation on the manage.py path.
-    try:
-        pathlib.Path(manage_py_path)
-    except Exception as e:
-        raise VSCodeUnittestError(f"Error running Django, manage.py path is not a valid path: {e}")  # noqa: B904
+    if not pathlib.Path(manage_py_path).exists():
+        raise VSCodeUnittestError("Error running Django, manage.py path does not exist.")
 
     try:
         # Get path to the custom_test_runner.py parent folder, add to sys.path and new environment used for subprocess.
@@ -61,10 +59,8 @@ def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
 
 def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List[str]) -> None:
     # Attempt a small amount of validation on the manage.py path.
-    try:
-        pathlib.Path(manage_py_path)
-    except Exception as e:
-        raise VSCodeUnittestError(f"Error running Django, manage.py path is not a valid path: {e}")  # noqa: B904
+    if not pathlib.Path(manage_py_path).exists():
+        raise VSCodeUnittestError("Error running Django, manage.py path does not exist.")
 
     try:
         # Get path to the custom_test_runner.py parent folder, add to sys.path.
