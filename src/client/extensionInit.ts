@@ -30,6 +30,7 @@ import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { registerLogger } from './logging';
 import { OutputChannelLogger } from './logging/outputChannelLogger';
 import { WorkspaceService } from './common/application/workspace';
+import { isString } from './common/utils/sysTypes';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -61,7 +62,7 @@ export function initializeGlobals(
     const unitTestOutChannel =
         workspaceService.isVirtualWorkspace || !workspaceService.isTrusted
             ? // Do not create any test related output UI when using virtual workspaces.
-              instance(mock<ITestOutputChannel>())
+              createTestOutputChannelMock()
             : window.createOutputChannel(OutputChannelNames.pythonTest);
     disposables.push(unitTestOutChannel);
 
@@ -109,4 +110,19 @@ export async function initializeComponents(ext: ExtensionState): Promise<Compone
     return {
         pythonEnvs,
     };
+}
+
+function createTestOutputChannelMock() {
+    const obj = instance(mock<ITestOutputChannel>());
+
+    return new Proxy(obj, {
+        get: (t, p) => {
+            if (isString(p) && ['then', 'catch'].includes(p)) {
+                return undefined;
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            return (t as any)[p];
+        },
+    });
 }
