@@ -117,17 +117,10 @@ extends:
               ThirdPartyNotices.txt
 
       - bash: |
+            ls -lf $(Build.SourcesDirectory)/python-env-tools/bin
             chmod +x $(Build.SourcesDirectory)/python-env-tools/bin/pet*
-        displayName: Make pet executable
-
-      - template: azure-pipelines/extension/templates/steps/build-extension-rust-package.yml@templates
-        parameters:
-          vsceTarget: $(vsceTarget)
-          binaryName: pet
-          signing: true
-          workingDirectory: $(Build.SourcesDirectory)/python-env-tools
-          buildWasm: false
-          runTest: false
+            ls -lf $(Build.SourcesDirectory)/python-env-tools/bin
+        displayName: Set chmod for pet binary
 
       - script: nox --session azure_pet_build_after
         displayName: Move bin to final location
