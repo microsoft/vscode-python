@@ -137,7 +137,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         // create named pipe server to send test ids
-        const testIdsFileName = await utils.writeTestIdsFile(testIds, cwd);
+        const testIdsFileName = await utils.writeTestIdsFile(testIds);
         mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
         traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
 

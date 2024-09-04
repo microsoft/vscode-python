@@ -33,7 +33,7 @@ suite('Unittest test execution adapter', () => {
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
     let mockProc: MockChildProcess;
-    let utilsStartTestIdsNamedPipeStub: sinon.SinonStub;
+    let utilsWriteTestIdsFileStub: sinon.SinonStub;
     let utilsStartRunResultNamedPipeStub: sinon.SinonStub;
     setup(() => {
         configService = ({
@@ -65,7 +65,7 @@ suite('Unittest test execution adapter', () => {
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
 
         // added
-        utilsStartTestIdsNamedPipeStub = sinon.stub(util, 'startTestIdsNamedPipe');
+        utilsWriteTestIdsFileStub = sinon.stub(util, 'writeTestIdsFile');
         debugLauncher = typeMoq.Mock.ofType<ITestDebugLauncher>();
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
@@ -105,7 +105,7 @@ suite('Unittest test execution adapter', () => {
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
-        utilsStartTestIdsNamedPipeStub.callsFake(() => {
+        utilsWriteTestIdsFileStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve({
                 name: 'mockName',
@@ -129,7 +129,7 @@ suite('Unittest test execution adapter', () => {
         mockProc.trigger('close');
 
         // assert
-        sinon.assert.calledWithExactly(utilsStartTestIdsNamedPipeStub, testIds);
+        sinon.assert.calledWithExactly(utilsWriteTestIdsFileStub, testIds);
     });
     test('unittest execution called with correct args', async () => {
         const deferred2 = createDeferred();
@@ -141,7 +141,7 @@ suite('Unittest test execution adapter', () => {
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
-        utilsStartTestIdsNamedPipeStub.callsFake(() => {
+        utilsWriteTestIdsFileStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve('testIdPipe-mockName');
         });
@@ -191,7 +191,7 @@ suite('Unittest test execution adapter', () => {
                 deferred2.resolve();
                 return Promise.resolve(execService.object);
             });
-        utilsStartTestIdsNamedPipeStub.callsFake(() => {
+        utilsWriteTestIdsFileStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve('testIdPipe-mockName');
         });
@@ -242,7 +242,7 @@ suite('Unittest test execution adapter', () => {
     test('Debug launched correctly for unittest', async () => {
         const deferred3 = createDeferred();
         const deferredEOT = createDeferred();
-        utilsStartTestIdsNamedPipeStub.callsFake(() => {
+        utilsWriteTestIdsFileStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve('testIdPipe-mockName');
         });

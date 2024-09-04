@@ -143,7 +143,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
 
             // create a file with the test ids and set the environment variable to the file name
-            const testIdsFileName = await utils.writeTestIdsFile(testIds, cwd);
+            const testIdsFileName = await utils.writeTestIdsFile(testIds);
             mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
             traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
 

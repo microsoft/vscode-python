@@ -22,6 +22,7 @@ import {
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createNamedPipeServer, generateRandomPipeName } from '../../../common/pipes/namedPipes';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -201,7 +202,7 @@ interface ExecutionResultMessage extends Message {
  * @param testIds - The array of test IDs to write.
  * @returns A promise that resolves to the file name of the temporary file.
  */
-export async function writeTestIdsFile(testIds: string[], cwd?: string): Promise<string> {
+export async function writeTestIdsFile(testIds: string[]): Promise<string> {
     // temp file name in format of test-ids-<randomSuffix>.txt
     const randomSuffix = crypto.randomBytes(10).toString('hex');
     const tempName = `test-ids-${randomSuffix}.txt`;
@@ -212,8 +213,8 @@ export async function writeTestIdsFile(testIds: string[], cwd?: string): Promise
         tempFileName = path.join(os.tmpdir(), tempName);
     } catch (error) {
         // Handle the error when accessing the temp directory
-        traceError('Error accessing temp directory:', error, ' Attempt to use current working directory instead.');
-        tempFileName = path.join(cwd || process.cwd(), tempName);
+        traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');
+        tempFileName = path.join(EXTENSION_ROOT_DIR, '.temp', tempName);
         traceLog('New temp file:', tempFileName);
     }
     // write test ids to file
