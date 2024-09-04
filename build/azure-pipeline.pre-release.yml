@@ -111,7 +111,10 @@ extends:
             branchName: 'refs/heads/main'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(vsceTarget)'
-            itemPattern: '(pet.exe|pet|ThirdPartyNotices.txt)'
+            itemPattern: |
+              pet.exe
+              pet
+              ThirdPartyNotices.txt
 
       - bash: |
             chmod +x $(Build.SourcesDirectory)/python-env-tools/bin/pet*
