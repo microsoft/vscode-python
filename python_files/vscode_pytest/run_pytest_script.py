@@ -22,6 +22,13 @@ from testing_tools import (  # noqa: E402
     socket_manager,
 )
 
+
+def run_without_test_ids(args):
+    print("Running pytest with no test ids as args. Args being used: ", args)
+    arg_array = ["-p", "vscode_pytest", *args]
+    pytest.main(arg_array)
+
+
 # This script handles running pytest via pytest.main(). It is called via run in the
 # pytest execution adapter and gets the test_ids to run via stdin and the rest of the
 # args through sys.argv. It then runs pytest.main() with the args and test_ids.
@@ -34,52 +41,21 @@ if __name__ == "__main__":
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
-    if not run_test_ids_pipe:
-        print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
-    raw_json = {}
-    try:
-        socket_name = os.environ.get("RUN_TEST_IDS_PIPE")
-        with socket_manager.PipeManager(socket_name) as sock:
-            buffer = ""
-            while True:
-                # Receive the data from the client as a string
-                data = sock.read(3000)
-                if not data:
-                    break
-
-                # Append the received data to the buffer
-                buffer += data
-
-                try:
-                    # Try to parse the buffer as JSON
-                    raw_json = process_json_util.process_rpc_json(buffer)
-                    # Clear the buffer as complete JSON object is received
-                    buffer = ""
-                    print("Received JSON data in run script")
-                    break
-                except json.JSONDecodeError:
-                    # JSON decoding error, the complete JSON object is not yet received
-                    continue
-                except UnicodeDecodeError:
-                    continue
-    except OSError as e:
-        print(f"Error: Could not connect to runTestIdsPort: {e}")
-        print("Error: Could not connect to runTestIdsPort")
-    try:
-        test_ids_from_buffer = raw_json.get("params")
-        if test_ids_from_buffer:
-            arg_array = ["-p", "vscode_pytest", *args, *test_ids_from_buffer]
+    if run_test_ids_pipe:
+        try:
+            # Read the test ids from the file, delete file, and run pytest.
+            ids_path = pathlib.Path(run_test_ids_pipe)
+            ids = ids_path.read_text(encoding="utf-8").splitlines()
+            try:
+                ids_path.unlink()
+            except Exception as e:
+                print("Error[vscode-pytest]: unable to delete temp file" + str(e))
+            arg_array = ["-p", "vscode_pytest", *args, *ids]
             print("Running pytest with args: " + str(arg_array))
             pytest.main(arg_array)
-        else:
-            print(
-                "Error: No test ids received from stdin, could be an error or a run request without ids provided.",
-            )
-            print("Running pytest with no test ids as args. Args being used: ", args)
-            arg_array = ["-p", "vscode_pytest", *args]
-            pytest.main(arg_array)
-    except json.JSONDecodeError:
-        print(
-            "Error: Could not parse test ids from stdin. Raw json received from socket: \n",
-            raw_json,
-        )
+        except Exception as e:
+            print("Error[vscode-pytest]: unable to read testIds from temp file" + str(e))
+            run_without_test_ids(args)
+    else:
+        print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
+        run_without_test_ids(args)
