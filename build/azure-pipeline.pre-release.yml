@@ -117,13 +117,10 @@ extends:
               ThirdPartyNotices.txt
 
       - bash: |
-            ls -lf $(Build.SourcesDirectory)/python-env-tools/bin
-            chmod +x $(Build.SourcesDirectory)/python-env-tools/bin/pet*
-            ls -lf $(Build.SourcesDirectory)/python-env-tools/bin
+            ls -lf ./python-env-tools/bin
+            chmod +x ./python-env-tools/bin/pet*
+            ls -lf ./python-env-tools/bin
         displayName: Set chmod for pet binary
-
-      - script: nox --session azure_pet_build_after
-        displayName: Move bin to final location
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox
