@@ -3,7 +3,6 @@
 
 import atexit
 import enum
-import json
 import os
 import pathlib
 import sys
@@ -24,7 +23,6 @@ sys.path.append(os.fspath(script_dir))
 
 from django_handler import django_execution_runner  # noqa: E402
 
-from testing_tools import process_json_util, socket_manager  # noqa: E402
 from unittestadapter.pvsc_utils import (  # noqa: E402
     EOTPayloadDict,
     ExecutionPayloadDict,

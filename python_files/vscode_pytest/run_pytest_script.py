@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT License.
-import json
 import os
 import pathlib
 import sys
@@ -17,10 +16,6 @@ os.environ[path_var_name] = (
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
-from testing_tools import (  # noqa: E402
-    process_json_util,
-    socket_manager,
-)
 
 
 def run_without_test_ids(args):

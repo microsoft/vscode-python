@@ -28,7 +28,7 @@ suite('Execution Flow Run Adapters', () => {
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
     let mockProc: MockChildProcess;
-    let utilsStartTestIdsNamedPipe: sinon.SinonStub;
+    let utilsWriteTestIdsFileStub: sinon.SinonStub;
     let utilsStartRunResultNamedPipe: sinon.SinonStub;
     let serverDisposeStub: sinon.SinonStub;
 
@@ -47,7 +47,7 @@ suite('Execution Flow Run Adapters', () => {
         execFactoryStub = typeMoq.Mock.ofType<IPythonExecutionFactory>();
 
         // mocked utility functions that handle pipe related functions
-        utilsStartTestIdsNamedPipe = sinon.stub(util, 'startTestIdsNamedPipe');
+        utilsWriteTestIdsFileStub = sinon.stub(util, 'writeTestIdsFile');
         utilsStartRunResultNamedPipe = sinon.stub(util, 'startRunResultNamedPipe');
         serverDisposeStub = sinon.stub();
 
@@ -87,7 +87,7 @@ suite('Execution Flow Run Adapters', () => {
 
             // test ids named pipe mocking
             const deferredStartTestIdsNamedPipe = createDeferred();
-            utilsStartTestIdsNamedPipe.callsFake(() => {
+            utilsWriteTestIdsFileStub.callsFake(() => {
                 deferredStartTestIdsNamedPipe.resolve();
                 return Promise.resolve('named-pipe');
             });
@@ -165,7 +165,7 @@ suite('Execution Flow Run Adapters', () => {
 
             // test ids named pipe mocking
             const deferredStartTestIdsNamedPipe = createDeferred();
-            utilsStartTestIdsNamedPipe.callsFake(() => {
+            utilsWriteTestIdsFileStub.callsFake(() => {
                 deferredStartTestIdsNamedPipe.resolve();
                 return Promise.resolve('named-pipe');
             });
