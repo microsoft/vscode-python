@@ -137,8 +137,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
 
         // create named pipe server to send test ids
-        const testIdsPipeName = await utils.startTestIdsNamedPipe(testIds);
-        mutableEnv.RUN_TEST_IDS_PIPE = testIdsPipeName;
+        const testIdsFileName = await utils.writeTestIdsFile(testIds);
+        mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
         traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
 
         const spawnOptions: SpawnOptions = {
@@ -167,7 +167,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     args,
                     token: options.token,
                     testProvider: UNITTEST_PROVIDER,
-                    runTestIdsPort: testIdsPipeName,
+                    runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName, // change this from pytest
                 };
                 traceInfo(`Running DEBUG unittest for workspace ${options.cwd} with arguments: ${args}\r\n`);

@@ -3,6 +3,8 @@
 import * as net from 'net';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as crypto from 'crypto';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
@@ -20,6 +22,7 @@ import {
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createNamedPipeServer, generateRandomPipeName } from '../../../common/pipes/namedPipes';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -191,6 +194,36 @@ export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> 
 
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload | EOTTestPayload;
+}
+
+/**
+ * Writes an array of test IDs to a temporary file.
+ *
+ * @param testIds - The array of test IDs to write.
+ * @returns A promise that resolves to the file name of the temporary file.
+ */
+export async function writeTestIdsFile(testIds: string[]): Promise<string> {
+    // temp file name in format of test-ids-<randomSuffix>.txt
+    const randomSuffix = crypto.randomBytes(10).toString('hex');
+    const tempName = `test-ids-${randomSuffix}.txt`;
+    // create temp file
+    let tempFileName: string;
+    try {
+        traceLog('Attempting to use temp directory for test ids file, file name:', tempName);
+        tempFileName = path.join(os.tmpdir(), tempName);
+    } catch (error) {
+        // Handle the error when accessing the temp directory
+        traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');
+        // Make new temp directory in extension root dir
+        const tempDir = path.join(EXTENSION_ROOT_DIR, '.temp');
+        await fs.promises.mkdir(tempDir, { recursive: true });
+        tempFileName = path.join(EXTENSION_ROOT_DIR, '.temp', tempName);
+        traceLog('New temp file:', tempFileName);
+    }
+    // write test ids to file
+    await fs.promises.writeFile(tempFileName, testIds.join('\n'));
+    // return file name
+    return tempFileName;
 }
 
 export async function startRunResultNamedPipe(

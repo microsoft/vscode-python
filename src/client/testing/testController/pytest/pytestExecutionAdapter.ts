@@ -142,9 +142,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 testArgs = utils.addValueIfKeyNotExist(testArgs, '--capture', 'no');
             }
 
-            // add port with run test ids to env vars
-            const testIdsPipeName = await utils.startTestIdsNamedPipe(testIds);
-            mutableEnv.RUN_TEST_IDS_PIPE = testIdsPipeName;
+            // create a file with the test ids and set the environment variable to the file name
+            const testIdsFileName = await utils.writeTestIdsFile(testIds);
+            mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
             traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
 
             const spawnOptions: SpawnOptions = {
@@ -162,7 +162,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     args: testArgs,
                     token: runInstance?.token,
                     testProvider: PYTEST_PROVIDER,
-                    runTestIdsPort: testIdsPipeName,
+                    runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName,
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
