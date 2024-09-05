@@ -18,8 +18,7 @@ sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 
-def run_without_test_ids(args):
-    print("Running pytest with no test ids as args. Args being used: ", args)
+def run_pytest(args):
     arg_array = ["-p", "vscode_pytest", *args]
     pytest.main(arg_array)
 

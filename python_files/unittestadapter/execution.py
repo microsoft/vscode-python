@@ -317,7 +317,7 @@ if __name__ == "__main__":
 
     except Exception as e:
         # No test ids received from buffer, return error payload
-        cwd = os.path.abspath(start_dir)  # noqa: PTH100
+        cwd = pathlib.Path(start_dir).absolute(start_dir)  # noqa: PTH100
         status = TestExecutionStatus.error
         payload: ExecutionPayloadDict = {
             "cwd": cwd,
