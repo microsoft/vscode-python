@@ -324,16 +324,15 @@ if __name__ == "__main__":
 
     except Exception as e:
         # No test ids received from buffer, return error payload
-        cwd = pathlib.Path(start_dir).absolute(start_dir)
-        status = TestExecutionStatus.error
+        cwd = pathlib.Path(start_dir).absolute()
+        status: TestExecutionStatus = TestExecutionStatus.error
         payload: ExecutionPayloadDict = {
-            "cwd": cwd,
+            "cwd": str(cwd),
             "status": status,
-            "error": "No test ids read from temp file," + str(e),
             "result": None,
+            "error": "No test ids read from temp file," + str(e),
         }
         send_post_request(payload, test_run_pipe)
-
 
     # If no error occurred, we will have test ids to run.
     if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
