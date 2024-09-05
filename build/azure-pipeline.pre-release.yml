@@ -31,7 +31,6 @@ extends:
     ghCreateTag: false
     standardizedVersioning: true
     l10nSourcePaths: ./src/client
-    needsTools: true
 
     buildPlatforms:
       - name: Linux
@@ -98,27 +97,30 @@ extends:
       - script: npx gulp prePublishBundle
         displayName: Build
 
-      - script: nox --session azure_pet_checkout
-        displayName: Checkout python-environment-tools
-        env:
-            PYTHON_ENV_TOOLS_DEST: $(Build.SourcesDirectory)
-            PYTHON_ENV_TOOLS_REF: main
-            PYTHON_ENV_TOOLS_TEMP: $(Agent.TempDirectory)
+      - bash: |
+            mkdir -p $(Build.SourcesDirectory)/python-env-tools/bin
+            chmod +x $(Build.SourcesDirectory)/python-env-tools/bin
+        displayName: Make Directory for python-env-tool binary
 
-      - script: nox --session azure_pet_build_before
-        displayName: Enable cargo config for azure
+      - task: DownloadPipelineArtifact@2
+        inputs:
+            buildType: 'specific'
+            project: 'Monaco'
+            definition: 591
+            buildVersionToDownload: 'latestFromBranch'
+            branchName: 'refs/heads/main'
+            targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
+            artifactName: 'bin-$(vsceTarget)'
+            itemPattern: |
+              pet.exe
+              pet
+              ThirdPartyNotices.txt
 
-      - template: azure-pipelines/extension/templates/steps/build-extension-rust-package.yml@templates
-        parameters:
-          vsceTarget: $(vsceTarget)
-          binaryName: pet
-          signing: true
-          workingDirectory: $(Build.SourcesDirectory)/python-env-tools
-          buildWasm: false
-          runTest: false
-
-      - script: nox --session azure_pet_build_after
-        displayName: Move bin to final location
+      - bash: |
+            ls -lf ./python-env-tools/bin
+            chmod +x ./python-env-tools/bin/pet*
+            ls -lf ./python-env-tools/bin
+        displayName: Set chmod for pet binary
 
       - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
         displayName: Clean up Nox
