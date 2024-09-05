@@ -27,6 +27,7 @@ def delete_dir(path: pathlib.Path, ignore_errors=None):
 
     shutil.rmtree(os.fspath(path))
 
+
 @nox.session()
 def install_python_libs(session: nox.Session):
     requirements = [
@@ -62,79 +63,6 @@ def install_python_libs(session: nox.Session):
 
     if pathlib.Path("./python_files/lib/temp").exists():
         shutil.rmtree("./python_files/lib/temp")
-
-@nox.session()
-def azure_pet_checkout(session: nox.Session):
-    branch = os.getenv("PYTHON_ENV_TOOLS_REF", "main")
-
-    # dest dir should be <vscode-python repo root>/python-env-tools
-    dest_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_DEST")) / "python-env-tools").resolve()
-
-    # temp dir should be <agent temp dir>
-    temp_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_TEMP")) / "python-env-tools").resolve()
-    session.log(f"Cloning python-environment-tools to {temp_dir}")
-    temp_dir.mkdir(0o766, parents=True, exist_ok=True)
-
-    try:
-        with session.cd(temp_dir):
-            session.run("git", "init", external=True)
-            session.run(
-                "git",
-                "remote",
-                "add",
-                "origin",
-                "https://github.com/microsoft/python-environment-tools",
-                external=True,
-            )
-            session.run("git", "fetch", "origin", branch, external=True)
-            session.run(
-                "git", "checkout", "--force", "-B", branch, f"origin/{branch}", external=True
-            )
-            delete_dir(temp_dir / ".git")
-            delete_dir(temp_dir / ".github")
-            delete_dir(temp_dir / ".vscode")
-            (temp_dir / "CODE_OF_CONDUCT.md").unlink()
-            shutil.move(os.fspath(temp_dir), os.fspath(dest_dir))
-    except PermissionError as e:
-        print(f"Permission error: {e}")
-        if not dest_dir.exists():
-            raise
-    finally:
-        delete_dir(temp_dir, ignore_errors=True)
-
-
-@nox.session()
-def azure_pet_build_before(session: nox.Session):
-    source_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
-    config_toml_disabled = source_dir / ".cargo" / "config.toml.disabled"
-    config_toml = source_dir / ".cargo" / "config.toml"
-    if config_toml_disabled.exists() and not config_toml.exists():
-        config_toml.write_bytes(config_toml_disabled.read_bytes())
-
-
-@nox.session()
-def azure_pet_build_after(session: nox.Session):
-    source_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
-    ext = sysconfig.get_config_var("EXE") or ""
-    bin_name = f"pet{ext}"
-
-    abs_bin_path = None
-    for root, _, files in os.walk(os.fspath(source_dir / "target")):
-        bin_path = pathlib.Path(root) / "release" / bin_name
-        if bin_path.exists():
-            abs_bin_path = bin_path.absolute()
-            break
-
-    assert abs_bin_path
-
-    dest_dir = pathlib.Path(pathlib.Path.cwd() / "python-env-tools").resolve()
-    if not pathlib.Path(dest_dir / "bin").exists():
-        pathlib.Path(dest_dir / "bin").mkdir()
-    bin_dest = dest_dir / "bin" / bin_name
-    shutil.copyfile(abs_bin_path, bin_dest)
-
-    if sys.platform != "win32":
-        os.chmod(os.fspath(bin_dest), 0o755)
 
 
 @nox.session()
