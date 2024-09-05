@@ -267,8 +267,15 @@ def run_tests(
     return payload
 
 
+def execute_eot_and_cleanup():
+    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
+    send_post_request(eot_payload, test_run_pipe)
+    if __socket:
+        __socket.close()
+
+
 __socket = None
-atexit.register(lambda: __socket.close() if __socket else None)
+atexit.register(execute_eot_and_cleanup)
 
 
 def send_run_data(raw_data, test_run_pipe):
@@ -326,8 +333,7 @@ if __name__ == "__main__":
             "result": None,
         }
         send_post_request(payload, test_run_pipe)
-        eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-        send_post_request(eot_payload, test_run_pipe)
+
 
     # If no error occurred, we will have test ids to run.
     if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
@@ -346,5 +352,3 @@ if __name__ == "__main__":
             failfast,
             locals_,
         )
-        eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-        send_post_request(eot_payload, test_run_pipe)

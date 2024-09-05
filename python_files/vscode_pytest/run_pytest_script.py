@@ -49,7 +49,7 @@ if __name__ == "__main__":
             pytest.main(arg_array)
         except Exception as e:
             print("Error[vscode-pytest]: unable to read testIds from temp file" + str(e))
-            run_without_test_ids(args)
+            run_pytest(args)
     else:
         print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
-        run_without_test_ids(args)
+        run_pytest(args)

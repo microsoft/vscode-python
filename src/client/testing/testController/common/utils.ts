@@ -214,6 +214,9 @@ export async function writeTestIdsFile(testIds: string[]): Promise<string> {
     } catch (error) {
         // Handle the error when accessing the temp directory
         traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');
+        // Make new temp directory in extension root dir
+        const tempDir = path.join(EXTENSION_ROOT_DIR, '.temp');
+        await fs.promises.mkdir(tempDir, { recursive: true });
         tempFileName = path.join(EXTENSION_ROOT_DIR, '.temp', tempName);
         traceLog('New temp file:', tempFileName);
     }
