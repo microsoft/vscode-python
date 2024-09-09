@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, window } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -20,6 +20,7 @@ import {
     ITerminalService,
     TerminalCreationOptions,
     TerminalShellType,
+    ITerminalExecutedCommand,
 } from './types';
 
 @injectable()
@@ -32,6 +33,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
     private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
+    private readonly executeCommandListeners: Set<Disposable> = new Set();
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -48,8 +50,10 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
     }
     public dispose() {
-        if (this.terminal) {
-            this.terminal.dispose();
+        this.terminal?.dispose();
+
+        for (const d of this.executeCommandListeners) {
+            d.dispose();
         }
     }
     public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
@@ -59,8 +63,9 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(true);
         }
 
-        this.terminal!.sendText(text, true);
+        await this.executeCommand(text);
     }
+    /** @deprecated */
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
         if (!this.options?.hideFromUser) {
@@ -68,15 +73,54 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
+    public async executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
+        const terminal = await this.ensureTerminal();
+        if (!this.options?.hideFromUser) {
+            terminal.show(true);
+        }
+
+        // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
+        if (!terminal.shellIntegration) {
+            const promise = new Promise<boolean>((resolve) => {
+                const shellIntegrationChangeEventListener = window.onDidChangeTerminalShellIntegration(() => {
+                    this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
+                    resolve(true);
+                });
+                setTimeout(() => {
+                    this.executeCommandListeners.add(shellIntegrationChangeEventListener);
+                    resolve(false);
+                }, 3000);
+            });
+            await promise;
+        }
+
+        if (terminal.shellIntegration) {
+            const execution = terminal.shellIntegration.executeCommand(commandLine);
+            return await new Promise((resolve) => {
+                const listener = window.onDidEndTerminalShellExecution((e) => {
+                    if (e.execution === execution) {
+                        this.executeCommandListeners.delete(listener);
+                        resolve({ execution, exitCode: e.exitCode });
+                    }
+                });
+                this.executeCommandListeners.add(listener);
+            });
+        } else {
+            terminal.sendText(commandLine);
+        }
+
+        return undefined;
+    }
+
     public async show(preserveFocus: boolean = true): Promise<void> {
         await this.ensureTerminal(preserveFocus);
         if (!this.options?.hideFromUser) {
             this.terminal!.show(preserveFocus);
         }
     }
-    public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
+    public async ensureTerminal(preserveFocus: boolean = true): Promise<Terminal> {
         if (this.terminal) {
-            return;
+            return this.terminal;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({
@@ -97,10 +141,11 @@ export class TerminalService implements ITerminalService, Disposable {
         });
 
         if (!this.options?.hideFromUser) {
-            this.terminal!.show(preserveFocus);
+            this.terminal.show(preserveFocus);
         }
 
         this.sendTelemetry().ignoreErrors();
+        return this.terminal;
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
