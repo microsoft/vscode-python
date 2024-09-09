@@ -74,5 +74,6 @@
     "python.testing.pytestEnabled": true,
     "rust-analyzer.linkedProjects": [
         ".\\python-env-tools\\Cargo.toml"
-    ]
+    ],
+    "python.REPL.sendToNativeREPL": false
 }
