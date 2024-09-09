@@ -22,7 +22,6 @@ import {
     TerminalCreationOptions,
     TerminalShellType,
 } from './types';
-import { disposeAll } from '../utils/resourceLifecycle';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
