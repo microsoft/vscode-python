@@ -62,8 +62,7 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!this.options?.hideFromUser) {
             this.terminal!.show(true);
         }
-
-        this.terminal!.sendText(text, true);
+        await this.executeCommand(text);
     }
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
@@ -81,19 +80,19 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
-        if (!terminal.shellIntegration) {
-            const promise = new Promise<boolean>((resolve) => {
-                const shellIntegrationChangeEventListener = window.onDidChangeTerminalShellIntegration(() => {
-                    this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
-                    resolve(true);
-                });
-                setTimeout(() => {
-                    this.executeCommandListeners.add(shellIntegrationChangeEventListener);
-                    resolve(false);
-                }, 3000);
-            });
-            await promise;
-        }
+        // if (!terminal.shellIntegration) {
+        //     const promise = new Promise<boolean>((resolve) => {
+        //         const shellIntegrationChangeEventListener = window.onDidChangeTerminalShellIntegration(() => {
+        //             this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
+        //             resolve(true);
+        //         });
+        //         setTimeout(() => {
+        //             this.executeCommandListeners.add(shellIntegrationChangeEventListener);
+        //             resolve(false);
+        //         }, 3000);
+        //     });
+        //     await promise;
+        // }
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
