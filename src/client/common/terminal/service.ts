@@ -85,10 +85,11 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!terminal.shellIntegration) {
             const promise = new Promise<boolean>((resolve) => {
                 const shellIntegrationChangeEventListener = window.onDidChangeTerminalShellIntegration(() => {
+                    this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
                     resolve(true);
-                    shellIntegrationChangeEventListener.dispose();
                 });
                 setTimeout(() => {
+                    this.executeCommandListeners.add(shellIntegrationChangeEventListener);
                     resolve(false);
                 }, 3000);
             });
