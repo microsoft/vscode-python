@@ -80,7 +80,21 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!this.options?.hideFromUser) {
             terminal.show(true);
         }
-        // TODO: If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
+
+        // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
+        if (!terminal.shellIntegration) {
+            const promise = new Promise<boolean>((resolve) => {
+                const shellIntegrationChangeEventListener = window.onDidChangeTerminalShellIntegration(() => {
+                    resolve(true);
+                    shellIntegrationChangeEventListener.dispose();
+                });
+                setTimeout(() => {
+                    resolve(false);
+                }, 3000);
+            });
+            await promise;
+        }
+
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             return await new Promise((resolve) => {
@@ -95,6 +109,7 @@ export class TerminalService implements ITerminalService, Disposable {
         } else {
             terminal.sendText(commandLine);
         }
+
         return undefined;
     }
 
