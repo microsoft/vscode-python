@@ -88,7 +88,7 @@ export class TerminalService implements ITerminalService, Disposable {
                 });
                 setTimeout(() => {
                     this.executeCommandListeners.add(shellIntegrationChangeEventListener);
-                    resolve(false);
+                    resolve(true);
                 }, 3000);
             });
             await promise;
