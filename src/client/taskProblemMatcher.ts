@@ -11,9 +11,9 @@ export function registerPythonTaskProvider(): Disposable {
                 new Task(
                     { type: 'pythonTask', task: 'defaultTask' },
                     TaskScope.Workspace,
-                    'Default Task',
+                    'Trigger Python Task',
                     'pythonTask',
-                    new ShellExecution('python joke.py'), // Hard coded for now: joke.py is in my ext.host workspace. Could be any file in user's workspace.
+                    new ShellExecution('echo hi'), // Hard coded for now: joke.py is in my ext.host workspace. Could be any file in user's workspace.
                     '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
                 ),
             ]),
@@ -26,22 +26,24 @@ export function registerPythonTaskProvider(): Disposable {
     tasks.onDidStartTask((e) => {
         traceLog(`Task started: ${e.execution.task.name}`);
 
-        // TODO: If the task started is for Python extension,
-        // Create new task,
-        // execute that new task with their current python file
+        if (e.execution.task.name === 'Trigger Python Task') {
+            // TODO: If the task started is for Python extension,
+            // Create new task,
+            // execute that new task with their current python file
 
-        const runCurrentFileCommand = '';
+            const runCurrentFileCommand = '';
 
-        const currentPythonFileTask = new Task(
-            { type: 'pythonTask', task: 'defaultTask' },
-            TaskScope.Workspace,
-            'Run current Python file',
-            'pythonTask',
-            new ShellExecution('python joke.py'), // TODO: Get the current active Python file and make command to run this
-            '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
-        );
+            const currentPythonFileTask = new Task(
+                { type: 'pythonTask2', task: 'defaultTask2' },
+                TaskScope.Workspace,
+                'Run current Python file',
+                'pythonTask',
+                new ShellExecution('python joke.py'), // TODO: Get the current active Python file and make command to run this
+                '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
+            );
 
-        tasks.executeTask(currentPythonFileTask);
+            tasks.executeTask(currentPythonFileTask);
+        }
     });
 
     return taskProvider;
