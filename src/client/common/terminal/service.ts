@@ -74,7 +74,8 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.sendText(text);
     }
     public async executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
-        const terminal = await this.ensureTerminal();
+        // const terminal = await this.ensureTerminal();
+        const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
         }
@@ -118,9 +119,11 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(preserveFocus);
         }
     }
-    public async ensureTerminal(preserveFocus: boolean = true): Promise<Terminal> {
+    // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
+    public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
-            return this.terminal;
+            // return this.terminal;
+            return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({
@@ -133,7 +136,7 @@ export class TerminalService implements ITerminalService, Disposable {
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise((resolve) => setTimeout(resolve, 100));
 
-        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
+        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
             resource: this.options?.resource,
             preserveFocus,
             interpreter: this.options?.interpreter,
@@ -145,7 +148,8 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         this.sendTelemetry().ignoreErrors();
-        return this.terminal;
+        // return this.terminal;
+        return;
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
