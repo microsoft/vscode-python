@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// @ts-ignore: TS6133
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
@@ -57,7 +58,7 @@ suite('Terminal Service', () => {
             });
 
         executeCommandListeners = new Set<Disposable>();
-        executeCommandListeners.add(new Disposable(() => {}));
+        // executeCommandListeners.add(new Disposable(() => {}));
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
