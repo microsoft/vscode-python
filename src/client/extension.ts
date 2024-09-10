@@ -47,6 +47,7 @@ import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';
 import { buildProposedApi } from './proposedApi';
 import { GLOBAL_PERSISTENT_KEYS } from './common/persistentState';
+import { registerPythonTaskProvider } from './taskProblemMatcher';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -140,24 +141,7 @@ async function activateUnsafe(
 
     // register task provider for the workspace
 
-    const taskProvider = tasks.registerTaskProvider('pythonTask', {
-        provideTasks: () => {
-            return Promise.resolve([
-                new Task(
-                    { type: 'pythonTask', task: 'defaultTask' },
-                    TaskScope.Workspace,
-                    'Default Task',
-                    'pythonTask',
-                    new ShellExecution('python joke.py'), // Hard coded for now: joke.py is in my ext.host workspace. Could be any file in user's workspace.
-                    '$pythonCustomMatcher', // Use the custom problem matcher defined in package.json
-                ),
-            ]);
-        },
-
-        resolveTask(_task: Task): Task | undefined {
-            return undefined;
-        },
-    });
+    const taskProvider = registerPythonTaskProvider();
 
     context.subscriptions.push(taskProvider);
 
