@@ -24,7 +24,8 @@
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
-        "contribIssueReporter"
+        "contribIssueReporter",
+        "notebookVariableProvider"
     ],
     "author": {
         "name": "Microsoft Corporation"

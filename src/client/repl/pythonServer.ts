@@ -21,7 +21,7 @@ export interface PythonServer extends Disposable {
     checkValidCommand(code: string): Promise<boolean>;
 }
 
-class PythonServerImpl implements Disposable {
+class PythonServerImpl implements PythonServer, Disposable {
     private readonly disposables: Disposable[] = [];
 
     constructor(private connection: rpc.MessageConnection, private pythonServer: ch.ChildProcess) {
