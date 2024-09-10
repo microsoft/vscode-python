@@ -40,6 +40,8 @@ import {
     StatusBarItem,
     Terminal,
     TerminalOptions,
+    TerminalShellExecutionEndEvent,
+    TerminalShellIntegrationChangeEvent,
     TextDocument,
     TextDocumentChangeEvent,
     TextDocumentShowOptions,
@@ -936,6 +938,10 @@ export interface ITerminalManager {
      * @return A new Terminal.
      */
     createTerminal(options: TerminalOptions): Terminal;
+
+    onDidChangeTerminalShellIntegration(handler: (e: TerminalShellIntegrationChangeEvent) => void): Disposable;
+
+    onDidEndTerminalShellExecution(handler: (e: TerminalShellExecutionEndEvent) => void): Disposable;
 }
 
 export const IDebugService = Symbol('IDebugManager');

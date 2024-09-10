@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, window } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -53,7 +53,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal?.dispose();
 
         for (const d of this.executeCommandListeners) {
-            d.dispose();
+            d?.dispose();
         }
     }
     public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
@@ -83,10 +83,12 @@ export class TerminalService implements ITerminalService, Disposable {
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
         if (!terminal.shellIntegration) {
             const promise = new Promise<boolean>((resolve) => {
-                const shellIntegrationChangeEventListener = window.onDidChangeTerminalShellIntegration(() => {
-                    this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
-                    resolve(true);
-                });
+                const shellIntegrationChangeEventListener = this.terminalManager.onDidChangeTerminalShellIntegration(
+                    () => {
+                        this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
+                        resolve(true);
+                    },
+                );
                 setTimeout(() => {
                     this.executeCommandListeners.add(shellIntegrationChangeEventListener);
                     resolve(true);
@@ -98,7 +100,7 @@ export class TerminalService implements ITerminalService, Disposable {
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             return await new Promise((resolve) => {
-                const listener = window.onDidEndTerminalShellExecution((e) => {
+                const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
                     if (e.execution === execution) {
                         this.executeCommandListeners.delete(listener);
                         resolve({ execution, exitCode: e.exitCode });
