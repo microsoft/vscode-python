@@ -57,6 +57,8 @@ suite('Terminal Service', () => {
             });
 
         executeCommandListeners = new Set<Disposable>();
+        executeCommandListeners.add(new Disposable(() => {}));
+
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
