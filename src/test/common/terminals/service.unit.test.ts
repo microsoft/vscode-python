@@ -36,7 +36,7 @@ suite('Terminal Service', () => {
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
     let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
-    let executeCommandListeners: Set<Disposable>;
+    let executeCommandListeners: Set<Disposable>; // eslint-disable-line @typescript-eslint/no-unused-vars
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
