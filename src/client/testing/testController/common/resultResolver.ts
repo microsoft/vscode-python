@@ -10,9 +10,20 @@ import {
     Location,
     TestRun,
     MarkdownString,
+    TestCoverageCount,
+    FileCoverage,
+    FileCoverageDetail,
+    StatementCoverage,
+    Range,
 } from 'vscode';
 import * as util from 'util';
-import { DiscoveredTestPayload, EOTTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
+import {
+    CoveragePayload,
+    DiscoveredTestPayload,
+    EOTTestPayload,
+    ExecutionTestPayload,
+    ITestResultResolver,
+} from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
@@ -35,6 +46,8 @@ export class PythonResultResolver implements ITestResultResolver {
     public vsIdToRunId: Map<string, string>;
 
     public subTestStats: Map<string, { passed: number; failed: number }> = new Map();
+
+    public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
 
     constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
         this.testController = testController;
@@ -105,7 +118,7 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     public resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload,
+        payload: ExecutionTestPayload | EOTTestPayload | CoveragePayload,
         runInstance: TestRun,
         deferredTillEOT: Deferred<void>,
     ): void {
@@ -113,9 +126,85 @@ export class PythonResultResolver implements ITestResultResolver {
             // eot sent once per connection
             traceVerbose('EOT received, resolving deferredTillServerClose');
             deferredTillEOT.resolve();
+        } else if ('coverage' in payload) {
+            // coverage data is sent once per connection
+            traceVerbose('Coverage data received.');
+            this._resolveCoverage(payload as CoveragePayload, runInstance);
         } else {
             this._resolveExecution(payload as ExecutionTestPayload, runInstance);
         }
+        if ('coverage' in payload) {
+            // coverage data is sent once per connection
+            traceVerbose('Coverage data received.');
+            this._resolveCoverage(payload as CoveragePayload, runInstance);
+        }
+    }
+
+    public _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void {
+        // TODO: do we want optional result, do we want errors etc? what error could happen during coverage
+        if (payload.result === undefined) {
+            return;
+        }
+        // const fileCoverageMap = new Map<string, FileCoverageMetrics>(Object.entries(payload.result));
+        for (const [key, value] of Object.entries(payload.result)) {
+            // key is the file path∂
+            const fileNameStr = key;
+            const fileCoverageMetrics = value;
+            const linesCovered = fileCoverageMetrics.lines_covered ? fileCoverageMetrics.lines_covered : []; // undefined if no lines covered
+            const linesMissed = fileCoverageMetrics.lines_missed ? fileCoverageMetrics.lines_missed : []; // undefined if no lines missed
+            const executedBranches = fileCoverageMetrics.executed_branches;
+            const totalBranches = fileCoverageMetrics.total_branches;
+
+            const lineCoverageCount = new TestCoverageCount(
+                linesCovered.length,
+                linesCovered.length + linesMissed.length,
+            );
+            const uri = Uri.file(fileNameStr);
+            let fileCoverage: FileCoverage;
+            if (totalBranches === -1) {
+                // branch coverage was not enabled and should not be displayed
+                fileCoverage = new FileCoverage(uri, lineCoverageCount);
+            } else {
+                const branchCoverageCount = new TestCoverageCount(executedBranches, totalBranches);
+                fileCoverage = new FileCoverage(uri, lineCoverageCount, branchCoverageCount);
+            }
+            // probs need exception handling here
+            runInstance.addCoverage(fileCoverage);
+
+            // create detailed coverage array for each file (only line coverage on detailed, not branch)
+            const detailedCoverageArray: FileCoverageDetail[] = [];
+            // go through all covered lines, create new StatementCoverage, and add to detailedCoverageArray
+            for (const line of linesCovered) {
+                // line is 1-indexed, so we need to subtract 1 to get the 0-indexed line number
+                // true value means line is covered
+                const statementCoverage = new StatementCoverage(
+                    true,
+                    new Range(line - 1, 0, line - 1, Number.MAX_SAFE_INTEGER),
+                );
+                detailedCoverageArray.push(statementCoverage);
+            }
+            for (const line of linesMissed) {
+                // line is 1-indexed, so we need to subtract 1 to get the 0-indexed line number
+                // false value means line is NOT covered
+                const statementCoverage = new StatementCoverage(
+                    false,
+                    new Range(line - 1, 0, line - 1, Number.MAX_SAFE_INTEGER),
+                );
+                detailedCoverageArray.push(statementCoverage);
+            }
+
+            this.detailedCoverageMap.set(fileNameStr, detailedCoverageArray);
+        }
+
+        //             console.log('hello! This is to load the detailed coverage');
+        //     const pos1 = new Position(2, 3);
+        //     // const range1 = new Range(new Position(11, 4), new Position(11, 10));
+        //     const range2 = new Range(19, 0, 20, 0);
+        //     const branchCoverage = new BranchCoverage(true, new Range(pos1, new Position(3, 3)), 'exbranchlabel');
+        //     const fileCoverageDetail1 = new StatementCoverage(1, range2, [branchCoverage]);
+        //     const fileCoverageDetail2 = new StatementCoverage(1, new Position(5, 6), []);
+        //     return Promise.resolve([fileCoverageDetail1, fileCoverageDetail2]);
+        // };
     }
 
     public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void {

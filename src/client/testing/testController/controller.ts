@@ -16,6 +16,16 @@ import {
     Uri,
     EventEmitter,
     TextDocument,
+    FileCoverage,
+    // StatementCoverage,
+    // Position,
+    TestCoverageCount,
+    FileCoverageDetail,
+    Position,
+    StatementCoverage,
+    BranchCoverage,
+    Range,
+    TestRun,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
@@ -86,6 +96,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     private sendTestDisabledTelemetry = true;
 
+    // private resultResolver: ITestResultResolver;
+
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
@@ -118,6 +130,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(delayTrigger);
         this.refreshData = delayTrigger;
 
+        const coverageProfile = this.testController.createRunProfile(
+            'Coverage Tests',
+            TestRunProfileKind.Coverage,
+            this.runTests.bind(this),
+            true,
+            RunTestTag,
+        );
+
         this.disposables.push(
             this.testController.createRunProfile(
                 'Run Tests',
@@ -133,7 +153,21 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 true,
                 DebugTestTag,
             ),
+            coverageProfile,
         );
+
+        // const detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
+        // coverageProfile.loadDetailedCoverage = async (
+        //     _testRun,
+        //     fileCoverage: FileCoverage,
+        //     _token,
+        // ): Promise<FileCoverageDetail[]> => {
+        //     const details = this.resultResolver.detailedCoverageMap.get(fileCoverage.uri.toString());
+        //     if (details === undefined) {
+        //         return Promise.resolve([]);
+        //     }
+        //     return Promise.resolve(details);
+        // };
         this.testController.resolveHandler = this.resolveChildren.bind(this);
         this.testController.refreshHandler = (token: CancellationToken) => {
             this.disposables.push(
@@ -160,7 +194,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let discoveryAdapter: ITestDiscoveryAdapter;
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
-            let resultResolver: ITestResultResolver;
+            let resultResolver: PythonResultResolver;
+
             if (settings.testing.unittestEnabled) {
                 testProvider = UNITTEST_PROVIDER;
                 resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
@@ -384,6 +419,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         });
 
         const unconfiguredWorkspaces: WorkspaceFolder[] = [];
+
         try {
             await Promise.all(
                 workspaces.map(async (workspace) => {
@@ -406,6 +442,34 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
+                        // coverage??
+                        const testAdapter =
+                            this.testAdapters.get(workspace.uri) ||
+                            (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+
+                        if (request.profile?.kind && request.profile?.kind === TestRunProfileKind.Coverage) {
+                            // add to environment variable: COVERAGE_ENABLED to communicate to pytest to run coverage
+                            // const mutableEnv = {
+                            //     ...(await this.envVarsService?.getEnvironmentVariables(workspace.uri)),
+                            // };
+                            // mutableEnv.COVERAGE_ENABLED = 'True';
+
+                            // while the profile is known, set the loadDetailedCoverage function to return the coverage data
+                            request.profile.loadDetailedCoverage = (
+                                _testRun: TestRun,
+                                fileCoverage,
+                                _token,
+                            ): Thenable<FileCoverageDetail[]> => {
+                                const details = testAdapter.resultResolver.detailedCoverageMap.get(
+                                    fileCoverage.uri.fsPath,
+                                );
+                                if (details === undefined) {
+                                    return Promise.resolve([]);
+                                }
+                                return Promise.resolve(details);
+                            };
+                        }
+
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'pytest',
@@ -413,15 +477,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             });
                             // ** experiment to roll out NEW test discovery mechanism
                             if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
-                                const testAdapter =
-                                    this.testAdapters.get(workspace.uri) ||
-                                    (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                                 return testAdapter.executeTests(
                                     this.testController,
                                     runInstance,
                                     testItems,
                                     token,
-                                    request.profile?.kind === TestRunProfileKind.Debug,
+                                    request.profile?.kind,
                                     this.pythonExecFactory,
                                     this.debugLauncher,
                                 );
@@ -444,9 +505,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             });
                             // ** experiment to roll out NEW test discovery mechanism
                             if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
-                                const testAdapter =
-                                    this.testAdapters.get(workspace.uri) ||
-                                    (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                                 return testAdapter.executeTests(
                                     this.testController,
                                     runInstance,
@@ -478,6 +536,53 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         } finally {
+            // const CurrProfile = request.profile;
+            // if (CurrProfile && CurrProfile.kind === TestRunProfileKind.Coverage) {
+            //     request.profile.loadDetailedCoverage = (
+            //         testRun: TestRun,
+            //         fileCoverage,
+            //         _token,
+            //     ): Thenable<FileCoverageDetail[]> => {
+            //         const details = this.testController..get(fileCoverage);
+            //         if (details === undefined) {
+            //             return Promise.resolve([]);
+            //         }
+            //         return Promise.resolve(details);
+            //     };
+            // }
+            // coverage starting spot
+            // const coverageData = new Map<FileCoverage, FileCoverageDetail[]>();
+            // const uriSpe = Uri.parse('/Users/eleanorboyd/testingFiles/pytestPluginLocalEnv/unittest/un.py');
+            // const pos1 = new Position(1, 0);
+            // const ran1 = new Range(19, 0, 19, 0);
+            // const branchCoverage = new BranchCoverage(5, pos1, 'exbranchlabel');
+
+            // const statementCoverage = new StatementCoverage(5, ran1, [branchCoverage]);
+            // const fdList: FileCoverageDetail[] = [];
+            // fdList.push(statementCoverage);
+
+            // const tcc = new TestCoverageCount(3, 5);
+            // const branchCoverageCount = new TestCoverageCount(2, 5);
+
+            // const fc = new FileCoverage(uriSpe, tcc, branchCoverageCount);
+            // runInstance.addCoverage(fc);
+
+            // coverageData.set(fc, fdList);
+
+            // if (request.profile) {
+            //     request.profile.loadDetailedCoverage = (
+            //         _testRun,
+            //         fileCoverage,
+            //         _token,
+            //     ): Thenable<FileCoverageDetail[]> => {
+            //         const details = coverageData.get(fileCoverage);
+            //         if (details === undefined) {
+            //             return Promise.resolve([]);
+            //         }
+            //         return Promise.resolve(details);
+            //     };
+            // }
+
             traceVerbose('Finished running tests, ending runInstance.');
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();

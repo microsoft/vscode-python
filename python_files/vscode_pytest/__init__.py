@@ -14,6 +14,7 @@ from typing import (
     Any,
     Dict,
     Generator,
+    Iterator,
     Literal,
     TypedDict,
 )
@@ -24,6 +25,24 @@ script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import socket_manager  # noqa: E402
+
+
+# import sys
+
+# sys.path.append("/Users/eleanorboyd/vscode-python/.nox/install_python_libs/lib/python3.10")
+# sys.path.append("/Users/eleanorboyd/vscode-python-debugger")
+# sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled")
+# sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled/libs")
+# from coverage.plugin import FileReporter
+# from coverage.results import Analysis
+
+# from coverage.jsonreport import JsonReporter
+# from coverage.report_core import get_analysis_to_report
+
+
+# import debugpy
+
+# debugpy.connect(5678)
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -65,8 +84,11 @@ collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
+INCLUDE_BRANCHES = False
+
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
+    print("into inital config")
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
@@ -80,6 +102,10 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+    if "--cov-branch" in args:
+        global INCLUDE_BRANCHES
+        INCLUDE_BRANCHES = True
 
     # check if --rootdir is in the args
     for arg in args:
@@ -356,6 +382,13 @@ def check_skipped_condition(item):
     return False
 
 
+class FileCoverageInfo(TypedDict):
+    lines_covered: list[int]
+    lines_missed: list[int]
+    executed_branches: int
+    total_branches: int
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
@@ -420,6 +453,52 @@ def pytest_sessionfinish(session, exitstatus):
                 None,
             )
         # send end of transmission token
+
+    # send coverageee if enabled
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED")
+    print("COVERAGE RUN RUN ")
+    if is_coverage_run == "True":
+        # load the report and build the json result to return
+        import coverage
+
+        cov = coverage.Coverage()
+        cov.load()
+        analysis_iterator: Iterator[
+            tuple[coverage.plugin.FileReporter, coverage.results.Analysis]
+        ] = coverage.report_core.get_analysis_to_report(cov, None)
+
+        data = cov.get_data()
+        print("DAD HAS ARXS???", data.has_arcs())
+        file_coverage_map: dict[str, FileCoverageInfo] = {}
+        for fr, analysis in analysis_iterator:
+            file_str: str = fr.filename
+            executed_branches = analysis.numbers.n_executed_branches
+            total_branches = analysis.numbers.n_branches
+            print("TB", total_branches, analysis, analysis.numbers)
+            if not INCLUDE_BRANCHES:
+                print("coverage not run with branches")
+                # if covearge wasn't run with branches, set the total branches value to -1 to signal that it is not available
+                executed_branches = 0
+                total_branches = -1
+
+            file_info = {
+                "lines_covered": list(analysis.executed),  # set
+                "lines_missed": list(analysis.missing),  # set
+                "executed_branches": executed_branches,  # int
+                "total_branches": total_branches,  # int
+            }
+            print("FILE INFO", file_info)
+            file_coverage_map[file_str] = file_info
+
+        print("coverage_map", file_coverage_map)
+        payload: CoveragePayloadDict = CoveragePayloadDict(
+            coverage=True,
+            cwd=os.fspath(cwd),
+            result=file_coverage_map,
+            error=None,
+        )
+        send_post_request(payload)
+
     command_type = "discovery" if IS_DISCOVERY else "execution"
     payload: EOTPayloadDict = {"command_type": command_type, "eot": True}
     send_post_request(payload)
@@ -738,6 +817,15 @@ class ExecutionPayloadDict(Dict):
     error: str | None  # Currently unused need to check
 
 
+class CoveragePayloadDict(Dict):
+    """A dictionary that is used to send a execution post request to the server."""
+
+    coverage: bool
+    cwd: str
+    result: dict[str, FileCoverageInfo] | None
+    error: str | None  # Currently unused need to check
+
+
 class EOTPayloadDict(TypedDict):
     """A dictionary that is used to send a end of transmission post request to the server."""
 
@@ -888,27 +976,27 @@ def send_post_request(
         )
 
 
-class DeferPlugin:
-    @pytest.hookimpl(hookwrapper=True)
-    def pytest_xdist_auto_num_workers(
-        self, config: pytest.Config
-    ) -> Generator[None, Result[int], None]:
-        """Determine how many workers to use based on how many tests were selected in the test explorer."""
-        outcome = yield
-        result = min(outcome.get_result(), len(config.option.file_or_dir))
-        if result == 1:
-            result = 0
-        outcome.force_result(result)
+# class DeferPlugin:
+#     @pytest.hookimpl(hookwrapper=True)
+#     def pytest_xdist_auto_num_workers(
+#         self, config: pytest.Config
+#     ) -> Generator[None, Result[int], None]:
+#         """Determine how many workers to use based on how many tests were selected in the test explorer."""
+#         outcome = yield
+#         result = min(outcome.get_result(), len(config.option.file_or_dir))
+#         if result == 1:
+#             result = 0
+#         outcome.force_result(result)
 
 
-def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
-    plugin_name = "vscode_xdist"
-    if (
-        # only register the plugin if xdist is enabled:
-        manager.hasplugin("xdist")
-        # prevent infinite recursion:
-        and not isinstance(plugin, DeferPlugin)
-        # prevent this plugin from being registered multiple times:
-        and not manager.hasplugin(plugin_name)
-    ):
-        manager.register(DeferPlugin(), name=plugin_name)
+# def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
+#     plugin_name = "vscode_xdist"
+#     if (
+#         # only register the plugin if xdist is enabled:
+#         manager.hasplugin("xdist")
+#         # prevent infinite recursion:
+#         and not isinstance(plugin, DeferPlugin)
+#         # prevent this plugin from being registered multiple times:
+#         and not manager.hasplugin(plugin_name)
+#     ):
+#         manager.register(DeferPlugin(), name=plugin_name)
