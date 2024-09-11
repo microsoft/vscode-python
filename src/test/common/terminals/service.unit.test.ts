@@ -50,12 +50,8 @@ suite('Terminal Service', () => {
             .returns(() => shellExecution.object);
 
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
-        // terminalManager.setup((t) => t.onDidEndTerminalShellExecution(TypeMoq.It.isAny()))
-        onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
-        terminalManager
-            .setup((t) => t.onDidEndTerminalShellExecution)
-            .returns(() => onDidEndTerminalShellExecutionEmitter.event);
 
+        onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
         const execution: TerminalShellExecution = {
             commandLine: {
                 value: 'dummy text',
@@ -76,6 +72,9 @@ suite('Terminal Service', () => {
             terminal: terminal.object,
             shellIntegration: terminalShellIntegration.object,
         };
+        terminalManager
+            .setup((t) => t.onDidEndTerminalShellExecution)
+            .returns(() => onDidEndTerminalShellExecutionEmitter.event);
 
         // Trigger the event
         onDidEndTerminalShellExecutionEmitter.fire(event);
@@ -127,7 +126,7 @@ suite('Terminal Service', () => {
             .setup((h) => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => 'dummy text');
 
-        // onDidEndTerminalShellExecutionEmitter.fire(event);
+        onDidEndTerminalShellExecutionEmitter.fire(event);
         // Sending a command will cause the terminal to be created
         await service.sendCommand('', []);
 
