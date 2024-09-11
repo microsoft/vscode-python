@@ -177,9 +177,7 @@ class SafeRepr(object):  # noqa: UP004
                     size = None
                 if size is not None and size > self.maxcollection[level]:
                     return True
-                return any(
-                    self._is_long_iter(item, level + 1) for item in obj
-                )
+                return any(self._is_long_iter(item, level + 1) for item in obj)
             return any(
                 i > self.maxcollection[level] or self._is_long_iter(item, level + 1)
                 for i, item in enumerate(obj)
@@ -225,9 +223,7 @@ class SafeRepr(object):  # noqa: UP004
                 obj_repr = "<no repr available for object>"
         yield obj_repr
 
-    def _repr_dict(
-        self, obj, level, prefix, suffix, item_prefix, item_sep, item_suffix
-    ):
+    def _repr_dict(self, obj, level, prefix, suffix, item_prefix, item_sep, item_suffix):
         if not obj:
             yield prefix + suffix
             return
@@ -294,9 +290,7 @@ class SafeRepr(object):  # noqa: UP004
             # Slightly imprecise calculations - we may end up with a string that is
             # up to 6 characters longer than limit. If you need precise formatting,
             # you are using the wrong class.
-            left_count, right_count = max(1, int(2 * limit / 3)), max(
-                1, int(limit / 3)
-            )
+            left_count, right_count = max(1, int(2 * limit / 3)), max(1, int(limit / 3))
 
             # Important: only do repr after slicing to avoid duplicating a byte array that could be
             # huge.
@@ -316,9 +310,7 @@ class SafeRepr(object):  # noqa: UP004
 
             part2 = obj[-right_count:]
             part2 = repr(part2)
-            part2 = part2[
-                part2.index("'") + 1 :
-            ]  # Remove the first ' (and possibly u or b).
+            part2 = part2[part2.index("'") + 1 :]  # Remove the first ' (and possibly u or b).
 
             yield part1
             yield "..."
@@ -326,9 +318,7 @@ class SafeRepr(object):  # noqa: UP004
         except:  # noqa: E722
             # This shouldn't really happen, but let's play it safe.
             # exception('Error getting string representation to show.')
-            yield from self._repr_obj(
-                obj, level, self.maxother_inner, self.maxother_outer
-            )
+            yield from self._repr_obj(obj, level, self.maxother_inner, self.maxother_outer)
 
     def _repr_other(self, obj, level):
         return self._repr_obj(obj, level, self.maxother_inner, self.maxother_outer)
@@ -359,9 +349,7 @@ class SafeRepr(object):  # noqa: UP004
                 obj_repr = object.__repr__(obj)
             except Exception:
                 try:
-                    obj_repr = (
-                        "<no repr available for " + type(obj).__name__ + ">"
-                    )
+                    obj_repr = "<no repr available for " + type(obj).__name__ + ">"
                 except Exception:
                     obj_repr = "<no repr available for object>"
 
@@ -374,9 +362,7 @@ class SafeRepr(object):  # noqa: UP004
         # Slightly imprecise calculations - we may end up with a string that is
         # up to 3 characters longer than limit. If you need precise formatting,
         # you are using the wrong class.
-        left_count, right_count = max(1, int(2 * limit / 3)), max(
-            1, int(limit / 3)
-        )
+        left_count, right_count = max(1, int(2 * limit / 3)), max(1, int(limit / 3))
 
         yield obj_repr[:left_count]
         yield "..."
@@ -394,9 +380,7 @@ class SafeRepr(object):  # noqa: UP004
         if encoding:
             try_encodings.append(encoding.lower())
 
-        preferred_encoding = (
-            self.locale_preferred_encoding or locale.getpreferredencoding()
-        )
+        preferred_encoding = self.locale_preferred_encoding or locale.getpreferredencoding()
         if preferred_encoding:
             preferred_encoding = preferred_encoding.lower()
             if preferred_encoding not in try_encodings:
@@ -414,11 +398,14 @@ class SafeRepr(object):  # noqa: UP004
         return obj_repr  # Return the original version (in bytes)
 
 
+class DisplayOptions(NamedTuple):
+    width: int
+    max_columns: int
+
+
 safe_repr = SafeRepr()
 collection_types = ["list", "tuple", "set"]
 array_page_size = 50
-
-DisplayOptions = NamedTuple("DisplayOptions", ["width", "max_columns"])
 
 
 def set_pandas_display_options(display_options=None):
@@ -494,9 +481,7 @@ def get_variable_description(variable):
     if hasattr(variable, "__len__") and result["type"] in collection_types:
         result["count"] = len(variable)
 
-    result["hasNamedChildren"] = hasattr(variable, "__dict__") or isinstance(
-        variable, dict
-    )
+    result["hasNamedChildren"] = hasattr(variable, "__dict__") or isinstance(variable, dict)
 
     result["value"] = get_value(variable)
     return result
@@ -536,8 +521,7 @@ def _VSCODE_getVariableDescriptions(var_names):  # noqa: N802
             "language": "python",
         }
         for varName in var_names
-        if varName in globals()
-        and type(globals()[varName]).__name__ not in types_to_exclude
+        if varName in globals() and type(globals()[varName]).__name__ not in types_to_exclude
     ]
 
     return json.dumps(variables)
@@ -579,10 +563,7 @@ def _VSCODE_getAllChildrenDescriptions(root_var_name, property_chain, start_inde
         children = []
         for prop in children_names:
             child_property = get_child_property(parent, [prop])
-            if (
-                child_property is not None
-                and type(child_property).__name__ not in types_to_exclude
-            ):
+            if child_property is not None and type(child_property).__name__ not in types_to_exclude:
                 child = {
                     **get_variable_description(child_property),
                     "name": prop,

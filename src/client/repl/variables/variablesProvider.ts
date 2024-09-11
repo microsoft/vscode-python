@@ -120,11 +120,11 @@ export class VariablesProvider implements NotebookVariableProvider {
     ): Promise<IVariableDescription[]> {
         let scriptCode = await getContentsOfVariablesScript();
         if (parent) {
-            scriptCode = `${scriptCode}\n\nreturn _VSCODE_getAllChildrenDescriptions(\'${
+            scriptCode = `${scriptCode}\r\n\r\nprint(_VSCODE_getAllChildrenDescriptions(\'${
                 parent.root
-            }\', ${JSON.stringify(parent.propertyChain)}, ${start})`;
+            }\', ${JSON.stringify(parent.propertyChain)}, ${start}))`;
         } else {
-            scriptCode = `${scriptCode}\n\nvariables= locals()\nreturn _VSCODE_getVariableDescriptions(variables)`;
+            scriptCode = `${scriptCode}\r\n\r\nvariables= locals()\r\nprint(_VSCODE_getVariableDescriptions(variables))`;
         }
 
         if (token.isCancellationRequested) {
@@ -133,7 +133,7 @@ export class VariablesProvider implements NotebookVariableProvider {
 
         const result = await this.pythonServer.execute(scriptCode);
 
-        if (result?.output && token.isCancellationRequested) {
+        if (result?.output && !token.isCancellationRequested) {
             return JSON.parse(result.output) as IVariableDescription[];
         }
 
@@ -147,7 +147,7 @@ async function getContentsOfVariablesScript(): Promise<string> {
     }
     const contents = await fsapi.readFile(VARIABLE_SCRIPT_LOCATION, 'utf-8');
     VariablesProvider.scriptContents = contents;
-    return Promise.resolve('locals()');
+    return VariablesProvider.scriptContents;
 }
 
 function createExpression(root: string, propertyChain: (string | number)[]): string {
