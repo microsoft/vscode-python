@@ -24,7 +24,6 @@ import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
 export interface IDisposable {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispose(): void | undefined | Promise<void>;
 }
 
