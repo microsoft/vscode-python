@@ -7,7 +7,7 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
 
 // TODO: This test is being flaky for windows, need to investigate why only fails on windows
-if (process.platform === 'win32') {
+if (process.platform !== 'win32') {
     suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
         suiteSetup(async function () {
             if (!IS_SMOKE_TEST) {
