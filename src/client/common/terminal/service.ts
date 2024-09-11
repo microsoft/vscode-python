@@ -111,6 +111,9 @@ export class TerminalService implements ITerminalService, Disposable {
                 if (listener) {
                     this.executeCommandListeners.add(listener);
                 }
+                // setTimeout(() => {
+                //     resolve(undefined);
+                // }, 10000); // This would be a work around for testing scenario -- would it be a good design outside of testing case?
             });
         } else {
             terminal.sendText(commandLine);

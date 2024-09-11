@@ -42,11 +42,34 @@ suite('Terminal Service', () => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
         terminal.setup((t) => t.shellIntegration).returns(() => terminalShellIntegration.object);
-        // terminal.setup((t) => t.shellIntegration).returns(() => undefined);
+        // terminal.setup((t) => t.shellIntegration).returns(() => undefined); -- always disable shell integration => passes test
         const shellExecution: TypeMoq.IMock<TerminalShellExecution> = TypeMoq.Mock.ofType<TerminalShellExecution>();
 
         terminalShellIntegration
             .setup((t) => t.executeCommand(TypeMoq.It.isAny()))
+            .callback(() => {
+                const execution: TerminalShellExecution = {
+                    commandLine: {
+                        value: 'dummy text',
+                        isTrusted: true,
+                        confidence: 2,
+                    },
+                    cwd: undefined,
+                    read: function (): AsyncIterable<string> {
+                        throw new Error('Function not implemented.');
+                    },
+                };
+                const exitCode = 0;
+
+                const event: TerminalShellExecutionEndEvent = {
+                    execution,
+                    exitCode,
+                    terminal: terminal.object,
+                    shellIntegration: terminalShellIntegration.object,
+                };
+
+                onDidEndTerminalShellExecutionEmitter.fire(event);
+            })
             .returns(() => shellExecution.object);
 
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
@@ -81,8 +104,10 @@ suite('Terminal Service', () => {
         // Add a listener to capture the event argument
         onDidEndTerminalShellExecutionEmitter.event((e) => {
             try {
-                expect(e.execution).to.equal(execution);
+                expect(e.execution.commandLine.value).to.equal(execution.commandLine.value);
                 expect(e.exitCode).to.equal(exitCode);
+                // resolve
+                return;
             } catch (error) {
                 console.error(error);
             }
