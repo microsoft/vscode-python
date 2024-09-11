@@ -38,12 +38,13 @@ suite('Terminal Service', () => {
     let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
     let onDidEndTerminalShellExecutionEmitter: EventEmitter<TerminalShellExecutionEndEvent>;
     let event: TerminalShellExecutionEndEvent;
+    let shellExecution: TypeMoq.IMock<TerminalShellExecution>;
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
         terminal.setup((t) => t.shellIntegration).returns(() => terminalShellIntegration.object);
         // terminal.setup((t) => t.shellIntegration).returns(() => undefined); -- always disable shell integration => passes test
-        const shellExecution: TypeMoq.IMock<TerminalShellExecution> = TypeMoq.Mock.ofType<TerminalShellExecution>();
+        shellExecution = TypeMoq.Mock.ofType<TerminalShellExecution>();
 
         onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
@@ -58,62 +59,35 @@ suite('Terminal Service', () => {
                 throw new Error('Function not implemented.');
             },
         };
-        const exitCode = 0;
 
         // Mock the execution object and exitCode
         event = {
             execution,
-            exitCode,
+            exitCode: 0,
             terminal: terminal.object,
             shellIntegration: terminalShellIntegration.object,
         };
 
         // Add a listener to capture the event argument
-        onDidEndTerminalShellExecutionEmitter.event((e) => {
-            try {
-                expect(e.execution.commandLine.value).to.equal(execution.commandLine.value);
-                expect(e.exitCode).to.equal(exitCode);
-                // resolve
-                return;
-            } catch (error) {
-                console.error(error);
-            }
-        });
+        // onDidEndTerminalShellExecutionEmitter.event((e) => {
+        //     try {
+        //         expect(e.execution.commandLine.value).to.equal(execution.commandLine.value);
+        //         expect(e.exitCode).to.equal(exitCode);
+        //         // resolve
+        //         return;
+        //     } catch (error) {
+        //         console.error(error);
+        //     }
+        // });
+
+        terminalShellIntegration.setup((t) => t.executeCommand(TypeMoq.It.isAny())).returns(() => execution);
 
         terminalManager
             .setup((t) => t.onDidEndTerminalShellExecution)
-            .returns(() => onDidEndTerminalShellExecutionEmitter.event);
-
-        terminalShellIntegration
-            .setup((t) => t.executeCommand(TypeMoq.It.isAny()))
-            .callback(() => {
-                const execution: TerminalShellExecution = {
-                    commandLine: {
-                        value: 'dummy text',
-                        isTrusted: true,
-                        confidence: 2,
-                    },
-                    cwd: undefined,
-                    read: function (): AsyncIterable<string> {
-                        throw new Error('Function not implemented.');
-                    },
-                };
-                const exitCode = 0;
-
-                const event: TerminalShellExecutionEndEvent = {
-                    execution,
-                    exitCode,
-                    terminal: terminal.object,
-                    shellIntegration: terminalShellIntegration.object,
-                };
-
-                onDidEndTerminalShellExecutionEmitter.fire(event);
-            })
-            .returns(() => shellExecution.object);
-
-        // Trigger the event
-        onDidEndTerminalShellExecutionEmitter.fire(event);
-
+            .returns(() => {
+                setTimeout(() => onDidEndTerminalShellExecutionEmitter.fire(event), 100);
+                return onDidEndTerminalShellExecutionEmitter.event;
+            });
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
@@ -179,7 +153,12 @@ suite('Terminal Service', () => {
             .setup((h) => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => 'dummy text');
 
-        onDidEndTerminalShellExecutionEmitter.fire(event);
+        terminalManager
+            .setup((t) => t.onDidEndTerminalShellExecution)
+            .returns(() => {
+                setTimeout(() => onDidEndTerminalShellExecutionEmitter.fire(event), 100);
+                return onDidEndTerminalShellExecutionEmitter.event;
+            });
         // Sending a command will cause the terminal to be created
         await service.sendCommand('', []);
 

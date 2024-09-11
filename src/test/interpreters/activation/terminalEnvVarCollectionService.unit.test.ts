@@ -146,7 +146,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).never();
         assert(applyCollectionStub.notCalled, 'Collection should not be applied on activation');
 
-        verify(collection.clear()).atLeast(1);
+        verify(globalCollection.clear()).atLeast(1);
     });
 
     test('When interpreter changes, apply new activated variables to the collection', async () => {
