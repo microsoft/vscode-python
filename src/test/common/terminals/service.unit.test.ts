@@ -19,7 +19,7 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../../../client/common/terminal/types';
-import { IDisposableRegistry } from '../../../client/common/types';
+import { IDisposable, IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
@@ -36,8 +36,7 @@ suite('Terminal Service', () => {
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
     let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
-    // eslint-disable-line @typescript-eslint/no-unused-vars
-    let executeCommandListeners: Set<Disposable>;
+    let executeCommandListeners: TypeMoq.IMock<IDisposable>[];
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
@@ -58,8 +57,8 @@ suite('Terminal Service', () => {
                 onDidEndTerminalShellExecutionEmitter.event(handler);
             });
 
-        executeCommandListeners = new Set<Disposable>();
-        // executeCommandListeners.add(new Disposable(() => {}));
+        executeCommandListeners = new Array<TypeMoq.IMock<IDisposable>>();
+        executeCommandListeners.push(TypeMoq.Mock.ofType<IDisposable>());
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
