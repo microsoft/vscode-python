@@ -10,19 +10,13 @@ import {
     EventEmitter,
     NotebookVariableProvider,
 } from 'vscode';
-import * as path from 'path';
-import * as fsapi from '../../common/platform/fs-paths';
 import { VariableResultCache } from './variableResultCache';
 import { PythonServer } from '../pythonServer';
 import { IVariableDescription } from './types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
-
-const VARIABLE_SCRIPT_LOCATION = path.join(EXTENSION_ROOT_DIR, 'python_files', 'get_variable_info.py');
+import { VariableRequester } from './variableRequester';
 
 export class VariablesProvider implements NotebookVariableProvider {
-    public static scriptContents: string | undefined;
-
-    private variableResultCache = new VariableResultCache();
+    private readonly variableResultCache = new VariableResultCache();
 
     private _onDidChangeVariables = new EventEmitter<NotebookDocument>();
 
@@ -30,9 +24,21 @@ export class VariablesProvider implements NotebookVariableProvider {
 
     private executionCount = 0;
 
-    constructor(private readonly pythonServer: PythonServer) {}
+    constructor(
+        private readonly pythonServer: PythonServer,
+        private readonly variableRequester: VariableRequester,
+        private readonly getNotebookDocument: () => NotebookDocument | undefined,
+    ) {
+        this.pythonServer.onCodeExecuted(() => this.onDidExecuteCode());
+    }
 
-    // TODO: signal that variables have chagned when the server executes user code
+    onDidExecuteCode(): void {
+        const notebook = this.getNotebookDocument();
+        if (notebook) {
+            this.executionCount += 1;
+            this._onDidChangeVariables.fire(notebook);
+        }
+    }
 
     async *provideVariables(
         notebook: NotebookDocument,
@@ -42,13 +48,12 @@ export class VariablesProvider implements NotebookVariableProvider {
         token: CancellationToken,
     ): AsyncIterable<VariablesResult> {
         // TODO: check if server is running
-        if (token.isCancellationRequested) {
+        const notebookDocument = this.getNotebookDocument();
+        if (token.isCancellationRequested || !notebookDocument || notebookDocument !== notebook) {
             return;
         }
 
-        // eslint-disable-next-line no-plusplus
-        const executionCount = this.executionCount++;
-
+        const { executionCount } = this;
         const cacheKey = getVariableResultCacheKey(notebook.uri.toString(), parent, start);
         let results = this.variableResultCache.getResults(executionCount, cacheKey);
 
@@ -56,6 +61,9 @@ export class VariablesProvider implements NotebookVariableProvider {
             const parentDescription = parent as IVariableDescription;
             if (!results && parentDescription.getChildren) {
                 const variables = await parentDescription.getChildren(start, token);
+                if (token.isCancellationRequested) {
+                    return;
+                }
                 results = variables.map((variable) => this.createVariableResult(variable));
                 this.variableResultCache.setResults(executionCount, cacheKey, results);
             } else if (!results) {
@@ -86,7 +94,10 @@ export class VariablesProvider implements NotebookVariableProvider {
             }
         } else {
             if (!results) {
-                const variables = await this.getAllVariableDiscriptions(undefined, start, token);
+                const variables = await this.variableRequester.getAllVariableDescriptions(undefined, start, token);
+                if (token.isCancellationRequested) {
+                    return;
+                }
                 results = variables.map((variable) => this.createVariableResult(variable));
                 this.variableResultCache.setResults(executionCount, cacheKey, results);
             }
@@ -110,53 +121,8 @@ export class VariablesProvider implements NotebookVariableProvider {
 
     async getChildren(variable: Variable, start: number, token: CancellationToken): Promise<IVariableDescription[]> {
         const parent = variable as IVariableDescription;
-        return this.getAllVariableDiscriptions(parent, start, token);
+        return this.variableRequester.getAllVariableDescriptions(parent, start, token);
     }
-
-    async getAllVariableDiscriptions(
-        parent: IVariableDescription | undefined,
-        start: number,
-        token: CancellationToken,
-    ): Promise<IVariableDescription[]> {
-        const scriptLines = (await getContentsOfVariablesScript()).split(/(?:\r\n|\n)/);
-        if (parent) {
-            const printCall = `return _VSCODE_getAllChildrenDescriptions(\'${parent.root}\', ${JSON.stringify(
-                parent.propertyChain,
-            )}, ${start})`;
-            scriptLines.push(printCall);
-        } else {
-            scriptLines.push('return _VSCODE_getVariableDescriptions()');
-        }
-
-        if (token.isCancellationRequested) {
-            return [];
-        }
-
-        const script = wrapScriptInFunction(scriptLines);
-        const result = await this.pythonServer.execute(script);
-
-        if (result?.output && !token.isCancellationRequested) {
-            return JSON.parse(result.output) as IVariableDescription[];
-        }
-
-        return [];
-    }
-}
-
-function wrapScriptInFunction(scriptLines: string[]): string {
-    const indented = scriptLines.map((line) => `    ${line}`).join('\n');
-    // put everything into a function scope and then delete that scope
-    // TODO: run in a background thread
-    return `def __VSCODE_run_script():\n${indented}\nprint(__VSCODE_run_script())\ndel __VSCODE_run_script`;
-}
-
-async function getContentsOfVariablesScript(): Promise<string> {
-    if (VariablesProvider.scriptContents) {
-        return VariablesProvider.scriptContents;
-    }
-    const contents = await fsapi.readFile(VARIABLE_SCRIPT_LOCATION, 'utf-8');
-    VariablesProvider.scriptContents = contents;
-    return VariablesProvider.scriptContents;
 }
 
 function createExpression(root: string, propertyChain: (string | number)[]): string {
@@ -171,11 +137,11 @@ function createExpression(root: string, propertyChain: (string | number)[]): str
     return expression;
 }
 
-function getVariableResultCacheKey(notebookUri: string, parent: Variable | undefined, start: number) {
+function getVariableResultCacheKey(uri: string, parent: Variable | undefined, start: number) {
     let parentKey = '';
     const parentDescription = parent as IVariableDescription;
     if (parentDescription) {
         parentKey = `${parentDescription.name}.${parentDescription.propertyChain.join('.')}[[${start}`;
     }
-    return `${notebookUri}:${parentKey}`;
+    return `${uri}:${parentKey}`;
 }

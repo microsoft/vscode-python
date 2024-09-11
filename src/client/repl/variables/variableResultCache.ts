@@ -1,6 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
 import { VariablesResult } from 'vscode';
 
 export class VariableResultCacheBase<T> {

@@ -20,6 +20,7 @@ import { createReplController } from './replController';
 import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { VariablesProvider } from './variables/variablesProvider';
+import { VariableRequester } from './variables/variableRequester';
 
 let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
 export class NativeRepl implements Disposable {
@@ -113,7 +114,11 @@ export class NativeRepl implements Disposable {
     public setReplController(): NotebookController {
         if (!this.replController) {
             this.replController = createReplController(this.interpreter!.path, this.disposables, this.cwd);
-            this.replController.variableProvider = new VariablesProvider(this.pythonServer);
+            this.replController.variableProvider = new VariablesProvider(
+                this.pythonServer,
+                new VariableRequester(this.pythonServer),
+                () => this.notebookDocument,
+            );
         }
         return this.replController;
     }
