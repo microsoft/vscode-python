@@ -113,7 +113,8 @@ export class TerminalService implements ITerminalService, Disposable {
                 }
                 // setTimeout(() => {
                 //     resolve(undefined);
-                // }, 10000); // This would be a work around for testing scenario -- would it be a good design outside of testing case?
+                // }, 10000); // This would be a work around for testing scenario & safeguard for when onDidEndTerminalShellExecution never gets fired
+                // -- would it be a good design outside of testing case?
             });
         } else {
             terminal.sendText(commandLine);
