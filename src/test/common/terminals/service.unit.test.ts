@@ -38,13 +38,12 @@ suite('Terminal Service', () => {
     let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
     let onDidEndTerminalShellExecutionEmitter: EventEmitter<TerminalShellExecutionEndEvent>;
     let event: TerminalShellExecutionEndEvent;
-    let shellExecution: TypeMoq.IMock<TerminalShellExecution>;
+
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
         terminal.setup((t) => t.shellIntegration).returns(() => terminalShellIntegration.object);
         // terminal.setup((t) => t.shellIntegration).returns(() => undefined); -- always disable shell integration => passes test
-        shellExecution = TypeMoq.Mock.ofType<TerminalShellExecution>();
 
         onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
@@ -174,7 +173,7 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify(
             (t) => t.sendText(TypeMoq.It.isValue(commandToExpect), TypeMoq.It.isValue(true)),
-            TypeMoq.Times.never(), // should be calling sendText but rather executeCommand()
+            TypeMoq.Times.never(),
         );
     });
 
