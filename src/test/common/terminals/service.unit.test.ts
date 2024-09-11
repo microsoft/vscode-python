@@ -68,18 +68,6 @@ suite('Terminal Service', () => {
             shellIntegration: terminalShellIntegration.object,
         };
 
-        // Add a listener to capture the event argument
-        // onDidEndTerminalShellExecutionEmitter.event((e) => {
-        //     try {
-        //         expect(e.execution.commandLine.value).to.equal(execution.commandLine.value);
-        //         expect(e.exitCode).to.equal(exitCode);
-        //         // resolve
-        //         return;
-        //     } catch (error) {
-        //         console.error(error);
-        //     }
-        // });
-
         terminalShellIntegration.setup((t) => t.executeCommand(TypeMoq.It.isAny())).returns(() => execution);
 
         terminalManager
