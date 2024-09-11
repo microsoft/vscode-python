@@ -36,7 +36,8 @@ suite('Terminal Service', () => {
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
     let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
-
+    // let onDidEndTerminalShellExecutionEmitter: EventEmitter<TerminalShellExecutionEndEvent>;
+    // let event: TerminalShellExecutionEndEvent;
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
@@ -56,6 +57,30 @@ suite('Terminal Service', () => {
             .callback((handler) => {
                 onDidEndTerminalShellExecutionEmitter.event(handler);
             });
+
+        // const execution: TerminalShellExecution = {
+        //     commandLine: {
+        //         value: 'dummy text',
+        //         isTrusted: true,
+        //         confidence: 2,
+        //     },
+        //     cwd: undefined,
+        //     read: function (): AsyncIterable<string> {
+        //         throw new Error('Function not implemented.');
+        //     },
+        // };
+        // const exitCode = 0;
+
+        // // Mock the execution object and exitCode
+        // event = {
+        //     execution,
+        //     exitCode,
+        //     terminal: terminal.object,
+        //     shellIntegration: terminalShellIntegration.object,
+        // };
+
+        // // Trigger the event
+        // onDidEndTerminalShellExecutionEmitter.fire(event);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -104,6 +129,7 @@ suite('Terminal Service', () => {
             .setup((h) => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => 'dummy text');
 
+        // onDidEndTerminalShellExecutionEmitter.fire(event);
         // Sending a command will cause the terminal to be created
         await service.sendCommand('', []);
 

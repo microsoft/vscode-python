@@ -108,7 +108,10 @@ export class TerminalService implements ITerminalService, Disposable {
                         resolve({ execution, exitCode: e.exitCode });
                     }
                 });
-                this.executeCommandListeners.add(listener);
+                if (listener) {
+                    this.executeCommandListeners.add(listener);
+                }
+                // this.executeCommandListeners.add(listener);
             });
         } else {
             terminal.sendText(commandLine);
