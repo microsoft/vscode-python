@@ -36,7 +36,7 @@ suite('Terminal Service', () => {
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
     let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
-    let executeCommandListeners: TypeMoq.IMock<IDisposable>[];
+    let executeCommandListeners: Disposable[] = [];
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
@@ -57,8 +57,7 @@ suite('Terminal Service', () => {
                 onDidEndTerminalShellExecutionEmitter.event(handler);
             });
 
-        executeCommandListeners = new Array<TypeMoq.IMock<IDisposable>>();
-        executeCommandListeners.push(TypeMoq.Mock.ofType<IDisposable>());
+        executeCommandListeners = [];
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();

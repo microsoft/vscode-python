@@ -52,8 +52,10 @@ export class TerminalService implements ITerminalService, Disposable {
     public dispose() {
         this.terminal?.dispose();
 
-        for (const d of this.executeCommandListeners) {
-            d?.dispose();
+        if (this.executeCommandListeners && this.executeCommandListeners.size > 0) {
+            for (const d of this.executeCommandListeners) {
+                d?.dispose();
+            }
         }
     }
     public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
