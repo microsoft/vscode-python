@@ -10,7 +10,7 @@ from importlib.util import find_spec
 from typing import NamedTuple
 
 
-# The pydevd SafeRepr class used in ptvsd/debugpy
+# this class is from in ptvsd/debugpy tools
 class SafeRepr(object):  # noqa: UP004
     # Can be used to override the encoding from locale.getpreferredencoding()
     locale_preferred_encoding = None
@@ -467,9 +467,6 @@ def get_full_type(var_type):
     return None
 
 
-types_to_exclude = ["module", "function", "method", "class", "type"]
-
-
 def get_variable_description(variable):
     result = {}
 
@@ -510,8 +507,11 @@ def get_child_property(root, property_chain):
     return variable
 
 
+types_to_exclude = ["module", "function", "method", "class", "type"]
+
+
 ### Get info on variables at the root level
-def _VSCODE_getVariableDescriptions(var_names):  # noqa: N802
+def _VSCODE_getVariableDescriptions():  # noqa: N802
     variables = [
         {
             "name": varName,
@@ -520,8 +520,8 @@ def _VSCODE_getVariableDescriptions(var_names):  # noqa: N802
             "propertyChain": [],
             "language": "python",
         }
-        for varName in var_names
-        if varName in globals() and type(globals()[varName]).__name__ not in types_to_exclude
+        for varName in globals()
+        if type(globals()[varName]).__name__ not in types_to_exclude and not varName.startswith("__")
     ]
 
     return json.dumps(variables)

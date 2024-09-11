@@ -118,20 +118,22 @@ export class VariablesProvider implements NotebookVariableProvider {
         start: number,
         token: CancellationToken,
     ): Promise<IVariableDescription[]> {
-        let scriptCode = await getContentsOfVariablesScript();
+        const scriptLines = (await getContentsOfVariablesScript()).split(/(?:\r\n|\n)/);
         if (parent) {
-            scriptCode = `${scriptCode}\r\n\r\nprint(_VSCODE_getAllChildrenDescriptions(\'${
-                parent.root
-            }\', ${JSON.stringify(parent.propertyChain)}, ${start}))`;
+            const printCall = `return _VSCODE_getAllChildrenDescriptions(\'${parent.root}\', ${JSON.stringify(
+                parent.propertyChain,
+            )}, ${start})`;
+            scriptLines.push(printCall);
         } else {
-            scriptCode = `${scriptCode}\r\n\r\nvariables= locals()\r\nprint(_VSCODE_getVariableDescriptions(variables))`;
+            scriptLines.push('return _VSCODE_getVariableDescriptions()');
         }
 
         if (token.isCancellationRequested) {
             return [];
         }
 
-        const result = await this.pythonServer.execute(scriptCode);
+        const script = wrapScriptInFunction(scriptLines);
+        const result = await this.pythonServer.execute(script);
 
         if (result?.output && !token.isCancellationRequested) {
             return JSON.parse(result.output) as IVariableDescription[];
@@ -139,6 +141,13 @@ export class VariablesProvider implements NotebookVariableProvider {
 
         return [];
     }
+}
+
+function wrapScriptInFunction(scriptLines: string[]): string {
+    const indented = scriptLines.map((line) => `    ${line}`).join('\n');
+    // put everything into a function scope and then delete that scope
+    // TODO: run in a background thread
+    return `def __VSCODE_run_script():\n${indented}\nprint(__VSCODE_run_script())\ndel __VSCODE_run_script`;
 }
 
 async function getContentsOfVariablesScript(): Promise<string> {
