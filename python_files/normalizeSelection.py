@@ -22,7 +22,6 @@ def split_lines(source):
 
 def _get_statements(selection):
     """Process a multiline selection into a list of its top-level statements.
-
     This will remove empty newlines around and within the selection, dedent it,
     and split it using the result of `ast.parse()`.
     """
