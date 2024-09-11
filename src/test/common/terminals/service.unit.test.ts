@@ -52,6 +52,7 @@ suite('Terminal Service', () => {
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
 
         onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
+
         const execution: TerminalShellExecution = {
             commandLine: {
                 value: 'dummy text',
@@ -72,9 +73,20 @@ suite('Terminal Service', () => {
             terminal: terminal.object,
             shellIntegration: terminalShellIntegration.object,
         };
+
         terminalManager
             .setup((t) => t.onDidEndTerminalShellExecution)
             .returns(() => onDidEndTerminalShellExecutionEmitter.event);
+
+        // Add a listener to capture the event argument
+        onDidEndTerminalShellExecutionEmitter.event((e) => {
+            try {
+                expect(e.execution).to.equal(execution);
+                expect(e.exitCode).to.equal(exitCode);
+            } catch (error) {
+                console.error(error);
+            }
+        });
 
         // Trigger the event
         onDidEndTerminalShellExecutionEmitter.fire(event);
@@ -101,6 +113,24 @@ suite('Terminal Service', () => {
             service.dispose();
         }
         disposables.filter((item) => !!item).forEach((item) => item.dispose());
+    });
+
+    test('Ensure terminal shell execution end event is handled', (done) => {
+        service = new TerminalService(mockServiceContainer.object);
+
+        // Add a listener to capture the event argument
+        onDidEndTerminalShellExecutionEmitter.event((e) => {
+            try {
+                expect(e.execution).to.equal(event.execution);
+                expect(e.exitCode).to.equal(event.exitCode);
+                done();
+            } catch (error) {
+                done(error);
+            }
+        });
+
+        // Trigger the event
+        onDidEndTerminalShellExecutionEmitter.fire(event);
     });
 
     test('Ensure terminal is disposed', async () => {
