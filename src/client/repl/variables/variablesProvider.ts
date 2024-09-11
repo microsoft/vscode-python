@@ -8,10 +8,10 @@ import {
     NotebookVariablesRequestKind,
     VariablesResult,
     EventEmitter,
+    Event,
     NotebookVariableProvider,
 } from 'vscode';
 import { VariableResultCache } from './variableResultCache';
-import { PythonServer } from '../pythonServer';
 import { IVariableDescription } from './types';
 import { VariableRequester } from './variableRequester';
 
@@ -25,11 +25,11 @@ export class VariablesProvider implements NotebookVariableProvider {
     private executionCount = 0;
 
     constructor(
-        private readonly pythonServer: PythonServer,
         private readonly variableRequester: VariableRequester,
         private readonly getNotebookDocument: () => NotebookDocument | undefined,
+        codeExecutedEvent: Event<void>
     ) {
-        this.pythonServer.onCodeExecuted(() => this.onDidExecuteCode());
+        codeExecutedEvent(() => this.onDidExecuteCode());
     }
 
     onDidExecuteCode(): void {
@@ -47,7 +47,6 @@ export class VariablesProvider implements NotebookVariableProvider {
         start: number,
         token: CancellationToken,
     ): AsyncIterable<VariablesResult> {
-        // TODO: check if server is running
         const notebookDocument = this.getNotebookDocument();
         if (token.isCancellationRequested || !notebookDocument || notebookDocument !== notebook) {
             return;
