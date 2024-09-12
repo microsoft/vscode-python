@@ -46,7 +46,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.94.0"
+        "vscode": "^1.94-insider"
     },
     "enableTelemetry": false,
     "keywords": [
