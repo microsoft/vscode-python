@@ -32,6 +32,10 @@ export function registerPythonTaskProvider(): Disposable {
             // execute that new task with their current python file
 
             const runCurrentFileCommand = '';
+            // TODO: Get the file to execute
+            // TODO: set cwd for file execution using await this.setCwdForFileExecution(file, options);
+            // TODO: const { command, args } = await this.getExecuteFileArgs(file, [file.fsPath.fileToCommandArgumentForPythonExt(),]);
+            // TODO: pass command, args as argument to new ShellExecution below
 
             const currentPythonFileTask = new Task(
                 { type: 'pythonTask2', task: 'defaultTask2' },
