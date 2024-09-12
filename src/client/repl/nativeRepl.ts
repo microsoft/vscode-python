@@ -115,9 +115,9 @@ export class NativeRepl implements Disposable {
         if (!this.replController) {
             this.replController = createReplController(this.interpreter!.path, this.disposables, this.cwd);
             this.replController.variableProvider = new VariablesProvider(
-                this.pythonServer,
                 new VariableRequester(this.pythonServer),
                 () => this.notebookDocument,
+                this.pythonServer.onCodeExecuted,
             );
         }
         return this.replController;
