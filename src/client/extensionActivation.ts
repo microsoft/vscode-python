@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugConfigurationProvider, debug, languages, window } from 'vscode';
+import { DebugConfigurationProvider, commands, debug, languages, window } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
 import { IExtensionActivationManager } from './activation/types';
@@ -32,7 +32,12 @@ import { TerminalProvider } from './providers/terminalProvider';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
-import { ICodeExecutionHelper, ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
+import {
+    ICodeExecutionHelper,
+    ICodeExecutionManager,
+    ICodeExecutionService,
+    ITerminalAutoActivation,
+} from './terminals/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
@@ -54,6 +59,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
+import { registerPythonTaskProvider } from './taskProblemMatcher';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -109,6 +115,33 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     );
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
     const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
+    const codeExecutionService = ext.legacyIOC.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService);
+    // register task provider for the workspace
+
+    const taskProvider = registerPythonTaskProvider(executionHelper, codeExecutionService);
+
+    // TODO: use command manager and not command directly from VS Code
+    commands.executeCommand('workbench.action.tasks.registerTaskDefinition', {
+        label: '$pythonCustomMatcher',
+        owner: 'python',
+        source: 'python',
+        fileLocation: 'autoDetect',
+        pattern: [
+            {
+                regexp: '^.*File \\"([^\\"]|.*)\\", line (\\d+).*',
+                file: 1,
+                line: 2,
+            },
+            {
+                regexp: '^.*raise.*$',
+            },
+            {
+                regexp: '^\\s*(.*)\\s*$',
+                message: 1,
+            },
+        ],
+    });
+
     registerTriggerForTerminalREPL(ext.disposables);
     registerStartNativeReplCommand(ext.disposables, interpreterService);
     registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);

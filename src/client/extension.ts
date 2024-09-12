@@ -28,7 +28,7 @@ initializeFileLogging(logDispose);
 //===============================================
 // loading starts here
 
-import { commands, ProgressLocation, ProgressOptions, ShellExecution, Task, tasks, TaskScope, window } from 'vscode';
+import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import { buildApi } from './api';
 import { IApplicationShell, IWorkspaceService } from './common/application/types';
 import { IDisposableRegistry, IExperimentService, IExtensionContext } from './common/types';
@@ -47,7 +47,6 @@ import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';
 import { buildProposedApi } from './proposedApi';
 import { GLOBAL_PERSISTENT_KEYS } from './common/persistentState';
-import { registerPythonTaskProvider } from './taskProblemMatcher';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -138,33 +137,6 @@ async function activateUnsafe(
     const activationPromise = (async () => {
         await Promise.all(nonBlocking);
     })();
-
-    // register task provider for the workspace
-
-    const taskProvider = registerPythonTaskProvider();
-
-    context.subscriptions.push(taskProvider);
-
-    commands.executeCommand('workbench.action.tasks.registerTaskDefinition', {
-        label: '$pythonCustomMatcher',
-        owner: 'python',
-        source: 'python',
-        fileLocation: 'autoDetect',
-        pattern: [
-            {
-                regexp: '^.*File \\"([^\\"]|.*)\\", line (\\d+).*',
-                file: 1,
-                line: 2,
-            },
-            {
-                regexp: '^.*raise.*$',
-            },
-            {
-                regexp: '^\\s*(.*)\\s*$',
-                message: 1,
-            },
-        ],
-    });
 
     //===============================================
     // activation ends here

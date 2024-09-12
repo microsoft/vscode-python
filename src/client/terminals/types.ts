@@ -3,6 +3,7 @@
 
 import { Event, Terminal, TextEditor, Uri } from 'vscode';
 import { IDisposable, Resource } from '../common/types';
+import { PythonExecInfo } from '../pythonEnvironments/exec';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
@@ -10,6 +11,7 @@ export interface ICodeExecutionService {
     execute(code: string, resource?: Uri): Promise<void>;
     executeFile(file: Uri, options?: { newTerminalPerFile: boolean }): Promise<void>;
     initializeRepl(resource?: Uri): Promise<void>;
+    getExecuteFileArgs(executeArgs: string[], resource?: Uri): Promise<PythonExecInfo>;
 }
 
 export const ICodeExecutionHelper = Symbol('ICodeExecutionHelper');

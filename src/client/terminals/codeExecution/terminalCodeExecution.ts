@@ -39,9 +39,10 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
         await this.setCwdForFileExecution(file, options);
-        const { command, args } = await this.getExecuteFileArgs(file, [
-            file.fsPath.fileToCommandArgumentForPythonExt(),
-        ]);
+        const { command, args } = await this.getExecuteFileArgs(
+            [file.fsPath.fileToCommandArgumentForPythonExt()],
+            file,
+        );
 
         await this.getTerminalService(file, options).sendCommand(command, args);
     }
@@ -121,7 +122,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     }
 
     // Overridden in subclasses, see djangoShellCodeExecution.ts
-    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
+    public async getExecuteFileArgs(executeArgs: string[] = [], resource?: Uri): Promise<PythonExecInfo> {
         return this.getExecutableInfo(resource, executeArgs);
     }
     private getTerminalService(resource: Resource, options?: { newTerminalPerFile: boolean }): ITerminalService {
