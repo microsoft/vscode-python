@@ -129,7 +129,6 @@ export class TerminalService implements ITerminalService, Disposable {
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
-            // return this.terminal;
             return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
