@@ -27,7 +27,7 @@ export class VariablesProvider implements NotebookVariableProvider {
     constructor(
         private readonly variableRequester: VariableRequester,
         private readonly getNotebookDocument: () => NotebookDocument | undefined,
-        codeExecutedEvent: Event<void>
+        codeExecutedEvent: Event<void>,
     ) {
         codeExecutedEvent(() => this.onDidExecuteCode());
     }

@@ -120,12 +120,7 @@ suite.only('ReplVariablesProvider', () => {
         const firstPage = [0, 1, 2].map(createListItem);
         const secondPage = [3, 4, 5].map(createListItem);
         setVariablesForParent(rootVariable.variable as IVariableDescription, firstPage, undefined, 0);
-        setVariablesForParent(
-            rootVariable.variable as IVariableDescription,
-            secondPage,
-            undefined,
-            firstPage.length,
-        );
+        setVariablesForParent(rootVariable.variable as IVariableDescription, secondPage, undefined, firstPage.length);
 
         const listItemResult = await provideVariables(rootVariable!.variable, 2);
 
@@ -150,12 +145,7 @@ suite.only('ReplVariablesProvider', () => {
         setVariablesForParent(undefined, [listVariable]);
         const rootVariable = (await provideVariables(undefined))[0];
         setVariablesForParent(rootVariable.variable as IVariableDescription, firstPage, undefined, 0);
-        setVariablesForParent(
-            rootVariable.variable as IVariableDescription,
-            secondPage,
-            undefined,
-            firstPage.length,
-        );
+        setVariablesForParent(rootVariable.variable as IVariableDescription, secondPage, undefined, firstPage.length);
         setVariablesForParent(rootVariable.variable as IVariableDescription, [], undefined, 5);
 
         const listItemResult = await provideVariables(rootVariable!.variable, 2);
@@ -203,7 +193,10 @@ suite.only('ReplVariablesProvider', () => {
         assert.equal(second.length, 1);
         assert.equal(first[0].variable.value, '1');
 
-        varRequester.verify(x => x.getAllVariableDescriptions(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
+        varRequester.verify(
+            (x) => x.getAllVariableDescriptions(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 
     test('Cache pages of indexed children correctly', async () => {
@@ -220,17 +213,15 @@ suite.only('ReplVariablesProvider', () => {
         setVariablesForParent(undefined, [listVariable]);
         const rootVariable = (await provideVariables(undefined))[0];
         setVariablesForParent(rootVariable.variable as IVariableDescription, firstPage, undefined, 0);
-        setVariablesForParent(
-            rootVariable.variable as IVariableDescription,
-            secondPage,
-            undefined,
-            firstPage.length,
-        );
+        setVariablesForParent(rootVariable.variable as IVariableDescription, secondPage, undefined, firstPage.length);
 
         await provideVariables(rootVariable!.variable, 2);
 
         // once for the parent and once for each of the two pages of list items
-        varRequester.verify(x => x.getAllVariableDescriptions(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.exactly(3));
+        varRequester.verify(
+            (x) => x.getAllVariableDescriptions(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.exactly(3),
+        );
 
         const listItemResult = await provideVariables(rootVariable!.variable, 2);
 
@@ -241,6 +232,9 @@ suite.only('ReplVariablesProvider', () => {
         });
 
         // no extra calls for getting the children again
-        varRequester.verify(x => x.getAllVariableDescriptions(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.exactly(3));
+        varRequester.verify(
+            (x) => x.getAllVariableDescriptions(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.exactly(3),
+        );
     });
 });

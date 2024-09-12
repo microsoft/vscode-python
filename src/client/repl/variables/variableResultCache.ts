@@ -1,11 +1,11 @@
 import { VariablesResult } from 'vscode';
 
-export class VariableResultCacheBase<T> {
-    private cache = new Map<string, T>();
+export class VariableResultCache {
+    private cache = new Map<string, VariablesResult[]>();
 
     private executionCount = 0;
 
-    getResults(executionCount: number, cacheKey: string): T | undefined {
+    getResults(executionCount: number, cacheKey: string): VariablesResult[] | undefined {
         if (this.executionCount !== executionCount) {
             this.cache.clear();
             this.executionCount = executionCount;
@@ -14,7 +14,7 @@ export class VariableResultCacheBase<T> {
         return this.cache.get(cacheKey);
     }
 
-    setResults(executionCount: number, cacheKey: string, results: T): void {
+    setResults(executionCount: number, cacheKey: string, results: VariablesResult[]): void {
         if (this.executionCount < executionCount) {
             this.cache.clear();
             this.executionCount = executionCount;
@@ -26,5 +26,3 @@ export class VariableResultCacheBase<T> {
         this.cache.set(cacheKey, results);
     }
 }
-
-export const VariableResultCache = VariableResultCacheBase<VariablesResult[]>;
