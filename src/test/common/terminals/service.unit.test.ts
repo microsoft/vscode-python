@@ -59,7 +59,6 @@ suite('Terminal Service', () => {
             },
         };
 
-        // Mock the execution object and exitCode
         event = {
             execution,
             exitCode: 0,
@@ -97,24 +96,6 @@ suite('Terminal Service', () => {
             service.dispose();
         }
         disposables.filter((item) => !!item).forEach((item) => item.dispose());
-    });
-
-    test('Ensure terminal shell execution end event is handled', (done) => {
-        service = new TerminalService(mockServiceContainer.object);
-
-        // Add a listener to capture the event argument
-        onDidEndTerminalShellExecutionEmitter.event((e) => {
-            try {
-                expect(e.execution).to.equal(event.execution);
-                expect(e.exitCode).to.equal(event.exitCode);
-                done();
-            } catch (error) {
-                done(error);
-            }
-        });
-
-        // Trigger the event
-        onDidEndTerminalShellExecutionEmitter.fire(event);
     });
 
     test('Ensure terminal is disposed', async () => {

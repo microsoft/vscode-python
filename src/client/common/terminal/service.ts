@@ -22,6 +22,7 @@ import {
     TerminalShellType,
     ITerminalExecutedCommand,
 } from './types';
+import { TIMEOUT } from 'dns';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -53,9 +54,9 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal?.dispose();
 
         if (this.executeCommandListeners && this.executeCommandListeners.size > 0) {
-            for (const d of this.executeCommandListeners) {
+            this.executeCommandListeners.forEach((d) => {
                 d?.dispose();
-            }
+            });
         }
     }
     public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
@@ -76,7 +77,6 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal!.sendText(text);
     }
     public async executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
-        // const terminal = await this.ensureTerminal();
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
@@ -91,10 +91,11 @@ export class TerminalService implements ITerminalService, Disposable {
                         resolve(true);
                     },
                 );
+                const TIMEOUT_DURATION = 3000;
                 setTimeout(() => {
                     this.executeCommandListeners.add(shellIntegrationChangeEventListener);
                     resolve(true);
-                }, 3000);
+                }, TIMEOUT_DURATION);
             });
             await promise;
         }
