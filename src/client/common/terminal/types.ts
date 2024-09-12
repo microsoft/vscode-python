@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Event, Terminal, Uri } from 'vscode';
+import { CancellationToken, Event, Terminal, Uri, TerminalShellExecution } from 'vscode';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { IDisposable, Resource } from '../types';
@@ -52,8 +52,15 @@ export interface ITerminalService extends IDisposable {
         cancel?: CancellationToken,
         swallowExceptions?: boolean,
     ): Promise<void>;
+    /** @deprecated */
     sendText(text: string): Promise<void>;
+    executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined>;
     show(preserveFocus?: boolean): Promise<void>;
+}
+
+export interface ITerminalExecutedCommand {
+    execution: TerminalShellExecution;
+    exitCode: number | undefined;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');

@@ -4,7 +4,15 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Terminal as VSCodeTerminal, WorkspaceConfiguration } from 'vscode';
+import {
+    Disposable,
+    EventEmitter,
+    TerminalShellExecution,
+    TerminalShellExecutionEndEvent,
+    TerminalShellIntegration,
+    Terminal as VSCodeTerminal,
+    WorkspaceConfiguration,
+} from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IPlatformService } from '../../../client/common/platform/types';
@@ -26,9 +34,44 @@ suite('Terminal Service', () => {
     let disposables: Disposable[] = [];
     let mockServiceContainer: TypeMoq.IMock<IServiceContainer>;
     let terminalAutoActivator: TypeMoq.IMock<ITerminalAutoActivation>;
+    let terminalShellIntegration: TypeMoq.IMock<TerminalShellIntegration>;
+    let onDidEndTerminalShellExecutionEmitter: EventEmitter<TerminalShellExecutionEndEvent>;
+    let event: TerminalShellExecutionEndEvent;
+
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
+        terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
+        terminal.setup((t) => t.shellIntegration).returns(() => terminalShellIntegration.object);
+
+        onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
+        const execution: TerminalShellExecution = {
+            commandLine: {
+                value: 'dummy text',
+                isTrusted: true,
+                confidence: 2,
+            },
+            cwd: undefined,
+            read: function (): AsyncIterable<string> {
+                throw new Error('Function not implemented.');
+            },
+        };
+
+        event = {
+            execution,
+            exitCode: 0,
+            terminal: terminal.object,
+            shellIntegration: terminalShellIntegration.object,
+        };
+
+        terminalShellIntegration.setup((t) => t.executeCommand(TypeMoq.It.isAny())).returns(() => execution);
+
+        terminalManager
+            .setup((t) => t.onDidEndTerminalShellExecution)
+            .returns(() => {
+                setTimeout(() => onDidEndTerminalShellExecutionEmitter.fire(event), 100);
+                return onDidEndTerminalShellExecutionEmitter.event;
+            });
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
@@ -37,6 +80,7 @@ suite('Terminal Service', () => {
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+
         mockServiceContainer.setup((c) => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup((c) => c.get(ITerminalHelper)).returns(() => terminalHelper.object);
         mockServiceContainer.setup((c) => c.get(IPlatformService)).returns(() => platformService.object);
@@ -75,10 +119,16 @@ suite('Terminal Service', () => {
             .setup((h) => h.buildCommandForTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => 'dummy text');
 
+        terminalManager
+            .setup((t) => t.onDidEndTerminalShellExecution)
+            .returns(() => {
+                setTimeout(() => onDidEndTerminalShellExecutionEmitter.fire(event), 100);
+                return onDidEndTerminalShellExecutionEmitter.event;
+            });
         // Sending a command will cause the terminal to be created
         await service.sendCommand('', []);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         service.dispose();
         terminal.verify((t) => t.dispose(), TypeMoq.Times.exactly(1));
     });
@@ -99,10 +149,10 @@ suite('Terminal Service', () => {
 
         await service.sendCommand(commandToSend, args);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.atLeastOnce());
         terminal.verify(
             (t) => t.sendText(TypeMoq.It.isValue(commandToExpect), TypeMoq.It.isValue(true)),
-            TypeMoq.Times.exactly(1),
+            TypeMoq.Times.never(),
         );
     });
 
