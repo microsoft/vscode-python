@@ -22,7 +22,6 @@ import {
     TerminalShellType,
     ITerminalExecutedCommand,
 } from './types';
-import { TIMEOUT } from 'dns';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
