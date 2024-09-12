@@ -7,7 +7,7 @@ import json
 import locale
 import sys
 from importlib.util import find_spec
-from typing import NamedTuple
+from typing import ClassVar, NamedTuple
 
 
 # this class is from in ptvsd/debugpy tools
@@ -52,7 +52,7 @@ class SafeRepr(object):  # noqa: UP004
 
     # type, prefix string, suffix string, item prefix string,
     # item key/value separator, item suffix string
-    dict_types = [(dict, "{", "}", "", ": ", "")]  # noqa: RUF012
+    dict_types: ClassVar[list] = [(dict, "{", "}", "", ": ", "")]
     try:
         from collections import OrderedDict
 
@@ -521,7 +521,8 @@ def _VSCODE_getVariableDescriptions():  # noqa: N802
             "language": "python",
         }
         for varName in globals()
-        if type(globals()[varName]).__name__ not in types_to_exclude and not varName.startswith("__")
+        if type(globals()[varName]).__name__ not in types_to_exclude
+        and not varName.startswith("__")
     ]
 
     return json.dumps(variables)
