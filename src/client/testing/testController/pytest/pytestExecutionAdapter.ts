@@ -37,7 +37,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     async runTests(
         uri: Uri,
         testIds: string[],
-        profileKind?: boolean,
+        profileKind?: TestRunProfileKind,
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
@@ -108,7 +108,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         deferredTillEOT: Deferred<void>,
         serverDispose: () => void,
         runInstance?: TestRun,
-        profileKind?: boolean | TestRunProfileKind,
+        profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {

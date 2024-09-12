@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { TestRun, Uri } from 'vscode';
+import { TestRun, TestRunProfileKind, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
@@ -43,7 +43,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
     public async runTests(
         uri: Uri,
         testIds: string[],
-        debugBool?: boolean,
+        profileKind?: TestRunProfileKind,
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
@@ -81,7 +81,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 deferredTillEOT,
                 serverDispose,
                 runInstance,
-                debugBool,
+                profileKind,
                 executionFactory,
                 debugLauncher,
             );
@@ -107,7 +107,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         deferredTillEOT: Deferred<void>,
         serverDispose: () => void,
         runInstance?: TestRun,
-        debugBool?: boolean,
+        profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
@@ -124,12 +124,15 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         const pythonPathCommand = [cwd, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = resultNamedPipeName;
+        if (profileKind && profileKind === TestRunProfileKind.Coverage) {
+            mutableEnv.COVERAGE_ENABLED = cwd;
+        }
 
         const options: TestCommandOptions = {
             workspaceFolder: uri,
             command,
             cwd,
-            debugBool,
+            profileKind,
             testIds,
             outChannel: this.outputChannel,
             token: runInstance?.token,
@@ -161,7 +164,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         }
 
         try {
-            if (options.debugBool) {
+            if (options.profileKind && options.profileKind === TestRunProfileKind.Debug) {
                 const launchOptions: LaunchOptions = {
                     cwd: options.cwd,
                     args,

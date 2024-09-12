@@ -16,15 +16,7 @@ import {
     Uri,
     EventEmitter,
     TextDocument,
-    FileCoverage,
-    // StatementCoverage,
-    // Position,
-    TestCoverageCount,
     FileCoverageDetail,
-    Position,
-    StatementCoverage,
-    BranchCoverage,
-    Range,
     TestRun,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
@@ -48,7 +40,6 @@ import {
     ITestFrameworkController,
     TestRefreshOptions,
     ITestExecutionAdapter,
-    ITestResultResolver,
 } from './common/types';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
@@ -155,19 +146,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             ),
             coverageProfile,
         );
-
-        // const detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
-        // coverageProfile.loadDetailedCoverage = async (
-        //     _testRun,
-        //     fileCoverage: FileCoverage,
-        //     _token,
-        // ): Promise<FileCoverageDetail[]> => {
-        //     const details = this.resultResolver.detailedCoverageMap.get(fileCoverage.uri.toString());
-        //     if (details === undefined) {
-        //         return Promise.resolve([]);
-        //     }
-        //     return Promise.resolve(details);
-        // };
         this.testController.resolveHandler = this.resolveChildren.bind(this);
         this.testController.refreshHandler = (token: CancellationToken) => {
             this.disposables.push(
@@ -448,13 +426,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             (this.testAdapters.values().next().value as WorkspaceTestAdapter);
 
                         if (request.profile?.kind && request.profile?.kind === TestRunProfileKind.Coverage) {
-                            // add to environment variable: COVERAGE_ENABLED to communicate to pytest to run coverage
-                            // const mutableEnv = {
-                            //     ...(await this.envVarsService?.getEnvironmentVariables(workspace.uri)),
-                            // };
-                            // mutableEnv.COVERAGE_ENABLED = 'True';
-
-                            // while the profile is known, set the loadDetailedCoverage function to return the coverage data
                             request.profile.loadDetailedCoverage = (
                                 _testRun: TestRun,
                                 fileCoverage,
@@ -464,6 +435,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     fileCoverage.uri.fsPath,
                                 );
                                 if (details === undefined) {
+                                    // given file has no detailed coverage data
                                     return Promise.resolve([]);
                                 }
                                 return Promise.resolve(details);
@@ -510,7 +482,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     runInstance,
                                     testItems,
                                     token,
-                                    request.profile?.kind === TestRunProfileKind.Debug,
+                                    request.profile?.kind,
                                     this.pythonExecFactory,
                                     this.debugLauncher,
                                 );
@@ -536,53 +508,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 }),
             );
         } finally {
-            // const CurrProfile = request.profile;
-            // if (CurrProfile && CurrProfile.kind === TestRunProfileKind.Coverage) {
-            //     request.profile.loadDetailedCoverage = (
-            //         testRun: TestRun,
-            //         fileCoverage,
-            //         _token,
-            //     ): Thenable<FileCoverageDetail[]> => {
-            //         const details = this.testController..get(fileCoverage);
-            //         if (details === undefined) {
-            //             return Promise.resolve([]);
-            //         }
-            //         return Promise.resolve(details);
-            //     };
-            // }
-            // coverage starting spot
-            // const coverageData = new Map<FileCoverage, FileCoverageDetail[]>();
-            // const uriSpe = Uri.parse('/Users/eleanorboyd/testingFiles/pytestPluginLocalEnv/unittest/un.py');
-            // const pos1 = new Position(1, 0);
-            // const ran1 = new Range(19, 0, 19, 0);
-            // const branchCoverage = new BranchCoverage(5, pos1, 'exbranchlabel');
-
-            // const statementCoverage = new StatementCoverage(5, ran1, [branchCoverage]);
-            // const fdList: FileCoverageDetail[] = [];
-            // fdList.push(statementCoverage);
-
-            // const tcc = new TestCoverageCount(3, 5);
-            // const branchCoverageCount = new TestCoverageCount(2, 5);
-
-            // const fc = new FileCoverage(uriSpe, tcc, branchCoverageCount);
-            // runInstance.addCoverage(fc);
-
-            // coverageData.set(fc, fdList);
-
-            // if (request.profile) {
-            //     request.profile.loadDetailedCoverage = (
-            //         _testRun,
-            //         fileCoverage,
-            //         _token,
-            //     ): Thenable<FileCoverageDetail[]> => {
-            //         const details = coverageData.get(fileCoverage);
-            //         if (details === undefined) {
-            //             return Promise.resolve([]);
-            //         }
-            //         return Promise.resolve(details);
-            //     };
-            // }
-
             traceVerbose('Finished running tests, ending runInstance.');
             runInstance.appendOutput(`Finished running tests!\r\n`);
             runInstance.end();

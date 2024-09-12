@@ -456,7 +456,6 @@ def pytest_sessionfinish(session, exitstatus):
 
     # send coverageee if enabled
     is_coverage_run = os.environ.get("COVERAGE_ENABLED")
-    print("COVERAGE RUN RUN ")
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
@@ -467,14 +466,11 @@ def pytest_sessionfinish(session, exitstatus):
             tuple[coverage.plugin.FileReporter, coverage.results.Analysis]
         ] = coverage.report_core.get_analysis_to_report(cov, None)
 
-        data = cov.get_data()
-        print("DAD HAS ARXS???", data.has_arcs())
         file_coverage_map: dict[str, FileCoverageInfo] = {}
         for fr, analysis in analysis_iterator:
             file_str: str = fr.filename
             executed_branches = analysis.numbers.n_executed_branches
             total_branches = analysis.numbers.n_branches
-            print("TB", total_branches, analysis, analysis.numbers)
             if not INCLUDE_BRANCHES:
                 print("coverage not run with branches")
                 # if covearge wasn't run with branches, set the total branches value to -1 to signal that it is not available
@@ -487,10 +483,8 @@ def pytest_sessionfinish(session, exitstatus):
                 "executed_branches": executed_branches,  # int
                 "total_branches": total_branches,  # int
             }
-            print("FILE INFO", file_info)
             file_coverage_map[file_str] = file_info
 
-        print("coverage_map", file_coverage_map)
         payload: CoveragePayloadDict = CoveragePayloadDict(
             coverage=True,
             cwd=os.fspath(cwd),

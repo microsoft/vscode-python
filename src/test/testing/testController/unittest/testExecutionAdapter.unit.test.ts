@@ -2,7 +2,7 @@
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the MIT License.
 import * as assert from 'assert';
-import { TestRun, Uri } from 'vscode';
+import { TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
@@ -121,7 +121,7 @@ suite('Unittest test execution adapter', () => {
         adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
         const testIds = ['test1id', 'test2id'];
 
-        adapter.runTests(uri, testIds, false, testRun.object, execFactory.object);
+        adapter.runTests(uri, testIds, TestRunProfileKind.Run, testRun.object, execFactory.object);
 
         // add in await and trigger
         await deferred2.promise;
@@ -150,7 +150,7 @@ suite('Unittest test execution adapter', () => {
         const uri = Uri.file(myTestPath);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
         adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
-        adapter.runTests(uri, [], false, testRun.object, execFactory.object);
+        adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
 
         await deferred2.promise;
         await deferred3.promise;
@@ -207,7 +207,7 @@ suite('Unittest test execution adapter', () => {
         const uri = Uri.file(myTestPath);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
         adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
-        adapter.runTests(uri, [], false, testRun.object, execFactory.object);
+        adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
 
         await deferred2.promise;
         await deferred3.promise;
@@ -266,7 +266,14 @@ suite('Unittest test execution adapter', () => {
         const uri = Uri.file(myTestPath);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
         adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
-        await adapter.runTests(uri, [], true, testRun.object, execFactory.object, debugLauncher.object);
+        await adapter.runTests(
+            uri,
+            [],
+            TestRunProfileKind.Debug,
+            testRun.object,
+            execFactory.object,
+            debugLauncher.object,
+        );
         await deferred3.promise;
         debugLauncher.verify(
             (x) =>

@@ -151,7 +151,7 @@ export type TestCommandOptions = {
     command: TestDiscoveryCommand | TestExecutionCommand;
     token?: CancellationToken;
     outChannel?: OutputChannel;
-    debugBool?: boolean;
+    profileKind?: TestRunProfileKind;
     testIds?: string[];
 };
 
