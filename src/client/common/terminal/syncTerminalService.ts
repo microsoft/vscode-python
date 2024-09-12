@@ -14,7 +14,7 @@ import * as internalScripts from '../process/internal/scripts';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { TerminalService } from './service';
-import { ITerminalService } from './types';
+import { ITerminalService, ITerminalExecutedCommand } from './types';
 
 enum State {
     notStarted = 0,
@@ -146,8 +146,12 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
             lockFile.dispose();
         }
     }
+    /** @deprecated */
     public sendText(text: string): Promise<void> {
         return this.terminalService.sendText(text);
+    }
+    public executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
+        return this.terminalService.executeCommand(commandLine);
     }
     public show(preserveFocus?: boolean | undefined): Promise<void> {
         return this.terminalService.show(preserveFocus);
