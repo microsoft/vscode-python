@@ -6,7 +6,6 @@
 import json
 import locale
 import sys
-from importlib.util import find_spec
 from typing import ClassVar
 
 
@@ -376,7 +375,7 @@ class SafeRepr(object):  # noqa: UP004
         # locale.getpreferredencoding() and 'utf-8). If no encoding can decode
         # the input, we return the original bytes.
         try_encodings = []
-        encoding = self.sys_stdout_encoding or getattr(sys.stdout, "encoding", "")
+        encoding = self.sys_stdout_encoding or getattr(sys.stdout, "encoding", None)
         if encoding:
             try_encodings.append(encoding.lower())
 
@@ -409,41 +408,8 @@ collection_types = ["list", "tuple", "set"]
 array_page_size = 50
 
 
-def set_pandas_display_options(display_options=None):
-    if find_spec("pandas") is not None:
-        try:
-            import pandas as _VSCODE_PD  # type: ignore  # noqa: N812
-
-            original_display = DisplayOptions(
-                width=_VSCODE_PD.options.display.width,
-                max_columns=_VSCODE_PD.options.display.max_columns,
-            )
-
-            if display_options:
-                _VSCODE_PD.options.display.max_columns = display_options.max_columns
-                _VSCODE_PD.options.display.width = display_options.width
-            else:
-                _VSCODE_PD.options.display.max_columns = 100
-                _VSCODE_PD.options.display.width = 1000
-
-            return original_display
-        except ImportError:
-            pass
-        finally:
-            del _VSCODE_PD
-    return None
-
-
 def get_value(variable):
-    original_display = None
-    if type(variable).__name__ == "DataFrame" and find_spec("pandas") is not None:
-        original_display = set_pandas_display_options()
-
-    try:
-        return safe_repr(variable)
-    finally:
-        if original_display:
-            set_pandas_display_options(original_display)
+    return safe_repr(variable)
 
 
 def get_property_names(variable):
