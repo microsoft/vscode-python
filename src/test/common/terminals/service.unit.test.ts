@@ -43,7 +43,6 @@ suite('Terminal Service', () => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
         terminal.setup((t) => t.shellIntegration).returns(() => terminalShellIntegration.object);
-        // terminal.setup((t) => t.shellIntegration).returns(() => undefined); -- always disable shell integration => passes test
 
         onDidEndTerminalShellExecutionEmitter = new EventEmitter<TerminalShellExecutionEndEvent>();
         terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();

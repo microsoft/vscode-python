@@ -154,7 +154,6 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         this.sendTelemetry().ignoreErrors();
-        // return this.terminal;
         return;
     }
     private terminalCloseHandler(terminal: Terminal) {
