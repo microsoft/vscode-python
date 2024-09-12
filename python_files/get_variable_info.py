@@ -7,7 +7,7 @@ import json
 import locale
 import sys
 from importlib.util import find_spec
-from typing import ClassVar, NamedTuple
+from typing import ClassVar
 
 
 # this class is from in ptvsd/debugpy tools
@@ -398,9 +398,10 @@ class SafeRepr(object):  # noqa: UP004
         return obj_repr  # Return the original version (in bytes)
 
 
-class DisplayOptions(NamedTuple):
-    width: int
-    max_columns: int
+class DisplayOptions:
+    def __init__(self, width, max_columns):
+        self.width = width
+        self.max_columns = max_columns
 
 
 safe_repr = SafeRepr()
