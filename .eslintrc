@@ -28,6 +28,7 @@
         "@typescript-eslint/no-dupe-class-members": "error",
         "no-empty-function": "off",
         "@typescript-eslint/no-empty-function": ["error"],
+        "no-inner-declarations": "warn",
         "@typescript-eslint/no-empty-interface": "off",
         "@typescript-eslint/no-explicit-any": "error",
         "@typescript-eslint/no-non-null-assertion": "off",

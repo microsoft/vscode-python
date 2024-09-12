@@ -32,7 +32,12 @@ import { TerminalProvider } from './providers/terminalProvider';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
-import { ICodeExecutionHelper, ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
+import {
+    ICodeExecutionHelper,
+    ICodeExecutionManager,
+    IPythonStartupEnvVarService,
+    ITerminalAutoActivation,
+} from './terminals/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
@@ -176,6 +181,7 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
             serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
+            serviceManager.get<IPythonStartupEnvVarService>(IPythonStartupEnvVarService).register();
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 

@@ -39,6 +39,7 @@ export class TerminalService implements ITerminalService, Disposable {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private readonly options?: TerminalCreationOptions,
     ) {
+        const a: TerminalService;
         const disposableRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposableRegistry.push(this);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
@@ -74,6 +75,10 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(preserveFocus);
         }
     }
+    //     When terminal is launched
+    //      Copy pythonrc into <userdata>/pythonrc.py
+    //      Update environment variable collection to include PYTHONSTARTUP=<userdata>/pythonrc.py
+
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
             return;
