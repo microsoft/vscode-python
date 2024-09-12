@@ -60,6 +60,7 @@ import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 import { registerPythonTaskProvider } from './taskProblemMatcher';
+import { ITerminalHelper, ITerminalService } from './common/terminal/types';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -116,6 +117,9 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
     const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
     const codeExecutionService = ext.legacyIOC.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService);
+    // const terminalService = ext.legacyIOC.serviceContainer.get<ITerminalService>(ITerminalService);  ----> Not allowed
+    const terminalHelper = ext.legacyIOC.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+
     // register task provider for the workspace
 
     const taskProvider = registerPythonTaskProvider(executionHelper, codeExecutionService);

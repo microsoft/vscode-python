@@ -5,10 +5,13 @@ import { ShellExecution, Task, TaskScope, tasks } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { traceLog } from './logging';
 import { ICodeExecutionHelper, ICodeExecutionService } from './terminals/types';
+import { ITerminalHelper, ITerminalService } from './common/terminal/types';
 
 export function registerPythonTaskProvider(
     executionHelper: ICodeExecutionHelper,
     codeExecutionService: ICodeExecutionService,
+    terminalService: ITerminalService,
+    terminalHelper: ITerminalHelper,
 ): Disposable {
     const taskProvider = tasks.registerTaskProvider('pythonTask', {
         provideTasks: () =>
@@ -49,7 +52,11 @@ export function registerPythonTaskProvider(
                 pythonFile!,
             );
             // TODO: build command for specific terminal
-            const finalCommand = terminalHelper.buildCommandForTerminal(terminalShellType, command, args);
+            const finalCommand = terminalHelper.buildCommandForTerminal(
+                terminalService.terminalShellType,
+                command,
+                args,
+            );
             // TODO: pass command, args as argument to new ShellExecution below
 
             const currentPythonFileTask = new Task(
