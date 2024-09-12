@@ -41,6 +41,7 @@ export class TerminalService implements ITerminalService, Disposable {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private readonly options?: TerminalCreationOptions,
     ) {
+        const a: TerminalService;
         const disposableRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposableRegistry.push(this);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
