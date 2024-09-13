@@ -221,6 +221,19 @@ def runner_with_cwd_env(
         process_args = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]
         pipe_name = generate_random_pipe_name("pytest-discovery-test")
 
+    if "COVERAGE_ENABLED" in env_add:
+        process_args = [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-p",
+            "vscode_pytest",
+            "--cov=.",
+            "--cov-branch",
+            "-s",
+            *args,
+        ]
+
     # Generate pipe name, pipe name specific per OS type.
 
     # Windows design

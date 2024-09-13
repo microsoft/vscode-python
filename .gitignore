@@ -49,3 +49,7 @@ dist/**
 package.nls.*.json
 l10n/
 python-env-tools/**
+# coverage files produced as test output
+python_files/tests/pytestadapter/.data/.coverage*
+python_files/tests/pytestadapter/.data/*/.coverage*
+
