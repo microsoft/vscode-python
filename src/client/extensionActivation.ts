@@ -121,19 +121,16 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     );
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
     const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
-    const codeExecutionService = ext.legacyIOC.serviceManager.get<ICodeExecutionService>(ICodeExecutionService); // ----> No matching binding found for serviceIdentifier ICodeExecutionService
+
     // const terminalService = ext.legacyIOC.serviceContainer.get<ITerminalService>(ITerminalService);  ----> Not allowed
     const terminalHelper = ext.legacyIOC.serviceManager.get<ITerminalHelper>(ITerminalHelper);
     const terminalManager = ext.legacyIOC.serviceManager.get<ITerminalManager>(ITerminalManager);
+    /// ///// Until here is fine------  codeExecutionService fails.
+    const codeExecutionService = ext.legacyIOC.serviceManager.get<ICodeExecutionService>(ICodeExecutionService); // ----> No matching binding found for serviceIdentifier ICodeExecutionService
 
     // register task provider for the workspace
 
-    const taskProvider = registerPythonTaskProvider(
-        executionHelper,
-        codeExecutionService,
-        terminalHelper,
-        terminalManager,
-    );
+    const taskProvider = registerPythonTaskProvider(executionHelper, terminalHelper, terminalManager);
 
     // TODO: use command manager and not command directly from VS Code
     commands.executeCommand('workbench.action.tasks.registerTaskDefinition', {
@@ -225,7 +222,7 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
 
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
 
-            serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
+            serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands(); // Why is this here..? WHY
 
             disposables.push(new ReplProvider(serviceContainer));
 

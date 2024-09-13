@@ -10,6 +10,7 @@ import { registerTypes as platformRegisterTypes } from './common/platform/servic
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
+// import { registerTypes as terminalRegisterTypes } from './terminals/serviceRegistry';
 import {
     GLOBAL_MEMENTO,
     IDisposableRegistry,
@@ -86,6 +87,7 @@ export function initializeStandard(ext: ExtensionState): void {
     platformRegisterTypes(serviceManager);
     processRegisterTypes(serviceManager);
     interpretersRegisterTypes(serviceManager);
+    // terminalRegisterTypes(serviceManager); // Question: Is this supposed to be here?
 
     // We will be pulling other code over from activateLegacy().
 }

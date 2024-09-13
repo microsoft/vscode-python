@@ -10,7 +10,6 @@ import { ITerminalManager } from './common/application/types';
 
 export function registerPythonTaskProvider(
     executionHelper: ICodeExecutionHelper,
-    codeExecutionService: ICodeExecutionService,
     terminalHelper: ITerminalHelper,
     terminalManager: ITerminalManager,
 ): Disposable {
@@ -45,13 +44,14 @@ export function registerPythonTaskProvider(
             const pythonFile = await executionHelper.getFileToExecute();
             // TODO: MIGHT NEED TO set cwd for file execution using await this.setCwdForFileExecution(file, options);
 
-            // TODO: const { command, args } = await this.getExecuteFileArgs(file, [file.fsPath.fileToCommandArgumentForPythonExt(),]);
-            const { command, args } = await codeExecutionService.getExecuteFileArgs(
-                [
-                    pythonFile!.fsPath.fileToCommandArgumentForPythonExt(), // TODO: Remove bang !
-                ],
-                pythonFile!,
-            );
+            // TODO: Have to rebuild getExecuteFileArgs from scartch because we can't inject codeExecutionService.
+            // const { command, args } = await codeExecutionService.getExecuteFileArgs(
+            //     [
+            //         pythonFile!.fsPath.fileToCommandArgumentForPythonExt(), // TODO: Remove bang !
+            //     ],
+            //     pythonFile!,
+            // );
+
             // TODO: build command for specific terminal
             const hiddenTerminal = terminalManager.createTerminal({
                 name: 'PythonHidden',
