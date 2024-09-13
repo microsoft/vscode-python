@@ -6,8 +6,11 @@ import { Disposable } from 'vscode-jsonrpc';
 import { traceLog } from './logging';
 import { ICodeExecutionHelper, ICodeExecutionService } from './terminals/types';
 import { ITerminalHelper } from './common/terminal/types';
-import { ITerminalManager } from './common/application/types';
+import { IActiveResourceService, ITerminalManager } from './common/application/types';
 import { IConfigurationService } from './common/types';
+import { PlatformService } from './common/platform/platformService';
+import { buildPythonExecInfo } from './pythonEnvironments/exec';
+import { IInterpreterService } from './interpreter/contracts';
 
 export function registerPythonTaskProvider(
     executionHelper: ICodeExecutionHelper,
@@ -15,6 +18,7 @@ export function registerPythonTaskProvider(
     terminalManager: ITerminalManager,
     configurationService: IConfigurationService,
     interpreterService: IInterpreterService,
+    activeResourceService: IActiveResourceService,
 ): Disposable {
     const taskProvider = tasks.registerTaskProvider('pythonTask', {
         provideTasks: () =>
@@ -54,7 +58,20 @@ export function registerPythonTaskProvider(
             //     ],
             //     pythonFile!,
             // );
+
+            const platformService = new PlatformService();
             // Reimplement getExecutableInfo here
+            const resource = activeResourceService.getActiveResource();
+            const pythonSettings = configurationService.getSettings(resource);
+            const interpreter = await interpreterService.getActiveInterpreter(resource);
+            const interpreterPath = interpreter?.path ?? pythonSettings.pythonPath;
+            const command = platformService.isWindows ? interpreterPath.replace(/\\/g, '/') : interpreterPath;
+            const { launchArgs } = pythonSettings.terminal;
+            const arrFileToCommandArgumentForPythonExt = pythonFile!.fsPath.fileToCommandArgumentForPythonExt();
+            const pythonExecInfo = buildPythonExecInfo(command, [
+                ...launchArgs,
+                ...arrFileToCommandArgumentForPythonExt,
+            ]);
 
             // TODO: build command for specific terminal
             const hiddenTerminal = terminalManager.createTerminal({
@@ -63,7 +80,11 @@ export function registerPythonTaskProvider(
                 hideFromUser: true,
             });
             const terminalShellType = terminalHelper.identifyTerminalShell(hiddenTerminal);
-            const finalCommand = terminalHelper.buildCommandForTerminal(terminalShellType, command, args);
+            const finalCommand = terminalHelper.buildCommandForTerminal(
+                terminalShellType,
+                pythonExecInfo.command,
+                pythonExecInfo.args,
+            );
             // TODO: pass command, args as argument to new ShellExecution below
 
             const currentPythonFileTask = new Task(

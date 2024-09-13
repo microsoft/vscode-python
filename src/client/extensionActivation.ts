@@ -10,6 +10,7 @@ import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
 import {
+    IActiveResourceService,
     IApplicationEnvironment,
     ICommandManager,
     ITerminalManager,
@@ -128,6 +129,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     /// ///// Until here is fine------  codeExecutionService fails.
     // const codeExecutionService = ext.legacyIOC.serviceManager.get<ICodeExecutionService>(ICodeExecutionService); // ----> No matching binding found for serviceIdentifier ICodeExecutionService
     const configurationService = ext.legacyIOC.serviceManager.get<IConfigurationService>(IConfigurationService);
+    const activeResourceService = ext.legacyIOC.serviceManager.get<IActiveResourceService>(IActiveResourceService);
 
     // register task provider for the workspace
 
@@ -137,6 +139,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         terminalManager,
         configurationService,
         interpreterService,
+        activeResourceService,
     );
 
     // TODO: use command manager and not command directly from VS Code
