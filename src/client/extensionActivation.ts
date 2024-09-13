@@ -121,10 +121,10 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     );
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
     const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
-    const codeExecutionService = ext.legacyIOC.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService);
+    const codeExecutionService = ext.legacyIOC.serviceManager.get<ICodeExecutionService>(ICodeExecutionService); // ----> No matching binding found for serviceIdentifier ICodeExecutionService
     // const terminalService = ext.legacyIOC.serviceContainer.get<ITerminalService>(ITerminalService);  ----> Not allowed
-    const terminalHelper = ext.legacyIOC.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-    const terminalManager = ext.legacyIOC.serviceContainer.get<ITerminalManager>(ITerminalManager);
+    const terminalHelper = ext.legacyIOC.serviceManager.get<ITerminalHelper>(ITerminalHelper);
+    const terminalManager = ext.legacyIOC.serviceManager.get<ITerminalManager>(ITerminalManager);
 
     // register task provider for the workspace
 
