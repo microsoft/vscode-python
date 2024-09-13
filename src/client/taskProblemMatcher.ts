@@ -7,11 +7,14 @@ import { traceLog } from './logging';
 import { ICodeExecutionHelper, ICodeExecutionService } from './terminals/types';
 import { ITerminalHelper } from './common/terminal/types';
 import { ITerminalManager } from './common/application/types';
+import { IConfigurationService } from './common/types';
 
 export function registerPythonTaskProvider(
     executionHelper: ICodeExecutionHelper,
     terminalHelper: ITerminalHelper,
     terminalManager: ITerminalManager,
+    configurationService: IConfigurationService,
+    interpreterService: IInterpreterService,
 ): Disposable {
     const taskProvider = tasks.registerTaskProvider('pythonTask', {
         provideTasks: () =>
@@ -51,6 +54,7 @@ export function registerPythonTaskProvider(
             //     ],
             //     pythonFile!,
             // );
+            // Reimplement getExecutableInfo here
 
             // TODO: build command for specific terminal
             const hiddenTerminal = terminalManager.createTerminal({

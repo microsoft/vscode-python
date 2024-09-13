@@ -126,11 +126,18 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const terminalHelper = ext.legacyIOC.serviceManager.get<ITerminalHelper>(ITerminalHelper);
     const terminalManager = ext.legacyIOC.serviceManager.get<ITerminalManager>(ITerminalManager);
     /// ///// Until here is fine------  codeExecutionService fails.
-    const codeExecutionService = ext.legacyIOC.serviceManager.get<ICodeExecutionService>(ICodeExecutionService); // ----> No matching binding found for serviceIdentifier ICodeExecutionService
+    // const codeExecutionService = ext.legacyIOC.serviceManager.get<ICodeExecutionService>(ICodeExecutionService); // ----> No matching binding found for serviceIdentifier ICodeExecutionService
+    const configurationService = ext.legacyIOC.serviceManager.get<IConfigurationService>(IConfigurationService);
 
     // register task provider for the workspace
 
-    const taskProvider = registerPythonTaskProvider(executionHelper, terminalHelper, terminalManager);
+    const taskProvider = registerPythonTaskProvider(
+        executionHelper,
+        terminalHelper,
+        terminalManager,
+        configurationService,
+        interpreterService,
+    );
 
     // TODO: use command manager and not command directly from VS Code
     commands.executeCommand('workbench.action.tasks.registerTaskDefinition', {
