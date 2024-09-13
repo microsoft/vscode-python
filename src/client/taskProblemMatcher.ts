@@ -6,11 +6,13 @@ import { Disposable } from 'vscode-jsonrpc';
 import { traceLog } from './logging';
 import { ICodeExecutionHelper, ICodeExecutionService } from './terminals/types';
 import { ITerminalHelper } from './common/terminal/types';
+import { ITerminalManager } from './common/application/types';
 
 export function registerPythonTaskProvider(
     executionHelper: ICodeExecutionHelper,
     codeExecutionService: ICodeExecutionService,
     terminalHelper: ITerminalHelper,
+    terminalManager: ITerminalManager,
 ): Disposable {
     const taskProvider = tasks.registerTaskProvider('pythonTask', {
         provideTasks: () =>
@@ -51,11 +53,13 @@ export function registerPythonTaskProvider(
                 pythonFile!,
             );
             // TODO: build command for specific terminal
-            const finalCommand = terminalHelper.buildCommandForTerminal(
-                terminalService.terminalShellType,
-                command,
-                args,
-            );
+            const hiddenTerminal = terminalManager.createTerminal({
+                name: 'PythonHidden',
+                env: {},
+                hideFromUser: true,
+            });
+            const terminalShellType = terminalHelper.identifyTerminalShell(hiddenTerminal);
+            const finalCommand = terminalHelper.buildCommandForTerminal(terminalShellType, command, args);
             // TODO: pass command, args as argument to new ShellExecution below
 
             const currentPythonFileTask = new Task(

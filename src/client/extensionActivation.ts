@@ -9,7 +9,12 @@ import { registerTypes as activationRegisterTypes } from './activation/serviceRe
 import { IExtensionActivationManager } from './activation/types';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
-import { IApplicationEnvironment, ICommandManager, IWorkspaceService } from './common/application/types';
+import {
+    IApplicationEnvironment,
+    ICommandManager,
+    ITerminalManager,
+    IWorkspaceService,
+} from './common/application/types';
 import { Commands, PYTHON_LANGUAGE, UseProposedApi } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { IFileSystem } from './common/platform/types';
@@ -60,7 +65,7 @@ import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 import { registerPythonTaskProvider } from './taskProblemMatcher';
-import { ITerminalHelper, ITerminalService } from './common/terminal/types';
+import { ITerminalHelper } from './common/terminal/types';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -119,10 +124,16 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const codeExecutionService = ext.legacyIOC.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService);
     // const terminalService = ext.legacyIOC.serviceContainer.get<ITerminalService>(ITerminalService);  ----> Not allowed
     const terminalHelper = ext.legacyIOC.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+    const terminalManager = ext.legacyIOC.serviceContainer.get<ITerminalManager>(ITerminalManager);
 
     // register task provider for the workspace
 
-    const taskProvider = registerPythonTaskProvider(executionHelper, codeExecutionService);
+    const taskProvider = registerPythonTaskProvider(
+        executionHelper,
+        codeExecutionService,
+        terminalHelper,
+        terminalManager,
+    );
 
     // TODO: use command manager and not command directly from VS Code
     commands.executeCommand('workbench.action.tasks.registerTaskDefinition', {
