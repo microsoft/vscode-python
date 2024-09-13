@@ -43,7 +43,7 @@ runs:
 
     # Bits from the VSIX are reused by smokeTest.ts to speed things up.
     - name: Download VSIX
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.artifact_name }}
 

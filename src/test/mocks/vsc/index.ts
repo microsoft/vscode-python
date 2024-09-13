@@ -369,6 +369,8 @@ export class CodeActionKind {
 
     public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
 
+    public static readonly Notebook: CodeActionKind = new CodeActionKind('notebook');
+
     private constructor(private _value: string) {}
 
     public append(parts: string): CodeActionKind {

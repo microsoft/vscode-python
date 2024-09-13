@@ -1193,7 +1193,8 @@
             {
                 "filenames": [
                     "Pipfile",
-                    "poetry.lock"
+                    "poetry.lock",
+                    "uv.lock"
                 ],
                 "id": "toml"
             },
@@ -1571,7 +1572,7 @@
         "@types/sinon": "^17.0.3",
         "@types/stack-trace": "0.0.29",
         "@types/tmp": "^0.0.33",
-        "@types/vscode": "^1.81.0",
+        "@types/vscode": "^1.93.0",
         "@types/which": "^2.0.1",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
