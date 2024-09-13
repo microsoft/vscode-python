@@ -307,25 +307,6 @@ if __name__ == "__main__":
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     test_run_pipe = os.getenv("TEST_RUN_PIPE")
-
-    workspace_root = os.environ.get("COVERAGE_ENABLED")
-    # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
-    is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
-    if is_coverage_run:
-        print(
-            "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
-            workspace_root,
-        )
-        import coverage
-
-        source_ar = [workspace_root]
-        if top_level_dir:
-            source_ar.append(top_level_dir)
-        if start_dir:
-            source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
-        cov = coverage.Coverage(branch=True, source=source_ar)  # is at least 1 of these required??
-        cov.start()
-
     if not run_test_ids_pipe:
         print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
@@ -354,6 +335,24 @@ if __name__ == "__main__":
             "error": "No test ids read from temp file," + str(e),
         }
         send_post_request(payload, test_run_pipe)
+
+    workspace_root = os.environ.get("COVERAGE_ENABLED")
+    # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
+    if is_coverage_run:
+        print(
+            "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
+            workspace_root,
+        )
+        import coverage
+
+        source_ar = [workspace_root]
+        if top_level_dir:
+            source_ar.append(top_level_dir)
+        if start_dir:
+            source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
+        cov = coverage.Coverage(branch=True, source=source_ar)  # is at least 1 of these required??
+        cov.start()
 
     # If no error occurred, we will have test ids to run.
     if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
