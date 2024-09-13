@@ -1234,7 +1234,8 @@
             {
                 "filenames": [
                     "Pipfile",
-                    "poetry.lock"
+                    "poetry.lock",
+                    "uv.lock"
                 ],
                 "id": "toml"
             },
