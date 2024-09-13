@@ -19,12 +19,12 @@ export class VariableRequester {
     ): Promise<IVariableDescription[]> {
         const scriptLines = (await getContentsOfVariablesScript()).split(/(?:\r\n|\n)/);
         if (parent) {
-            const printCall = `return _VSCODE_getAllChildrenDescriptions(\'${parent.root}\', ${JSON.stringify(
+            const printCall = `return json.dumps(getAllChildrenDescriptions(\'${parent.root}\', ${JSON.stringify(
                 parent.propertyChain,
-            )}, ${start})`;
+            )}, ${start}))`;
             scriptLines.push(printCall);
         } else {
-            scriptLines.push('return _VSCODE_getVariableDescriptions()');
+            scriptLines.push('return json.dumps(getVariableDescriptions())');
         }
 
         if (token.isCancellationRequested) {

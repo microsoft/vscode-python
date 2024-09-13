@@ -478,8 +478,8 @@ types_to_exclude = ["module", "function", "method", "class", "type"]
 
 
 ### Get info on variables at the root level
-def _VSCODE_getVariableDescriptions():  # noqa: N802
-    variables = [
+def getVariableDescriptions():  # noqa: N802
+    return [
         {
             "name": varName,
             **get_variable_description(globals()[varName]),
@@ -492,11 +492,9 @@ def _VSCODE_getVariableDescriptions():  # noqa: N802
         and not varName.startswith("__")
     ]
 
-    return json.dumps(variables)
-
 
 ### Get info on children of a variable reached through the given property chain
-def _VSCODE_getAllChildrenDescriptions(root_var_name, property_chain, start_index):  # noqa: N802
+def getAllChildrenDescriptions(root_var_name, property_chain, start_index):  # noqa: N802
     root = globals()[root_var_name]
     if root is None:
         return []
@@ -540,4 +538,4 @@ def _VSCODE_getAllChildrenDescriptions(root_var_name, property_chain, start_inde
                 }
                 children.append(child)
 
-    return json.dumps(children)
+    return children
