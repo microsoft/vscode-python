@@ -5,12 +5,11 @@ import { ShellExecution, Task, TaskScope, tasks } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { traceLog } from './logging';
 import { ICodeExecutionHelper, ICodeExecutionService } from './terminals/types';
-import { ITerminalHelper, ITerminalService } from './common/terminal/types';
+import { ITerminalHelper } from './common/terminal/types';
 
 export function registerPythonTaskProvider(
     executionHelper: ICodeExecutionHelper,
     codeExecutionService: ICodeExecutionService,
-    terminalService: ITerminalService,
     terminalHelper: ITerminalHelper,
 ): Disposable {
     const taskProvider = tasks.registerTaskProvider('pythonTask', {
