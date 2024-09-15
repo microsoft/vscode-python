@@ -37,7 +37,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IShellIntegrationService, ITerminalDeactivateService } from '../../../client/terminals/types';
+import { IShellIntegrationDetectionService, ITerminalDeactivateService } from '../../../client/terminals/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 
 suite('Terminal Environment Variable Collection Service', () => {
@@ -58,7 +58,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         title: Interpreters.activatingTerminals,
     };
     let configService: IConfigurationService;
-    let shellIntegrationService: IShellIntegrationService;
+    let shellIntegrationService: IShellIntegrationDetectionService;
     const displayPath = 'display/path';
     const customShell = 'powershell';
     const defaultShell = defaultShells[getOSType()];
@@ -76,7 +76,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
         const envVarProvider = mock<IEnvironmentVariablesProvider>();
-        shellIntegrationService = mock<IShellIntegrationService>();
+        shellIntegrationService = mock<IShellIntegrationDetectionService>();
         when(shellIntegrationService.isWorking()).thenResolve(true);
         globalCollection = mock<GlobalEnvironmentVariableCollection>();
         collection = mock<EnvironmentVariableCollection>();
