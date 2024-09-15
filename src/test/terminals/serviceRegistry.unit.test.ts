@@ -20,12 +20,14 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
+    IPythonStartupEnvVarService,
     IShellIntegrationDetectionService,
     ITerminalAutoActivation,
     ITerminalDeactivateService,
     ITerminalEnvVarCollectionService,
 } from '../../client/terminals/types';
 import { ShellIntegrationDetectionService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
+import { PythonStartupEnvVarService } from '../../client/terminals/pythonStartupEnvVar/service';
 
 suite('Terminal - Service Registry', () => {
     test('Ensure all services get registered', () => {
@@ -41,6 +43,7 @@ suite('Terminal - Service Registry', () => {
             [IExtensionSingleActivationService, TerminalIndicatorPrompt],
             [ITerminalDeactivateService, TerminalDeactivateService],
             [IShellIntegrationDetectionService, ShellIntegrationDetectionService],
+            [IPythonStartupEnvVarService, PythonStartupEnvVarService],
         ].forEach((args) => {
             if (args.length === 2) {
                 services
