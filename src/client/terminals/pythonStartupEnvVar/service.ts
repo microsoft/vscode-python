@@ -5,12 +5,15 @@ import * as path from 'path';
 import { injectable, inject } from 'inversify';
 import { Uri, workspace } from 'vscode';
 import { IPythonStartupEnvVarService } from '../types';
-import { IExtensionContext } from '../../common/types';
+import { IConfigurationService, IExtensionContext } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 
 @injectable()
 export class PythonStartupEnvVarService implements IPythonStartupEnvVarService {
-    constructor(@inject(IExtensionContext) private context: IExtensionContext) {}
+    constructor(
+        @inject(IExtensionContext) private context: IExtensionContext,
+        @inject(IConfigurationService) private configurationService: IConfigurationService,
+    ) {}
 
     public async register(): Promise<void> {
         const storageUri = this.context.storageUri || this.context.globalStorageUri;
@@ -29,7 +32,12 @@ export class PythonStartupEnvVarService implements IPythonStartupEnvVarService {
         const sourcePath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
 
         await workspace.fs.copy(Uri.file(sourcePath), destPath, { overwrite: true });
-
-        this.context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
+        const pythonrcSetting = this.configurationService.getSettings().terminal.pythonrcStartup;
+        if (pythonrcSetting) {
+            this.context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
+        } else {
+            this.context.environmentVariableCollection.delete('PYTHONSTARTUP');
+        }
+        // this.context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
     }
 }

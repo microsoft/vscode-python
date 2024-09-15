@@ -631,6 +631,12 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "python.terminal.enable Shell Integration in Python Terminal REPL": {
+                    "default": true,
+                    "description": "%python.terminal.enableSITerminal.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.REPL.enableREPLSmartSend": {
                     "default": true,
                     "description": "%python.EnableREPLSmartSend.description%",
