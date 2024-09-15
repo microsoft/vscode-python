@@ -20,7 +20,6 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    IPythonStartupEnvVarService,
     IShellIntegrationDetectionService,
     ITerminalAutoActivation,
     ITerminalDeactivateService,
