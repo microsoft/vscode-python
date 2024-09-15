@@ -10,7 +10,6 @@ import {
     EnvironmentVariableScope,
     EnvironmentVariableMutatorOptions,
     ProgressLocation,
-    EnvironmentVariableCollection,
 } from 'vscode';
 import { pathExists, normCase } from '../../common/platform/fs-paths';
 import { IExtensionActivationService } from '../../activation/types';
@@ -97,7 +96,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async activate(resource: Resource): Promise<void> {
         try {
             if (!inTerminalEnvVarExperiment(this.experimentService)) {
-                clearCollectionVariables(this.context.environmentVariableCollection);
+                this.context.environmentVariableCollection.clear();
                 await this.handleMicroVenv(resource);
                 if (!this.registeredOnce) {
                     this.interpreterService.onDidChangeInterpreter(
@@ -177,7 +176,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
         if (!settings.terminal.activateEnvironment) {
-            clearCollectionVariables(envVarCollection);
+            envVarCollection.clear();
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
             return;
         }
@@ -199,7 +198,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 return;
             }
             await this.trackTerminalPrompt(shell, resource, env);
-            clearCollectionVariables(envVarCollection);
+            envVarCollection.clear();
             this.processEnvVars = undefined;
             return;
         }
@@ -216,7 +215,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const defaultPrependOptions = await this.getPrependOptions();
 
         // Clear any previously set env vars from collection
-        clearCollectionVariables(envVarCollection);
+        envVarCollection.clear();
         const deactivate = await this.terminalDeactivateService.getScriptLocation(shell, resource);
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
@@ -373,7 +372,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
             const settings = this.configurationService.getSettings(resource);
             const workspaceFolder = this.getWorkspaceFolder(resource);
             if (!settings.terminal.activateEnvironment) {
-                clearCollectionVariables(this.getEnvironmentVariableCollection({ workspaceFolder }));
+                this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
                 traceVerbose(
                     'Do not activate microvenv as activating environments in terminal is disabled for',
                     resource?.fsPath,
@@ -393,7 +392,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     );
                     return;
                 }
-                clearCollectionVariables(this.getEnvironmentVariableCollection({ workspaceFolder }));
+                this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
             }
         } catch (ex) {
             traceWarn(`Microvenv failed as it is using proposed API which is constantly changing`, ex);
@@ -490,10 +489,4 @@ function normCaseKeys(env: EnvironmentVariables): EnvironmentVariables {
         result[normCase(key)] = env[key];
     });
     return result;
-}
-
-function clearCollectionVariables(collection: EnvironmentVariableCollection) {
-    for (const key of ['PS1', 'PATH']) {
-        collection.delete(key);
-    }
 }
