@@ -21,7 +21,6 @@ import {
 import { TerminalEnvVarCollectionService } from './envCollectionActivation/service';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
-
 import { TerminalDeactivateService } from './envCollectionActivation/deactivateService';
 import { ShellIntegrationDetectionService } from './envCollectionActivation/shellIntegrationService';
 import { PythonStartupEnvVarService } from './pythonStartupEnvVar/service';
