@@ -33,11 +33,11 @@ export class PythonStartupEnvVarService implements IPythonStartupEnvVarService {
 
         await workspace.fs.copy(Uri.file(sourcePath), destPath, { overwrite: true });
         const pythonrcSetting = this.configurationService.getSettings().terminal.pythonrcStartup;
+        // TODO: Is there better place to set this?
         if (pythonrcSetting) {
             this.context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
         } else {
             this.context.environmentVariableCollection.delete('PYTHONSTARTUP');
         }
-        // this.context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
     }
 }
