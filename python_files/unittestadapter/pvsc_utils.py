@@ -82,8 +82,8 @@ class EOTPayloadDict(TypedDict):
 
 
 class FileCoverageInfo(TypedDict):
-    lines_covered: list[int]
-    lines_missed: list[int]
+    lines_covered: List[int]
+    lines_missed: List[int]
     executed_branches: int
     total_branches: int
 

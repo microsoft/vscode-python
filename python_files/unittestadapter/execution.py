@@ -10,7 +10,7 @@ import sysconfig
 import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, Iterator, List, Optional, Tuple, Type, Union
+from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Type, Union
 
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
@@ -338,6 +338,7 @@ if __name__ == "__main__":
 
     workspace_root = os.environ.get("COVERAGE_ENABLED")
     # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
+    cov = None
     is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
     if is_coverage_run:
         print(
@@ -346,7 +347,9 @@ if __name__ == "__main__":
         )
         import coverage
 
-        source_ar = [workspace_root]
+        source_ar: List[str] = []
+        if workspace_root:
+            source_ar.append(workspace_root)
         if top_level_dir:
             source_ar.append(top_level_dir)
         if start_dir:
@@ -373,11 +376,17 @@ if __name__ == "__main__":
         )
 
     if is_coverage_run:
+        from coverage.plugin import FileReporter
+        from coverage.report_core import get_analysis_to_report
+        from coverage.results import Analysis
+
+        if not cov:
+            raise VSCodeUnittestError("Coverage is enabled but cov is not set")
         cov.stop()
         cov.save()
-        analysis_iterator: Iterator[
-            tuple[coverage.plugin.FileReporter, coverage.results.Analysis]
-        ] = coverage.report_core.get_analysis_to_report(cov, None)
+        analysis_iterator: Iterator[tuple[FileReporter, Analysis]] = get_analysis_to_report(
+            cov, None
+        )
 
         file_coverage_map: dict[str, FileCoverageInfo] = {}
         for fr, analysis in analysis_iterator:
@@ -385,17 +394,17 @@ if __name__ == "__main__":
             executed_branches = analysis.numbers.n_executed_branches
             total_branches = analysis.numbers.n_branches
 
-            file_info = {
-                "lines_covered": list(analysis.executed),  # set
-                "lines_missed": list(analysis.missing),  # set
+            file_info: FileCoverageInfo = {
+                "lines_covered": List(analysis.executed),  # set
+                "lines_missed": List(analysis.missing),  # set
                 "executed_branches": executed_branches,  # int
                 "total_branches": total_branches,  # int
             }
             file_coverage_map[file_str] = file_info
-        payload: CoveragePayloadDict = CoveragePayloadDict(
+        payload_cov: CoveragePayloadDict = CoveragePayloadDict(
             coverage=True,
             cwd=os.fspath(cwd),
             result=file_coverage_map,
             error=None,
         )
-        send_post_request(payload, test_run_pipe)
+        send_post_request(payload_cov, test_run_pipe)

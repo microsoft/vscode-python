@@ -15,6 +15,7 @@ from typing import (
     Dict,
     Generator,
     Iterator,
+    List,
     Literal,
     TypedDict,
 )
@@ -364,8 +365,8 @@ def check_skipped_condition(item):
 
 
 class FileCoverageInfo(TypedDict):
-    lines_covered: list[int]
-    lines_missed: list[int]
+    lines_covered: List[int]
+    lines_missed: List[int]
     executed_branches: int
     total_branches: int
 
@@ -440,12 +441,17 @@ def pytest_sessionfinish(session, exitstatus):
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
+        from coverage.report_core import get_analysis_to_report
+
+        if TYPE_CHECKING:
+            from coverage.plugin import FileReporter
+            from coverage.results import Analysis
 
         cov = coverage.Coverage()
         cov.load()
-        analysis_iterator: Iterator[
-            tuple[coverage.plugin.FileReporter, coverage.results.Analysis]
-        ] = coverage.report_core.get_analysis_to_report(cov, None)
+        analysis_iterator: Iterator[tuple[FileReporter, Analysis]] = get_analysis_to_report(
+            cov, None
+        )
 
         file_coverage_map: dict[str, FileCoverageInfo] = {}
         for fr, analysis in analysis_iterator:
@@ -458,9 +464,9 @@ def pytest_sessionfinish(session, exitstatus):
                 executed_branches = 0
                 total_branches = -1
 
-            file_info = {
-                "lines_covered": list(analysis.executed),  # set
-                "lines_missed": list(analysis.missing),  # set
+            file_info: FileCoverageInfo = {
+                "lines_covered": List(analysis.executed),  # set
+                "lines_missed": List(analysis.missing),  # set
                 "executed_branches": executed_branches,  # int
                 "total_branches": total_branches,  # int
             }
@@ -475,8 +481,8 @@ def pytest_sessionfinish(session, exitstatus):
         send_post_request(payload)
 
     command_type = "discovery" if IS_DISCOVERY else "execution"
-    payload: EOTPayloadDict = {"command_type": command_type, "eot": True}
-    send_post_request(payload)
+    payload_eot: EOTPayloadDict = {"command_type": command_type, "eot": True}
+    send_post_request(payload_eot)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -885,14 +891,14 @@ def post_response(cwd: str, session_node: TestNode) -> None:
 class PathEncoder(json.JSONEncoder):
     """A custom JSON encoder that encodes pathlib.Path objects as strings."""
 
-    def default(self, obj):
-        if isinstance(obj, pathlib.Path):
-            return os.fspath(obj)
-        return super().default(obj)
+    def default(self, o):
+        if isinstance(o, pathlib.Path):
+            return os.fspath(o)
+        return super().default(o)
 
 
 def send_post_request(
-    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict,
+    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict | CoveragePayloadDict,
     cls_encoder=None,
 ):
     """
