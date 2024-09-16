@@ -83,7 +83,7 @@
         "problemMatchers":
         [
             {
-                "name": "pythonCustomMatcher",
+                "name": "python",
                 "owner": "python",
                 "source": "python",
                 "fileLocation": "autoDetect",
