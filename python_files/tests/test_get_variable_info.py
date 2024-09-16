@@ -68,7 +68,7 @@ def test_list():
 def test_dict():
     found = assert_variable_found({"a": 1, "b": 2}, "{'a': 1, 'b': 2}", "dict", None)
     assert found["hasNamedChildren"]
-    assert_property(found, "a", "2")
+    assert_property(found, "a", "1")
     assert_property(found, "b", "2")
 
 
