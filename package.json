@@ -95,13 +95,12 @@
                         "severity": 4,
                         "message": 5
                     },
-
                     {
-                        "regexp": "^.*\\S.*$"
+                        "regexp": "^\\s*(.*)\\s*$"
+
                     },
-
                     {
-                        "regexp": "^\\s*(.*)\\s*$",
+                        "regexp": "\\s*(.*Error.*)$",
                         "message": 1
                     }
                 ]
