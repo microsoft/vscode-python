@@ -17,6 +17,7 @@ def get_global_variable():
 def assert_variable_found(variable, expected_value, expected_type, expected_count=None):
     set_global_variable(variable)
     variable = get_global_variable()
+    assert variable is not None
     if expected_value is not None:
         assert variable["value"] == expected_value
     assert variable["type"] == expected_type
@@ -52,8 +53,8 @@ def assert_property(variable, expected_property_name, expected_property_value=No
 
     assert found is not None
     if expected_property_value is not None:
-        assert child["value"] == expected_property_value
-    return child
+        assert found["value"] == expected_property_value
+    return found
 
 
 def test_simple():
@@ -67,7 +68,6 @@ def test_list():
 
 def test_dict():
     found = assert_variable_found({"a": 1, "b": 2}, "{'a': 1, 'b': 2}", "dict", None)
-    assert found is not None
     assert found["hasNamedChildren"]
     assert_property(found, "a", "1")
     assert_property(found, "b", "2")
