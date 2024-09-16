@@ -3,7 +3,7 @@ import get_variable_info
 
 def set_global_variable(value):
     # setting on the module allows tests to set a variable that the module under test can access
-    get_variable_info.test_variable = value
+    get_variable_info.test_variable = value  # pyright: ignore[reportGeneralTypeIssues]
 
 
 def get_global_variable():
@@ -14,7 +14,7 @@ def get_global_variable():
     return None
 
 
-def assert_variable_found(variable, expected_value, expected_type, expected_count):
+def assert_variable_found(variable, expected_value, expected_type, expected_count=None):
     set_global_variable(variable)
     variable = get_global_variable()
     if expected_value is not None:
@@ -29,7 +29,7 @@ def assert_variable_found(variable, expected_value, expected_type, expected_coun
 
 def assert_indexed_child(variable, start_index, expected_index, expected_child_value=None):
     children = get_variable_info.getAllChildrenDescriptions(
-        variable.get("root"), variable.get("propertyChain"), start_index
+        variable["root"], variable["propertyChain"], start_index
     )
     child = children[expected_index]
 
@@ -40,11 +40,11 @@ def assert_indexed_child(variable, start_index, expected_index, expected_child_v
 
 def assert_property(variable, expected_property_name, expected_property_value=None):
     children = get_variable_info.getAllChildrenDescriptions(
-        variable.get("root"), variable.get("propertyChain"), 0
+        variable["root"], variable["propertyChain"], 0
     )
     found = None
     for child in children:
-        chain = child.get("propertyChain")
+        chain = child["propertyChain"]
         property_name = chain[-1] if chain else None
         if property_name == expected_property_name:
             found = child
@@ -67,6 +67,7 @@ def test_list():
 
 def test_dict():
     found = assert_variable_found({"a": 1, "b": 2}, "{'a': 1, 'b': 2}", "dict", None)
+    assert found is not None
     assert found["hasNamedChildren"]
     assert_property(found, "a", "1")
     assert_property(found, "b", "2")
@@ -96,7 +97,7 @@ def test_nested_list():
 
 def test_long_list():
     child = assert_variable_found(list(range(1_000_000)), None, "list", 1_000_000)
-    value = child.get("value")
+    value = child["value"]
     assert value.startswith("[0, 1, 2, 3")
     assert value.endswith("...]")
     assert_indexed_child(child, 400_000, 10, "400010")
