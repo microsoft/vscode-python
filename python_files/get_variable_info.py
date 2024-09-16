@@ -2,8 +2,6 @@
 # Licensed under the MIT License. See LICENSE in the project root
 # for license information.
 
-# Gotten from ptvsd for supporting the format expected there.
-import json
 import locale
 import sys
 from typing import ClassVar
@@ -403,16 +401,16 @@ class DisplayOptions:
         self.max_columns = max_columns
 
 
-safe_repr = SafeRepr()
-collection_types = ["list", "tuple", "set"]
-array_page_size = 50
+_safe_repr = SafeRepr()
+_collection_types = ["list", "tuple", "set"]
+_array_page_size = 50
 
 
-def get_value(variable):
-    return safe_repr(variable)
+def _get_value(variable):
+    return _safe_repr(variable)
 
 
-def get_property_names(variable):
+def _get_property_names(variable):
     props = []
     private_props = []
     for prop in dir(variable):
@@ -423,7 +421,7 @@ def get_property_names(variable):
     return props + private_props
 
 
-def get_full_type(var_type):
+def _get_full_type(var_type):
     module = ""
     if hasattr(var_type, "__module__") and var_type.__module__ != "builtins":
         module = var_type.__module__ + "."
@@ -434,24 +432,24 @@ def get_full_type(var_type):
     return None
 
 
-def get_variable_description(variable):
+def _get_variable_description(variable):
     result = {}
 
     var_type = type(variable)
-    result["type"] = get_full_type(var_type)
+    result["type"] = _get_full_type(var_type)
     if hasattr(var_type, "__mro__"):
-        result["interfaces"] = [get_full_type(t) for t in var_type.__mro__]
+        result["interfaces"] = [_get_full_type(t) for t in var_type.__mro__]
 
-    if hasattr(variable, "__len__") and result["type"] in collection_types:
+    if hasattr(variable, "__len__") and result["type"] in _collection_types:
         result["count"] = len(variable)
 
     result["hasNamedChildren"] = hasattr(variable, "__dict__") or isinstance(variable, dict)
 
-    result["value"] = get_value(variable)
+    result["value"] = _get_value(variable)
     return result
 
 
-def get_child_property(root, property_chain):
+def _get_child_property(root, property_chain):
     try:
         variable = root
         for prop in property_chain:
@@ -482,7 +480,7 @@ def getVariableDescriptions():  # noqa: N802
     return [
         {
             "name": varName,
-            **get_variable_description(globals()[varName]),
+            **_get_variable_description(globals()[varName]),
             "root": varName,
             "propertyChain": [],
             "language": "python",
@@ -501,17 +499,17 @@ def getAllChildrenDescriptions(root_var_name, property_chain, start_index):  # n
 
     parent = root
     if len(property_chain) > 0:
-        parent = get_child_property(root, property_chain)
+        parent = _get_child_property(root, property_chain)
 
     children = []
-    parent_info = get_variable_description(parent)
+    parent_info = _get_variable_description(parent)
     if "count" in parent_info:
         if parent_info["count"] > 0:
-            last_item = min(parent_info["count"], start_index + array_page_size)
+            last_item = min(parent_info["count"], start_index + _array_page_size)
             index_range = range(start_index, last_item)
             children = [
                 {
-                    **get_variable_description(get_child_property(parent, [i])),
+                    **_get_variable_description(_get_child_property(parent, [i])),
                     "name": str(i),
                     "root": root_var_name,
                     "propertyChain": [*property_chain, i],
@@ -522,16 +520,16 @@ def getAllChildrenDescriptions(root_var_name, property_chain, start_index):  # n
     elif parent_info["hasNamedChildren"]:
         children_names = []
         if hasattr(parent, "__dict__"):
-            children_names = get_property_names(parent)
+            children_names = _get_property_names(parent)
         elif isinstance(parent, dict):
             children_names = list(parent.keys())
 
         children = []
         for prop in children_names:
-            child_property = get_child_property(parent, [prop])
+            child_property = _get_child_property(parent, [prop])
             if child_property is not None and type(child_property).__name__ not in types_to_exclude:
                 child = {
-                    **get_variable_description(child_property),
+                    **_get_variable_description(child_property),
                     "name": prop,
                     "root": root_var_name,
                     "propertyChain": [*property_chain, prop],
