@@ -631,9 +631,9 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "python.terminal.enable Shell Integration in Python Terminal REPL": {
+                "python.terminal.pythonStartupForShellIntegration": {
                     "default": true,
-                    "description": "%python.terminal.enableSITerminal.description%",
+                    "description": "%python.terminal.pythonStartupForShellIntegration.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
