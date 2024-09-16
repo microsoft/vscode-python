@@ -24,11 +24,6 @@ export class PythonStartupEnvVarService implements IPythonStartupEnvVarService {
         }
         const destPath = Uri.joinPath(storageUri, 'pythonrc.py');
 
-        // TODO: Only do this when we have a setting
-        // Rollout strategy:
-        // Stage 1. Opt-in setting in stable/insiders
-        // Stage 2. Out-out setting in insiders
-        // Stage 3. Out-out setting in stable (or experiment?)
         const sourcePath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
 
         await workspace.fs.copy(Uri.file(sourcePath), destPath, { overwrite: true });
