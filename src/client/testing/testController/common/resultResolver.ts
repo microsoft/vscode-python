@@ -195,16 +195,6 @@ export class PythonResultResolver implements ITestResultResolver {
 
             this.detailedCoverageMap.set(fileNameStr, detailedCoverageArray);
         }
-
-        //             console.log('hello! This is to load the detailed coverage');
-        //     const pos1 = new Position(2, 3);
-        //     // const range1 = new Range(new Position(11, 4), new Position(11, 10));
-        //     const range2 = new Range(19, 0, 20, 0);
-        //     const branchCoverage = new BranchCoverage(true, new Range(pos1, new Position(3, 3)), 'exbranchlabel');
-        //     const fileCoverageDetail1 = new StatementCoverage(1, range2, [branchCoverage]);
-        //     const fileCoverageDetail2 = new StatementCoverage(1, new Position(5, 6), []);
-        //     return Promise.resolve([fileCoverageDetail1, fileCoverageDetail2]);
-        // };
     }
 
     public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void {

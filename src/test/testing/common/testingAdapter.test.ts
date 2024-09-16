@@ -751,6 +751,91 @@ suite('End to End Tests: test adapters', () => {
                 }
             });
     });
+    test('pytest coverage execution, small workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg = '';
+        resultResolver._resolveCoverage = async (payload, _runInstance?) => {
+            traceLog(`resolve execution ${payload}`);
+            callCount = callCount + 1;
+            // the payloads that get to the resolveCoverage are all coverage data and should be successful.
+            try {
+                assert.ok(payload.result, 'Expected results to be present');
+
+            } catch (err) {
+                failureMsg = err ? (err as Error).toString() : '';
+                failureOccurred = true;
+            }
+            return Promise.resolve();
+        };
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+
+        // run pytest execution
+        const executionAdapter = new PytestTestExecutionAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        let collectedOutput = '';
+        testRun
+            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+            .callback((output: string) => {
+                collectedOutput += output;
+                traceLog('appendOutput was called with:', output);
+            })
+            .returns(() => false);
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
+                TestRunProfileKind.Coverage,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .then(() => {
+                // verify that the _resolveExecution was called once per test
+                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
+
+                // verify output works for stdout and stderr as well as pytest output
+                assert.ok(
+                    collectedOutput.includes('test session starts'),
+                    'The test string does not contain the expected stdout output.',
+                );
+                assert.ok(
+                    collectedOutput.includes('Captured log call'),
+                    'The test string does not contain the expected log section.',
+                );
+                const searchStrings = [
+                    'This is a warning message.',
+                    'This is an error message.',
+                    'This is a critical message.',
+                ];
+                let searchString: string;
+                for (searchString of searchStrings) {
+                    const count: number = (collectedOutput.match(new RegExp(searchString, 'g')) || []).length;
+                    assert.strictEqual(
+                        count,
+                        2,
+                        `The test string does not contain two instances of ${searchString}. Should appear twice from logging output and stack trace`,
+                    );
+                }
+            });
+    });
     test('pytest execution adapter large workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
@@ -1027,7 +1112,7 @@ suite('End to End Tests: test adapters', () => {
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
             try {
-                if (data.status === 'error') {
+            if (data.status === 'error') {
                     assert.ok(data.error, "Expected errors in 'error' field");
                 } else {
                     const indexOfTest = JSON.stringify(data.result).search('error');

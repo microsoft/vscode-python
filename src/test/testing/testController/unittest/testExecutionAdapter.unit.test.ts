@@ -173,6 +173,7 @@ suite('Unittest test execution adapter', () => {
                         assert.equal(options.env?.PYTHONPATH, expectedExtraVariables.PYTHONPATH);
                         assert.equal(options.env?.TEST_RUN_PIPE, expectedExtraVariables.TEST_RUN_PIPE);
                         assert.equal(options.env?.RUN_TEST_IDS_PIPE, expectedExtraVariables.RUN_TEST_IDS_PIPE);
+                        assert.equal(options.env?.COVERAGE_ENABLED, undefined); // coverage not enabled
                         assert.equal(options.cwd, uri.fsPath);
                         assert.equal(options.throwOnStdErr, true);
                         return true;
@@ -287,6 +288,47 @@ suite('Unittest test execution adapter', () => {
                         return true;
                     }),
                     typeMoq.It.isAny(),
+                ),
+            typeMoq.Times.once(),
+        );
+    });
+    test('unittest execution with coverage turned on correctly', async () => {
+        const deferred2 = createDeferred();
+        const deferred3 = createDeferred();
+        execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+        execFactory
+            .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+            .returns(() => {
+                deferred2.resolve();
+                return Promise.resolve(execService.object);
+            });
+        utilsWriteTestIdsFileStub.callsFake(() => {
+            deferred3.resolve();
+            return Promise.resolve('testIdPipe-mockName');
+        });
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+        const uri = Uri.file(myTestPath);
+        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
+        adapter.runTests(uri, [], TestRunProfileKind.Coverage, testRun.object, execFactory.object);
+
+        await deferred2.promise;
+        await deferred3.promise;
+        await deferred4.promise;
+        mockProc.trigger('close');
+
+        const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'python_files');
+        const pathToExecutionScript = path.join(pathToPythonFiles, 'unittestadapter', 'execution.py');
+        const expectedArgs = [pathToExecutionScript, '--udiscovery', '.'];
+        execService.verify(
+            (x) =>
+                x.execObservable(
+                    expectedArgs,
+                    typeMoq.It.is<SpawnOptions>((options) => {
+                        assert.equal(options.env?.COVERAGE_ENABLED, uri.fsPath);
+                        return true;
+                    }),
                 ),
             typeMoq.Times.once(),
         );
