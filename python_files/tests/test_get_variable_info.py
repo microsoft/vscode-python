@@ -38,7 +38,7 @@ def assert_indexed_child(variable, start_index, expected_index, expected_child_v
     return child
 
 
-def assert_property(variable, expected_property_name, expected_property_value = None):
+def assert_property(variable, expected_property_name, expected_property_value=None):
     children = get_variable_info.getAllChildrenDescriptions(
         variable.get("root"), variable.get("propertyChain"), 0
     )
@@ -101,6 +101,7 @@ def test_long_list():
     assert value.endswith("...]")
     assert_indexed_child(child, 400_000, 10, "400010")
     assert_indexed_child(child, 999_950, 10, "999960")
+
 
 def test_get_nested_children():
     d = [{"a": {("hello")}}]
