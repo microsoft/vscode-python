@@ -71,6 +71,12 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'symlink_parent-folder',
     );
+    const rootPathCoverageWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'coverageWorkspace',
+    );
     suiteSetup(async () => {
         serviceContainer = (await initialize()).serviceContainer;
 
@@ -199,7 +205,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
-
     test('unittest discovery adapter large workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
@@ -751,27 +756,80 @@ suite('End to End Tests: test adapters', () => {
                 }
             });
     });
+
+    test('Unittest execution with coverage, small workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        resultResolver._resolveCoverage = async (payload, _token?) => {
+            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+            assert.ok(payload.result, 'Expected results to be present');
+            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+            // since only one test was run, the other test in the same file will have missed coverage lines
+            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 3 lines to be missed in even.py');
+            return Promise.resolve();
+        };
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        // run execution
+        const executionAdapter = new UnittestTestExecutionAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        let collectedOutput = '';
+        testRun
+            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+            .callback((output: string) => {
+                collectedOutput += output;
+                traceLog('appendOutput was called with:', output);
+            })
+            .returns(() => false);
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                ['test_even.TestNumbers.test_odd'],
+                TestRunProfileKind.Coverage,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .finally(() => {
+                assert.ok(collectedOutput, 'expect output to be collected');
+            });
+    });
     test('pytest coverage execution, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
         resultResolver._resolveCoverage = async (payload, _runInstance?) => {
-            traceLog(`resolve execution ${payload}`);
-            callCount = callCount + 1;
-            // the payloads that get to the resolveCoverage are all coverage data and should be successful.
-            try {
-                assert.ok(payload.result, 'Expected results to be present');
+            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+            assert.ok(payload.result, 'Expected results to be present');
+            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+            // since only one test was run, the other test in the same file will have missed coverage lines
+            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 3 lines to be missed in even.py');
 
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
             return Promise.resolve();
         };
         // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
+        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
@@ -801,39 +859,13 @@ suite('End to End Tests: test adapters', () => {
         await executionAdapter
             .runTests(
                 workspaceUri,
-                [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
+                [`${rootPathCoverageWorkspace}/test_even.py::TestNumbers::test_odd`],
                 TestRunProfileKind.Coverage,
                 testRun.object,
                 pythonExecFactory,
             )
             .then(() => {
-                // verify that the _resolveExecution was called once per test
-                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
-                assert.strictEqual(failureOccurred, false, failureMsg);
-
-                // verify output works for stdout and stderr as well as pytest output
-                assert.ok(
-                    collectedOutput.includes('test session starts'),
-                    'The test string does not contain the expected stdout output.',
-                );
-                assert.ok(
-                    collectedOutput.includes('Captured log call'),
-                    'The test string does not contain the expected log section.',
-                );
-                const searchStrings = [
-                    'This is a warning message.',
-                    'This is an error message.',
-                    'This is a critical message.',
-                ];
-                let searchString: string;
-                for (searchString of searchStrings) {
-                    const count: number = (collectedOutput.match(new RegExp(searchString, 'g')) || []).length;
-                    assert.strictEqual(
-                        count,
-                        2,
-                        `The test string does not contain two instances of ${searchString}. Should appear twice from logging output and stack trace`,
-                    );
-                }
+                assert.ok(collectedOutput, 'expect output to be collected');
             });
     });
     test('pytest execution adapter large workspace', async () => {
@@ -1112,7 +1144,7 @@ suite('End to End Tests: test adapters', () => {
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
             try {
-            if (data.status === 'error') {
+                if (data.status === 'error') {
                     assert.ok(data.error, "Expected errors in 'error' field");
                 } else {
                     const indexOfTest = JSON.stringify(data.result).search('error');
