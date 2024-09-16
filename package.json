@@ -25,7 +25,8 @@
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
         "contribIssueReporter",
-        "notebookVariableProvider"
+        "notebookVariableProvider",
+        "codeActionAI"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -46,7 +47,11 @@
         "theme": "dark"
     },
     "engines": {
+<<<<<<< HEAD
         "vscode": "^1.94.0-insider"
+=======
+        "vscode": "^1.94.0-20240913"
+>>>>>>> origin/main
     },
     "enableTelemetry": false,
     "keywords": [
