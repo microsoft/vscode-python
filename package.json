@@ -80,6 +80,31 @@
     "browser": "./dist/extension.browser.js",
     "l10n": "./l10n",
     "contributes": {
+        "problemMatchers":
+        [
+            {
+                "name": "pythonCustomMatcher",
+                "owner": "python",
+                "source": "python",
+                "fileLocation": "autoDetect",
+                "pattern": [
+                    {
+                        "regexp": "^.*File \\\"([^\\\"]|.*)\\\", line (\\d+).*",
+                        "file": 1,
+                        "line": 2,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    {
+                        "regexp": "^.*raise.*$"
+                    },
+                    {
+                        "regexp": "^\\s*(.*)\\s*$",
+                        "message": 1
+                    }
+                ]
+            }
+        ],
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
