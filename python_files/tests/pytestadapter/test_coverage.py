@@ -12,8 +12,6 @@ from .helpers import (  # noqa: E402
     runner_with_cwd_env,
 )
 
-# runner_with_cwd_env
-
 
 def test_simple_pytest_coverage():
     """

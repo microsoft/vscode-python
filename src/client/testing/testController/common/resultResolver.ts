@@ -141,13 +141,10 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     public _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void {
-        // TODO: do we want optional result, do we want errors etc? what error could happen during coverage
         if (payload.result === undefined) {
             return;
         }
-        // const fileCoverageMap = new Map<string, FileCoverageMetrics>(Object.entries(payload.result));
         for (const [key, value] of Object.entries(payload.result)) {
-            // key is the file path∂
             const fileNameStr = key;
             const fileCoverageMetrics = value;
             const linesCovered = fileCoverageMetrics.lines_covered ? fileCoverageMetrics.lines_covered : []; // undefined if no lines covered
@@ -168,7 +165,6 @@ export class PythonResultResolver implements ITestResultResolver {
                 const branchCoverageCount = new TestCoverageCount(executedBranches, totalBranches);
                 fileCoverage = new FileCoverage(uri, lineCoverageCount, branchCoverageCount);
             }
-            // probs need exception handling here
             runInstance.addCoverage(fileCoverage);
 
             // create detailed coverage array for each file (only line coverage on detailed, not branch)

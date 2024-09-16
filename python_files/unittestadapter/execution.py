@@ -391,7 +391,6 @@ if __name__ == "__main__":
                 "executed_branches": executed_branches,  # int
                 "total_branches": total_branches,  # int
             }
-            print("FILE INFO", file_info)
             file_coverage_map[file_str] = file_info
         payload: CoveragePayloadDict = CoveragePayloadDict(
             coverage=True,

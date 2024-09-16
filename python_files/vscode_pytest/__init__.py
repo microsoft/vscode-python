@@ -26,24 +26,6 @@ sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 from testing_tools import socket_manager  # noqa: E402
 
-
-# import sys
-
-# sys.path.append("/Users/eleanorboyd/vscode-python/.nox/install_python_libs/lib/python3.10")
-# sys.path.append("/Users/eleanorboyd/vscode-python-debugger")
-# sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled")
-# sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled/libs")
-# from coverage.plugin import FileReporter
-# from coverage.results import Analysis
-
-# from coverage.jsonreport import JsonReporter
-# from coverage.report_core import get_analysis_to_report
-
-
-# import debugpy
-
-# debugpy.connect(5678)
-
 if TYPE_CHECKING:
     from pluggy import Result
 
@@ -88,7 +70,6 @@ INCLUDE_BRANCHES = False
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
-    print("into inital config")
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
@@ -970,27 +951,27 @@ def send_post_request(
         )
 
 
-# class DeferPlugin:
-#     @pytest.hookimpl(hookwrapper=True)
-#     def pytest_xdist_auto_num_workers(
-#         self, config: pytest.Config
-#     ) -> Generator[None, Result[int], None]:
-#         """Determine how many workers to use based on how many tests were selected in the test explorer."""
-#         outcome = yield
-#         result = min(outcome.get_result(), len(config.option.file_or_dir))
-#         if result == 1:
-#             result = 0
-#         outcome.force_result(result)
+class DeferPlugin:
+    @pytest.hookimpl(hookwrapper=True)
+    def pytest_xdist_auto_num_workers(
+        self, config: pytest.Config
+    ) -> Generator[None, Result[int], None]:
+        """Determine how many workers to use based on how many tests were selected in the test explorer."""
+        outcome = yield
+        result = min(outcome.get_result(), len(config.option.file_or_dir))
+        if result == 1:
+            result = 0
+        outcome.force_result(result)
 
 
-# def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
-#     plugin_name = "vscode_xdist"
-#     if (
-#         # only register the plugin if xdist is enabled:
-#         manager.hasplugin("xdist")
-#         # prevent infinite recursion:
-#         and not isinstance(plugin, DeferPlugin)
-#         # prevent this plugin from being registered multiple times:
-#         and not manager.hasplugin(plugin_name)
-#     ):
-#         manager.register(DeferPlugin(), name=plugin_name)
+def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
+    plugin_name = "vscode_xdist"
+    if (
+        # only register the plugin if xdist is enabled:
+        manager.hasplugin("xdist")
+        # prevent infinite recursion:
+        and not isinstance(plugin, DeferPlugin)
+        # prevent this plugin from being registered multiple times:
+        and not manager.hasplugin(plugin_name)
+    ):
+        manager.register(DeferPlugin(), name=plugin_name)

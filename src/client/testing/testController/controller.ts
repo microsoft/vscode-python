@@ -87,8 +87,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
     private sendTestDisabledTelemetry = true;
 
-    // private resultResolver: ITestResultResolver;
-
     constructor(
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configSettings: IConfigurationService,

@@ -273,6 +273,7 @@ export type CoveragePayload = {
     error: string;
 };
 
+// using camel-case for these types to match the python side
 export type FileCoverageMetrics = {
     // eslint-disable-next-line camelcase
     lines_covered: number[];
