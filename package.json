@@ -95,9 +95,11 @@
                         "severity": 4,
                         "message": 5
                     },
+
                     {
-                        "regexp": "^.*raise.*$"
+                        "regexp": "^.*\\S.*$"
                     },
+
                     {
                         "regexp": "^\\s*(.*)\\s*$",
                         "message": 1
