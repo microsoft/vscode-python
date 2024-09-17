@@ -91,9 +91,7 @@
                     {
                         "regexp": "^.*File \\\"([^\\\"]|.*)\\\", line (\\d+).*",
                         "file": 1,
-                        "line": 2,
-                        "severity": 4,
-                        "message": 5
+                        "line": 2
                     },
                     {
                         "regexp": "^\\s*(.*)\\s*$"
