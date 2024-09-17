@@ -633,7 +633,7 @@
                 },
                 "python.REPL.enableShellIntegration": {
                     "default": true,
-                    "description": "%python.terminal.enableShellIntegration.description%",
+                    "description": "%python.REPL.enableShellIntegration.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },
