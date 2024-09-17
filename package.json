@@ -100,7 +100,7 @@
 
                     },
                     {
-                        "regexp": "\\s*(.*Error.*)$",
+                        "regexp": "^\\s*(.*Error.*)$",
                         "message": 1
                     }
                 ]
