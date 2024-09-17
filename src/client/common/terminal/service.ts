@@ -99,19 +99,46 @@ export class TerminalService implements ITerminalService, Disposable {
             await promise;
         }
 
+        /**
+         * Cases we need to handle:
+         *
+         * Shell integration in zsh works, but not python
+         *
+         * 1. TODO: executeCommand never actually runs the command because the `python` command never finishes
+         * 2. onDidEndTerminalShellExecution never fires because because the `python` command never finishes
+         */
+
         if (terminal.shellIntegration) {
-            const execution = terminal.shellIntegration.executeCommand(commandLine);
-            return await new Promise((resolve) => {
-                const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
-                    if (e.execution === execution) {
-                        this.executeCommandListeners.delete(listener);
-                        resolve({ execution, exitCode: e.exitCode });
+            // TODO: Test myself for windows
+            const execution = terminal.shellIntegration.executeCommand(commandLine); // create return object, on that object it has a promise to executed command
+
+            // Before
+            // return await new Promise((resolve) => {
+            //     const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
+            //         if (e.execution === execution) {
+            //             this.executeCommandListeners.delete(listener);
+            //             resolve({ execution, exitCode: e.exitCode });
+            //         }
+            //     });
+            //     if (listener) {
+            //         this.executeCommandListeners.add(listener);
+            //     }
+            // });
+
+            return {
+                execution,
+                exitCode: new Promise((resolve) => {
+                    const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
+                        if (e.execution === execution) {
+                            this.executeCommandListeners.delete(listener);
+                            resolve(e.exitCode);
+                        }
+                    });
+                    if (listener) {
+                        this.executeCommandListeners.add(listener);
                     }
-                });
-                if (listener) {
-                    this.executeCommandListeners.add(listener);
-                }
-            });
+                }),
+            };
         } else {
             terminal.sendText(commandLine);
         }
