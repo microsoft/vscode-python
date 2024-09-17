@@ -387,7 +387,7 @@ if __name__ == "__main__":
             cov, None
         )
 
-        file_coverage_map: dict[str, FileCoverageInfo] = {}
+        file_coverage_map: Dict[str, FileCoverageInfo] = {}
         for fr, analysis in analysis_iterator:
             file_str: str = fr.filename
             executed_branches = analysis.numbers.n_executed_branches
