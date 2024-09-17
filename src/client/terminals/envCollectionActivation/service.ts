@@ -85,7 +85,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IShellIntegrationDetectionService)
-        private readonly shellIntegrationService: IShellIntegrationDetectionService,
+        private readonly shellIntegrationDetectionService: IShellIntegrationDetectionService,
         @inject(IEnvironmentVariablesProvider)
         private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
@@ -118,7 +118,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this,
                     this.disposables,
                 );
-                this.shellIntegrationService.onDidChangeStatus(
+                this.shellIntegrationDetectionService.onDidChangeStatus(
                     async () => {
                         traceInfo("Shell integration status changed, can confirm it's working.");
                         await this._applyCollection(undefined).ignoreErrors();
@@ -144,7 +144,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this.disposables,
                 );
                 const { shell } = this.applicationEnvironment;
-                const isActive = await this.shellIntegrationService.isWorking();
+                const isActive = await this.shellIntegrationDetectionService.isWorking();
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
                     traceWarn(
@@ -333,7 +333,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = await this.shellIntegrationService.isWorking();
+            const config = await this.shellIntegrationDetectionService.isWorking();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -400,7 +400,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async getPrependOptions(): Promise<EnvironmentVariableMutatorOptions> {
-        const isActive = await this.shellIntegrationService.isWorking();
+        const isActive = await this.shellIntegrationDetectionService.isWorking();
         // Ideally we would want to prepend exactly once, either at shell integration or process creation.
         // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
         return isActive
