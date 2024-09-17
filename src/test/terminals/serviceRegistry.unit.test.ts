@@ -14,7 +14,6 @@ import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecut
 import { TerminalDeactivateService } from '../../client/terminals/envCollectionActivation/deactivateService';
 import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
-
 import { registerTypes } from '../../client/terminals/serviceRegistry';
 import {
     ICodeExecutionHelper,
