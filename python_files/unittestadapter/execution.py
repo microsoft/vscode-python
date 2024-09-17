@@ -383,7 +383,7 @@ if __name__ == "__main__":
             raise VSCodeUnittestError("Coverage is enabled but cov is not set")
         cov.stop()
         cov.save()
-        analysis_iterator: Iterator[tuple[FileReporter, Analysis]] = get_analysis_to_report(
+        analysis_iterator: Iterator[Tuple[FileReporter, Analysis]] = get_analysis_to_report(
             cov, None
         )
 
