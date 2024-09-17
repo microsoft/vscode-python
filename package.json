@@ -631,9 +631,9 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "python.terminal.pythonStartupForShellIntegration": {
+                "python.REPL.enableShellIntegration": {
                     "default": true,
-                    "description": "%python.terminal.pythonStartupForShellIntegration.description%",
+                    "description": "%python.terminal.enableShellIntegration.description%",
                     "scope": "resource",
                     "type": "boolean"
                 },

@@ -27,7 +27,7 @@ export class PythonStartupEnvVarService implements IPythonStartupEnvVarService {
         const sourcePath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
 
         await workspace.fs.copy(Uri.file(sourcePath), destPath, { overwrite: true });
-        const pythonrcSetting = this.configurationService.getSettings().terminal.pythonrcStartup;
+        const pythonrcSetting = this.configurationService.getSettings().REPL.enableShellIntegration;
         // TODO: Is there better place to set this?
         if (pythonrcSetting) {
             this.context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
