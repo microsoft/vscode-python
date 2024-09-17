@@ -12,8 +12,3 @@ def reverse_sentence(sentence):
     words = sentence.split()
     reversed_words = [reverse_string(word) for word in words]
     return " ".join(reversed_words)
-
-# Example usage
-if __name__ == "__main__":
-    sample_string = "hello"
-    print(reverse_string(sample_string))  # Output: "olleh"

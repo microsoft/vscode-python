@@ -47,7 +47,11 @@ def test_basic_coverage():
     assert focal_function_coverage
     assert focal_function_coverage.get("lines_covered") is not None
     assert focal_function_coverage.get("lines_missed") is not None
-    assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14, 17}
-    assert set(focal_function_coverage.get("lines_missed")) == {18, 19, 6}
-    assert focal_function_coverage.get("executed_branches") == 6
-    assert focal_function_coverage.get("total_branches") == 8
+    assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14}
+    assert set(focal_function_coverage.get("lines_missed")) == {6}
+    assert (
+        focal_function_coverage.get("executed_branches") == 5
+    ), f'executed_branches: {focal_function_coverage.get("executed_branches")}'
+    assert (
+        focal_function_coverage.get("total_branches") == 6
+    ), f'total_branches: {focal_function_coverage.get("total_branches")}'
