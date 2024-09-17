@@ -94,7 +94,7 @@ class CoveragePayloadDict(Dict):
     coverage: bool
     cwd: str
     result: Optional[Dict[str, FileCoverageInfo]]
-    error: str | None  # Currently unused need to check
+    error: Optional[str]  # Currently unused need to check
 
 
 # Helper functions for data retrieval.
