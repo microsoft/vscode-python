@@ -13,5 +13,6 @@
     "python.linting.banditEnabled": false,
     // Don't set this to `Pylance`, for CI we want to use the LS that ships with the extension.
     "python.languageServer": "Jedi",
-    "python.pythonPath": "C:\\GIT\\s p\\vscode-python\\.venv\\Scripts\\python.exe"
+    "python.pythonPath": "C:\\GIT\\s p\\vscode-python\\.venv\\Scripts\\python.exe",
+    "python.defaultInterpreterPath": "python"
 }
