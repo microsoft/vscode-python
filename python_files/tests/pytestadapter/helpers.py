@@ -246,7 +246,7 @@ def runner_with_cwd_env(
         )
         env_add.update({"RUN_TEST_IDS_PIPE": test_ids_pipe})
         test_ids_arr = after_ids
-        with open(test_ids_pipe, "w") as f:
+        with open(test_ids_pipe, "w") as f:  # noqa: PTH123
             f.write("\n".join(test_ids_arr))
     else:
         process_args = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]

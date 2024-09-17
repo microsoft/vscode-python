@@ -10,8 +10,7 @@ import sysconfig
 import traceback
 import unittest
 from types import TracebackType
-from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Tuple, Type, Union
-
+from typing import Dict, Iterator, List, Optional, Tuple, Type, Union
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -395,8 +394,8 @@ if __name__ == "__main__":
             total_branches = analysis.numbers.n_branches
 
             file_info: FileCoverageInfo = {
-                "lines_covered": List(analysis.executed),  # set
-                "lines_missed": List(analysis.missing),  # set
+                "lines_covered": list(analysis.executed),  # set
+                "lines_missed": list(analysis.missing),  # set
                 "executed_branches": executed_branches,  # int
                 "total_branches": total_branches,  # int
             }

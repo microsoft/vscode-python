@@ -15,7 +15,6 @@ from typing import (
     Dict,
     Generator,
     Iterator,
-    List,
     Literal,
     TypedDict,
 )
@@ -365,8 +364,8 @@ def check_skipped_condition(item):
 
 
 class FileCoverageInfo(TypedDict):
-    lines_covered: List[int]
-    lines_missed: List[int]
+    lines_covered: list[int]
+    lines_missed: list[int]
     executed_branches: int
     total_branches: int
 
@@ -465,8 +464,8 @@ def pytest_sessionfinish(session, exitstatus):
                 total_branches = -1
 
             file_info: FileCoverageInfo = {
-                "lines_covered": List(analysis.executed),  # set
-                "lines_missed": List(analysis.missing),  # set
+                "lines_covered": list(analysis.executed),  # set
+                "lines_missed": list(analysis.missing),  # set
                 "executed_branches": executed_branches,  # int
                 "total_branches": total_branches,  # int
             }
