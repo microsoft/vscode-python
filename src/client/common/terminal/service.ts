@@ -75,7 +75,6 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
-
     public async executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
@@ -126,9 +125,6 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(preserveFocus);
         }
     }
-    //     When terminal is launched
-    //      Copy pythonrc into <userdata>/pythonrc.py
-    //      Update environment variable collection to include PYTHONSTARTUP=<userdata>/pythonrc.py
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
         if (this.terminal) {
