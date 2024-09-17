@@ -80,6 +80,30 @@
     "browser": "./dist/extension.browser.js",
     "l10n": "./l10n",
     "contributes": {
+        "problemMatchers":
+        [
+            {
+                "name": "python",
+                "owner": "python",
+                "source": "python",
+                "fileLocation": "autoDetect",
+                "pattern": [
+                    {
+                        "regexp": "^.*File \\\"([^\\\"]|.*)\\\", line (\\d+).*",
+                        "file": 1,
+                        "line": 2
+                    },
+                    {
+                        "regexp": "^\\s*(.*)\\s*$"
+
+                    },
+                    {
+                        "regexp": "^\\s*(.*Error.*)$",
+                        "message": 1
+                    }
+                ]
+            }
+        ],
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
