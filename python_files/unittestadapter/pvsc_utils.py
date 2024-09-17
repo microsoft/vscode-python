@@ -93,7 +93,7 @@ class CoveragePayloadDict(Dict):
 
     coverage: bool
     cwd: str
-    result: dict[str, FileCoverageInfo] | None
+    result: Optional[dict[str, FileCoverageInfo]]
     error: str | None  # Currently unused need to check
 
 
