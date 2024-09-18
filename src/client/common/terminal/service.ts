@@ -105,25 +105,11 @@ export class TerminalService implements ITerminalService, Disposable {
          * Shell integration in zsh works, but not python
          *
          * 1. TODO: executeCommand never actually runs the command because the `python` command never finishes
-         * 2. onDidEndTerminalShellExecution never fires because because the `python` command never finishes
+         * 2. onDidEndTerminalShellExecution never fires because because the `python` command never finishes --> complete
          */
 
         if (terminal.shellIntegration) {
-            // TODO: Test myself for windows
-            const execution = terminal.shellIntegration.executeCommand(commandLine); // create return object, on that object it has a promise to executed command
-
-            // Before
-            // return await new Promise((resolve) => {
-            //     const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
-            //         if (e.execution === execution) {
-            //             this.executeCommandListeners.delete(listener);
-            //             resolve({ execution, exitCode: e.exitCode });
-            //         }
-            //     });
-            //     if (listener) {
-            //         this.executeCommandListeners.add(listener);
-            //     }
-            // });
+            const execution = terminal.shellIntegration.executeCommand(commandLine);
 
             return {
                 execution,
