@@ -1,7 +1,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState, WorkspaceFolder } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState, WorkspaceFolder, Command } from 'vscode';
 import { IApplicationShell, ICommandManager, IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
@@ -170,6 +170,31 @@ export class UnitTestManagementService implements IExtensionActivationService {
                     this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
+            commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
+                | { message: string; command: Command }
+                | undefined => {
+                const wkspaceFolder =
+                    this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders?.at(0);
+                if (!wkspaceFolder) {
+                    return undefined;
+                }
+
+                const configurationService = this.serviceContainer.get<ITestConfigurationService>(
+                    ITestConfigurationService,
+                );
+                if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
+                    return undefined;
+                }
+
+                return {
+                    message: Testing.copilotSetupMessage,
+                    command: {
+                        title: Testing.configureTests,
+                        command: constants.Commands.Tests_Configure,
+                        arguments: [undefined, constants.CommandSource.ui, resource],
+                    },
+                };
+            }),
         );
     }
 
