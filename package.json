@@ -1161,7 +1161,7 @@
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused"
             },
             {
                 "command": "python.refreshTensorBoard",
