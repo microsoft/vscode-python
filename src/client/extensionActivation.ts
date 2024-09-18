@@ -32,12 +32,7 @@ import { TerminalProvider } from './providers/terminalProvider';
 import { setExtensionInstallTelemetryProperties } from './telemetry/extensionInstallTelemetry';
 import { registerTypes as tensorBoardRegisterTypes } from './tensorBoard/serviceRegistry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
-import {
-    ICodeExecutionHelper,
-    ICodeExecutionManager,
-    IPythonStartupEnvVarService,
-    ITerminalAutoActivation,
-} from './terminals/types';
+import { ICodeExecutionHelper, ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 // components
@@ -59,6 +54,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
+import { registerPythonStartup } from './terminals/pythonStartup';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -182,7 +178,7 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
 
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
 
-            serviceManager.get<IPythonStartupEnvVarService>(IPythonStartupEnvVarService).register();
+            await registerPythonStartup(ext.context);
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 

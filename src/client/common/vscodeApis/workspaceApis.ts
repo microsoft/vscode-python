@@ -93,3 +93,11 @@ export function isTrusted(): boolean {
 export function onDidGrantWorkspaceTrust(handler: () => void): vscode.Disposable {
     return vscode.workspace.onDidGrantWorkspaceTrust(handler);
 }
+
+export function createDirectory(uri: vscode.Uri): Thenable<void> {
+    return vscode.workspace.fs.createDirectory(uri);
+}
+
+export function copy(source: vscode.Uri, dest: vscode.Uri, options?: { overwrite?: boolean }): Thenable<void> {
+    return vscode.workspace.fs.copy(source, dest, options);
+}

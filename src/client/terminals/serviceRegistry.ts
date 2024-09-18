@@ -12,7 +12,6 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    IPythonStartupEnvVarService,
     IShellIntegrationDetectionService,
     ITerminalAutoActivation,
     ITerminalDeactivateService,
@@ -23,7 +22,6 @@ import { IExtensionActivationService, IExtensionSingleActivationService } from '
 import { TerminalIndicatorPrompt } from './envCollectionActivation/indicatorPrompt';
 import { TerminalDeactivateService } from './envCollectionActivation/deactivateService';
 import { ShellIntegrationDetectionService } from './envCollectionActivation/shellIntegrationService';
-import { PythonStartupEnvVarService } from './pythonStartupEnvVar/service';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
@@ -56,7 +54,6 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IShellIntegrationDetectionService,
         ShellIntegrationDetectionService,
     );
-    serviceManager.addSingleton<IPythonStartupEnvVarService>(IPythonStartupEnvVarService, PythonStartupEnvVarService);
 
     serviceManager.addBinding(ITerminalEnvVarCollectionService, IExtensionActivationService);
 }
