@@ -34,7 +34,7 @@ export async function openInteractiveREPL(
         // Case where NotebookDocument doesnt exist, create a blank one.
         notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: true, label: 'Python REPL' });
+    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: 'Python REPL' });
     await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,
@@ -69,13 +69,14 @@ export async function selectNotebookKernel(
  * @param code
  * @return Promise<void>
  */
-export async function executeNotebookCell(notebookDocument: NotebookDocument, code: string): Promise<void> {
-    const { cellCount } = notebookDocument;
-    await addCellToNotebook(notebookDocument, code);
+export async function executeNotebookCell(notebookEditor: NotebookEditor, code: string): Promise<void> {
+    const { notebook, replOptions } = notebookEditor;
+    const cellIndex = replOptions?.appendIndex ?? notebook.cellCount;
+    await addCellToNotebook(notebook, cellIndex, code);
     // Execute the cell
     commands.executeCommand('notebook.cell.execute', {
-        ranges: [{ start: cellCount - 1, end: cellCount }],
-        document: notebookDocument.uri,
+        ranges: [{ start: cellIndex, end: cellIndex + 1 }],
+        document: notebook.uri,
     });
 }
 
@@ -85,11 +86,10 @@ export async function executeNotebookCell(notebookDocument: NotebookDocument, co
  * @param code
  *
  */
-async function addCellToNotebook(notebookDocument: NotebookDocument, code: string): Promise<void> {
+async function addCellToNotebook(notebookDocument: NotebookDocument, index: number, code: string): Promise<void> {
     const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');
-    const { cellCount } = notebookDocument!;
     // Add new cell to interactive window document
-    const notebookEdit = NotebookEdit.insertCells(cellCount - 1, [notebookCellData]);
+    const notebookEdit = NotebookEdit.insertCells(index, [notebookCellData]);
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
     await workspace.applyEdit(workspaceEdit);

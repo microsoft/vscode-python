@@ -150,7 +150,7 @@ export class NativeRepl implements Disposable {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
             await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
             if (code) {
-                await executeNotebookCell(this.notebookDocument, code);
+                await executeNotebookCell(notebookEditor, code);
             }
         }
     }
