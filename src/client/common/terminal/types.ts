@@ -60,7 +60,7 @@ export interface ITerminalService extends IDisposable {
 
 export interface ITerminalExecutedCommand {
     execution: TerminalShellExecution;
-    exitCode: number | undefined;
+    exitCode: Promise<number | undefined>;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
