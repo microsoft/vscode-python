@@ -658,7 +658,7 @@
                     "type": "array"
                 },
                 "python.REPL.enableShellIntegration": {
-                    "default": true,
+                    "default": false,
                     "description": "%python.REPL.enableShellIntegration.description%",
                     "scope": "resource",
                     "type": "boolean"
