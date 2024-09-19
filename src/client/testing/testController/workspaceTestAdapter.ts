@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as util from 'util';
-import { CancellationToken, TestController, TestItem, TestRun, Uri } from 'vscode';
+import { CancellationToken, TestController, TestItem, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Testing } from '../../common/utils/localize';
 import { traceError } from '../../logging';
@@ -34,7 +34,7 @@ export class WorkspaceTestAdapter {
         private discoveryAdapter: ITestDiscoveryAdapter,
         private executionAdapter: ITestExecutionAdapter,
         private workspaceUri: Uri,
-        private resultResolver: ITestResultResolver,
+        public resultResolver: ITestResultResolver,
     ) {}
 
     public async executeTests(
@@ -42,7 +42,7 @@ export class WorkspaceTestAdapter {
         runInstance: TestRun,
         includes: TestItem[],
         token?: CancellationToken,
-        debugBool?: boolean,
+        profileKind?: boolean | TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<void> {
@@ -76,13 +76,13 @@ export class WorkspaceTestAdapter {
                 await this.executionAdapter.runTests(
                     this.workspaceUri,
                     testCaseIds,
-                    debugBool,
+                    profileKind,
                     runInstance,
                     executionFactory,
                     debugLauncher,
                 );
             } else {
-                await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, debugBool);
+                await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, profileKind);
             }
             deferred.resolve();
         } catch (ex) {

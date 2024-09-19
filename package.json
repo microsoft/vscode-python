@@ -26,7 +26,8 @@
         "terminalExecuteCommandEvent",
         "contribIssueReporter",
         "codeActionAI",
-        "notebookReplDocument"
+        "notebookReplDocument",
+        "notebookVariableProvider"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -67,6 +68,7 @@
         "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
+        "onCommand:python.copilotSetupTests",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "workspaceContains:Pipfile",
@@ -656,6 +658,12 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "python.REPL.enableShellIntegration": {
+                    "default": true,
+                    "description": "%python.REPL.enableShellIntegration.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.REPL.enableREPLSmartSend": {
                     "default": true,
                     "description": "%python.EnableREPLSmartSend.description%",
@@ -1161,12 +1169,12 @@
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl'"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl' && !inlineChatFocused"
             },
             {
                 "command": "python.execInInteractiveWindowEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused"
             },
             {
                 "command": "python.refreshTensorBoard",
@@ -1515,6 +1523,11 @@
                 "url": "./schemas/conda-meta.json"
             }
         ]
+    },
+    "copilot": {
+        "tests": {
+            "getSetupConfirmation": "python.copilotSetupTests"
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",

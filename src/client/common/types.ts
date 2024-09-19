@@ -202,6 +202,7 @@ export interface ITerminalSettings {
 export interface IREPLSettings {
     readonly enableREPLSmartSend: boolean;
     readonly sendToNativeREPL: boolean;
+    readonly enableShellIntegration: boolean;
 }
 
 export interface IExperiments {

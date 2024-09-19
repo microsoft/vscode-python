@@ -203,6 +203,26 @@ def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[s
     return runner_with_cwd_env(args, path, {})
 
 
+def split_array_at_item(arr: List[str], item: str) -> Tuple[List[str], List[str]]:
+    """
+    Splits an array into two subarrays at the specified item.
+
+    Args:
+        arr (List[str]): The array to be split.
+        item (str): The item at which to split the array.
+
+    Returns:
+        Tuple[List[str], List[str]]: A tuple containing two subarrays. The first subarray includes the item and all elements before it. The second subarray includes all elements after the item. If the item is not found, the first subarray is the original array and the second subarray is empty.
+    """
+    if item in arr:
+        index = arr.index(item)
+        before = arr[: index + 1]
+        after = arr[index + 1 :]
+        return before, after
+    else:
+        return arr, []
+
+
 def runner_with_cwd_env(
     args: List[str], path: pathlib.Path, env_add: Dict[str, str]
 ) -> Optional[List[Dict[str, Any]]]:
@@ -217,9 +237,33 @@ def runner_with_cwd_env(
         # If we are running Django, generate a unittest-specific pipe name.
         process_args = [sys.executable, *args]
         pipe_name = generate_random_pipe_name("unittest-discovery-test")
+    elif "_TEST_VAR_UNITTEST" in env_add:
+        before_args, after_ids = split_array_at_item(args, "*test*.py")
+        process_args = [sys.executable, *before_args]
+        pipe_name = generate_random_pipe_name("unittest-execution-test")
+        test_ids_pipe = os.fspath(
+            script_dir / "tests" / "unittestadapter" / ".data" / "coverage_ex" / "10943021.txt"
+        )
+        env_add.update({"RUN_TEST_IDS_PIPE": test_ids_pipe})
+        test_ids_arr = after_ids
+        with open(test_ids_pipe, "w") as f:  # noqa: PTH123
+            f.write("\n".join(test_ids_arr))
     else:
         process_args = [sys.executable, "-m", "pytest", "-p", "vscode_pytest", "-s", *args]
         pipe_name = generate_random_pipe_name("pytest-discovery-test")
+
+    if "COVERAGE_ENABLED" in env_add and "_TEST_VAR_UNITTEST" not in env_add:
+        process_args = [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-p",
+            "vscode_pytest",
+            "--cov=.",
+            "--cov-branch",
+            "-s",
+            *args,
+        ]
 
     # Generate pipe name, pipe name specific per OS type.
 

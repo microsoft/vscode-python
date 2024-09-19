@@ -14,6 +14,7 @@ from typing import (
     Any,
     Dict,
     Generator,
+    Iterator,
     Literal,
     TypedDict,
 )
@@ -65,6 +66,8 @@ collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
+INCLUDE_BRANCHES = False
+
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     global TEST_RUN_PIPE
@@ -80,6 +83,10 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+    if "--cov-branch" in args:
+        global INCLUDE_BRANCHES
+        INCLUDE_BRANCHES = True
 
     # check if --rootdir is in the args
     for arg in args:
@@ -356,6 +363,13 @@ def check_skipped_condition(item):
     return False
 
 
+class FileCoverageInfo(TypedDict):
+    lines_covered: list[int]
+    lines_missed: list[int]
+    executed_branches: int
+    total_branches: int
+
+
 def pytest_sessionfinish(session, exitstatus):
     """A pytest hook that is called after pytest has fulled finished.
 
@@ -420,9 +434,54 @@ def pytest_sessionfinish(session, exitstatus):
                 None,
             )
         # send end of transmission token
+
+    # send coverageee if enabled
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED")
+    if is_coverage_run == "True":
+        # load the report and build the json result to return
+        import coverage
+        from coverage.report_core import get_analysis_to_report
+
+        if TYPE_CHECKING:
+            from coverage.plugin import FileReporter
+            from coverage.results import Analysis
+
+        cov = coverage.Coverage()
+        cov.load()
+        analysis_iterator: Iterator[tuple[FileReporter, Analysis]] = get_analysis_to_report(
+            cov, None
+        )
+
+        file_coverage_map: dict[str, FileCoverageInfo] = {}
+        for fr, analysis in analysis_iterator:
+            file_str: str = fr.filename
+            executed_branches = analysis.numbers.n_executed_branches
+            total_branches = analysis.numbers.n_branches
+            if not INCLUDE_BRANCHES:
+                print("coverage not run with branches")
+                # if covearge wasn't run with branches, set the total branches value to -1 to signal that it is not available
+                executed_branches = 0
+                total_branches = -1
+
+            file_info: FileCoverageInfo = {
+                "lines_covered": list(analysis.executed),  # set
+                "lines_missed": list(analysis.missing),  # set
+                "executed_branches": executed_branches,  # int
+                "total_branches": total_branches,  # int
+            }
+            file_coverage_map[file_str] = file_info
+
+        payload: CoveragePayloadDict = CoveragePayloadDict(
+            coverage=True,
+            cwd=os.fspath(cwd),
+            result=file_coverage_map,
+            error=None,
+        )
+        send_post_request(payload)
+
     command_type = "discovery" if IS_DISCOVERY else "execution"
-    payload: EOTPayloadDict = {"command_type": command_type, "eot": True}
-    send_post_request(payload)
+    payload_eot: EOTPayloadDict = {"command_type": command_type, "eot": True}
+    send_post_request(payload_eot)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -738,6 +797,15 @@ class ExecutionPayloadDict(Dict):
     error: str | None  # Currently unused need to check
 
 
+class CoveragePayloadDict(Dict):
+    """A dictionary that is used to send a execution post request to the server."""
+
+    coverage: bool
+    cwd: str
+    result: dict[str, FileCoverageInfo] | None
+    error: str | None  # Currently unused need to check
+
+
 class EOTPayloadDict(TypedDict):
     """A dictionary that is used to send a end of transmission post request to the server."""
 
@@ -822,14 +890,14 @@ def post_response(cwd: str, session_node: TestNode) -> None:
 class PathEncoder(json.JSONEncoder):
     """A custom JSON encoder that encodes pathlib.Path objects as strings."""
 
-    def default(self, obj):
-        if isinstance(obj, pathlib.Path):
-            return os.fspath(obj)
-        return super().default(obj)
+    def default(self, o):
+        if isinstance(o, pathlib.Path):
+            return os.fspath(o)
+        return super().default(o)
 
 
 def send_post_request(
-    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict,
+    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict | CoveragePayloadDict,
     cls_encoder=None,
 ):
     """

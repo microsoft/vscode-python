@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the MIT License.
-import { CancellationTokenSource, TestRun, Uri } from 'vscode';
+import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
@@ -126,7 +126,7 @@ suite('Execution Flow Run Adapters', () => {
             await testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
-                false,
+                TestRunProfileKind.Run,
                 testRunMock.object,
                 execFactoryStub.object,
                 debugLauncher.object,
@@ -220,7 +220,7 @@ suite('Execution Flow Run Adapters', () => {
             await testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
-                true,
+                TestRunProfileKind.Debug,
                 testRunMock.object,
                 execFactoryStub.object,
                 debugLauncher.object,

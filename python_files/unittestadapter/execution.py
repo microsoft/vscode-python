@@ -10,7 +10,7 @@ import sysconfig
 import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Type, Union
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -24,8 +24,10 @@ sys.path.append(os.fspath(script_dir))
 from django_handler import django_execution_runner  # noqa: E402
 
 from unittestadapter.pvsc_utils import (  # noqa: E402
+    CoveragePayloadDict,
     EOTPayloadDict,
     ExecutionPayloadDict,
+    FileCoverageInfo,
     TestExecutionStatus,
     VSCodeUnittestError,
     parse_unittest_args,
@@ -304,7 +306,6 @@ if __name__ == "__main__":
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     test_run_pipe = os.getenv("TEST_RUN_PIPE")
-
     if not run_test_ids_pipe:
         print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
@@ -312,6 +313,7 @@ if __name__ == "__main__":
         print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
     test_ids = []
+    cwd = pathlib.Path(start_dir).absolute()
     try:
         # Read the test ids from the file, attempt to delete file afterwords.
         ids_path = pathlib.Path(run_test_ids_pipe)
@@ -324,7 +326,6 @@ if __name__ == "__main__":
 
     except Exception as e:
         # No test ids received from buffer, return error payload
-        cwd = pathlib.Path(start_dir).absolute()
         status: TestExecutionStatus = TestExecutionStatus.error
         payload: ExecutionPayloadDict = {
             "cwd": str(cwd),
@@ -333,6 +334,27 @@ if __name__ == "__main__":
             "error": "No test ids read from temp file," + str(e),
         }
         send_post_request(payload, test_run_pipe)
+
+    workspace_root = os.environ.get("COVERAGE_ENABLED")
+    # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
+    cov = None
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
+    if is_coverage_run:
+        print(
+            "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
+            workspace_root,
+        )
+        import coverage
+
+        source_ar: List[str] = []
+        if workspace_root:
+            source_ar.append(workspace_root)
+        if top_level_dir:
+            source_ar.append(top_level_dir)
+        if start_dir:
+            source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
+        cov = coverage.Coverage(branch=True, source=source_ar)  # is at least 1 of these required??
+        cov.start()
 
     # If no error occurred, we will have test ids to run.
     if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
@@ -351,3 +373,37 @@ if __name__ == "__main__":
             failfast,
             locals_,
         )
+
+    if is_coverage_run:
+        from coverage.plugin import FileReporter
+        from coverage.report_core import get_analysis_to_report
+        from coverage.results import Analysis
+
+        if not cov:
+            raise VSCodeUnittestError("Coverage is enabled but cov is not set")
+        cov.stop()
+        cov.save()
+        analysis_iterator: Iterator[Tuple[FileReporter, Analysis]] = get_analysis_to_report(
+            cov, None
+        )
+
+        file_coverage_map: Dict[str, FileCoverageInfo] = {}
+        for fr, analysis in analysis_iterator:
+            file_str: str = fr.filename
+            executed_branches = analysis.numbers.n_executed_branches
+            total_branches = analysis.numbers.n_branches
+
+            file_info: FileCoverageInfo = {
+                "lines_covered": list(analysis.executed),  # set
+                "lines_missed": list(analysis.missing),  # set
+                "executed_branches": executed_branches,  # int
+                "total_branches": total_branches,  # int
+            }
+            file_coverage_map[file_str] = file_info
+        payload_cov: CoveragePayloadDict = CoveragePayloadDict(
+            coverage=True,
+            cwd=os.fspath(cwd),
+            result=file_coverage_map,
+            error=None,
+        )
+        send_post_request(payload_cov, test_run_pipe)

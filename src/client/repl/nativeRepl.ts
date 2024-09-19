@@ -19,6 +19,8 @@ import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from '
 import { createReplController } from './replController';
 import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry';
+import { VariablesProvider } from './variables/variablesProvider';
+import { VariableRequester } from './variables/variableRequester';
 
 let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
 export class NativeRepl implements Disposable {
@@ -48,7 +50,7 @@ export class NativeRepl implements Disposable {
         nativeRepl.interpreter = interpreter;
         await nativeRepl.setReplDirectory();
         nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
-        nativeRepl.replController = nativeRepl.setReplController();
+        nativeRepl.setReplController();
 
         return nativeRepl;
     }
@@ -111,7 +113,12 @@ export class NativeRepl implements Disposable {
      */
     public setReplController(): NotebookController {
         if (!this.replController) {
-            return createReplController(this.interpreter!.path, this.disposables, this.cwd);
+            this.replController = createReplController(this.interpreter!.path, this.disposables, this.cwd);
+            this.replController.variableProvider = new VariablesProvider(
+                new VariableRequester(this.pythonServer),
+                () => this.notebookDocument,
+                this.pythonServer.onCodeExecuted,
+            );
         }
         return this.replController;
     }

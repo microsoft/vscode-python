@@ -54,6 +54,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
+import { registerPythonStartup } from './terminals/pythonStartup';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -176,6 +177,8 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
             serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
 
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
+
+            await registerPythonStartup(ext.context);
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 

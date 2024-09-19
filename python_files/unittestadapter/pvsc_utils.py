@@ -81,6 +81,22 @@ class EOTPayloadDict(TypedDict):
     eot: bool
 
 
+class FileCoverageInfo(TypedDict):
+    lines_covered: List[int]
+    lines_missed: List[int]
+    executed_branches: int
+    total_branches: int
+
+
+class CoveragePayloadDict(Dict):
+    """A dictionary that is used to send a execution post request to the server."""
+
+    coverage: bool
+    cwd: str
+    result: Optional[Dict[str, FileCoverageInfo]]
+    error: Optional[str]  # Currently unused need to check
+
+
 # Helper functions for data retrieval.
 
 
@@ -300,7 +316,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def send_post_request(
-    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict],
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict, CoveragePayloadDict],
     test_run_pipe: Optional[str],
 ):
     """

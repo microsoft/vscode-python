@@ -49,3 +49,8 @@ dist/**
 package.nls.*.json
 l10n/
 python-env-tools/**
+# coverage files produced as test output
+python_files/tests/*/.data/.coverage*
+python_files/tests/*/.data/*/.coverage*
+src/testTestingRootWkspc/coverageWorkspace/.coverage
+

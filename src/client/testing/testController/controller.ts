@@ -16,6 +16,8 @@ import {
     Uri,
     EventEmitter,
     TextDocument,
+    FileCoverageDetail,
+    TestRun,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
@@ -38,7 +40,6 @@ import {
     ITestFrameworkController,
     TestRefreshOptions,
     ITestExecutionAdapter,
-    ITestResultResolver,
 } from './common/types';
 import { UnittestTestDiscoveryAdapter } from './unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from './unittest/testExecutionAdapter';
@@ -118,6 +119,14 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(delayTrigger);
         this.refreshData = delayTrigger;
 
+        const coverageProfile = this.testController.createRunProfile(
+            'Coverage Tests',
+            TestRunProfileKind.Coverage,
+            this.runTests.bind(this),
+            true,
+            RunTestTag,
+        );
+
         this.disposables.push(
             this.testController.createRunProfile(
                 'Run Tests',
@@ -133,6 +142,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 true,
                 DebugTestTag,
             ),
+            coverageProfile,
         );
         this.testController.resolveHandler = this.resolveChildren.bind(this);
         this.testController.refreshHandler = (token: CancellationToken) => {
@@ -160,7 +170,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             let discoveryAdapter: ITestDiscoveryAdapter;
             let executionAdapter: ITestExecutionAdapter;
             let testProvider: TestProvider;
-            let resultResolver: ITestResultResolver;
+            let resultResolver: PythonResultResolver;
+
             if (settings.testing.unittestEnabled) {
                 testProvider = UNITTEST_PROVIDER;
                 resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
@@ -384,6 +395,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         });
 
         const unconfiguredWorkspaces: WorkspaceFolder[] = [];
+
         try {
             await Promise.all(
                 workspaces.map(async (workspace) => {
@@ -406,6 +418,28 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
+                        // coverage??
+                        const testAdapter =
+                            this.testAdapters.get(workspace.uri) ||
+                            (this.testAdapters.values().next().value as WorkspaceTestAdapter);
+
+                        if (request.profile?.kind && request.profile?.kind === TestRunProfileKind.Coverage) {
+                            request.profile.loadDetailedCoverage = (
+                                _testRun: TestRun,
+                                fileCoverage,
+                                _token,
+                            ): Thenable<FileCoverageDetail[]> => {
+                                const details = testAdapter.resultResolver.detailedCoverageMap.get(
+                                    fileCoverage.uri.fsPath,
+                                );
+                                if (details === undefined) {
+                                    // given file has no detailed coverage data
+                                    return Promise.resolve([]);
+                                }
+                                return Promise.resolve(details);
+                            };
+                        }
+
                         if (settings.testing.pytestEnabled) {
                             sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
                                 tool: 'pytest',
@@ -413,15 +447,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             });
                             // ** experiment to roll out NEW test discovery mechanism
                             if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
-                                const testAdapter =
-                                    this.testAdapters.get(workspace.uri) ||
-                                    (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                                 return testAdapter.executeTests(
                                     this.testController,
                                     runInstance,
                                     testItems,
                                     token,
-                                    request.profile?.kind === TestRunProfileKind.Debug,
+                                    request.profile?.kind,
                                     this.pythonExecFactory,
                                     this.debugLauncher,
                                 );
@@ -444,15 +475,12 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             });
                             // ** experiment to roll out NEW test discovery mechanism
                             if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
-                                const testAdapter =
-                                    this.testAdapters.get(workspace.uri) ||
-                                    (this.testAdapters.values().next().value as WorkspaceTestAdapter);
                                 return testAdapter.executeTests(
                                     this.testController,
                                     runInstance,
                                     testItems,
                                     token,
-                                    request.profile?.kind === TestRunProfileKind.Debug,
+                                    request.profile?.kind,
                                     this.pythonExecFactory,
                                     this.debugLauncher,
                                 );
