@@ -1161,7 +1161,12 @@
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && isCompositeNotebook"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl'"
+            },
+            {
+                "command": "python.execInInteractiveWindowEnter",
+                "key": "enter",
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
             },
             {
                 "command": "python.refreshTensorBoard",
