@@ -105,11 +105,13 @@ export class TerminalService implements ITerminalService, Disposable {
          * Shell integration in zsh works, but not python
          *
          * 1. TODO: executeCommand never actually runs the command because the `python` command never finishes
-         * 2. onDidEndTerminalShellExecution never fires because because the `python` command never finishes --> complete
+         * 2. onDidEndTerminalShellExecution never fires because because the `python` command never finishes --> line of defense via only promising on exitCode.
          */
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
+
+            // To cover case #1, could we take any hint from execution (TerminalShellExecution) to know if executeCommand actually ran/sent anything?
 
             return {
                 execution,
