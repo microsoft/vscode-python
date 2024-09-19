@@ -22,6 +22,7 @@ import {
     TerminalShellType,
     ITerminalExecutedCommand,
 } from './types';
+import { traceVerbose } from '../../logging';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -111,9 +112,11 @@ export class TerminalService implements ITerminalService, Disposable {
                 if (listener) {
                     this.executeCommandListeners.add(listener);
                 }
+                traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             });
         } else {
             terminal.sendText(commandLine);
+            traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
         }
 
         return undefined;
