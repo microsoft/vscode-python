@@ -662,7 +662,10 @@
                     "default": false,
                     "description": "%python.REPL.enableShellIntegration.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "tags": [
+                        "experimental"
+                    ]
                 },
                 "python.REPL.enableREPLSmartSend": {
                     "default": true,
