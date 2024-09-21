@@ -1,5 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { GlobalEnvironmentVariableCollection, Uri, WorkspaceConfiguration } from 'vscode';
