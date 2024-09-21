@@ -8,7 +8,7 @@ import { IVariableDescription } from '../../client/repl/variables/types';
 import { VariablesProvider } from '../../client/repl/variables/variablesProvider';
 import { VariableRequester } from '../../client/repl/variables/variableRequester';
 
-suite.only('ReplVariablesProvider', () => {
+suite('ReplVariablesProvider', () => {
     let provider: VariablesProvider;
     let varRequester: TypeMoq.IMock<VariableRequester>;
     let notebook: TypeMoq.IMock<NotebookDocument>;

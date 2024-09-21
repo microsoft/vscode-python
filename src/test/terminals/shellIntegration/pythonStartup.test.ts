@@ -2,7 +2,12 @@
 // Licensed under the MIT License.
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { EnvironmentVariableCollection, GlobalEnvironmentVariableCollection, WorkspaceConfiguration } from 'vscode';
+import {
+    EnvironmentVariableCollection,
+    GlobalEnvironmentVariableCollection,
+    Uri,
+    WorkspaceConfiguration,
+} from 'vscode';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { registerPythonStartup } from '../../../client/terminals/pythonStartup';
 import { IExtensionContext } from '../../../client/common/types';
@@ -20,12 +25,20 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     let globalEnvironmentVariableCollection: TypeMoq.IMock<GlobalEnvironmentVariableCollection>;
     setup(() => {
         context = TypeMoq.Mock.ofType<IExtensionContext>();
-        context.setup((c) => c).returns(() => context.object);
+        // context.setup((c) => c).returns(() => context.object);
         environmentVariableCollection = TypeMoq.Mock.ofType<EnvironmentVariableCollection>();
         globalEnvironmentVariableCollection = TypeMoq.Mock.ofType<GlobalEnvironmentVariableCollection>();
+
         context.setup((c) => c.environmentVariableCollection).returns(() => globalEnvironmentVariableCollection.object);
-        // setup context.environmentVariableCollection when delete method is called
-        globalEnvironmentVariableCollection.setup((c) => c.delete(TypeMoq.It.isAny())).returns(() => undefined);
+        globalEnvironmentVariableCollection
+            .setup((c) => c.getScoped(TypeMoq.It.isAny()))
+            .returns(() => environmentVariableCollection.object);
+        context.setup((c) => c.storageUri).returns(() => Uri.parse('a'));
+        context
+            .setup((c) =>
+                c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            )
+            .returns(() => Promise.resolve());
 
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         createDirectoryStub = sinon.stub(workspaceApis, 'createDirectory');
@@ -58,5 +71,6 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             (c) => c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.once(),
         );
+        // context.verify((c) => c.environmentVariableCollection.delete(TypeMoq.It.isAny()), TypeMoq.Times.never());
     });
 });
