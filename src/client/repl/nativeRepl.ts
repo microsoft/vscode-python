@@ -1,11 +1,13 @@
 // Native Repl class that holds instance of pythonServer and replController
 
 import {
+    ExtensionContext,
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
     QuickPickItem,
     TextEditor,
+    Uri,
     workspace,
     WorkspaceFolder,
 } from 'vscode';
@@ -22,6 +24,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { VariablesProvider } from './variables/variablesProvider';
 import { VariableRequester } from './variables/variableRequester';
 
+const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
 let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
@@ -39,14 +42,19 @@ export class NativeRepl implements Disposable {
 
     public newReplSession: boolean | undefined = true;
 
+    private replUri: Uri | undefined;
+
+    private context: ExtensionContext;
+
     // TODO: In the future, could also have attribute of URI for file specific REPL.
-    private constructor() {
+    private constructor(context: ExtensionContext) {
         this.watchNotebookClosed();
+        this.context = context;
     }
 
     // Static async factory method to handle asynchronous initialization
-    public static async create(interpreter: PythonEnvironment): Promise<NativeRepl> {
-        const nativeRepl = new NativeRepl();
+    public static async create(interpreter: PythonEnvironment, context: ExtensionContext): Promise<NativeRepl> {
+        const nativeRepl = new NativeRepl(context);
         nativeRepl.interpreter = interpreter;
         await nativeRepl.setReplDirectory();
         nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
@@ -65,10 +73,12 @@ export class NativeRepl implements Disposable {
      */
     private watchNotebookClosed(): void {
         this.disposables.push(
-            workspace.onDidCloseNotebookDocument((nb) => {
+            workspace.onDidCloseNotebookDocument(async (nb) => {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
                     this.newReplSession = true;
+                    this.replUri = undefined;
+                    await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
                 }
             }),
         );
@@ -152,6 +162,8 @@ export class NativeRepl implements Disposable {
     public async sendToNativeRepl(code?: string): Promise<void> {
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument);
         this.notebookDocument = notebookEditor.notebook;
+        this.replUri = this.notebookDocument.uri;
+        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri);
 
         if (this.notebookDocument) {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
@@ -168,9 +180,13 @@ export class NativeRepl implements Disposable {
  * @param interpreter
  * @returns Native REPL instance
  */
-export async function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): Promise<NativeRepl> {
+export async function getNativeRepl(
+    interpreter: PythonEnvironment,
+    disposables: Disposable[],
+    context: ExtensionContext,
+): Promise<NativeRepl> {
     if (!nativeRepl) {
-        nativeRepl = await NativeRepl.create(interpreter);
+        nativeRepl = await NativeRepl.create(interpreter, context);
         disposables.push(nativeRepl);
     }
     if (nativeRepl && nativeRepl.newReplSession) {
