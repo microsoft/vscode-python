@@ -15,6 +15,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     let context: TypeMoq.IMock<IExtensionContext>;
     let createDirectoryStub: sinon.SinonStub;
     let copyStub: sinon.SinonStub;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let environmentVariableCollection: TypeMoq.IMock<EnvironmentVariableCollection>;
     let globalEnvironmentVariableCollection: TypeMoq.IMock<GlobalEnvironmentVariableCollection>;
     setup(() => {
@@ -53,11 +54,9 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         await registerPythonStartup(context.object);
 
         // Make sure context.environmentVariableCollection.replace is called once
-        // context.verify(
-        //     (c) => c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-        //     TypeMoq.Times.once(),
-        // );
-        context.verify((c) => c.environmentVariableCollection.delete(TypeMoq.It.isAny()), TypeMoq.Times.once());
-        // fail the test
+        context.verify(
+            (c) => c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 });
