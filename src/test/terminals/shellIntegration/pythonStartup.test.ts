@@ -88,4 +88,16 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         // Verify environment collection.replace has been called
         sinon.assert.calledOnce(context.environmentVariableCollection.replace);
     });
+
+    // TODO: BLOCKED: How is it that environmentVariableCollection is not a function in context?
+    // Is it some mystery between IExtensionContext and ExtensionContext?
+
+    // test('Verify copy is called when shell integration is enabled', async () => {
+    //     pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+
+    //     await registerPythonStartup(context.object);
+
+    //     // Verify copyStub has been called
+    //     sinon.assert.calledOnce(copyStub);
+    // });
 });
