@@ -38,7 +38,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             .setup((c) =>
                 c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
-            .returns(() => Promise.resolve());
+            .returns(() => Promise.resolve()); // TODO: what is wrong with this --> complaining it is NOT a Function
 
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         createDirectoryStub = sinon.stub(workspaceApis, 'createDirectory');
@@ -61,16 +61,31 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         sinon.restore();
     });
 
-    test('PYTHONSTARTUP is set when setting is enabled', async () => {
+    test('Verify createDirectory is called when shell integration is enabled', async () => {
         pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
 
         await registerPythonStartup(context.object);
 
-        // Make sure context.environmentVariableCollection.replace is called once
-        context.verify(
-            (c) => c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            TypeMoq.Times.once(),
-        );
-        // context.verify((c) => c.environmentVariableCollection.delete(TypeMoq.It.isAny()), TypeMoq.Times.never());
+        // Verify createDirectoryStub has been called
+        sinon.assert.calledOnce(createDirectoryStub);
+    });
+
+    test('Verify createDirectory is not called when shell integration is disabled', async () => {
+        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => false);
+
+        await registerPythonStartup(context.object);
+
+        // Verify createDirectoryStub has not been called
+        sinon.assert.notCalled(createDirectoryStub);
+    });
+
+    // TODO: figure out what is wrong. How is environmentVariableCollection not a function in context?
+    test('Verify environment collection.replace is called when shell integration is enabled', async () => {
+        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+
+        await registerPythonStartup(context.object);
+
+        // Verify environment collection.replace has been called
+        sinon.assert.calledOnce(context.environmentVariableCollection.replace);
     });
 });
