@@ -36,12 +36,14 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             .setup((c) => c.getScoped(TypeMoq.It.isAny()))
             .returns(() => environmentVariableCollection.object);
         context.setup((c) => c.storageUri).returns(() => Uri.parse('a'));
+
+        // Commenting out 41 to 45 will pas first couple test. "c.environmentVariableCollection is not a function" crashes everything.
         context
             .setup((c) =>
                 c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             )
             .returns(() => Promise.resolve()); // TODO: what is wrong with this --> complaining it is NOT a Function
-
+        // Marker -----
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         createDirectoryStub = sinon.stub(workspaceApis, 'createDirectory');
         copyStub = sinon.stub(workspaceApis, 'copy');
@@ -81,6 +83,24 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         sinon.assert.notCalled(createDirectoryStub);
     });
 
+    test('Verify copy is called when shell integration is enabled', async () => {
+        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+
+        await registerPythonStartup(context.object);
+
+        // Verify copyStub has been called
+        sinon.assert.calledOnce(copyStub);
+    });
+
+    test('Verify copy is not called when shell integration is disabled', async () => {
+        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => false);
+
+        await registerPythonStartup(context.object);
+
+        // Verify copyStub has not been called
+        sinon.assert.notCalled(copyStub);
+    });
+
     // TODO: figure out what is wrong. How is environmentVariableCollection not a function in context?
     test('Verify environment collection.replace is called when shell integration is enabled', async () => {
         pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
@@ -90,16 +110,4 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         // Verify environment collection.replace has been called
         sinon.assert.calledOnce(context.environmentVariableCollection.replace);
     });
-
-    // TODO: BLOCKED: How is it that environmentVariableCollection is not a function in context?
-    // Is it some mystery between IExtensionContext and ExtensionContext?
-
-    // test('Verify copy is called when shell integration is enabled', async () => {
-    //     pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
-
-    //     await registerPythonStartup(context.object);
-
-    //     // Verify copyStub has been called
-    //     sinon.assert.calledOnce(copyStub);
-    // });
 });
