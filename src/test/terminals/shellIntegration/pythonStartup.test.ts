@@ -23,6 +23,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let environmentVariableCollection: TypeMoq.IMock<EnvironmentVariableCollection>;
     let globalEnvironmentVariableCollection: TypeMoq.IMock<GlobalEnvironmentVariableCollection>;
+
     setup(() => {
         context = TypeMoq.Mock.ofType<IExtensionContext>();
         // context.setup((c) => c).returns(() => context.object);
@@ -37,12 +38,20 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             .returns(() => environmentVariableCollection.object);
         context.setup((c) => c.storageUri).returns(() => Uri.parse('a'));
 
+        globalEnvironmentVariableCollection
+            .setup((c) => c.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve());
+
+        environmentVariableCollection
+            .setup((c) => c.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve());
+
         // Commenting out 41 to 45 will pas first couple test. "c.environmentVariableCollection is not a function" crashes everything.
-        context
-            .setup((c) =>
-                c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
-            )
-            .returns(() => Promise.resolve()); // TODO: what is wrong with this --> complaining it is NOT a Function
+        // context
+        //     .setup((c) =>
+        //         c.environmentVariableCollection.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+        //     )
+        //     .returns(() => Promise.resolve());
         // Marker -----
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         createDirectoryStub = sinon.stub(workspaceApis, 'createDirectory');
@@ -108,6 +117,9 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         await registerPythonStartup(context.object);
 
         // Verify environment collection.replace has been called
-        sinon.assert.calledOnce(context.environmentVariableCollection.replace);
+        globalEnvironmentVariableCollection.verify(
+            (c) => c.replace('PYTHONSTARTUP', TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 });
