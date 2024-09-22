@@ -160,7 +160,8 @@ export class NativeRepl implements Disposable {
      * @param code
      */
     public async sendToNativeRepl(code?: string): Promise<void> {
-        const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument);
+        const mementoValue = this.context.globalState.get(NATIVE_REPL_URI_MEMENTO) as Uri | undefined;
+        const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoValue);
         this.notebookDocument = notebookEditor.notebook;
         this.replUri = this.notebookDocument.uri;
         await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri);
