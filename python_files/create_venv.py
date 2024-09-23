@@ -140,7 +140,7 @@ def upgrade_pip(venv_path: str) -> None:
 
 def create_gitignore(git_ignore: Union[str, pathlib.PurePath]):
     print("Creating:", os.fspath(git_ignore))
-    git_ignore.write_text("*")
+    pathlib.Path(git_ignore).write_text("*")
 
 
 def add_gitignore(name: str) -> None:
