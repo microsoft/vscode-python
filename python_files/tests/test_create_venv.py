@@ -14,7 +14,9 @@ import pytest
 import create_venv
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Windows does not have micro venv fallback.")
+@pytest.mark.skipif(
+    sys.platform == "win32", reason="Windows does not have micro venv fallback."
+)
 def test_venv_not_installed_unix():
     importlib.reload(create_venv)
     create_venv.is_installed = lambda module: module != "venv"
@@ -41,7 +43,9 @@ def test_venv_not_installed_unix():
     assert run_process_called is True
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason="Windows does not have microvenv fallback.")
+@pytest.mark.skipif(
+    sys.platform != "win32", reason="Windows does not have microvenv fallback."
+)
 def test_venv_not_installed_windows():
     importlib.reload(create_venv)
     create_venv.is_installed = lambda module: module != "venv"
@@ -51,13 +55,16 @@ def test_venv_not_installed_windows():
 
 
 @pytest.mark.parametrize("env_exists", ["hasEnv", "noEnv"])
-@pytest.mark.parametrize("git_ignore", ["useGitIgnore", "skipGitIgnore"])
+@pytest.mark.parametrize(
+    "git_ignore", ["useGitIgnore", "skipGitIgnore", "gitIgnoreExists"]
+)
 @pytest.mark.parametrize("install", ["requirements", "toml", "skipInstall"])
 def test_create_env(env_exists, git_ignore, install):
     importlib.reload(create_venv)
     create_venv.is_installed = lambda _x: True
     create_venv.venv_exists = lambda _n: env_exists == "hasEnv"
     create_venv.upgrade_pip = lambda _x: None
+    create_venv.is_file = lambda _x: git_ignore == "gitIgnoreExists"
 
     install_packages_called = False
 
@@ -84,8 +91,18 @@ def test_create_env(env_exists, git_ignore, install):
     def add_gitignore(_name):
         nonlocal add_gitignore_called
         add_gitignore_called = True
+        if not create_venv.is_file(_name):
+            create_venv.create_gitignore(_name)
 
     create_venv.add_gitignore = add_gitignore
+
+    create_gitignore_called = False
+
+    def create_gitignore(_p):
+        nonlocal create_gitignore_called
+        create_gitignore_called = True
+
+    create_venv.create_gitignore = create_gitignore
 
     args = []
     if git_ignore == "useGitIgnore":
@@ -102,7 +119,13 @@ def test_create_env(env_exists, git_ignore, install):
     assert run_process_called == (env_exists == "noEnv")
 
     # add_gitignore is called when new venv is created and git_ignore is True
-    assert add_gitignore_called == ((env_exists == "noEnv") and (git_ignore == "useGitIgnore"))
+    assert add_gitignore_called == (
+        (env_exists == "noEnv") and (git_ignore == "useGitIgnore")
+    )
+
+    assert create_gitignore_called == (
+        add_gitignore_called and (git_ignore != "gitIgnoreExists")
+    )
 
 
 @pytest.mark.parametrize("install_type", ["requirements", "pyproject", "both"])
@@ -232,7 +255,9 @@ def test_create_venv_missing_pip():
         if "install" in args and "pip" in args:
             nonlocal run_process_called
             run_process_called = True
-            pip_pyz_path = os.fspath(create_venv.CWD / create_venv.VENV_NAME / "pip.pyz")
+            pip_pyz_path = os.fspath(
+                create_venv.CWD / create_venv.VENV_NAME / "pip.pyz"
+            )
             assert args[1:] == [pip_pyz_path, "install", "pip"]
             assert error_message == "CREATE_VENV.INSTALL_PIP_FAILED"
 
