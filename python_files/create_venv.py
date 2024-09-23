@@ -136,7 +136,7 @@ def upgrade_pip(venv_path: str) -> None:
 
 def add_gitignore(name: str) -> None:
     git_ignore = CWD / name / ".gitignore"
-    if git_ignore.is_file():
+    if not git_ignore.is_file():
         print("Creating:", os.fspath(git_ignore))
         git_ignore.write_text("*")
 
