@@ -2313,7 +2313,7 @@ export interface IEventNamePropertyMapping {
         /**
          * Whether the user launched the Terminal REPL or Native REPL
          */
-        replType: 'Terminal' | 'Native';
+        replType: 'Terminal' | 'Native' | 'manualTerminal';
     };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
