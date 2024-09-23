@@ -113,7 +113,6 @@ suite('REPL - Smart Send', () => {
                 enableREPLSmartSend: true,
                 REPLSmartSend: true,
                 sendToNativeREPL: false,
-                enableShellIntegration: true,
             }));
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);

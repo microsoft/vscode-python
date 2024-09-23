@@ -116,7 +116,6 @@ suite('Terminal - Code Execution Helper', () => {
                 enableREPLSmartSend: false,
                 REPLSmartSend: false,
                 sendToNativeREPL: false,
-                enableShellIntegration: true,
             }));
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         configurationService

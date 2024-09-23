@@ -368,6 +368,7 @@ export class PythonSettings implements IPythonSettings {
                   launchArgs: [],
                   activateEnvironment: true,
                   activateEnvInCurrentTerminal: false,
+                  enableShellIntegration: false,
               };
 
         this.REPL = pythonSettings.get<IREPLSettings>('REPL')!;
