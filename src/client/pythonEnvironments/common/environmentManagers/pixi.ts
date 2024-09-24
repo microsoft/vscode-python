@@ -273,7 +273,7 @@ export async function getPixiEnvironmentFromInterpreter(
     // Find the pixi executable for the project
     pixi = pixi || (await Pixi.getPixi());
     if (!pixi) {
-        traceWarn(`could not find a pixi interpreter for the interpreter at ${interpreterPath}`);
+        traceVerbose(`could not find a pixi interpreter for the interpreter at ${interpreterPath}`);
         return undefined;
     }
 
