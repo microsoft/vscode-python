@@ -42,9 +42,3 @@ def test_simple_pytest_coverage():
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14, 17}
     assert set(focal_function_coverage.get("lines_missed")) == {18, 19, 6}
-    assert (
-        focal_function_coverage.get("executed_branches") > 0
-    ), "executed_branches are a number greater than 0."
-    assert (
-        focal_function_coverage.get("total_branches") > 0
-    ), "total_branches are a number greater than 0."

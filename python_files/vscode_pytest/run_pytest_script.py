@@ -45,8 +45,7 @@ if __name__ == "__main__":
                 coverage_enabled = True
                 break
         if not coverage_enabled:
-            print("Coverage is enabled, adding branch coverage as an argument.")
-            args = [*args, "--cov=.", "--cov-branch"]
+            args = [*args, "--cov=."]
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     if run_test_ids_pipe:

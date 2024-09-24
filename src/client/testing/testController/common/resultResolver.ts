@@ -149,22 +149,13 @@ export class PythonResultResolver implements ITestResultResolver {
             const fileCoverageMetrics = value;
             const linesCovered = fileCoverageMetrics.lines_covered ? fileCoverageMetrics.lines_covered : []; // undefined if no lines covered
             const linesMissed = fileCoverageMetrics.lines_missed ? fileCoverageMetrics.lines_missed : []; // undefined if no lines missed
-            const executedBranches = fileCoverageMetrics.executed_branches;
-            const totalBranches = fileCoverageMetrics.total_branches;
 
             const lineCoverageCount = new TestCoverageCount(
                 linesCovered.length,
                 linesCovered.length + linesMissed.length,
             );
             const uri = Uri.file(fileNameStr);
-            let fileCoverage: FileCoverage;
-            if (totalBranches === -1) {
-                // branch coverage was not enabled and should not be displayed
-                fileCoverage = new FileCoverage(uri, lineCoverageCount);
-            } else {
-                const branchCoverageCount = new TestCoverageCount(executedBranches, totalBranches);
-                fileCoverage = new FileCoverage(uri, lineCoverageCount, branchCoverageCount);
-            }
+            const fileCoverage = new FileCoverage(uri, lineCoverageCount);
             runInstance.addCoverage(fileCoverage);
 
             // create detailed coverage array for each file (only line coverage on detailed, not branch)

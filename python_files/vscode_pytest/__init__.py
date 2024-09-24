@@ -14,7 +14,6 @@ from typing import (
     Any,
     Dict,
     Generator,
-    Iterator,
     Literal,
     TypedDict,
 )
@@ -66,8 +65,6 @@ collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
-INCLUDE_BRANCHES = False
-
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     global TEST_RUN_PIPE
@@ -83,10 +80,6 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
-
-    if "--cov-branch" in args:
-        global INCLUDE_BRANCHES
-        INCLUDE_BRANCHES = True
 
     # check if --rootdir is in the args
     for arg in args:
@@ -366,8 +359,6 @@ def check_skipped_condition(item):
 class FileCoverageInfo(TypedDict):
     lines_covered: list[int]
     lines_missed: list[int]
-    executed_branches: int
-    total_branches: int
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -435,41 +426,26 @@ def pytest_sessionfinish(session, exitstatus):
             )
         # send end of transmission token
 
-    # send coverageee if enabled
+    # send coverage if enabled
     is_coverage_run = os.environ.get("COVERAGE_ENABLED")
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
-        from coverage.report_core import get_analysis_to_report
-
-        if TYPE_CHECKING:
-            from coverage.plugin import FileReporter
-            from coverage.results import Analysis
 
         cov = coverage.Coverage()
         cov.load()
-        analysis_iterator: Iterator[tuple[FileReporter, Analysis]] = get_analysis_to_report(
-            cov, None
-        )
-
+        file_set: set[str] = cov.get_data().measured_files()
         file_coverage_map: dict[str, FileCoverageInfo] = {}
-        for fr, analysis in analysis_iterator:
-            file_str: str = fr.filename
-            executed_branches = analysis.numbers.n_executed_branches
-            total_branches = analysis.numbers.n_branches
-            if not INCLUDE_BRANCHES:
-                print("coverage not run with branches")
-                # if covearge wasn't run with branches, set the total branches value to -1 to signal that it is not available
-                executed_branches = 0
-                total_branches = -1
-
+        for file in file_set:
+            analysis = cov.analysis2(file)
+            lines_executable = {int(line_no) for line_no in analysis[1]}
+            lines_missed = {int(line_no) for line_no in analysis[3]}
+            lines_covered = lines_executable - lines_missed
             file_info: FileCoverageInfo = {
-                "lines_covered": list(analysis.executed),  # set
-                "lines_missed": list(analysis.missing),  # set
-                "executed_branches": executed_branches,  # int
-                "total_branches": total_branches,  # int
+                "lines_covered": list(lines_covered),  # list of int
+                "lines_missed": list(lines_missed),  # list of int
             }
-            file_coverage_map[file_str] = file_info
+            file_coverage_map[file] = file_info
 
         payload: CoveragePayloadDict = CoveragePayloadDict(
             coverage=True,
