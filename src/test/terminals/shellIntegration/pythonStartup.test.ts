@@ -54,7 +54,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('Verify createDirectory is called when shell integration is enabled', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
 
         await registerPythonStartup(context.object);
 
@@ -62,7 +62,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('Verify createDirectory is not called when shell integration is disabled', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => false);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
 
         await registerPythonStartup(context.object);
 
@@ -70,7 +70,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('Verify copy is called when shell integration is enabled', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
 
         await registerPythonStartup(context.object);
 
@@ -78,7 +78,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('Verify copy is not called when shell integration is disabled', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => false);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
 
         await registerPythonStartup(context.object);
 
@@ -86,7 +86,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('PYTHONSTARTUP is set when enableShellIntegration setting is true', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
 
         await registerPythonStartup(context.object);
 
@@ -97,7 +97,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('environmentCollection should not remove PYTHONSTARTUP when enableShellIntegration setting is true', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => true);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
 
         await registerPythonStartup(context.object);
 
@@ -105,7 +105,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('PYTHONSTARTUP is not set when enableShellIntegration setting is false', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => false);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
 
         await registerPythonStartup(context.object);
 
@@ -116,7 +116,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('PYTHONSTARTUP is deleted when enableShellIntegration setting is false', async () => {
-        pythonConfig.setup((p) => p.get('REPL.enableShellIntegration')).returns(() => false);
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
 
         await registerPythonStartup(context.object);
 
