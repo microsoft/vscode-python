@@ -383,7 +383,7 @@ if __name__ == "__main__":
         cov.save()
         cov.load()
         file_set: Set[str] = cov.get_data().measured_files()
-        file_coverage_map: dict[str, FileCoverageInfo] = {}
+        file_coverage_map: Dict[str, FileCoverageInfo] = {}
         for file in file_set:
             analysis = cov.analysis2(file)
             lines_executable = {int(line_no) for line_no in analysis[1]}
