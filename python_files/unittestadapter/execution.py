@@ -10,7 +10,7 @@ import sysconfig
 import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, Union
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -382,7 +382,7 @@ if __name__ == "__main__":
         cov.stop()
         cov.save()
         cov.load()
-        file_set: set[str] = cov.get_data().measured_files()
+        file_set: Set[str] = cov.get_data().measured_files()
         file_coverage_map: dict[str, FileCoverageInfo] = {}
         for file in file_set:
             analysis = cov.analysis2(file)
