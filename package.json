@@ -660,7 +660,7 @@
                 },
                 "python.terminal.shellIntegration.enabled": {
                     "default": false,
-                    "description": "%python.terminal.shellIntegration.enabled.description%",
+                    "markdownDescription": "%python.terminal.shellIntegration.enabled.description%",
                     "scope": "resource",
                     "type": "boolean",
                     "tags": [
