@@ -133,11 +133,6 @@ export class PythonResultResolver implements ITestResultResolver {
         } else {
             this._resolveExecution(payload as ExecutionTestPayload, runInstance);
         }
-        if ('coverage' in payload) {
-            // coverage data is sent once per connection
-            traceVerbose('Coverage data received.');
-            this._resolveCoverage(payload as CoveragePayload, runInstance);
-        }
     }
 
     public _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void {
@@ -180,7 +175,7 @@ export class PythonResultResolver implements ITestResultResolver {
                 detailedCoverageArray.push(statementCoverage);
             }
 
-            this.detailedCoverageMap.set(fileNameStr, detailedCoverageArray);
+            this.detailedCoverageMap.set(uri.fsPath, detailedCoverageArray);
         }
     }
 
