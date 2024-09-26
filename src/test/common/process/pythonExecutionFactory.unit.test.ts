@@ -36,6 +36,7 @@ import { ServiceContainer } from '../../../client/ioc/container';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { Conda, CONDA_RUN_VERSION } from '../../../client/pythonEnvironments/common/environmentManagers/conda';
+import * as pixi from '../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 const pythonInterpreter: PythonEnvironment = {
     path: '/foo/bar/python.exe',
@@ -87,10 +88,15 @@ suite('Process - PythonExecutionFactory', () => {
             let executionService: typemoq.IMock<IPythonExecutionService>;
             let autoSelection: IInterpreterAutoSelectionService;
             let interpreterPathExpHelper: IInterpreterPathService;
+            let getPixiEnvironmentFromInterpreterStub: sinon.SinonStub;
             const pythonPath = 'path/to/python';
             setup(() => {
                 sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
                 sinon.stub(Conda.prototype, 'getInterpreterPathForEnvironment').resolves(pythonPath);
+
+                getPixiEnvironmentFromInterpreterStub = sinon.stub(pixi, 'getPixiEnvironmentFromInterpreter');
+                getPixiEnvironmentFromInterpreterStub.resolves(undefined);
+
                 activationHelper = mock(EnvironmentActivationService);
                 processFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
@@ -336,6 +342,7 @@ suite('Process - PythonExecutionFactory', () => {
                 } else {
                     verify(pyenvs.getCondaEnvironment(interpreter!.path)).once();
                 }
+                expect(getPixiEnvironmentFromInterpreterStub.notCalled).to.be.equal(true);
             });
 
             test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {

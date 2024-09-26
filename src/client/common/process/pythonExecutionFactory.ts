@@ -162,11 +162,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
 
         const env = await createPixiEnv(pixiEnvironment, processService, this.fileSystem);
-        if (!env) {
-            return undefined;
+        if (env) {
+            return createPythonService(processService, env);
         }
 
-        return createPythonService(processService, env);
+        return undefined;
     }
 }
 
