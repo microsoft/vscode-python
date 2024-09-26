@@ -24,7 +24,6 @@ export interface ICodeExecutionHelper {
 export const ICodeExecutionManager = Symbol('ICodeExecutionManager');
 
 export interface ICodeExecutionManager {
-    onExecutedCode: Event<string>;
     registerCommands(): void;
 }
 

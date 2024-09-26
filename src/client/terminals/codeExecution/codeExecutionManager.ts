@@ -4,12 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, EventEmitter, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -30,7 +29,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
-        @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
     ) {}
