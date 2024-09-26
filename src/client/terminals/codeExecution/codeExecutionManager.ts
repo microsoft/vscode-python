@@ -35,10 +35,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
     ) {}
 
-    public get onExecutedCode(): Event<string> {
-        return this.eventEmitter.event;
-    }
-
     public registerCommands() {
         [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon, Commands.Exec_In_Separate_Terminal].forEach(
             (cmd) => {
@@ -125,15 +121,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
         if (fileAfterSave) {
             fileToExecute = fileAfterSave;
-        }
-
-        try {
-            const contents = await this.fileSystem.readFile(fileToExecute.fsPath);
-            this.eventEmitter.fire(contents);
-        } catch {
-            // Ignore any errors that occur for firing this event. It's only used
-            // for telemetry
-            noop();
         }
 
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
