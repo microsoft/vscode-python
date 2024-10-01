@@ -111,15 +111,9 @@ suite('Execution Flow Run Adapters', () => {
             });
 
             // mock EOT token & ExecClose token
-            const deferredEOT = createDeferred();
             const deferredExecClose = createDeferred();
             const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
-            utilsCreateEOTStub.callsFake(() => {
-                if (utilsCreateEOTStub.callCount === 1) {
-                    return deferredEOT;
-                }
-                return deferredExecClose;
-            });
+            utilsCreateEOTStub.callsFake(() => deferredExecClose);
 
             // define adapter and run tests
             const testAdapter = createAdapter(adapter, configService, typeMoq.Mock.ofType<ITestOutputChannel>().object);

@@ -85,9 +85,6 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
         else:
             json_messages.append(json_data["params"])
 
-    last_json = json_messages.pop(-1)
-    if "eot" not in last_json:
-        raise ValueError("Last JSON messages does not contain 'eot' as its last payload.")
     return json_messages  # return the list of json messages, only the params part without the EOT token
 
 

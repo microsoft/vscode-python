@@ -3,12 +3,6 @@ export interface DataWithPayloadChunks {
     data: string;
 }
 
-const EOT_PAYLOAD = `Content-Length: 42
-Content-Type: application/json
-Request-uuid: fake-u-u-i-d
-
-{"command_type": "execution", "eot": true}`;
-
 const SINGLE_UNITTEST_SUBTEST = {
     cwd: '/home/runner/work/vscode-python/vscode-python/path with spaces/src/testTestingRootWkspc/largeWorkspace',
     status: 'success',
@@ -84,7 +78,7 @@ export function PAYLOAD_SINGLE_CHUNK(uuid: string): DataWithPayloadChunks {
     const payload = createPayload(uuid, SINGLE_UNITTEST_SUBTEST);
 
     return {
-        payloadArray: [payload, EOT_PAYLOAD],
+        payloadArray: [payload],
         data: JSON.stringify(SINGLE_UNITTEST_SUBTEST.result),
     };
 }
@@ -99,7 +93,7 @@ export function PAYLOAD_MULTI_CHUNK(uuid: string): DataWithPayloadChunks {
         result += JSON.stringify(SINGLE_UNITTEST_SUBTEST.result);
     }
     return {
-        payloadArray: [payload, EOT_PAYLOAD],
+        payloadArray: [payload],
         data: result,
     };
 }
@@ -116,7 +110,6 @@ export function PAYLOAD_ONLY_HEADER_MULTI_CHUNK(uuid: string): DataWithPayloadCh
     const payload2 = val.substring(firstSpaceIndex);
     payloadArray.push(payload1);
     payloadArray.push(payload2);
-    payloadArray.push(EOT_PAYLOAD);
     return {
         payloadArray,
         data: result,
@@ -128,7 +121,6 @@ export function PAYLOAD_SPLIT_ACROSS_CHUNKS_ARRAY(uuid: string): DataWithPayload
     const payload = createPayload(uuid, SINGLE_PYTEST_PAYLOAD);
     const splitPayload = splitIntoRandomSubstrings(payload);
     const finalResult = JSON.stringify(SINGLE_PYTEST_PAYLOAD.result);
-    splitPayload.push(EOT_PAYLOAD);
     return {
         payloadArray: splitPayload,
         data: finalResult,
@@ -143,7 +135,6 @@ export function PAYLOAD_SPLIT_MULTI_CHUNK_ARRAY(uuid: string): DataWithPayloadCh
         JSON.stringify(SINGLE_PYTEST_PAYLOAD_TWO.result),
     );
 
-    splitPayload.push(EOT_PAYLOAD);
     return {
         payloadArray: splitPayload,
         data: finalResult,

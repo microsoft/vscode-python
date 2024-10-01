@@ -243,7 +243,6 @@ suite('pytest test execution adapter', () => {
     });
     test('Debug launched correctly for pytest', async () => {
         const deferred3 = createDeferred();
-        const deferredEOT = createDeferred();
         utilsWriteTestIdsFileStub.callsFake(() => {
             deferred3.resolve();
             return Promise.resolve('testIdPipe-mockName');
@@ -252,10 +251,7 @@ suite('pytest test execution adapter', () => {
             .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(async () => {
                 traceInfo('stubs launch debugger');
-                deferredEOT.resolve();
             });
-        const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
-        utilsCreateEOTStub.callsFake(() => deferredEOT);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)

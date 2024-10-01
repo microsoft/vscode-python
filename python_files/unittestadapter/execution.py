@@ -17,6 +17,16 @@ path_var_name = "PATH" if "PATH" in os.environ else "Path"
 os.environ[path_var_name] = (
     sysconfig.get_paths()["scripts"] + os.pathsep + os.environ[path_var_name]
 )
+sys.path.append("/Users/eleanorboyd/vscode-python/.nox/install_python_libs/lib/python3.10")
+sys.path.append("/Users/eleanorboyd/vscode-python-debugger")
+sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled")
+sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled/libs")
+
+import debugpy  # noqa: E402
+
+debugpy.connect(5678)
+debugpy.breakpoint()  # noqa: E702
+
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
@@ -25,7 +35,6 @@ from django_handler import django_execution_runner  # noqa: E402
 
 from unittestadapter.pvsc_utils import (  # noqa: E402
     CoveragePayloadDict,
-    EOTPayloadDict,
     ExecutionPayloadDict,
     FileCoverageInfo,
     TestExecutionStatus,
@@ -60,21 +69,6 @@ class UnittestTestResult(unittest.TextTestResult):
 
     def stopTestRun(self):  # noqa: N802
         super().stopTestRun()
-        # After stopping the test run, send EOT
-        test_run_pipe = os.getenv("TEST_RUN_PIPE")
-        if os.getenv("MANAGE_PY_PATH"):
-            # only send this if it is a Django run
-            if not test_run_pipe:
-                print(
-                    "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
-                    f"TEST_RUN_PIPE = {test_run_pipe}\n",
-                    file=sys.stderr,
-                )
-                raise VSCodeUnittestError(
-                    "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
-                )
-            eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-            send_post_request(eot_payload, test_run_pipe)
 
     def addError(  # noqa: N802
         self,
@@ -270,14 +264,15 @@ def run_tests(
 
 
 def execute_eot_and_cleanup():
-    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
     if __socket:
         __socket.close()
 
 
 __socket = None
-atexit.register(execute_eot_and_cleanup)
+__atexit_registered = False
+if not __atexit_registered:
+    atexit.register(execute_eot_and_cleanup)
+    __atexit_registered = True
 
 
 def send_run_data(raw_data, test_run_pipe):
@@ -361,7 +356,6 @@ if __name__ == "__main__":
         print("MANAGE_PY_PATH env var set, running Django test suite.")
         args = argv[index + 1 :] or []
         django_execution_runner(manage_py_path, test_ids, args)
-        # the django run subprocesses sends the eot payload.
     else:
         # Perform regular unittest execution.
         payload = run_tests(

@@ -873,7 +873,7 @@ class PathEncoder(json.JSONEncoder):
 
 
 def send_post_request(
-    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict | CoveragePayloadDict,
+    payload: ExecutionPayloadDict | DiscoveryPayloadDict | CoveragePayloadDict,
     cls_encoder=None,
 ):
     """

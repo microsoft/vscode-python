@@ -314,7 +314,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def send_post_request(
-    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict, CoveragePayloadDict],
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, CoveragePayloadDict],
     test_run_pipe: Optional[str],
 ):
     """
@@ -341,6 +341,7 @@ def send_post_request(
             __writer = socket_manager.PipeManager(test_run_pipe)
             __writer.connect()
         except Exception as error:
+            print("attempting to write", payload)
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
             __writer = None
             raise VSCodeUnittestError(error_msg) from error

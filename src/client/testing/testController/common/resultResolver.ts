@@ -20,19 +20,18 @@ import * as util from 'util';
 import {
     CoveragePayload,
     DiscoveredTestPayload,
-    EOTTestPayload,
+
     ExecutionTestPayload,
     ITestResultResolver,
 } from './types';
 import { TestProvider } from '../../types';
-import { traceError, traceVerbose } from '../../../logging';
+import { traceError } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testItemUtilities';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
 import { buildErrorNodeOptions, populateTestTree, splitTestNameWithRegex } from './utils';
-import { Deferred } from '../../../common/utils/async';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -58,14 +57,8 @@ export class PythonResultResolver implements ITestResultResolver {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    public resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): void {
-        if ('eot' in payload && payload.eot === true) {
-            deferredTillEOT.resolve();
-        } else if (!payload) {
+    public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
+        if (!payload) {
             // No test data is available
         } else {
             this._resolveDiscovery(payload as DiscoveredTestPayload, token);

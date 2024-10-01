@@ -16,7 +16,6 @@ import {
 import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { EnvironmentVariables } from '../../../common/variables/types';
-import { Deferred } from '../../../common/utils/async';
 
 export type TestRunInstanceOptions = TestRunOptions & {
     exclude?: readonly TestItem[];
@@ -257,11 +256,6 @@ export type DiscoveredTestPayload = {
     tests?: DiscoveredTestNode;
     status: 'success' | 'error';
     error?: string[];
-};
-
-export type EOTTestPayload = {
-    commandType: 'discovery' | 'execution';
-    eot: boolean;
 };
 
 export type CoveragePayload = {
