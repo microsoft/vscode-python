@@ -455,10 +455,6 @@ def pytest_sessionfinish(session, exitstatus):
         )
         send_post_request(payload)
 
-    command_type = "discovery" if IS_DISCOVERY else "execution"
-    payload_eot: EOTPayloadDict = {"command_type": command_type, "eot": True}
-    send_post_request(payload_eot)
-
 
 def build_test_tree(session: pytest.Session) -> TestNode:
     """Builds a tree made up of testing nodes from the pytest session.
@@ -780,13 +776,6 @@ class CoveragePayloadDict(Dict):
     cwd: str
     result: dict[str, FileCoverageInfo] | None
     error: str | None  # Currently unused need to check
-
-
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
-
-    command_type: Literal["discovery", "execution"]
-    eot: bool
 
 
 def get_node_path(node: Any) -> pathlib.Path:
