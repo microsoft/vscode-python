@@ -12,7 +12,7 @@ import {
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { createDeferred } from '../../../common/utils/async';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,

@@ -17,15 +17,9 @@ import {
     Range,
 } from 'vscode';
 import * as util from 'util';
-import {
-    CoveragePayload,
-    DiscoveredTestPayload,
-
-    ExecutionTestPayload,
-    ITestResultResolver,
-} from './types';
+import { CoveragePayload, DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
-import { traceError } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testItemUtilities';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -110,16 +104,8 @@ export class PythonResultResolver implements ITestResultResolver {
         });
     }
 
-    public resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload | CoveragePayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): void {
-        if ('eot' in payload && payload.eot === true) {
-            // eot sent once per connection
-            traceVerbose('EOT received, resolving deferredTillServerClose');
-            deferredTillEOT.resolve();
-        } else if ('coverage' in payload) {
+    public resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void {
+        if ('coverage' in payload) {
             // coverage data is sent once per connection
             traceVerbose('Coverage data received.');
             this._resolveCoverage(payload as CoveragePayload, runInstance);

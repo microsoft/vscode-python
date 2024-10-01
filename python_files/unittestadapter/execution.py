@@ -17,16 +17,6 @@ path_var_name = "PATH" if "PATH" in os.environ else "Path"
 os.environ[path_var_name] = (
     sysconfig.get_paths()["scripts"] + os.pathsep + os.environ[path_var_name]
 )
-sys.path.append("/Users/eleanorboyd/vscode-python/.nox/install_python_libs/lib/python3.10")
-sys.path.append("/Users/eleanorboyd/vscode-python-debugger")
-sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled")
-sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled/libs")
-
-import debugpy  # noqa: E402
-
-debugpy.connect(5678)
-debugpy.breakpoint()  # noqa: E702
-
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))

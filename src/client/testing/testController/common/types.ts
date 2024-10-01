@@ -197,16 +197,8 @@ export interface ITestResultResolver {
     vsIdToRunId: Map<string, string>;
     detailedCoverageMap: Map<string, FileCoverageDetail[]>;
 
-    resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): void;
-    resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload | CoveragePayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): void;
+    resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
+    resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void;
     _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
     _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void;
     _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void;
