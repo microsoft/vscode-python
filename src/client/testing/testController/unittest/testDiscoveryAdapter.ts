@@ -26,7 +26,7 @@ import {
     fixLogLinesNoTrailing,
     startDiscoveryNamedPipe,
 } from '../common/utils';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
