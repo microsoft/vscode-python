@@ -232,7 +232,7 @@ export async function startRunResultNamedPipe(
     cancellationToken?: CancellationToken,
 ): Promise<{ name: string } & Disposable> {
     traceVerbose('Starting Test Result named pipe');
-    const pipeName: string = '/Users/eleanorboyd/testingFiles/inc_dec_example/temp.txt'; // generateRandomPipeName('python-test-results');
+    const pipeName: string = generateRandomPipeName('python-test-results'); //  '/Users/eleanorboyd/testingFiles/inc_dec_example/temp.txt'; //
 
     let disposeOfServer: () => void = () => {
         deferredTillServerClose.resolve();
