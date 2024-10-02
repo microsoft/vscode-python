@@ -103,7 +103,7 @@ extends:
             project: 'Monaco'
             definition: 593
             buildVersionToDownload: 'latestFromBranch'
-            branchName: 'refs/heads/release/2024.14'
+            branchName: 'refs/tags/v2024.16.0'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(vsceTarget)'
             itemPattern: |
