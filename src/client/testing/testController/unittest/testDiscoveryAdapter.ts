@@ -44,8 +44,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { unittestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
-        // const deferredTillEOT: Deferred<void> = createDeferred<void>();
-
         const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
             this.resultResolver?.resolveDiscovery(data);
         });
@@ -68,8 +66,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         try {
             await this.runDiscovery(uri, options, name, cwd, executionFactory);
         } finally {
-            // await deferredTillEOT.promise;
-            traceVerbose('deferredTill EOT resolved');
             dispose();
         }
         // placeholder until after the rewrite is adopted
@@ -83,7 +79,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         options: TestCommandOptions,
         testRunPipeName: string,
         cwd: string,
-        // deferredTillEOT: Deferred<void>,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         // get and edit env vars

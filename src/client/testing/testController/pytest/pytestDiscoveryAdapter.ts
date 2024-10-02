@@ -43,8 +43,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         try {
             await this.runPytestDiscovery(uri, name, executionFactory);
         } finally {
-            // await deferredTillEOT.promise;
-            traceVerbose('deferredTill EOT resolved');
             dispose();
         }
         // this is only a placeholder to handle function overloading until rewrite is finished
@@ -141,7 +139,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 );
                 this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
             }
-            // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
             // due to the sync reading of the output.
             deferredTillExecClose?.resolve();
         });

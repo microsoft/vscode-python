@@ -47,7 +47,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
-        // deferredTillEOT awaits EOT message and deferredTillServerClose awaits named pipe server close
+        // deferredTillServerClose awaits named pipe server close
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
         // create callback to handle data received on the named pipe
@@ -64,10 +64,8 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             runInstance?.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
-            console.log(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
+            console.log(`Test run cancelled, resolving 'till TillAllServerClose' deferred for ${uri.fsPath}.`);
             // if canceled, stop listening for results
-            // deferredTillEOT.resolve();
-            // if canceled, close the server, resolves the deferredTillAllServerClose
             deferredTillServerClose.resolve();
             serverDispose();
         });
@@ -85,8 +83,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } catch (error) {
             traceError(`Error in running unittest tests: ${error}`);
         } finally {
-            // wait for EOT
-            // await deferredTillEOT.promise;
             await deferredTillServerClose.promise;
         }
         const executionPayload: ExecutionTestPayload = {
@@ -101,7 +97,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        // deferredTillEOT: Deferred<void>,
         serverDispose: () => void,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
@@ -178,7 +173,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 }
                 await debugLauncher.launchDebugger(launchOptions, () => {
                     serverDispose(); // this will resolve the deferredTillAllServerClose
-                    // deferredTillEOT?.resolve();
                 });
             } else {
                 // This means it is running the test

@@ -253,16 +253,8 @@ def run_tests(
     return payload
 
 
-def execute_eot_and_cleanup():
-    if __socket:
-        __socket.close()
-
-
 __socket = None
-__atexit_registered = False
-if not __atexit_registered:
-    atexit.register(execute_eot_and_cleanup)
-    __atexit_registered = True
+atexit.register(lambda: __socket.close() if __socket else None)
 
 
 def send_run_data(raw_data, test_run_pipe):

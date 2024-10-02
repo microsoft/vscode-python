@@ -334,7 +334,6 @@ def send_post_request(
             __writer = socket_manager.PipeManager(test_run_pipe)
             __writer.connect()
         except Exception as error:
-            print("attempting to write", payload)
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
             __writer = None
             raise VSCodeUnittestError(error_msg) from error
