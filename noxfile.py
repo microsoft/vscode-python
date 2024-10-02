@@ -27,6 +27,7 @@ def delete_dir(path: pathlib.Path, ignore_errors=None):
 
     shutil.rmtree(os.fspath(path))
 
+
 @nox.session()
 def install_python_libs(session: nox.Session):
     requirements = [
@@ -52,6 +53,7 @@ def install_python_libs(session: nox.Session):
         )
 
     session.install("packaging")
+    session.install("debugpy")
 
     # Download get-pip script
     session.run(
@@ -63,15 +65,20 @@ def install_python_libs(session: nox.Session):
     if pathlib.Path("./python_files/lib/temp").exists():
         shutil.rmtree("./python_files/lib/temp")
 
+
 @nox.session()
 def azure_pet_checkout(session: nox.Session):
     branch = os.getenv("PYTHON_ENV_TOOLS_REF", "main")
 
     # dest dir should be <vscode-python repo root>/python-env-tools
-    dest_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_DEST")) / "python-env-tools").resolve()
+    dest_dir = (
+        pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_DEST")) / "python-env-tools"
+    ).resolve()
 
     # temp dir should be <agent temp dir>
-    temp_dir = (pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_TEMP")) / "python-env-tools").resolve()
+    temp_dir = (
+        pathlib.Path(os.getenv("PYTHON_ENV_TOOLS_TEMP")) / "python-env-tools"
+    ).resolve()
     session.log(f"Cloning python-environment-tools to {temp_dir}")
     temp_dir.mkdir(0o766, parents=True, exist_ok=True)
 
@@ -88,7 +95,13 @@ def azure_pet_checkout(session: nox.Session):
             )
             session.run("git", "fetch", "origin", branch, external=True)
             session.run(
-                "git", "checkout", "--force", "-B", branch, f"origin/{branch}", external=True
+                "git",
+                "checkout",
+                "--force",
+                "-B",
+                branch,
+                f"origin/{branch}",
+                external=True,
             )
             delete_dir(temp_dir / ".git")
             delete_dir(temp_dir / ".github")
