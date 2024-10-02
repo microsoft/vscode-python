@@ -41,7 +41,9 @@ if __name__ == "__main__":
     if is_coverage_run == "True":
         # If coverage is enabled, check if the coverage plugin is already in the args, if so keep user args.
         for arg in args:
-            if "--cov" in arg:
+            # if '--cov' is an arg or if '--cov=' is in an arg (check to see if this arg is set to not override user intent)
+            if arg == "--cov" or "--cov=" in arg:
+                print("coverage already enabled with specific args")
                 coverage_enabled = True
                 break
         if not coverage_enabled:
