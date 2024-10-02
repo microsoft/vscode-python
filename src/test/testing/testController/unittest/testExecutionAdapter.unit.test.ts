@@ -242,14 +242,15 @@ suite('Unittest test execution adapter', () => {
     });
     test('Debug launched correctly for unittest', async () => {
         const deferred3 = createDeferred();
-        utilsWriteTestIdsFileStub.callsFake(() => {
-            deferred3.resolve();
-            return Promise.resolve('testIdPipe-mockName');
-        });
+        utilsWriteTestIdsFileStub.callsFake(() => Promise.resolve('testIdPipe-mockName'));
         debugLauncher
             .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
-            .returns(async () => {
+            .returns(async (_opts, callback) => {
                 traceInfo('stubs launch debugger');
+                if (typeof callback === 'function') {
+                    deferred3.resolve();
+                    callback();
+                }
             });
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
@@ -263,14 +264,7 @@ suite('Unittest test execution adapter', () => {
         const uri = Uri.file(myTestPath);
         const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
         adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
-        await adapter.runTests(
-            uri,
-            [],
-            TestRunProfileKind.Debug,
-            testRun.object,
-            execFactory.object,
-            debugLauncher.object,
-        );
+        adapter.runTests(uri, [], TestRunProfileKind.Debug, testRun.object, execFactory.object, debugLauncher.object);
         await deferred3.promise;
         debugLauncher.verify(
             (x) =>
