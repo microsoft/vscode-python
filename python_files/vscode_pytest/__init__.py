@@ -20,10 +20,16 @@ from typing import (
 
 import pytest
 
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.append(os.fspath(script_dir / "lib" / "python"))
-from testing_tools import socket_manager  # noqa: E402
+
+# sys.path.append("/Users/eleanorboyd/vscode-python/.nox/install_python_libs/lib/python3.10")
+# sys.path.append("/Users/eleanorboyd/vscode-python-debugger")
+# sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled")
+# sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled/libs")
+
+# import debugpy  # noqa: E402
+
+# debugpy.connect(5678)
+# debugpy.breakpoint()  # noqa: E702
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -872,6 +878,7 @@ def send_post_request(
     payload -- the payload data to be sent.
     cls_encoder -- a custom encoder if needed.
     """
+    print("EJFB into send post request!")
     if not TEST_RUN_PIPE:
         error_msg = (
             "PYTEST ERROR: TEST_RUN_PIPE is not set at the time of pytest starting. "
@@ -886,9 +893,10 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = socket_manager.PipeManager(TEST_RUN_PIPE)
-            __writer.connect()
+            print("EJFB attemping writer open")
+            __writer = open(TEST_RUN_PIPE, "w", encoding="utf-8", newline="\r\n")  # noqa: SIM115, PTH123
         except Exception as error:
+            print("EJFB error in writer open")
             error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
             print(
@@ -905,10 +913,16 @@ def send_post_request(
         "params": payload,
     }
     data = json.dumps(rpc, cls=cls_encoder)
-
+    print(f"EJFB Plugin info[vscode-pytest]: sending data: \n{data}\n")
     try:
         if __writer:
-            __writer.write(data)
+            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
+            __writer.write(request)
+            __writer.flush()
+            print(
+                f"EJFB Plugin info[vscode-pytest]: data sent successfully[vscode-pytest]: \n{data}\n"
+            )
+            # __writer.close()
         else:
             print(
                 f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",
