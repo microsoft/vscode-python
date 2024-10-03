@@ -400,6 +400,7 @@
  */
 /* __GDPR__
 "language_server.crash" : {
-   "oom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" }
+   "oom" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
+   "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "rchiodo" },
 }
 */
