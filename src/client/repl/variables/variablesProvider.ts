@@ -38,7 +38,7 @@ export class VariablesProvider implements NotebookVariableProvider {
         const notebook = this.getNotebookDocument();
         if (notebook) {
             this.executionCount += 1;
-            if (isEnabled()) {
+            if (isEnabled(notebook.uri)) {
                 this._onDidChangeVariables.fire(notebook);
             }
         }
@@ -52,7 +52,12 @@ export class VariablesProvider implements NotebookVariableProvider {
         token: CancellationToken,
     ): AsyncIterable<VariablesResult> {
         const notebookDocument = this.getNotebookDocument();
-        if (!isEnabled() || token.isCancellationRequested || !notebookDocument || notebookDocument !== notebook) {
+        if (
+            !isEnabled(notebook.uri) ||
+            token.isCancellationRequested ||
+            !notebookDocument ||
+            notebookDocument !== notebook
+        ) {
             return;
         }
 
