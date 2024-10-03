@@ -7,13 +7,12 @@ import { IConfigurationService, ITestOutputChannel } from '../../../common/types
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DiscoveredTestPayload,
-    EOTTestPayload,
     ITestDiscoveryAdapter,
     ITestResultResolver,
     TestCommandOptions,
     TestDiscoveryCommand,
 } from '../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { createDeferred } from '../../../common/utils/async';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -24,11 +23,10 @@ import {
 import {
     MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
-    createEOTPayload,
     fixLogLinesNoTrailing,
     startDiscoveryNamedPipe,
 } from '../common/utils';
-import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceLog } from '../../../logging';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -46,10 +44,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { unittestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
-        const deferredTillEOT: Deferred<void> = createDeferred<void>();
-
-        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
-            this.resultResolver?.resolveDiscovery(data, deferredTillEOT);
+        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+            this.resultResolver?.resolveDiscovery(data);
         });
 
         // set up env with the pipe name
@@ -68,10 +64,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
 
         try {
-            await this.runDiscovery(uri, options, name, cwd, deferredTillEOT, executionFactory);
+            await this.runDiscovery(uri, options, name, cwd, executionFactory);
         } finally {
-            await deferredTillEOT.promise;
-            traceVerbose('deferredTill EOT resolved');
             dispose();
         }
         // placeholder until after the rewrite is adopted
@@ -85,7 +79,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         options: TestCommandOptions,
         testRunPipeName: string,
         cwd: string,
-        deferredTillEOT: Deferred<void>,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         // get and edit env vars
@@ -146,11 +139,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                     traceError(
                         `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}. Creating and sending error discovery payload`,
                     );
-                    this.resultResolver?.resolveDiscovery(
-                        createDiscoveryErrorPayload(code, signal, cwd),
-                        deferredTillEOT,
-                    );
-                    this.resultResolver?.resolveDiscovery(createEOTPayload(false), deferredTillEOT);
+                    this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
                 }
                 deferredTillExecClose.resolve();
             });

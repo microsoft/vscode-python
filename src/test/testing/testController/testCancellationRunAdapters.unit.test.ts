@@ -110,17 +110,6 @@ suite('Execution Flow Run Adapters', () => {
                 }
             });
 
-            // mock EOT token & ExecClose token
-            const deferredEOT = createDeferred();
-            const deferredExecClose = createDeferred();
-            const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
-            utilsCreateEOTStub.callsFake(() => {
-                if (utilsCreateEOTStub.callCount === 1) {
-                    return deferredEOT;
-                }
-                return deferredExecClose;
-            });
-
             // define adapter and run tests
             const testAdapter = createAdapter(adapter, configService, typeMoq.Mock.ofType<ITestOutputChannel>().object);
             await testAdapter.runTests(
@@ -189,17 +178,6 @@ suite('Execution Flow Run Adapters', () => {
                         'deferredTillServerCloseTester is undefined, should be defined from startRunResultNamedPipe',
                     );
                 }
-            });
-
-            // mock EOT token & ExecClose token
-            const deferredEOT = createDeferred();
-            const deferredExecClose = createDeferred();
-            const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
-            utilsCreateEOTStub.callsFake(() => {
-                if (utilsCreateEOTStub.callCount === 1) {
-                    return deferredEOT;
-                }
-                return deferredExecClose;
             });
 
             // debugLauncher mocked
