@@ -18,7 +18,7 @@ import { VariablesProvider } from '../../client/repl/variables/variablesProvider
 import { VariableRequester } from '../../client/repl/variables/variableRequester';
 import * as workspaceApis from '../../client/common/vscodeApis/workspaceApis';
 
-suite.only('ReplVariablesProvider', () => {
+suite('ReplVariablesProvider', () => {
     let provider: VariablesProvider;
     let varRequester: TypeMoq.IMock<VariableRequester>;
     let notebook: TypeMoq.IMock<NotebookDocument>;
