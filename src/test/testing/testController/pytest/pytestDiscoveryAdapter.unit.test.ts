@@ -20,6 +20,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { Deferred, createDeferred } from '../../../../client/common/utils/async';
 import * as util from '../../../../client/testing/testController/common/utils';
+import { IInterpreterService } from '../../../../client/interpreter/contracts';
 
 suite('pytest test discovery adapter', () => {
     let configService: IConfigurationService;
@@ -71,7 +72,7 @@ suite('pytest test discovery adapter', () => {
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-
+        interpreterService = typeMoq.Mock.ofType<IInterpreterService>();
         const output = new Observable<Output<string>>(() => {
             /* no op */
         });

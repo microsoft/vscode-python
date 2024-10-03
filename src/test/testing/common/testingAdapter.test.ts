@@ -22,8 +22,10 @@ import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { createTypeMoq } from '../../mocks/helper';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
 
 suite('End to End Tests: test adapters', () => {
+    let interpreterService: IInterpreterService;
     let resultResolver: ITestResultResolver;
     let pythonExecFactory: IPythonExecutionFactory;
     let configService: IConfigurationService;
@@ -109,7 +111,7 @@ suite('End to End Tests: test adapters', () => {
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         testController = serviceContainer.get<TestController>(ITestController);
         envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
-
+        interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         // create objects that were not injected
 
         testOutputChannel = createTypeMoq<ITestOutputChannel>();
@@ -271,6 +273,7 @@ suite('End to End Tests: test adapters', () => {
             testOutputChannel.object,
             resultResolver,
             envVarsService,
+            interpreterService,
         );
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
@@ -326,6 +329,7 @@ suite('End to End Tests: test adapters', () => {
             testOutputChannel.object,
             resultResolver,
             envVarsService,
+            interpreterService,
         );
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
@@ -415,6 +419,7 @@ suite('End to End Tests: test adapters', () => {
             testOutputChannel.object,
             resultResolver,
             envVarsService,
+            interpreterService,
         );
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
@@ -491,6 +496,7 @@ suite('End to End Tests: test adapters', () => {
             testOutputChannel.object,
             resultResolver,
             envVarsService,
+            interpreterService,
         );
 
         // set workspace to test workspace folder
@@ -1038,6 +1044,7 @@ suite('End to End Tests: test adapters', () => {
             testOutputChannel.object,
             resultResolver,
             envVarsService,
+            interpreterService,
         );
 
         // set workspace to test workspace folder

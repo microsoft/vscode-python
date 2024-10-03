@@ -24,6 +24,7 @@ import {
     hasSymlinkParent,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { IInterpreterService } from '../../../interpreter/contracts';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -34,6 +35,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
+        private readonly interpreterService?: IInterpreterService,
     ) {}
 
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
@@ -102,11 +104,15 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             env: mutableEnv,
         };
 
+        const interpreter = await this.interpreterService?.getActiveInterpreter();
+
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: uri,
+            interpreter,
         };
+
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);

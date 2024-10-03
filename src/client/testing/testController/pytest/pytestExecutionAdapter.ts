@@ -25,6 +25,7 @@ import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import * as utils from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { IInterpreterService } from '../../../interpreter/contracts';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -32,6 +33,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
+        private readonly interpreterService?: IInterpreterService,
     ) {}
 
     async runTests(
@@ -131,10 +133,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         }
         const debugBool = profileKind && profileKind === TestRunProfileKind.Debug;
 
+        const interpreter = await this.interpreterService?.getActiveInterpreter();
+
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: uri,
+            interpreter,
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
