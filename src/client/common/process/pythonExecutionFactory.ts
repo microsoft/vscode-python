@@ -115,15 +115,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 pythonPath: options.interpreter ? options.interpreter.path : undefined,
             });
         }
-        // TODO: Try passing actual interpreter when calling this from Pytest
+
         const pythonPath = options.interpreter
             ? options.interpreter.path
-            : this.configService.getSettings(options.resource).pythonPath; // : this.configService.getSettings(options.resource).pythonPath; MIGHT BE A PROBLEM.
+            : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = new ProcessService({ ...envVars });
         processService.on('exec', this.logger.logProcess.bind(this.logger));
         this.disposables.push(processService);
 
-        // TODO: Switch ordering on pixi and conda to see if that helps selecting right conda environment to run.   --> Looks like done?
         const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
         if (condaExecutionService) {
             return condaExecutionService;
