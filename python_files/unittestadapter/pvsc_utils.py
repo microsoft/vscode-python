@@ -74,13 +74,6 @@ class ExecutionPayloadDict(TypedDict):
     error: NotRequired[str]
 
 
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
-
-    command_type: Literal["discovery", "execution"]
-    eot: bool
-
-
 class FileCoverageInfo(TypedDict):
     lines_covered: List[int]
     lines_missed: List[int]
@@ -314,7 +307,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def send_post_request(
-    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict, CoveragePayloadDict],
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, CoveragePayloadDict],
     test_run_pipe: Optional[str],
 ):
     """

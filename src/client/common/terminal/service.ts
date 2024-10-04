@@ -91,7 +91,7 @@ export class TerminalService implements ITerminalService, Disposable {
                         resolve(true);
                     },
                 );
-                const TIMEOUT_DURATION = 3000;
+                const TIMEOUT_DURATION = 500;
                 setTimeout(() => {
                     this.executeCommandListeners.add(shellIntegrationChangeEventListener);
                     resolve(true);

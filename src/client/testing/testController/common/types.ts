@@ -16,7 +16,6 @@ import {
 import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { EnvironmentVariables } from '../../../common/variables/types';
-import { Deferred } from '../../../common/utils/async';
 
 export type TestRunInstanceOptions = TestRunOptions & {
     exclude?: readonly TestItem[];
@@ -198,16 +197,8 @@ export interface ITestResultResolver {
     vsIdToRunId: Map<string, string>;
     detailedCoverageMap: Map<string, FileCoverageDetail[]>;
 
-    resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): void;
-    resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload | CoveragePayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): void;
+    resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
+    resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void;
     _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
     _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void;
     _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void;
@@ -257,11 +248,6 @@ export type DiscoveredTestPayload = {
     tests?: DiscoveredTestNode;
     status: 'success' | 'error';
     error?: string[];
-};
-
-export type EOTTestPayload = {
-    commandType: 'discovery' | 'execution';
-    eot: boolean;
 };
 
 export type CoveragePayload = {

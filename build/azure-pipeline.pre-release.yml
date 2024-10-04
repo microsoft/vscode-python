@@ -107,7 +107,7 @@ extends:
             buildType: 'specific'
             project: 'Monaco'
             definition: 591
-            buildVersionToDownload: 'latestFromBranch'
+            buildVersionToDownload: 'latest'
             branchName: 'refs/heads/main'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(vsceTarget)'

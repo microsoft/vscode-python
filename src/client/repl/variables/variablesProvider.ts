@@ -10,10 +10,12 @@ import {
     EventEmitter,
     Event,
     NotebookVariableProvider,
+    Uri,
 } from 'vscode';
 import { VariableResultCache } from './variableResultCache';
 import { IVariableDescription } from './types';
 import { VariableRequester } from './variableRequester';
+import { getConfiguration } from '../../common/vscodeApis/workspaceApis';
 
 export class VariablesProvider implements NotebookVariableProvider {
     private readonly variableResultCache = new VariableResultCache();
@@ -36,7 +38,9 @@ export class VariablesProvider implements NotebookVariableProvider {
         const notebook = this.getNotebookDocument();
         if (notebook) {
             this.executionCount += 1;
-            this._onDidChangeVariables.fire(notebook);
+            if (isEnabled(notebook.uri)) {
+                this._onDidChangeVariables.fire(notebook);
+            }
         }
     }
 
@@ -48,7 +52,12 @@ export class VariablesProvider implements NotebookVariableProvider {
         token: CancellationToken,
     ): AsyncIterable<VariablesResult> {
         const notebookDocument = this.getNotebookDocument();
-        if (token.isCancellationRequested || !notebookDocument || notebookDocument !== notebook) {
+        if (
+            !isEnabled(notebook.uri) ||
+            token.isCancellationRequested ||
+            !notebookDocument ||
+            notebookDocument !== notebook
+        ) {
             return;
         }
 
@@ -143,4 +152,8 @@ function getVariableResultCacheKey(uri: string, parent: Variable | undefined, st
         parentKey = `${parentDescription.name}.${parentDescription.propertyChain.join('.')}[[${start}`;
     }
     return `${uri}:${parentKey}`;
+}
+
+function isEnabled(resource?: Uri) {
+    return getConfiguration('python', resource).get('REPL.provideVariables');
 }

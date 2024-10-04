@@ -9,14 +9,13 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
-import { DiscoveredTestPayload, EOTTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
+import { DiscoveredTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
 import {
     MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
-    createEOTPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
     startDiscoveryNamedPipe,
@@ -37,17 +36,13 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     ) {}
 
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        const deferredTillEOT: Deferred<void> = createDeferred<void>();
-
-        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
-            this.resultResolver?.resolveDiscovery(data, deferredTillEOT);
+        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+            this.resultResolver?.resolveDiscovery(data);
         });
 
         try {
-            await this.runPytestDiscovery(uri, name, deferredTillEOT, executionFactory);
+            await this.runPytestDiscovery(uri, name, executionFactory);
         } finally {
-            await deferredTillEOT.promise;
-            traceVerbose('deferredTill EOT resolved');
             dispose();
         }
         // this is only a placeholder to handle function overloading until rewrite is finished
@@ -58,7 +53,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     async runPytestDiscovery(
         uri: Uri,
         discoveryPipeName: string,
-        deferredTillEOT: Deferred<void>,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         const relativePathToPytest = 'python_files';
@@ -143,10 +137,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}. Creating and sending error discovery payload`,
                 );
-                this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd), deferredTillEOT);
-                this.resultResolver?.resolveDiscovery(createEOTPayload(false), deferredTillEOT);
+                this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
             }
-            // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
             // due to the sync reading of the output.
             deferredTillExecClose?.resolve();
         });

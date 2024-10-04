@@ -71,7 +71,6 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
 
     This function also:
     - Checks that the jsonrpc value is 2.0
-    - Checks that the last JSON message contains the `eot` token.
     """
     json_messages = []
     remaining = data
@@ -85,10 +84,7 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
         else:
             json_messages.append(json_data["params"])
 
-    last_json = json_messages.pop(-1)
-    if "eot" not in last_json:
-        raise ValueError("Last JSON messages does not contain 'eot' as its last payload.")
-    return json_messages  # return the list of json messages, only the params part without the EOT token
+    return json_messages  # return the list of json messages
 
 
 def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
@@ -96,7 +92,6 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 
     A single rpc payload is in the format:
     content-length: #LEN# \r\ncontent-type: application/json\r\n\r\n{"jsonrpc": "2.0", "params": ENTIRE_DATA}
-    with EOT params: "params": {"command_type": "discovery", "eot": true}
 
     returns:
     json_data: A single rpc payload of JSON data from the server.

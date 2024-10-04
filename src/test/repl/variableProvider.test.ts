@@ -2,16 +2,29 @@
 // Licensed under the MIT License.
 
 import { assert } from 'chai';
-import { NotebookDocument, CancellationTokenSource, VariablesResult, Variable, EventEmitter } from 'vscode';
+import sinon from 'sinon';
+import {
+    NotebookDocument,
+    CancellationTokenSource,
+    VariablesResult,
+    Variable,
+    EventEmitter,
+    ConfigurationScope,
+    WorkspaceConfiguration,
+} from 'vscode';
 import * as TypeMoq from 'typemoq';
 import { IVariableDescription } from '../../client/repl/variables/types';
 import { VariablesProvider } from '../../client/repl/variables/variablesProvider';
 import { VariableRequester } from '../../client/repl/variables/variableRequester';
+import * as workspaceApis from '../../client/common/vscodeApis/workspaceApis';
 
 suite('ReplVariablesProvider', () => {
     let provider: VariablesProvider;
     let varRequester: TypeMoq.IMock<VariableRequester>;
     let notebook: TypeMoq.IMock<NotebookDocument>;
+    let getConfigurationStub: sinon.SinonStub;
+    let configMock: TypeMoq.IMock<WorkspaceConfiguration>;
+    let enabled: boolean;
     const executionEventEmitter = new EventEmitter<void>();
     const cancellationToken = new CancellationTokenSource().token;
 
@@ -68,9 +81,23 @@ suite('ReplVariablesProvider', () => {
     }
 
     setup(() => {
+        enabled = true;
         varRequester = TypeMoq.Mock.ofType<VariableRequester>();
         notebook = TypeMoq.Mock.ofType<NotebookDocument>();
         provider = new VariablesProvider(varRequester.object, () => notebook.object, executionEventEmitter.event);
+        configMock = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        configMock.setup((c) => c.get<boolean>('REPL.provideVariables')).returns(() => enabled);
+        getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
+        getConfigurationStub.callsFake((section?: string, _scope?: ConfigurationScope | null) => {
+            if (section === 'python') {
+                return configMock.object;
+            }
+            return undefined;
+        });
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('provideVariables without parent should yield variables', async () => {
@@ -82,6 +109,38 @@ suite('ReplVariablesProvider', () => {
         assert.equal(results.length, 1);
         assert.equal(results[0].variable.name, 'myObject');
         assert.equal(results[0].variable.expression, 'myObject');
+    });
+
+    test('No variables are returned when variable provider is disabled', async () => {
+        enabled = false;
+        setVariablesForParent(undefined, [objectVariable]);
+
+        const results = await provideVariables(undefined);
+
+        assert.isEmpty(results);
+    });
+
+    test('No change event from provider when disabled', async () => {
+        enabled = false;
+        let eventFired = false;
+        provider.onDidChangeVariables(() => {
+            eventFired = true;
+        });
+
+        executionEventEmitter.fire();
+
+        assert.isFalse(eventFired, 'event should not have fired');
+    });
+
+    test('Variables change event from provider should fire when execution happens', async () => {
+        let eventFired = false;
+        provider.onDidChangeVariables(() => {
+            eventFired = true;
+        });
+
+        executionEventEmitter.fire();
+
+        assert.isTrue(eventFired, 'event should have fired');
     });
 
     test('provideVariables with a parent should call get children correctly', async () => {

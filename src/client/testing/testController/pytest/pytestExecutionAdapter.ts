@@ -7,13 +7,7 @@ import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
-import {
-    CoveragePayload,
-    EOTTestPayload,
-    ExecutionTestPayload,
-    ITestExecutionAdapter,
-    ITestResultResolver,
-} from '../common/types';
+import { ExecutionTestPayload, ITestExecutionAdapter, ITestResultResolver } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -42,14 +36,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
-        // deferredTillEOT awaits EOT message and deferredTillServerClose awaits named pipe server close
-        const deferredTillEOT: Deferred<void> = utils.createTestingDeferred();
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
         // create callback to handle data received on the named pipe
-        const dataReceivedCallback = (data: ExecutionTestPayload | EOTTestPayload | CoveragePayload) => {
+        const dataReceivedCallback = (data: ExecutionTestPayload) => {
             if (runInstance && !runInstance.token.isCancellationRequested) {
-                this.resultResolver?.resolveExecution(data, runInstance, deferredTillEOT);
+                this.resultResolver?.resolveExecution(data, runInstance);
             } else {
                 traceError(`No run instance found, cannot resolve execution, for workspace ${uri.fsPath}.`);
             }
@@ -60,9 +52,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             runInstance?.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
-            traceInfo(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
+            traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
             // if canceled, stop listening for results
-            deferredTillEOT.resolve();
             serverDispose(); // this will resolve deferredTillServerClose
 
             const executionPayload: ExecutionTestPayload = {
@@ -78,7 +69,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 uri,
                 testIds,
                 name,
-                deferredTillEOT,
                 serverDispose,
                 runInstance,
                 profileKind,
@@ -86,8 +76,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 debugLauncher,
             );
         } finally {
-            // wait for to send EOT
-            await deferredTillEOT.promise;
             await deferredTillServerClose.promise;
         }
 
@@ -105,7 +93,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        deferredTillEOT: Deferred<void>,
         serverDispose: () => void,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
@@ -178,7 +165,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     serverDispose(); // this will resolve deferredTillServerClose
-                    deferredTillEOT?.resolve();
                 });
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read
@@ -238,19 +224,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                             this.resultResolver?.resolveExecution(
                                 utils.createExecutionErrorPayload(code, signal, testIds, cwd),
                                 runInstance,
-                                deferredTillEOT,
-                            );
-                            this.resultResolver?.resolveExecution(
-                                utils.createEOTPayload(true),
-                                runInstance,
-                                deferredTillEOT,
                             );
                         }
                         // this doesn't work, it instead directs us to the noop one which is defined first
                         // potentially this is due to the server already being close, if this is the case?
                         serverDispose(); // this will resolve deferredTillServerClose
                     }
-                    // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
                     // due to the sync reading of the output.
                     deferredTillExecClose.resolve();
                 });

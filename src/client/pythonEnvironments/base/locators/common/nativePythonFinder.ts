@@ -422,7 +422,10 @@ function getCustomVirtualEnvDirs(): string[] {
     const venvFolders = getPythonSettingAndUntildify<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();
     if (homeDir) {
-        venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
+        venvFolders
+            .map((item) => (item.startsWith(homeDir) ? item : path.join(homeDir, item)))
+            .forEach((d) => venvDirs.push(d));
+        venvFolders.forEach((item) => venvDirs.push(untildify(item)));
     }
     return Array.from(new Set(venvDirs));
 }

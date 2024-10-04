@@ -5,7 +5,10 @@
         "mocha": true
     },
     "parser": "@typescript-eslint/parser",
-    "plugins": ["@typescript-eslint"],
+    "plugins": [
+        "@typescript-eslint",
+        "no-only-tests"
+    ],
     "extends": [
         "airbnb",
         "plugin:@typescript-eslint/recommended",
@@ -97,6 +100,7 @@
             }
         ],
         "operator-assignment": "off",
-        "strict": "off"
+        "strict": "off",
+        "no-only-tests/no-only-tests": ["error", { "block": ["test", "suite"], "focus": ["only"] }]
     }
 }
