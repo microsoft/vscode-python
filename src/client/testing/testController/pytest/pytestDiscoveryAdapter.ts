@@ -23,6 +23,7 @@ import {
     hasSymlinkParent,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -35,13 +36,17 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
-    async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    async discoverTests(
+        uri: Uri,
+        executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
+    ): Promise<DiscoveredTestPayload> {
         const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
             this.resultResolver?.resolveDiscovery(data);
         });
 
         try {
-            await this.runPytestDiscovery(uri, name, executionFactory);
+            await this.runPytestDiscovery(uri, name, executionFactory, interpreter);
         } finally {
             dispose();
         }
@@ -54,6 +59,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         uri: Uri,
         discoveryPipeName: string,
         executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
     ): Promise<void> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -100,6 +106,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: uri,
+            interpreter,
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         // delete UUID following entire discovery finishing.
