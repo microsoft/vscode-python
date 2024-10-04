@@ -276,6 +276,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.testController,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
+                                await this.interpreterService.getActiveInterpreter(workspace.uri),
                             );
                         } else {
                             traceError('Unable to find test adapter for workspace.');
@@ -297,6 +298,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.testController,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
+                                await this.interpreterService.getActiveInterpreter(workspace.uri),
                             );
                         } else {
                             traceError('Unable to find test adapter for workspace.');
@@ -455,6 +457,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     request.profile?.kind,
                                     this.pythonExecFactory,
                                     this.debugLauncher,
+                                    await this.interpreterService.getActiveInterpreter(workspace.uri),
                                 );
                             }
                             return this.pytest.runTests(
@@ -483,6 +486,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                     request.profile?.kind,
                                     this.pythonExecFactory,
                                     this.debugLauncher,
+                                    await this.interpreterService.getActiveInterpreter(workspace.uri),
                                 );
                             }
                             // below is old way of running unittest execution

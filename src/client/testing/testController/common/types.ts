@@ -16,6 +16,7 @@ import {
 import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { EnvironmentVariables } from '../../../common/variables/types';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 export type TestRunInstanceOptions = TestRunOptions & {
     exclude?: readonly TestItem[];
@@ -206,7 +207,11 @@ export interface ITestResultResolver {
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-    discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
+    discoverTests(
+        uri: Uri,
+        executionFactory: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
+    ): Promise<DiscoveredTestPayload>;
 }
 
 // interface for execution/runner adapter
@@ -220,6 +225,7 @@ export interface ITestExecutionAdapter {
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload>;
 }
 

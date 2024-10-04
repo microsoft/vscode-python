@@ -19,6 +19,7 @@ import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import * as utils from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -35,6 +36,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
@@ -74,6 +76,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 profileKind,
                 executionFactory,
                 debugLauncher,
+                interpreter,
             );
         } finally {
             await deferredTillServerClose.promise;
@@ -98,6 +101,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -122,6 +126,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: uri,
+            interpreter,
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);

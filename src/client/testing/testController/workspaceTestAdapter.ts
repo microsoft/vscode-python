@@ -14,6 +14,7 @@ import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } fro
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
 import { buildErrorNodeOptions } from './common/utils';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -45,6 +46,7 @@ export class WorkspaceTestAdapter {
         profileKind?: boolean | TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<void> {
         if (this.executing) {
             traceError('Test execution already in progress, not starting a new one.');
@@ -80,6 +82,7 @@ export class WorkspaceTestAdapter {
                     runInstance,
                     executionFactory,
                     debugLauncher,
+                    interpreter,
                 );
             } else {
                 await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, profileKind);
@@ -115,6 +118,7 @@ export class WorkspaceTestAdapter {
         testController: TestController,
         token?: CancellationToken,
         executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -130,7 +134,7 @@ export class WorkspaceTestAdapter {
         try {
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
-                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, interpreter);
             } else {
                 await this.discoveryAdapter.discoverTests(this.workspaceUri);
             }
