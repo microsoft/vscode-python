@@ -276,6 +276,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.testController,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
+                                await this.interpreterService.getActiveInterpreter(workspace.uri),
                             );
                         } else {
                             traceError('Unable to find test adapter for workspace.');
@@ -297,6 +298,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.testController,
                                 this.refreshCancellation.token,
                                 this.pythonExecFactory,
+                                await this.interpreterService.getActiveInterpreter(workspace.uri),
                             );
                         } else {
                             traceError('Unable to find test adapter for workspace.');

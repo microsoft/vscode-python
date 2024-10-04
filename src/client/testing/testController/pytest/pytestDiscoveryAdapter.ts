@@ -24,7 +24,7 @@ import {
     hasSymlinkParent,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
-import { IInterpreterService } from '../../../interpreter/contracts';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -35,10 +35,13 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
-        private readonly interpreterService?: IInterpreterService,
     ) {}
 
-    async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    async discoverTests(
+        uri: Uri,
+        executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
+    ): Promise<DiscoveredTestPayload> {
         const deferredTillEOT: Deferred<void> = createDeferred<void>();
 
         const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
@@ -46,7 +49,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         });
 
         try {
-            await this.runPytestDiscovery(uri, name, deferredTillEOT, executionFactory);
+            await this.runPytestDiscovery(uri, name, deferredTillEOT, executionFactory, interpreter);
         } finally {
             await deferredTillEOT.promise;
             traceVerbose('deferredTill EOT resolved');
@@ -62,6 +65,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         discoveryPipeName: string,
         deferredTillEOT: Deferred<void>,
         executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
     ): Promise<void> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -103,8 +107,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             outputChannel: this.outputChannel,
             env: mutableEnv,
         };
-
-        const interpreter = await this.interpreterService?.getActiveInterpreter();
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {

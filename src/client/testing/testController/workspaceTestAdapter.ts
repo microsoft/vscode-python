@@ -14,6 +14,7 @@ import { ITestDiscoveryAdapter, ITestExecutionAdapter, ITestResultResolver } fro
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITestDebugLauncher } from '../common/types';
 import { buildErrorNodeOptions } from './common/utils';
+import { PythonEnvironment } from '../../pythonEnvironments/info';
 
 /**
  * This class exposes a test-provider-agnostic way of discovering tests.
@@ -115,6 +116,7 @@ export class WorkspaceTestAdapter {
         testController: TestController,
         token?: CancellationToken,
         executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
     ): Promise<void> {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERING, undefined, { tool: this.testProvider });
 
@@ -130,7 +132,7 @@ export class WorkspaceTestAdapter {
         try {
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
-                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory);
+                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, interpreter);
             } else {
                 await this.discoveryAdapter.discoverTests(this.workspaceUri);
             }
