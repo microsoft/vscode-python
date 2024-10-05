@@ -119,14 +119,6 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(delayTrigger);
         this.refreshData = delayTrigger;
 
-        const coverageProfile = this.testController.createRunProfile(
-            'Coverage Tests',
-            TestRunProfileKind.Coverage,
-            this.runTests.bind(this),
-            true,
-            RunTestTag,
-        );
-
         this.disposables.push(
             this.testController.createRunProfile(
                 'Run Tests',
@@ -142,8 +134,19 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 true,
                 DebugTestTag,
             ),
-            coverageProfile,
         );
+        if (pythonTestAdapterRewriteEnabled(this.serviceContainer)) {
+            // only add the coverage profile if the new test adapter is enabled
+            const coverageProfile = this.testController.createRunProfile(
+                'Coverage Tests',
+                TestRunProfileKind.Coverage,
+                this.runTests.bind(this),
+                true,
+                RunTestTag,
+            );
+
+            this.disposables.push(coverageProfile);
+        }
         this.testController.resolveHandler = this.resolveChildren.bind(this);
         this.testController.refreshHandler = (token: CancellationToken) => {
             this.disposables.push(
@@ -420,11 +423,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
 
                     const settings = this.configSettings.getSettings(workspace.uri);
                     if (testItems.length > 0) {
-                        // coverage??
                         const testAdapter =
                             this.testAdapters.get(workspace.uri) ||
                             (this.testAdapters.values().next().value as WorkspaceTestAdapter);
 
+                        // no profile will have TestRunProfileKind.Coverage if rewrite isn't enabled
                         if (request.profile?.kind && request.profile?.kind === TestRunProfileKind.Coverage) {
                             request.profile.loadDetailedCoverage = (
                                 _testRun: TestRun,
