@@ -26,7 +26,7 @@ from testing_tools.adapter.util import (
 
 
 def is_python313_or_later():
-    return sys.version_info >= (3, 1, 3)
+    return sys.version_info >= (3, 13)
 
 
 def test_isolated_imports():
