@@ -8,7 +8,6 @@ import os.path
 import posixpath
 import shlex
 import sys
-import unittest
 
 import pytest
 
@@ -117,12 +116,16 @@ def test_fix_path(path, expected):
         ("spam.py", ntpath, r".\spam.py"),
         (r"eggs\spam.py", ntpath, r".\eggs\spam.py"),
         ("eggs\\spam\\", ntpath, ".\\eggs\\spam\\"),
-        ("/spam.py", ntpath, r"\spam.py"),  # Note the fixed "/".
+        (
+            "/spam.py",
+            ntpath,
+            r".\\spam.py" if is_python313_or_later() else r"\spam.py",
+        ),  # Note the fixed "/".
         # absolute
         ("/", posixpath, "/"),
         ("/spam.py", posixpath, "/spam.py"),
-        ("\\", ntpath, "\\"),
-        (r"\spam.py", ntpath, r"\spam.py"),
+        ("\\", ntpath, ".\\" if is_python313_or_later() else "\\"),
+        (r"\spam.py", ntpath, r".\\spam.py" if is_python313_or_later() else r"\spam.py"),
         (r"C:\spam.py", ntpath, r"C:\spam.py"),
         # no-op
         ("./spam.py", posixpath, "./spam.py"),
@@ -165,9 +168,9 @@ def test_fix_relpath(path, os_path, expected):
         ("eggs/spam.py", ntpath, "./eggs/spam.py"),
         ("eggs/spam/", ntpath, "./eggs/spam/"),
         # absolute (no-op)
-        ("/", ntpath, "/"),
+        ("/", ntpath, ".//" if is_python313_or_later() else "/"),
         ("//", ntpath, "//"),
-        ("/spam.py", ntpath, "/spam.py"),
+        ("/spam.py", ntpath, ".//spam.py" if is_python313_or_later() else "/spam.py"),
         # no-op
         (None, ntpath, None),
         ("", ntpath, ""),
@@ -177,9 +180,9 @@ def test_fix_relpath(path, os_path, expected):
         ("eggs\\spam\\", ntpath, "./eggs/spam/"),
         (r".\spam.py", ntpath, r"./spam.py"),
         # absolute
-        (r"\spam.py", ntpath, "/spam.py"),
+        (r"\spam.py", ntpath, ".//spam.py" if is_python313_or_later() else "/spam.py"),
         (r"C:\spam.py", ntpath, "C:/spam.py"),
-        ("\\", ntpath, "/"),
+        ("\\", ntpath, ".//" if is_python313_or_later() else "/"),
         ("\\\\", ntpath, "//"),
         ("C:\\\\", ntpath, "C://"),
         ("C:/", ntpath, "C:/"),
