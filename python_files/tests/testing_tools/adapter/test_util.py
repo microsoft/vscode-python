@@ -124,7 +124,7 @@ def test_fix_path(path, expected):
         # absolute
         ("/", posixpath, "/"),
         ("/spam.py", posixpath, "/spam.py"),
-        ("\\", ntpath, ".\\" if is_python313_or_later() else "\\"),
+        ("\\", ntpath, ".\\\\" if is_python313_or_later() else "\\"),
         (r"\spam.py", ntpath, r".\\spam.py" if is_python313_or_later() else r"\spam.py"),
         (r"C:\spam.py", ntpath, r"C:\spam.py"),
         # no-op
@@ -225,11 +225,11 @@ def test_fix_fileid(fileid, os_path, expected):
         ("/eggs/spam.py", "/eggs", ntpath, "./spam.py"),
         ("/eggs/spam.py", "/eggs/", ntpath, "./spam.py"),
         # no-op
-        ("/spam.py", "/eggs", ntpath, "/spam.py"),
-        ("/spam.py", "/eggs/", ntpath, "/spam.py"),
+        ("/spam.py", "/eggs", ntpath, ".//spam.py" if is_python313_or_later() else "/spam.py"),
+        ("/spam.py", "/eggs/", ntpath, ".//spam.py" if is_python313_or_later() else "/spam.py"),
         # root-only (no-op)
         ("/", "/", ntpath, "/"),
-        ("/", "/spam", ntpath, "/"),
+        ("/", "/spam", ntpath, ".//" if is_python313_or_later() else "/"),
         ("//", "/", ntpath, "//"),
         ("//", "//", ntpath, "//"),
         ("//", "//spam", ntpath, "//"),
@@ -244,11 +244,11 @@ def test_fix_fileid(fileid, os_path, expected):
         (r"\eggs\spam.py", "\\Eggs", ntpath, r"./spam.py"),
         (r"\eggs\Spam.py", "\\Eggs", ntpath, r"./Spam.py"),
         # no-op
-        (r"\spam.py", r"\eggs", ntpath, r"/spam.py"),
+        (r"\spam.py", r"\eggs", ntpath, ".//spam.py" if is_python313_or_later() else r"/spam.py"),
         (r"C:\spam.py", r"C:\eggs", ntpath, r"C:/spam.py"),
         # TODO: Should these be supported.
         (r"C:\spam.py", "\\", ntpath, r"C:/spam.py"),
-        (r"\spam.py", "C:\\", ntpath, r"/spam.py"),
+        (r"\spam.py", "C:\\", ntpath, ".//spam.py" if is_python313_or_later() else r"/spam.py"),
         # root-only
         ("\\", "\\", ntpath, "/"),
         ("\\\\", "\\", ntpath, "//"),
