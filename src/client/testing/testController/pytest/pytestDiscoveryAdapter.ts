@@ -39,7 +39,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
         const deferredTillEOT: Deferred<void> = createDeferred<void>();
 
-        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
+        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
             this.resultResolver?.resolveDiscovery(data, deferredTillEOT);
         });
 
@@ -48,7 +48,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         } finally {
             await deferredTillEOT.promise;
             traceVerbose('deferredTill EOT resolved');
-            dispose();
         }
         // this is only a placeholder to handle function overloading until rewrite is finished
         const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
