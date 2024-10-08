@@ -166,7 +166,7 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
         deferred.resolve(combined);
         return deferred.promise;
     }
-    // linux implementation of FIFO
+    // mac/linux implementation of FIFO
     await mkfifo(pipeName);
     const reader = fs.createReadStream(pipeName, {
         encoding: 'utf-8',
