@@ -67,6 +67,13 @@ SYMLINK_PATH = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
+    has_pytest_cov = early_config.pluginmanager.hasplugin("pytest_cov")
+    has_cov_arg = any("--cov" in arg for arg in args)
+    if has_cov_arg and not has_pytest_cov:
+        raise VSCodePytestError(
+            "\n \nERROR: pytest-cov is not installed, please install this before running pytest with coverage as pytest-cov is required. \n"
+        )
+
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
@@ -117,6 +124,7 @@ def pytest_internalerror(excrepr, excinfo):  # noqa: ARG001
     excinfo -- the exception information of type ExceptionInfo.
     """
     # call.excinfo.exconly() returns the exception as a string.
+    print("UGHHHHHH2")
     ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
 
 
@@ -131,6 +139,8 @@ def pytest_exception_interact(node, call, report):
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
     # If it is during discovery, then add the error to error logs.
+    print("UGHHHHHH23")
+
     if IS_DISCOVERY:
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
@@ -935,6 +945,10 @@ class DeferPlugin:
 
 
 def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
+    # if manager.has_plugin("pytest_cov"):
+    #     print("has plugin cov pytest")
+    # else:
+    #     print("does not have plugin cov pytest")
     plugin_name = "vscode_xdist"
     if (
         # only register the plugin if xdist is enabled:
