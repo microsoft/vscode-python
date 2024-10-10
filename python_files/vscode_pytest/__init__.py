@@ -124,7 +124,6 @@ def pytest_internalerror(excrepr, excinfo):  # noqa: ARG001
     excinfo -- the exception information of type ExceptionInfo.
     """
     # call.excinfo.exconly() returns the exception as a string.
-    print("UGHHHHHH2")
     ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
 
 
@@ -139,7 +138,6 @@ def pytest_exception_interact(node, call, report):
     # call.excinfo is the captured exception of the call, if it raised as type ExceptionInfo.
     # call.excinfo.exconly() returns the exception as a string.
     # If it is during discovery, then add the error to error logs.
-    print("UGHHHHHH23")
 
     if IS_DISCOVERY:
         if call.excinfo and call.excinfo.typename != "AssertionError":
@@ -945,10 +943,6 @@ class DeferPlugin:
 
 
 def pytest_plugin_registered(plugin: object, manager: pytest.PytestPluginManager):
-    # if manager.has_plugin("pytest_cov"):
-    #     print("has plugin cov pytest")
-    # else:
-    #     print("does not have plugin cov pytest")
     plugin_name = "vscode_xdist"
     if (
         # only register the plugin if xdist is enabled:
