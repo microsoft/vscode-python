@@ -67,6 +67,13 @@ SYMLINK_PATH = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
+    has_pytest_cov = early_config.pluginmanager.hasplugin("pytest_cov")
+    has_cov_arg = any("--cov" in arg for arg in args)
+    if has_cov_arg and not has_pytest_cov:
+        raise VSCodePytestError(
+            "\n \nERROR: pytest-cov is not installed, please install this before running pytest with coverage as pytest-cov is required. \n"
+        )
+
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
