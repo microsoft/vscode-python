@@ -24,7 +24,6 @@ import type { TestTool } from './types';
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
  * Within DA, there's a completely different way to send telemetry.
- * @returns {boolean}
  */
 function isTelemetrySupported(): boolean {
     try {
@@ -42,7 +41,6 @@ let packageJSON: any;
 
 /**
  * Checks if the telemetry is disabled
- * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
     if (!packageJSON) {

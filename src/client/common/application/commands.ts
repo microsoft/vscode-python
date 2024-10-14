@@ -14,7 +14,6 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 /**
  * Mapping between commands and list or arguments.
  * These commands do NOT have any arguments.
- * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.InstallPythonOnMac]: [];
@@ -52,9 +51,6 @@ export type AllCommands = keyof ICommandNameArgumentTypeMapping;
 /**
  * Mapping between commands and list of arguments.
  * Used to provide strong typing for command & args.
- * @export
- * @interface ICommandNameArgumentTypeMapping
- * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     [Commands.Create_Environment]: [CreateEnvironmentOptions];

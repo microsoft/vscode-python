@@ -245,12 +245,6 @@ export async function flattenIterable<T>(iterableItem: AsyncIterable<T>): Promis
 
 /**
  * Wait for a condition to be fulfilled within a timeout.
- *
- * @export
- * @param {() => Promise<boolean>} condition
- * @param {number} timeoutMs
- * @param {string} errorMessage
- * @returns {Promise<void>}
  */
 export async function waitForCondition(
     condition: () => Promise<boolean>,

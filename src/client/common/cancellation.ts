@@ -16,11 +16,6 @@ export class CancellationError extends Error {
 }
 /**
  * Create a promise that will either resolve with a default value or reject when the token is cancelled.
- *
- * @export
- * @template T
- * @param {({ defaultValue: T; token: CancellationToken; cancelAction: 'reject' | 'resolve' })} options
- * @returns {Promise<T>}
  */
 export function createPromiseFromCancellation<T>(options: {
     defaultValue: T;
@@ -50,10 +45,6 @@ export function createPromiseFromCancellation<T>(options: {
 
 /**
  * Create a single unified cancellation token that wraps multiple cancellation tokens.
- *
- * @export
- * @param {(...(CancellationToken | undefined)[])} tokens
- * @returns {CancellationToken}
  */
 export function wrapCancellationTokens(...tokens: (CancellationToken | undefined)[]): CancellationToken {
     const wrappedCancellantionToken = new CancellationTokenSource();
@@ -117,7 +108,6 @@ export namespace Cancellation {
 
     /**
      * isCanceled returns a boolean indicating if the cancel token has been canceled.
-     * @param cancelToken
      */
     export function isCanceled(cancelToken?: CancellationToken): boolean {
         return cancelToken ? cancelToken.isCancellationRequested : false;
@@ -125,7 +115,6 @@ export namespace Cancellation {
 
     /**
      * throws a CancellationError if the token is canceled.
-     * @param cancelToken
      */
     export function throwIfCanceled(cancelToken?: CancellationToken): void {
         if (isCanceled(cancelToken)) {

@@ -67,8 +67,7 @@ export async function isGlobalPythonSelected(workspace: WorkspaceFolder): Promis
 /**
  * Checks the setting `python.createEnvironment.trigger` to see if we should perform the checks
  * to prompt to create an environment.
- * @export
- * @returns : True if we should prompt to create an environment.
+ * Returns True if we should prompt to create an environment.
  */
 export function shouldPromptToCreateEnv(): boolean {
     const config = getConfiguration('python');

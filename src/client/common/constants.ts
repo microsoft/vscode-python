@@ -111,8 +111,6 @@ export function isTestExecution(): boolean {
 /**
  * Whether we're running unit tests (*.unit.test.ts).
  * These tests have a special meaning, they run fast.
- * @export
- * @returns {boolean}
  */
 export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';

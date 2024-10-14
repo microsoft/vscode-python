@@ -12,10 +12,6 @@ import { BaseShellDetector } from './baseShellDetector';
 
 /**
  * Identifies the shell, based on the VSC Environment API.
- *
- * @export
- * @class VSCEnvironmentShellDetector
- * @extends {BaseShellDetector}
  */
 export class VSCEnvironmentShellDetector extends BaseShellDetector {
     constructor(@inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) {

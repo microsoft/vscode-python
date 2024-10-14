@@ -73,11 +73,6 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
     /**
      * Returns a key used to keep track of whether a diagnostic was handled or not.
      * So as to prevent handling/displaying messages multiple times for the same diagnostic.
-     *
-     * @protected
-     * @param {IDiagnostic} diagnostic
-     * @returns {string}
-     * @memberof BaseDiagnosticsService
      */
     protected getDiagnosticsKey(diagnostic: IDiagnostic): string {
         if (diagnostic.scope === DiagnosticScope.Global) {

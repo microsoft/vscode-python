@@ -121,9 +121,6 @@ function activatePythonExtensionScript() {
 /**
  * Runner, invoked by VS Code.
  * More info https://code.visualstudio.com/api/working-with-extensions/testing-extension
- *
- * @export
- * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
     const options = configure();

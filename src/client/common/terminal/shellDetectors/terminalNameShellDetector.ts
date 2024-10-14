@@ -11,10 +11,6 @@ import { BaseShellDetector } from './baseShellDetector';
 
 /**
  * Identifies the shell, based on the display name of the terminal.
- *
- * @export
- * @class TerminalNameShellDetector
- * @extends {BaseShellDetector}
  */
 @injectable()
 export class TerminalNameShellDetector extends BaseShellDetector {

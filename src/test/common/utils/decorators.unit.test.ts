@@ -72,8 +72,6 @@ suite('Common Utils - Decorators', function () {
          * This has an accuracy of around 2-20ms.
          * However we're dealing with tests that need accuracy of 1ms.
          * Use API that'll give us better accuracy when dealing with elapsed times.
-         *
-         * @returns {number}
          */
         function getHighPrecisionTime(): number {
             const currentTime = process.hrtime();

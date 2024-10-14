@@ -27,10 +27,6 @@ type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? nev
  * Checking whether something is a Resource (Uri/undefined).
  * Using `instanceof Uri` doesn't always work as the object is not an instance of Uri (at least not in tests).
  * That's why VSC too has a helper method `URI.isUri` (though not public).
- *
- * @export
- * @param {InterpreterUri} [resource]
- * @returns {resource is Resource}
  */
 export function isResource(resource?: InterpreterUri): resource is Resource {
     if (!resource) {
@@ -44,9 +40,6 @@ export function isResource(resource?: InterpreterUri): resource is Resource {
  * Checking whether something is a Uri.
  * Using `instanceof Uri` doesn't always work as the object is not an instance of Uri (at least not in tests).
  * That's why VSC too has a helper method `URI.isUri` (though not public).
- *
- * @param {InterpreterUri} [resource]
- * @returns {resource is Uri}
  */
 
 function isUri(resource?: Uri | any): resource is Uri {
