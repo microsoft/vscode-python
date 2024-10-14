@@ -89,9 +89,6 @@ suite('Common Utils - Decorators', function () {
          * await new Promise(resolve = setTimeout(resolve, 100))
          * console.log(currentTime - startTijme)
          * ```
-         *
-         * @param {number} actualDelay
-         * @param {number} expectedDelay
          */
         function assertElapsedTimeWithinRange(actualDelay: number, expectedDelay: number) {
             const difference = actualDelay - expectedDelay;

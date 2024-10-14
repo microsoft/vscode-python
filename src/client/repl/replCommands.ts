@@ -20,11 +20,6 @@ import { EventName } from '../telemetry/constants';
 
 /**
  * Register Start Native REPL command in the command palette
- *
- * @param disposables
- * @param interpreterService
- * @param commandManager
- * @returns Promise<void>
  */
 export async function registerStartNativeReplCommand(
     disposables: Disposable[],
@@ -46,9 +41,6 @@ export async function registerStartNativeReplCommand(
 
 /**
  * Registers REPL command for shift+enter if sendToNativeREPL setting is enabled.
- * @param disposables
- * @param interpreterService
- * @returns Promise<void>
  */
 export async function registerReplCommands(
     disposables: Disposable[],
@@ -88,8 +80,6 @@ export async function registerReplCommands(
 
 /**
  * Command triggered for 'Enter': Conditionally call interactive.execute OR insert \n in text input box.
- * @param disposables
- * @param interpreterService
  */
 export async function registerReplExecuteOnEnter(
     disposables: Disposable[],
