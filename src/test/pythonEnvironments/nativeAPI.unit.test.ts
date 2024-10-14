@@ -108,7 +108,7 @@ suite('Native Python API', () => {
             mtime: -1,
         },
         kind: PythonEnvKind.Conda,
-        location: '/home/user/.conda/envs/conda_python/python',
+        location: '/home/user/.conda/envs/conda_python',
         source: [],
         name: 'conda_python',
         type: PythonEnvType.Conda,

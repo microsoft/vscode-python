@@ -210,6 +210,32 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
     };
 }
 
+function hasChanged(old: PythonEnvInfo, newEnv: PythonEnvInfo): boolean {
+    if (old.executable.filename !== newEnv.executable.filename) {
+        return true;
+    }
+    if (old.version.major !== newEnv.version.major) {
+        return true;
+    }
+    if (old.version.minor !== newEnv.version.minor) {
+        return true;
+    }
+    if (old.version.micro !== newEnv.version.micro) {
+        return true;
+    }
+    if (old.location !== newEnv.location) {
+        return true;
+    }
+    if (old.kind !== newEnv.kind) {
+        return true;
+    }
+    if (old.arch !== newEnv.arch) {
+        return true;
+    }
+
+    return false;
+}
+
 class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     private _onProgress: EventEmitter<ProgressNotificationEvent>;
 
@@ -354,37 +380,11 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return this._envs;
     }
 
-    private hasChanged(old: PythonEnvInfo, newEnv: PythonEnvInfo): boolean {
-        if (old.executable.filename !== newEnv.executable.filename) {
-            return true;
-        }
-        if (old.version.major !== newEnv.version.major) {
-            return true;
-        }
-        if (old.version.minor !== newEnv.version.minor) {
-            return true;
-        }
-        if (old.version.micro !== newEnv.version.micro) {
-            return true;
-        }
-        if (old.location !== newEnv.location) {
-            return true;
-        }
-        if (old.kind !== newEnv.kind) {
-            return true;
-        }
-        if (old.arch !== newEnv.arch) {
-            return true;
-        }
-
-        return false;
-    }
-
     private addEnv(native: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
         const info = toPythonEnvInfo(native);
         if (info) {
             const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
-            if (old && this.hasChanged(old, info)) {
+            if (old && hasChanged(old, info)) {
                 this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
                 this._envs.push(info);
                 this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
