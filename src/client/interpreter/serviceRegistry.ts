@@ -27,7 +27,7 @@ import {
 } from './configuration/types';
 import { IActivatedEnvironmentLaunch, IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from './contracts';
 import { InterpreterDisplay } from './display';
-import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
+import { InterpreterLocatorProgressStatusBarHandler } from './display/progressDisplay';
 import { InterpreterHelper } from './helpers';
 import { InterpreterPathCommand } from './interpreterPathCommand';
 import { InterpreterService } from './interpreterService';
@@ -83,7 +83,7 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        InterpreterLocatorProgressStatubarHandler,
+        InterpreterLocatorProgressStatusBarHandler,
     );
 
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(
