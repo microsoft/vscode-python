@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { TEST_LAYOUT_ROOT } from '../commonTestConstants';
-import { Pixi } from '../../../../client/pythonEnvironments/common/environmentManagers/pixi';
+import { getPixi } from '../../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 export type PixiCommand = { cmd: 'info --json' } | { cmd: '--version' } | { cmd: null };
 
@@ -119,7 +119,7 @@ suite('Pixi binary is located correctly', async () => {
         getPythonSetting.returns(pixiPath);
         // If `verify` is false, don’t verify that the command has been called with that path
         exec.callsFake(makeExecHandler(verify ? { pixiPath } : undefined));
-        const pixi = await Pixi.getPixi();
+        const pixi = await getPixi();
         expect(pixi?.command).to.equal(pixiPath);
     };
 
@@ -133,7 +133,7 @@ suite('Pixi binary is located correctly', async () => {
         exec.callsFake((_file: string, _args: string[], _options: ShellOptions) =>
             Promise.reject(new Error('Command failed')),
         );
-        const pixi = await Pixi.getPixi();
+        const pixi = await getPixi();
         expect(pixi?.command).to.equal(undefined);
     });
 });

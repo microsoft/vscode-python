@@ -8,13 +8,10 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
-import { traceError } from '../../../logging';
 import {
     getPixiEnvironmentFromInterpreter,
     isNonDefaultPixiEnvironmentName,
 } from '../../../pythonEnvironments/common/environmentManagers/pixi';
-import { exec } from '../../../pythonEnvironments/common/externalDependencies';
-import { splitLines } from '../../stringUtils';
 
 @injectable()
 export class PixiActivationCommandProvider implements ITerminalActivationCommandProvider {
@@ -39,36 +36,42 @@ export class PixiActivationCommandProvider implements ITerminalActivationCommand
 
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        targetShell: TerminalShellType,
+        _targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
         const pixiEnv = await getPixiEnvironmentFromInterpreter(pythonPath);
         if (!pixiEnv) {
             return undefined;
         }
 
-        const command = ['shell-hook', '--manifest-path', pixiEnv.manifestPath];
+        const args = [
+            pixiEnv.pixi.command.toCommandArgumentForPythonExt(),
+            'shell',
+            '--manifest-path',
+            pixiEnv.manifestPath.toCommandArgumentForPythonExt(),
+        ];
         if (isNonDefaultPixiEnvironmentName(pixiEnv.envName)) {
-            command.push('--environment');
-            command.push(pixiEnv.envName);
+            args.push('--environment');
+            args.push(pixiEnv.envName.toCommandArgumentForPythonExt());
         }
 
-        const pixiTargetShell = shellTypeToPixiShell(targetShell);
-        if (pixiTargetShell) {
-            command.push('--shell');
-            command.push(pixiTargetShell);
-        }
+        // const pixiTargetShell = shellTypeToPixiShell(targetShell);
+        // if (pixiTargetShell) {
+        //     args.push('--shell');
+        //     args.push(pixiTargetShell);
+        // }
 
-        const shellHookOutput = await exec(pixiEnv.pixi.command, command, {
-            throwOnStdErr: false,
-        }).catch(traceError);
-        if (!shellHookOutput) {
-            return undefined;
-        }
+        // const shellHookOutput = await exec(pixiEnv.pixi.command, args, {
+        //     throwOnStdErr: false,
+        // }).catch(traceError);
+        // if (!shellHookOutput) {
+        //     return undefined;
+        // }
 
-        return splitLines(shellHookOutput.stdout, {
-            removeEmptyEntries: true,
-            trim: true,
-        });
+        // return splitLines(shellHookOutput.stdout, {
+        //     removeEmptyEntries: true,
+        //     trim: true,
+        // });
+        return [args.join(' ')];
     }
 }
 
