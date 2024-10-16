@@ -25,7 +25,7 @@ import {
 import { IInterpreterAutoSelectionService } from '../../interpreter/autoSelection/types';
 import { sleep } from '../utils/async';
 import { traceError } from '../../logging';
-import { getPixiEnvironmentFromInterpreter } from '../../pythonEnvironments/common/environmentManagers/pixi';
+import { getPixiEnvironmentFromInterpreter, Pixi } from '../../pythonEnvironments/common/environmentManagers/pixi';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -80,14 +80,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
 
+        if (await Pixi.getPixi()) {
+            const pixiExecutionService = await this.createPixiExecutionService(pythonPath, processService);
+            if (pixiExecutionService) {
+                return pixiExecutionService;
+            }
+        }
+
         const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
         if (condaExecutionService) {
             return condaExecutionService;
-        }
-
-        const pixiExecutionService = await this.createPixiExecutionService(pythonPath, processService);
-        if (pixiExecutionService) {
-            return pixiExecutionService;
         }
 
         const windowsStoreInterpreterCheck = this.pyenvs.isMicrosoftStoreInterpreter.bind(this.pyenvs);

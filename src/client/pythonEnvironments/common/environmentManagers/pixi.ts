@@ -144,7 +144,6 @@ export class Pixi {
                 traceVerbose(`Found pixi ${pixiVersion} via filesystem probing: ${pixiToolPath}`);
                 return pixi;
             }
-            traceVerbose(`Failed to find pixi: ${pixiToolPath}`);
         }
 
         // Didn't find anything.
@@ -205,7 +204,6 @@ export class Pixi {
             }
             return versionParts[1].trim();
         } catch (error) {
-            traceVerbose(`Failed to get pixi version`, error);
             return undefined;
         }
     }
