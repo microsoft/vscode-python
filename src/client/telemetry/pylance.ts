@@ -327,6 +327,7 @@
 /* __GDPR__
    "language_server/settings" : {
       "addimportexactmatchonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "aicodeactionsimplementabstractclasses" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autoimportcompletions" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autosearchpaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "callArgumentNameInlayHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -344,6 +345,7 @@
       "intelliCodeEnabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "includeusersymbolsinautoimport" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "indexing" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "languageservermode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "lspinteractivewindows" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "lspnotebooks" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "movesymbol" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
