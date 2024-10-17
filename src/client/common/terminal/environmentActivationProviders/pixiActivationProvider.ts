@@ -31,11 +31,11 @@ export class PixiActivationCommandProvider implements ITerminalActivationCommand
         return this.getActivationCommandsForInterpreter(interpreter.path, targetShell);
     }
 
-    public async getActivationCommandsForInterpreter(
+    public getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        return await getPixiActivationCommands(pythonPath, targetShell);
+        return getPixiActivationCommands(pythonPath, targetShell);
     }
 }
 

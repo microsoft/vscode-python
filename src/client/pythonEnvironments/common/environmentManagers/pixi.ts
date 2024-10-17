@@ -77,56 +77,10 @@ export function getPrefixFromInterpreterPath(interpreterPath: string): string {
 async function findPixiOnPath(): Promise<readonly string[]> {
     try {
         return await which('pixi', { all: true });
-    } catch {}
+    } catch {
+        // Ignore errors
+    }
     return [];
-}
-
-async function getPixiTool(): Promise<Pixi | undefined> {
-    let pixi = getPythonSetting<string>(PIXITOOLPATH_SETTING_KEY);
-
-    if (!pixi || pixi === 'pixi' || !(await pathExists(pixi))) {
-        pixi = undefined;
-        const paths = await findPixiOnPath();
-        for (let p of paths) {
-            if (await pathExists(p)) {
-                pixi = p;
-                break;
-            }
-        }
-    }
-
-    if (!pixi) {
-        // Check the default installation location
-        const home = getUserHomeDir();
-        if (home) {
-            const pixiToolPath = path.join(home, '.pixi', 'bin', isWindows() ? 'pixi.exe' : 'pixi');
-            if (await pathExists(pixiToolPath)) {
-                pixi = pixiToolPath;
-            }
-        }
-    }
-
-    return pixi ? new Pixi(pixi) : undefined;
-}
-
-/**
- * Locating pixi binary can be expensive, since it potentially involves spawning or
- * trying to spawn processes; so we only do it once per session.
- */
-let _pixi: Promise<Pixi | undefined> | undefined;
-
-/**
- * Returns a Pixi instance corresponding to the binary which can be used to run commands for the cwd.
- *
- * Pixi commands can be slow and so can be bottleneck to overall discovery time. So trigger command
- * execution as soon as possible. To do that we need to ensure the operations before the command are
- * performed synchronously.
- */
-export function getPixi() {
-    if (_pixi === undefined || isTestExecution()) {
-        _pixi = getPixiTool();
-    }
-    return _pixi;
 }
 
 /** Wraps the "pixi" utility, and exposes its functionality.
@@ -215,6 +169,54 @@ export class Pixi {
     }
 }
 
+async function getPixiTool(): Promise<Pixi | undefined> {
+    let pixi = getPythonSetting<string>(PIXITOOLPATH_SETTING_KEY);
+
+    if (!pixi || pixi === 'pixi' || !(await pathExists(pixi))) {
+        pixi = undefined;
+        const paths = await findPixiOnPath();
+        for (const p of paths) {
+            if (await pathExists(p)) {
+                pixi = p;
+                break;
+            }
+        }
+    }
+
+    if (!pixi) {
+        // Check the default installation location
+        const home = getUserHomeDir();
+        if (home) {
+            const pixiToolPath = path.join(home, '.pixi', 'bin', isWindows() ? 'pixi.exe' : 'pixi');
+            if (await pathExists(pixiToolPath)) {
+                pixi = pixiToolPath;
+            }
+        }
+    }
+
+    return pixi ? new Pixi(pixi) : undefined;
+}
+
+/**
+ * Locating pixi binary can be expensive, since it potentially involves spawning or
+ * trying to spawn processes; so we only do it once per session.
+ */
+let _pixi: Promise<Pixi | undefined> | undefined;
+
+/**
+ * Returns a Pixi instance corresponding to the binary which can be used to run commands for the cwd.
+ *
+ * Pixi commands can be slow and so can be bottleneck to overall discovery time. So trigger command
+ * execution as soon as possible. To do that we need to ensure the operations before the command are
+ * performed synchronously.
+ */
+export function getPixi(): Promise<Pixi | undefined> {
+    if (_pixi === undefined || isTestExecution()) {
+        _pixi = getPixiTool();
+    }
+    return _pixi;
+}
+
 export type PixiEnvironmentInfo = {
     interpreterPath: string;
     pixi: Pixi;
@@ -300,6 +302,8 @@ export async function getPixiEnvironmentFromInterpreter(
     } catch (error) {
         traceWarn('Error processing paths or getting Pixi Info:', error);
     }
+
+    return undefined;
 }
 
 /**
