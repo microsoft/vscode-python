@@ -6,17 +6,17 @@ import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { chain, iterable } from '../../../../common/utils/async';
 import { traceError, traceVerbose } from '../../../../logging';
 import { getCondaInterpreterPath } from '../../../common/environmentManagers/conda';
-import { Pixi } from '../../../common/environmentManagers/pixi';
 import { pathExists } from '../../../common/externalDependencies';
 import { PythonEnvKind } from '../../info';
 import { IPythonEnvsIterator, BasicEnvInfo } from '../../locator';
 import { FSWatcherKind, FSWatchingLocator } from './fsWatchingLocator';
+import { getPixi } from '../../../common/environmentManagers/pixi';
 
 /**
  * Returns all virtual environment locations to look for in a workspace.
  */
 async function getVirtualEnvDirs(root: string): Promise<string[]> {
-    const pixi = await Pixi.getPixi();
+    const pixi = await getPixi();
     const envDirs = (await pixi?.getEnvList(root)) ?? [];
     return asyncFilter(envDirs, pathExists);
 }
