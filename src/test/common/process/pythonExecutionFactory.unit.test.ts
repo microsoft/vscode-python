@@ -89,6 +89,7 @@ suite('Process - PythonExecutionFactory', () => {
             let autoSelection: IInterpreterAutoSelectionService;
             let interpreterPathExpHelper: IInterpreterPathService;
             let getPixiEnvironmentFromInterpreterStub: sinon.SinonStub;
+            let getPixiStub: sinon.SinonStub;
             const pythonPath = 'path/to/python';
             setup(() => {
                 sinon.stub(Conda, 'getConda').resolves(new Conda('conda'));
@@ -96,6 +97,9 @@ suite('Process - PythonExecutionFactory', () => {
 
                 getPixiEnvironmentFromInterpreterStub = sinon.stub(pixi, 'getPixiEnvironmentFromInterpreter');
                 getPixiEnvironmentFromInterpreterStub.resolves(undefined);
+
+                getPixiStub = sinon.stub(pixi, 'getPixi');
+                getPixiStub.resolves(undefined);
 
                 activationHelper = mock(EnvironmentActivationService);
                 processFactory = mock(ProcessServiceFactory);
@@ -141,6 +145,9 @@ suite('Process - PythonExecutionFactory', () => {
                 when(serviceContainer.get<IComponentAdapter>(IComponentAdapter)).thenReturn(instance(pyenvs));
                 when(serviceContainer.tryGet<IInterpreterService>(IInterpreterService)).thenReturn(
                     instance(interpreterService),
+                );
+                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
+                    instance(configService),
                 );
                 factory = new PythonExecutionFactory(
                     instance(serviceContainer),
