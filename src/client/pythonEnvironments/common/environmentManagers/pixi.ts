@@ -15,6 +15,7 @@ import { isWindows } from '../../../common/platform/platformService';
 import { IDisposableRegistry } from '../../../common/types';
 import { getWorkspaceFolderPaths } from '../../../common/vscodeApis/workspaceApis';
 import { isTestExecution } from '../../../common/constants';
+import { TerminalShellType } from '../../../common/terminal/types';
 
 export const PIXITOOLPATH_SETTING_KEY = 'pixiToolPath';
 
@@ -338,4 +339,44 @@ export async function getRunPixiPythonCommand(pythonPath: string): Promise<strin
 
     args.push('python');
     return args;
+}
+
+export async function getPixiActivationCommands(
+    pythonPath: string,
+    _targetShell?: TerminalShellType,
+): Promise<string[] | undefined> {
+    const pixiEnv = await getPixiEnvironmentFromInterpreter(pythonPath);
+    if (!pixiEnv) {
+        return undefined;
+    }
+
+    const args = [
+        pixiEnv.pixi.command.toCommandArgumentForPythonExt(),
+        'shell',
+        '--manifest-path',
+        pixiEnv.manifestPath.toCommandArgumentForPythonExt(),
+    ];
+    if (isNonDefaultPixiEnvironmentName(pixiEnv.envName)) {
+        args.push('--environment');
+        args.push(pixiEnv.envName.toCommandArgumentForPythonExt());
+    }
+
+    // const pixiTargetShell = shellTypeToPixiShell(targetShell);
+    // if (pixiTargetShell) {
+    //     args.push('--shell');
+    //     args.push(pixiTargetShell);
+    // }
+
+    // const shellHookOutput = await exec(pixiEnv.pixi.command, args, {
+    //     throwOnStdErr: false,
+    // }).catch(traceError);
+    // if (!shellHookOutput) {
+    //     return undefined;
+    // }
+
+    // return splitLines(shellHookOutput.stdout, {
+    //     removeEmptyEntries: true,
+    //     trim: true,
+    // });
+    return [args.join(' ')];
 }

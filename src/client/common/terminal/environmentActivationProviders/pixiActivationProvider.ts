@@ -8,10 +8,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
-import {
-    getPixiEnvironmentFromInterpreter,
-    isNonDefaultPixiEnvironmentName,
-} from '../../../pythonEnvironments/common/environmentManagers/pixi';
+import { getPixiActivationCommands } from '../../../pythonEnvironments/common/environmentManagers/pixi';
 
 @injectable()
 export class PixiActivationCommandProvider implements ITerminalActivationCommandProvider {
@@ -36,42 +33,9 @@ export class PixiActivationCommandProvider implements ITerminalActivationCommand
 
     public async getActivationCommandsForInterpreter(
         pythonPath: string,
-        _targetShell: TerminalShellType,
+        targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const pixiEnv = await getPixiEnvironmentFromInterpreter(pythonPath);
-        if (!pixiEnv) {
-            return undefined;
-        }
-
-        const args = [
-            pixiEnv.pixi.command.toCommandArgumentForPythonExt(),
-            'shell',
-            '--manifest-path',
-            pixiEnv.manifestPath.toCommandArgumentForPythonExt(),
-        ];
-        if (isNonDefaultPixiEnvironmentName(pixiEnv.envName)) {
-            args.push('--environment');
-            args.push(pixiEnv.envName.toCommandArgumentForPythonExt());
-        }
-
-        // const pixiTargetShell = shellTypeToPixiShell(targetShell);
-        // if (pixiTargetShell) {
-        //     args.push('--shell');
-        //     args.push(pixiTargetShell);
-        // }
-
-        // const shellHookOutput = await exec(pixiEnv.pixi.command, args, {
-        //     throwOnStdErr: false,
-        // }).catch(traceError);
-        // if (!shellHookOutput) {
-        //     return undefined;
-        // }
-
-        // return splitLines(shellHookOutput.stdout, {
-        //     removeEmptyEntries: true,
-        //     trim: true,
-        // });
-        return [args.join(' ')];
+        return await getPixiActivationCommands(pythonPath, targetShell);
     }
 }
 

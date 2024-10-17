@@ -54,6 +54,7 @@ import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 import { registerPythonStartup } from './terminals/pythonStartup';
+import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -100,6 +101,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
         IInterpreterService,
     );
     const pathUtils = ext.legacyIOC.serviceContainer.get<IPathUtils>(IPathUtils);
+    registerPixiFeatures(ext.disposables);
     registerAllCreateEnvironmentFeatures(
         ext.disposables,
         interpreterQuickPick,
