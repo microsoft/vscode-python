@@ -39,6 +39,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { cache } from '../../common/utils/decorators';
+import { getRunPixiPythonCommand } from '../../pythonEnvironments/common/environmentManagers/pixi';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -250,6 +251,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 });
                 if (pythonArgv) {
                     // Using environment prefix isn't needed as the marker script already takes care of it.
+                    command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
+                }
+            } else if (interpreter?.envType === EnvironmentType.Pixi) {
+                const pythonArgv = await getRunPixiPythonCommand(interpreter.path);
+                if (pythonArgv) {
                     command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
                 }
             }

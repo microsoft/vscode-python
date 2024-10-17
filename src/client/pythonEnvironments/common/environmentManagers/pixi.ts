@@ -315,3 +315,27 @@ export function registerPixiFeatures(disposables: IDisposableRegistry): void {
         }),
     );
 }
+
+/**
+ * Returns the `pixi run` command
+ */
+export async function getRunPixiPythonCommand(pythonPath: string): Promise<string[] | undefined> {
+    const pixiEnv = await getPixiEnvironmentFromInterpreter(pythonPath);
+    if (!pixiEnv) {
+        return undefined;
+    }
+
+    const args = [
+        pixiEnv.pixi.command.toCommandArgumentForPythonExt(),
+        'run',
+        '--manifest-path',
+        pixiEnv.manifestPath.toCommandArgumentForPythonExt(),
+    ];
+    if (isNonDefaultPixiEnvironmentName(pixiEnv.envName)) {
+        args.push('--environment');
+        args.push(pixiEnv.envName.toCommandArgumentForPythonExt());
+    }
+
+    args.push('python');
+    return args;
+}
