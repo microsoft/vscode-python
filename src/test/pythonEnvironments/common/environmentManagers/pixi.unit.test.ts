@@ -105,10 +105,12 @@ export function makeExecHandler(verify: VerifyOptions = {}) {
 suite('Pixi binary is located correctly', async () => {
     let exec: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
+    let pathExists: sinon.SinonStub;
 
     setup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
         exec = sinon.stub(externalDependencies, 'exec');
+        pathExists = sinon.stub(externalDependencies, 'pathExists');
     });
 
     teardown(() => {
@@ -117,10 +119,16 @@ suite('Pixi binary is located correctly', async () => {
 
     const testPath = async (pixiPath: string, verify = true) => {
         getPythonSetting.returns(pixiPath);
+        pathExists.returns(pixiPath !== 'pixi');
         // If `verify` is false, don’t verify that the command has been called with that path
         exec.callsFake(makeExecHandler(verify ? { pixiPath } : undefined));
         const pixi = await getPixi();
-        expect(pixi?.command).to.equal(pixiPath);
+
+        if (pixiPath === 'pixi') {
+            expect(pixi).to.equal(undefined);
+        } else {
+            expect(pixi?.command).to.equal(pixiPath);
+        }
     };
 
     test('Return a Pixi instance in an empty directory', () => testPath('pixiPath', false));
