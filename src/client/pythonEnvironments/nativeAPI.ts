@@ -384,10 +384,12 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         const info = toPythonEnvInfo(native);
         if (info) {
             const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
-            if (old && hasChanged(old, info)) {
+            if (old) {
                 this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
                 this._envs.push(info);
-                this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
+                if (hasChanged(old, info)) {
+                    this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
+                }
             } else {
                 this._envs.push(info);
                 this._onChanged.fire({ type: FileChangeType.Created, new: info, searchLocation });
