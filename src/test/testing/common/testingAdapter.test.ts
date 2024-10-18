@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as os from 'os';
+import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
@@ -22,6 +23,7 @@ import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { createTypeMoq } from '../../mocks/helper';
+import * as pixi from '../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: ITestResultResolver;
@@ -32,6 +34,7 @@ suite('End to End Tests: test adapters', () => {
     let workspaceUri: Uri;
     let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
     let testController: TestController;
+    let getPixiStub: sinon.SinonStub;
     const unittestProvider: TestProvider = UNITTEST_PROVIDER;
     const pytestProvider: TestProvider = PYTEST_PROVIDER;
     const rootPathSmallWorkspace = path.join(
@@ -104,6 +107,9 @@ suite('End to End Tests: test adapters', () => {
     });
 
     setup(async () => {
+        getPixiStub = sinon.stub(pixi, 'getPixi');
+        getPixiStub.resolves(undefined);
+
         // create objects that were injected
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -129,6 +135,9 @@ suite('End to End Tests: test adapters', () => {
             .returns(() => {
                 // Whatever you need to return
             });
+    });
+    teardown(() => {
+        sinon.restore();
     });
     suiteTeardown(async () => {
         // remove symlink
