@@ -239,6 +239,27 @@ suite('Native Python API', () => {
         assert.deepEqual(actual, [expectedConda1]);
     });
 
+    test('Ensure no duplication on resolve', async () => {
+        mockFinder
+            .setup((f) => f.refresh())
+            .returns(() => {
+                async function* generator() {
+                    yield* [conda1];
+                }
+                return generator();
+            })
+            .verifiable(typemoq.Times.once());
+        mockFinder
+            .setup((f) => f.resolve(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(conda))
+            .verifiable(typemoq.Times.once());
+
+        await api.triggerRefresh();
+        await api.resolveEnv('/home/user/.conda/envs/conda_python/python');
+        const actual = api.getEnvs();
+        assert.deepEqual(actual, [expectedConda1]);
+    });
+
     test('Conda environment with no python', async () => {
         mockFinder
             .setup((f) => f.refresh())
