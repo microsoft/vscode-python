@@ -8,13 +8,7 @@ import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
-import { traceError } from '../../../logging';
-import {
-    getPixiEnvironmentFromInterpreter,
-    isNonDefaultPixiEnvironmentName,
-} from '../../../pythonEnvironments/common/environmentManagers/pixi';
-import { exec } from '../../../pythonEnvironments/common/externalDependencies';
-import { splitLines } from '../../stringUtils';
+import { getPixiActivationCommands } from '../../../pythonEnvironments/common/environmentManagers/pixi';
 
 @injectable()
 export class PixiActivationCommandProvider implements ITerminalActivationCommandProvider {
@@ -37,38 +31,11 @@ export class PixiActivationCommandProvider implements ITerminalActivationCommand
         return this.getActivationCommandsForInterpreter(interpreter.path, targetShell);
     }
 
-    public async getActivationCommandsForInterpreter(
+    public getActivationCommandsForInterpreter(
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
-        const pixiEnv = await getPixiEnvironmentFromInterpreter(pythonPath);
-        if (!pixiEnv) {
-            return undefined;
-        }
-
-        const command = ['shell-hook', '--manifest-path', pixiEnv.manifestPath];
-        if (isNonDefaultPixiEnvironmentName(pixiEnv.envName)) {
-            command.push('--environment');
-            command.push(pixiEnv.envName);
-        }
-
-        const pixiTargetShell = shellTypeToPixiShell(targetShell);
-        if (pixiTargetShell) {
-            command.push('--shell');
-            command.push(pixiTargetShell);
-        }
-
-        const shellHookOutput = await exec(pixiEnv.pixi.command, command, {
-            throwOnStdErr: false,
-        }).catch(traceError);
-        if (!shellHookOutput) {
-            return undefined;
-        }
-
-        return splitLines(shellHookOutput.stdout, {
-            removeEmptyEntries: true,
-            trim: true,
-        });
+        return getPixiActivationCommands(pythonPath, targetShell);
     }
 }
 

@@ -22,6 +22,7 @@ import {
     TerminalActivationProviders,
     TerminalShellType,
 } from './types';
+import { isPixiEnvironment } from '../../pythonEnvironments/common/environmentManagers/pixi';
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
@@ -142,6 +143,19 @@ export class TerminalHelper implements ITerminalHelper {
         providers: ITerminalActivationCommandProvider[],
     ): Promise<string[] | undefined> {
         const settings = this.configurationService.getSettings(resource);
+
+        const isPixiEnv = interpreter
+            ? interpreter.envType === EnvironmentType.Pixi
+            : await isPixiEnvironment(settings.pythonPath);
+        if (isPixiEnv) {
+            const activationCommands = interpreter
+                ? await this.pixi.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
+                : await this.pixi.getActivationCommands(resource, terminalShellType);
+
+            if (Array.isArray(activationCommands)) {
+                return activationCommands;
+            }
+        }
 
         const condaService = this.serviceContainer.get<IComponentAdapter>(IComponentAdapter);
         // If we have a conda environment, then use that.
