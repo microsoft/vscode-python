@@ -448,7 +448,7 @@ def pytest_sessionfinish(session, exitstatus):
             result=file_coverage_map,
             error=None,
         )
-        send_post_request(payload)
+        send_message(payload)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -858,7 +858,7 @@ class PathEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def send_post_request(
+def send_message(
     payload: ExecutionPayloadDict | DiscoveryPayloadDict | CoveragePayloadDict,
     cls_encoder=None,
 ):

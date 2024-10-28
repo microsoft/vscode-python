@@ -256,7 +256,7 @@ export async function startRunResultNamedPipe(
         reader.listen((data: Message) => {
             traceVerbose(`Test Result named pipe ${pipeName} received data`);
             // if EOT, call decrement connection count (callback)
-            dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload | EOTTestPayload);
+            dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
         }),
         reader.onClose(() => {
             // this is called once the server close, once per run instance
@@ -306,10 +306,9 @@ export async function startDiscoveryNamedPipe(
         reader,
         reader.listen((data: Message) => {
             traceVerbose(`Test Discovery named pipe ${pipeName} received data`);
-            callback((data as DiscoveryResultMessage).params as DiscoveredTestPayload | EOTTestPayload);
+            callback((data as DiscoveryResultMessage).params as DiscoveredTestPayload);
         }),
         reader.onClose(() => {
-            callback(createEOTPayload(false));
             traceVerbose(`Test Discovery named pipe ${pipeName} closed`);
             disposable.dispose();
         }),

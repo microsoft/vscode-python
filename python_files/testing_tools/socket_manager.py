@@ -26,15 +26,13 @@ class PipeManager:
 
     def close(self):
         self._writer.close()
-        self._reader.close()
+        if hasattr(self, "_reader"):
+            self._reader.close()
 
     def write(self, data: str):
-
         try:
             # for windows, is should only use \n\n
-            request = (
-                f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
-            )
+            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
             self._writer.write(request)
             self._writer.flush()
         except Exception as e:

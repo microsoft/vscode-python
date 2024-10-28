@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as path from 'path';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
@@ -58,9 +58,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         );
         runInstance?.token.onCancellationRequested(() => {
             traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
-            // if canceled, stop listening for results
-            serverDispose(); // this will resolve deferredTillServerClose
-
             const executionPayload: ExecutionTestPayload = {
                 cwd: uri.fsPath,
                 status: 'success',
@@ -74,7 +71,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 uri,
                 testIds,
                 name,
-                deferredTillEOT,
                 cSource,
                 runInstance,
                 profileKind,
@@ -100,7 +96,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        serverDispose: () => void,
+        serverCancel: CancellationTokenSource,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
@@ -174,7 +170,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
                     serverCancel.cancel();
-                    deferredTillEOT?.resolve();
                 });
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read

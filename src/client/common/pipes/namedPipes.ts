@@ -75,7 +75,9 @@ export async function createWriterPipe(pipeName: string, token?: CancellationTok
     await mkfifo(pipeName);
     try {
         await fs.chmod(pipeName, 0o666);
-    } catch {}
+    } catch {
+        // Intentionally ignored
+    }
     const writer = fs.createWriteStream(pipeName, {
         encoding: 'utf-8',
     });
@@ -89,6 +91,7 @@ class CombinedReader implements rpc.MessageReader {
 
     private _onPartialMessage = new rpc.Emitter<rpc.PartialMessageInfo>();
 
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     private _callback: rpc.DataCallback = () => {};
 
     private _disposables: rpc.Disposable[] = [];
@@ -107,6 +110,7 @@ class CombinedReader implements rpc.MessageReader {
 
     listen(callback: rpc.DataCallback): rpc.Disposable {
         this._callback = callback;
+        // eslint-disable-next-line no-return-assign, @typescript-eslint/no-empty-function
         return new Disposable(() => (this._callback = () => {}));
     }
 
@@ -167,7 +171,7 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
         server.listen(pipeName);
         if (token) {
             token.onCancellationRequested(() => {
-                if (server.listening) {
+                if (server.listening) {      
                     server.close();
                 }
                 deferred.reject(new CancellationError());
@@ -180,7 +184,9 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
     await mkfifo(pipeName);
     try {
         await fs.chmod(pipeName, 0o666);
-    } catch {}
+    } catch {
+        // Intentionally ignored
+    }
     const reader = fs.createReadStream(pipeName, { encoding: 'utf-8' });
     return new rpc.StreamMessageReader(reader, 'utf-8');
 }
