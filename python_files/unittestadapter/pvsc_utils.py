@@ -18,8 +18,6 @@ sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 from typing_extensions import NotRequired  # noqa: E402
 
-from testing_tools import socket_manager  # noqa: E402
-
 # Types
 
 
