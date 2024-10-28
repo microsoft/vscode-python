@@ -234,6 +234,7 @@ export async function startRunResultNamedPipe(
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
 
+
     const reader = await createReaderPipe(pipeName, cancellationToken);
     traceVerbose(`Test Results named pipe ${pipeName} connected`);
     let disposables: Disposable[] = [];
