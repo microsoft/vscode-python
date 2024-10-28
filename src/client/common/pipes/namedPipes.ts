@@ -3,12 +3,12 @@
 
 import * as cp from 'child_process';
 import * as crypto from 'crypto';
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
-import { CancellationError, CancellationToken } from 'vscode';
+import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { traceVerbose } from '../../logging';
 import { isWindows } from '../platform/platformService';
 import { createDeferred } from '../utils/async';
@@ -73,6 +73,9 @@ export async function createWriterPipe(pipeName: string, token?: CancellationTok
     }
     // linux implementation of FIFO
     await mkfifo(pipeName);
+    try {
+        await fs.chmod(pipeName, 0o666);
+    } catch {}
     const writer = fs.createWriteStream(pipeName, {
         encoding: 'utf-8',
     });
@@ -86,14 +89,14 @@ class CombinedReader implements rpc.MessageReader {
 
     private _onPartialMessage = new rpc.Emitter<rpc.PartialMessageInfo>();
 
-    private _listeners = new rpc.Emitter<rpc.NotificationMessage>();
-
-    private _readers: rpc.MessageReader[] = [];
+    private _callback: rpc.DataCallback = () => {};
 
     private _disposables: rpc.Disposable[] = [];
 
+    private _readers: rpc.MessageReader[] = [];
+
     constructor() {
-        this._disposables.push(this._onClose, this._onError, this._onPartialMessage, this._listeners);
+        this._disposables.push(this._onClose, this._onError, this._onPartialMessage);
     }
 
     onError: rpc.Event<Error> = this._onError.event;
@@ -103,34 +106,41 @@ class CombinedReader implements rpc.MessageReader {
     onPartialMessage: rpc.Event<rpc.PartialMessageInfo> = this._onPartialMessage.event;
 
     listen(callback: rpc.DataCallback): rpc.Disposable {
-        return this._listeners.event(callback);
+        this._callback = callback;
+        return new Disposable(() => (this._callback = () => {}));
     }
 
     add(reader: rpc.MessageReader): void {
         this._readers.push(reader);
-        this._disposables.push(
-            reader.onError((error) => this._onError.fire(error)),
-            reader.onClose(() => this.dispose()),
-            reader.onPartialMessage((info) => this._onPartialMessage.fire(info)),
-            reader.listen((msg) => {
-                this._listeners.fire(msg as rpc.NotificationMessage);
-            }),
-        );
+        reader.listen((msg) => {
+            this._callback(msg as rpc.NotificationMessage);
+        });
+        this._disposables.push(reader);
+        reader.onClose(() => {
+            this.remove(reader);
+            if (this._readers.length === 0) {
+                this._onClose.fire();
+            }
+        });
+        reader.onError((e) => {
+            this.remove(reader);
+            this._onError.fire(e);
+        });
     }
 
-    error(error: Error): void {
-        this._onError.fire(error);
+    remove(reader: rpc.MessageReader): void {
+        const found = this._readers.find((r) => r === reader);
+        if (found) {
+            this._readers = this._readers.filter((r) => r !== reader);
+            reader.dispose();
+        }
     }
 
     dispose(): void {
-        this._onClose.fire();
-        this._disposables.forEach((disposable) => {
-            try {
-                disposable.dispose();
-            } catch (e) {
-                /* noop */
-            }
-        });
+        this._readers.forEach((r) => r.dispose());
+        this._readers = [];
+        this._disposables.forEach((disposable) => disposable.dispose());
+        this._disposables = [];
     }
 }
 
@@ -166,10 +176,11 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
         deferred.resolve(combined);
         return deferred.promise;
     }
-    // linux implementation of FIFO
+    // mac/linux implementation of FIFO
     await mkfifo(pipeName);
-    const reader = fs.createReadStream(pipeName, {
-        encoding: 'utf-8',
-    });
+    try {
+        await fs.chmod(pipeName, 0o666);
+    } catch {}
+    const reader = fs.createReadStream(pipeName, { encoding: 'utf-8' });
     return new rpc.StreamMessageReader(reader, 'utf-8');
 }
