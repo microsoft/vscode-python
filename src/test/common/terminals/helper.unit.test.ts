@@ -103,9 +103,9 @@ suite('Terminal Service helpers', () => {
             const term = helper.createTerminal(theTitle);
             const args = capture(terminalManager.createTerminal).first()[0];
             expect(term).to.be.deep.equal(terminal);
-            const temp = args.env;
-            // parse through temp or args.env and make sure there is no PYTHONSTARTUP
-            expect(temp).to.not.have.property('PYTHONSTARTUP');
+            const terminalOptions = args.env;
+            const safeTerminalOptions = terminalOptions || {};
+            expect(safeTerminalOptions).to.not.have.property('PYTHONSTARTUP');
         });
         test('Create terminal without a title', () => {
             const terminal = 'Terminal Created';
