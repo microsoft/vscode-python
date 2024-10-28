@@ -6,6 +6,7 @@ if sys.platform != "win32":
 original_ps1 = ">>> "
 should_opt_out = sys.version_info.major == 3 and sys.version_info.minor == 13
 
+
 class REPLHooks:
     def __init__(self):
         self.global_exit = None
@@ -70,6 +71,7 @@ class PS1:
         # result = f"{chr(27)}]633;D;{exit_code}{chr(7)}{chr(27)}]633;A{chr(7)}{original_ps1}{chr(27)}]633;B{chr(7)}{chr(27)}]633;C{chr(7)}"
 
         return result
+
 
 if sys.platform != "win32" and not should_opt_out:
     sys.ps1 = PS1()
