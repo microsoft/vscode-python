@@ -25,7 +25,6 @@ export interface PythonExtension {
 
         /**
          * Gets the path to the debugger package used by the extension.
-         * @returns {Promise<string>}
          */
         getDebuggerPackagePath(): Promise<string | undefined>;
     };

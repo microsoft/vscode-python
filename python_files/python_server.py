@@ -159,7 +159,10 @@ class CustomIO(io.TextIOWrapper):
 
 def get_headers():
     headers = {}
-    while line := STDIN.readline().strip():
+    while True:
+        line = STDIN.readline().strip()
+        if not line:
+            break
         name, value = line.split(":", 1)
         headers[name] = value.strip()
     return headers

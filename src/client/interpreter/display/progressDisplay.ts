@@ -17,7 +17,7 @@ import { IComponentAdapter } from '../contracts';
 
 // The parts of IComponentAdapter used here.
 @injectable()
-export class InterpreterLocatorProgressStatubarHandler implements IExtensionSingleActivationService {
+export class InterpreterLocatorProgressStatusBarHandler implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
     private deferred: Deferred<void> | undefined;

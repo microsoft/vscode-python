@@ -92,11 +92,6 @@ class ExecutionState implements Disposable {
  * - Send text to a terminal that executes our python file, passing in the original text as args
  * - The pthon file will execute the commands as a subprocess
  * - At the end of the execution a file is created to singal completion.
- *
- * @export
- * @class SynchronousTerminalService
- * @implements {ITerminalService}
- * @implements {Disposable}
  */
 export class SynchronousTerminalService implements ITerminalService, Disposable {
     private readonly disposables: Disposable[] = [];

@@ -11,8 +11,6 @@ export interface IApplicationDiagnostics {
     /**
      * Perform pre-extension activation health checks.
      * E.g. validate user environment, etc.
-     * @returns {Promise<void>}
-     * @memberof IApplicationDiagnostics
      */
     performPreStartupHealthCheck(resource: Resource): Promise<void>;
     register(): void;

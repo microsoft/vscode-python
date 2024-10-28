@@ -818,9 +818,6 @@ export interface IWorkspaceService {
 
     /**
      * Generate a key that's unique to the workspace folder (could be fsPath).
-     * @param {(Uri | undefined)} resource
-     * @returns {string}
-     * @memberof IWorkspaceService
      */
     getWorkspaceFolderIdentifier(resource: Uri | undefined, defaultValue?: string): string;
     /**

@@ -57,7 +57,6 @@ export interface DeprecatedProposedAPI {
          * @param {Resource} [resource] A resource for which the setting is asked for.
          * * When no resource is provided, the setting scoped to the first workspace folder is returned.
          * * If no folder is present, it returns the global setting.
-         * @returns {({ execCommand: string[] | undefined })}
          */
         getExecutionDetails(
             resource?: Resource,

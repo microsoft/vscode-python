@@ -582,10 +582,7 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "type": "string"
                 },
                 "python.locator": {
                     "default": "js",
@@ -595,7 +592,8 @@
                         "native"
                     ],
                     "tags": [
-                        "experimental"
+                        "experimental",
+                        "onExP"
                     ],
                     "scope": "machine",
                     "type": "string"
@@ -662,7 +660,7 @@
                     "scope": "resource",
                     "type": "boolean",
                     "tags": [
-                        "experimental"
+                        "preview"
                     ]
                 },
                 "python.REPL.enableREPLSmartSend": {
@@ -677,7 +675,8 @@
                     "scope": "resource",
                     "type": "boolean",
                     "tags": [
-                        "experimental"
+                        "experimental",
+                        "onExP"
                     ]
                 },
                 "python.REPL.provideVariables": {
