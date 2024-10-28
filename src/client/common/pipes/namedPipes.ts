@@ -171,7 +171,7 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
         server.listen(pipeName);
         if (token) {
             token.onCancellationRequested(() => {
-                if (server.listening) {      
+                if (server.listening) {
                     server.close();
                 }
                 deferred.reject(new CancellationError());

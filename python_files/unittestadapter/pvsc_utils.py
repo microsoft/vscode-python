@@ -307,7 +307,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def send_post_request(
-    payload: ExecutionPayloadDict | DiscoveryPayloadDict | CoveragePayloadDict,
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, CoveragePayloadDict],
     test_run_pipe: Optional[str],
 ):
     """

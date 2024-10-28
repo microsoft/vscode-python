@@ -394,12 +394,6 @@ def generate_random_pipe_name(prefix=""):
         return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}")  # noqa: PTH118
 
 
-async def create_fifo(pipe_name: str) -> None:
-    # Create the FIFO (named pipe) if it doesn't exist
-    if not pathlib.Path.exists(pipe_name):
-        os.mkfifo(pipe_name)
-
-
 class UnixPipeServer:
     def __init__(self, name):
         self.name = name
