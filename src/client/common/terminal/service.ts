@@ -136,7 +136,7 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({
             name: this.options?.title || 'Python',
-            env: { PYTHONSTARTUP: this.envVarScript },
+            env: {},
             hideFromUser: this.options?.hideFromUser,
         });
         this.terminalAutoActivator.disableAutoActivation(this.terminal);
