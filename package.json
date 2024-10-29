@@ -592,8 +592,8 @@
                         "native"
                     ],
                     "tags": [
-                        "experimental",
-                        "onExP"
+                        "onExP",
+                        "preview"
                     ],
                     "scope": "machine",
                     "type": "string"
