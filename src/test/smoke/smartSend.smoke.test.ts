@@ -8,7 +8,7 @@ import { openFile, waitForCondition } from '../common';
 
 // TODO: This test is being flaky for windows, need to investigate why only fails on windows
 if (process.platform !== 'win32') {
-    suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
+    suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         suiteSetup(async function () {
             if (!IS_SMOKE_TEST) {
                 return this.skip();
