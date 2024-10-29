@@ -119,7 +119,7 @@ export class TerminalService implements ITerminalService, Disposable {
                         terminal.sendText(commandLine);
                         resolve(undefined);
                         return undefined;
-                    }, 10000);
+                    }, 5000);
                 }),
             ]);
         } else {
