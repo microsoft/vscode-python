@@ -69,7 +69,7 @@ if (process.platform !== 'win32') {
                 return new Promise<void>((resolve) => {
                     setTimeout(() => {
                         resolve();
-                    }, 10000);
+                    }, 5000);
                 });
             }
 
