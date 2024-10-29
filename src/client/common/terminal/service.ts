@@ -112,6 +112,7 @@ export class TerminalService implements ITerminalService, Disposable {
                     }
                     traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
                 }),
+                // Once shell integration is active, hearing back from onDidEndTerminalShellExecution should not take too long.
                 new Promise<undefined>((resolve) => {
                     setTimeout(() => {
                         traceVerbose(`Execution timed out, falling back to sendText: ${commandLine}`);
