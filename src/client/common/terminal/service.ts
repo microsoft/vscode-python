@@ -99,7 +99,7 @@ export class TerminalService implements ITerminalService, Disposable {
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            return await Promise.race([
+            const result = await Promise.race([
                 new Promise<ITerminalExecutedCommand>((resolve) => {
                     const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
                         if (e.execution === execution) {
@@ -112,16 +112,20 @@ export class TerminalService implements ITerminalService, Disposable {
                     }
                     traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
                 }),
-                // Once shell integration is active, hearing back from onDidEndTerminalShellExecution should not take too long.
                 new Promise<undefined>((resolve) => {
                     setTimeout(() => {
-                        traceVerbose(`Execution timed out, falling back to sendText: ${commandLine}`);
-                        terminal.sendText(commandLine);
                         resolve(undefined);
-                        return undefined;
                     }, 5000);
                 }),
             ]);
+
+            if (result === undefined) {
+                traceVerbose(`Execution timed out, falling back to sendText: ${commandLine}`);
+                terminal.sendText(commandLine);
+                return undefined;
+            } else {
+                return result;
+            }
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
