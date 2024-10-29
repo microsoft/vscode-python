@@ -99,18 +99,28 @@ export class TerminalService implements ITerminalService, Disposable {
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            return await new Promise((resolve) => {
-                const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
-                    if (e.execution === execution) {
-                        this.executeCommandListeners.delete(listener);
-                        resolve({ execution, exitCode: e.exitCode });
+            return await Promise.race([
+                new Promise<ITerminalExecutedCommand>((resolve) => {
+                    const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
+                        if (e.execution === execution) {
+                            this.executeCommandListeners.delete(listener);
+                            resolve({ execution, exitCode: e.exitCode });
+                        }
+                    });
+                    if (listener) {
+                        this.executeCommandListeners.add(listener);
                     }
-                });
-                if (listener) {
-                    this.executeCommandListeners.add(listener);
-                }
-                traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-            });
+                    traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
+                }),
+                new Promise<undefined>((resolve) => {
+                    setTimeout(() => {
+                        traceVerbose(`Execution timed out, falling back to sendText: ${commandLine}`);
+                        terminal.sendText(commandLine);
+                        resolve(undefined);
+                        return undefined;
+                    }, 10000);
+                }),
+            ]);
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
