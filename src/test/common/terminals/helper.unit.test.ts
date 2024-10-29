@@ -107,6 +107,21 @@ suite('Terminal Service helpers', () => {
             const safeTerminalOptions = terminalOptions || {};
             expect(safeTerminalOptions).to.not.have.property('PYTHONSTARTUP');
         });
+        test('Create terminal should respect env passed in', () => {
+            const terminal = 'Terminal Created';
+            when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
+            terminalManager.createTerminal({
+                name:  'Python',
+                env: {},
+                hideFromUser: undefined,
+            });
+            const args = capture(terminalManager.createTerminal).first()[0];
+            const terminalOptions = args.env;
+            const safeTerminalOptions = terminalOptions || {};
+            expect(safeTerminalOptions).to.have.property('myCustomEnv', '123');
+            });
+        })
+
         test('Create terminal without a title', () => {
             const terminal = 'Terminal Created';
             when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
