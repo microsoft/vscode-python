@@ -675,8 +675,8 @@
                     "scope": "resource",
                     "type": "boolean",
                     "tags": [
-                        "experimental",
-                        "onExP"
+                        "onExP",
+                        "preview"
                     ]
                 },
                 "python.REPL.provideVariables": {
