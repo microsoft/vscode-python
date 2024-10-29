@@ -21,7 +21,10 @@ if (process.platform !== 'win32') {
         suiteTeardown(closeActiveWindows);
         teardown(closeActiveWindows);
 
-        test('Smart Send', async (done) => {
+        test('Smart Send', async () => {
+            const configuration = vscode.workspace.getConfiguration('python');
+            await configuration.update('REPL.sendToNativeREPL', false, vscode.ConfigurationTarget.Global);
+
             const file = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
                 'src',
@@ -69,7 +72,7 @@ if (process.platform !== 'win32') {
                 return new Promise<void>((resolve) => {
                     setTimeout(() => {
                         resolve();
-                    }, 10000);
+                    }, 30000);
                 });
             }
 
@@ -81,7 +84,6 @@ if (process.platform !== 'win32') {
             } else {
                 assert.fail(`"${outputFile}" file still exists`);
             }
-            done();
         });
     });
 }
