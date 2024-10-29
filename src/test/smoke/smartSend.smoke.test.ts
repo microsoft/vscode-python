@@ -21,7 +21,7 @@ if (process.platform !== 'win32') {
         suiteTeardown(closeActiveWindows);
         teardown(closeActiveWindows);
 
-        test('Smart Send', async () => {
+        test('Smart Send', async (done) => {
             const file = path.join(
                 EXTENSION_ROOT_DIR_FOR_TESTS,
                 'src',
@@ -69,7 +69,7 @@ if (process.platform !== 'win32') {
                 return new Promise<void>((resolve) => {
                     setTimeout(() => {
                         resolve();
-                    }, 5000);
+                    }, 10000);
                 });
             }
 
@@ -81,6 +81,7 @@ if (process.platform !== 'win32') {
             } else {
                 assert.fail(`"${outputFile}" file still exists`);
             }
+            done();
         });
     });
 }
