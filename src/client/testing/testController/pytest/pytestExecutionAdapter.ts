@@ -188,6 +188,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         resultProc?.kill();
                     } else {
                         deferredTillExecClose.resolve();
+                        serverCancel.cancel();
                     }
                 });
 

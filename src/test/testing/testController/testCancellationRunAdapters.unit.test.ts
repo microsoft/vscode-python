@@ -74,7 +74,6 @@ suite('Execution Flow Run Adapters', () => {
                 .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
                 .returns(() => {
                     cancellationToken.cancel();
-                    deferredTillServerCloseTester?.resolve();
                     return {
                         proc: mockProc as any,
                         out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
@@ -96,8 +95,12 @@ suite('Execution Flow Run Adapters', () => {
                 return Promise.resolve('named-pipe');
             });
 
-            utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, _token) => {
+            utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, token) => {
                 deferredTillServerCloseTester = deferredTillServerClose;
+                token?.onCancellationRequested(() => {
+                    deferredTillServerCloseTester?.resolve();
+                });
+
                 return Promise.resolve('named-pipes-socket-name');
             });
             serverDisposeStub.callsFake(() => {
@@ -140,7 +143,6 @@ suite('Execution Flow Run Adapters', () => {
                 .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
                 .returns(() => {
                     cancellationToken.cancel();
-                    deferredTillServerCloseTester?.resolve();
                     return {
                         proc: mockProc as any,
                         out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
@@ -164,6 +166,9 @@ suite('Execution Flow Run Adapters', () => {
 
             utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, _token) => {
                 deferredTillServerCloseTester = deferredTillServerClose;
+                token?.onCancellationRequested(() => {
+                    deferredTillServerCloseTester?.resolve();
+                });
                 return Promise.resolve('named-pipes-socket-name');
             });
             serverDisposeStub.callsFake(() => {
@@ -188,7 +193,6 @@ suite('Execution Flow Run Adapters', () => {
                 })
                 .returns(async () => {
                     cancellationToken.cancel();
-                    deferredTillServerCloseTester?.resolve();
                     return Promise.resolve();
                 });
 

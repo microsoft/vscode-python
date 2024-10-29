@@ -130,7 +130,8 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 
 def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Event):
     # Open the FIFO for reading
-    with open(pipe_name) as fifo:
+    fifo_path = pathlib.Path(pipe_name)
+    with fifo_path.open() as fifo:
         print("Waiting for data...")
         while True:
             if completed.is_set():
