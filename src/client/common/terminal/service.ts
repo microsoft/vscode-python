@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -18,7 +18,6 @@ import {
     ITerminalService,
     TerminalCreationOptions,
     TerminalShellType,
-    ITerminalExecutedCommand,
 } from './types';
 import { traceVerbose } from '../../logging';
 
@@ -35,6 +34,8 @@ export class TerminalService implements ITerminalService, Disposable {
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
+
+    // private _shellIntegrationEnabled
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private readonly options?: TerminalCreationOptions,
@@ -73,7 +74,7 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
-    public async executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
+    public async executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined> {
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
@@ -82,15 +83,14 @@ export class TerminalService implements ITerminalService, Disposable {
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
         if (!terminal.shellIntegration) {
             const promise = new Promise<boolean>((resolve) => {
-                const shellIntegrationChangeEventListener = this.terminalManager.onDidChangeTerminalShellIntegration(
-                    () => {
-                        this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
-                        resolve(true);
-                    },
-                );
+                const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
+                    clearTimeout(timer); //racetimeout
+                    disposable.dispose();
+                    resolve(true);
+                });
                 const TIMEOUT_DURATION = 500;
-                setTimeout(() => {
-                    this.executeCommandListeners.add(shellIntegrationChangeEventListener);
+                const timer = setTimeout(() => {
+                    disposable.dispose();
                     resolve(true);
                 }, TIMEOUT_DURATION);
             });
@@ -101,28 +101,7 @@ export class TerminalService implements ITerminalService, Disposable {
             // TODO: executeCommand would not execute command manually typed inside Python Terminal REPL.
             // We only run executeCommand when user shift+enter in .py file, and hence run command in terminal on user's behalf.
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-            // exitCode as promise for the case:
-            // In the case where SI is enabled in zsh/pwsh in Windows but not inside Python REPL so Python command won't finish until user exit()
-            // This means OnDidEndTerminalShellExecution would not fire inside REPL launched once REPL is launched for above case.
-
-            return {
-                execution,
-                exitCode: new Promise((resolve) => {
-                    const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
-                        if (e.execution === execution) {
-                            this.executeCommandListeners.delete(listener);
-                            resolve(e.exitCode);
-                            traceVerbose(
-                                `onDidEndTerminalShellExecution handler is called: Shell Integration exitCode: ${e.exitCode}`,
-                            );
-                        }
-                    });
-                    if (listener) {
-                        this.executeCommandListeners.add(listener);
-                    }
-                }),
-            };
+            return execution;
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
