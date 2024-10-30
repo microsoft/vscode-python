@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalOptions } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -11,7 +11,6 @@ import { EventName } from '../../telemetry/constants';
 import { ITerminalAutoActivation } from '../../terminals/types';
 import { ITerminalManager } from '../application/types';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
-import * as path from 'path';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
     ITerminalActivator,
@@ -22,10 +21,6 @@ import {
     ITerminalExecutedCommand,
 } from './types';
 import { traceVerbose } from '../../logging';
-import { EXTENSION_ROOT_DIR } from '../constants';
-import { getActiveResource } from '../vscodeApis/windowApis';
-import { getConfiguration } from '../vscodeApis/workspaceApis';
-import { create } from 'lodash';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -36,8 +31,6 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
-
-    private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
     private readonly executeCommandListeners: Set<Disposable> = new Set();
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
