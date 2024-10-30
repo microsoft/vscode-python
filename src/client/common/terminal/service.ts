@@ -107,6 +107,7 @@ export class TerminalService implements ITerminalService, Disposable {
                     disposable = this.terminalManager.onDidEndTerminalShellExecution((e) => {
                         if (e.execution === execution) {
                             resolve({ execution, exitCode: e.exitCode });
+                            console.log('Resolving inside onDidEndTerminalShellExecution');
                         }
                     });
 
@@ -120,6 +121,7 @@ export class TerminalService implements ITerminalService, Disposable {
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
+            console.log('sendText instead of try catch. This means terminal.shellIntegration is undefined');
         }
 
         return undefined;
