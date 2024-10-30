@@ -22,7 +22,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
     test('Smart Send', async () => {
         const configuration = vscode.workspace.getConfiguration('python');
         await configuration.update('REPL.sendToNativeREPL', false, vscode.ConfigurationTarget.Global);
-
+        await configuration.update('REPL.enableREPLSmartSend', true, vscode.ConfigurationTarget.Global);
         const configurationTerminal = vscode.workspace.getConfiguration('terminal');
         // set terminal.integrated.shellIntegration.enabled to false
         await configurationTerminal.update(
