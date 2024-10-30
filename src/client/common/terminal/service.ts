@@ -20,6 +20,7 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
+import { trace } from 'console';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -102,6 +103,7 @@ export class TerminalService implements ITerminalService, Disposable {
             // TODO: executeCommand would not execute command manually typed inside Python Terminal REPL.
             // We only run executeCommand when user shift+enter in .py file, and hence run command in terminal on user's behalf.
             const execution = terminal.shellIntegration.executeCommand(commandLine);
+            traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
         } else {
             terminal.sendText(commandLine);
