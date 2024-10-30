@@ -72,6 +72,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         });
 
         try {
+            console.log('EJFB run tests new');
             await this.runTestsNew(
                 uri,
                 testIds,
@@ -203,6 +204,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     }
                 });
 
+                console.log('EJFB before execObservable');
                 const result = execService?.execObservable(runArgs, spawnOptions);
                 resultProc = result?.proc;
 
@@ -213,11 +215,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     const out = utils.fixLogLinesNoTrailing(data.toString());
                     runInstance?.appendOutput(out);
                     this.outputChannel?.append(out);
+                    console.log('EJFB stdout', out);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = utils.fixLogLinesNoTrailing(data.toString());
                     runInstance?.appendOutput(out);
                     this.outputChannel?.append(out);
+                    console.log('EJFB stderr', out);
                 });
                 result?.proc?.on('exit', (code, signal) => {
                     console.log('EJFB on exit');
