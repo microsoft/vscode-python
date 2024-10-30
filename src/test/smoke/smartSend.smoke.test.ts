@@ -84,7 +84,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
             return new Promise<void>((resolve) => {
                 setTimeout(() => {
                     resolve();
-                }, 20000);
+                }, 10000);
             });
         }
 
