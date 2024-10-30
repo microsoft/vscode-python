@@ -98,6 +98,7 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         if (terminal.shellIntegration) {
+            // TODO: executeCommand would not execute command manually typed inside Python Terminal REPL.
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             // exitCode as promise for the case:
