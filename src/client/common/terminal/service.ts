@@ -144,28 +144,14 @@ export class TerminalService implements ITerminalService, Disposable {
     }
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
-        let createTerminalOptions: TerminalOptions;
-        const uri = getActiveResource();
-        const configuration = getConfiguration('python', uri);
-        const pythonStartupSetting = configuration.get<boolean>('terminal.shellIntegration.enabled', false);
-
-        if (pythonStartupSetting) {
-            createTerminalOptions = {
-                name: this.options?.title || 'Python',
-                env: { PYTHONSTARTUP: this.envVarScript },
-                hideFromUser: this.options?.hideFromUser,
-            };
-        } else {
-            createTerminalOptions = {
-                name: this.options?.title || 'Python',
-                hideFromUser: this.options?.hideFromUser,
-            };
-        }
         if (this.terminal) {
             return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
-        this.terminal = this.terminalManager.createTerminal(createTerminalOptions);
+        this.terminal = this.terminalManager.createTerminal({
+            name: this.options?.title || 'Python',
+            hideFromUser: this.options?.hideFromUser,
+        });
         this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
