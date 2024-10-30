@@ -24,6 +24,12 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         await configuration.update('REPL.sendToNativeREPL', false, vscode.ConfigurationTarget.Global);
 
         const configurationTerminal = vscode.workspace.getConfiguration('terminal');
+        // set terminal.integrated.shellIntegration.enabled to false
+        await configurationTerminal.update(
+            'integrated.shellIntegration.enabled',
+            false,
+            vscode.ConfigurationTarget.Global,
+        );
         configurationTerminal.update(
             'integrated.defaultProfile.windows',
             'PowerShell',
