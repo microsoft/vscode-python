@@ -1144,6 +1144,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
+        console.log('EFB: beginning function');
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
@@ -1169,7 +1170,8 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            // return Promise.resolve();
+            console.log('EJFB returning promise.resolve');
+            return Promise.resolve();
         };
 
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
@@ -1195,9 +1197,11 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
+        console.log('EJFB, right before run tests');
         await executionAdapter
             .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
             .finally(() => {
+                console.log('EJFB executing assertions');
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
                 assert.strictEqual(failureOccurred, false, failureMsg);
             });

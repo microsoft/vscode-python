@@ -38,10 +38,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
+        console.log('EJFB running tests');
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
         // create callback to handle data received on the named pipe
         const dataReceivedCallback = (data: ExecutionTestPayload) => {
+            console.log('EJFB data received callback');
+
             if (runInstance && !runInstance.token.isCancellationRequested) {
                 this.resultResolver?.resolveExecution(data, runInstance);
             } else {
@@ -57,6 +60,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             cSource.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
+            console.log('EJFB cancelation token hit!');
+
             traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
             const executionPayload: ExecutionTestPayload = {
                 cwd: uri.fsPath,
@@ -79,6 +84,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 interpreter,
             );
         } finally {
+            console.log('EJFB await finally');
+
             await deferredTillServerClose.promise;
         }
 
@@ -103,6 +110,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
+        console.log('EJFB running tests 2222');
+
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
@@ -182,6 +191,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 let resultProc: ChildProcess | undefined;
 
                 runInstance?.token.onCancellationRequested(() => {
+                    console.log('EJFB run instance canceled');
+
                     traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
@@ -209,6 +220,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     this.outputChannel?.append(out);
                 });
                 result?.proc?.on('exit', (code, signal) => {
+                    console.log('EJFB on exit');
+
                     this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0 && testIds) {
                         traceError(
@@ -218,6 +231,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 result?.proc?.on('close', (code, signal) => {
+                    console.log('EJFB on close');
+
                     traceVerbose('Test run finished, subprocess closed.');
                     // if the child has testIds then this is a run request
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
@@ -234,6 +249,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         }
                         // this doesn't work, it instead directs us to the noop one which is defined first
                         // potentially this is due to the server already being close, if this is the case?
+                        console.log('right before serverDispose');
                     }
 
                     // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
@@ -241,6 +257,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     deferredTillExecClose.resolve();
                     serverCancel.cancel();
                 });
+                console.log('EJFB awaiting deferredTillExecClose');
+
                 await deferredTillExecClose.promise;
             }
         } catch (ex) {
