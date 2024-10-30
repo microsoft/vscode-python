@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalOptions } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -11,6 +11,7 @@ import { EventName } from '../../telemetry/constants';
 import { ITerminalAutoActivation } from '../../terminals/types';
 import { ITerminalManager } from '../application/types';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
+import * as path from 'path';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
     ITerminalActivator,
@@ -21,6 +22,10 @@ import {
     ITerminalExecutedCommand,
 } from './types';
 import { traceVerbose } from '../../logging';
+import { EXTENSION_ROOT_DIR } from '../constants';
+import { getActiveResource } from '../vscodeApis/windowApis';
+import { getConfiguration } from '../vscodeApis/workspaceApis';
+import { create } from 'lodash';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -31,6 +36,8 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
+
+    private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
     private readonly executeCommandListeners: Set<Disposable> = new Set();
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
@@ -99,25 +106,11 @@ export class TerminalService implements ITerminalService, Disposable {
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
+            traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
+            // exitCode as promise for the case:
+            // OnDidEndTerminalShellExecution never fires because python command does not finish until exit()
+            // In the case where SI is enabled in zsh/pwsh in Windows but not inside Python REPL so Python command won't finish until user exit()
 
-            // let result = undefined;
-            // let disposable: Disposable | undefined;
-            // try {
-            //     result = await new Promise<ITerminalExecutedCommand>((resolve) => {
-            //         disposable = this.terminalManager.onDidEndTerminalShellExecution((e) => {
-            //             if (e.execution === execution) {
-            //                 resolve({ execution, exitCode: e.exitCode });
-            //                 console.log('Resolving inside onDidEndTerminalShellExecution');
-            //             }
-            //         });
-
-            //         traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-            //     });
-            //     return result;
-            // } catch {
-            // } finally {
-            //     disposable?.dispose();
-            // }
             return {
                 execution,
                 exitCode: new Promise((resolve) => {
@@ -125,6 +118,9 @@ export class TerminalService implements ITerminalService, Disposable {
                         if (e.execution === execution) {
                             this.executeCommandListeners.delete(listener);
                             resolve(e.exitCode);
+                            traceVerbose(
+                                `onDidEndTerminalShellExecution handler is called: Shell Integration exitCode: ${e.exitCode}`,
+                            );
                         }
                     });
                     if (listener) {
@@ -135,7 +131,6 @@ export class TerminalService implements ITerminalService, Disposable {
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
-            console.log('sendText instead of try catch. This means terminal.shellIntegration is undefined');
         }
 
         return undefined;
@@ -149,14 +144,28 @@ export class TerminalService implements ITerminalService, Disposable {
     }
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
     public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
+        let createTerminalOptions: TerminalOptions;
+        const uri = getActiveResource();
+        const configuration = getConfiguration('python', uri);
+        const pythonStartupSetting = configuration.get<boolean>('terminal.shellIntegration.enabled', false);
+
+        if (pythonStartupSetting) {
+            createTerminalOptions = {
+                name: this.options?.title || 'Python',
+                env: { PYTHONSTARTUP: this.envVarScript },
+                hideFromUser: this.options?.hideFromUser,
+            };
+        } else {
+            createTerminalOptions = {
+                name: this.options?.title || 'Python',
+                hideFromUser: this.options?.hideFromUser,
+            };
+        }
         if (this.terminal) {
             return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
-        this.terminal = this.terminalManager.createTerminal({
-            name: this.options?.title || 'Python',
-            hideFromUser: this.options?.hideFromUser,
-        });
+        this.terminal = this.terminalManager.createTerminal(createTerminalOptions);
         this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
