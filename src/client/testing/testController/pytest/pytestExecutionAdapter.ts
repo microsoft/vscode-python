@@ -122,6 +122,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const mutableEnv = {
             ...(await this.envVarsService?.getEnvironmentVariables(uri)),
         };
+        console.log('EJFB after env vars service');
         // get python path from mutable env, it contains process.env as well
         const pythonPathParts: string[] = mutableEnv.PYTHONPATH?.split(path.delimiter) ?? [];
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
@@ -140,6 +141,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+        console.log('EJFB after exec service');
         try {
             // Remove positional test folders and files, we will add as needed per node
             let testArgs = removePositionalFoldersAndFiles(pytestArgs);
@@ -156,6 +158,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
             // create a file with the test ids and set the environment variable to the file name
             const testIdsFileName = await utils.writeTestIdsFile(testIds);
+            console.log('EJFB after write test ids file');
             mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
             traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
 
@@ -182,6 +185,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     serverCancel.cancel();
                 });
             } else {
+                console.log('EJFB before execObservable');
                 // deferredTillExecClose is resolved when all stdout and stderr is read
                 const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
                 // combine path to run script with run args
