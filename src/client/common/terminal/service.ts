@@ -100,24 +100,38 @@ export class TerminalService implements ITerminalService, Disposable {
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
 
-            let result = undefined;
-            let disposable: Disposable | undefined;
-            try {
-                result = await new Promise<ITerminalExecutedCommand>((resolve) => {
-                    disposable = this.terminalManager.onDidEndTerminalShellExecution((e) => {
+            // let result = undefined;
+            // let disposable: Disposable | undefined;
+            // try {
+            //     result = await new Promise<ITerminalExecutedCommand>((resolve) => {
+            //         disposable = this.terminalManager.onDidEndTerminalShellExecution((e) => {
+            //             if (e.execution === execution) {
+            //                 resolve({ execution, exitCode: e.exitCode });
+            //                 console.log('Resolving inside onDidEndTerminalShellExecution');
+            //             }
+            //         });
+
+            //         traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
+            //     });
+            //     return result;
+            // } catch {
+            // } finally {
+            //     disposable?.dispose();
+            // }
+            return {
+                execution,
+                exitCode: new Promise((resolve) => {
+                    const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
                         if (e.execution === execution) {
-                            resolve({ execution, exitCode: e.exitCode });
-                            console.log('Resolving inside onDidEndTerminalShellExecution');
+                            this.executeCommandListeners.delete(listener);
+                            resolve(e.exitCode);
                         }
                     });
-
-                    traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-                });
-                return result;
-            } catch {
-            } finally {
-                disposable?.dispose();
-            }
+                    if (listener) {
+                        this.executeCommandListeners.add(listener);
+                    }
+                }),
+            };
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
