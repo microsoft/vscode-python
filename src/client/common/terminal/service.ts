@@ -102,8 +102,8 @@ export class TerminalService implements ITerminalService, Disposable {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             // exitCode as promise for the case:
-            // OnDidEndTerminalShellExecution never fires because python command does not finish until exit()
             // In the case where SI is enabled in zsh/pwsh in Windows but not inside Python REPL so Python command won't finish until user exit()
+            // This means OnDidEndTerminalShellExecution would not fire inside REPL launched once REPL is launched for above case.
 
             return {
                 execution,
