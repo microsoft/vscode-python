@@ -1169,7 +1169,6 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            console.log('EJFB returning promise.resolve');
             return Promise.resolve();
         };
 
@@ -1196,11 +1195,9 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        console.log('EJFB, right before run tests');
         await executionAdapter
             .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
             .finally(() => {
-                console.log('EJFB executing assertions');
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
                 assert.strictEqual(failureOccurred, false, failureMsg);
             });
