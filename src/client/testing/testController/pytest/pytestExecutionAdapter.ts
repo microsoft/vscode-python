@@ -42,7 +42,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
         // create callback to handle data received on the named pipe
         const dataReceivedCallback = (data: ExecutionTestPayload) => {
-
             if (runInstance && !runInstance.token.isCancellationRequested) {
                 this.resultResolver?.resolveExecution(data, runInstance);
             } else {
@@ -104,7 +103,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
-
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
         const settings = this.configSettings.getSettings(uri);
@@ -184,7 +182,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 let resultProc: ChildProcess | undefined;
 
                 runInstance?.token.onCancellationRequested(() => {
-
                     traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
@@ -212,7 +209,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     this.outputChannel?.append(out);
                 });
                 result?.proc?.on('exit', (code, signal) => {
-
                     this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0 && testIds) {
                         traceError(
@@ -222,7 +218,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 result?.proc?.on('close', (code, signal) => {
-
                     traceVerbose('Test run finished, subprocess closed.');
                     // if the child has testIds then this is a run request
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
