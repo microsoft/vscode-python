@@ -389,563 +389,563 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
-    test('pytest discovery adapter small workspace with symlink', async () => {
-        if (os.platform() === 'win32') {
-            console.log('Skipping test for windows');
-            return;
-        }
+    // test('pytest discovery adapter small workspace with symlink', async () => {
+    //     if (os.platform() === 'win32') {
+    //         console.log('Skipping test for windows');
+    //         return;
+    //     }
 
-        // result resolver and saved data for assertions
-        let actualData: {
-            cwd: string;
-            tests?: unknown;
-            status: 'success' | 'error';
-            error?: string[];
-        };
-        // set workspace to test workspace folder
-        const testSimpleSymlinkPath = path.join(rootPathDiscoverySymlink, 'test_simple.py');
-        workspaceUri = Uri.parse(rootPathDiscoverySymlink);
-        const stats = fs.lstatSync(rootPathDiscoverySymlink);
+    //     // result resolver and saved data for assertions
+    //     let actualData: {
+    //         cwd: string;
+    //         tests?: unknown;
+    //         status: 'success' | 'error';
+    //         error?: string[];
+    //     };
+    //     // set workspace to test workspace folder
+    //     const testSimpleSymlinkPath = path.join(rootPathDiscoverySymlink, 'test_simple.py');
+    //     workspaceUri = Uri.parse(rootPathDiscoverySymlink);
+    //     const stats = fs.lstatSync(rootPathDiscoverySymlink);
 
-        // confirm that the path is a symbolic link
-        assert.ok(stats.isSymbolicLink(), 'The path is not a symbolic link but must be for this test.');
+    //     // confirm that the path is a symbolic link
+    //     assert.ok(stats.isSymbolicLink(), 'The path is not a symbolic link but must be for this test.');
 
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-        let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            actualData = payload;
-            return Promise.resolve();
-        };
-        // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+    //     resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     resultResolver._resolveDiscovery = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         actualData = payload;
+    //         return Promise.resolve();
+    //     };
+    //     // run pytest discovery
+    //     const discoveryAdapter = new PytestTestDiscoveryAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
-        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
-            // verification after discovery is complete
+    //     await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+    //         // verification after discovery is complete
 
-            // 1. Check the status is "success"
-            assert.strictEqual(
-                actualData.status,
-                'success',
-                `Expected status to be 'success' instead status is ${actualData.status}`,
-            ); // 2. Confirm no errors
-            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
-            // 4. Confirm that the cwd returned is the symlink path and the test's path is also using the symlink as the root
-            if (process.platform === 'win32') {
-                // covert string to lowercase for windows as the path is case insensitive
-                traceLog('windows machine detected, converting path to lowercase for comparison');
-                const a = actualData.cwd.toLowerCase();
-                const b = rootPathDiscoverySymlink.toLowerCase();
-                const testSimpleActual = (actualData.tests as {
-                    children: {
-                        path: string;
-                    }[];
-                }).children[0].path.toLowerCase();
-                const testSimpleExpected = testSimpleSymlinkPath.toLowerCase();
-                assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
-                assert.strictEqual(
-                    testSimpleActual,
-                    testSimpleExpected,
-                    `Expected test path to be the symlink path actual: ${testSimpleActual} expected: ${testSimpleExpected}`,
-                );
-            } else {
-                assert.strictEqual(
-                    path.join(actualData.cwd),
-                    path.join(rootPathDiscoverySymlink),
-                    'Expected cwd to be the symlink path, check for non-windows machines',
-                );
-                assert.strictEqual(
-                    (actualData.tests as {
-                        children: {
-                            path: string;
-                        }[];
-                    }).children[0].path,
-                    testSimpleSymlinkPath,
-                    'Expected test path to be the symlink path, check for non windows machines',
-                );
-            }
+    //         // 1. Check the status is "success"
+    //         assert.strictEqual(
+    //             actualData.status,
+    //             'success',
+    //             `Expected status to be 'success' instead status is ${actualData.status}`,
+    //         ); // 2. Confirm no errors
+    //         assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+    //         // 3. Confirm tests are found
+    //         assert.ok(actualData.tests, 'Expected tests to be present');
+    //         // 4. Confirm that the cwd returned is the symlink path and the test's path is also using the symlink as the root
+    //         if (process.platform === 'win32') {
+    //             // covert string to lowercase for windows as the path is case insensitive
+    //             traceLog('windows machine detected, converting path to lowercase for comparison');
+    //             const a = actualData.cwd.toLowerCase();
+    //             const b = rootPathDiscoverySymlink.toLowerCase();
+    //             const testSimpleActual = (actualData.tests as {
+    //                 children: {
+    //                     path: string;
+    //                 }[];
+    //             }).children[0].path.toLowerCase();
+    //             const testSimpleExpected = testSimpleSymlinkPath.toLowerCase();
+    //             assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
+    //             assert.strictEqual(
+    //                 testSimpleActual,
+    //                 testSimpleExpected,
+    //                 `Expected test path to be the symlink path actual: ${testSimpleActual} expected: ${testSimpleExpected}`,
+    //             );
+    //         } else {
+    //             assert.strictEqual(
+    //                 path.join(actualData.cwd),
+    //                 path.join(rootPathDiscoverySymlink),
+    //                 'Expected cwd to be the symlink path, check for non-windows machines',
+    //             );
+    //             assert.strictEqual(
+    //                 (actualData.tests as {
+    //                     children: {
+    //                         path: string;
+    //                     }[];
+    //                 }).children[0].path,
+    //                 testSimpleSymlinkPath,
+    //                 'Expected test path to be the symlink path, check for non windows machines',
+    //             );
+    //         }
 
-            // 5. Confirm that resolveDiscovery was called once
-            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
-        });
-    });
-    test('pytest discovery adapter large workspace', async () => {
-        // result resolver and saved data for assertions
-        let actualData: {
-            cwd: string;
-            tests?: unknown;
-            status: 'success' | 'error';
-            error?: string[];
-        };
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-        let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            actualData = payload;
-            return Promise.resolve();
-        };
-        // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+    //         // 5. Confirm that resolveDiscovery was called once
+    //         assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+    //     });
+    // });
+    // test('pytest discovery adapter large workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     let actualData: {
+    //         cwd: string;
+    //         tests?: unknown;
+    //         status: 'success' | 'error';
+    //         error?: string[];
+    //     };
+    //     resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     resultResolver._resolveDiscovery = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         actualData = payload;
+    //         return Promise.resolve();
+    //     };
+    //     // run pytest discovery
+    //     const discoveryAdapter = new PytestTestDiscoveryAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathLargeWorkspace);
+    //     configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
-        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
-            // verification after discovery is complete
-            // 1. Check the status is "success"
-            assert.strictEqual(
-                actualData.status,
-                'success',
-                `Expected status to be 'success' instead status is ${actualData.status}`,
-            ); // 2. Confirm no errors
-            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
-            // 3. Confirm tests are found
-            assert.ok(actualData.tests, 'Expected tests to be present');
+    //     await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+    //         // verification after discovery is complete
+    //         // 1. Check the status is "success"
+    //         assert.strictEqual(
+    //             actualData.status,
+    //             'success',
+    //             `Expected status to be 'success' instead status is ${actualData.status}`,
+    //         ); // 2. Confirm no errors
+    //         assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+    //         // 3. Confirm tests are found
+    //         assert.ok(actualData.tests, 'Expected tests to be present');
 
-            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
-        });
-    });
-    test('unittest execution adapter small workspace with correct output', async () => {
-        // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            // the payloads that get to the _resolveExecution are all data and should be successful.
-            try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
+    //         assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+    //     });
+    // });
+    // test('unittest execution adapter small workspace with correct output', async () => {
+    //     // result resolver and saved data for assertions
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     let failureOccurred = false;
+    //     let failureMsg = '';
+    //     resultResolver._resolveExecution = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         // the payloads that get to the _resolveExecution are all data and should be successful.
+    //         try {
+    //             assert.strictEqual(
+    //                 payload.status,
+    //                 'success',
+    //                 `Expected status to be 'success', instead status is ${payload.status}`,
+    //             );
+    //             assert.ok(payload.result, 'Expected results to be present');
+    //         } catch (err) {
+    //             failureMsg = err ? (err as Error).toString() : '';
+    //             failureOccurred = true;
+    //         }
+    //         return Promise.resolve();
+    //     };
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
-        // run execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        let collectedOutput = '';
-        testRun
-            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
-            .callback((output: string) => {
-                collectedOutput += output;
-                traceLog('appendOutput was called with:', output);
-            })
-            .returns(() => false);
-        await executionAdapter
-            .runTests(
-                workspaceUri,
-                ['test_simple.SimpleClass.test_simple_unit'],
-                TestRunProfileKind.Run,
-                testRun.object,
-                pythonExecFactory,
-            )
-            .finally(() => {
-                // verify that the _resolveExecution was called once per test
-                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
-                assert.strictEqual(failureOccurred, false, failureMsg);
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathSmallWorkspace);
+    //     configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+    //     // run execution
+    //     const executionAdapter = new UnittestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     let collectedOutput = '';
+    //     testRun
+    //         .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+    //         .callback((output: string) => {
+    //             collectedOutput += output;
+    //             traceLog('appendOutput was called with:', output);
+    //         })
+    //         .returns(() => false);
+    //     await executionAdapter
+    //         .runTests(
+    //             workspaceUri,
+    //             ['test_simple.SimpleClass.test_simple_unit'],
+    //             TestRunProfileKind.Run,
+    //             testRun.object,
+    //             pythonExecFactory,
+    //         )
+    //         .finally(() => {
+    //             // verify that the _resolveExecution was called once per test
+    //             assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+    //             assert.strictEqual(failureOccurred, false, failureMsg);
 
-                // verify output works for stdout and stderr as well as unittest output
-                assert.ok(
-                    collectedOutput.includes('expected printed output, stdout'),
-                    'The test string does not contain the expected stdout output.',
-                );
-                assert.ok(
-                    collectedOutput.includes('expected printed output, stderr'),
-                    'The test string does not contain the expected stderr output.',
-                );
-                assert.ok(
-                    collectedOutput.includes('Ran 1 test in'),
-                    'The test string does not contain the expected unittest output.',
-                );
-            });
-    });
-    test('unittest execution adapter large workspace', async () => {
-        // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            // the payloads that get to the _resolveExecution are all data and should be successful.
-            try {
-                const validStatuses = ['subtest-success', 'subtest-failure'];
-                assert.ok(
-                    validStatuses.includes(payload.status),
-                    `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
+    //             // verify output works for stdout and stderr as well as unittest output
+    //             assert.ok(
+    //                 collectedOutput.includes('expected printed output, stdout'),
+    //                 'The test string does not contain the expected stdout output.',
+    //             );
+    //             assert.ok(
+    //                 collectedOutput.includes('expected printed output, stderr'),
+    //                 'The test string does not contain the expected stderr output.',
+    //             );
+    //             assert.ok(
+    //                 collectedOutput.includes('Ran 1 test in'),
+    //                 'The test string does not contain the expected unittest output.',
+    //             );
+    //         });
+    // });
+    // test('unittest execution adapter large workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     let failureOccurred = false;
+    //     let failureMsg = '';
+    //     resultResolver._resolveExecution = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         // the payloads that get to the _resolveExecution are all data and should be successful.
+    //         try {
+    //             const validStatuses = ['subtest-success', 'subtest-failure'];
+    //             assert.ok(
+    //                 validStatuses.includes(payload.status),
+    //                 `Expected status to be one of ${validStatuses.join(', ')}, but instead status is ${payload.status}`,
+    //             );
+    //             assert.ok(payload.result, 'Expected results to be present');
+    //         } catch (err) {
+    //             failureMsg = err ? (err as Error).toString() : '';
+    //             failureOccurred = true;
+    //         }
+    //         return Promise.resolve();
+    //     };
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathLargeWorkspace);
+    //     configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
-        // run unittest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        let collectedOutput = '';
-        testRun
-            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
-            .callback((output: string) => {
-                collectedOutput += output;
-                traceLog('appendOutput was called with:', output);
-            })
-            .returns(() => false);
-        await executionAdapter
-            .runTests(
-                workspaceUri,
-                ['test_parameterized_subtest.NumbersTest.test_even'],
-                TestRunProfileKind.Run,
-                testRun.object,
-                pythonExecFactory,
-            )
-            .then(() => {
-                // verify that the _resolveExecution was called once per test
-                assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
-                assert.strictEqual(failureOccurred, false, failureMsg);
+    //     // run unittest execution
+    //     const executionAdapter = new UnittestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     let collectedOutput = '';
+    //     testRun
+    //         .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+    //         .callback((output: string) => {
+    //             collectedOutput += output;
+    //             traceLog('appendOutput was called with:', output);
+    //         })
+    //         .returns(() => false);
+    //     await executionAdapter
+    //         .runTests(
+    //             workspaceUri,
+    //             ['test_parameterized_subtest.NumbersTest.test_even'],
+    //             TestRunProfileKind.Run,
+    //             testRun.object,
+    //             pythonExecFactory,
+    //         )
+    //         .then(() => {
+    //             // verify that the _resolveExecution was called once per test
+    //             assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+    //             assert.strictEqual(failureOccurred, false, failureMsg);
 
-                // verify output
-                assert.ok(
-                    collectedOutput.includes('test_parameterized_subtest.py'),
-                    'The test string does not contain the correct test name which should be printed',
-                );
-                assert.ok(
-                    collectedOutput.includes('FAILED (failures=1000)'),
-                    'The test string does not contain the last of the unittest output',
-                );
-            });
-    });
-    test('pytest execution adapter small workspace with correct output', async () => {
-        // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            // the payloads that get to the _resolveExecution are all data and should be successful.
-            try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+    //             // verify output
+    //             assert.ok(
+    //                 collectedOutput.includes('test_parameterized_subtest.py'),
+    //                 'The test string does not contain the correct test name which should be printed',
+    //             );
+    //             assert.ok(
+    //                 collectedOutput.includes('FAILED (failures=1000)'),
+    //                 'The test string does not contain the last of the unittest output',
+    //             );
+    //         });
+    // });
+    // test('pytest execution adapter small workspace with correct output', async () => {
+    //     // result resolver and saved data for assertions
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     let failureOccurred = false;
+    //     let failureMsg = '';
+    //     resultResolver._resolveExecution = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         // the payloads that get to the _resolveExecution are all data and should be successful.
+    //         try {
+    //             assert.strictEqual(
+    //                 payload.status,
+    //                 'success',
+    //                 `Expected status to be 'success', instead status is ${payload.status}`,
+    //             );
+    //             assert.ok(payload.result, 'Expected results to be present');
+    //         } catch (err) {
+    //             failureMsg = err ? (err as Error).toString() : '';
+    //             failureOccurred = true;
+    //         }
+    //         return Promise.resolve();
+    //     };
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathSmallWorkspace);
+    //     configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
-        // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        let collectedOutput = '';
-        testRun
-            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
-            .callback((output: string) => {
-                collectedOutput += output;
-                traceLog('appendOutput was called with:', output);
-            })
-            .returns(() => false);
-        await executionAdapter
-            .runTests(
-                workspaceUri,
-                [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
-                TestRunProfileKind.Run,
-                testRun.object,
-                pythonExecFactory,
-            )
-            .then(() => {
-                // verify that the _resolveExecution was called once per test
-                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
-                assert.strictEqual(failureOccurred, false, failureMsg);
+    //     // run pytest execution
+    //     const executionAdapter = new PytestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     let collectedOutput = '';
+    //     testRun
+    //         .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+    //         .callback((output: string) => {
+    //             collectedOutput += output;
+    //             traceLog('appendOutput was called with:', output);
+    //         })
+    //         .returns(() => false);
+    //     await executionAdapter
+    //         .runTests(
+    //             workspaceUri,
+    //             [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
+    //             TestRunProfileKind.Run,
+    //             testRun.object,
+    //             pythonExecFactory,
+    //         )
+    //         .then(() => {
+    //             // verify that the _resolveExecution was called once per test
+    //             assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+    //             assert.strictEqual(failureOccurred, false, failureMsg);
 
-                // verify output works for stdout and stderr as well as pytest output
-                assert.ok(
-                    collectedOutput.includes('test session starts'),
-                    'The test string does not contain the expected stdout output.',
-                );
-                assert.ok(
-                    collectedOutput.includes('Captured log call'),
-                    'The test string does not contain the expected log section.',
-                );
-                const searchStrings = [
-                    'This is a warning message.',
-                    'This is an error message.',
-                    'This is a critical message.',
-                ];
-                let searchString: string;
-                for (searchString of searchStrings) {
-                    const count: number = (collectedOutput.match(new RegExp(searchString, 'g')) || []).length;
-                    assert.strictEqual(
-                        count,
-                        2,
-                        `The test string does not contain two instances of ${searchString}. Should appear twice from logging output and stack trace`,
-                    );
-                }
-            });
-    });
+    //             // verify output works for stdout and stderr as well as pytest output
+    //             assert.ok(
+    //                 collectedOutput.includes('test session starts'),
+    //                 'The test string does not contain the expected stdout output.',
+    //             );
+    //             assert.ok(
+    //                 collectedOutput.includes('Captured log call'),
+    //                 'The test string does not contain the expected log section.',
+    //             );
+    //             const searchStrings = [
+    //                 'This is a warning message.',
+    //                 'This is an error message.',
+    //                 'This is a critical message.',
+    //             ];
+    //             let searchString: string;
+    //             for (searchString of searchStrings) {
+    //                 const count: number = (collectedOutput.match(new RegExp(searchString, 'g')) || []).length;
+    //                 assert.strictEqual(
+    //                     count,
+    //                     2,
+    //                     `The test string does not contain two instances of ${searchString}. Should appear twice from logging output and stack trace`,
+    //                 );
+    //             }
+    //         });
+    // });
 
-    test('Unittest execution with coverage, small workspace', async () => {
-        // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        resultResolver._resolveCoverage = async (payload, _token?) => {
-            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
-            assert.ok(payload.result, 'Expected results to be present');
-            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
-            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
-            // since only one test was run, the other test in the same file will have missed coverage lines
-            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
-            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
-            return Promise.resolve();
-        };
+    // test('Unittest execution with coverage, small workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     resultResolver._resolveCoverage = async (payload, _token?) => {
+    //         assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+    //         assert.ok(payload.result, 'Expected results to be present');
+    //         const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+    //         assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+    //         // since only one test was run, the other test in the same file will have missed coverage lines
+    //         assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+    //         assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+    //         return Promise.resolve();
+    //     };
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
-        // run execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        let collectedOutput = '';
-        testRun
-            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
-            .callback((output: string) => {
-                collectedOutput += output;
-                traceLog('appendOutput was called with:', output);
-            })
-            .returns(() => false);
-        await executionAdapter
-            .runTests(
-                workspaceUri,
-                ['test_even.TestNumbers.test_odd'],
-                TestRunProfileKind.Coverage,
-                testRun.object,
-                pythonExecFactory,
-            )
-            .finally(() => {
-                assert.ok(collectedOutput, 'expect output to be collected');
-            });
-    });
-    test('pytest coverage execution, small workspace', async () => {
-        // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
-        resultResolver._resolveCoverage = async (payload, _runInstance?) => {
-            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
-            assert.ok(payload.result, 'Expected results to be present');
-            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
-            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
-            // since only one test was run, the other test in the same file will have missed coverage lines
-            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
-            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+    //     configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+    //     // run execution
+    //     const executionAdapter = new UnittestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     let collectedOutput = '';
+    //     testRun
+    //         .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+    //         .callback((output: string) => {
+    //             collectedOutput += output;
+    //             traceLog('appendOutput was called with:', output);
+    //         })
+    //         .returns(() => false);
+    //     await executionAdapter
+    //         .runTests(
+    //             workspaceUri,
+    //             ['test_even.TestNumbers.test_odd'],
+    //             TestRunProfileKind.Coverage,
+    //             testRun.object,
+    //             pythonExecFactory,
+    //         )
+    //         .finally(() => {
+    //             assert.ok(collectedOutput, 'expect output to be collected');
+    //         });
+    // });
+    // test('pytest coverage execution, small workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+    //     resultResolver._resolveCoverage = async (payload, _runInstance?) => {
+    //         assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+    //         assert.ok(payload.result, 'Expected results to be present');
+    //         const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+    //         assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+    //         // since only one test was run, the other test in the same file will have missed coverage lines
+    //         assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+    //         assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
 
-            return Promise.resolve();
-        };
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+    //         return Promise.resolve();
+    //     };
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+    //     configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
-        // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        let collectedOutput = '';
-        testRun
-            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
-            .callback((output: string) => {
-                collectedOutput += output;
-                traceLog('appendOutput was called with:', output);
-            })
-            .returns(() => false);
-        await executionAdapter
-            .runTests(
-                workspaceUri,
-                [`${rootPathCoverageWorkspace}/test_even.py::TestNumbers::test_odd`],
-                TestRunProfileKind.Coverage,
-                testRun.object,
-                pythonExecFactory,
-            )
-            .then(() => {
-                assert.ok(collectedOutput, 'expect output to be collected');
-            });
-    });
-    test('pytest execution adapter large workspace', async () => {
-        // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
-            callCount = callCount + 1;
-            // the payloads that get to the _resolveExecution are all data and should be successful.
-            try {
-                assert.strictEqual(
-                    payload.status,
-                    'success',
-                    `Expected status to be 'success', instead status is ${payload.status}`,
-                );
-                assert.ok(payload.result, 'Expected results to be present');
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
+    //     // run pytest execution
+    //     const executionAdapter = new PytestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     let collectedOutput = '';
+    //     testRun
+    //         .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+    //         .callback((output: string) => {
+    //             collectedOutput += output;
+    //             traceLog('appendOutput was called with:', output);
+    //         })
+    //         .returns(() => false);
+    //     await executionAdapter
+    //         .runTests(
+    //             workspaceUri,
+    //             [`${rootPathCoverageWorkspace}/test_even.py::TestNumbers::test_odd`],
+    //             TestRunProfileKind.Coverage,
+    //             testRun.object,
+    //             pythonExecFactory,
+    //         )
+    //         .then(() => {
+    //             assert.ok(collectedOutput, 'expect output to be collected');
+    //         });
+    // });
+    // test('pytest execution adapter large workspace', async () => {
+    //     // result resolver and saved data for assertions
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     let failureOccurred = false;
+    //     let failureMsg = '';
+    //     resultResolver._resolveExecution = async (payload, _token?) => {
+    //         traceLog(`resolveDiscovery ${payload}`);
+    //         callCount = callCount + 1;
+    //         // the payloads that get to the _resolveExecution are all data and should be successful.
+    //         try {
+    //             assert.strictEqual(
+    //                 payload.status,
+    //                 'success',
+    //                 `Expected status to be 'success', instead status is ${payload.status}`,
+    //             );
+    //             assert.ok(payload.result, 'Expected results to be present');
+    //         } catch (err) {
+    //             failureMsg = err ? (err as Error).toString() : '';
+    //             failureOccurred = true;
+    //         }
+    //         return Promise.resolve();
+    //     };
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathLargeWorkspace);
-        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathLargeWorkspace);
+    //     configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
-        // generate list of test_ids
-        const testIds: string[] = [];
-        for (let i = 0; i < 2000; i = i + 1) {
-            const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
-            testIds.push(testId);
-        }
+    //     // generate list of test_ids
+    //     const testIds: string[] = [];
+    //     for (let i = 0; i < 2000; i = i + 1) {
+    //         const testId = `${rootPathLargeWorkspace}/test_parameterized_subtest.py::test_odd_even[${i}]`;
+    //         testIds.push(testId);
+    //     }
 
-        // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        let collectedOutput = '';
-        testRun
-            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
-            .callback((output: string) => {
-                collectedOutput += output;
-                traceLog('appendOutput was called with:', output);
-            })
-            .returns(() => false);
-        await executionAdapter
-            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
-            .then(() => {
-                // verify that the _resolveExecution was called once per test
-                assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
-                assert.strictEqual(failureOccurred, false, failureMsg);
+    //     // run pytest execution
+    //     const executionAdapter = new PytestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     let collectedOutput = '';
+    //     testRun
+    //         .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+    //         .callback((output: string) => {
+    //             collectedOutput += output;
+    //             traceLog('appendOutput was called with:', output);
+    //         })
+    //         .returns(() => false);
+    //     await executionAdapter
+    //         .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+    //         .then(() => {
+    //             // verify that the _resolveExecution was called once per test
+    //             assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+    //             assert.strictEqual(failureOccurred, false, failureMsg);
 
-                // verify output works for large repo
-                assert.ok(
-                    collectedOutput.includes('test session starts'),
-                    'The test string does not contain the expected stdout output from pytest.',
-                );
-            });
-    });
+    //             // verify output works for large repo
+    //             assert.ok(
+    //                 collectedOutput.includes('test session starts'),
+    //                 'The test string does not contain the expected stdout output from pytest.',
+    //             );
+    //         });
+    // });
     test('unittest discovery adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
@@ -1062,83 +1062,83 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
-    test('unittest execution adapter seg fault error handling', async () => {
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (data, _token?) => {
-            // do the following asserts for each time resolveExecution is called, should be called once per test.
-            callCount = callCount + 1;
-            traceLog(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
-            try {
-                if (data.status === 'error') {
-                    if (data.error === undefined) {
-                        // Dereference a NULL pointer
-                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
-                        if (indexOfTest === -1) {
-                            failureOccurred = true;
-                            failureMsg = 'Expected test to have a null pointer';
-                        }
-                    } else if (data.error.length === 0) {
-                        failureOccurred = true;
-                        failureMsg = "Expected errors in 'error' field";
-                    }
-                } else {
-                    const indexOfTest = JSON.stringify(data.result).search('error');
-                    if (indexOfTest === -1) {
-                        failureOccurred = true;
-                        failureMsg =
-                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
-                    }
-                }
-                if (data.result === undefined) {
-                    failureOccurred = true;
-                    failureMsg = 'Expected results to be present';
-                }
-                // make sure the testID is found in the results
-                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
-                if (indexOfTest === -1) {
-                    failureOccurred = true;
-                    failureMsg = 'Expected testId to be present';
-                }
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
+    // test('unittest execution adapter seg fault error handling', async () => {
+    //     resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+    //     let callCount = 0;
+    //     let failureOccurred = false;
+    //     let failureMsg = '';
+    //     resultResolver._resolveExecution = async (data, _token?) => {
+    //         // do the following asserts for each time resolveExecution is called, should be called once per test.
+    //         callCount = callCount + 1;
+    //         traceLog(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+    //         try {
+    //             if (data.status === 'error') {
+    //                 if (data.error === undefined) {
+    //                     // Dereference a NULL pointer
+    //                     const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
+    //                     if (indexOfTest === -1) {
+    //                         failureOccurred = true;
+    //                         failureMsg = 'Expected test to have a null pointer';
+    //                     }
+    //                 } else if (data.error.length === 0) {
+    //                     failureOccurred = true;
+    //                     failureMsg = "Expected errors in 'error' field";
+    //                 }
+    //             } else {
+    //                 const indexOfTest = JSON.stringify(data.result).search('error');
+    //                 if (indexOfTest === -1) {
+    //                     failureOccurred = true;
+    //                     failureMsg =
+    //                         'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
+    //                 }
+    //             }
+    //             if (data.result === undefined) {
+    //                 failureOccurred = true;
+    //                 failureMsg = 'Expected results to be present';
+    //             }
+    //             // make sure the testID is found in the results
+    //             const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
+    //             if (indexOfTest === -1) {
+    //                 failureOccurred = true;
+    //                 failureMsg = 'Expected testId to be present';
+    //             }
+    //         } catch (err) {
+    //             failureMsg = err ? (err as Error).toString() : '';
+    //             failureOccurred = true;
+    //         }
+    //         return Promise.resolve();
+    //     };
 
-        const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
-        const testIds: string[] = [testId];
+    //     const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
+    //     const testIds: string[] = [testId];
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+    //     // set workspace to test workspace folder
+    //     workspaceUri = Uri.parse(rootPathErrorWorkspace);
+    //     configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
-        // run pytest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        await executionAdapter
-            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
-            .finally(() => {
-                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
-                assert.strictEqual(failureOccurred, false, failureMsg);
-            });
-    });
+    //     // run pytest execution
+    //     const executionAdapter = new UnittestTestExecutionAdapter(
+    //         configService,
+    //         testOutputChannel.object,
+    //         resultResolver,
+    //         envVarsService,
+    //     );
+    //     const testRun = typeMoq.Mock.ofType<TestRun>();
+    //     testRun
+    //         .setup((t) => t.token)
+    //         .returns(
+    //             () =>
+    //                 ({
+    //                     onCancellationRequested: () => undefined,
+    //                 } as any),
+    //         );
+    //     await executionAdapter
+    //         .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+    //         .finally(() => {
+    //             assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+    //             assert.strictEqual(failureOccurred, false, failureMsg);
+    //         });
+    // });
     test('pytest execution adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;

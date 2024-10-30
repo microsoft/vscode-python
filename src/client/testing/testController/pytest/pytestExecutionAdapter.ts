@@ -139,6 +139,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             resource: uri,
             interpreter,
         };
+        console.log('EJFB before createActivatedEnvironment', executionFactory);
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
         console.log('EJFB after exec service');
