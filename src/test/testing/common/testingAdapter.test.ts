@@ -17,7 +17,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { traceError, traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
-import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
+// import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
 import { PythonResultResolver } from '../../../client/testing/testController/common/resultResolver';
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
@@ -74,12 +74,12 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'symlink_parent-folder',
     );
-    const rootPathCoverageWorkspace = path.join(
-        EXTENSION_ROOT_DIR_FOR_TESTS,
-        'src',
-        'testTestingRootWkspc',
-        'coverageWorkspace',
-    );
+    // const rootPathCoverageWorkspace = path.join(
+    //     EXTENSION_ROOT_DIR_FOR_TESTS,
+    //     'src',
+    //     'testTestingRootWkspc',
+    //     'coverageWorkspace',
+    // );
     suiteSetup(async () => {
         serviceContainer = (await initialize()).serviceContainer;
 
