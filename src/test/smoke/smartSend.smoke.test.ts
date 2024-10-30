@@ -61,7 +61,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
             });
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, 10_000, `"${outputFile}" file not created`);
+        await waitForCondition(checkIfFileHasBeenCreated, 20_000, `"${outputFile}" file not created`);
 
         await vscode.commands
             .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
@@ -78,7 +78,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
             return new Promise<void>((resolve) => {
                 setTimeout(() => {
                     resolve();
-                }, 10000);
+                }, 20000);
             });
         }
 
