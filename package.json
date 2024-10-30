@@ -24,7 +24,6 @@
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
-        "contribIssueReporter",
         "codeActionAI",
         "notebookReplDocument",
         "notebookVariableProvider"
