@@ -20,7 +20,6 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
-import { trace } from 'console';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
