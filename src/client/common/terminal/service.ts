@@ -31,7 +31,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
     private readonly executeCommandListeners: Set<Disposable> = new Set();
-    private _shellIntegrationEnabled: boolean = false;
+    private _terminalFirstLaunched: boolean = true;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
@@ -81,17 +81,16 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
-        if (!terminal.shellIntegration && !this._shellIntegrationEnabled) {
+        if (!terminal.shellIntegration && this._terminalFirstLaunched) {
+            this._terminalFirstLaunched = false;
             const promise = new Promise<boolean>((resolve) => {
                 const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
-                    this._shellIntegrationEnabled = true;
                     clearTimeout(timer); //racetimeout
                     disposable.dispose();
                     resolve(true);
                 });
                 const TIMEOUT_DURATION = 500;
                 const timer = setTimeout(() => {
-                    this._shellIntegrationEnabled = false;
                     disposable.dispose();
                     resolve(true);
                 }, TIMEOUT_DURATION);
@@ -103,10 +102,8 @@ export class TerminalService implements ITerminalService, Disposable {
             // TODO: executeCommand would not execute command manually typed inside Python Terminal REPL.
             // We only run executeCommand when user shift+enter in .py file, and hence run command in terminal on user's behalf.
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            this._shellIntegrationEnabled = true;
             return execution;
         } else {
-            this._shellIntegrationEnabled = false;
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
         }
