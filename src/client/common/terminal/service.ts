@@ -99,32 +99,23 @@ export class TerminalService implements ITerminalService, Disposable {
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            const result = await Promise.race([
-                new Promise<ITerminalExecutedCommand>((resolve) => {
-                    const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
+
+            let result = undefined;
+            let disposable: Disposable | undefined;
+            try {
+                result = await new Promise<ITerminalExecutedCommand>((resolve) => {
+                    disposable = this.terminalManager.onDidEndTerminalShellExecution((e) => {
                         if (e.execution === execution) {
-                            this.executeCommandListeners.delete(listener);
                             resolve({ execution, exitCode: e.exitCode });
                         }
                     });
-                    if (listener) {
-                        this.executeCommandListeners.add(listener);
-                    }
-                    traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-                }),
-                new Promise<undefined>((resolve) => {
-                    setTimeout(() => {
-                        resolve(undefined);
-                    }, 5000);
-                }),
-            ]);
 
-            if (result === undefined) {
-                traceVerbose(`Execution timed out, falling back to sendText: ${commandLine}`);
-                terminal.sendText(commandLine);
-                return undefined;
-            } else {
+                    traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
+                });
                 return result;
+            } catch {
+            } finally {
+                disposable?.dispose();
             }
         } else {
             terminal.sendText(commandLine);
@@ -148,7 +139,6 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({
             name: this.options?.title || 'Python',
-            env: {},
             hideFromUser: this.options?.hideFromUser,
         });
         this.terminalAutoActivator.disableAutoActivation(this.terminal);
