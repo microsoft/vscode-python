@@ -23,7 +23,13 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         const configuration = vscode.workspace.getConfiguration('python');
         await configuration.update('REPL.sendToNativeREPL', false, vscode.ConfigurationTarget.Global);
 
-        // TODO: change default setting to pwsh for this test
+        const configurationTerminal = vscode.workspace.getConfiguration('terminal');
+        configurationTerminal.update(
+            'integrated.defaultProfile.windows',
+            'PowerShell',
+            vscode.ConfigurationTarget.Global,
+        );
+        configurationTerminal.update('integrated.defaultProfile.osx', 'PowerShell', vscode.ConfigurationTarget.Global);
 
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
