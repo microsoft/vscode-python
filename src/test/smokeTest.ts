@@ -47,11 +47,6 @@ class TestRunner {
         );
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
-        const configurationTerminal = workspace.getConfiguration('terminal');
-        await configurationTerminal.update('integrated.defaultProfile.osx', 'pwsh', ConfigurationTarget.Global);
-        await configurationTerminal.update('integrated.defaultProfile.linux', 'pwsh', ConfigurationTarget.Global);
-        await configurationTerminal.update('integrated.defaultProfile.windows', 'pwsh', ConfigurationTarget.Global);
-
         console.log('Launch tests in test runner');
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
