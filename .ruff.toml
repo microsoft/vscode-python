@@ -1,0 +1,9 @@
+exclude = [
+    "src/test/python_files/terminalExec/sample*.py",
+    "src/testMultiRootWkspc/parent/child/file.py",
+    "src/testMultiRootWkspc/disableLinters/file.py",
+    "src/test/python_files/debugging/logMessage.py",
+    "src/test/python_files/tensorBoard/*.py",
+    "src/test/python_files/intellisense/test.py",
+    "src/test/python_files/debugging/*.py"
+]

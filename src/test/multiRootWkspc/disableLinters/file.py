@@ -59,7 +59,7 @@ class Foo(object):
             # pylint: enable=no-member
             # error
             print (self.blip)
-        except UndefinedName: # pylint: disable=undefined-variable
+        except UndefinedName: # type: ignore # pylint: disable=undefined-variable  # noqa: F821
             # no error
             print (self.blip)
         # no error

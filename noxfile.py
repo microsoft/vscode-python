@@ -5,7 +5,6 @@ import os
 import pathlib
 import nox
 import shutil
-import sys
 import sysconfig
 import uuid
 
