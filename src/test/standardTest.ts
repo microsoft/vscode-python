@@ -29,29 +29,6 @@ const extensionDevelopmentPath = process.env.CODE_EXTENSIONS_PATH
     ? process.env.CODE_EXTENSIONS_PATH
     : EXTENSION_ROOT_DIR_FOR_TESTS;
 
-// Make sure shell used are pwsh for smoke tests
-// create .vscode folder inside workspacePath and settings.json inside that .vscode path
-async function setupWorkspace() {
-    await fs.ensureDir(path.join(workspacePath, '.vscode'));
-    const settingsPath = path.join(workspacePath, '.vscode', 'settings.json');
-    if (!(await fs.pathExists(settingsPath))) {
-        await fs.writeFile(
-            settingsPath,
-            `{
-            "terminal.integrated.defaultProfile.linux": "pwsh",
-            "terminal.integrated.defaultProfile.osx": "pwsh",
-            "terminal.integrated.defaultProfile.windows": "pwsh"
-            }`,
-        );
-    }
-}
-if (process.env.TEST_FILES_SUFFIX !== 'smoke.test') {
-    setupWorkspace().catch((err) => {
-        console.error('Failed to setup workspace for smoke test', err);
-        process.exit(1);
-    });
-}
-
 /**
  * Smoke tests & tests running in VSCode require Jupyter extension to be installed.
  */
