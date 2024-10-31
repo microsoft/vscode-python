@@ -5,7 +5,7 @@
 
 // Must always be on top to setup expected env.
 process.env.VSC_PYTHON_SMOKE_TEST = '1';
-
+import * as vscode from 'vscode';
 import { spawn } from 'child_process';
 import * as fs from '../client/common/platform/fs-paths';
 import * as glob from 'glob';
@@ -47,6 +47,19 @@ class TestRunner {
         );
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
+        const configurationTerminal = vscode.workspace.getConfiguration('terminal');
+        await configurationTerminal.update('integrated.defaultProfile.osx', 'pwsh', vscode.ConfigurationTarget.Global);
+        await configurationTerminal.update(
+            'integrated.defaultProfile.linux',
+            'pwsh',
+            vscode.ConfigurationTarget.Global,
+        );
+        await configurationTerminal.update(
+            'integrated.defaultProfile.windows',
+            'pwsh',
+            vscode.ConfigurationTarget.Global,
+        );
+
         console.log('Launch tests in test runner');
         await new Promise<void>((resolve, reject) => {
             const env: Record<string, string> = {
