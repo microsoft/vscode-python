@@ -20,23 +20,6 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
     teardown(closeActiveWindows);
 
     test('Smart Send', async () => {
-        const configuration = vscode.workspace.getConfiguration('python');
-        await configuration.update('REPL.sendToNativeREPL', false, vscode.ConfigurationTarget.Global);
-        await configuration.update('REPL.enableREPLSmartSend', true, vscode.ConfigurationTarget.Global);
-        const configurationTerminal = vscode.workspace.getConfiguration('terminal');
-        // set terminal.integrated.shellIntegration.enabled to false
-        await configurationTerminal.update(
-            'integrated.shellIntegration.enabled',
-            false,
-            vscode.ConfigurationTarget.Global,
-        );
-        configurationTerminal.update(
-            'integrated.defaultProfile.windows',
-            'PowerShell',
-            vscode.ConfigurationTarget.Global,
-        );
-        configurationTerminal.update('integrated.defaultProfile.osx', 'PowerShell', vscode.ConfigurationTarget.Global);
-
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
