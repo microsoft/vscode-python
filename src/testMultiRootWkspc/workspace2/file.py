@@ -2,6 +2,7 @@
 
 __revision__ = None
 
+
 class Foo(object):
     """block-disable test"""
 
@@ -15,13 +16,12 @@ class Foo(object):
     def meth2(self, arg):
         """and this one not"""
         # pylint: disable=unused-argument
-        print(self\
-              + "foo")
+        print(self + "foo")
 
     def meth3(self):
         """test one line disabling"""
         # no error
-        print(self.bla) # pylint: disable=no-member
+        print(self.bla)  # pylint: disable=no-member
         # error
         print(self.blop)
 
@@ -67,7 +67,7 @@ class Foo(object):
 
     def meth7(self):
         """test one line block opening disabling"""
-        if self.blop: # pylint: disable=no-member
+        if self.blop:  # pylint: disable=no-member
             # error
             print(self.blip)
         else:
@@ -75,7 +75,6 @@ class Foo(object):
             print(self.blip)
         # error
         print(self.blip)
-
 
     def meth8(self):
         """test late disabling"""

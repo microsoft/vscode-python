@@ -46,5 +46,4 @@ runs:
         python -m pip install -U ruff
         python -m ruff check .
         python -m ruff format --check
-      working-directory: python_files
       shell: bash
