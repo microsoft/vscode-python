@@ -3,7 +3,7 @@ import get_variable_info
 
 def set_global_variable(value):
     # setting on the module allows tests to set a variable that the module under test can access
-    get_variable_info.test_variable = value  # pyright: ignore[reportGeneralTypeIssues]
+    get_variable_info.test_variable = value  # pyright: ignore[reportGeneralTypeIssues] # type: ignore
 
 
 def get_global_variable():

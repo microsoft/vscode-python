@@ -265,7 +265,7 @@ def redirect_io(stream: str, new_stream):
 class CustomIO(io.TextIOWrapper):
     """Custom stream object to replace stdio."""
 
-    name: str = "customio"
+    name: str = "customio"  # type: ignore
 
     def __init__(self, name: str, encoding="utf-8", newline=None):
         self._buffer = io.BytesIO()
