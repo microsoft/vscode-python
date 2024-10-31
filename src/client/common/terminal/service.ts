@@ -85,7 +85,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this._terminalFirstLaunched = false;
             const promise = new Promise<boolean>((resolve) => {
                 const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
-                    clearTimeout(timer); //racetimeout
+                    clearTimeout(timer);
                     disposable.dispose();
                     resolve(true);
                 });
@@ -99,8 +99,6 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         if (terminal.shellIntegration) {
-            // TODO: executeCommand would not execute command manually typed inside Python Terminal REPL.
-            // We only run executeCommand when user shift+enter in .py file, and hence run command in terminal on user's behalf.
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
