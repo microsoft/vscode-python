@@ -12,9 +12,7 @@
             "type": "npm",
             "script": "compile",
             "isBackground": true,
-            "problemMatcher": [
-                "$tsc-watch"
-            ],
+            "problemMatcher": ["$tsc-watch"],
             "group": {
                 "kind": "build",
                 "isDefault": true
@@ -34,6 +32,22 @@
             "script": "preTestJediLSP",
             "problemMatcher": [],
             "label": "preTestJediLSP"
+        },
+        {
+            "label": "Run checkPR.sh",
+            "type": "shell",
+            "command": "${workspaceFolder}/scripts/checkPR.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            }
         }
     ]
 }
