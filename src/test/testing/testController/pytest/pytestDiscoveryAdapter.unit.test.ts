@@ -179,7 +179,17 @@ suite('pytest test discovery adapter', () => {
 
         // verification
 
-        const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
+        const expectedArgs = [
+            '-m',
+            'pytest',
+            '-p',
+            'vscode_pytest',
+            '--collect-only',
+            '.',
+            'abc',
+            'xyz',
+            `--rootdir=${expectedPathNew}`,
+        ];
         execService.verify(
             (x) =>
                 x.execObservable(
