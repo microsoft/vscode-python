@@ -18,6 +18,7 @@ import {
     TextDocument,
     FileCoverageDetail,
     TestRun,
+    MarkdownString,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
@@ -32,8 +33,8 @@ import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { TestProvider } from '../types';
-import { DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
-import { pythonTestAdapterRewriteEnabled } from './common/utils';
+import { createErrorTestItem, DebugTestTag, getNodeByUri, RunTestTag } from './common/testItemUtilities';
+import { buildErrorNodeOptions, pythonTestAdapterRewriteEnabled } from './common/utils';
 import {
     ITestController,
     ITestDiscoveryAdapter,
@@ -275,6 +276,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (workspace && workspace.uri) {
                         const testAdapter = this.testAdapters.get(workspace.uri);
                         if (testAdapter) {
+                            const testProviderInAdapter = testAdapter.getTestProvider();
+                            if (testProviderInAdapter !== 'pytest') {
+                                traceError('Test provider in adapter is not pytest. Please reload window.');
+                                this.surfaceErrorNode(
+                                    workspace.uri,
+                                    'Test provider types are not aligned, please reload your VS Code window.',
+                                    'pytest',
+                                );
+                                return Promise.resolve();
+                            }
                             await testAdapter.discoverTests(
                                 this.testController,
                                 this.refreshCancellation.token,
@@ -297,6 +308,16 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     if (workspace && workspace.uri) {
                         const testAdapter = this.testAdapters.get(workspace.uri);
                         if (testAdapter) {
+                            const testProviderInAdapter = testAdapter.getTestProvider();
+                            if (testProviderInAdapter !== 'unittest') {
+                                traceError('Test provider in adapter is not unittest. Please reload window.');
+                                this.surfaceErrorNode(
+                                    workspace.uri,
+                                    'Test provider types are not aligned, please reload your VS Code window.',
+                                    'unittest',
+                                );
+                                return Promise.resolve();
+                            }
                             await testAdapter.discoverTests(
                                 this.testController,
                                 this.refreshCancellation.token,
@@ -597,5 +618,17 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             });
             this.triggerTypes.push(trigger);
         }
+    }
+
+    private surfaceErrorNode(workspaceUri: Uri, message: string, testProvider: TestProvider): void {
+        let errorNode = this.testController.items.get(`DiscoveryError:${workspaceUri.fsPath}`);
+        if (errorNode === undefined) {
+            const options = buildErrorNodeOptions(workspaceUri, message, testProvider);
+            errorNode = createErrorTestItem(this.testController, options);
+            this.testController.items.add(errorNode);
+        }
+        const errorNodeLabel: MarkdownString = new MarkdownString(message);
+        errorNodeLabel.isTrusted = true;
+        errorNode.error = errorNodeLabel;
     }
 }
