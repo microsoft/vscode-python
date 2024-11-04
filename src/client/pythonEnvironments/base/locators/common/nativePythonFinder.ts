@@ -12,7 +12,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../constants';
 import { createDeferred, createDeferredFrom } from '../../../../common/utils/async';
 import { DisposableBase, DisposableStore } from '../../../../common/utils/resourceLifecycle';
 import { noop } from '../../../../common/utils/misc';
-import { getConfiguration, getWorkspaceFolderPaths } from '../../../../common/vscodeApis/workspaceApis';
+import { getConfiguration, getWorkspaceFolderPaths, isTrusted } from '../../../../common/vscodeApis/workspaceApis';
 import { CONDAPATH_SETTING_KEY } from '../../../common/environmentManagers/conda';
 import { VENVFOLDERS_SETTING_KEY, VENVPATH_SETTING_KEY } from '../lowLevel/customVirtualEnvLocator';
 import { getUserHomeDir } from '../../../../common/utils/platform';
@@ -22,6 +22,7 @@ import { NativePythonEnvironmentKind } from './nativePythonUtils';
 import type { IExtensionContext } from '../../../../common/types';
 import { StopWatch } from '../../../../common/utils/stopWatch';
 import { untildify } from '../../../../common/helpers';
+import { traceError } from '../../../../logging';
 
 const PYTHON_ENV_TOOLS_PATH = isWindows()
     ? path.join(EXTENSION_ROOT_DIR, 'python-env-tools', 'bin', 'pet.exe')
@@ -440,6 +441,25 @@ function getPythonSettingAndUntildify<T>(name: string, scope?: Uri): T | undefin
 
 let _finder: NativePythonFinder | undefined;
 export function getNativePythonFinder(context?: IExtensionContext): NativePythonFinder {
+    if (!isTrusted()) {
+        return {
+            async *refresh() {
+                traceError('Python discovery not supported in untrusted workspace');
+                yield* [];
+            },
+            async resolve() {
+                traceError('Python discovery not supported in untrusted workspace');
+                return {};
+            },
+            async getCondaInfo() {
+                traceError('Python discovery not supported in untrusted workspace');
+                return ({} as unknown) as NativeCondaInfo;
+            },
+            dispose() {
+                // do nothing
+            },
+        };
+    }
     if (!_finder) {
         const cacheDirectory = context ? getCacheDirectory(context) : undefined;
         _finder = new NativePythonFinderImpl(cacheDirectory);
