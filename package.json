@@ -1174,12 +1174,12 @@
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl' && !inlineChatFocused"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl' && !inlineChatFocused && !notebookCellListFocused"
             },
             {
                 "command": "python.execInInteractiveWindowEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused && !notebookCellListFocused"
             },
             {
                 "command": "python.refreshTensorBoard",
