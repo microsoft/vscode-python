@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -11,7 +10,6 @@ import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalAutoActivation } from '../../terminals/types';
 import { ITerminalManager } from '../application/types';
-import { EXTENSION_ROOT_DIR } from '../constants';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
@@ -20,7 +18,6 @@ import {
     ITerminalService,
     TerminalCreationOptions,
     TerminalShellType,
-    ITerminalExecutedCommand,
 } from './types';
 import { traceVerbose } from '../../logging';
 
@@ -33,11 +30,12 @@ export class TerminalService implements ITerminalService, Disposable {
     private terminalHelper: ITerminalHelper;
     private terminalActivator: ITerminalActivator;
     private terminalAutoActivator: ITerminalAutoActivation;
-    private readonly envVarScript = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
     private readonly executeCommandListeners: Set<Disposable> = new Set();
+    private _terminalFirstLaunched: boolean = true;
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
+
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         private readonly options?: TerminalCreationOptions,
@@ -76,24 +74,24 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
-    public async executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined> {
+    public async executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined> {
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
         }
 
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
-        if (!terminal.shellIntegration) {
+        if (!terminal.shellIntegration && this._terminalFirstLaunched) {
+            this._terminalFirstLaunched = false;
             const promise = new Promise<boolean>((resolve) => {
-                const shellIntegrationChangeEventListener = this.terminalManager.onDidChangeTerminalShellIntegration(
-                    () => {
-                        this.executeCommandListeners.delete(shellIntegrationChangeEventListener);
-                        resolve(true);
-                    },
-                );
+                const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
+                    clearTimeout(timer);
+                    disposable.dispose();
+                    resolve(true);
+                });
                 const TIMEOUT_DURATION = 500;
-                setTimeout(() => {
-                    this.executeCommandListeners.add(shellIntegrationChangeEventListener);
+                const timer = setTimeout(() => {
+                    disposable.dispose();
                     resolve(true);
                 }, TIMEOUT_DURATION);
             });
@@ -102,18 +100,8 @@ export class TerminalService implements ITerminalService, Disposable {
 
         if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            return await new Promise((resolve) => {
-                const listener = this.terminalManager.onDidEndTerminalShellExecution((e) => {
-                    if (e.execution === execution) {
-                        this.executeCommandListeners.delete(listener);
-                        resolve({ execution, exitCode: e.exitCode });
-                    }
-                });
-                if (listener) {
-                    this.executeCommandListeners.add(listener);
-                }
-                traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-            });
+            traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
+            return execution;
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
@@ -136,7 +124,6 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
         this.terminal = this.terminalManager.createTerminal({
             name: this.options?.title || 'Python',
-            env: { PYTHONSTARTUP: this.envVarScript },
             hideFromUser: this.options?.hideFromUser,
         });
         this.terminalAutoActivator.disableAutoActivation(this.terminal);

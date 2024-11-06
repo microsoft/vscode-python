@@ -54,13 +54,8 @@ export interface ITerminalService extends IDisposable {
     ): Promise<void>;
     /** @deprecated */
     sendText(text: string): Promise<void>;
-    executeCommand(commandLine: string): Promise<ITerminalExecutedCommand | undefined>;
+    executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined>;
     show(preserveFocus?: boolean): Promise<void>;
-}
-
-export interface ITerminalExecutedCommand {
-    execution: TerminalShellExecution;
-    exitCode: number | undefined;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
