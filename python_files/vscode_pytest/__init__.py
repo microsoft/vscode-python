@@ -28,6 +28,15 @@ from testing_tools import socket_manager  # noqa: E402
 if TYPE_CHECKING:
     from pluggy import Result
 
+import contextlib
+
+USES_PYTEST_DESCRIBE = False
+
+with contextlib.suppress(ImportError):
+    from pytest_describe.plugin import DescribeBlock
+
+    USES_PYTEST_DESCRIBE = True
+
 
 class TestData(TypedDict):
     """A general class that all test objects inherit from."""
@@ -529,11 +538,15 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                     parent_test_case["children"].append(function_test_node)
             # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
             test_node = function_test_node
-        if isinstance(test_case.parent, pytest.Class):
+        if isinstance(test_case.parent, pytest.Class) or (
+            USES_PYTEST_DESCRIBE and isinstance(test_case.parent, DescribeBlock)
+        ):
             case_iter = test_case.parent
             node_child_iter = test_node
             test_class_node: TestNode | None = None
-            while isinstance(case_iter, pytest.Class):
+            while isinstance(case_iter, pytest.Class) or (
+                USES_PYTEST_DESCRIBE and isinstance(case_iter, DescribeBlock)
+            ):
                 # While the given node is a class, create a class and nest the previous node as a child.
                 try:
                     test_class_node = class_nodes_dict[case_iter.nodeid]
