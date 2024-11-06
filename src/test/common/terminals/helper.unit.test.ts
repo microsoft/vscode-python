@@ -96,6 +96,30 @@ suite('Terminal Service helpers', () => {
     teardown(() => shellDetectorIdentifyTerminalShell.restore());
     suite('Misc', () => {
         setup(doSetup);
+        test('Creating terminal should not automatically contain PYTHONSTARTUP', () => {
+            const theTitle = 'Hello';
+            const terminal = 'Terminal Created';
+            when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
+            const term = helper.createTerminal(theTitle);
+            const args = capture(terminalManager.createTerminal).first()[0];
+            expect(term).to.be.deep.equal(terminal);
+            const terminalOptions = args.env;
+            const safeTerminalOptions = terminalOptions || {};
+            expect(safeTerminalOptions).to.not.have.property('PYTHONSTARTUP');
+        });
+
+        test('Env should be undefined if not explicitly passed in ', () => {
+            const theTitle = 'Hello';
+            const terminal = 'Terminal Created';
+            when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
+
+            const term = helper.createTerminal(theTitle);
+
+            verify(terminalManager.createTerminal(anything())).once();
+            const args = capture(terminalManager.createTerminal).first()[0];
+            expect(term).to.be.deep.equal(terminal);
+            expect(args.env).to.be.deep.equal(undefined);
+        });
 
         test('Create terminal without a title', () => {
             const terminal = 'Terminal Created';
