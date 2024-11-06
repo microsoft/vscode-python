@@ -8,6 +8,7 @@ import sys
 import textwrap
 from typing import Iterable
 
+attach_bracket_paste = sys.version_info >= (3, 13)
 
 def split_lines(source):
     """
@@ -279,14 +280,14 @@ if __name__ == "__main__":
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]
         if normalized == "deprecated":
-            data = json.dumps({"normalized": normalized})
+            data = json.dumps({"normalized": normalized, "attach_bracket_paste": attach_bracket_paste})
         else:
             data = json.dumps(
-                {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
+                {"normalized": normalized, "nextBlockLineno": result["which_line_next"], "attach_bracket_paste": attach_bracket_paste}
             )
     else:
         normalized = normalize_lines(contents["code"])
-        data = json.dumps({"normalized": normalized})
+        data = json.dumps({"normalized": normalized, "attach_bracket_paste": attach_bracket_paste })
 
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))

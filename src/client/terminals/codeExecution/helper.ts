@@ -118,6 +118,16 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line - 1;
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }
+            // For new _pyrepl for Python3.13 and above, we need to send code via bracketed paste mode.
+            if (object.attach_bracket_paste) {
+                // return `\u001b[200~${object.normalized.trim()}\u001b[201~`;
+                let trimmedNormalized = object.normalized.replace(/\n$/, '');
+                if (trimmedNormalized.endsWith(':\n')) {
+                    // In case where statement is unfinished via :, truncate so auto-indentation lands nicely.
+                    trimmedNormalized = trimmedNormalized.replace(/\n$/, '');
+                }
+                return `\u001b[200~${trimmedNormalized}\u001b[201~`;
+            }
 
             return parse(object.normalized);
         } catch (ex) {
