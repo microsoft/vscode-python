@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import atexit
+import contextlib
 import json
 import os
 import pathlib
@@ -28,7 +29,6 @@ from testing_tools import socket_manager  # noqa: E402
 if TYPE_CHECKING:
     from pluggy import Result
 
-import contextlib
 
 USES_PYTEST_DESCRIBE = False
 
