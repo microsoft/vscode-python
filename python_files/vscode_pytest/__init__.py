@@ -703,7 +703,7 @@ def create_session_node(session: pytest.Session) -> TestNode:
     }
 
 
-def create_class_node(class_module: pytest.Class) -> TestNode:
+def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
     """Creates a class node from a pytest class object.
 
     Keyword arguments:
