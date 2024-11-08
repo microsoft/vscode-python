@@ -169,28 +169,6 @@ export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContai
     return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
-// export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> {
-//     const pipeName: string = generateRandomPipeName('python-test-ids');
-//     // uses callback so the on connect action occurs after the pipe is created
-//     await createNamedPipeServer(pipeName, ([_reader, writer]) => {
-//         traceVerbose('Test Ids named pipe connected');
-//         // const num = await
-//         const msg = {
-//             jsonrpc: '2.0',
-//             params: testIds,
-//         } as Message;
-//         writer
-//             .write(msg)
-//             .then(() => {
-//                 writer.end();
-//             })
-//             .catch((ex) => {
-//                 traceError('Failed to write test ids to named pipe', ex);
-//             });
-//     });
-//     return pipeName;
-// }
-
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload;
 }

@@ -45,11 +45,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             this.resultResolver?.resolveDiscovery(data);
         });
 
-        try {
-            await this.runPytestDiscovery(uri, name, executionFactory, interpreter);
-        } finally {
-            traceVerbose('donee');
-        }
+        await this.runPytestDiscovery(uri, name, executionFactory, interpreter);
+
         // this is only a placeholder to handle function overloading until rewrite is finished
         const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
         return discoveryPayload;
