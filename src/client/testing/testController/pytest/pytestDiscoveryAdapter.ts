@@ -84,6 +84,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             traceWarn("Symlink found, adding '--rootdir' to pytestArgs only if it doesn't already exist. cwd: ", cwd);
             pytestArgs = addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
         }
+        // if user has provided `--rootdir` then use that, otherwise add `cwd`
+        // root dir is required so pytest can find the relative paths and for symlinks
+        addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
 
         // get and edit env vars
         const mutableEnv = {

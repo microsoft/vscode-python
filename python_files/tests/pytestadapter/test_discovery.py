@@ -161,6 +161,14 @@ def test_parameterized_error_collect():
             "text_docstring.txt",
             expected_discovery_test_output.doctest_pytest_expected_output,
         ),
+        (
+            "pytest_describe_plugin" + os.path.sep + "describe_only.py",
+            expected_discovery_test_output.expected_describe_only_output,
+        ),
+        (
+            "pytest_describe_plugin" + os.path.sep + "nested_describe.py",
+            expected_discovery_test_output.expected_nested_describe_output,
+        ),
     ],
 )
 def test_pytest_collect(file, expected_const):

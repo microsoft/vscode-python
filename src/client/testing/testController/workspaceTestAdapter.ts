@@ -167,4 +167,13 @@ export class WorkspaceTestAdapter {
         sendTelemetryEvent(EventName.UNITTEST_DISCOVERY_DONE, undefined, { tool: this.testProvider, failed: false });
         return Promise.resolve();
     }
+
+    /**
+     * Retrieves the current test provider instance.
+     *
+     * @returns {TestProvider} The instance of the test provider.
+     */
+    public getTestProvider(): TestProvider {
+        return this.testProvider;
+    }
 }
