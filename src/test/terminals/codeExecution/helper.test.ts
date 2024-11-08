@@ -36,7 +36,7 @@ import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
-// TODO: tests for 3.13 relevant sequences
+
 suite('Terminal - Code Execution Helper', () => {
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
@@ -53,8 +53,8 @@ suite('Terminal - Code Execution Helper', () => {
     let jsonParseStub: sinon.SinonStub;
     const workingPython: PythonEnvironment = {
         path: PYTHON_PATH,
-        version: new SemVer('3.13.0'),
-        sysVersion: '3.13.0',
+        version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         displayName: 'Python',
         envType: EnvironmentType.Unknown,
@@ -166,6 +166,36 @@ suite('Terminal - Code Execution Helper', () => {
         jsonParseStub.restore();
     });
 
+    test('normalizeLines should not attach bracketed paste for < 3.13', async () => {
+        jsonParseStub = sinon.stub(JSON, 'parse');
+        const mockResult = {
+            normalized: 'print("Looks like you are not on 3.13")',
+            attach_bracket_paste: false,
+        };
+        jsonParseStub.returns(mockResult);
+
+        configurationService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns({
+                REPL: {
+                    EnableREPLSmartSend: false,
+                    REPLSmartSend: false,
+                },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
+        const actualProcessService = new ProcessService();
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) =>
+                actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
+            );
+
+        const result = await helper.normalizeLines('print("Looks like you are not on 3.13")');
+
+        expect(result).to.equal('print("Looks like you are not on 3.13")');
+        jsonParseStub.restore();
+    });
+
     test('normalizeLines should call normalizeSelection.py', async () => {
         jsonParseStub.restore();
         let execArgs = '';
@@ -219,7 +249,6 @@ suite('Terminal - Code Execution Helper', () => {
                 path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
                 'utf8',
             );
-            // python3 -m pythonFiles.tests
             await ensureCodeIsNormalized(code, expectedCode);
         });
     });
