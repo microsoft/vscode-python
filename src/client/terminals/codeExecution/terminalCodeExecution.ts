@@ -24,7 +24,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
-    private replActive?: Promise<boolean>;
+    replActive?: Promise<boolean>;
 
     constructor(
         @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
@@ -73,6 +73,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
             let listener: IDisposable;
+            // TODO: There's a race condition here as well; the send text from file command may happen before this timeout resolves
             Promise.race([
                 new Promise<boolean>((resolve) => setTimeout(() => resolve(true), 3000)),
                 new Promise<boolean>((resolve) => {
@@ -99,9 +100,17 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 }
                 resolve(true);
             });
+            // python
+            // python shell, exit code undefined.
+            // ondidStartShellExecution happens, si fires ondidEndsi
 
-            await terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args);
+            // TODO: Store this promise and make sure no further commands are executed without awaiting .exitCode
+            const replExecution = await terminalService.sendCommand(replCommandArgs.command, replCommandArgs.args); // need to make sure this is resolved before starting executing something in repl.
+
+            // TODO: Should we await replyExecution.exitCode here?
+            await replExecution?.exitCode;
         });
+
         this.disposables.push(
             terminalService.onDidCloseTerminal(() => {
                 this.replActive = undefined;

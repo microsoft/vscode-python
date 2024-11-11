@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject } from 'inversify';
-import { CancellationToken, Disposable, Event, TerminalShellExecution } from 'vscode';
+import { CancellationToken, Disposable, Event } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceVerbose } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -14,7 +14,7 @@ import * as internalScripts from '../process/internal/scripts';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { TerminalService } from './service';
-import { ITerminalService } from './types';
+import { IExecuteCommandResult, ITerminalService } from './types';
 
 enum State {
     notStarted = 0,
@@ -124,7 +124,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         args: string[],
         cancel?: CancellationToken,
         swallowExceptions: boolean = true,
-    ): Promise<void> {
+    ): Promise<IExecuteCommandResult | undefined> {
         if (!cancel) {
             return this.terminalService.sendCommand(command, args);
         }
@@ -145,7 +145,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     public sendText(text: string): Promise<void> {
         return this.terminalService.sendText(text);
     }
-    public executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined> {
+    public async executeCommand(commandLine: string): Promise<IExecuteCommandResult | undefined> {
         return this.terminalService.executeCommand(commandLine);
     }
     public show(preserveFocus?: boolean | undefined): Promise<void> {

@@ -7,6 +7,7 @@ import { IDisposable, Resource } from '../common/types';
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
 export interface ICodeExecutionService {
+    replActive?: Promise<boolean>;
     execute(code: string, resource?: Uri): Promise<void>;
     executeFile(file: Uri, options?: { newTerminalPerFile: boolean }): Promise<void>;
     initializeRepl(resource?: Uri): Promise<void>;
