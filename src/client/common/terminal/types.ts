@@ -54,7 +54,7 @@ export interface ITerminalService extends IDisposable {
     ): Promise<IExecuteCommandResult | undefined>;
     /** @deprecated */
     sendText(text: string): Promise<void>;
-    executeCommand(commandLine: string): Promise<IExecuteCommandResult | undefined>;
+    executeCommand(commandLine: string, isPythonShell: boolean): Promise<IExecuteCommandResult | undefined>;
     show(preserveFocus?: boolean): Promise<void>;
 }
 
