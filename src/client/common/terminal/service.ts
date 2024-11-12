@@ -101,7 +101,7 @@ export class TerminalService implements ITerminalService, Disposable {
             });
             await promise;
         }
-        //breaking test
+
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
         if (isPythonShell && !pythonrcSetting) {
