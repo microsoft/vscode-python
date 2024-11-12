@@ -31,7 +31,11 @@ export async function openInteractiveREPL(
         // Case where NotebookDocument doesnt exist, create a blank one.
         notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: 'Python REPL' });
+    const editor = window.showNotebookDocument(notebookDocument!, {
+        viewColumn,
+        asRepl: 'Python REPL',
+        preserveFocus: true,
+    });
     await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,
