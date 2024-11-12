@@ -2,17 +2,18 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, window } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ITerminalAutoActivation } from '../../terminals/types';
+import { ICodeExecutionService, ITerminalAutoActivation } from '../../terminals/types';
 import { ITerminalManager } from '../application/types';
 import { _SCRIPTS_DIR } from '../process/internal/scripts/constants';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import {
+    IExecuteCommandResult,
     ITerminalActivator,
     ITerminalHelper,
     ITerminalService,
@@ -20,6 +21,7 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
+import { getConfiguration } from '../vscodeApis/workspaceApis';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -57,14 +59,18 @@ export class TerminalService implements ITerminalService, Disposable {
             });
         }
     }
-    public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
+    public async sendCommand(
+        command: string,
+        args: string[],
+        _?: CancellationToken,
+    ): Promise<IExecuteCommandResult | undefined> {
         await this.ensureTerminal();
         const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
         if (!this.options?.hideFromUser) {
             this.terminal!.show(true);
         }
 
-        await this.executeCommand(text);
+        return this.executeCommand(text, false);
     }
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
@@ -72,9 +78,12 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!this.options?.hideFromUser) {
             this.terminal!.show(true);
         }
-        this.terminal!.sendText(text);
+        this.terminal!.sendText(text, false);
     }
-    public async executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined> {
+    public async executeCommand(
+        commandLine: string,
+        isPythonShell: boolean,
+    ): Promise<IExecuteCommandResult | undefined> {
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
@@ -97,11 +106,32 @@ export class TerminalService implements ITerminalService, Disposable {
             });
             await promise;
         }
+        // If shell integration for python is disabled, use sendText inside REPL regardless of upstream shell integration setting.
+        const config = getConfiguration('python');
+        const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
+        if (isPythonShell && !pythonrcSetting) {
+            terminal.sendText(commandLine);
+            return undefined;
+        } else if (terminal.shellIntegration) {
+            // python in a shell , exit code is undefined . startCommand event happen, we call end command event
+            // TODO: Await the python REPL execute promise here. So we know python repl launched for sure before executing other python code.
+            // So we would not be interrupted.
 
-        if (terminal.shellIntegration) {
+            // await this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService).replActive; getting undefined
+
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
-            return execution;
+            return {
+                execution,
+                exitCode: new Promise((resolve) => {
+                    const disposable = window.onDidEndTerminalShellExecution((event) => {
+                        if (event.execution === execution) {
+                            disposable.dispose();
+                            resolve(event.exitCode);
+                        }
+                    });
+                }),
+            };
         } else {
             terminal.sendText(commandLine);
             traceVerbose(`Shell Integration is disabled, sendText: ${commandLine}`);
