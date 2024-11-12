@@ -20,6 +20,7 @@ import {
     TerminalShellType,
 } from './types';
 import { traceVerbose } from '../../logging';
+import { getConfiguration } from '../vscodeApis/workspaceApis';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -64,7 +65,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal!.show(true);
         }
 
-        await this.executeCommand(text);
+        await this.executeCommand(text, false);
     }
     /** @deprecated */
     public async sendText(text: string): Promise<void> {
@@ -74,7 +75,10 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         this.terminal!.sendText(text);
     }
-    public async executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined> {
+    public async executeCommand(
+        commandLine: string,
+        isPythonShell: boolean,
+    ): Promise<TerminalShellExecution | undefined> {
         const terminal = this.terminal!;
         if (!this.options?.hideFromUser) {
             terminal.show(true);
@@ -98,7 +102,13 @@ export class TerminalService implements ITerminalService, Disposable {
             await promise;
         }
 
-        if (terminal.shellIntegration) {
+        const config = getConfiguration('python');
+        const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
+        if (isPythonShell && !pythonrcSetting) {
+            // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
+            terminal.sendText(commandLine);
+            return undefined;
+        } else if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;

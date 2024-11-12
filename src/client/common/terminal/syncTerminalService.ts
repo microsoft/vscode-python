@@ -145,8 +145,8 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     public sendText(text: string): Promise<void> {
         return this.terminalService.sendText(text);
     }
-    public executeCommand(commandLine: string): Promise<TerminalShellExecution | undefined> {
-        return this.terminalService.executeCommand(commandLine);
+    public executeCommand(commandLine: string, isPythonShell: boolean): Promise<TerminalShellExecution | undefined> {
+        return this.terminalService.executeCommand(commandLine, isPythonShell);
     }
     public show(preserveFocus?: boolean | undefined): Promise<void> {
         return this.terminalService.show(preserveFocus);
