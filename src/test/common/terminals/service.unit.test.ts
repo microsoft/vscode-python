@@ -204,13 +204,20 @@ suite('Terminal Service', () => {
         terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        await service.sendText(textToSend);
+        service.ensureTerminal();
+        service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(2));
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     // Ensure executeCommand is called when Python shell integration and terminal shell integration are both enabled
+    test('Ensure executeCommand is called when Python shell integration and terminal shell integration are both enabled', async () => {
+        pythonConfig
+            .setup((p) => p.get('terminal.shellIntegration.enabled'))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+    });
 
     test('Ensure terminal is not shown if `hideFromUser` option is set to `true`', async () => {
         terminalHelper
