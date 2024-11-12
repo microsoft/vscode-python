@@ -463,6 +463,9 @@ export function getNativePythonFinder(context?: IExtensionContext): NativePython
     if (!_finder) {
         const cacheDirectory = context ? getCacheDirectory(context) : undefined;
         _finder = new NativePythonFinderImpl(cacheDirectory);
+        if (context) {
+            context.subscriptions.push(_finder);
+        }
     }
     return _finder;
 }

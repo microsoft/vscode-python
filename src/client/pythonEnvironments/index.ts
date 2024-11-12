@@ -60,7 +60,6 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
 
     if (shouldUseNativeLocator()) {
         const finder = getNativePythonFinder(ext.context);
-        ext.disposables.push(finder);
         const api = createNativeEnvironmentsApi(finder);
         ext.disposables.push(api);
         registerNewDiscoveryForIOC(
