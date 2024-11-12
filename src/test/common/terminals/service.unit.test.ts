@@ -189,7 +189,7 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
-    // Ensure sendText is called when Python shell integration is disabled.
+    // Ensure sendText is called when Python shell integration are disabled.
     test('Ensure text is sent to terminal and it is shown when Python shell integration is disabled', async () => {
         pythonConfig
             .setup((p) => p.get('terminal.shellIntegration.enabled'))
@@ -211,12 +211,48 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
+    // Ensure sendText is called when terminal.shellIntegration is enabled but Python shell integration is disabled
+    test('Ensure sendText is called when terminal.shellIntegration enabled but Python shell integration disabled', async () => {
+        pythonConfig
+            .setup((p) => p.get('terminal.shellIntegration.enabled'))
+            .returns(() => false)
+            .verifiable(TypeMoq.Times.once());
+
+        terminalHelper
+            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        const textToSend = 'Some Text';
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        service.ensureTerminal();
+        service.executeCommand(textToSend, true);
+
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
+    });
+
     // Ensure executeCommand is called when Python shell integration and terminal shell integration are both enabled
-    test('Ensure executeCommand is called when Python shell integration and terminal shell integration are both enabled', async () => {
+    test('Ensure sendText is not called when Python shell integration and terminal shell integration are both enabled', async () => {
         pythonConfig
             .setup((p) => p.get('terminal.shellIntegration.enabled'))
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
+
+        terminalHelper
+            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        const textToSend = 'Some Text';
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        service.ensureTerminal();
+        service.executeCommand(textToSend, true);
+
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.never());
     });
 
     test('Ensure terminal is not shown if `hideFromUser` option is set to `true`', async () => {
