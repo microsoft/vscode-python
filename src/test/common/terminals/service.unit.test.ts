@@ -189,6 +189,10 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
+    // Ensure sendText is called when Python shell integration is disabled.
+
+    // Ensure executeCommand is called when Python shell integration and terminal shell integration are both enabled
+
     test('Ensure terminal is not shown if `hideFromUser` option is set to `true`', async () => {
         terminalHelper
             .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
