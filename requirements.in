@@ -13,4 +13,3 @@ microvenv
 importlib_metadata
 packaging
 tomli
-debugpy
