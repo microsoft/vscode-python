@@ -156,7 +156,15 @@ export class NativeRepl implements Disposable {
      * Function that opens interactive repl, selects kernel, and send/execute code to the native repl.
      */
     public async sendToNativeRepl(code?: string): Promise<void> {
+        // TODO need to check if that memento URI exist in my tab
+        // plain untitled notebook same uri as REPL.
+        // editor option check
         const mementoValue = this.context.globalState.get(NATIVE_REPL_URI_MEMENTO) as Uri | undefined;
+        // mementoValue = undefined;
+
+        // try to restore notebook doc based on memento value.
+        // if I cant, then clear momento and openInteractiveREPL.
+
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoValue);
         this.notebookDocument = notebookEditor.notebook;
         this.replUri = this.notebookDocument.uri;
