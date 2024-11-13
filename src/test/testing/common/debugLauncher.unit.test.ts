@@ -129,7 +129,9 @@ suite('Unit Tests - Debug Launcher', () => {
         const deferred = createDeferred<void>();
 
         debugService
-            .setup((d) => d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected)))
+            .setup((d) =>
+                d.startDebugging(TypeMoq.It.isValue(workspaceFolder), TypeMoq.It.isValue(expected), undefined),
+            )
             .returns((_wspc: WorkspaceFolder, _expectedParam: DebugConfiguration) => {
                 deferred.resolve();
                 return Promise.resolve(undefined as any);
@@ -299,7 +301,7 @@ suite('Unit Tests - Debug Launcher', () => {
         });
         test(`Must not launch debugger if cancelled ${testTitleSuffix}`, async () => {
             debugService
-                .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((d) => d.startDebugging(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined as any);
                 })
