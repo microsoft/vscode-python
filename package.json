@@ -1169,7 +1169,7 @@
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "!accessibilityModeEnabled && config.python.REPL.sendToNativeREPL && editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
+                "when": "config.python.REPL.sendToNativeREPL && editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "python.execInREPLEnter",
