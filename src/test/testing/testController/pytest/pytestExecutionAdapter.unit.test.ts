@@ -2,7 +2,7 @@
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the MIT License.
 import * as assert from 'assert';
-import { TestRun, Uri, TestRunProfileKind } from 'vscode';
+import { TestRun, Uri, TestRunProfileKind, DebugSessionOptions } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
@@ -238,7 +238,7 @@ suite('pytest test execution adapter', () => {
         const deferred3 = createDeferred();
         utilsWriteTestIdsFileStub.callsFake(() => Promise.resolve('testIdPipe-mockName'));
         debugLauncher
-            .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(async (_opts, callback) => {
                 traceInfo('stubs launch debugger');
                 if (typeof callback === 'function') {
@@ -273,6 +273,10 @@ suite('pytest test execution adapter', () => {
                         return true;
                     }),
                     typeMoq.It.isAny(),
+                    typeMoq.It.is<DebugSessionOptions>((sessionOptions) => {
+                        assert.equal(sessionOptions.testRun, testRun.object);
+                        return true;
+                    }),
                 ),
             typeMoq.Times.once(),
         );
