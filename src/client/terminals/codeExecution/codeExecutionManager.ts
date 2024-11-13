@@ -21,6 +21,7 @@ import {
     CreateEnvironmentCheckKind,
     triggerCreateEnvironmentCheckNonBlocking,
 } from '../../pythonEnvironments/creation/createEnvironmentTrigger';
+import { ReplType } from '../../repl/types';
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
@@ -149,7 +150,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         if (activeEditor && activeEditor.document) {
             wholeFileContent = activeEditor.document.getText();
         }
-        const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!, wholeFileContent);
+        const normalizedCode = await codeExecutionHelper.normalizeLines(
+            codeToExecute!,
+            ReplType.terminal,
+            wholeFileContent,
+        );
         if (!normalizedCode || normalizedCode.trim().length === 0) {
             return;
         }

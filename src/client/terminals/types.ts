@@ -3,6 +3,7 @@
 
 import { Event, Terminal, TextEditor, Uri } from 'vscode';
 import { IDisposable, Resource } from '../common/types';
+import { ReplType } from '../repl/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
@@ -15,7 +16,7 @@ export interface ICodeExecutionService {
 export const ICodeExecutionHelper = Symbol('ICodeExecutionHelper');
 
 export interface ICodeExecutionHelper {
-    normalizeLines(code: string, wholeFileContent?: string): Promise<string>;
+    normalizeLines(code: string, replType: ReplType, wholeFileContent?: string, resource?: Uri): Promise<string>;
     getFileToExecute(): Promise<Uri | undefined>;
     saveFileIfDirty(file: Uri): Promise<Resource>;
     getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined>;

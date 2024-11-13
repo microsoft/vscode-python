@@ -17,6 +17,7 @@ import {
 import { registerCommand } from '../common/vscodeApis/commandApis';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { ReplType } from './types';
 
 /**
  * Register Start Native REPL command in the command palette
@@ -69,7 +70,11 @@ export async function registerReplCommands(
                         if (activeEditor && activeEditor.document) {
                             wholeFileContent = activeEditor.document.getText();
                         }
-                        const normalizedCode = await executionHelper.normalizeLines(code!, wholeFileContent);
+                        const normalizedCode = await executionHelper.normalizeLines(
+                            code!,
+                            ReplType.native,
+                            wholeFileContent,
+                        );
                         await nativeRepl.sendToNativeRepl(normalizedCode);
                     }
                 }

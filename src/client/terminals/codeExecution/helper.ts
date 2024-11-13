@@ -23,6 +23,7 @@ import { traceError } from '../../logging';
 import { IConfigurationService, Resource } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { ReplType } from '../../repl/types';
 
 @injectable()
 export class CodeExecutionHelper implements ICodeExecutionHelper {
@@ -52,7 +53,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
         this.activeResourceService = this.serviceContainer.get<IActiveResourceService>(IActiveResourceService);
     }
 
-    public async normalizeLines(code: string, wholeFileContent?: string, resource?: Uri): Promise<string> {
+    public async normalizeLines(
+        code: string,
+        replType: ReplType,
+        wholeFileContent?: string,
+        resource?: Uri,
+    ): Promise<string> {
         try {
             if (code.trim().length === 0) {
                 return '';
@@ -119,7 +125,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }
             // For new _pyrepl for Python3.13 and above, we need to send code via bracketed paste mode.
-            if (object.attach_bracket_paste) {
+            if (object.attach_bracket_paste && replType === ReplType.terminal) {
                 let trimmedNormalized = object.normalized.replace(/\n$/, '');
                 if (trimmedNormalized.endsWith(':\n')) {
                     // In case where statement is unfinished via :, truncate so auto-indentation lands nicely.
