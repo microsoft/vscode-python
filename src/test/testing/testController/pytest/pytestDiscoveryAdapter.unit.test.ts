@@ -40,14 +40,7 @@ suite('pytest test discovery adapter', () => {
         mockExtensionRootDir.setup((m) => m.toString()).returns(() => '/mocked/extension/root/dir');
 
         utilsStartDiscoveryNamedPipeStub = sinon.stub(util, 'startDiscoveryNamedPipe');
-        utilsStartDiscoveryNamedPipeStub.callsFake(() =>
-            Promise.resolve({
-                name: 'discoveryResultPipe-mockName',
-                dispose: () => {
-                    /* no-op */
-                },
-            }),
-        );
+        utilsStartDiscoveryNamedPipeStub.callsFake(() => Promise.resolve('discoveryResultPipe-mockName'));
 
         // constants
         expectedPath = path.join('/', 'my', 'test', 'path');
@@ -179,7 +172,17 @@ suite('pytest test discovery adapter', () => {
 
         // verification
 
-        const expectedArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only', '.', 'abc', 'xyz'];
+        const expectedArgs = [
+            '-m',
+            'pytest',
+            '-p',
+            'vscode_pytest',
+            '--collect-only',
+            '.',
+            'abc',
+            'xyz',
+            `--rootdir=${expectedPathNew}`,
+        ];
         execService.verify(
             (x) =>
                 x.execObservable(

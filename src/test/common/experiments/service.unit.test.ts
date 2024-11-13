@@ -11,11 +11,12 @@ import { Disposable } from 'vscode-jsonrpc';
 // sinon can not create a stub if we just point to the exported module
 import * as tasClient from 'vscode-tas-client/vscode-tas-client/VSCodeTasClient';
 import * as expService from 'vscode-tas-client';
+import { TargetPopulation } from 'vscode-tas-client';
 import { ApplicationEnvironment } from '../../../client/common/application/applicationEnvironment';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { Channel } from '../../../client/common/constants';
-import { ExperimentService, TargetPopulation } from '../../../client/common/experiments/service';
+import { ExperimentService } from '../../../client/common/experiments/service';
 import { PersistentState } from '../../../client/common/persistentState';
 import { IPersistentStateFactory } from '../../../client/common/types';
 import { registerLogger } from '../../../client/logging';
@@ -74,13 +75,13 @@ suite('Experimentation service', () => {
     }
 
     function configureApplicationEnvironment(channel: Channel, version: string, contributes?: Record<string, unknown>) {
-        when(appEnvironment.extensionChannel).thenReturn(channel);
+        when(appEnvironment.channel).thenReturn(channel);
         when(appEnvironment.extensionName).thenReturn(PVSC_EXTENSION_ID_FOR_TESTS);
         when(appEnvironment.packageJson).thenReturn({ version, contributes });
     }
 
     suite('Initialization', () => {
-        test('Users with a release version of the extension should be in the Public target population', () => {
+        test('Users with VS Code stable version should be in the Public target population', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
             configureSettings(true, [], []);
             configureApplicationEnvironment('stable', extensionVersion);
@@ -99,7 +100,7 @@ suite('Experimentation service', () => {
             );
         });
 
-        test('Users with an Insiders version of the extension should be the Insiders target population', () => {
+        test('Users with VS Code Insiders version should be the Insiders target population', () => {
             const getExperimentationServiceStub = sinon.stub(tasClient, 'getExperimentationService');
 
             configureSettings(true, [], []);

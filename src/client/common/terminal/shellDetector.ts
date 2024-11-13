@@ -33,10 +33,6 @@ export class ShellDetector {
      * 3. Try to identify the type of the shell based on the user environment (OS).
      * 4. If all else fail, use defaults hardcoded (cmd for windows, bash for linux & mac).
      * More information here: https://github.com/microsoft/vscode/issues/74233#issuecomment-497527337
-     *
-     * @param {Terminal} [terminal]
-     * @returns {TerminalShellType}
-     * @memberof TerminalHelper
      */
     public identifyTerminalShell(terminal?: Terminal): TerminalShellType {
         let shell: TerminalShellType | undefined;

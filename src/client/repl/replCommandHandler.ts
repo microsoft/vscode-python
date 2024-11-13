@@ -17,9 +17,6 @@ import { PVSC_EXTENSION_ID } from '../common/constants';
 
 /**
  * Function that opens/show REPL using IW UI.
- * @param notebookController
- * @param notebookEditor
- * @returns notebookEditor
  */
 export async function openInteractiveREPL(
     notebookController: NotebookController,
@@ -38,7 +35,11 @@ export async function openInteractiveREPL(
         // Case where NotebookDocument doesnt exist, create a blank one.
         notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    const editor = window.showNotebookDocument(notebookDocument!, { viewColumn, asRepl: 'Python REPL' });
+    const editor = window.showNotebookDocument(notebookDocument!, {
+        viewColumn,
+        asRepl: 'Python REPL',
+        preserveFocus: true,
+    });
     await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,
@@ -50,10 +51,6 @@ export async function openInteractiveREPL(
 
 /**
  * Function that selects notebook Kernel.
- * @param notebookEditor
- * @param notebookControllerId
- * @param extensionId
- * @return Promise<void>
  */
 export async function selectNotebookKernel(
     notebookEditor: NotebookEditor,
@@ -69,9 +66,6 @@ export async function selectNotebookKernel(
 
 /**
  * Function that executes notebook cell given code.
- * @param notebookDocument
- * @param code
- * @return Promise<void>
  */
 export async function executeNotebookCell(notebookEditor: NotebookEditor, code: string): Promise<void> {
     const { notebook, replOptions } = notebookEditor;
@@ -87,8 +81,6 @@ export async function executeNotebookCell(notebookEditor: NotebookEditor, code: 
 /**
  * Function that adds cell to notebook.
  * This function will only get called when notebook document is defined.
- * @param code
- *
  */
 async function addCellToNotebook(notebookDocument: NotebookDocument, index: number, code: string): Promise<void> {
     const notebookCellData = new NotebookCellData(NotebookCellKind.Code, code as string, 'python');

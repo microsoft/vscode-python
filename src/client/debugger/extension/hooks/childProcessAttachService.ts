@@ -17,9 +17,6 @@ import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 /**
  * This class is responsible for attaching the debugger to any
  * child processes launched. I.e. this is the class responsible for multi-proc debugging.
- * @export
- * @class ChildProcessAttachEventHandler
- * @implements {IChildProcessAttachService}
  */
 @injectable()
 export class ChildProcessAttachService implements IChildProcessAttachService {

@@ -102,6 +102,12 @@ def _resolve_relpath(
     if path.startswith("./"):
         return path[2:]
     if not _path_isabs(path):
+        if rootdir:
+            rootdir = rootdir.replace(_pathsep, "/")
+            if not rootdir.endswith("/"):
+                rootdir += "/"
+            if _normcase(path).startswith(_normcase(rootdir)):
+                return path[len(rootdir) :]
         return path
 
     # Deal with root-dir-as-fileid.

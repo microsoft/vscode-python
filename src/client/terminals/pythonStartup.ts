@@ -8,7 +8,7 @@ import { EXTENSION_ROOT_DIR } from '../constants';
 
 export async function registerPythonStartup(context: ExtensionContext): Promise<void> {
     const config = getConfiguration('python');
-    const pythonrcSetting = config.get<boolean>('REPL.enableShellIntegration');
+    const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
 
     if (pythonrcSetting) {
         const storageUri = context.storageUri || context.globalStorageUri;

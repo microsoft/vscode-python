@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import { TextEditor, Selection, Position, TextDocument, Uri } from 'vscode';
@@ -22,6 +25,7 @@ import { PYTHON_PATH } from '../../common';
 import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
 import { l10n } from '../../mocks/vsc';
+import { ReplType } from '../../../client/repl/types';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
 
@@ -113,7 +117,6 @@ suite('REPL - Smart Send', () => {
                 enableREPLSmartSend: true,
                 REPLSmartSend: true,
                 sendToNativeREPL: false,
-                enableShellIntegration: true,
             }));
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
@@ -143,7 +146,7 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        await codeExecutionHelper.normalizeLines('my_dict = {', ReplType.terminal, wholeFileContent);
 
         commandManager
             .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
@@ -195,7 +198,11 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        const actualSmartOutput = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        const actualSmartOutput = await codeExecutionHelper.normalizeLines(
+            'my_dict = {',
+            ReplType.terminal,
+            wholeFileContent,
+        );
 
         // my_dict = {  <----- smart shift+enter here
         //     "key1": "value1",
@@ -245,7 +252,11 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        const actualNonSmartResult = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        const actualNonSmartResult = await codeExecutionHelper.normalizeLines(
+            'my_dict = {',
+            ReplType.terminal,
+            wholeFileContent,
+        );
         const expectedNonSmartResult = 'my_dict = {\n\n'; // Standard for previous normalization logic
         expect(actualNonSmartResult).to.be.equal(expectedNonSmartResult);
     });
@@ -283,7 +294,7 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        await codeExecutionHelper.normalizeLines('my_dict = {', ReplType.terminal, wholeFileContent);
 
         applicationShell
             .setup((a) =>

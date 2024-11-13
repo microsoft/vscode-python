@@ -55,6 +55,10 @@ function toArch(a: string | undefined): Architecture {
 }
 
 function getLocation(nativeEnv: NativeEnvInfo, executable: string): string {
+    if (nativeEnv.kind === NativePythonEnvironmentKind.Conda) {
+        return nativeEnv.prefix ?? path.dirname(executable);
+    }
+
     if (nativeEnv.executable) {
         return nativeEnv.executable;
     }
@@ -204,6 +208,32 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
         display: displayName,
         type: getEnvType(kind),
     };
+}
+
+function hasChanged(old: PythonEnvInfo, newEnv: PythonEnvInfo): boolean {
+    if (old.executable.filename !== newEnv.executable.filename) {
+        return true;
+    }
+    if (old.version.major !== newEnv.version.major) {
+        return true;
+    }
+    if (old.version.minor !== newEnv.version.minor) {
+        return true;
+    }
+    if (old.version.micro !== newEnv.version.micro) {
+        return true;
+    }
+    if (old.location !== newEnv.location) {
+        return true;
+    }
+    if (old.kind !== newEnv.kind) {
+        return true;
+    }
+    if (old.arch !== newEnv.arch) {
+        return true;
+    }
+
+    return false;
 }
 
 class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
@@ -357,7 +387,9 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
             if (old) {
                 this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
                 this._envs.push(info);
-                this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
+                if (hasChanged(old, info)) {
+                    this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
+                }
             } else {
                 this._envs.push(info);
                 this._onChanged.fire({ type: FileChangeType.Created, new: info, searchLocation });

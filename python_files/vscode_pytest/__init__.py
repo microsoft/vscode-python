@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import atexit
+import contextlib
 import json
 import os
 import pathlib
@@ -14,20 +15,22 @@ from typing import (
     Any,
     Dict,
     Generator,
-    Iterator,
     Literal,
     TypedDict,
 )
 
 import pytest
 
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.append(os.fspath(script_dir / "lib" / "python"))
-from testing_tools import socket_manager  # noqa: E402
-
 if TYPE_CHECKING:
     from pluggy import Result
+
+
+USES_PYTEST_DESCRIBE = False
+
+with contextlib.suppress(ImportError):
+    from pytest_describe.plugin import DescribeBlock
+
+    USES_PYTEST_DESCRIBE = True
 
 
 class TestData(TypedDict):
@@ -66,10 +69,15 @@ collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 
-INCLUDE_BRANCHES = False
-
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
+    has_pytest_cov = early_config.pluginmanager.hasplugin("pytest_cov")
+    has_cov_arg = any("--cov" in arg for arg in args)
+    if has_cov_arg and not has_pytest_cov:
+        raise VSCodePytestError(
+            "\n \nERROR: pytest-cov is not installed, please install this before running pytest with coverage as pytest-cov is required. \n"
+        )
+
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
     error_string = (
@@ -83,10 +91,6 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
-
-    if "--cov-branch" in args:
-        global INCLUDE_BRANCHES
-        INCLUDE_BRANCHES = True
 
     # check if --rootdir is in the args
     for arg in args:
@@ -162,7 +166,7 @@ def pytest_exception_interact(node, call, report):
             collected_test = TestRunResultDict()
             collected_test[node_id] = item_result
             cwd = pathlib.Path.cwd()
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 "success",
                 collected_test if collected_test else None,
@@ -286,7 +290,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             )
             collected_test = TestRunResultDict()
             collected_test[absolute_node_id] = item_result
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 "success",
                 collected_test if collected_test else None,
@@ -320,7 +324,7 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
             )
             collected_test = TestRunResultDict()
             collected_test[absolute_node_id] = item_result
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 "success",
                 collected_test if collected_test else None,
@@ -366,8 +370,6 @@ def check_skipped_condition(item):
 class FileCoverageInfo(TypedDict):
     lines_covered: list[int]
     lines_missed: list[int]
-    executed_branches: int
-    total_branches: int
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -398,7 +400,7 @@ def pytest_sessionfinish(session, exitstatus):
                 "children": [],
                 "id_": "",
             }
-            post_response(os.fsdecode(cwd), error_node)
+            send_discovery_message(os.fsdecode(cwd), error_node)
         try:
             session_node: TestNode | None = build_test_tree(session)
             if not session_node:
@@ -406,7 +408,7 @@ def pytest_sessionfinish(session, exitstatus):
                     "Something went wrong following pytest finish, \
                         no session node was created"
                 )
-            post_response(os.fsdecode(cwd), session_node)
+            send_discovery_message(os.fsdecode(cwd), session_node)
         except Exception as e:
             ERRORS.append(
                 f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
@@ -418,7 +420,7 @@ def pytest_sessionfinish(session, exitstatus):
                 "children": [],
                 "id_": "",
             }
-            post_response(os.fsdecode(cwd), error_node)
+            send_discovery_message(os.fsdecode(cwd), error_node)
     else:
         if exitstatus == 0 or exitstatus == 1:
             exitstatus_bool = "success"
@@ -428,48 +430,33 @@ def pytest_sessionfinish(session, exitstatus):
             )
             exitstatus_bool = "error"
 
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 exitstatus_bool,
                 None,
             )
         # send end of transmission token
 
-    # send coverageee if enabled
+    # send coverage if enabled
     is_coverage_run = os.environ.get("COVERAGE_ENABLED")
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
-        from coverage.report_core import get_analysis_to_report
-
-        if TYPE_CHECKING:
-            from coverage.plugin import FileReporter
-            from coverage.results import Analysis
 
         cov = coverage.Coverage()
         cov.load()
-        analysis_iterator: Iterator[tuple[FileReporter, Analysis]] = get_analysis_to_report(
-            cov, None
-        )
-
+        file_set: set[str] = cov.get_data().measured_files()
         file_coverage_map: dict[str, FileCoverageInfo] = {}
-        for fr, analysis in analysis_iterator:
-            file_str: str = fr.filename
-            executed_branches = analysis.numbers.n_executed_branches
-            total_branches = analysis.numbers.n_branches
-            if not INCLUDE_BRANCHES:
-                print("coverage not run with branches")
-                # if covearge wasn't run with branches, set the total branches value to -1 to signal that it is not available
-                executed_branches = 0
-                total_branches = -1
-
+        for file in file_set:
+            analysis = cov.analysis2(file)
+            lines_executable = {int(line_no) for line_no in analysis[1]}
+            lines_missed = {int(line_no) for line_no in analysis[3]}
+            lines_covered = lines_executable - lines_missed
             file_info: FileCoverageInfo = {
-                "lines_covered": list(analysis.executed),  # set
-                "lines_missed": list(analysis.missing),  # set
-                "executed_branches": executed_branches,  # int
-                "total_branches": total_branches,  # int
+                "lines_covered": list(lines_covered),  # list of int
+                "lines_missed": list(lines_missed),  # list of int
             }
-            file_coverage_map[file_str] = file_info
+            file_coverage_map[file] = file_info
 
         payload: CoveragePayloadDict = CoveragePayloadDict(
             coverage=True,
@@ -477,11 +464,7 @@ def pytest_sessionfinish(session, exitstatus):
             result=file_coverage_map,
             error=None,
         )
-        send_post_request(payload)
-
-    command_type = "discovery" if IS_DISCOVERY else "execution"
-    payload_eot: EOTPayloadDict = {"command_type": command_type, "eot": True}
-    send_post_request(payload_eot)
+        send_message(payload)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -550,11 +533,15 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                     parent_test_case["children"].append(function_test_node)
             # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
             test_node = function_test_node
-        if isinstance(test_case.parent, pytest.Class):
+        if isinstance(test_case.parent, pytest.Class) or (
+            USES_PYTEST_DESCRIBE and isinstance(test_case.parent, DescribeBlock)
+        ):
             case_iter = test_case.parent
             node_child_iter = test_node
             test_class_node: TestNode | None = None
-            while isinstance(case_iter, pytest.Class):
+            while isinstance(case_iter, pytest.Class) or (
+                USES_PYTEST_DESCRIBE and isinstance(case_iter, DescribeBlock)
+            ):
                 # While the given node is a class, create a class and nest the previous node as a child.
                 try:
                     test_class_node = class_nodes_dict[case_iter.nodeid]
@@ -711,7 +698,7 @@ def create_session_node(session: pytest.Session) -> TestNode:
     }
 
 
-def create_class_node(class_module: pytest.Class) -> TestNode:
+def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
     """Creates a class node from a pytest class object.
 
     Keyword arguments:
@@ -806,13 +793,6 @@ class CoveragePayloadDict(Dict):
     error: str | None  # Currently unused need to check
 
 
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
-
-    command_type: Literal["discovery", "execution"]
-    eot: bool
-
-
 def get_node_path(node: Any) -> pathlib.Path:
     """A function that returns the path of a node given the switch to pathlib.Path.
 
@@ -852,8 +832,10 @@ __writer = None
 atexit.register(lambda: __writer.close() if __writer else None)
 
 
-def execution_post(cwd: str, status: Literal["success", "error"], tests: TestRunResultDict | None):
-    """Sends a POST request with execution payload details.
+def send_execution_message(
+    cwd: str, status: Literal["success", "error"], tests: TestRunResultDict | None
+):
+    """Sends message execution payload details.
 
     Args:
         cwd (str): Current working directory.
@@ -865,10 +847,10 @@ def execution_post(cwd: str, status: Literal["success", "error"], tests: TestRun
     )
     if ERRORS:
         payload["error"] = ERRORS
-    send_post_request(payload)
+    send_message(payload)
 
 
-def post_response(cwd: str, session_node: TestNode) -> None:
+def send_discovery_message(cwd: str, session_node: TestNode) -> None:
     """
     Sends a POST request with test session details in payload.
 
@@ -884,7 +866,7 @@ def post_response(cwd: str, session_node: TestNode) -> None:
     }
     if ERRORS is not None:
         payload["error"] = ERRORS
-    send_post_request(payload, cls_encoder=PathEncoder)
+    send_message(payload, cls_encoder=PathEncoder)
 
 
 class PathEncoder(json.JSONEncoder):
@@ -896,8 +878,8 @@ class PathEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def send_post_request(
-    payload: ExecutionPayloadDict | DiscoveryPayloadDict | EOTPayloadDict | CoveragePayloadDict,
+def send_message(
+    payload: ExecutionPayloadDict | DiscoveryPayloadDict | CoveragePayloadDict,
     cls_encoder=None,
 ):
     """
@@ -921,8 +903,7 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = socket_manager.PipeManager(TEST_RUN_PIPE)
-            __writer.connect()
+            __writer = open(TEST_RUN_PIPE, "w", encoding="utf-8", newline="\r\n")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
@@ -940,10 +921,11 @@ def send_post_request(
         "params": payload,
     }
     data = json.dumps(rpc, cls=cls_encoder)
-
     try:
         if __writer:
-            __writer.write(data)
+            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
+            __writer.write(request)
+            __writer.flush()
         else:
             print(
                 f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",

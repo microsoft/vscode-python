@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2024.15.0-dev",
+    "version": "2024.21.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -24,7 +24,6 @@
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
-        "contribIssueReporter",
         "codeActionAI",
         "notebookReplDocument",
         "notebookVariableProvider"
@@ -83,8 +82,7 @@
     "browser": "./dist/extension.browser.js",
     "l10n": "./l10n",
     "contributes": {
-        "problemMatchers":
-        [
+        "problemMatchers": [
             {
                 "name": "python",
                 "owner": "python",
@@ -98,7 +96,6 @@
                     },
                     {
                         "regexp": "^\\s*(.*)\\s*$"
-
                     },
                     {
                         "regexp": "^\\s*(.*Error.*)$",
@@ -584,10 +581,7 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "type": "string"
                 },
                 "python.locator": {
                     "default": "js",
@@ -597,7 +591,8 @@
                         "native"
                     ],
                     "tags": [
-                        "experimental"
+                        "onExP",
+                        "preview"
                     ],
                     "scope": "machine",
                     "type": "string"
@@ -658,11 +653,14 @@
                     "scope": "resource",
                     "type": "array"
                 },
-                "python.REPL.enableShellIntegration": {
+                "python.terminal.shellIntegration.enabled": {
                     "default": false,
-                    "description": "%python.REPL.enableShellIntegration.description%",
+                    "markdownDescription": "%python.terminal.shellIntegration.enabled.description%",
                     "scope": "resource",
-                    "type": "boolean"
+                    "type": "boolean",
+                    "tags": [
+                        "preview"
+                    ]
                 },
                 "python.REPL.enableREPLSmartSend": {
                     "default": true,
@@ -676,8 +674,15 @@
                     "scope": "resource",
                     "type": "boolean",
                     "tags": [
-                        "experimental"
+                        "onExP",
+                        "preview"
                     ]
+                },
+                "python.REPL.provideVariables": {
+                    "default": true,
+                    "description": "%python.REPL.provideVariables.description%",
+                    "scope": "resource",
+                    "type": "boolean"
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
@@ -1169,12 +1174,12 @@
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl' && !inlineChatFocused"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.repl' && !inlineChatFocused && !notebookCellListFocused"
             },
             {
                 "command": "python.execInInteractiveWindowEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused && !notebookCellListFocused"
             },
             {
                 "command": "python.refreshTensorBoard",
@@ -1637,6 +1642,7 @@
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-import": "^2.29.1",
         "eslint-plugin-jsx-a11y": "^6.3.1",
+        "eslint-plugin-no-only-tests": "^3.3.0",
         "eslint-plugin-react": "^7.20.3",
         "eslint-plugin-react-hooks": "^4.0.0",
         "expose-loader": "^3.1.0",

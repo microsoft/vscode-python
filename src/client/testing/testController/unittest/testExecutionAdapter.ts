@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
-    EOTTestPayload,
     ExecutionTestPayload,
     ITestExecutionAdapter,
     ITestResultResolver,
@@ -48,38 +47,35 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
     ): Promise<ExecutionTestPayload> {
-        // deferredTillEOT awaits EOT message and deferredTillServerClose awaits named pipe server close
-        const deferredTillEOT: Deferred<void> = utils.createTestingDeferred();
+        // deferredTillServerClose awaits named pipe server close
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
         // create callback to handle data received on the named pipe
-        const dataReceivedCallback = (data: ExecutionTestPayload | EOTTestPayload) => {
+        const dataReceivedCallback = (data: ExecutionTestPayload) => {
             if (runInstance && !runInstance.token.isCancellationRequested) {
-                this.resultResolver?.resolveExecution(data, runInstance, deferredTillEOT);
+                this.resultResolver?.resolveExecution(data, runInstance);
             } else {
                 traceError(`No run instance found, cannot resolve execution, for workspace ${uri.fsPath}.`);
             }
         };
-        const { name: resultNamedPipeName, dispose: serverDispose } = await utils.startRunResultNamedPipe(
+        const cSource = new CancellationTokenSource();
+        runInstance?.token.onCancellationRequested(() => cSource.cancel());
+        const name = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
-            runInstance?.token, // token to cancel
+            cSource.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
-            console.log(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
+            console.log(`Test run cancelled, resolving 'till TillAllServerClose' deferred for ${uri.fsPath}.`);
             // if canceled, stop listening for results
-            deferredTillEOT.resolve();
-            // if canceled, close the server, resolves the deferredTillAllServerClose
             deferredTillServerClose.resolve();
-            serverDispose();
         });
         try {
             await this.runTestsNew(
                 uri,
                 testIds,
-                resultNamedPipeName,
-                deferredTillEOT,
-                serverDispose,
+                name,
+                cSource,
                 runInstance,
                 profileKind,
                 executionFactory,
@@ -88,8 +84,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } catch (error) {
             traceError(`Error in running unittest tests: ${error}`);
         } finally {
-            // wait for EOT
-            await deferredTillEOT.promise;
             await deferredTillServerClose.promise;
         }
         const executionPayload: ExecutionTestPayload = {
@@ -104,8 +98,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        deferredTillEOT: Deferred<void>,
-        serverDispose: () => void,
+        serverCancel: CancellationTokenSource,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
@@ -180,8 +173,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     throw new Error('Debug launcher is not defined');
                 }
                 await debugLauncher.launchDebugger(launchOptions, () => {
-                    serverDispose(); // this will resolve the deferredTillAllServerClose
-                    deferredTillEOT?.resolve();
+                    serverCancel.cancel();
                 });
             } else {
                 // This means it is running the test
@@ -198,6 +190,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                         resultProc?.kill();
                     } else {
                         deferredTillExecClose?.resolve();
+                        serverCancel.cancel();
                     }
                 });
 
@@ -232,17 +225,11 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                             this.resultResolver?.resolveExecution(
                                 utils.createExecutionErrorPayload(code, signal, testIds, cwd),
                                 runInstance,
-                                deferredTillEOT,
-                            );
-                            this.resultResolver?.resolveExecution(
-                                utils.createEOTPayload(true),
-                                runInstance,
-                                deferredTillEOT,
                             );
                         }
-                        serverDispose();
                     }
                     deferredTillExecClose.resolve();
+                    serverCancel.cancel();
                 });
                 await deferredTillExecClose.promise;
             }

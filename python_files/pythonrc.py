@@ -4,6 +4,7 @@ if sys.platform != "win32":
     import readline
 
 original_ps1 = ">>> "
+use_shell_integration = sys.version_info < (3, 13)
 
 
 class REPLHooks:
@@ -72,5 +73,5 @@ class PS1:
         return result
 
 
-if sys.platform != "win32":
+if sys.platform != "win32" and use_shell_integration:
     sys.ps1 = PS1()

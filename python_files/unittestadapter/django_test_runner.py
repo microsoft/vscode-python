@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING  # noqa: E402
 from execution import UnittestTestResult  # noqa: E402
 from pvsc_utils import (  # noqa: E402
     DiscoveryPayloadDict,
-    EOTPayloadDict,
     VSCodeUnittestError,
     build_test_tree,
     send_post_request,
@@ -64,9 +63,6 @@ class CustomDiscoveryTestRunner(DiscoverRunner):
 
             # Send discovery payload.
             send_post_request(payload, test_run_pipe)
-            # Send EOT token.
-            eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-            send_post_request(eot_payload, test_run_pipe)
             return 0  # Skip actual test execution, return 0 as no tests were run.
         except Exception as e:
             error_msg = (

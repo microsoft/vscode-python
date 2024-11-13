@@ -119,7 +119,6 @@ export class NativeRepl implements Disposable {
 
     /**
      * Function that check if NotebookController for REPL exists, and returns it in Singleton manner.
-     * @returns NotebookController
      */
     public setReplController(): NotebookController {
         if (!this.replController) {
@@ -135,8 +134,6 @@ export class NativeRepl implements Disposable {
 
     /**
      * Function that checks if native REPL's text input box contains complete code.
-     * @param activeEditor
-     * @param pythonServer
      * @returns Promise<boolean> - True if complete/Valid code is present, False otherwise.
      */
     public async checkUserInputCompleteCode(activeEditor: TextEditor | undefined): Promise<boolean> {
@@ -157,7 +154,6 @@ export class NativeRepl implements Disposable {
 
     /**
      * Function that opens interactive repl, selects kernel, and send/execute code to the native repl.
-     * @param code
      */
     public async sendToNativeRepl(code?: string): Promise<void> {
         const mementoValue = this.context.globalState.get(NATIVE_REPL_URI_MEMENTO) as Uri | undefined;

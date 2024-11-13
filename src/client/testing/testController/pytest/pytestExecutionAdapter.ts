@@ -1,19 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as path from 'path';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
-import {
-    CoveragePayload,
-    EOTTestPayload,
-    ExecutionTestPayload,
-    ITestExecutionAdapter,
-    ITestResultResolver,
-} from '../common/types';
+import { ExecutionTestPayload, ITestExecutionAdapter, ITestResultResolver } from '../common/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -25,6 +19,7 @@ import { PYTEST_PROVIDER } from '../../common/constants';
 import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import * as utils from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -41,30 +36,28 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
-        // deferredTillEOT awaits EOT message and deferredTillServerClose awaits named pipe server close
-        const deferredTillEOT: Deferred<void> = utils.createTestingDeferred();
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
         // create callback to handle data received on the named pipe
-        const dataReceivedCallback = (data: ExecutionTestPayload | EOTTestPayload | CoveragePayload) => {
+        const dataReceivedCallback = (data: ExecutionTestPayload) => {
             if (runInstance && !runInstance.token.isCancellationRequested) {
-                this.resultResolver?.resolveExecution(data, runInstance, deferredTillEOT);
+                this.resultResolver?.resolveExecution(data, runInstance);
             } else {
                 traceError(`No run instance found, cannot resolve execution, for workspace ${uri.fsPath}.`);
             }
         };
-        const { name, dispose: serverDispose } = await utils.startRunResultNamedPipe(
+        const cSource = new CancellationTokenSource();
+        runInstance?.token.onCancellationRequested(() => cSource.cancel());
+
+        const name = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
-            runInstance?.token, // token to cancel
+            cSource.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
-            traceInfo(`Test run cancelled, resolving 'till EOT' deferred for ${uri.fsPath}.`);
-            // if canceled, stop listening for results
-            deferredTillEOT.resolve();
-            serverDispose(); // this will resolve deferredTillServerClose
-
+            traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
             const executionPayload: ExecutionTestPayload = {
                 cwd: uri.fsPath,
                 status: 'success',
@@ -78,16 +71,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 uri,
                 testIds,
                 name,
-                deferredTillEOT,
-                serverDispose,
+                cSource,
                 runInstance,
                 profileKind,
                 executionFactory,
                 debugLauncher,
+                interpreter,
             );
         } finally {
-            // wait for to send EOT
-            await deferredTillEOT.promise;
             await deferredTillServerClose.promise;
         }
 
@@ -105,12 +96,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        deferredTillEOT: Deferred<void>,
-        serverDispose: () => void,
+        serverCancel: CancellationTokenSource,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -135,6 +126,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: uri,
+            interpreter,
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
@@ -177,8 +169,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
                 await debugLauncher!.launchDebugger(launchOptions, () => {
-                    serverDispose(); // this will resolve deferredTillServerClose
-                    deferredTillEOT?.resolve();
+                    serverCancel.cancel();
                 });
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read
@@ -197,6 +188,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         resultProc?.kill();
                     } else {
                         deferredTillExecClose.resolve();
+                        serverCancel.cancel();
                     }
                 });
 
@@ -238,21 +230,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                             this.resultResolver?.resolveExecution(
                                 utils.createExecutionErrorPayload(code, signal, testIds, cwd),
                                 runInstance,
-                                deferredTillEOT,
-                            );
-                            this.resultResolver?.resolveExecution(
-                                utils.createEOTPayload(true),
-                                runInstance,
-                                deferredTillEOT,
                             );
                         }
                         // this doesn't work, it instead directs us to the noop one which is defined first
                         // potentially this is due to the server already being close, if this is the case?
-                        serverDispose(); // this will resolve deferredTillServerClose
+                        console.log('right before serverDispose');
                     }
+
                     // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
                     // due to the sync reading of the output.
                     deferredTillExecClose.resolve();
+                    serverCancel.cancel();
                 });
                 await deferredTillExecClose.promise;
             }

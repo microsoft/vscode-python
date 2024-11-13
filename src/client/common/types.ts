@@ -24,7 +24,6 @@ import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
 export interface IDisposable {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispose(): void | undefined | Promise<void>;
 }
 
@@ -197,12 +196,12 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
     readonly activateEnvInCurrentTerminal: boolean;
+    readonly enableShellIntegration: boolean;
 }
 
 export interface IREPLSettings {
     readonly enableREPLSmartSend: boolean;
     readonly sendToNativeREPL: boolean;
-    readonly enableShellIntegration: boolean;
 }
 
 export interface IExperiments {

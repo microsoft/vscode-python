@@ -8,7 +8,7 @@ import {
     InterpreterInfoJson,
 } from '../../../common/process/internal/scripts';
 import { Architecture } from '../../../common/utils/platform';
-import { traceError, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import { shellExecute } from '../../common/externalDependencies';
 import { copyPythonExecInfo, PythonExecInfo } from '../../exec';
 import { parseVersion } from './pythonVersion';
@@ -82,7 +82,13 @@ export async function getInterpreterInfo(
     );
 
     // Sometimes on CI, the python process takes a long time to start up. This is a workaround for that.
-    const standardTimeout = isCI ? 30000 : 15000;
+    let standardTimeout = isCI ? 30000 : 15000;
+    if (process.env.VSC_PYTHON_INTERPRETER_INFO_TIMEOUT !== undefined) {
+        // Custom override for setups where the initial Python setup process may take longer than the standard timeout.
+        standardTimeout = parseInt(process.env.VSC_PYTHON_INTERPRETER_INFO_TIMEOUT, 10);
+        traceInfo(`Custom interpreter discovery timeout: ${standardTimeout}`);
+    }
+
     // Try shell execing the command, followed by the arguments. This will make node kill the process if it
     // takes too long.
     // Sometimes the python path isn't valid, timeout if that's the case.

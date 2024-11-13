@@ -17,13 +17,7 @@ import {
     Range,
 } from 'vscode';
 import * as util from 'util';
-import {
-    CoveragePayload,
-    DiscoveredTestPayload,
-    EOTTestPayload,
-    ExecutionTestPayload,
-    ITestResultResolver,
-} from './types';
+import { CoveragePayload, DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
@@ -32,7 +26,6 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
 import { buildErrorNodeOptions, populateTestTree, splitTestNameWithRegex } from './utils';
-import { Deferred } from '../../../common/utils/async';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -58,14 +51,8 @@ export class PythonResultResolver implements ITestResultResolver {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    public resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): void {
-        if ('eot' in payload && payload.eot === true) {
-            deferredTillEOT.resolve();
-        } else if (!payload) {
+    public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
+        if (!payload) {
             // No test data is available
         } else {
             this._resolveDiscovery(payload as DiscoveredTestPayload, token);
@@ -117,26 +104,13 @@ export class PythonResultResolver implements ITestResultResolver {
         });
     }
 
-    public resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload | CoveragePayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): void {
-        if ('eot' in payload && payload.eot === true) {
-            // eot sent once per connection
-            traceVerbose('EOT received, resolving deferredTillServerClose');
-            deferredTillEOT.resolve();
-        } else if ('coverage' in payload) {
+    public resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void {
+        if ('coverage' in payload) {
             // coverage data is sent once per connection
             traceVerbose('Coverage data received.');
             this._resolveCoverage(payload as CoveragePayload, runInstance);
         } else {
             this._resolveExecution(payload as ExecutionTestPayload, runInstance);
-        }
-        if ('coverage' in payload) {
-            // coverage data is sent once per connection
-            traceVerbose('Coverage data received.');
-            this._resolveCoverage(payload as CoveragePayload, runInstance);
         }
     }
 
@@ -149,22 +123,13 @@ export class PythonResultResolver implements ITestResultResolver {
             const fileCoverageMetrics = value;
             const linesCovered = fileCoverageMetrics.lines_covered ? fileCoverageMetrics.lines_covered : []; // undefined if no lines covered
             const linesMissed = fileCoverageMetrics.lines_missed ? fileCoverageMetrics.lines_missed : []; // undefined if no lines missed
-            const executedBranches = fileCoverageMetrics.executed_branches;
-            const totalBranches = fileCoverageMetrics.total_branches;
 
             const lineCoverageCount = new TestCoverageCount(
                 linesCovered.length,
                 linesCovered.length + linesMissed.length,
             );
             const uri = Uri.file(fileNameStr);
-            let fileCoverage: FileCoverage;
-            if (totalBranches === -1) {
-                // branch coverage was not enabled and should not be displayed
-                fileCoverage = new FileCoverage(uri, lineCoverageCount);
-            } else {
-                const branchCoverageCount = new TestCoverageCount(executedBranches, totalBranches);
-                fileCoverage = new FileCoverage(uri, lineCoverageCount, branchCoverageCount);
-            }
+            const fileCoverage = new FileCoverage(uri, lineCoverageCount);
             runInstance.addCoverage(fileCoverage);
 
             // create detailed coverage array for each file (only line coverage on detailed, not branch)
@@ -189,7 +154,7 @@ export class PythonResultResolver implements ITestResultResolver {
                 detailedCoverageArray.push(statementCoverage);
             }
 
-            this.detailedCoverageMap.set(fileNameStr, detailedCoverageArray);
+            this.detailedCoverageMap.set(uri.fsPath, detailedCoverageArray);
         }
     }
 

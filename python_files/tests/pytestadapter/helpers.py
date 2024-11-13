@@ -71,7 +71,6 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
 
     This function also:
     - Checks that the jsonrpc value is 2.0
-    - Checks that the last JSON message contains the `eot` token.
     """
     json_messages = []
     remaining = data
@@ -85,10 +84,7 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
         else:
             json_messages.append(json_data["params"])
 
-    last_json = json_messages.pop(-1)
-    if "eot" not in last_json:
-        raise ValueError("Last JSON messages does not contain 'eot' as its last payload.")
-    return json_messages  # return the list of json messages, only the params part without the EOT token
+    return json_messages  # return the list of json messages
 
 
 def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
@@ -96,7 +92,6 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
 
     A single rpc payload is in the format:
     content-length: #LEN# \r\ncontent-type: application/json\r\n\r\n{"jsonrpc": "2.0", "params": ENTIRE_DATA}
-    with EOT params: "params": {"command_type": "discovery", "eot": true}
 
     returns:
     json_data: A single rpc payload of JSON data from the server.
@@ -131,6 +126,22 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
             return json_data, str_stream.read()
         except json.JSONDecodeError:
             print("json decode error")
+
+
+def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Event):
+    # Open the FIFO for reading
+    fifo_path = pathlib.Path(pipe_name)
+    with fifo_path.open() as fifo:
+        print("Waiting for data...")
+        while True:
+            if completed.is_set():
+                break  # Exit loop if completed event is set
+            data = fifo.read()  # This will block until data is available
+            if len(data) == 0:
+                # If data is empty, assume EOF
+                break
+            print(f"Received: {data}")
+            result.append(data)
 
 
 def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event):
@@ -312,14 +323,19 @@ def runner_with_cwd_env(
         # if additional environment variables are passed, add them to the environment
         if env_add:
             env.update(env_add)
-        server = UnixPipeServer(pipe_name)
-        server.start()
+        # server = UnixPipeServer(pipe_name)
+        # server.start()
+        #################
+        # Create the FIFO (named pipe) if it doesn't exist
+        # if not pathlib.Path.exists(pipe_name):
+        os.mkfifo(pipe_name)
+        #################
 
         completed = threading.Event()
 
         result = []  # result is a string array to store the data during threading
         t1: threading.Thread = threading.Thread(
-            target=_listen_on_pipe_new, args=(server, result, completed)
+            target=_listen_on_fifo, args=(pipe_name, result, completed)
         )
         t1.start()
 
@@ -369,14 +385,14 @@ def generate_random_pipe_name(prefix=""):
 
     # For Windows, named pipes have a specific naming convention.
     if sys.platform == "win32":
-        return f"\\\\.\\pipe\\{prefix}-{random_suffix}-sock"
+        return f"\\\\.\\pipe\\{prefix}-{random_suffix}"
 
     # For Unix-like systems, use either the XDG_RUNTIME_DIR or a temporary directory.
     xdg_runtime_dir = os.getenv("XDG_RUNTIME_DIR")
     if xdg_runtime_dir:
-        return os.path.join(xdg_runtime_dir, f"{prefix}-{random_suffix}.sock")  # noqa: PTH118
+        return os.path.join(xdg_runtime_dir, f"{prefix}-{random_suffix}")  # noqa: PTH118
     else:
-        return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}.sock")  # noqa: PTH118
+        return os.path.join(tempfile.gettempdir(), f"{prefix}-{random_suffix}")  # noqa: PTH118
 
 
 class UnixPipeServer:

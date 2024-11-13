@@ -5,7 +5,6 @@
 
 // Must always be on top to setup expected env.
 process.env.VSC_PYTHON_SMOKE_TEST = '1';
-
 import { spawn } from 'child_process';
 import * as fs from '../client/common/platform/fs-paths';
 import * as glob from 'glob';

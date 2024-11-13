@@ -44,8 +44,6 @@ process.on('unhandledRejection', (ex: any, _a) => {
 
 /**
  * Configure the test environment and return the optoins required to run moch tests.
- *
- * @returns {SetupOptions}
  */
 function configure(): SetupOptions {
     process.env.VSC_PYTHON_CI_TEST = '1';
@@ -103,7 +101,6 @@ function configure(): SetupOptions {
  * to complete.
  * That's when we know out PVSC extension specific code is ready for testing.
  * So, this code needs to run always for every test running in VS Code (what we call these `system test`) .
- * @returns
  */
 function activatePythonExtensionScript() {
     const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
@@ -121,9 +118,6 @@ function activatePythonExtensionScript() {
 /**
  * Runner, invoked by VS Code.
  * More info https://code.visualstudio.com/api/working-with-extensions/testing-extension
- *
- * @export
- * @returns {Promise<void>}
  */
 export async function run(): Promise<void> {
     const options = configure();

@@ -78,6 +78,10 @@ def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
     return pathlib.Path(path).exists()
 
 
+def is_file(path: Union[str, pathlib.PurePath]) -> bool:
+    return pathlib.Path(path).is_file()
+
+
 def venv_exists(name: str) -> bool:
     return (
         (CWD / name).exists()
@@ -134,11 +138,15 @@ def upgrade_pip(venv_path: str) -> None:
     print("CREATE_VENV.UPGRADED_PIP")
 
 
+def create_gitignore(git_ignore: Union[str, pathlib.PurePath]):
+    print("Creating:", os.fspath(git_ignore))
+    pathlib.Path(git_ignore).write_text("*")
+
+
 def add_gitignore(name: str) -> None:
     git_ignore = CWD / name / ".gitignore"
-    if git_ignore.is_file():
-        print("Creating:", os.fspath(git_ignore))
-        git_ignore.write_text("*")
+    if not is_file(git_ignore):
+        create_gitignore(git_ignore)
 
 
 def download_pip_pyz(name: str):

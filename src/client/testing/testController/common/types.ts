@@ -16,7 +16,7 @@ import {
 import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { EnvironmentVariables } from '../../../common/variables/types';
-import { Deferred } from '../../../common/utils/async';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 export type TestRunInstanceOptions = TestRunOptions & {
     exclude?: readonly TestItem[];
@@ -198,16 +198,8 @@ export interface ITestResultResolver {
     vsIdToRunId: Map<string, string>;
     detailedCoverageMap: Map<string, FileCoverageDetail[]>;
 
-    resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): void;
-    resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload | CoveragePayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): void;
+    resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
+    resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void;
     _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
     _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void;
     _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void;
@@ -215,7 +207,11 @@ export interface ITestResultResolver {
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-    discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
+    discoverTests(
+        uri: Uri,
+        executionFactory: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
+    ): Promise<DiscoveredTestPayload>;
 }
 
 // interface for execution/runner adapter
@@ -229,6 +225,7 @@ export interface ITestExecutionAdapter {
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
+        interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload>;
 }
 
@@ -259,11 +256,6 @@ export type DiscoveredTestPayload = {
     error?: string[];
 };
 
-export type EOTTestPayload = {
-    commandType: 'discovery' | 'execution';
-    eot: boolean;
-};
-
 export type CoveragePayload = {
     coverage: boolean;
     cwd: string;
@@ -279,10 +271,6 @@ export type FileCoverageMetrics = {
     lines_covered: number[];
     // eslint-disable-next-line camelcase
     lines_missed: number[];
-    // eslint-disable-next-line camelcase
-    executed_branches: number;
-    // eslint-disable-next-line camelcase
-    total_branches: number;
 };
 
 export type ExecutionTestPayload = {
