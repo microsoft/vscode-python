@@ -34,6 +34,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnviro
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
+import { ReplType } from '../../../client/repl/types';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
 
@@ -160,7 +161,7 @@ suite('Terminal - Code Execution Helper', () => {
         };
         jsonParseStub.returns(mockResult);
 
-        const result = await helper.normalizeLines('print("Looks like you are on 3.13")');
+        const result = await helper.normalizeLines('print("Looks like you are on 3.13")', ReplType.terminal);
 
         expect(result).to.equal(`\u001b[200~print("Looks like you are on 3.13")\u001b[201~`);
         jsonParseStub.restore();
@@ -190,7 +191,7 @@ suite('Terminal - Code Execution Helper', () => {
                 actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
             );
 
-        const result = await helper.normalizeLines('print("Looks like you are not on 3.13")');
+        const result = await helper.normalizeLines('print("Looks like you are not on 3.13")', ReplType.terminal);
 
         expect(result).to.equal('print("Looks like you are not on 3.13")');
         jsonParseStub.restore();
@@ -207,7 +208,7 @@ suite('Terminal - Code Execution Helper', () => {
                 return ({} as unknown) as ObservableExecutionResult<string>;
             });
 
-        await helper.normalizeLines('print("hello")');
+        await helper.normalizeLines('print("hello")', ReplType.terminal);
 
         expect(execArgs).to.contain('normalizeSelection.py');
     });
@@ -228,7 +229,7 @@ suite('Terminal - Code Execution Helper', () => {
             .returns((file, args, options) =>
                 actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
             );
-        const normalizedCode = await helper.normalizeLines(source);
+        const normalizedCode = await helper.normalizeLines(source, ReplType.terminal);
         const normalizedExpected = expectedSource.replace(/\r\n/g, '\n');
         expect(normalizedCode).to.be.equal(normalizedExpected);
     }
