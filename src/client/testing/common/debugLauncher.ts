@@ -1,6 +1,6 @@
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSession } from 'vscode';
+import { DebugConfiguration, l10n, Uri, WorkspaceFolder, DebugSession, DebugSessionOptions } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import * as internalScripts from '../../common/process/internal/scripts';
@@ -32,7 +32,11 @@ export class DebugLauncher implements ITestDebugLauncher {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
 
-    public async launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void> {
+    public async launchDebugger(
+        options: LaunchOptions,
+        callback?: () => void,
+        sessionOptions?: DebugSessionOptions,
+    ): Promise<void> {
         const deferred = createDeferred<void>();
         let hasCallbackBeenCalled = false;
         if (options.token && options.token.isCancellationRequested) {
@@ -57,7 +61,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
 
         let activatedDebugSession: DebugSession | undefined;
-        debugManager.startDebugging(workspaceFolder, launchArgs).then(() => {
+        debugManager.startDebugging(workspaceFolder, launchArgs, sessionOptions).then(() => {
             // Save the debug session after it is started so we can check if it is the one that was terminated.
             activatedDebugSession = debugManager.activeDebugSession;
         });

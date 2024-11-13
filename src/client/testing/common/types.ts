@@ -1,4 +1,4 @@
-import { CancellationToken, Disposable, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, DebugSessionOptions, Disposable, OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 import { TestProvider } from '../types';
@@ -89,7 +89,7 @@ export interface ITestConfigurationManagerFactory {
 }
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 export interface ITestDebugLauncher {
-    launchDebugger(options: LaunchOptions, callback?: () => void): Promise<void>;
+    launchDebugger(options: LaunchOptions, callback?: () => void, sessionOptions?: DebugSessionOptions): Promise<void>;
 }
 
 export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');

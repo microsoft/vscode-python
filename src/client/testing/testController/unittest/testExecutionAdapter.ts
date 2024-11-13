@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { CancellationTokenSource, DebugSessionOptions, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
@@ -166,15 +166,22 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName, // change this from pytest
                 };
+                const sessionOptions: DebugSessionOptions = {
+                    testRun: runInstance,
+                };
                 traceInfo(`Running DEBUG unittest for workspace ${options.cwd} with arguments: ${args}\r\n`);
 
                 if (debugLauncher === undefined) {
                     traceError('Debug launcher is not defined');
                     throw new Error('Debug launcher is not defined');
                 }
-                await debugLauncher.launchDebugger(launchOptions, () => {
-                    serverCancel.cancel();
-                });
+                await debugLauncher.launchDebugger(
+                    launchOptions,
+                    () => {
+                        serverCancel.cancel();
+                    },
+                    sessionOptions,
+                );
             } else {
                 // This means it is running the test
                 traceInfo(`Running unittests for workspace ${cwd} with arguments: ${args}\r\n`);

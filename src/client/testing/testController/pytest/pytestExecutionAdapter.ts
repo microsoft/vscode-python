@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { CancellationTokenSource, DebugSessionOptions, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as path from 'path';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
@@ -167,10 +167,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName,
                 };
+                const sessionOptions: DebugSessionOptions = {
+                    testRun: runInstance,
+                };
                 traceInfo(`Running DEBUG pytest with arguments: ${testArgs} for workspace ${uri.fsPath} \r\n`);
-                await debugLauncher!.launchDebugger(launchOptions, () => {
-                    serverCancel.cancel();
-                });
+                await debugLauncher!.launchDebugger(
+                    launchOptions,
+                    () => {
+                        serverCancel.cancel();
+                    },
+                    sessionOptions,
+                );
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read
                 const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
