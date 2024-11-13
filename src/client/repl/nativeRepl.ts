@@ -160,13 +160,21 @@ export class NativeRepl implements Disposable {
         let mementoUri = mementoValue ? Uri.parse(mementoValue) : undefined;
 
         // const mementoFsPath = mementoUri?.fsPath;
-        // const openEditorsFsPath = workspace.textDocuments.map((doc) => doc.uri.fsPath);
+
         const openEditors = workspace.textDocuments.map((doc) => doc.uri);
+        const openEditorsFsPath = workspace.textDocuments.map((doc) => doc.uri.fsPath);
         // TODO need to check if that memento URI exist in my tab
         // plain untitled notebook same uri as REPL.
         // editor option check
-        if (mementoUri && openEditors.includes(mementoUri)) {
-            this.replUri = mementoUri;
+        if (mementoUri?.fsPath) {
+            const matchingEditor = openEditors.find((uri) => uri.fsPath === mementoUri?.fsPath);
+            if (matchingEditor) {
+                this.replUri = matchingEditor;
+                this.notebookDocument = workspace.notebookDocuments.find(
+                    (doc) => doc.uri.fsPath === matchingEditor.fsPath,
+                );
+                await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
+            }
         } else {
             this.replUri = undefined;
             await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
