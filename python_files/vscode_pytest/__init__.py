@@ -447,16 +447,6 @@ def pytest_sessionfinish(session, exitstatus):
         cov = coverage.Coverage()
         cov.load()
 
-        # omit file playground
-        config = cov.config
-        # omit_patterns = config.omit
-        exclude_patterns = config.exclude_list
-        cov_ex_list = cov.get_exclude_list()
-
-        # print("Omitted files patterns:", omit_patterns)
-        print("Excluded code patterns:", exclude_patterns)
-        print("Excluded code patterns:", cov_ex_list)
-
         file_set: set[str] = cov.get_data().measured_files()
         file_coverage_map: dict[str, FileCoverageInfo] = {}
         for file in file_set:
