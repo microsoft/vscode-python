@@ -158,36 +158,28 @@ export class NativeRepl implements Disposable {
     public async sendToNativeRepl(code?: string): Promise<void> {
         const mementoValue = (await this.context.globalState.get(NATIVE_REPL_URI_MEMENTO)) as string | undefined;
         let mementoUri = mementoValue ? Uri.parse(mementoValue) : undefined;
+        const openNotebookDocuments = workspace.notebookDocuments.map((doc) => doc.uri);
 
-        // const mementoFsPath = mementoUri?.fsPath;
-
-        const openEditors = workspace.textDocuments.map((doc) => doc.uri);
-        const openEditorsFsPath = workspace.textDocuments.map((doc) => doc.uri.fsPath);
-        // TODO need to check if that memento URI exist in my tab
-        // plain untitled notebook same uri as REPL.
-        // editor option check
-        if (mementoUri?.fsPath) {
-            const matchingEditor = openEditors.find((uri) => uri.fsPath === mementoUri?.fsPath);
-            if (matchingEditor) {
-                this.replUri = matchingEditor;
+        if (mementoUri) {
+            const replTabBeforeReload = openNotebookDocuments.find((uri) => uri.fsPath === mementoUri?.fsPath);
+            if (replTabBeforeReload) {
+                this.replUri = replTabBeforeReload;
                 this.notebookDocument = workspace.notebookDocuments.find(
-                    (doc) => doc.uri.fsPath === matchingEditor.fsPath,
+                    (doc) => doc.uri.fsPath === replTabBeforeReload.fsPath,
                 );
                 await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
             }
         } else {
             this.replUri = undefined;
-            await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
             mementoUri = undefined;
+            await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
         }
 
-        // try to restore notebook doc based on memento value.
-        // if I cant, then clear momento and openInteractiveREPL.
-
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoUri);
+
         this.notebookDocument = notebookEditor.notebook;
         this.replUri = this.notebookDocument.uri;
-        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString()); // TODO store Uri as string and then parse this on recovery.
+        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
 
         if (this.notebookDocument) {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
