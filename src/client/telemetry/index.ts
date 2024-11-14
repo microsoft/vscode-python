@@ -1814,7 +1814,7 @@ export interface IEventNamePropertyMapping {
          */
         locatorPipEnv?: number;
         /**
-         * Time taken to find all Poetry environments.
+         * Time taken to find all Pixi environments.
          */
         locatorPixi?: number;
         /**
