@@ -115,9 +115,6 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     registerStartNativeReplCommand(ext.disposables, interpreterService, ext.context);
     registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager, ext.context);
     registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager, ext.context);
-
-    // TODO cover edge case: create repl, reload repl, close tab, then open notebook, and then we fall into trap where we think notebook is repl.
-    // check label of editor name - if its python repl or not.
 }
 
 /// //////////////////////////
