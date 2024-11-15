@@ -20,6 +20,7 @@ import { PVSC_EXTENSION_ID } from '../common/constants';
 export async function openInteractiveREPL(
     notebookController: NotebookController,
     notebookDocument: NotebookDocument | undefined,
+    preserveFocus: boolean = true,
 ): Promise<NotebookEditor> {
     let viewColumn = ViewColumn.Beside;
 
@@ -34,7 +35,7 @@ export async function openInteractiveREPL(
     const editor = window.showNotebookDocument(notebookDocument!, {
         viewColumn,
         asRepl: 'Python REPL',
-        preserveFocus: true,
+        preserveFocus,
     });
     await commands.executeCommand('notebook.selectKernel', {
         editor,
