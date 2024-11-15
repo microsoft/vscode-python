@@ -1,4 +1,6 @@
 import {
+    commands,
+    window,
     NotebookController,
     NotebookEditor,
     ViewColumn,
@@ -7,52 +9,35 @@ import {
     NotebookCellKind,
     NotebookEdit,
     WorkspaceEdit,
-    Uri,
+    workspace,
 } from 'vscode';
-import { getExistingReplViewColumn, getTabNameForUri } from './replUtils';
+import { getExistingReplViewColumn } from './replUtils';
 import { PVSC_EXTENSION_ID } from '../common/constants';
-import { showNotebookDocument } from '../common/vscodeApis/windowApis';
-import { openNotebookDocument, applyEdit } from '../common/vscodeApis/workspaceApis';
-import { executeCommand } from '../common/vscodeApis/commandApis';
 
 /**
  * Function that opens/show REPL using IW UI.
  */
 export async function openInteractiveREPL(
     notebookController: NotebookController,
-    notebookDocument: NotebookDocument | Uri | undefined,
+    notebookDocument: NotebookDocument | undefined,
     preserveFocus: boolean = true,
-): Promise<NotebookEditor | undefined> {
+): Promise<NotebookEditor> {
     let viewColumn = ViewColumn.Beside;
-    if (notebookDocument instanceof Uri) {
-        // Case where NotebookDocument is undefined, but workspace mementoURI exists.
-        notebookDocument = await openNotebookDocument(notebookDocument);
-    } else if (notebookDocument) {
-        // Case where NotebookDocument (REPL document already exists in the tab)
+
+    // Case where NotebookDocument (REPL document already exists in the tab)
+    if (notebookDocument) {
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
         viewColumn = existingReplViewColumn ?? viewColumn;
     } else if (!notebookDocument) {
-        // Case where NotebookDocument doesnt exist, or
-        // became outdated (untitled.ipynb created without Python extension knowing, effectively taking over original Python REPL's URI)
-        notebookDocument = await openNotebookDocument('jupyter-notebook');
+        // Case where NotebookDocument doesnt exist, create a blank one.
+        notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    const editor = await showNotebookDocument(notebookDocument!, {
+    const editor = window.showNotebookDocument(notebookDocument!, {
         viewColumn,
         asRepl: 'Python REPL',
         preserveFocus,
     });
-
-    // Sanity check that we opened a Native REPL from showNotebookDocument.
-    if (
-        !editor ||
-        !editor.notebook ||
-        !editor.notebook.uri ||
-        getTabNameForUri(editor.notebook.uri) !== 'Python REPL'
-    ) {
-        return undefined;
-    }
-
-    await executeCommand('notebook.selectKernel', {
+    await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,
         extension: PVSC_EXTENSION_ID,
@@ -69,7 +54,7 @@ export async function selectNotebookKernel(
     notebookControllerId: string,
     extensionId: string,
 ): Promise<void> {
-    await executeCommand('notebook.selectKernel', {
+    await commands.executeCommand('notebook.selectKernel', {
         notebookEditor,
         id: notebookControllerId,
         extension: extensionId,
@@ -84,7 +69,7 @@ export async function executeNotebookCell(notebookEditor: NotebookEditor, code: 
     const cellIndex = replOptions?.appendIndex ?? notebook.cellCount;
     await addCellToNotebook(notebook, cellIndex, code);
     // Execute the cell
-    executeCommand('notebook.cell.execute', {
+    commands.executeCommand('notebook.cell.execute', {
         ranges: [{ start: cellIndex, end: cellIndex + 1 }],
         document: notebook.uri,
     });
@@ -100,5 +85,5 @@ async function addCellToNotebook(notebookDocument: NotebookDocument, index: numb
     const notebookEdit = NotebookEdit.insertCells(index, [notebookCellData]);
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-    await applyEdit(workspaceEdit);
+    await workspace.applyEdit(workspaceEdit);
 }

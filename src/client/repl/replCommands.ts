@@ -31,10 +31,8 @@ export async function registerStartNativeReplCommand(
             sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
             const interpreter = await getActiveInterpreter(uri, interpreterService);
             if (interpreter) {
-                if (interpreter) {
-                    const nativeRepl = await getNativeRepl(interpreter, disposables);
-                    await nativeRepl.sendToNativeRepl(undefined, false);
-                }
+                const nativeRepl = await getNativeRepl(interpreter, disposables);
+                await nativeRepl.sendToNativeRepl(undefined, false);
             }
         }),
     );
