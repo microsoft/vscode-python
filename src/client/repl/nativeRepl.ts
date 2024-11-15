@@ -205,18 +205,9 @@ function getOpenTabNames(): string[] {
 
     for (const tabGroup of tabGroups) {
         for (const tab of tabGroup.tabs) {
-            if (tab.input instanceof TabInputText) {
-                tabNames.push(tab.input.uri.fsPath);
-            } else if (tab.input instanceof TabInputTextDiff) {
-                if (tab.input.modified instanceof Uri) {
-                    tabNames.push(tab.input.modified.fsPath);
-                }
-            } else if (tab.input instanceof TabInputNotebook) {
-                tabNames.push(tab.input.uri.fsPath);
-            }
+            tabNames.push(tab.label);
         }
     }
-    const tabGroupTemp = tabGroups;
 
     return tabNames;
 }
