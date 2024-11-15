@@ -144,7 +144,7 @@
       "totaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "typeevalcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "typeevaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
 */
 /* __GDPR__
@@ -321,7 +321,7 @@
       "typeevalcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "typeevaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
 */
 /* __GDPR__
@@ -390,7 +390,7 @@
       "watchforlibrarychanges" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "workspacecount" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
