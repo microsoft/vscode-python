@@ -6,12 +6,17 @@ import {
     NotebookControllerAffinity,
     NotebookDocument,
     QuickPickItem,
+    TabInputText,
     TextEditor,
     Uri,
     workspace,
     WorkspaceFolder,
+    window,
+    TabInputTextDiff,
+    TabInputNotebook,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
+import * as path from 'path';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
@@ -168,6 +173,9 @@ export class NativeRepl implements Disposable {
                     (doc) => doc.uri.fsPath === replTabBeforeReload.fsPath,
                 );
                 await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
+                const myFileName = path.basename(this.replUri.fsPath);
+                const whatever = 'hi';
+                const tabNames = getOpenTabNames();
             }
         } else {
             this.replUri = undefined;
@@ -189,6 +197,28 @@ export class NativeRepl implements Disposable {
             }
         }
     }
+}
+
+function getOpenTabNames(): string[] {
+    const tabNames: string[] = [];
+    const tabGroups = window.tabGroups.all;
+
+    for (const tabGroup of tabGroups) {
+        for (const tab of tabGroup.tabs) {
+            if (tab.input instanceof TabInputText) {
+                tabNames.push(tab.input.uri.fsPath);
+            } else if (tab.input instanceof TabInputTextDiff) {
+                if (tab.input.modified instanceof Uri) {
+                    tabNames.push(tab.input.modified.fsPath);
+                }
+            } else if (tab.input instanceof TabInputNotebook) {
+                tabNames.push(tab.input.uri.fsPath);
+            }
+        }
+    }
+    const tabGroupTemp = tabGroups;
+
+    return tabNames;
 }
 
 /**
