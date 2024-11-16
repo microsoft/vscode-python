@@ -10,13 +10,8 @@ import {
     Uri,
     workspace,
     WorkspaceFolder,
-    window,
-    TabInputNotebook,
-    TabInputTextDiff,
-    TabInputText,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
-import * as path from 'path';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
@@ -28,6 +23,7 @@ import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { VariablesProvider } from './variables/variablesProvider';
 import { VariableRequester } from './variables/variableRequester';
+import { getTabNameForUri } from './replUtils';
 
 const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
 let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
@@ -46,8 +42,6 @@ export class NativeRepl implements Disposable {
     private notebookDocument: NotebookDocument | undefined;
 
     public newReplSession: boolean | undefined = true;
-
-    private replUri: Uri | undefined;
 
     private context: ExtensionContext;
 
@@ -82,7 +76,6 @@ export class NativeRepl implements Disposable {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
                     this.newReplSession = true;
-                    this.replUri = undefined;
                     await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
                 }
             }),
@@ -168,28 +161,20 @@ export class NativeRepl implements Disposable {
         if (mementoUri) {
             const replTabBeforeReload = openNotebookDocuments.find((uri) => uri.fsPath === mementoUri?.fsPath);
             if (replTabBeforeReload) {
-                this.replUri = replTabBeforeReload;
                 this.notebookDocument = workspace.notebookDocuments.find(
                     (doc) => doc.uri.fsPath === replTabBeforeReload.fsPath,
                 );
-                await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
-                const myFileName = path.basename(this.replUri.fsPath);
+                await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, replTabBeforeReload.toString());
 
-                // const tabNames = getOpenTabNames();
-                const tabLabel = getTabNameForUri(this.replUri);
-                if (tabLabel !== 'Python REPL') {
-                    const regex = /^Untitled-\d+\.ipynb$/;
-                    const isUntitled = regex.test(myFileName);
-
-                    this.replUri = undefined;
+                // If repl URI does not have tabLabel 'Python REPL', something has changed:
+                // e.g. creation of untitled notebook without Python extension knowing.
+                if (getTabNameForUri(replTabBeforeReload) !== 'Python REPL') {
                     mementoUri = undefined;
-
                     await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
                     this.notebookDocument = undefined;
                 }
             }
         } else {
-            this.replUri = undefined;
             mementoUri = undefined;
             await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
             this.notebookDocument = undefined;
@@ -198,8 +183,7 @@ export class NativeRepl implements Disposable {
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoUri);
 
         this.notebookDocument = notebookEditor.notebook;
-        this.replUri = this.notebookDocument.uri;
-        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
+        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.notebookDocument.uri.toString());
 
         if (this.notebookDocument) {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
@@ -209,43 +193,6 @@ export class NativeRepl implements Disposable {
             }
         }
     }
-}
-
-function getOpenTabNames(): string[] {
-    const tabNames: string[] = [];
-    const tabGroups = window.tabGroups.all;
-
-    for (const tabGroup of tabGroups) {
-        for (const tab of tabGroup.tabs) {
-            tabNames.push(tab.label);
-        }
-    }
-    // TODO if tabName includes 'Python REPL' and there are other 'Untitled-*.ipynb' then, we need to re-create REPL instance with new URI.
-    return tabNames;
-}
-
-function getTabNameForUri(uri: Uri): string | undefined {
-    const tabGroups = window.tabGroups.all;
-
-    for (const tabGroup of tabGroups) {
-        for (const tab of tabGroup.tabs) {
-            if (tab.input instanceof TabInputText && tab.input.uri.toString() === uri.toString()) {
-                return tab.label;
-            }
-            if (tab.input instanceof TabInputTextDiff) {
-                if (
-                    tab.input.original.toString() === uri.toString() ||
-                    tab.input.modified.toString() === uri.toString()
-                ) {
-                    return tab.label;
-                }
-            } else if (tab.input instanceof TabInputNotebook && tab.input.uri.toString() === uri.toString()) {
-                return tab.label;
-            }
-        }
-    }
-
-    return undefined;
 }
 
 /**

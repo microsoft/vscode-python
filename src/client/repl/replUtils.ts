@@ -99,3 +99,21 @@ export function getExistingReplViewColumn(notebookDocument: NotebookDocument): V
     }
     return undefined;
 }
+/**
+ * Function that will return tab name for before reloading VS Code
+ * This is so we can make sure tab name is still 'Python REPL' after reloading VS Code,
+ * and make sure Python REPL does not get 'merged' into unaware untitled.ipynb tab.
+ */
+export function getTabNameForUri(uri: Uri): string | undefined {
+    const tabGroups = window.tabGroups.all;
+
+    for (const tabGroup of tabGroups) {
+        for (const tab of tabGroup.tabs) {
+            if (tab.input instanceof TabInputNotebook && tab.input.uri.toString() === uri.toString()) {
+                return tab.label;
+            }
+        }
+    }
+
+    return undefined;
+}

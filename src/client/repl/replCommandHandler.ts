@@ -26,14 +26,15 @@ export async function openInteractiveREPL(
     let viewColumn = ViewColumn.Beside;
     if (mementoValue) {
         // also check if memento value URI tab has file name of Python REPL
-        // Cachhed NotebookDocument exists.
+        // Cached NotebookDocument exists.
         notebookDocument = await workspace.openNotebookDocument(mementoValue as Uri);
     } else if (notebookDocument) {
         // Case where NotebookDocument (REPL document already exists in the tab)
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
         viewColumn = existingReplViewColumn ?? viewColumn;
     } else if (!notebookDocument) {
-        // Case where NotebookDocument doesnt exist, create a blank one.
+        // Case where NotebookDocument doesnt exist, or
+        // became outdated (untitled.ipynb created without Python extension knowing, effectively taking over original Python REPL's URI)
         notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
     const editor = window.showNotebookDocument(notebookDocument!, {
