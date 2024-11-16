@@ -99,6 +99,7 @@ export function getExistingReplViewColumn(notebookDocument: NotebookDocument): V
     }
     return undefined;
 }
+
 /**
  * Function that will return tab name for before reloading VS Code
  * This is so we can make sure tab name is still 'Python REPL' after reloading VS Code,

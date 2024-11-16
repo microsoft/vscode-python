@@ -170,14 +170,11 @@ export class NativeRepl implements Disposable {
                 // e.g. creation of untitled notebook without Python extension knowing.
                 if (getTabNameForUri(replTabBeforeReload) !== 'Python REPL') {
                     mementoUri = undefined;
-                    await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
-                    this.notebookDocument = undefined;
+                    await this.cleanRepl();
                 }
             }
         } else {
-            mementoUri = undefined;
-            await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
-            this.notebookDocument = undefined;
+            await this.cleanRepl();
         }
 
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoUri);
@@ -192,6 +189,15 @@ export class NativeRepl implements Disposable {
                 await executeNotebookCell(notebookEditor, code);
             }
         }
+    }
+
+    /**
+     * Properly clean up notebook document stored inside Native REPL.
+     * Also remove the Native REPL URI from memento to prepare for brand new REPL creation.
+     */
+    private async cleanRepl(): Promise<void> {
+        this.notebookDocument = undefined;
+        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
     }
 }
 
