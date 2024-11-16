@@ -26,7 +26,7 @@ import { VariableRequester } from './variables/variableRequester';
 import { getTabNameForUri } from './replUtils';
 
 const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
-let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
+let nativeRepl: NativeRepl | undefined;
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
     private pythonServer!: PythonServer;
