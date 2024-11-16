@@ -6,14 +6,14 @@ import {
     NotebookControllerAffinity,
     NotebookDocument,
     QuickPickItem,
-    TabInputText,
     TextEditor,
     Uri,
     workspace,
     WorkspaceFolder,
     window,
-    TabInputTextDiff,
     TabInputNotebook,
+    TabInputTextDiff,
+    TabInputText,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as path from 'path';
@@ -174,13 +174,25 @@ export class NativeRepl implements Disposable {
                 );
                 await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.replUri.toString());
                 const myFileName = path.basename(this.replUri.fsPath);
-                const whatever = 'hi';
-                const tabNames = getOpenTabNames();
+
+                // const tabNames = getOpenTabNames();
+                const tabLabel = getTabNameForUri(this.replUri);
+                if (tabLabel !== 'Python REPL') {
+                    const regex = /^Untitled-\d+\.ipynb$/;
+                    const isUntitled = regex.test(myFileName);
+
+                    this.replUri = undefined;
+                    mementoUri = undefined;
+
+                    await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
+                    this.notebookDocument = undefined;
+                }
             }
         } else {
             this.replUri = undefined;
             mementoUri = undefined;
             await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
+            this.notebookDocument = undefined;
         }
 
         const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoUri);
@@ -208,8 +220,32 @@ function getOpenTabNames(): string[] {
             tabNames.push(tab.label);
         }
     }
-
+    // TODO if tabName includes 'Python REPL' and there are other 'Untitled-*.ipynb' then, we need to re-create REPL instance with new URI.
     return tabNames;
+}
+
+function getTabNameForUri(uri: Uri): string | undefined {
+    const tabGroups = window.tabGroups.all;
+
+    for (const tabGroup of tabGroups) {
+        for (const tab of tabGroup.tabs) {
+            if (tab.input instanceof TabInputText && tab.input.uri.toString() === uri.toString()) {
+                return tab.label;
+            }
+            if (tab.input instanceof TabInputTextDiff) {
+                if (
+                    tab.input.original.toString() === uri.toString() ||
+                    tab.input.modified.toString() === uri.toString()
+                ) {
+                    return tab.label;
+                }
+            } else if (tab.input instanceof TabInputNotebook && tab.input.uri.toString() === uri.toString()) {
+                return tab.label;
+            }
+        }
+    }
+
+    return undefined;
 }
 
 /**

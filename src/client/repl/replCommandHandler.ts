@@ -25,6 +25,7 @@ export async function openInteractiveREPL(
 ): Promise<NotebookEditor> {
     let viewColumn = ViewColumn.Beside;
     if (mementoValue) {
+        // also check if memento value URI tab has file name of Python REPL
         // Cachhed NotebookDocument exists.
         notebookDocument = await workspace.openNotebookDocument(mementoValue as Uri);
     } else if (notebookDocument) {
