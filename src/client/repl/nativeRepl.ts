@@ -161,7 +161,6 @@ export class NativeRepl implements Disposable {
             if (!wsMementoUri || getTabNameForUri(wsMementoUri) !== 'Python REPL') {
                 await this.cleanRepl();
                 wsMementoUri = undefined;
-                this.notebookDocument = undefined;
             }
         }
 
