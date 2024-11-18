@@ -1,4 +1,4 @@
-import { commands, ExtensionContext, Uri, window } from 'vscode';
+import { commands, Uri, window } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
@@ -25,7 +25,6 @@ import { ReplType } from './types';
 export async function registerStartNativeReplCommand(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
-    context: ExtensionContext,
 ): Promise<void> {
     disposables.push(
         registerCommand(Commands.Start_Native_REPL, async (uri: Uri) => {
@@ -33,7 +32,7 @@ export async function registerStartNativeReplCommand(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
             if (interpreter) {
                 if (interpreter) {
-                    const nativeRepl = await getNativeRepl(interpreter, disposables, context);
+                    const nativeRepl = await getNativeRepl(interpreter, disposables);
                     await nativeRepl.sendToNativeRepl(undefined, false);
                 }
             }
@@ -49,7 +48,6 @@ export async function registerReplCommands(
     interpreterService: IInterpreterService,
     executionHelper: ICodeExecutionHelper,
     commandManager: ICommandManager,
-    context: ExtensionContext,
 ): Promise<void> {
     disposables.push(
         commandManager.registerCommand(Commands.Exec_In_REPL, async (uri: Uri) => {
@@ -62,7 +60,7 @@ export async function registerReplCommands(
             const interpreter = await getActiveInterpreter(uri, interpreterService);
 
             if (interpreter) {
-                const nativeRepl = await getNativeRepl(interpreter, disposables, context);
+                const nativeRepl = await getNativeRepl(interpreter, disposables);
                 const activeEditor = window.activeTextEditor;
                 if (activeEditor) {
                     const code = await getSelectedTextToExecute(activeEditor);
@@ -92,16 +90,15 @@ export async function registerReplExecuteOnEnter(
     disposables: Disposable[],
     interpreterService: IInterpreterService,
     commandManager: ICommandManager,
-    context: ExtensionContext,
 ): Promise<void> {
     disposables.push(
         commandManager.registerCommand(Commands.Exec_In_REPL_Enter, async (uri: Uri) => {
-            await onInputEnter(uri, 'repl.execute', interpreterService, disposables, context);
+            await onInputEnter(uri, 'repl.execute', interpreterService, disposables);
         }),
     );
     disposables.push(
         commandManager.registerCommand(Commands.Exec_In_IW_Enter, async (uri: Uri) => {
-            await onInputEnter(uri, 'interactive.execute', interpreterService, disposables, context);
+            await onInputEnter(uri, 'interactive.execute', interpreterService, disposables);
         }),
     );
 }
@@ -111,7 +108,6 @@ async function onInputEnter(
     commandName: string,
     interpreterService: IInterpreterService,
     disposables: Disposable[],
-    context: ExtensionContext,
 ): Promise<void> {
     const interpreter = await interpreterService.getActiveInterpreter(uri);
     if (!interpreter) {
@@ -119,7 +115,7 @@ async function onInputEnter(
         return;
     }
 
-    const nativeRepl = await getNativeRepl(interpreter, disposables, context);
+    const nativeRepl = await getNativeRepl(interpreter, disposables);
     const completeCode = await nativeRepl?.checkUserInputCompleteCode(window.activeTextEditor);
     const editor = window.activeTextEditor;
 

@@ -11,7 +11,6 @@ import * as replUtils from '../../client/repl/replUtils';
 import * as nativeRepl from '../../client/repl/nativeRepl';
 import { Commands } from '../../client/common/constants';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { IExtensionContext } from '../../client/common/types';
 
 suite('REPL - register native repl command', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -25,7 +24,7 @@ suite('REPL - register native repl command', () => {
     let getNativeReplStub: sinon.SinonStub;
     let disposable: TypeMoq.IMock<Disposable>;
     let disposableArray: Disposable[] = [];
-    let extensionContext: TypeMoq.IMock<IExtensionContext>;
+
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -41,7 +40,6 @@ suite('REPL - register native repl command', () => {
         registerCommandSpy = sinon.spy(commandManager.object, 'registerCommand');
         disposable = TypeMoq.Mock.ofType<Disposable>();
         disposableArray = [disposable.object];
-        extensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
     });
 
     teardown(() => {
@@ -65,7 +63,6 @@ suite('REPL - register native repl command', () => {
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
-            extensionContext.object,
         );
 
         commandManager.verify(
@@ -96,7 +93,6 @@ suite('REPL - register native repl command', () => {
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
-            extensionContext.object,
         );
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -129,7 +125,6 @@ suite('REPL - register native repl command', () => {
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
-            extensionContext.object,
         );
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -163,7 +158,6 @@ suite('REPL - register native repl command', () => {
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
-            extensionContext.object,
         );
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -201,7 +195,6 @@ suite('REPL - register native repl command', () => {
             interpreterService.object,
             executionHelper.object,
             commandManager.object,
-            extensionContext.object,
         );
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');

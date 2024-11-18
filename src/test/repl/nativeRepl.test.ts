@@ -55,7 +55,7 @@ suite('REPL - Native REPL', () => {
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         const interpreter = await interpreterService.object.getActiveInterpreter();
-        await getNativeRepl(interpreter as PythonEnvironment, disposableArray, extensionContext.object);
+        await getNativeRepl(interpreter as PythonEnvironment, disposableArray);
 
         expect(createMethodStub.calledOnce).to.be.true;
     });
@@ -67,11 +67,7 @@ suite('REPL - Native REPL', () => {
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         const interpreter = await interpreterService.object.getActiveInterpreter();
-        const nativeRepl = await getNativeRepl(
-            interpreter as PythonEnvironment,
-            disposableArray,
-            extensionContext.object,
-        );
+        const nativeRepl = await getNativeRepl(interpreter as PythonEnvironment, disposableArray);
 
         nativeRepl.sendToNativeRepl(undefined, false);
 
@@ -84,7 +80,7 @@ suite('REPL - Native REPL', () => {
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
 
-        await NativeRepl.create(interpreter as PythonEnvironment, extensionContext.object);
+        await NativeRepl.create(interpreter as PythonEnvironment);
 
         expect(setReplDirectoryStub.calledOnce).to.be.true;
         expect(setReplControllerSpy.calledOnce).to.be.true;

@@ -1,7 +1,6 @@
 // Native Repl class that holds instance of pythonServer and replController
 
 import {
-    ExtensionContext,
     NotebookController,
     NotebookControllerAffinity,
     NotebookDocument,
@@ -24,6 +23,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { VariablesProvider } from './variables/variablesProvider';
 import { VariableRequester } from './variables/variableRequester';
 import { getTabNameForUri } from './replUtils';
+import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../common/persistentState';
 
 export const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
 let nativeRepl: NativeRepl | undefined;
@@ -43,17 +43,14 @@ export class NativeRepl implements Disposable {
 
     public newReplSession: boolean | undefined = true;
 
-    private context: ExtensionContext;
-
     // TODO: In the future, could also have attribute of URI for file specific REPL.
-    private constructor(context: ExtensionContext) {
+    private constructor() {
         this.watchNotebookClosed();
-        this.context = context;
     }
 
     // Static async factory method to handle asynchronous initialization
-    public static async create(interpreter: PythonEnvironment, context: ExtensionContext): Promise<NativeRepl> {
-        const nativeRepl = new NativeRepl(context);
+    public static async create(interpreter: PythonEnvironment): Promise<NativeRepl> {
+        const nativeRepl = new NativeRepl();
         nativeRepl.interpreter = interpreter;
         await nativeRepl.setReplDirectory();
         nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
@@ -76,7 +73,8 @@ export class NativeRepl implements Disposable {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
                     this.newReplSession = true;
-                    await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
+                    // await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
+                    updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
                 }
             }),
         );
@@ -154,38 +152,29 @@ export class NativeRepl implements Disposable {
      * Function that opens interactive repl, selects kernel, and send/execute code to the native repl.
      */
     public async sendToNativeRepl(code?: string | undefined, preserveFocus: boolean = true): Promise<void> {
-        const mementoValue = (await this.context.globalState.get(NATIVE_REPL_URI_MEMENTO)) as string | undefined;
-        let mementoUri = mementoValue ? Uri.parse(mementoValue) : undefined;
-        const openNotebookDocuments = workspace.notebookDocuments.map((doc) => doc.uri);
+        let wsMementoUri: Uri | undefined;
 
-        if (mementoUri) {
-            const replTabBeforeReload = openNotebookDocuments.find((uri) => uri.fsPath === mementoUri?.fsPath);
-            if (replTabBeforeReload) {
-                this.notebookDocument = workspace.notebookDocuments.find(
-                    (doc) => doc.uri.fsPath === replTabBeforeReload.fsPath,
-                );
-                await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, replTabBeforeReload.toString());
+        if (!this.notebookDocument) {
+            const wsMemento = getWorkspaceStateValue<string>(NATIVE_REPL_URI_MEMENTO);
+            wsMementoUri = wsMemento ? Uri.parse(wsMemento) : undefined;
 
-                // If repl URI does not have tabLabel 'Python REPL', something has changed:
-                // e.g. creation of untitled notebook without Python extension knowing.
-                if (getTabNameForUri(replTabBeforeReload) !== 'Python REPL') {
-                    mementoUri = undefined;
-                    await this.cleanRepl();
-                }
+            if (!wsMementoUri || getTabNameForUri(wsMementoUri) !== 'Python REPL') {
+                await this.cleanRepl();
+                wsMementoUri = undefined;
+                this.notebookDocument = undefined;
             }
-        } else {
-            await this.cleanRepl();
         }
 
         const notebookEditor = await openInteractiveREPL(
             this.replController,
             this.notebookDocument,
-            mementoUri,
+            wsMementoUri,
             preserveFocus,
         );
 
         this.notebookDocument = notebookEditor.notebook;
-        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.notebookDocument.uri.toString());
+        // await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.notebookDocument.uri.toString());
+        updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, this.notebookDocument.uri.toString());
 
         if (this.notebookDocument) {
             this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
@@ -202,7 +191,8 @@ export class NativeRepl implements Disposable {
      */
     private async cleanRepl(): Promise<void> {
         this.notebookDocument = undefined;
-        await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
+        // await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, undefined);
+        updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
     }
 }
 
@@ -211,13 +201,9 @@ export class NativeRepl implements Disposable {
  * @param interpreter
  * @returns Native REPL instance
  */
-export async function getNativeRepl(
-    interpreter: PythonEnvironment,
-    disposables: Disposable[],
-    context: ExtensionContext,
-): Promise<NativeRepl> {
+export async function getNativeRepl(interpreter: PythonEnvironment, disposables: Disposable[]): Promise<NativeRepl> {
     if (!nativeRepl) {
-        nativeRepl = await NativeRepl.create(interpreter, context);
+        nativeRepl = await NativeRepl.create(interpreter);
         disposables.push(nativeRepl);
     }
     if (nativeRepl && nativeRepl.newReplSession) {

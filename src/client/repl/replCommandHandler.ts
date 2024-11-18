@@ -26,9 +26,9 @@ export async function openInteractiveREPL(
 ): Promise<NotebookEditor> {
     let viewColumn = ViewColumn.Beside;
     if (mementoValue) {
-        // also check if memento value URI tab has file name of Python REPL
-        // Cached NotebookDocument exists.
-        notebookDocument = await workspace.openNotebookDocument(mementoValue as Uri);
+        if (!notebookDocument) {
+            notebookDocument = await workspace.openNotebookDocument(mementoValue as Uri);
+        }
     } else if (notebookDocument) {
         // Case where NotebookDocument (REPL document already exists in the tab)
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
@@ -43,6 +43,8 @@ export async function openInteractiveREPL(
         asRepl: 'Python REPL',
         preserveFocus,
     });
+    // sanity check that we opened a Native REPL from showNotebookDocument.
+    // if not true, set notebook = undefined.
     await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,

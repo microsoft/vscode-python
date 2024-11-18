@@ -112,9 +112,9 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     const executionHelper = ext.legacyIOC.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
     const commandManager = ext.legacyIOC.serviceContainer.get<ICommandManager>(ICommandManager);
     registerTriggerForTerminalREPL(ext.disposables);
-    registerStartNativeReplCommand(ext.disposables, interpreterService, ext.context);
-    registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager, ext.context);
-    registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager, ext.context);
+    registerStartNativeReplCommand(ext.disposables, interpreterService);
+    registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);
+    registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager);
 }
 
 /// //////////////////////////
