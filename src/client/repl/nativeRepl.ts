@@ -153,7 +153,7 @@ export class NativeRepl implements Disposable {
     /**
      * Function that opens interactive repl, selects kernel, and send/execute code to the native repl.
      */
-    public async sendToNativeRepl(code?: string): Promise<void> {
+    public async sendToNativeRepl(code?: string | undefined, preserveFocus: boolean = true): Promise<void> {
         const mementoValue = (await this.context.globalState.get(NATIVE_REPL_URI_MEMENTO)) as string | undefined;
         let mementoUri = mementoValue ? Uri.parse(mementoValue) : undefined;
         const openNotebookDocuments = workspace.notebookDocuments.map((doc) => doc.uri);
@@ -177,7 +177,12 @@ export class NativeRepl implements Disposable {
             await this.cleanRepl();
         }
 
-        const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument, mementoUri);
+        const notebookEditor = await openInteractiveREPL(
+            this.replController,
+            this.notebookDocument,
+            mementoUri,
+            preserveFocus,
+        );
 
         this.notebookDocument = notebookEditor.notebook;
         await this.context.globalState.update(NATIVE_REPL_URI_MEMENTO, this.notebookDocument.uri.toString());
