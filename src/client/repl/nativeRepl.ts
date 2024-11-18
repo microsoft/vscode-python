@@ -25,7 +25,7 @@ import { VariablesProvider } from './variables/variablesProvider';
 import { VariableRequester } from './variables/variableRequester';
 import { getTabNameForUri } from './replUtils';
 
-const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
+export const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
 let nativeRepl: NativeRepl | undefined;
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
