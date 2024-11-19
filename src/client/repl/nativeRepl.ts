@@ -73,7 +73,7 @@ export class NativeRepl implements Disposable {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
                     this.newReplSession = true;
-                    updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
+                    await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
                 }
             }),
         );
@@ -171,7 +171,7 @@ export class NativeRepl implements Disposable {
         );
         if (notebookEditor) {
             this.notebookDocument = notebookEditor.notebook;
-            updateWorkspaceStateValue<string | undefined>(
+            await updateWorkspaceStateValue<string | undefined>(
                 NATIVE_REPL_URI_MEMENTO,
                 this.notebookDocument.uri.toString(),
             );
@@ -192,7 +192,7 @@ export class NativeRepl implements Disposable {
      */
     private async cleanRepl(): Promise<void> {
         this.notebookDocument = undefined;
-        updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
+        await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
     }
 }
 
