@@ -2,24 +2,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as TypeMoq from 'typemoq';
 import * as sinon from 'sinon';
-import { Disposable, ExtensionContext } from 'vscode';
+import { Disposable } from 'vscode';
 import { expect } from 'chai';
 
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
-import { getNativeRepl, NATIVE_REPL_URI_MEMENTO, NativeRepl } from '../../client/repl/nativeRepl';
-import { IExtensionContext } from '../../client/common/types';
+import { getNativeRepl, NativeRepl } from '../../client/repl/nativeRepl';
+
 import * as replUtils from '../../client/repl/replUtils';
+import * as persistentState from '../../client/common/persistentState';
 
 suite('REPL - Native REPL', () => {
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    let extensionContext: TypeMoq.IMock<IExtensionContext>;
+
     let disposable: TypeMoq.IMock<Disposable>;
     let disposableArray: Disposable[] = [];
     let setReplDirectoryStub: sinon.SinonStub;
     let setReplControllerSpy: sinon.SinonSpy;
-    let memento: TypeMoq.IMock<ExtensionContext['globalState']>;
-    let getTabNameForUriStub: sinon.SinonStub;
+    let getWorkspaceStateValueStub: sinon.SinonStub;
+
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         interpreterService
@@ -27,14 +28,11 @@ suite('REPL - Native REPL', () => {
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
         disposable = TypeMoq.Mock.ofType<Disposable>();
         disposableArray = [disposable.object];
-        memento = TypeMoq.Mock.ofType<ExtensionContext['globalState']>();
+
         setReplDirectoryStub = sinon.stub(NativeRepl.prototype as any, 'setReplDirectory').resolves(); // Stubbing private method
         // Use a spy instead of a stub for setReplController
-        getTabNameForUriStub = sinon.stub(replUtils, 'getTabNameForUri').returns('tabName');
         setReplControllerSpy = sinon.spy(NativeRepl.prototype, 'setReplController');
-        extensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
-        extensionContext.setup((c) => c.globalState).returns(() => memento.object);
-        memento.setup((m) => m.get(NATIVE_REPL_URI_MEMENTO)).returns(() => undefined);
+        getWorkspaceStateValueStub = sinon.stub(persistentState, 'getWorkspaceStateValue').returns(undefined);
     });
 
     teardown(() => {
@@ -45,8 +43,6 @@ suite('REPL - Native REPL', () => {
         });
         disposableArray = [];
         sinon.restore();
-        extensionContext?.reset();
-        memento?.reset();
     });
 
     test('getNativeRepl should call create constructor', async () => {
@@ -60,9 +56,7 @@ suite('REPL - Native REPL', () => {
         expect(createMethodStub.calledOnce).to.be.true;
     });
 
-    test('sendToNativeRepl with undefined URI should not try to reload', async () => {
-        memento.setup((m) => m.get(NATIVE_REPL_URI_MEMENTO)).returns(() => undefined);
-
+    test('sendToNativeRepl should look for memento URI if notebook document is undefined', async () => {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
@@ -71,7 +65,7 @@ suite('REPL - Native REPL', () => {
 
         nativeRepl.sendToNativeRepl(undefined, false);
 
-        expect(getTabNameForUriStub.notCalled).to.be.true;
+        expect(getWorkspaceStateValueStub.calledOnce).to.be.true;
     });
 
     test('create should call setReplDirectory, setReplController', async () => {
