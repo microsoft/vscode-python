@@ -165,8 +165,7 @@ export class NativeRepl implements Disposable {
 
         const notebookEditor = await openInteractiveREPL(
             this.replController,
-            this.notebookDocument,
-            wsMementoUri,
+            this.notebookDocument ?? wsMementoUri,
             preserveFocus,
         );
         if (notebookEditor) {

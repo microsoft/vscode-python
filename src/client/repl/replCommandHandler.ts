@@ -20,15 +20,13 @@ import { PVSC_EXTENSION_ID } from '../common/constants';
  */
 export async function openInteractiveREPL(
     notebookController: NotebookController,
-    notebookDocument: NotebookDocument | undefined,
-    mementoValue: Uri | undefined,
+    notebookDocument: NotebookDocument | Uri | undefined,
     preserveFocus: boolean = true,
 ): Promise<NotebookEditor | undefined> {
     let viewColumn = ViewColumn.Beside;
-    if (mementoValue) {
-        if (!notebookDocument) {
-            notebookDocument = await workspace.openNotebookDocument(mementoValue as Uri);
-        }
+    if (notebookDocument instanceof Uri) {
+        // Case where NotebookDocument is undefined, but workspace mementoURI exists.
+        notebookDocument = await workspace.openNotebookDocument(notebookDocument);
     } else if (notebookDocument) {
         // Case where NotebookDocument (REPL document already exists in the tab)
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
