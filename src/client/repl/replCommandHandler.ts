@@ -12,7 +12,7 @@ import {
     workspace,
     Uri,
 } from 'vscode';
-import { getExistingReplViewColumn } from './replUtils';
+import { getExistingReplViewColumn, getTabNameForUri } from './replUtils';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 
 /**
@@ -23,7 +23,7 @@ export async function openInteractiveREPL(
     notebookDocument: NotebookDocument | undefined,
     mementoValue: Uri | undefined,
     preserveFocus: boolean = true,
-): Promise<NotebookEditor> {
+): Promise<NotebookEditor | undefined> {
     let viewColumn = ViewColumn.Beside;
     if (mementoValue) {
         if (!notebookDocument) {
@@ -38,13 +38,22 @@ export async function openInteractiveREPL(
         // became outdated (untitled.ipynb created without Python extension knowing, effectively taking over original Python REPL's URI)
         notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
     }
-    const editor = window.showNotebookDocument(notebookDocument!, {
+    const editor = await window.showNotebookDocument(notebookDocument!, {
         viewColumn,
         asRepl: 'Python REPL',
         preserveFocus,
     });
-    // sanity check that we opened a Native REPL from showNotebookDocument.
-    // if not true, set notebook = undefined.
+
+    // Sanity check that we opened a Native REPL from showNotebookDocument.
+    if (
+        !editor ||
+        !editor.notebook ||
+        !editor.notebook.uri ||
+        getTabNameForUri(editor.notebook.uri) !== 'Python REPL'
+    ) {
+        return undefined;
+    }
+
     await commands.executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,

@@ -18,6 +18,7 @@ suite('REPL - Native REPL', () => {
     let setReplDirectoryStub: sinon.SinonStub;
     let setReplControllerSpy: sinon.SinonSpy;
     let getWorkspaceStateValueStub: sinon.SinonStub;
+    let updateWorkspaceStateValueStub: sinon.SinonStub;
 
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
@@ -30,7 +31,7 @@ suite('REPL - Native REPL', () => {
         setReplDirectoryStub = sinon.stub(NativeRepl.prototype as any, 'setReplDirectory').resolves(); // Stubbing private method
         // Use a spy instead of a stub for setReplController
         setReplControllerSpy = sinon.spy(NativeRepl.prototype, 'setReplController');
-        getWorkspaceStateValueStub = sinon.stub(persistentState, 'getWorkspaceStateValue').returns(undefined);
+        updateWorkspaceStateValueStub = sinon.stub(persistentState, 'updateWorkspaceStateValue').resolves();
     });
 
     teardown(() => {
@@ -55,6 +56,7 @@ suite('REPL - Native REPL', () => {
     });
 
     test('sendToNativeRepl should look for memento URI if notebook document is undefined', async () => {
+        getWorkspaceStateValueStub = sinon.stub(persistentState, 'getWorkspaceStateValue').returns(undefined);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
@@ -64,6 +66,19 @@ suite('REPL - Native REPL', () => {
         nativeRepl.sendToNativeRepl(undefined, false);
 
         expect(getWorkspaceStateValueStub.calledOnce).to.be.true;
+    });
+
+    test('sendToNativeRepl should call updateWorkspaceStateValue', async () => {
+        getWorkspaceStateValueStub = sinon.stub(persistentState, 'getWorkspaceStateValue').returns('myNameIsMemento');
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        const interpreter = await interpreterService.object.getActiveInterpreter();
+        const nativeRepl = await getNativeRepl(interpreter as PythonEnvironment, disposableArray);
+
+        nativeRepl.sendToNativeRepl(undefined, false);
+
+        expect(updateWorkspaceStateValueStub.calledOnce).to.be.true;
     });
 
     test('create should call setReplDirectory, setReplController', async () => {

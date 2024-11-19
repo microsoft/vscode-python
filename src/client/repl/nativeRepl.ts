@@ -169,15 +169,19 @@ export class NativeRepl implements Disposable {
             wsMementoUri,
             preserveFocus,
         );
+        if (notebookEditor) {
+            this.notebookDocument = notebookEditor.notebook;
+            updateWorkspaceStateValue<string | undefined>(
+                NATIVE_REPL_URI_MEMENTO,
+                this.notebookDocument.uri.toString(),
+            );
 
-        this.notebookDocument = notebookEditor.notebook;
-        updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, this.notebookDocument.uri.toString());
-
-        if (this.notebookDocument) {
-            this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
-            await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
-            if (code) {
-                await executeNotebookCell(notebookEditor, code);
+            if (this.notebookDocument) {
+                this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
+                await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
+                if (code) {
+                    await executeNotebookCell(notebookEditor, code);
+                }
             }
         }
     }
