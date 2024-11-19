@@ -442,17 +442,26 @@ def pytest_sessionfinish(session, exitstatus):
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
-        from coverage.exceptions import NoSource
 
         cov = coverage.Coverage()
         cov.load()
 
         file_set: set[str] = cov.get_data().measured_files()
         file_coverage_map: dict[str, FileCoverageInfo] = {}
+
+        # remove files omitted per coverage report config if any
+        omit_files = cov.config.report_omit
+        if omit_files:
+            omit_files = set(omit_files)
+            # convert to absolute paths, check against file set
+            omit_files = {os.fspath(pathlib.Path(file).absolute()) for file in omit_files}
+            print("Files to omit from reporting", omit_files)
+            file_set = file_set - omit_files
+
         for file in file_set:
             try:
                 analysis = cov.analysis2(file)
-            except NoSource:
+            except coverage.exceptions.NoSource:
                 # as per issue 24308 this best way to handle this edge case
                 continue
             lines_executable = {int(line_no) for line_no in analysis[1]}

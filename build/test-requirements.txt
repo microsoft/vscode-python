@@ -31,6 +31,8 @@ django-stubs
 # for coverage
 coverage
 pytest-cov
+pytest-json
+
 
 # for pytest-describe related tests
 pytest-describe
