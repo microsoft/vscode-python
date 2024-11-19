@@ -8,8 +8,6 @@ import { expect } from 'chai';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { getNativeRepl, NativeRepl } from '../../client/repl/nativeRepl';
-
-import * as replUtils from '../../client/repl/replUtils';
 import * as persistentState from '../../client/common/persistentState';
 
 suite('REPL - Native REPL', () => {
