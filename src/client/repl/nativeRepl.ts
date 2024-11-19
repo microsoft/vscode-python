@@ -158,7 +158,7 @@ export class NativeRepl implements Disposable {
             wsMementoUri = wsMemento ? Uri.parse(wsMemento) : undefined;
 
             if (!wsMementoUri || getTabNameForUri(wsMementoUri) !== 'Python REPL') {
-                await this.cleanRepl();
+                await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
                 wsMementoUri = undefined;
             }
         }
@@ -183,15 +183,6 @@ export class NativeRepl implements Disposable {
                 }
             }
         }
-    }
-
-    /**
-     * Properly clean up notebook document stored inside Native REPL.
-     * Also remove the Native REPL URI from memento to prepare for brand new REPL creation.
-     */
-    private async cleanRepl(): Promise<void> {
-        this.notebookDocument = undefined;
-        await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
     }
 }
 
