@@ -442,6 +442,7 @@ def pytest_sessionfinish(session, exitstatus):
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
+        from coverage import exceptions
 
         cov = coverage.Coverage()
         cov.load()
@@ -461,7 +462,7 @@ def pytest_sessionfinish(session, exitstatus):
         for file in file_set:
             try:
                 analysis = cov.analysis2(file)
-            except coverage.exceptions.NoSource:
+            except exceptions.NoSource:
                 # as per issue 24308 this best way to handle this edge case
                 continue
             lines_executable = {int(line_no) for line_no in analysis[1]}
