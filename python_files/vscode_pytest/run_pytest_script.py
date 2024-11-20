@@ -28,6 +28,7 @@ def run_pytest(args):
 # args through sys.argv. It then runs pytest.main() with the args and test_ids.
 
 if __name__ == "__main__":
+    os.environ["PROCESS_ID"] = str(os.getpid())
     # Add the root directory to the path so that we can import the plugin.
     directory_path = pathlib.Path(__file__).parent.parent
     sys.path.append(os.fspath(directory_path))

@@ -68,6 +68,8 @@ map_id_to_path = {}
 collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
+# Get variable set in the `run_pytest_script.py` for the parent process to check if its forked
+ROOT_PROCESS_PID: int = os.getenv("PROCESS_ID")
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
@@ -91,6 +93,24 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+    global ROOT_PROCESS_PID
+    print(early_config.pluginmanager.list_name_plugin())
+    if early_config.pluginmanager.has_plugin("pytest_forked"):
+        if ROOT_PROCESS_PID and int(os.getpid()) == int(ROOT_PROCESS_PID):
+            print(
+                "Plugin info[vscode-pytest]: Forked plugin detected but NOT running in forked process."
+            )
+        elif ROOT_PROCESS_PID:
+            print(
+                f"Plugin info[vscode-pytest]: Forked plugin detected and running in forked process. Root PID: {ROOT_PROCESS_PID}, Current PID: {os.getpid()}"
+            )
+        else:
+            print("Plugin info[vscode-pytest]: No root PID defined, setting to 0.")
+            ROOT_PROCESS_PID = 0
+    else:
+        # If the plugin is not detected, then the root process is the current process.
+        ROOT_PROCESS_PID = 0
 
     # check if --rootdir is in the args
     for arg in args:
@@ -858,12 +878,19 @@ def send_execution_message(
         status (Literal["success", "error"]): Execution status indicating success or error.
         tests (Union[testRunResultDict, None]): Test run results, if available.
     """
-    payload: ExecutionPayloadDict = ExecutionPayloadDict(
-        cwd=cwd, status=status, result=tests, not_found=None, error=None
-    )
-    if ERRORS:
-        payload["error"] = ERRORS
-    send_message(payload)
+    current_pid = os.getpid()
+    # if ROOT_PROCESS_PID is 0 then forked plugin is not enabled
+    if ROOT_PROCESS_PID != 0 and int(current_pid) != int(ROOT_PROCESS_PID):
+        print("PID NOT equal to the root proccess, no return", current_pid, ROOT_PROCESS_PID)
+        return
+    else:
+        print("PID equal to the root of forked proccess", current_pid, ROOT_PROCESS_PID)
+        payload: ExecutionPayloadDict = ExecutionPayloadDict(
+            cwd=cwd, status=status, result=tests, not_found=None, error=None
+        )
+        if ERRORS:
+            payload["error"] = ERRORS
+        send_message(payload)
 
 
 def send_discovery_message(cwd: str, session_node: TestNode) -> None:
