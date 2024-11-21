@@ -194,6 +194,13 @@ def test_rootdir_specified():
             expected_execution_test_output.nested_describe_expected_execution_output,
             id="nested_describe_plugin",
         ),
+        pytest.param(
+            [
+                "test_rerunfailures_plugin.py::test_flaky",
+            ],
+            expected_execution_test_output.rerunfailures_plugin_expected_execution_output,
+            id="test_rerunfailures_plugin",
+        ),
     ],
 )
 def test_pytest_execution(test_ids, expected_const):

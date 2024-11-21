@@ -33,16 +33,6 @@ with contextlib.suppress(ImportError):
     USES_PYTEST_DESCRIBE = True
 
 
-sys.path.append("/Users/eleanorboyd/vscode-python/.nox/install_python_libs/lib/python3.10")
-sys.path.append("/Users/eleanorboyd/vscode-python-debugger")
-sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled")
-sys.path.append("/Users/eleanorboyd/vscode-python-debugger/bundled/libs")
-
-import debugpy  # noqa: E402
-
-debugpy.connect(5678)
-debugpy.breakpoint()  # noqa: E702
-
 
 class TestData(TypedDict):
     """A general class that all test objects inherit from."""

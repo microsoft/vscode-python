@@ -734,3 +734,18 @@ nested_describe_expected_execution_output = {
         "subtest": None,
     },
 }
+
+test_rerunfailures_plugin_path = TEST_DATA_PATH / "test_rerunfailures_plugin.py"
+rerunfailures_plugin_expected_execution_output = {
+    get_absolute_test_id(
+        "test_rerunfailures_plugin.py::test_flaky", test_rerunfailures_plugin_path
+    ): {
+        "test": get_absolute_test_id(
+            "test_rerunfailures_plugin.py::test_flaky", test_rerunfailures_plugin_path
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}
