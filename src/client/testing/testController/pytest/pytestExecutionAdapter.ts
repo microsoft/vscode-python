@@ -20,6 +20,7 @@ import { EXTENSION_ROOT_DIR } from '../../../common/constants';
 import * as utils from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
 
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
@@ -153,7 +154,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 cwd,
                 throwOnStdErr: true,
                 outputChannel: this.outputChannel,
-                stdinStr: testIds.toString(),
                 env: mutableEnv,
                 token: runInstance?.token,
             };
@@ -178,6 +178,39 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     },
                     sessionOptions,
                 );
+            } else if (useEnvExtension()) {
+                const pythonEnv = await getEnvironment(uri);
+                if (pythonEnv) {
+                    const proc = await runInBackground(pythonEnv, {
+                        cwd,
+                        args: testArgs,
+                        env: (mutableEnv as unknown) as { [key: string]: string },
+                    });
+                    runInstance?.token.onCancellationRequested(() => {
+                        traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
+                        proc.kill();
+                    });
+                    proc.stdout.on('data', (data) => {
+                        const out = utils.fixLogLinesNoTrailing(data.toString());
+                        runInstance?.appendOutput(out);
+                        this.outputChannel?.append(out);
+                    });
+                    proc.stderr.on('data', (data) => {
+                        const out = utils.fixLogLinesNoTrailing(data.toString());
+                        runInstance?.appendOutput(out);
+                        this.outputChannel?.append(out);
+                    });
+                    proc.onExit((code, signal) => {
+                        this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
+                        if (code !== 0) {
+                            traceError(
+                                `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                            );
+                        }
+                    });
+                } else {
+                    traceError(`Python Environment not found for: ${uri.fsPath}`);
+                }
             } else {
                 // deferredTillExecClose is resolved when all stdout and stderr is read
                 const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
@@ -217,7 +250,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
                 result?.proc?.on('exit', (code, signal) => {
                     this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
-                    if (code !== 0 && testIds) {
+                    if (code !== 0) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
                         );
@@ -228,7 +261,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     traceVerbose('Test run finished, subprocess closed.');
                     // if the child has testIds then this is a run request
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
-                    if (code !== 0 && testIds) {
+                    if (code !== 0) {
                         traceError(
                             `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal} for workspace ${uri.fsPath}. Creating and sending error execution payload \n`,
                         );
