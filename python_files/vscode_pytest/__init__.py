@@ -33,7 +33,6 @@ with contextlib.suppress(ImportError):
     USES_PYTEST_DESCRIBE = True
 
 
-
 class TestData(TypedDict):
     """A general class that all test objects inherit from."""
 
