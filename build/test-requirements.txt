@@ -36,3 +36,4 @@ pytest-json
 
 # for pytest-describe related tests
 pytest-describe
+pytest-subtests
