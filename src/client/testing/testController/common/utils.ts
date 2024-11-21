@@ -18,6 +18,7 @@ import {
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { TestProvider } from '../../types';
 
 export function fixLogLinesNoTrailing(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -272,10 +273,15 @@ export function createDiscoveryErrorPayload(
  * @param testName The full test name string.
  * @returns A tuple where the first item is the parent test name and the second item is the subtest section or `testName` if no subtest section exists.
  */
-export function splitTestNameWithRegex(testName: string): [string, string] {
+export function splitTestNameWithRegex(testName: string, testProvider: TestProvider): [string, string] {
     // If a match is found, return the parent test name and the subtest (whichever was captured between parenthesis or square brackets).
     // Otherwise, return the entire testName for the parent and entire testName for the subtest.
-    const regex = /^(.*?) ([\[(].*[\])])$/;
+    let regex: RegExp;
+    if (testProvider === 'pytest') {
+        regex = /^(.*?)\*\*{(.*?)}\*\*$/;
+    } else {
+        regex = /^(.*?) ([\[(].*[\])])$/;
+    }
     const match = testName.match(regex);
     if (match) {
         return [match[1].trim(), match[2] || match[3] || testName];

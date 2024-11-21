@@ -6,6 +6,7 @@ TEST_SUBTRACT_FUNCTION = "unittest_folder/test_subtract.py::TestSubtractFunction
 TEST_ADD_FUNCTION = "unittest_folder/test_add.py::TestAddFunction::"
 SUCCESS = "success"
 FAILURE = "failure"
+SUBTEST_FAILURE = "subtest-failure"
 
 # This is the expected output for the unittest_folder execute tests
 # └── unittest_folder
@@ -730,6 +731,41 @@ nested_describe_expected_execution_output = {
         ),
         "outcome": "success",
         "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+# This is the expected output for the test_pytest_subtests_plugin.py file.
+# └── test_pytest_subtests_plugin.py
+#    └── test_a
+#       └── test_a [test_a]: subtest-success
+#       └── test_a [Second subtest]: subtest-failure
+test_pytest_subtests_plugin_path = TEST_DATA_PATH / "test_pytest_subtests_plugin.py"
+pytest_subtests_plugin_expected_execution_output = {
+    get_absolute_test_id(
+        "test_pytest_subtests_plugin.py::test_a**{test_a [test_a]}**",
+        test_pytest_subtests_plugin_path,
+    ): {
+        "test": get_absolute_test_id(
+            "test_pytest_subtests_plugin.py::test_a**{test_a [test_a]}**",
+            test_pytest_subtests_plugin_path,
+        ),
+        "outcome": "subtest-success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "test_pytest_subtests_plugin.py::test_a**{test_a [Second subtest]}**",
+        test_pytest_subtests_plugin_path,
+    ): {
+        "test": get_absolute_test_id(
+            "test_pytest_subtests_plugin.py::test_a**{test_a [Second subtest]}**",
+            test_pytest_subtests_plugin_path,
+        ),
+        "outcome": SUBTEST_FAILURE,
+        "message": "ERROR MESSAGE",
         "traceback": None,
         "subtest": None,
     },

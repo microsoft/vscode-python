@@ -271,8 +271,19 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             node_path = map_id_to_path[report.nodeid]
         except KeyError:
             node_path = cwd
-        # Calculate the absolute test id and use this as the ID moving forward.
+
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
+        parent_test_name = report.nodeid.split("::")[-1]
+        if report.head_line and report.head_line != parent_test_name:
+            # add parent node to collected_tests_so_far to not double report
+            collected_tests_so_far.append(absolute_node_id)
+            # If the report has a head_line, then it is a pytest-subtest
+            # and we need to adjust the nodeid to reflect the subtest.
+            if report_value == "failure":
+                report_value = "subtest-failure"
+            elif report_value == "success":
+                report_value = "subtest-success"
+            absolute_node_id = absolute_node_id + "**{" + report.head_line + "}**"
         if absolute_node_id not in collected_tests_so_far:
             collected_tests_so_far.append(absolute_node_id)
             item_result = create_test_outcome(

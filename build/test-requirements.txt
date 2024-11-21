@@ -36,6 +36,7 @@ pytest-json
 
 # for pytest-describe related tests
 pytest-describe
+pytest-subtests
 
 # for pytest-ruff related tests
 pytest-ruff
