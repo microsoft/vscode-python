@@ -247,10 +247,12 @@ def test_symlink_root_dir():
 
 
 def test_pytest_root_dir():
+
     """Test to test pytest discovery with the command line arg --rootdir specified to be a subfolder of the workspace root.
 
     Discovery should succeed and testids should be relative to workspace root.
     """
+    print("running test_pytest_root_dir")
     rd = f"--rootdir={helpers.TEST_DATA_PATH / 'root' / 'tests'}"
     actual = helpers.runner_with_cwd(
         [
@@ -279,6 +281,7 @@ def test_pytest_config_file():
 
     Discovery should succeed and testids should be relative to workspace root.
     """
+    print("running test_pytest_config_file")
     actual = helpers.runner_with_cwd(
         [
             "--collect-only",
@@ -301,6 +304,7 @@ def test_pytest_config_file():
         ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
 
 
+@pytest.mark.timeout(60)
 def test_config_sub_folder():
     """Here the session node will be a subfolder of the workspace root and the test are in another subfolder.
 
