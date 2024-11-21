@@ -47,6 +47,8 @@ import {
 } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
 import { untildify } from '../../../../common/helpers';
+import { useEnvExtension } from '../../../../envExt/api.internal';
+import { setInterpreterLegacy } from '../../../../envExt/api.legacy';
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 export type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
@@ -581,6 +583,9 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             // an empty string, in which case we should update.
             // Having the value `undefined` means user cancelled the quickpick, so we update nothing in that case.
             await this.pythonPathUpdaterService.updatePythonPath(interpreterState.path, configTarget, 'ui', wkspace);
+            if (useEnvExtension()) {
+                await setInterpreterLegacy(interpreterState.path, wkspace);
+            }
         }
     }
 
