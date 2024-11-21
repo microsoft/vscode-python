@@ -69,7 +69,8 @@ collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
 # Get variable set in the `run_pytest_script.py` for the parent process to check if its forked
-ROOT_PROCESS_PID: int = os.getenv("PROCESS_ID")
+process_id_envvar = os.getenv("PROCESS_ID")
+ROOT_PROCESS_PID: int = int(process_id_envvar) if process_id_envvar else 0
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
