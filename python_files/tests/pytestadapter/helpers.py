@@ -331,6 +331,7 @@ def runner_with_cwd_env(
         os.mkfifo(pipe_name)
         #################
 
+        print("beginning run request")
         completed = threading.Event()
 
         result = []  # result is a string array to store the data during threading

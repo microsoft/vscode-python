@@ -308,6 +308,7 @@ def test_config_sub_folder():
     session node is correctly updated to the common path.
     """
     folder_path = helpers.TEST_DATA_PATH / "config_sub_folder"
+    print("running test_config_sub_folder")
     actual = helpers.runner_with_cwd(
         [
             "--collect-only",

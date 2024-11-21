@@ -96,6 +96,7 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     # set the reruns value, -1 if not set
     global FLAKY_MAX_RUNS
     FLAKY_MAX_RUNS = get_reruns_value(args)
+    print("Plugin info[vscode-pytest]: global FLAKY_MAX_RUNS set to: ", FLAKY_MAX_RUNS)
 
     # check if --rootdir is in the args
     for arg in args:
@@ -198,6 +199,7 @@ def pytest_exception_interact(node, call, report):
 
             # flaky_max_runs != -1 means test is flaky
             if flaky_max_runs != -1 and exec_count <= flaky_max_runs:
+                print("flaky test rerun: ", exec_count)
                 return
             elif flaky_max_runs != -1 and exec_count > flaky_max_runs:
                 print("Plugin info[vscode-pytest]: max reruns reached.")
@@ -709,6 +711,8 @@ def build_nested_folders(
     counter = 0
     max_iter = 100
     while iterator_path != session_node_path:
+        print("iterator_path: ", iterator_path)
+        print("session_node_path: ", session_node_path)
         curr_folder_name = iterator_path.name
         try:
             curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
