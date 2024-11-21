@@ -65,6 +65,23 @@ def test_rootdir_specified():
         assert actual_result_dict == expected_const
 
 
+def test_rerunfailure_with_arg():
+    """Test pytest execution when a --rootdir is specified."""
+    args = ["--reruns=2", "test_rerunfailures_plugin.py::test_flaky_no_marker"]
+    actual = runner(args)
+    expected_const = expected_execution_test_output.rerunfailures_with_arg_expected_execution_output
+    assert actual
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+    assert len(actual_list) == len(expected_const)
+    actual_result_dict = {}
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(item in actual_item for item in ("status", "cwd", "result"))
+            assert actual_item.get("status") == "success"
+            actual_result_dict.update(actual_item["result"])
+        assert actual_result_dict == expected_const
+
+
 @pytest.mark.parametrize(
     ("test_ids", "expected_const"),
     [
