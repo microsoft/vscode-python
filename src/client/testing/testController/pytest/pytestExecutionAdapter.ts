@@ -181,9 +181,13 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             } else if (useEnvExtension()) {
                 const pythonEnv = await getEnvironment(uri);
                 if (pythonEnv) {
+                    const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
+                    const runArgs = [scriptPath, ...testArgs];
+                    traceInfo(`Running pytest with arguments: ${runArgs.join(' ')} for workspace ${uri.fsPath} \r\n`);
+
                     const proc = await runInBackground(pythonEnv, {
                         cwd,
-                        args: testArgs,
+                        args: runArgs,
                         env: (mutableEnv as unknown) as { [key: string]: string },
                     });
                     runInstance?.token.onCancellationRequested(() => {
