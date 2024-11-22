@@ -247,7 +247,6 @@ def test_symlink_root_dir():
 
 
 def test_pytest_root_dir():
-
     """Test to test pytest discovery with the command line arg --rootdir specified to be a subfolder of the workspace root.
 
     Discovery should succeed and testids should be relative to workspace root.
