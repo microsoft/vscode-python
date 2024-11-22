@@ -181,6 +181,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             } else if (useEnvExtension()) {
                 const pythonEnv = await getEnvironment(uri);
                 if (pythonEnv) {
+                    const deferredTillExecClose: Deferred<void> = utils.createTestingDeferred();
+
                     const scriptPath = path.join(fullPluginPath, 'vscode_pytest', 'run_pytest_script.py');
                     const runArgs = [scriptPath, ...testArgs];
                     traceInfo(`Running pytest with arguments: ${runArgs.join(' ')} for workspace ${uri.fsPath} \r\n`);
@@ -193,6 +195,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     runInstance?.token.onCancellationRequested(() => {
                         traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                         proc.kill();
+                        deferredTillExecClose.resolve();
+                        serverCancel.cancel();
                     });
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
@@ -211,7 +215,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                                 `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
                             );
                         }
+                        deferredTillExecClose.resolve();
+                        serverCancel.cancel();
                     });
+                    await deferredTillExecClose.promise;
                 } else {
                     traceError(`Python Environment not found for: ${uri.fsPath}`);
                 }
