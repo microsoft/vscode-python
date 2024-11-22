@@ -101,6 +101,10 @@ export namespace AttachProcess {
 
 export namespace Repl {
     export const disableSmartSend = l10n.t('Disable Smart Send');
+    // TODO: get feedback on text message below:
+    export const terminalSuggestNativeReplPrompt = l10n.t(
+        'The Python extension now includes an editor based native Python REPL with Intellisense, syntax highlighting. Would you like to try this out?',
+    );
 }
 export namespace Pylance {
     export const remindMeLater = l10n.t('Remind me later');
