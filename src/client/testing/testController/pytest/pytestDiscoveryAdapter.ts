@@ -104,6 +104,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         if (useEnvExtension()) {
             const pythonEnv = await getEnvironment(uri);
             if (pythonEnv) {
+                const deferredTillExecClose: Deferred<void> = createTestingDeferred();
+
                 const proc = await runInBackground(pythonEnv, {
                     cwd,
                     args: execArgs,
@@ -126,7 +128,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
                         );
                     }
+                    deferredTillExecClose.resolve();
                 });
+                await deferredTillExecClose.promise;
             } else {
                 traceError(`Python Environment not found for: ${uri.fsPath}`);
             }

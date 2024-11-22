@@ -27,6 +27,7 @@ import {
     startDiscoveryNamedPipe,
 } from '../common/utils';
 import { traceError, traceInfo, traceLog } from '../../../logging';
+import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`.
@@ -86,6 +87,47 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             ...(await this.envVarsService?.getEnvironmentVariables(uri)),
         };
         mutableEnv.TEST_RUN_PIPE = testRunPipeName;
+        const args = [options.command.script].concat(options.command.args);
+
+        if (options.outChannel) {
+            options.outChannel.appendLine(`python ${args.join(' ')}`);
+        }
+
+        if (useEnvExtension()) {
+            const pythonEnv = await getEnvironment(uri);
+            if (pythonEnv) {
+                const deferredTillExecClose = createDeferred();
+
+                const proc = await runInBackground(pythonEnv, {
+                    cwd,
+                    args,
+                    env: (mutableEnv as unknown) as { [key: string]: string },
+                });
+                proc.stdout.on('data', (data) => {
+                    const out = fixLogLinesNoTrailing(data.toString());
+                    traceInfo(out);
+                    this.outputChannel?.append(out);
+                });
+                proc.stderr.on('data', (data) => {
+                    const out = fixLogLinesNoTrailing(data.toString());
+                    traceError(out);
+                    this.outputChannel?.append(out);
+                });
+                proc.onExit((code, signal) => {
+                    this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
+                    if (code !== 0) {
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                        );
+                    }
+                    deferredTillExecClose.resolve();
+                });
+                await deferredTillExecClose.promise;
+            } else {
+                traceError(`Python Environment not found for: ${uri.fsPath}`);
+            }
+            return;
+        }
 
         const spawnOptions: SpawnOptions = {
             token: options.token,
@@ -94,22 +136,17 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             outputChannel: options.outChannel,
             env: mutableEnv,
         };
-        // Create the Python environment in which to execute the command.
-        const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
-            allowEnvironmentFetchExceptions: false,
-            resource: options.workspaceFolder,
-        };
-        const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
-
-        const args = [options.command.script].concat(options.command.args);
-
-        if (options.outChannel) {
-            options.outChannel.appendLine(`python ${args.join(' ')}`);
-        }
 
         try {
             traceLog(`Discovering unittest tests for workspace ${options.cwd} with arguments: ${args}\r\n`);
             const deferredTillExecClose = createDeferred<ExecutionResult<string>>();
+
+            // Create the Python environment in which to execute the command.
+            const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
+                allowEnvironmentFetchExceptions: false,
+                resource: options.workspaceFolder,
+            };
+            const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
             const result = execService?.execObservable(args, spawnOptions);
 
