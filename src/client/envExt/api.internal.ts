@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import { Terminal, Uri } from 'vscode';
 import { getExtension } from '../common/vscodeApis/extensionsApi';
 import {
     GetEnvironmentScope,
@@ -58,4 +59,42 @@ export async function getEnvironment(scope: GetEnvironmentScope): Promise<Python
 export async function refreshEnvironments(scope: RefreshEnvironmentsScope): Promise<void> {
     const envExtApi = await getEnvExtApi();
     return envExtApi.refreshEnvironments(scope);
+}
+
+export async function runInTerminal(
+    resource: Uri | undefined,
+    args?: string[],
+    cwd?: string | Uri,
+    show?: boolean,
+): Promise<Terminal> {
+    const envExtApi = await getEnvExtApi();
+    const env = await getEnvironment(resource);
+    const project = resource ? envExtApi.getPythonProject(resource) : undefined;
+    if (env && project && resource) {
+        return envExtApi.runInTerminal(env, {
+            cwd: cwd ?? project.uri,
+            args,
+            show,
+        });
+    }
+    throw new Error('Python environment not found');
+}
+
+export async function runInDedicatedTerminal(
+    resource: Uri | undefined,
+    args?: string[],
+    cwd?: string | Uri,
+    show?: boolean,
+): Promise<Terminal> {
+    const envExtApi = await getEnvExtApi();
+    const env = await getEnvironment(resource);
+    const project = resource ? envExtApi.getPythonProject(resource) : undefined;
+    if (env && project && resource) {
+        return envExtApi.runInDedicatedTerminal(resource, env, {
+            cwd: cwd ?? project.uri,
+            args,
+            show,
+        });
+    }
+    throw new Error('Python environment not found');
 }

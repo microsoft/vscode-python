@@ -9,6 +9,8 @@ import { Architecture } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
 import { traceError, traceInfo } from '../logging';
+import { reportActiveInterpreterChanged } from '../environmentApi';
+import { getWorkspaceFolder } from '../common/vscodeApis/workspaceApis';
 
 function toEnvironmentType(pythonEnv: PythonEnvironment): EnvironmentType {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -96,8 +98,20 @@ function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
     };
 }
 
+const previousEnvMap = new Map<string, PythonEnvironment | undefined>();
 export async function getActiveInterpreterLegacy(resource?: Uri): Promise<PythonEnvironmentLegacy | undefined> {
+    const api = await getEnvExtApi();
+    const uri = resource ? api.getPythonProject(resource)?.uri : undefined;
+
     const pythonEnv = await getEnvironment(resource);
+    const oldEnv = previousEnvMap.get(uri?.fsPath || '');
+    const newEnv = pythonEnv ? toLegacyType(pythonEnv) : undefined;
+    if (newEnv && oldEnv?.envId.id !== pythonEnv?.envId.id) {
+        reportActiveInterpreterChanged({
+            resource: getWorkspaceFolder(resource),
+            path: newEnv.path,
+        });
+    }
     return pythonEnv ? toLegacyType(pythonEnv) : undefined;
 }
 
