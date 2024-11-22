@@ -6,7 +6,7 @@ import { ICommandManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { Common, Repl } from '../../common/utils/localize';
 import { IExtensionContext } from '../../common/types';
-import { getGlobalStorage } from '../../common/persistentState';
+import { getGlobalStorage, getWorkspaceStateValue, updateWorkspaceStateValue } from '../../common/persistentState';
 
 export const SUGGEST_NATIVE_REPL = 'suggestNativeRepl';
 
@@ -20,6 +20,8 @@ export async function registerTriggerForTerminalREPL(
     context: IExtensionContext,
     disposables: Disposable[],
 ): Promise<void> {
+    // When extension reloads via user triggering reloading of VS Code, reset to suggest Native REPL on workspace level.
+    await updateWorkspaceStateValue(SUGGEST_NATIVE_REPL, true);
     disposables.push(
         onDidStartTerminalShellExecution(async (e: TerminalShellExecutionStartEvent) => {
             if (e.execution.commandLine.isTrusted && checkREPLCommand(e.execution.commandLine.value)) {
@@ -28,8 +30,9 @@ export async function registerTriggerForTerminalREPL(
                 // Plan:
                 // Global memento to disable show of prompt entirely - global memento
                 // workspace memento to track and only show suggest of native REPL once.
-                const globalSuggestNativeRepl = getGlobalStorage<boolean>(context, SUGGEST_NATIVE_REPL);
-                if (globalSuggestNativeRepl.get()) {
+                const globalSuggestNativeRepl = getGlobalStorage<boolean>(context, SUGGEST_NATIVE_REPL, true);
+                const workspaceSuggestNativeRepl = getWorkspaceStateValue<boolean>(SUGGEST_NATIVE_REPL, true);
+                if (globalSuggestNativeRepl.get() && workspaceSuggestNativeRepl) {
                     // Prompt user to start Native REPL
                     const selection = await showWarningMessage(
                         Repl.terminalSuggestNativeReplPrompt,
@@ -44,6 +47,8 @@ export async function registerTriggerForTerminalREPL(
                         await globalSuggestNativeRepl.set(false);
                     }
                 }
+                // Update workspace native repl suggestion value after the first 'python' in terminal.
+                await updateWorkspaceStateValue(SUGGEST_NATIVE_REPL, false);
             }
         }),
     );
