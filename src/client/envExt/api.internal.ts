@@ -77,7 +77,7 @@ export async function runInTerminal(
             show,
         });
     }
-    throw new Error('Python environment not found');
+    throw new Error('Invalid arguments to run in terminal');
 }
 
 export async function runInDedicatedTerminal(
@@ -89,12 +89,12 @@ export async function runInDedicatedTerminal(
     const envExtApi = await getEnvExtApi();
     const env = await getEnvironment(resource);
     const project = resource ? envExtApi.getPythonProject(resource) : undefined;
-    if (env && project && resource) {
-        return envExtApi.runInDedicatedTerminal(resource, env, {
+    if (env && project) {
+        return envExtApi.runInDedicatedTerminal(resource ?? 'global', env, {
             cwd: cwd ?? project.uri,
             args,
             show,
         });
     }
-    throw new Error('Python environment not found');
+    throw new Error('Invalid arguments to run in dedicated terminal');
 }

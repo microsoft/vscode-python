@@ -192,7 +192,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             return;
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
-        const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
+        const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor);
         let wholeFileContent = '';
         if (activeEditor && activeEditor.document) {
             wholeFileContent = activeEditor.document.getText();
@@ -214,7 +214,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             noop();
         }
 
-        await executionService.execute(normalizedCode, activeEditor!.document.uri);
+        await executionService.execute(normalizedCode, activeEditor.document.uri);
     }
 
     private shouldTerminalFocusOnStart(uri: Uri | undefined): boolean {
