@@ -5,7 +5,7 @@ import json
 import sys
 import traceback
 import uuid
-from typing import Optional, Union
+from typing import Dict, List, Optional, Union
 
 STDIN = sys.stdin
 STDOUT = sys.stdout
@@ -38,7 +38,7 @@ def send_response(
     )
 
 
-def send_request(params: Optional[Union[list, dict]] = None):
+def send_request(params: Optional[Union[List, Dict]] = None):
     request_id = uuid.uuid4().hex
     if params is None:
         send_message(id=request_id, method="input")

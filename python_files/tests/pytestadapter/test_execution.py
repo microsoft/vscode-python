@@ -4,7 +4,7 @@ import json
 import os
 import pathlib
 import sys
-from typing import Any
+from typing import Any, Dict, List
 
 import pytest
 
@@ -33,7 +33,7 @@ def test_config_file():
     actual = runner_with_cwd(args, new_cwd)
     expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
-    actual_list: list[dict[str, Any]] = actual
+    actual_list: List[Dict[str, Any]] = actual
     assert len(actual_list) == len(expected_const)
     actual_result_dict = {}
     if actual_list is not None:
@@ -53,7 +53,7 @@ def test_rootdir_specified():
     actual = runner_with_cwd(args, new_cwd)
     expected_const = expected_execution_test_output.config_file_pytest_expected_execution_output
     assert actual
-    actual_list: list[dict[str, dict[str, Any]]] = actual
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
     actual_result_dict = {}
     if actual_list is not None:
@@ -207,7 +207,7 @@ def test_pytest_execution(test_ids, expected_const):
     args = test_ids
     actual = runner(args)
     assert actual
-    actual_list: list[dict[str, dict[str, Any]]] = actual
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
     assert len(actual_list) == len(expected_const)
     actual_result_dict = {}
     if actual_list is not None:
@@ -248,7 +248,7 @@ def test_symlink_run():
 
         expected_const = expected_execution_test_output.symlink_run_expected_execution_output
         assert actual
-        actual_list: list[dict[str, Any]] = actual
+        actual_list: List[Dict[str, Any]] = actual
         if actual_list is not None:
             actual_item = actual_list.pop(0)
             try:

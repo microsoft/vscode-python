@@ -13,6 +13,8 @@ import traceback
 from typing import (
     TYPE_CHECKING,
     Any,
+    Dict,
+    Generator,
     Literal,
     TypedDict,
 )
@@ -20,8 +22,6 @@ from typing import (
 import pytest
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
-
     from pluggy import Result
 
 
@@ -214,7 +214,7 @@ def pytest_keyboard_interrupt(excinfo):
     ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
 
 
-class TestOutcome(dict):
+class TestOutcome(Dict):
     """A class that handles outcome for a single test.
 
     for pytest the outcome for a test is only 'passed', 'skipped' or 'failed'
@@ -244,7 +244,7 @@ def create_test_outcome(
     )
 
 
-class TestRunResultDict(dict[str, dict[str, TestOutcome]]):
+class TestRunResultDict(Dict[str, Dict[str, TestOutcome]]):
     """A class that stores all test run results."""
 
     outcome: str
@@ -790,7 +790,7 @@ class DiscoveryPayloadDict(TypedDict):
     error: list[str] | None
 
 
-class ExecutionPayloadDict(dict):
+class ExecutionPayloadDict(Dict):
     """A dictionary that is used to send a execution post request to the server."""
 
     cwd: str
@@ -800,7 +800,7 @@ class ExecutionPayloadDict(dict):
     error: str | None  # Currently unused need to check
 
 
-class CoveragePayloadDict(dict):
+class CoveragePayloadDict(Dict):
     """A dictionary that is used to send a execution post request to the server."""
 
     coverage: bool

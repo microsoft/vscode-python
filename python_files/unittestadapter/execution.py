@@ -10,7 +10,7 @@ import sysconfig
 import traceback
 import unittest
 from types import TracebackType
-from typing import Optional, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, Union
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -33,7 +33,7 @@ from unittestadapter.pvsc_utils import (  # noqa: E402
     send_post_request,
 )
 
-ErrorType = Union[tuple[type[BaseException], BaseException, TracebackType], tuple[None, None, None]]
+ErrorType = Union[Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]]
 test_run_pipe = ""
 START_DIR = ""
 
@@ -51,7 +51,7 @@ class TestOutcomeEnum(str, enum.Enum):
 
 class UnittestTestResult(unittest.TextTestResult):
     def __init__(self, *args, **kwargs):
-        self.formatted: dict[str, dict[str, Union[str, None]]] = {}
+        self.formatted: Dict[str, Dict[str, Union[str, None]]] = {}
         super().__init__(*args, **kwargs)
 
     def startTest(self, test: unittest.TestCase):  # noqa: N802
@@ -149,7 +149,7 @@ class UnittestTestResult(unittest.TextTestResult):
         send_run_data(result, test_run_pipe)
 
 
-def filter_tests(suite: unittest.TestSuite, test_ids: list[str]) -> unittest.TestSuite:
+def filter_tests(suite: unittest.TestSuite, test_ids: List[str]) -> unittest.TestSuite:
     """Filter the tests in the suite to only run the ones with the given ids."""
     filtered_suite = unittest.TestSuite()
     for test in suite:
@@ -161,7 +161,7 @@ def filter_tests(suite: unittest.TestSuite, test_ids: list[str]) -> unittest.Tes
     return filtered_suite
 
 
-def get_all_test_ids(suite: unittest.TestSuite) -> list[str]:
+def get_all_test_ids(suite: unittest.TestSuite) -> List[str]:
     """Return a list of all test ids in the suite."""
     test_ids = []
     for test in suite:
@@ -172,7 +172,7 @@ def get_all_test_ids(suite: unittest.TestSuite) -> list[str]:
     return test_ids
 
 
-def find_missing_tests(test_ids: list[str], suite: unittest.TestSuite) -> list[str]:
+def find_missing_tests(test_ids: List[str], suite: unittest.TestSuite) -> List[str]:
     """Return a list of test ids that are not in the suite."""
     all_test_ids = get_all_test_ids(suite)
     return [test_id for test_id in test_ids if test_id not in all_test_ids]
@@ -185,7 +185,7 @@ def find_missing_tests(test_ids: list[str], suite: unittest.TestSuite) -> list[s
 # - if tests got added since the VS Code side last ran discovery and the current test run, ignore them.
 def run_tests(
     start_dir: str,
-    test_ids: list[str],
+    test_ids: List[str],
     pattern: str,
     top_level_dir: Optional[str],
     verbosity: int,
@@ -323,7 +323,7 @@ if __name__ == "__main__":
         )
         import coverage
 
-        source_ar: list[str] = []
+        source_ar: List[str] = []
         if workspace_root:
             source_ar.append(workspace_root)
         if top_level_dir:
@@ -358,8 +358,8 @@ if __name__ == "__main__":
         cov.stop()
         cov.save()
         cov.load()
-        file_set: set[str] = cov.get_data().measured_files()
-        file_coverage_map: dict[str, FileCoverageInfo] = {}
+        file_set: Set[str] = cov.get_data().measured_files()
+        file_coverage_map: Dict[str, FileCoverageInfo] = {}
         for file in file_set:
             analysis = cov.analysis2(file)
             lines_executable = {int(line_no) for line_no in analysis[1]}

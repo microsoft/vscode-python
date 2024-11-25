@@ -6,7 +6,7 @@ import json
 import re
 import sys
 import textwrap
-from collections.abc import Iterable
+from typing import Iterable
 
 attach_bracket_paste = sys.version_info >= (3, 13)
 

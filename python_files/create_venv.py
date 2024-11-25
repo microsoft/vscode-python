@@ -9,8 +9,7 @@ import pathlib
 import subprocess
 import sys
 import urllib.request as url_lib
-from collections.abc import Sequence
-from typing import Optional, Union
+from typing import List, Optional, Sequence, Union
 
 VENV_NAME = ".venv"
 CWD = pathlib.Path.cwd()
@@ -108,7 +107,7 @@ def get_venv_path(name: str) -> str:
         return os.fspath(CWD / name / "bin" / "python")
 
 
-def install_requirements(venv_path: str, requirements: list[str]) -> None:
+def install_requirements(venv_path: str, requirements: List[str]) -> None:
     if not requirements:
         return
 
@@ -121,7 +120,7 @@ def install_requirements(venv_path: str, requirements: list[str]) -> None:
     print("CREATE_VENV.PIP_INSTALLED_REQUIREMENTS")
 
 
-def install_toml(venv_path: str, extras: list[str]) -> None:
+def install_toml(venv_path: str, extras: List[str]) -> None:
     args = "." if len(extras) == 0 else f".[{','.join(extras)}]"
     run_process(
         [venv_path, "-m", "pip", "install", "-e", args],
@@ -172,7 +171,7 @@ def install_pip(name: str):
     )
 
 
-def get_requirements_from_args(args: argparse.Namespace) -> list[str]:
+def get_requirements_from_args(args: argparse.Namespace) -> List[str]:
     requirements = []
     if args.stdin:
         data = json.loads(sys.stdin.read())

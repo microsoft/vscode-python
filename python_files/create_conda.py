@@ -6,8 +6,7 @@ import os
 import pathlib
 import subprocess
 import sys
-from collections.abc import Sequence
-from typing import Optional, Union
+from typing import Optional, Sequence, Union
 
 CONDA_ENV_NAME = ".conda"
 CWD = pathlib.Path.cwd()
