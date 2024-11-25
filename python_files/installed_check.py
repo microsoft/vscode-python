@@ -6,7 +6,8 @@ import json
 import os
 import pathlib
 import sys
-from typing import Dict, List, Optional, Sequence, Tuple, Union
+from collections.abc import Sequence
+from typing import Dict, List, Optional, Tuple, Union
 
 LIB_ROOT = pathlib.Path(__file__).parent / "lib" / "python"
 sys.path.insert(0, os.fspath(LIB_ROOT))

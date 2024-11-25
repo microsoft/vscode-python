@@ -9,7 +9,8 @@ import pathlib
 import subprocess
 import sys
 import urllib.request as url_lib
-from typing import List, Optional, Sequence, Union
+from collections.abc import Sequence
+from typing import List, Optional, Union
 
 VENV_NAME = ".venv"
 CWD = pathlib.Path.cwd()

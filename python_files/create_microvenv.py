@@ -6,7 +6,8 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from typing import Optional
 
 VENV_NAME = ".venv"
 LIB_ROOT = pathlib.Path(__file__).parent / "lib" / "python"

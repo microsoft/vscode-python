@@ -10,11 +10,11 @@ import os
 import pathlib
 import sys
 import traceback
+from collections.abc import Generator
 from typing import (
     TYPE_CHECKING,
     Any,
     Dict,
-    Generator,
     Literal,
     TypedDict,
 )
