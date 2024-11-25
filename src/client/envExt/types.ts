@@ -1,7 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri, Disposable, MarkdownString, Event, LogOutputChannel, ThemeIcon, Terminal, TaskExecution } from 'vscode';
+import {
+    Uri,
+    Disposable,
+    MarkdownString,
+    Event,
+    LogOutputChannel,
+    ThemeIcon,
+    Terminal,
+    TaskExecution,
+    TerminalOptions,
+} from 'vscode';
 
 /**
  * The path to an icon, or a theme-specific configuration of icons.
@@ -243,7 +253,7 @@ export type DidChangeEnvironmentEventArgs = {
     /**
      * The URI of the environment that changed.
      */
-    readonly uri: Uri;
+    readonly uri: Uri | undefined;
 
     /**
      * The old Python environment before the change.
@@ -1030,25 +1040,27 @@ export interface PythonProjectModifyApi {
  */
 export interface PythonProjectApi extends PythonProjectCreationApi, PythonProjectGetterApi, PythonProjectModifyApi {}
 
+export interface PythonTerminalOptions extends TerminalOptions {
+    /**
+     * Whether to show the terminal.
+     */
+    disableActivation?: boolean;
+}
+
 export interface PythonTerminalCreateApi {
-    createTerminal(
-        environment: PythonEnvironment,
-        cwd: string | Uri,
-        envVars?: { [key: string]: string | undefined },
-    ): Promise<Terminal>;
+    createTerminal(environment: PythonEnvironment, options: PythonTerminalOptions): Promise<Terminal>;
 }
 
 export interface PythonTerminalExecutionOptions {
     cwd: string | Uri;
     args?: string[];
-
     show?: boolean;
 }
 
 export interface PythonTerminalRunApi {
     runInTerminal(environment: PythonEnvironment, options: PythonTerminalExecutionOptions): Promise<Terminal>;
     runInDedicatedTerminal(
-        terminalKey: Uri,
+        terminalKey: Uri | string,
         environment: PythonEnvironment,
         options: PythonTerminalExecutionOptions,
     ): Promise<Terminal>;

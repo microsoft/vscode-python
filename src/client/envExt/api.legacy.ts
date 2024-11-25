@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
-import { PythonEnvironment } from './types';
+import { PythonEnvironment, PythonTerminalOptions } from './types';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
@@ -148,4 +148,20 @@ export async function setInterpreterLegacy(pythonPath: string, uri: Uri | undefi
 export async function resetInterpreterLegacy(uri: Uri | undefined): Promise<void> {
     const api = await getEnvExtApi();
     await api.setEnvironment(uri, undefined);
+}
+
+export async function ensureTerminalLegacy(
+    resource: Uri | undefined,
+    options?: PythonTerminalOptions,
+): Promise<Terminal> {
+    const api = await getEnvExtApi();
+    const pythonEnv = await api.getEnvironment(resource);
+    const project = resource ? api.getPythonProject(resource) : undefined;
+
+    if (pythonEnv && project) {
+        const fixedOptions = options ? { ...options } : { cwd: project.uri };
+        const terminal = await api.createTerminal(pythonEnv, fixedOptions);
+        return terminal;
+    }
+    throw new Error('Invalid arguments to create terminal');
 }
