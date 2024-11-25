@@ -115,6 +115,12 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         }
     }
     private async updateDisplay(workspaceFolder?: Uri) {
+        if (useEnvExtension()) {
+            this.statusBar?.hide();
+            this.languageStatus?.dispose();
+            this.languageStatus = undefined;
+            return;
+        }
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
         if (
             this.currentlySelectedInterpreterDisplay &&
