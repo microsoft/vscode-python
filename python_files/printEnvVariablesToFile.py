@@ -4,7 +4,6 @@
 import os
 import sys
 
-
 # Prevent overwriting itself, since sys.argv[0] is the path to this file
 if len(sys.argv) > 1:
     # Last argument is the target file into which we'll write the env variables line by line.
