@@ -7,7 +7,7 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pytest
 
@@ -31,7 +31,7 @@ def generate_file(base_file: pathlib.Path):
 
 def run_on_file(
     file_path: pathlib.Path, severity: Optional[str] = None
-) -> List[Dict[str, Union[str, int]]]:
+) -> list[dict[str, Union[str, int]]]:
     env = os.environ.copy()
     if severity:
         env["VSCODE_MISSING_PGK_SEVERITY"] = severity

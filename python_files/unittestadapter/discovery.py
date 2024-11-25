@@ -6,7 +6,7 @@ import pathlib
 import sys
 import traceback
 import unittest
-from typing import List, Optional
+from typing import Optional
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
@@ -65,7 +65,7 @@ def discover_tests(
         sys.path.insert(0, cwd)
     payload: DiscoveryPayloadDict = {"cwd": cwd, "status": "success", "tests": None}
     tests = None
-    error: List[str] = []
+    error: list[str] = []
 
     try:
         loader = unittest.TestLoader()

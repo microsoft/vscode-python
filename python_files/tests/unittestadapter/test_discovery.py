@@ -4,7 +4,7 @@
 import os
 import pathlib
 import sys
-from typing import Any, Dict, List
+from typing import Any
 
 import pytest
 
@@ -70,7 +70,7 @@ TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
         ),
     ],
 )
-def test_parse_unittest_args(args: List[str], expected: List[str]) -> None:
+def test_parse_unittest_args(args: list[str], expected: list[str]) -> None:
     """The parse_unittest_args function should return values for the start_dir, pattern, and top_level_dir arguments when passed as command-line options, and ignore unrecognized arguments."""
     actual = parse_unittest_args(args)
 
@@ -309,7 +309,7 @@ def test_simple_django_collect():
     )
 
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     assert actual_list is not None
     if actual_list is not None:
         actual_item = actual_list.pop(0)

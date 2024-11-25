@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import unittest
-from typing import Dict, List, Literal, Optional, Tuple, TypedDict, Union
+from typing import Literal, Optional, TypedDict, Union
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -42,7 +42,7 @@ class TestItem(TestData):
 
 
 class TestNode(TestData):
-    children: "List[TestNode | TestItem]"
+    children: "list[TestNode | TestItem]"
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -61,28 +61,28 @@ class DiscoveryPayloadDict(TypedDict):
     cwd: str
     status: Literal["success", "error"]
     tests: Optional[TestNode]
-    error: NotRequired[List[str]]
+    error: NotRequired[list[str]]
 
 
 class ExecutionPayloadDict(TypedDict):
     cwd: str
     status: TestExecutionStatus
-    result: Optional[Dict[str, Dict[str, Optional[str]]]]
-    not_found: NotRequired[List[str]]
+    result: Optional[dict[str, dict[str, Optional[str]]]]
+    not_found: NotRequired[list[str]]
     error: NotRequired[str]
 
 
 class FileCoverageInfo(TypedDict):
-    lines_covered: List[int]
-    lines_missed: List[int]
+    lines_covered: list[int]
+    lines_missed: list[int]
 
 
-class CoveragePayloadDict(Dict):
+class CoveragePayloadDict(dict):
     """A dictionary that is used to send a execution post request to the server."""
 
     coverage: bool
     cwd: str
-    result: Optional[Dict[str, FileCoverageInfo]]
+    result: Optional[dict[str, FileCoverageInfo]]
     error: Optional[str]  # Currently unused need to check
 
 
@@ -154,7 +154,7 @@ def get_child_node(name: str, path: str, type_: TestNodeTypeEnum, root: TestNode
 
 def build_test_tree(
     suite: unittest.TestSuite, top_level_directory: str
-) -> Tuple[Union[TestNode, None], List[str]]:
+) -> tuple[Union[TestNode, None], list[str]]:
     """Build a test tree from a unittest test suite.
 
     This function returns the test tree, and any errors found by unittest.
@@ -260,8 +260,8 @@ def build_test_tree(
 
 
 def parse_unittest_args(
-    args: List[str],
-) -> Tuple[str, str, Union[str, None], int, Union[bool, None], Union[bool, None]]:
+    args: list[str],
+) -> tuple[str, str, Union[str, None], int, Union[bool, None], Union[bool, None]]:
     """Parse command-line arguments that should be forwarded to unittest to perform discovery.
 
     Valid unittest arguments are: -v, -s, -p, -t and their long-form counterparts,

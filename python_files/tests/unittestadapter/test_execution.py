@@ -4,7 +4,7 @@
 import os
 import pathlib
 import sys
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Optional
 from unittest.mock import patch
 
 import pytest
@@ -67,11 +67,11 @@ def test_single_ids_run(mock_send_run_data):
     test_actual = args[0]  # first argument is the result
 
     assert test_actual
-    actual_result: Optional[Dict[str, Dict[str, Optional[str]]]] = actual["result"]
+    actual_result: Optional[dict[str, dict[str, Optional[str]]]] = actual["result"]
     if actual_result is None:
         raise AssertionError("actual_result is None")
     else:
-        if not isinstance(actual_result, Dict):
+        if not isinstance(actual_result, dict):
             raise AssertionError("actual_result is not a Dict")
         assert len(actual_result) == 1
         assert id_ in actual_result
@@ -322,7 +322,7 @@ def test_basic_run_django():
         {"MANAGE_PY_PATH": manage_py_path},
     )
     assert actual
-    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+    actual_list: list[dict[str, dict[str, Any]]] = actual
     actual_result_dict = {}
     assert len(actual_list) == 3
     for actual_item in actual_list:

@@ -12,7 +12,7 @@ import sys
 import tempfile
 import threading
 import uuid
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Optional
 
 if sys.platform == "win32":
     from namedpipe import NPopen
@@ -63,7 +63,7 @@ def create_symlink(root: pathlib.Path, target_ext: str, destination_ext: str):
         print("destination unlinked", destination)
 
 
-def process_data_received(data: str) -> List[Dict[str, Any]]:
+def process_data_received(data: str) -> list[dict[str, Any]]:
     """Process the all JSON data which comes from the server.
 
     After listen is finished, this function will be called.
@@ -87,7 +87,7 @@ def process_data_received(data: str) -> List[Dict[str, Any]]:
     return json_messages  # return the list of json messages
 
 
-def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
+def parse_rpc_message(data: str) -> tuple[dict[str, str], str]:
     """Process the JSON data which comes from the server.
 
     A single rpc payload is in the format:
@@ -128,7 +128,7 @@ def parse_rpc_message(data: str) -> Tuple[Dict[str, str], str]:
             print("json decode error")
 
 
-def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Event):
+def _listen_on_fifo(pipe_name: str, result: list[str], completed: threading.Event):
     # Open the FIFO for reading
     fifo_path = pathlib.Path(pipe_name)
     with fifo_path.open() as fifo:
@@ -144,7 +144,7 @@ def _listen_on_fifo(pipe_name: str, result: List[str], completed: threading.Even
             result.append(data)
 
 
-def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event):
+def _listen_on_pipe_new(listener, result: list[str], completed: threading.Event):
     """Listen on the named pipe or Unix domain socket for JSON data from the server.
 
     Created as a separate function for clarity in threading context.
@@ -197,24 +197,24 @@ def _listen_on_pipe_new(listener, result: List[str], completed: threading.Event)
         result.append("".join(all_data))
 
 
-def _run_test_code(proc_args: List[str], proc_env, proc_cwd: str, completed: threading.Event):
+def _run_test_code(proc_args: list[str], proc_env, proc_cwd: str, completed: threading.Event):
     result = subprocess.run(proc_args, env=proc_env, cwd=proc_cwd)
     completed.set()
     return result
 
 
-def runner(args: List[str]) -> Optional[List[Dict[str, Any]]]:
+def runner(args: list[str]) -> Optional[list[dict[str, Any]]]:
     """Run a subprocess and a named-pipe to listen for messages at the same time with threading."""
     print("\n Running python test subprocess with cwd set to: ", TEST_DATA_PATH)
     return runner_with_cwd(args, TEST_DATA_PATH)
 
 
-def runner_with_cwd(args: List[str], path: pathlib.Path) -> Optional[List[Dict[str, Any]]]:
+def runner_with_cwd(args: list[str], path: pathlib.Path) -> Optional[list[dict[str, Any]]]:
     """Run a subprocess and a named-pipe to listen for messages at the same time with threading."""
     return runner_with_cwd_env(args, path, {})
 
 
-def split_array_at_item(arr: List[str], item: str) -> Tuple[List[str], List[str]]:
+def split_array_at_item(arr: list[str], item: str) -> tuple[list[str], list[str]]:
     """
     Splits an array into two subarrays at the specified item.
 
@@ -235,14 +235,14 @@ def split_array_at_item(arr: List[str], item: str) -> Tuple[List[str], List[str]
 
 
 def runner_with_cwd_env(
-    args: List[str], path: pathlib.Path, env_add: Dict[str, str]
-) -> Optional[List[Dict[str, Any]]]:
+    args: list[str], path: pathlib.Path, env_add: dict[str, str]
+) -> Optional[list[dict[str, Any]]]:
     """
     Run a subprocess and a named-pipe to listen for messages at the same time with threading.
 
     Includes environment variables to add to the test environment.
     """
-    process_args: List[str]
+    process_args: list[str]
     pipe_name: str
     if "MANAGE_PY_PATH" in env_add:
         # If we are running Django, generate a unittest-specific pipe name.

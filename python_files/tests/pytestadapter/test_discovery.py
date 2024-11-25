@@ -3,7 +3,7 @@
 import json
 import os
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import pytest
 
@@ -25,10 +25,10 @@ def test_import_error():
     """
     file_path = helpers.TEST_DATA_PATH / "error_pytest_import.txt"
     with helpers.text_to_python_file(file_path) as p:
-        actual: Optional[List[Dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
+        actual: Optional[list[dict[str, Any]]] = helpers.runner(["--collect-only", os.fspath(p)])
 
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item for item in ("status", "cwd", "error"))
@@ -64,7 +64,7 @@ def test_syntax_error(tmp_path):  # noqa: ARG001
         actual = helpers.runner(["--collect-only", os.fspath(p)])
 
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item for item in ("status", "cwd", "error"))
@@ -89,7 +89,7 @@ def test_parameterized_error_collect():
     file_path_str = "error_parametrize_discovery.py"
     actual = helpers.runner(["--collect-only", file_path_str])
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
             assert all(item in actual_item for item in ("status", "cwd", "error"))
@@ -191,7 +191,7 @@ def test_pytest_collect(file, expected_const):
     )
 
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
         assert all(item in actual_item for item in ("status", "cwd", "error"))
@@ -227,7 +227,7 @@ def test_symlink_root_dir():
         )
         expected = expected_discovery_test_output.symlink_expected_discovery_output
         assert actual
-        actual_list: List[Dict[str, Any]] = actual
+        actual_list: list[dict[str, Any]] = actual
         if actual_list is not None:
             actual_item = actual_list.pop(0)
             try:
@@ -260,7 +260,7 @@ def test_pytest_root_dir():
         helpers.TEST_DATA_PATH / "root",
     )
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
 
@@ -287,7 +287,7 @@ def test_pytest_config_file():
         helpers.TEST_DATA_PATH / "root",
     )
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
 
@@ -319,7 +319,7 @@ def test_config_sub_folder():
     )
 
     assert actual
-    actual_list: List[Dict[str, Any]] = actual
+    actual_list: list[dict[str, Any]] = actual
     if actual_list is not None:
         actual_item = actual_list.pop(0)
         assert all(item in actual_item for item in ("status", "cwd", "error"))
