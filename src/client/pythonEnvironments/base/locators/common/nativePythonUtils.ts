@@ -7,6 +7,7 @@ import { traceError } from '../../../../logging';
 
 export enum NativePythonEnvironmentKind {
     Conda = 'Conda',
+    Pixi = 'Pixi',
     Homebrew = 'Homebrew',
     Pyenv = 'Pyenv',
     GlobalPaths = 'GlobalPaths',
@@ -26,6 +27,7 @@ export enum NativePythonEnvironmentKind {
 
 const mapping = new Map<NativePythonEnvironmentKind, PythonEnvKind>([
     [NativePythonEnvironmentKind.Conda, PythonEnvKind.Conda],
+    [NativePythonEnvironmentKind.Pixi, PythonEnvKind.Pixi],
     [NativePythonEnvironmentKind.GlobalPaths, PythonEnvKind.OtherGlobal],
     [NativePythonEnvironmentKind.Pyenv, PythonEnvKind.Pyenv],
     [NativePythonEnvironmentKind.PyenvVirtualEnv, PythonEnvKind.Pyenv],
