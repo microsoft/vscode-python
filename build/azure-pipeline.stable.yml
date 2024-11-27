@@ -102,7 +102,7 @@ extends:
             project: 'Monaco'
             definition: 593
             buildVersionToDownload: 'latestFromBranch'
-            branchName: 'refs/heads/release/2024.18'
+            branchName: 'refs/heads/release/2024.20'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(vsceTarget)'
             itemPattern: |
@@ -123,4 +123,5 @@ extends:
             areaPath: 'Visual Studio Code Python Extensions'
             serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
         enabled: true
+    apiScanDependentPipelineId: '593' # python-environment-tools
     apiScanSoftwareVersion: '2024'
