@@ -70,9 +70,9 @@ export async function runInTerminal(
     const envExtApi = await getEnvExtApi();
     const env = await getEnvironment(resource);
     const project = resource ? envExtApi.getPythonProject(resource) : undefined;
-    if (env && project && resource) {
+    if (env && resource) {
         return envExtApi.runInTerminal(env, {
-            cwd: cwd ?? project.uri,
+            cwd: cwd ?? project?.uri ?? process.cwd(),
             args,
             show,
         });
@@ -89,9 +89,9 @@ export async function runInDedicatedTerminal(
     const envExtApi = await getEnvExtApi();
     const env = await getEnvironment(resource);
     const project = resource ? envExtApi.getPythonProject(resource) : undefined;
-    if (env && project) {
+    if (env) {
         return envExtApi.runInDedicatedTerminal(resource ?? 'global', env, {
-            cwd: cwd ?? project.uri,
+            cwd: cwd ?? project?.uri ?? process.cwd(),
             args,
             show,
         });
