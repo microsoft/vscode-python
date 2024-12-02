@@ -11,6 +11,7 @@ import {
     PythonProcess,
     RefreshEnvironmentsScope,
 } from './types';
+import { executeCommand } from '../common/vscodeApis/commandApis';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
@@ -97,4 +98,11 @@ export async function runInDedicatedTerminal(
         });
     }
     throw new Error('Invalid arguments to run in dedicated terminal');
+}
+
+export async function clearCache(): Promise<void> {
+    const envExtApi = await getEnvExtApi();
+    if (envExtApi) {
+        await executeCommand('python-envs.clearCache');
+    }
 }
