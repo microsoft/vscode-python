@@ -11,6 +11,7 @@ import {
     Terminal,
     TaskExecution,
     TerminalOptions,
+    FileChangeType,
 } from 'vscode';
 
 /**
@@ -240,7 +241,7 @@ export type RefreshEnvironmentsScope = Uri | undefined;
 
 /**
  * The scope for which environments are required.
- * - `undefined`/`"all"`: All environments.
+ * - `"all"`: All environments.
  * - `"global"`: Python installations that are usually a base for creating virtual environments.
  * - {@link Uri}: Environments for the workspace/folder/file pointed to by the Uri.
  */
@@ -296,23 +297,6 @@ export type DidChangeEnvironmentsEventArgs = {
     environment: PythonEnvironment;
 }[];
 
-export type PythonIsKnownContext = Uri | string;
-
-/**
- * Result of checking if a context is a known Python environment.
- */
-export interface PythonIsKnownResult {
-    /**
-     * The confidence level of the result (low, moderate, or high).
-     */
-    confidence: 'low' | 'moderate' | 'high';
-
-    /**
-     * The Python environment match.
-     */
-    result: 'unknown' | 'known' | 'canHandle';
-}
-
 /**
  * Type representing the context for resolving a Python environment.
  */
@@ -334,7 +318,9 @@ export interface EnvironmentManager {
 
     /**
      * The preferred package manager ID for the environment manager.
-     * @example 'ms-python.python:pip'
+     *
+     * @example
+     * 'ms-python.python:pip'
      */
     readonly preferredPackageManagerId: string;
 
@@ -424,15 +410,6 @@ export interface EnvironmentManager {
      * @returns A promise that resolves to the fully detailed {@link PythonEnvironment}, or `undefined` if the environment cannot be resolved.
      */
     resolve(context: ResolveEnvironmentContext): Promise<PythonEnvironment | undefined>;
-
-    /**
-     * Checks if the specified context is a known Python environment. The string/Uri can point to the environment root folder
-     * or to python executable. It can also be a named environment.
-     *
-     * @param context - The URI/string context to check.
-     * @returns A promise that resolves to the result of the check.
-     */
-    isKnown?(context: PythonIsKnownContext): Promise<PythonIsKnownResult>;
 
     /**
      * Clears the environment manager's cache.
@@ -579,7 +556,7 @@ export interface PackageManager {
     /**
      * The log output channel for the package manager.
      */
-    logOutput?: LogOutputChannel;
+    log?: LogOutputChannel;
 
     /**
      * Installs packages in the specified Python environment.
@@ -617,9 +594,8 @@ export interface PackageManager {
      * @param environment The Python environment for which to get installable items.
      *
      * Note: An environment can be used by multiple projects, so the installable items returned.
-     * should be for the environment. IF you want to do it for a particular project, then you may
-     * shown a QuickPick to the user to select the project, and filter the installable items based
-     * on the project.
+     * should be for the environment. If you want to do it for a particular project, then you should
+     * ask user to select a project, and filter the installable items based on the project.
      */
     getInstallable?(environment: PythonEnvironment): Promise<Installable[]>;
 
@@ -768,7 +744,8 @@ export interface Installable {
     readonly group?: string;
 
     /**
-     * Path to the requirements, version of the package, or any other project file path.
+     * Description about the installable item. This can also be path to the requirements,
+     * version of the package, or any other project file path.
      */
     readonly description?: string;
 
@@ -1048,17 +1025,70 @@ export interface PythonTerminalOptions extends TerminalOptions {
 }
 
 export interface PythonTerminalCreateApi {
+    /**
+     * Creates a terminal and activates any (activatable) environment for the terminal.
+     *
+     * @param environment The Python environment to activate.
+     * @param options Options for creating the terminal.
+     *
+     * Note: Non-activatable environments have no effect on the terminal.
+     */
     createTerminal(environment: PythonEnvironment, options: PythonTerminalOptions): Promise<Terminal>;
 }
 
+/**
+ * Options for running a Python script or module in a terminal.
+ *
+ * Example:
+ *  * Running Script: `python myscript.py --arg1`
+ *  ```typescript
+ *    {
+ *       args: ["myscript.py", "--arg1"]
+ *    }
+ *  ```
+ *  * Running a module: `python -m my_module --arg1`
+ *  ```typescript
+ *    {
+ *       args: ["-m", "my_module", "--arg1"]
+ *    }
+ *  ```
+ */
 export interface PythonTerminalExecutionOptions {
+    /**
+     * Current working directory for the terminal. This in only used to create the terminal.
+     */
     cwd: string | Uri;
+
+    /**
+     * Arguments to pass to the python executable.
+     */
     args?: string[];
+
+    /**
+     * Set `true` to show the terminal.
+     */
     show?: boolean;
 }
 
 export interface PythonTerminalRunApi {
+    /**
+     * Runs a Python script or module in a terminal. This API will create a terminal if one is not available to use.
+     * If a terminal is available, it will be used to run the script or module.
+     *
+     * Note:
+     *  - If you restart VS Code, this will create a new terminal, this is a limitation of VS Code.
+     *  - If you close the terminal, this will create a new terminal.
+     *  - In cases of multi-root/project scenario, it will create a separate terminal for each project.
+     */
     runInTerminal(environment: PythonEnvironment, options: PythonTerminalExecutionOptions): Promise<Terminal>;
+
+    /**
+     * Runs a Python script or module in a dedicated terminal. This API will create a terminal if one is not available to use.
+     * If a terminal is available, it will be used to run the script or module. This terminal will be dedicated to the script,
+     * and selected based on the `terminalKey`.
+     *
+     * @param terminalKey A unique key to identify the terminal. For scripts you can use the Uri of the script file.
+     */
     runInDedicatedTerminal(
         terminalKey: Uri | string,
         environment: PythonEnvironment,
@@ -1067,6 +1097,7 @@ export interface PythonTerminalRunApi {
 }
 
 /**
+ * Options for running a Python task.
  *
  * Example:
  *  * Running Script: `python myscript.py --arg1`
@@ -1083,23 +1114,63 @@ export interface PythonTerminalRunApi {
  *  ```
  */
 export interface PythonTaskExecutionOptions {
-    project?: PythonProject;
-    args: string[];
-    cwd?: string;
-    env?: { [key: string]: string };
+    /**
+     * Name of the task to run.
+     */
     name: string;
+
+    /**
+     * Arguments to pass to the python executable.
+     */
+    args: string[];
+
+    /**
+     * The Python project to use for the task.
+     */
+    project?: PythonProject;
+
+    /**
+     * Current working directory for the task. Default is the project directory for the script being run.
+     */
+    cwd?: string;
+
+    /**
+     * Environment variables to set for the task.
+     */
+    env?: { [key: string]: string };
 }
 
 export interface PythonTaskRunApi {
+    /**
+     * Run a Python script or module as a task.
+     *
+     */
     runAsTask(environment: PythonEnvironment, options: PythonTaskExecutionOptions): Promise<TaskExecution>;
 }
 
+/**
+ * Options for running a Python script or module in the background.
+ */
 export interface PythonBackgroundRunOptions {
+    /**
+     * The Python environment to use for running the script or module.
+     */
     args: string[];
+
+    /**
+     * Current working directory for the script or module. Default is the project directory for the script being run.
+     */
     cwd?: string;
+
+    /**
+     * Environment variables to set for the script or module.
+     */
     env?: { [key: string]: string | undefined };
 }
 export interface PythonBackgroundRunApi {
+    /**
+     * Run a Python script or module in the background. This API will create a new process to run the script or module.
+     */
     runInBackground(environment: PythonEnvironment, options: PythonBackgroundRunOptions): Promise<PythonProcess>;
 }
 
@@ -1108,6 +1179,49 @@ export interface PythonExecutionApi
         PythonTerminalRunApi,
         PythonTaskRunApi,
         PythonBackgroundRunApi {}
+
+/**
+ * Event arguments for when the monitored `.env` files or any other sources change.
+ */
+export interface DidChangeEnvironmentVariablesEventArgs {
+    /**
+     * The URI of the file that changed. No `Uri` means a non-file source of environment variables changed.
+     */
+    uri?: Uri;
+
+    /**
+     * The type of change that occurred.
+     */
+    changeTye: FileChangeType;
+}
+
+export interface PythonEnvironmentVariablesApi {
+    /**
+     * Get environment variables for a workspace. This picks up `.env` file from the root of the
+     * workspace.
+     *
+     * Order of overrides:
+     * 1. `baseEnvVar` if given or `process.env`
+     * 2. `.env` file from the "python.envFile" setting in the workspace.
+     * 3. `.env` file at the root of the python project.
+     * 4. `overrides` in the order provided.
+     *
+     * @param uri The URI of the project, workspace or a file in a for which environment variables are required.
+     * @param overrides Additional environment variables to override the defaults.
+     * @param baseEnvVar The base environment variables that should be used as a starting point.
+     */
+    getEnvironmentVariables(
+        uri: Uri,
+        overrides?: ({ [key: string]: string | undefined } | Uri)[],
+        baseEnvVar?: { [key: string]: string | undefined },
+    ): Promise<{ [key: string]: string | undefined }>;
+
+    /**
+     * Event raised when `.env` file changes or any other monitored source of env variable changes.
+     */
+    onDidChangeEnvironmentVariables: Event<DidChangeEnvironmentVariablesEventArgs>;
+}
+
 /**
  * The API for interacting with Python environments, package managers, and projects.
  */
@@ -1115,4 +1229,5 @@ export interface PythonEnvironmentApi
     extends PythonEnvironmentManagerApi,
         PythonPackageManagerApi,
         PythonProjectApi,
-        PythonExecutionApi {}
+        PythonExecutionApi,
+        PythonEnvironmentVariablesApi {}
