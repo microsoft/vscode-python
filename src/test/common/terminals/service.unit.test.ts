@@ -24,6 +24,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
+import * as platformService from '../../../client/common/platform/platformService';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
@@ -42,6 +43,7 @@ suite('Terminal Service', () => {
     let getConfigurationStub: sinon.SinonStub;
     let pythonConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let editorConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+    let isWindowsStub: sinon.SinonStub;
 
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
@@ -94,6 +96,7 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(ITerminalActivator)).returns(() => terminalActivator.object);
         mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
+        isWindowsStub = sinon.stub(platformService.object, 'isWindows');
         pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         editorConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         getConfigurationStub.callsFake((section: string) => {
@@ -231,7 +234,30 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
-    test('Ensure sendText is NOT called when Python shell integration and terminal shell integration are both enabled', async () => {
+    test('Ensure sendText is NOT called when Python shell integration and terminal shell integration are both enabled - Mac, Linux', async () => {
+        isWindowsStub.returns(false);
+        pythonConfig
+            .setup((p) => p.get('terminal.shellIntegration.enabled'))
+            .returns(() => true)
+            .verifiable(TypeMoq.Times.once());
+
+        terminalHelper
+            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        service = new TerminalService(mockServiceContainer.object);
+        const textToSend = 'Some Text';
+        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+
+        service.ensureTerminal();
+        service.executeCommand(textToSend, true);
+
+        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.never());
+    });
+
+    test('Ensure sendText IS called even when Python shell integration and terminal shell integration are both enabled - Window', async () => {
+        isWindowsStub.returns(true);
         pythonConfig
             .setup((p) => p.get('terminal.shellIntegration.enabled'))
             .returns(() => true)
