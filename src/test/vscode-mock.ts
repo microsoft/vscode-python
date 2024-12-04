@@ -45,6 +45,7 @@ export function initialize() {
     const clipboard = new MockClipboard();
     when(mockedVSCodeNamespaces.env!.clipboard).thenReturn(clipboard);
     when(mockedVSCodeNamespaces.env!.appName).thenReturn('Insider');
+    when(mockedVSCodeNamespaces.env!.remoteName).thenReturn('Notwsl');
 
     // This API is used in src/client/telemetry/telemetry.ts
     const extension = mock<vscode.Extension<any>>();
