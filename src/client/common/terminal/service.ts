@@ -21,6 +21,7 @@ import {
 } from './types';
 import { traceVerbose } from '../../logging';
 import { getConfiguration } from '../vscodeApis/workspaceApis';
+import { isWindows } from '../platform/platformService';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -104,7 +105,7 @@ export class TerminalService implements ITerminalService, Disposable {
 
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-        if (isPythonShell && !pythonrcSetting) {
+        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows())) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
