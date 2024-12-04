@@ -258,7 +258,11 @@ export class PythonResultResolver implements ITestResultResolver {
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
-                        const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
+                        const subTestItem = this.testController?.createTestItem(
+                            subtestId,
+                            subtestId,
+                            parentTestItem.uri,
+                        );
                         // create a new test item for the subtest
                         if (subTestItem) {
                             const traceback = data.traceback ?? '';
@@ -293,7 +297,11 @@ export class PythonResultResolver implements ITestResultResolver {
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
-                        const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
+                        const subTestItem = this.testController?.createTestItem(
+                            subtestId,
+                            subtestId,
+                            parentTestItem.uri,
+                        );
                         // create a new test item for the subtest
                         if (subTestItem) {
                             parentTestItem.children.add(subTestItem);
