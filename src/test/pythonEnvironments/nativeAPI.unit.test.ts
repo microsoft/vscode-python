@@ -13,9 +13,8 @@ import {
     NativeEnvManagerInfo,
     NativePythonFinder,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
-import { Architecture } from '../../client/common/utils/platform';
+import { Architecture, isWindows } from '../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../../client/pythonEnvironments/base/info';
-import { isWindows } from '../../client/common/platform/platformService';
 import { NativePythonEnvironmentKind } from '../../client/pythonEnvironments/base/locators/common/nativePythonUtils';
 import * as condaApi from '../../client/pythonEnvironments/common/environmentManagers/conda';
 import * as pyenvApi from '../../client/pythonEnvironments/common/environmentManagers/pyenv';
