@@ -25,6 +25,7 @@ import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as platform from '../../../client/common/utils/platform';
+import * as envApis from '../../../client/common/utils/envApis';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
@@ -98,7 +99,7 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         isWindowsStub = sinon.stub(platform, 'isWindows');
-        isWslStub = sinon.stub(platform, 'isWsl');
+        isWslStub = sinon.stub(envApis, 'isWsl');
         pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         editorConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         getConfigurationStub.callsFake((section: string) => {

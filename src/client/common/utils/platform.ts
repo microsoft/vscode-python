@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { env } from 'vscode';
 import { EnvironmentVariables } from '../variables/types';
 export enum Architecture {
     Unknown = 1,
@@ -28,10 +27,6 @@ export function getOSType(platform: string = process.platform): OSType {
     } else {
         return OSType.Unknown;
     }
-}
-
-export function isWsl(): boolean {
-    return env.remoteName === 'wsl';
 }
 
 const architectures: Record<string, Architecture> = {

@@ -21,7 +21,8 @@ import {
 } from './types';
 import { traceVerbose } from '../../logging';
 import { getConfiguration } from '../vscodeApis/workspaceApis';
-import { isWindows, isWsl } from '../utils/platform';
+import { isWindows } from '../utils/platform';
+import { isWsl } from '../utils/envApis';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
