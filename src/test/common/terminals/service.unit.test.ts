@@ -274,7 +274,7 @@ suite('Terminal Service', () => {
         service.executeCommand(textToSend, true);
 
         terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.never());
+        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
     test('Ensure terminal is not shown if `hideFromUser` option is set to `true`', async () => {
