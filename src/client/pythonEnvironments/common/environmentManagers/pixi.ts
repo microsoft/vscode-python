@@ -6,12 +6,11 @@
 import * as path from 'path';
 import { readJSON } from 'fs-extra';
 import which from 'which';
-import { getUserHomeDir } from '../../../common/utils/platform';
+import { getUserHomeDir, isWindows } from '../../../common/utils/platform';
 import { exec, getPythonSetting, onDidChangePythonSetting, pathExists } from '../externalDependencies';
 import { cache } from '../../../common/utils/decorators';
 import { traceVerbose, traceWarn } from '../../../logging';
 import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
-import { isWindows } from '../../../common/platform/platformService';
 import { IDisposableRegistry } from '../../../common/types';
 import { getWorkspaceFolderPaths } from '../../../common/vscodeApis/workspaceApis';
 import { isTestExecution } from '../../../common/constants';

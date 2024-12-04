@@ -26,7 +26,7 @@ import {
 import { findFiles } from '../../../common/vscodeApis/workspaceApis';
 import { traceError, traceVerbose } from '../../../logging';
 import { Commands } from '../../../common/constants';
-import { isWindows } from '../../../common/platform/platformService';
+import { isWindows } from '../../../common/utils/platform';
 import { getVenvPath, hasVenv } from '../common/commonUtils';
 import { deleteEnvironmentNonWindows, deleteEnvironmentWindows } from './venvDeleteUtils';
 

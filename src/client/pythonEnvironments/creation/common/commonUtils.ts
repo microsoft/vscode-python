@@ -7,7 +7,7 @@ import { Commands } from '../../../common/constants';
 import { Common } from '../../../common/utils/localize';
 import { executeCommand } from '../../../common/vscodeApis/commandApis';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
-import { isWindows } from '../../../common/platform/platformService';
+import { isWindows } from '../../../common/utils/platform';
 
 export async function showErrorMessageWithLogs(message: string): Promise<void> {
     const result = await showErrorMessage(message, Common.openOutputPanel, Common.selectPythonInterpreter);

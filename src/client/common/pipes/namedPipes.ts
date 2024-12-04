@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { traceVerbose } from '../../logging';
-import { isWindows } from '../platform/platformService';
+import { isWindows } from '../utils/platform';
 import { createDeferred } from '../utils/async';
 
 const { XDG_RUNTIME_DIR } = process.env;

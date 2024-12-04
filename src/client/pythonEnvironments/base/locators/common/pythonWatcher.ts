@@ -3,7 +3,7 @@
 
 import { Disposable, Event, EventEmitter, GlobPattern, RelativePattern, Uri, WorkspaceFolder } from 'vscode';
 import { createFileSystemWatcher, getWorkspaceFolder } from '../../../../common/vscodeApis/workspaceApis';
-import { isWindows } from '../../../../common/platform/platformService';
+import { isWindows } from '../../../../common/utils/platform';
 import { arePathsSame } from '../../../common/externalDependencies';
 import { FileChangeType } from '../../../../common/platform/fileSystemWatcher';
 
