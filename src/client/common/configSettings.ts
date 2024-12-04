@@ -36,8 +36,7 @@ import {
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
-import { getOSType, OSType } from './utils/platform';
-import { isWindows } from './platform/platformService';
+import { getOSType, OSType, isWindows } from './utils/platform';
 import { untildify } from './helpers';
 
 export class PythonSettings implements IPythonSettings {
