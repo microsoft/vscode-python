@@ -1,3 +1,4 @@
+/* eslint-disable class-methods-use-this */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -7,6 +8,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { clearTimeout, setTimeout } from 'timers';
 import { TextDocument } from 'vscode';
+import { createHash } from 'crypto';
 import { sendTelemetryEvent } from '.';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
@@ -52,9 +54,6 @@ export class ImportTracker implements IExtensionSingleActivationService {
     private pendingChecks = new Map<string, NodeJS.Timeout>();
 
     private static sentMatches: Set<string> = new Set<string>();
-
-    // eslint-disable-next-line global-require
-    private hashFn = require('hash.js').sha256;
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
@@ -120,7 +119,7 @@ export class ImportTracker implements IExtensionSingleActivationService {
         ImportTracker.sentMatches.add(packageName);
         // Hash the package name so that we will never accidentally see a
         // user's private package name.
-        const hash = this.hashFn().update(packageName).digest('hex');
+        const hash = createHash('sha256').update(packageName).digest('hex');
         sendTelemetryEvent(EventName.HASHED_PACKAGE_NAME, undefined, { hashedName: hash });
     }
 
