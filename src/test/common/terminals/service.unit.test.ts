@@ -107,6 +107,7 @@ suite('Terminal Service', () => {
             }
             return editorConfig.object;
         });
+        isWindowsStub.returns(false);
     });
     teardown(() => {
         if (service) {
