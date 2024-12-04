@@ -105,7 +105,7 @@ export class TerminalService implements ITerminalService, Disposable {
 
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || (isPythonShell && isWsl())) {
+        if (isPythonShell && (!pythonrcSetting || isWindows() || isWsl())) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
