@@ -24,7 +24,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
-import * as platformService from '../../../client/common/platform/platformService';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
