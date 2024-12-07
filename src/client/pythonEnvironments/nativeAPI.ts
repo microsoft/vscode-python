@@ -27,7 +27,7 @@ import { traceError, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind, NativePythonEnvironmentKind } from './base/locators/common/nativePythonUtils';
-import { setCondaBinary } from './common/environmentManagers/conda';
+import { getCondaEnvDirs, setCondaBinary } from './common/environmentManagers/conda';
 import { setPyEnvBinary } from './common/environmentManagers/pyenv';
 import {
     createPythonWatcher,
@@ -157,26 +157,40 @@ function getEnvType(kind: PythonEnvKind): PythonEnvType | undefined {
     }
 }
 
-function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
+function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind, condaEnvDirs: string[]): string {
     if (nativeEnv.name) {
         return nativeEnv.name;
     }
 
     const envType = getEnvType(kind);
-    if (nativeEnv.prefix && (envType === PythonEnvType.Conda || envType === PythonEnvType.Virtual)) {
+    if (nativeEnv.prefix && envType === PythonEnvType.Virtual) {
         return path.basename(nativeEnv.prefix);
     }
+
+    if (nativeEnv.prefix && envType === PythonEnvType.Conda) {
+        if (
+            condaEnvDirs.some((dir) => {
+                if (nativeEnv.prefix) {
+                    return path.normalize(nativeEnv.prefix).startsWith(path.normalize(dir));
+                }
+                return false;
+            })
+        ) {
+            return path.basename(nativeEnv.prefix);
+        }
+    }
+
     return '';
 }
 
-function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
+function toPythonEnvInfo(nativeEnv: NativeEnvInfo, condaEnvDirs: string[]): PythonEnvInfo | undefined {
     if (!validEnv(nativeEnv)) {
         return undefined;
     }
     const kind = categoryToKind(nativeEnv.kind);
     const arch = toArch(nativeEnv.arch);
     const version: PythonVersion = parseVersion(nativeEnv.version ?? '');
-    const name = getName(nativeEnv, kind);
+    const name = getName(nativeEnv, kind, condaEnvDirs);
     const displayName = nativeEnv.version
         ? getDisplayName(version, kind, arch, name)
         : nativeEnv.displayName ?? 'Python';
@@ -211,6 +225,9 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
 }
 
 function hasChanged(old: PythonEnvInfo, newEnv: PythonEnvInfo): boolean {
+    if (old.name !== newEnv.name) {
+        return true;
+    }
     if (old.executable.filename !== newEnv.executable.filename) {
         return true;
     }
@@ -246,6 +263,8 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     private _envs: PythonEnvInfo[] = [];
 
     private _disposables: Disposable[] = [];
+
+    private _condaEnvDirs: string[] = [];
 
     constructor(private readonly finder: NativePythonFinder) {
         this._onProgress = new EventEmitter<ProgressNotificationEvent>();
@@ -381,7 +400,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     }
 
     private addEnv(native: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
-        const info = toPythonEnvInfo(native);
+        const info = toPythonEnvInfo(native, this._condaEnvDirs);
         if (info) {
             const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
             if (old) {
@@ -417,6 +436,9 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         }
         const native = await this.finder.resolve(envPath);
         if (native) {
+            if (native.kind === NativePythonEnvironmentKind.Conda && this._condaEnvDirs.length === 0) {
+                this._condaEnvDirs = (await getCondaEnvDirs()) ?? [];
+            }
             return this.addEnv(native);
         }
         return undefined;

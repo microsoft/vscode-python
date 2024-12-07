@@ -495,6 +495,15 @@ export class Conda {
         );
     }
 
+    /**
+     * Retrieves list of directories where conda environments are stored.
+     */
+    @cache(30_000, true, 10_000)
+    public async getEnvDirs(): Promise<string[]> {
+        const info = await this.getInfo();
+        return info.envs_dirs ?? [];
+    }
+
     public async getName(prefix: string, info?: CondaInfo): Promise<string | undefined> {
         info = info ?? (await this.getInfo(true));
         if (info.root_prefix && arePathsSame(prefix, info.root_prefix)) {
@@ -618,4 +627,9 @@ export class Conda {
 
 export function setCondaBinary(executable: string): void {
     Conda.setConda(executable);
+}
+
+export async function getCondaEnvDirs(): Promise<string[] | undefined> {
+    const conda = await Conda.getConda();
+    return conda?.getEnvDirs();
 }
