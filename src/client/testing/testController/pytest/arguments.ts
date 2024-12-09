@@ -253,4 +253,3 @@ function pytestFilterArguments(args: string[], argumentToRemoveOrFilter: string[
     }
     return filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
 }
-

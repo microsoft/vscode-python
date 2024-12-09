@@ -17,7 +17,6 @@ export type TestDiscoveryOptions = {
     outChannel?: OutputChannel;
 };
 
-
 export type LaunchOptions = {
     cwd: string;
     args: string[];
@@ -28,7 +27,6 @@ export type LaunchOptions = {
     pytestUUID?: string;
     runTestIdsPort?: string;
 };
-
 
 export enum TestFilter {
     removeTests = 'removeTests',

@@ -52,8 +52,6 @@ export interface ITestFrameworkController {
 export const ITestsRunner = Symbol('ITestsRunner');
 export interface ITestsRunner {}
 
-
-
 // We expose these here as a convenience and to cut down on churn
 // elsewhere in the code.
 type RawTestNode = {
@@ -117,7 +115,6 @@ export type TestCommandOptions = {
     profileKind?: TestRunProfileKind;
     testIds?: string[];
 };
-
 
 // /**
 //  * Interface describing the server that will send test commands to the Python side, and process responses.
