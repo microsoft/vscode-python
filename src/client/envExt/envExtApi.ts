@@ -25,9 +25,8 @@ import {
     PythonEnvironmentApi,
 } from './types';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
-import { Architecture } from '../common/utils/platform';
+import { Architecture, isWindows } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
-import { isWindows } from '../common/platform/platformService';
 
 function getKind(pythonEnv: PythonEnvironment): PythonEnvKind {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
