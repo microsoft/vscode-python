@@ -13,7 +13,7 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
+import { ITestDebugLauncher } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { EnvironmentVariables } from '../../../common/variables/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
@@ -39,11 +39,6 @@ export interface TestData {
     kind: TestDataKinds;
 }
 
-export const ITestDiscoveryHelper = Symbol('ITestDiscoveryHelper');
-export interface ITestDiscoveryHelper {
-    runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]>;
-}
-
 export type TestRefreshOptions = { forceRefresh: boolean };
 
 export const ITestController = Symbol('ITestController');
@@ -65,24 +60,10 @@ export interface ITestRun {
 export const ITestFrameworkController = Symbol('ITestFrameworkController');
 export interface ITestFrameworkController {
     resolveChildren(testController: TestController, item: TestItem, token?: CancellationToken): Promise<void>;
-    refreshTestData(testController: TestController, resource?: Uri, token?: CancellationToken): Promise<void>;
-    runTests(
-        testRun: ITestRun,
-        workspace: WorkspaceFolder,
-        token: CancellationToken,
-        testController?: TestController,
-    ): Promise<void>;
 }
 
 export const ITestsRunner = Symbol('ITestsRunner');
-export interface ITestsRunner {
-    runTests(
-        testRun: ITestRun,
-        options: TestRunOptions,
-        idToRawData: Map<string, TestData>,
-        testController?: TestController,
-    ): Promise<void>;
-}
+export interface ITestsRunner {}
 
 export type TestRunOptions = {
     workspaceFolder: Uri;
