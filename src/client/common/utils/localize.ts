@@ -10,15 +10,6 @@ import { Commands } from '../constants';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
-    export const warnSourceMaps = l10n.t(
-        'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.',
-    );
-    export const disableSourceMaps = l10n.t('Disable Source Map Support');
-
-    export const warnBeforeEnablingSourceMaps = l10n.t(
-        'Enabling source map support in the Python Extension will adversely impact performance of the extension.',
-    );
-    export const enableSourceMapsAndReloadVSC = l10n.t('Enable and reload Window.');
     export const lsNotSupported = l10n.t(
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.',
     );

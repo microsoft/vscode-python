@@ -302,11 +302,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.enableSourceMapSupport",
-                "title": "%python.command.python.enableSourceMapSupport.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.execInTerminal",
                 "title": "%python.command.python.execInTerminal.title%"
             },
@@ -442,12 +437,6 @@
                     "markdownDescription": "%python.defaultInterpreterPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
-                },
-                "python.diagnostics.sourceMapsEnabled": {
-                    "default": false,
-                    "description": "%python.diagnostics.sourceMapsEnabled.description%",
-                    "scope": "application",
-                    "type": "boolean"
                 },
                 "python.envFile": {
                     "default": "${workspaceFolder}/.env",
@@ -1295,12 +1284,6 @@
                     "category": "Python",
                     "command": "python.createTerminal",
                     "title": "%python.command.python.createTerminal.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.enableSourceMapSupport",
-                    "title": "%python.command.python.enableSourceMapSupport.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
                 },
                 {

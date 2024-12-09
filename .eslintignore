@@ -17,8 +17,6 @@ src/test/proc.ts
 src/test/smokeTest.ts
 src/test/standardTest.ts
 src/test/startupTelemetry.unit.test.ts
-src/test/sourceMapSupport.test.ts
-src/test/sourceMapSupport.unit.test.ts
 src/test/testBootstrap.ts
 src/test/testLogger.ts
 src/test/testRunner.ts
@@ -129,7 +127,6 @@ src/test/application/diagnostics/checks/invalidPythonPathInDebugger.unit.test.ts
 src/test/application/diagnostics/checks/envPathVariable.unit.test.ts
 src/test/application/diagnostics/applicationDiagnostics.unit.test.ts
 src/test/application/diagnostics/promptHandler.unit.test.ts
-src/test/application/diagnostics/sourceMapSupportService.unit.test.ts
 src/test/application/diagnostics/commands/ignore.unit.test.ts
 
 src/test/performance/load.perf.test.ts
@@ -145,7 +142,6 @@ src/client/interpreter/virtualEnvs/condaInheritEnvPrompt.ts
 src/client/interpreter/display/index.ts
 
 src/client/extension.ts
-src/client/sourceMapSupport.ts
 src/client/startupTelemetry.ts
 
 src/client/terminals/codeExecution/terminalCodeExecution.ts

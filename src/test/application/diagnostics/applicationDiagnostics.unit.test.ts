@@ -10,12 +10,7 @@ import { DiagnosticSeverity } from 'vscode';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService } from '../../../client/application/diagnostics/checks/envPathVariable';
 import { InvalidPythonInterpreterService } from '../../../client/application/diagnostics/checks/pythonInterpreter';
-import {
-    DiagnosticScope,
-    IDiagnostic,
-    IDiagnosticsService,
-    ISourceMapSupportService,
-} from '../../../client/application/diagnostics/types';
+import { DiagnosticScope, IDiagnostic, IDiagnosticsService } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { createDeferred, createDeferredFromPromise } from '../../../client/common/utils/async';
@@ -60,19 +55,6 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
     teardown(() => {
         process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
         process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
-    });
-
-    test('Register should register source maps', () => {
-        const sourceMapService = typemoq.Mock.ofType<ISourceMapSupportService>();
-        sourceMapService.setup((s) => s.register()).verifiable(typemoq.Times.once());
-
-        serviceContainer
-            .setup((d) => d.get(typemoq.It.isValue(ISourceMapSupportService), typemoq.It.isAny()))
-            .returns(() => sourceMapService.object);
-
-        appDiagnostics.register();
-
-        sourceMapService.verifyAll();
     });
 
     test('Performing Pre Startup Health Check must diagnose all validation checks', async () => {

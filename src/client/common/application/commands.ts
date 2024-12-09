@@ -34,7 +34,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
     [Commands.Start_REPL]: [];
-    [Commands.Enable_SourceMap_Support]: [];
     [Commands.Exec_Selection_In_Terminal]: [];
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
