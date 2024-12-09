@@ -105,8 +105,6 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-        // const pythonVersion = await this.getPythonVersion();
-        // const isPython313 = pythonVersion?.startsWith('3.13');
 
         let isPython313 = false;
         if (this.options && this.options.resource) {
@@ -192,17 +190,4 @@ export class TerminalService implements ITerminalService, Disposable {
             interpreterType,
         });
     }
-
-    // private async getPythonVersion(): Promise<string | undefined> {
-    //     const pythonPath = this.serviceContainer
-    //         .get<IConfigurationService>(IConfigurationService)
-    //         .getSettings(this.options?.resource).pythonPath;
-    //     const interpreterInfo =
-    //         this.options?.interpreter ||
-    //         (await this.serviceContainer
-    //             .get<IInterpreterService>(IInterpreterService)
-    //             .getInterpreterDetails(pythonPath));
-    //     const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
-    //     return pythonVersion;
-    // }
 }
