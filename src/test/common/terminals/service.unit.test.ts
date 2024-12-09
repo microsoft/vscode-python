@@ -243,7 +243,7 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
-    test('Ensure sendText is NOT called when Python shell integration and terminal shell integration are both enabled - Mac, Linux', async () => {
+    test('Ensure sendText is NOT called when Python shell integration and terminal shell integration are both enabled - Mac, Linux - !Python3.13', async () => {
         isWindowsStub.returns(false);
         pythonConfig
             .setup((p) => p.get('terminal.shellIntegration.enabled'))
