@@ -4,7 +4,6 @@
 import { IExtensionActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { DebugLauncher } from './common/debugLauncher';
-import { TestRunner } from './common/runner';
 import { TestConfigSettingsService } from './common/configSettingService';
 import { TestsHelper } from './common/testUtils';
 import {
@@ -12,7 +11,6 @@ import {
     ITestConfigurationManagerFactory,
     ITestConfigurationService,
     ITestDebugLauncher,
-    ITestRunner,
     ITestsHelper,
     IUnitTestSocketServer,
 } from './common/types';
@@ -28,8 +26,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
     serviceManager.add<IUnitTestSocketServer>(IUnitTestSocketServer, UnitTestSocketServer);
-
-    serviceManager.add<ITestRunner>(ITestRunner, TestRunner);
 
     serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
     serviceManager.addSingleton<ITestingService>(ITestingService, TestingService);

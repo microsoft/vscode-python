@@ -100,8 +100,3 @@ export interface IUnitTestSocketServer extends Disposable {
     start(options?: { port?: number; host?: string }): Promise<number>;
     stop(): void;
 }
-
-export const ITestRunner = Symbol('ITestRunner');
-export interface ITestRunner {
-    run(testProvider: TestProvider, options: Options): Promise<string>;
-}
