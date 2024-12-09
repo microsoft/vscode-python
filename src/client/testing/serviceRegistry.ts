@@ -12,20 +12,17 @@ import {
     ITestConfigurationService,
     ITestDebugLauncher,
     ITestsHelper,
-    IUnitTestSocketServer,
 } from './common/types';
 import { UnitTestConfigurationService } from './configuration';
 import { TestConfigurationManagerFactory } from './configurationFactory';
 import { TestingService, UnitTestManagementService } from './main';
 import { ITestingService } from './types';
-import { UnitTestSocketServer } from './common/socketServer';
 import { registerTestControllerTypes } from './testController/serviceRegistry';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, DebugLauncher);
 
     serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
-    serviceManager.add<IUnitTestSocketServer>(IUnitTestSocketServer, UnitTestSocketServer);
 
     serviceManager.addSingleton<ITestConfigurationService>(ITestConfigurationService, UnitTestConfigurationService);
     serviceManager.addSingleton<ITestingService>(ITestingService, TestingService);

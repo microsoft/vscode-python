@@ -9,10 +9,9 @@ import { IProcessServiceFactory } from '../../client/common/process/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { TestsHelper } from '../../client/testing/common/testUtils';
-import { ITestsHelper, IUnitTestSocketServer } from '../../client/testing/common/types';
+import { ITestsHelper } from '../../client/testing/common/types';
 import { getPythonSemVer } from '../common';
 import { IocContainer } from '../serviceRegistry';
-import { MockUnitTestSocketServer } from './mocks';
 
 export class UnitTestIocContainer extends IocContainer {
     public async getPythonMajorVersion(resource: Uri): Promise<number> {
@@ -31,9 +30,5 @@ export class UnitTestIocContainer extends IocContainer {
 
     public registerInterpreterStorageTypes(): void {
         this.serviceManager.add<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
-    }
-
-    public registerMockUnitTestSocketServer(): void {
-        this.serviceManager.addSingleton<IUnitTestSocketServer>(IUnitTestSocketServer, MockUnitTestSocketServer);
     }
 }
