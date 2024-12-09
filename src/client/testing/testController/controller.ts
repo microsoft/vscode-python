@@ -465,30 +465,22 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                             );
                         }
                         if (settings.testing.unittestEnabled) {
-                                                                  sendTelemetryEvent(
-                                                                      EventName.UNITTEST_RUN,
-                                                                      undefined,
-                                                                      {
-                                                                          tool: 'unittest',
-                                                                          debugging:
-                                                                              request.profile?.kind ===
-                                                                              TestRunProfileKind.Debug,
-                                                                      },
-                                                                  );
-                                                                  // ** experiment to roll out NEW test discovery mechanism
-                                                                  return testAdapter.executeTests(
-                                                                      this.testController,
-                                                                      runInstance,
-                                                                      testItems,
-                                                                      token,
-                                                                      request.profile?.kind,
-                                                                      this.pythonExecFactory,
-                                                                      this.debugLauncher,
-                                                                      await this.interpreterService.getActiveInterpreter(
-                                                                          workspace.uri,
-                                                                      ),
-                                                                  );
-                                                              }
+                            sendTelemetryEvent(EventName.UNITTEST_RUN, undefined, {
+                                tool: 'unittest',
+                                debugging: request.profile?.kind === TestRunProfileKind.Debug,
+                            });
+                            // ** experiment to roll out NEW test discovery mechanism
+                            return testAdapter.executeTests(
+                                this.testController,
+                                runInstance,
+                                testItems,
+                                token,
+                                request.profile?.kind,
+                                this.pythonExecFactory,
+                                this.debugLauncher,
+                                await this.interpreterService.getActiveInterpreter(workspace.uri),
+                            );
+                        }
                     }
                     if (!settings.testing.pytestEnabled && !settings.testing.unittestEnabled) {
                         unconfiguredWorkspaces.push(workspace);

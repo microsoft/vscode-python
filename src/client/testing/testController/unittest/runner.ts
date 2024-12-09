@@ -4,8 +4,8 @@
 import { ITestsRunner } from '../common/types';
 
 export class UnittestRunner implements ITestsRunner {
-           // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-           constructor() {
-               // not used, but required for DI
-           }
-       }
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
+    constructor() {
+        // not used, but required for DI
+    }
+}

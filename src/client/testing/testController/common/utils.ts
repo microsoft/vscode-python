@@ -19,7 +19,6 @@ import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
-
 export function fixLogLinesNoTrailing(content: string): string {
     const lines = content.split(/\r?\n/g);
     return `${lines.join('\r\n')}`;
@@ -34,7 +33,6 @@ export const MESSAGE_ON_TESTING_OUTPUT_MOVE =
 export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
-
 
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload;
