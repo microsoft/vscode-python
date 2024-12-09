@@ -22,6 +22,7 @@ import {
 import { traceVerbose } from '../../logging';
 import { getConfiguration } from '../vscodeApis/workspaceApis';
 import { isWindows } from '../utils/platform';
+import { getActiveInterpreter } from '../../repl/replUtils';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -107,7 +108,16 @@ export class TerminalService implements ITerminalService, Disposable {
         // const pythonVersion = await this.getPythonVersion();
         // const isPython313 = pythonVersion?.startsWith('3.13');
 
-        if (isPythonShell && (!pythonrcSetting || isWindows())) {
+        let isPython313 = false;
+        if (this.options && this.options.resource) {
+            const pythonVersion = await getActiveInterpreter(
+                this.options.resource,
+                this.serviceContainer.get<IInterpreterService>(IInterpreterService),
+            );
+            pythonVersion?.sysVersion?.startsWith('3.13');
+        }
+
+        if (isPythonShell && (!pythonrcSetting || isWindows() || isPython313)) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;

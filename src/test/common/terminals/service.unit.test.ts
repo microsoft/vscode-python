@@ -25,6 +25,8 @@ import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as platform from '../../../client/common/utils/platform';
+import { IInterpreterService } from '../../../client/interpreter/contracts';
+import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
@@ -44,6 +46,7 @@ suite('Terminal Service', () => {
     let pythonConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let editorConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let isWindowsStub: sinon.SinonStub;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
 
     setup(() => {
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
@@ -87,6 +90,10 @@ suite('Terminal Service', () => {
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
 
         mockServiceContainer.setup((c) => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup((c) => c.get(ITerminalHelper)).returns(() => terminalHelper.object);
@@ -95,6 +102,8 @@ suite('Terminal Service', () => {
         mockServiceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspaceService.object);
         mockServiceContainer.setup((c) => c.get(ITerminalActivator)).returns(() => terminalActivator.object);
         mockServiceContainer.setup((c) => c.get(ITerminalAutoActivation)).returns(() => terminalAutoActivator.object);
+        mockServiceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
+
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         isWindowsStub = sinon.stub(platform, 'isWindows');
         pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
