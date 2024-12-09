@@ -1,4 +1,4 @@
-import { CancellationToken, DebugSessionOptions, Disposable, OutputChannel, Uri } from 'vscode';
+import { CancellationToken, DebugSessionOptions, OutputChannel, Uri } from 'vscode';
 import { Product } from '../../common/types';
 import { TestSettingsPropertyNames } from '../configuration/types';
 import { TestProvider } from '../types';
@@ -17,8 +17,6 @@ export type TestDiscoveryOptions = {
     outChannel?: OutputChannel;
 };
 
-export type UnitTestParserOptions = TestDiscoveryOptions & { startDirectory: string };
-
 export type LaunchOptions = {
     cwd: string;
     args: string[];
@@ -28,16 +26,6 @@ export type LaunchOptions = {
     pytestPort?: string;
     pytestUUID?: string;
     runTestIdsPort?: string;
-};
-
-export type ParserOptions = TestDiscoveryOptions;
-
-export type Options = {
-    workspaceFolder: Uri;
-    cwd: string;
-    args: string[];
-    outChannel?: OutputChannel;
-    token?: CancellationToken;
 };
 
 export enum TestFilter {
@@ -90,18 +78,4 @@ export interface ITestConfigurationManagerFactory {
 export const ITestDebugLauncher = Symbol('ITestDebugLauncher');
 export interface ITestDebugLauncher {
     launchDebugger(options: LaunchOptions, callback?: () => void, sessionOptions?: DebugSessionOptions): Promise<void>;
-}
-
-export const IUnitTestSocketServer = Symbol('IUnitTestSocketServer');
-export interface IUnitTestSocketServer extends Disposable {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    on(event: string | symbol, listener: (...args: any[]) => void): this;
-    removeAllListeners(event?: string | symbol): this;
-    start(options?: { port?: number; host?: string }): Promise<number>;
-    stop(): void;
-}
-
-export const ITestRunner = Symbol('ITestRunner');
-export interface ITestRunner {
-    run(testProvider: TestProvider, options: Options): Promise<string>;
 }
