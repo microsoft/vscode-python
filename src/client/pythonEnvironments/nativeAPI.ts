@@ -23,7 +23,7 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import { Architecture, getUserHomeDir } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
 import { cache } from '../common/utils/decorators';
-import { traceError, traceLog, traceWarn } from '../logging';
+import { traceError, traceInfo, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind, NativePythonEnvironmentKind } from './base/locators/common/nativePythonUtils';
@@ -157,6 +157,15 @@ function getEnvType(kind: PythonEnvKind): PythonEnvType | undefined {
     }
 }
 
+function isSubDir(pathToCheck: string | undefined, parents: string[]): boolean {
+    return parents.some((prefix) => {
+        if (pathToCheck) {
+            return path.normalize(pathToCheck).startsWith(path.normalize(prefix));
+        }
+        return false;
+    });
+}
+
 function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind, condaEnvDirs: string[]): string {
     if (nativeEnv.name) {
         return nativeEnv.name;
@@ -168,14 +177,18 @@ function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind, condaEnvDirs: st
     }
 
     if (nativeEnv.prefix && envType === PythonEnvType.Conda) {
-        if (
-            condaEnvDirs.some((dir) => {
-                if (nativeEnv.prefix) {
-                    return path.normalize(nativeEnv.prefix).startsWith(path.normalize(dir));
-                }
-                return false;
-            })
-        ) {
+        if (nativeEnv.name === 'base') {
+            return 'base';
+        }
+
+        const workspaces = (getWorkspaceFolders() ?? []).map((wf) => wf.uri.fsPath);
+        if (isSubDir(nativeEnv.prefix, workspaces)) {
+            traceInfo(`Conda env is --prefix environment: ${nativeEnv.prefix}`);
+            return '';
+        }
+
+        if (condaEnvDirs.length > 0 && isSubDir(nativeEnv.prefix, condaEnvDirs)) {
+            traceInfo(`Conda env is --named environment: ${nativeEnv.prefix}`);
             return path.basename(nativeEnv.prefix);
         }
     }
