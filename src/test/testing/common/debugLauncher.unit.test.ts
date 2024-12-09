@@ -29,7 +29,6 @@ import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { TestProvider } from '../../../client/testing/types';
 import { isOs, OSType } from '../../common';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import * as util from '../../../client/testing/testController/common/utils';
 import { createDeferred } from '../../../client/common/utils/async';
 
 use(chaiAsPromised.default);
@@ -47,7 +46,6 @@ suite('Unit Tests - Debug Launcher', () => {
     let getWorkspaceFoldersStub: sinon.SinonStub;
     let pathExistsStub: sinon.SinonStub;
     let readFileStub: sinon.SinonStub;
-    let pythonTestAdapterRewriteEnabledStub: sinon.SinonStub;
     const envVars = { FOO: 'BAR' };
 
     setup(async () => {
@@ -68,8 +66,6 @@ suite('Unit Tests - Debug Launcher', () => {
         getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
         pathExistsStub = sinon.stub(fs, 'pathExists');
         readFileStub = sinon.stub(fs, 'readFile');
-        pythonTestAdapterRewriteEnabledStub = sinon.stub(util, 'pythonTestAdapterRewriteEnabled');
-        pythonTestAdapterRewriteEnabledStub.returns(false);
 
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));

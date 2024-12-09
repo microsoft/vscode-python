@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as net from 'net';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -8,9 +7,6 @@ import * as crypto from 'crypto';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
-import { IExperimentService } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
 import {
     DiscoveredTestItem,
@@ -61,48 +57,6 @@ export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
-export function extractJsonPayload(rawData: string, uuids: Array<string>): ExtractOutput {
-    /**
-     * Extracts JSON-RPC payload from the provided raw data.
-     * @param {string} rawData - The raw string data from which the JSON payload will be extracted.
-     * @param {Array<string>} uuids - The list of UUIDs that are active.
-     * @returns {string} The remaining raw data after the JSON payload is extracted.
-     */
-
-    const rpcHeaders: ParsedRPCHeadersAndData = parseJsonRPCHeadersAndData(rawData);
-
-    // verify the RPC has a UUID and that it is recognized
-    let uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
-    uuid = checkUuid(uuid, uuids);
-
-    const payloadLength = rpcHeaders.headers.get('Content-Length');
-
-    // separate out the data within context length of the given payload from the remaining data in the buffer
-    const rpcContent: IJSONRPCData = ExtractJsonRPCData(payloadLength, rpcHeaders.remainingRawData);
-    const cleanedJsonData = rpcContent.extractedJSON;
-    const { remainingRawData } = rpcContent;
-
-    // if the given payload has the complete json, process it otherwise wait for the rest in the buffer
-    if (cleanedJsonData.length === Number(payloadLength)) {
-        // call to process this data
-        // remove this data from the buffer
-        return { uuid, cleanedJsonData, remainingRawData };
-    }
-    // wait for the remaining
-    return { uuid: undefined, cleanedJsonData: undefined, remainingRawData: rawData };
-}
-
-export function checkUuid(uuid: string | undefined, uuids: Array<string>): string | undefined {
-    if (!uuid) {
-        // no UUID found, this could occurred if the payload is full yet so send back without erroring
-        return undefined;
-    }
-    if (!uuids.includes(uuid)) {
-        // no UUID found, this could occurred if the payload is full yet so send back without erroring
-        throw new Error('On data received: Error occurred because the payload UUID is not recognized');
-    }
-    return uuid;
-}
 
 export function parseJsonRPCHeadersAndData(rawData: string): ParsedRPCHeadersAndData {
     /**
@@ -162,11 +116,6 @@ export function ExtractJsonRPCData(payloadLength: string | undefined, rawData: s
         extractedJSON: data,
         remainingRawData,
     };
-}
-
-export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContainer): boolean {
-    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
-    return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
 interface ExecutionResultMessage extends Message {
@@ -295,63 +244,6 @@ export async function startDiscoveryNamedPipe(
         }),
     );
     return pipeName;
-}
-
-export async function startTestIdServer(testIds: string[]): Promise<number> {
-    const startServer = (): Promise<number> =>
-        new Promise((resolve, reject) => {
-            const server = net.createServer((socket: net.Socket) => {
-                // Convert the test_ids array to JSON
-                const testData = JSON.stringify(testIds);
-
-                // Create the headers
-                const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-
-                // Create the payload by concatenating the headers and the test data
-                const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
-
-                // Send the payload to the socket
-                socket.write(payload);
-
-                // Handle socket events
-                socket.on('data', (data) => {
-                    traceLog('Received data:', data.toString());
-                });
-
-                socket.on('end', () => {
-                    traceLog('Client disconnected');
-                });
-            });
-
-            server.listen(0, () => {
-                const { port } = server.address() as net.AddressInfo;
-                traceLog(`Server listening on port ${port}`);
-                resolve(port);
-            });
-
-            server.on('error', (error: Error) => {
-                reject(error);
-            });
-        });
-
-    // Start the server and wait until it is listening
-    let returnPort = 0;
-    try {
-        await startServer()
-            .then((assignedPort) => {
-                traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
-                returnPort = assignedPort;
-            })
-            .catch((error) => {
-                traceError('Error starting server for pytest test ids server:', error);
-                return 0;
-            })
-            .finally(() => returnPort);
-        return returnPort;
-    } catch {
-        traceError('Error starting server for pytest test ids server, cannot get port.');
-        return returnPort;
-    }
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
