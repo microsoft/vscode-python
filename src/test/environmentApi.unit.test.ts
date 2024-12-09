@@ -38,6 +38,7 @@ import {
     EnvironmentsChangeEvent,
     PythonExtension,
 } from '../client/api/types';
+import { JupyterPythonEnvironmentApi } from '../client/jupyter/jupyterIntegration';
 
 suite('Python Environment API', () => {
     const workspacePath = 'path/to/workspace';
@@ -80,7 +81,6 @@ suite('Python Environment API', () => {
         onDidChangeRefreshState = new EventEmitter();
         onDidChangeEnvironments = new EventEmitter();
         onDidChangeEnvironmentVariables = new EventEmitter();
-
         serviceContainer.setup((s) => s.get(IExtensions)).returns(() => extensions.object);
         serviceContainer.setup((s) => s.get(IInterpreterPathService)).returns(() => interpreterPathService.object);
         serviceContainer.setup((s) => s.get(IConfigurationService)).returns(() => configService.object);
@@ -94,8 +94,13 @@ suite('Python Environment API', () => {
         discoverAPI.setup((d) => d.onProgress).returns(() => onDidChangeRefreshState.event);
         discoverAPI.setup((d) => d.onChanged).returns(() => onDidChangeEnvironments.event);
         discoverAPI.setup((d) => d.getEnvs()).returns(() => []);
+        const onDidChangePythonEnvironment = new EventEmitter<Uri>();
+        const jupyterApi: JupyterPythonEnvironmentApi = {
+            onDidChangePythonEnvironment: onDidChangePythonEnvironment.event,
+            getPythonEnvironment: (_uri: Uri) => undefined,
+        };
 
-        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object);
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object, jupyterApi);
     });
 
     teardown(() => {
@@ -323,7 +328,12 @@ suite('Python Environment API', () => {
             },
         ];
         discoverAPI.setup((d) => d.getEnvs()).returns(() => envs);
-        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object);
+        const onDidChangePythonEnvironment = new EventEmitter<Uri>();
+        const jupyterApi: JupyterPythonEnvironmentApi = {
+            onDidChangePythonEnvironment: onDidChangePythonEnvironment.event,
+            getPythonEnvironment: (_uri: Uri) => undefined,
+        };
+        environmentApi = buildEnvironmentApi(discoverAPI.object, serviceContainer.object, jupyterApi);
         const actual = environmentApi.known;
         const actualEnvs = actual?.map((a) => (a as EnvironmentReference).internal);
         assert.deepEqual(
