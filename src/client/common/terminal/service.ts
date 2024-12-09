@@ -104,8 +104,8 @@ export class TerminalService implements ITerminalService, Disposable {
         }
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-        const pythonVersion = await this.getPythonVersion();
-        const isPython313 = pythonVersion?.startsWith('3.13');
+        // const pythonVersion = await this.getPythonVersion();
+        // const isPython313 = pythonVersion?.startsWith('3.13');
 
         if (isPythonShell && (!pythonrcSetting || isWindows())) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
@@ -183,16 +183,16 @@ export class TerminalService implements ITerminalService, Disposable {
         });
     }
 
-    private async getPythonVersion(): Promise<string | undefined> {
-        const pythonPath = this.serviceContainer
-            .get<IConfigurationService>(IConfigurationService)
-            .getSettings(this.options?.resource).pythonPath;
-        const interpreterInfo =
-            this.options?.interpreter ||
-            (await this.serviceContainer
-                .get<IInterpreterService>(IInterpreterService)
-                .getInterpreterDetails(pythonPath));
-        const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
-        return pythonVersion;
-    }
+    // private async getPythonVersion(): Promise<string | undefined> {
+    //     const pythonPath = this.serviceContainer
+    //         .get<IConfigurationService>(IConfigurationService)
+    //         .getSettings(this.options?.resource).pythonPath;
+    //     const interpreterInfo =
+    //         this.options?.interpreter ||
+    //         (await this.serviceContainer
+    //             .get<IInterpreterService>(IInterpreterService)
+    //             .getInterpreterDetails(pythonPath));
+    //     const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
+    //     return pythonVersion;
+    // }
 }
