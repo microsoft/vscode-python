@@ -102,10 +102,22 @@ export class TerminalService implements ITerminalService, Disposable {
             });
             await promise;
         }
-
+        // TODO: need to use sendText for Python3.13 as well.
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows())) {
+
+        const pythonPath = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(this.options?.resource).pythonPath;
+        const interpreterInfo =
+            this.options?.interpreter ||
+            (await this.serviceContainer
+                .get<IInterpreterService>(IInterpreterService)
+                .getInterpreterDetails(pythonPath));
+        const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
+        const isPython313 = pythonVersion?.startsWith('3.13');
+
+        if (isPythonShell && (!pythonrcSetting || isWindows() || isWsl() || isPython313)) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
