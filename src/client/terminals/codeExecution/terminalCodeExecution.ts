@@ -5,20 +5,23 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, TerminalShellExecutionStartEvent, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import { Diagnostics, Repl } from '../../common/utils/localize';
-import { showWarningMessage } from '../../common/vscodeApis/windowApis';
+import { Common, Diagnostics, Repl } from '../../common/utils/localize';
+import { onDidStartTerminalShellExecution, showWarningMessage } from '../../common/vscodeApis/windowApis';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceInfo } from '../../logging';
 import { buildPythonExecInfo, PythonExecInfo } from '../../pythonEnvironments/exec';
 import { ICodeExecutionService } from '../../terminals/types';
 import { EventName } from '../../telemetry/constants';
 import { sendTelemetryEvent } from '../../telemetry';
+import { getActiveInterpreter } from '../../repl/replUtils';
+import { getNativeRepl } from '../../repl/nativeRepl';
+import { checkREPLCommand } from './terminalReplWatcher';
 
 @injectable()
 export class TerminalCodeExecutionProvider implements ICodeExecutionService {
@@ -63,11 +66,43 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         }
     }
 
+    public suggestNativeRepl(resource: Resource) {
+        this.disposables.push(
+            onDidStartTerminalShellExecution(async (e: TerminalShellExecutionStartEvent) => {
+                if (e.execution.commandLine.isTrusted && checkREPLCommand(e.execution.commandLine.value)) {
+                    sendTelemetryEvent(EventName.REPL, undefined, { replType: 'manualTerminal' });
+                    const selection = await showWarningMessage(
+                        Repl.terminalSuggestNativeReplPrompt,
+                        Common.doNotShowAgain,
+                    );
+                    if (selection === Repl.terminalSuggestNativeReplPrompt) {
+                        sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Native' });
+                        const interpreter = await getActiveInterpreter(resource as Uri, this.interpreterService);
+                        if (interpreter) {
+                            const nativeRepl = await getNativeRepl(interpreter, this.disposables);
+                            await nativeRepl.sendToNativeRepl(undefined, false);
+                        }
+                    }
+                }
+            }),
+        );
+    }
+
     public async initializeRepl(resource: Resource) {
         const terminalService = this.getTerminalService(resource);
+        if (!this.replActive) {
+            this.suggestNativeRepl(resource);
+        }
         if (this.replActive && (await this.replActive)) {
             await terminalService.show();
             return;
+        } else {
+            // Suggest launch of Native REPL
+            const interpreter = await getActiveInterpreter(resource!, this.interpreterService);
+            if (interpreter) {
+                const nativeRepl = await getNativeRepl(interpreter, this.disposables);
+                await nativeRepl.sendToNativeRepl(undefined, false);
+            }
         }
         sendTelemetryEvent(EventName.REPL, undefined, { replType: 'Terminal' });
         this.replActive = new Promise<boolean>(async (resolve) => {
