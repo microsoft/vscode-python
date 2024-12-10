@@ -15,6 +15,7 @@ import { PytestTestExecutionAdapter } from '../../../client/testing/testControll
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import * as util from '../../../client/testing/testController/common/utils';
+import * as extapi from '../../../client/envExt/api.internal';
 
 const adapters: Array<string> = ['pytest', 'unittest'];
 
@@ -32,7 +33,11 @@ suite('Execution Flow Run Adapters', () => {
     let utilsStartRunResultNamedPipe: sinon.SinonStub;
     let serverDisposeStub: sinon.SinonStub;
 
+    let useEnvExtensionStub: sinon.SinonStub;
+
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
         // general vars
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
         configService = ({

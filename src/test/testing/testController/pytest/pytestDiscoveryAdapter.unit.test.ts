@@ -20,6 +20,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { Deferred, createDeferred } from '../../../../client/common/utils/async';
 import * as util from '../../../../client/testing/testController/common/utils';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('pytest test discovery adapter', () => {
     let configService: IConfigurationService;
@@ -34,8 +35,12 @@ suite('pytest test discovery adapter', () => {
     let mockProc: MockChildProcess;
     let deferred2: Deferred<void>;
     let utilsStartDiscoveryNamedPipeStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         const mockExtensionRootDir = typeMoq.Mock.ofType<string>();
         mockExtensionRootDir.setup((m) => m.toString()).returns(() => '/mocked/extension/root/dir');
 
