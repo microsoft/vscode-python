@@ -79,7 +79,7 @@
     "python.testing.promptToConfigure.description": "Prompt to configure a test framework if potential tests directories are discovered.",
     "python.testing.pytestArgs.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.testing.pytestEnabled.description": "Enable testing using pytest.",
-    "python.testing.pytestPath.description": "Path to pytest (pytest), you can use a custom version of pytest by modifying this setting to include the full path.",
+    "python.testing.pytestPath.description": "Path to pytest. You can use a custom version of pytest by modifying this setting to include the full path.",
     "python.testing.unittestArgs.description": "Arguments passed in. Each argument is a separate item in the array.",
     "python.testing.unittestEnabled.description": "Enable testing using unittest.",
     "python.venvFolders.description": "Folders in your home directory to look into for virtual environments (supports pyenv, direnv and virtualenvwrapper by default).",
