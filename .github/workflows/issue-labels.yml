@@ -5,7 +5,7 @@ on:
     types: [opened, reopened]
 
 env:
-  TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd","anthonykim1"]'
+  TRIAGERS: '["karthiknadig","eleanorjboyd","anthonykim1"]'
 
 permissions:
   issues: write
