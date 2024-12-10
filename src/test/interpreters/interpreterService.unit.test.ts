@@ -37,6 +37,7 @@ import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as proposedApi from '../../client/environmentApi';
 import { createTypeMoq } from '../mocks/helper';
+import * as extapi from '../../client/envExt/api.internal';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -62,8 +63,12 @@ suite('Interpreters service', () => {
     let installer: TypeMoq.IMock<IInstaller>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let reportActiveInterpreterChangedStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
