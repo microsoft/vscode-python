@@ -106,7 +106,7 @@ ${data}${secondPayload}`;
         assert.deepStrictEqual(rpcContent.remainingRawData, '');
     });
 
-    suite('Test Controller Utils: Other', () => {
+    suite('Test Controller Utils: Unittest', () => {
         interface TestCase {
             name: string;
             input: string;
@@ -155,11 +155,55 @@ ${data}${secondPayload}`;
 
         testCases.forEach((testCase) => {
             test(`splitTestNameWithRegex: ${testCase.name}`, () => {
-                const splitResult = splitTestNameWithRegex(testCase.input);
+                const splitResult = splitTestNameWithRegex(testCase.input, 'unittest');
                 assert.deepStrictEqual(splitResult, [testCase.expectedParent, testCase.expectedSubtest]);
             });
         });
     });
+
+    suite('Test Controller Utils: Pytest', () => {
+        interface TestCase {
+            name: string;
+            input: string;
+            expectedParent: string;
+            expectedSubtest: string;
+        }
+
+        const testCases: Array<TestCase> = [
+            {
+                name: 'basic example',
+                input: 'test_pytest_subtests_plugin.py::test_a**{test_a [Second subtest]}**',
+                expectedParent: 'test_pytest_subtests_plugin.py::test_a',
+                expectedSubtest: 'test_a [Second subtest]',
+            },
+            {
+                name: 'duplicate name',
+                input: 'test_pytest_subtests_plugin.py::test_a**{test_a [test_a]}**',
+                expectedParent: 'test_pytest_subtests_plugin.py::test_a',
+                expectedSubtest: 'test_a [test_a]',
+            },
+            {
+                name: 'weird characters name',
+                input: 'test_pytest_subtests_plugin.py::L34Tc**{test_a111 [test_a]}**',
+                expectedParent: 'test_pytest_subtests_plugin.py::L34Tc',
+                expectedSubtest: 'test_a111 [test_a]',
+            },
+            {
+                name: 'name with stars',
+                input: 'test_pytest_subtests_plugin.py::L34Tc**{test_a111**** [test_a]}**',
+                expectedParent: 'test_pytest_subtests_plugin.py::L34Tc',
+                expectedSubtest: 'test_a111**** [test_a]',
+            },
+        ];
+
+        testCases.forEach((testCase) => {
+            test(`splitTestNameWithRegex: ${testCase.name}`, () => {
+                const splitResult = splitTestNameWithRegex(testCase.input, 'pytest');
+                assert.deepStrictEqual(splitResult, [testCase.expectedParent, testCase.expectedSubtest]);
+            });
+        });
+    });
+
     suite('Test Controller Utils: Args Mapping', () => {
         suite('addValueIfKeyNotExist', () => {
             test('should add key-value pair if key does not exist', () => {

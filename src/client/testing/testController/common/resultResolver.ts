@@ -242,7 +242,7 @@ export class PythonResultResolver implements ITestResultResolver {
                     }
                 } else if (testItem.outcome === 'subtest-failure') {
                     // split on [] or () based on how the subtest is setup.
-                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
+                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp, this.testProvider);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
                     const data = testItem;
                     // find the subtest's parent test item
@@ -284,7 +284,7 @@ export class PythonResultResolver implements ITestResultResolver {
                     }
                 } else if (testItem.outcome === 'subtest-success') {
                     // split on [] or () based on how the subtest is setup.
-                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
+                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp, this.testProvider);
                     const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
 
                     // find the subtest's parent test item
