@@ -26,6 +26,7 @@ import {
 import { ITestDebugLauncher, LaunchOptions } from '../../common/types';
 import { UNITTEST_PROVIDER } from '../../common/constants';
 import * as utils from '../common/utils';
+import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
 
 /**
  * Wrapper Class for unittest test execution. This is where we call `runTestCommand`?
@@ -182,6 +183,47 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     },
                     sessionOptions,
                 );
+            } else if (useEnvExtension()) {
+                const pythonEnv = await getEnvironment(uri);
+                if (pythonEnv) {
+                    traceInfo(`Running unittest with arguments: ${args.join(' ')} for workspace ${uri.fsPath} \r\n`);
+                    const deferredTillExecClose = createDeferred();
+
+                    const proc = await runInBackground(pythonEnv, {
+                        cwd,
+                        args,
+                        env: (mutableEnv as unknown) as { [key: string]: string },
+                    });
+                    runInstance?.token.onCancellationRequested(() => {
+                        traceInfo(`Test run cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
+                        proc.kill();
+                        deferredTillExecClose.resolve();
+                        serverCancel.cancel();
+                    });
+                    proc.stdout.on('data', (data) => {
+                        const out = utils.fixLogLinesNoTrailing(data.toString());
+                        runInstance?.appendOutput(out);
+                        this.outputChannel?.append(out);
+                    });
+                    proc.stderr.on('data', (data) => {
+                        const out = utils.fixLogLinesNoTrailing(data.toString());
+                        runInstance?.appendOutput(out);
+                        this.outputChannel?.append(out);
+                    });
+                    proc.onExit((code, signal) => {
+                        this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
+                        if (code !== 0) {
+                            traceError(
+                                `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                            );
+                        }
+                        deferredTillExecClose.resolve();
+                        serverCancel.cancel();
+                    });
+                    await deferredTillExecClose.promise;
+                } else {
+                    traceError(`Python Environment not found for: ${uri.fsPath}`);
+                }
             } else {
                 // This means it is running the test
                 traceInfo(`Running unittests for workspace ${cwd} with arguments: ${args}\r\n`);

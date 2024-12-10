@@ -14,6 +14,7 @@ import { IConfigurationService } from '../../../client/common/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as triggerApis from '../../../client/pythonEnvironments/creation/createEnvironmentTrigger';
+import * as extapi from '../../../client/envExt/api.internal';
 
 suite('Terminal - Code Execution Manager', () => {
     let executionManager: ICodeExecutionManager;
@@ -25,7 +26,11 @@ suite('Terminal - Code Execution Manager', () => {
     let configService: TypeMoq.IMock<IConfigurationService>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let triggerCreateEnvironmentCheckNonBlockingStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspace
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))

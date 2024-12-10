@@ -25,6 +25,7 @@ import { ITerminalAutoActivation } from '../../../client/terminals/types';
 import { createPythonInterpreter } from '../../utils/interpreters';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as platform from '../../../client/common/utils/platform';
+import * as extapi from '../../../client/envExt/api.internal';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
@@ -44,8 +45,12 @@ suite('Terminal Service', () => {
     let pythonConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let editorConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let isWindowsStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         terminal = TypeMoq.Mock.ofType<VSCodeTerminal>();
         terminalShellIntegration = TypeMoq.Mock.ofType<TerminalShellIntegration>();
         terminal.setup((t) => t.shellIntegration).returns(() => terminalShellIntegration.object);

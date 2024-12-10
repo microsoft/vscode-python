@@ -48,6 +48,7 @@ import { IInterpreterService, PythonEnvironmentsChangedEvent } from '../../../..
 import { createDeferred, sleep } from '../../../../client/common/utils/async';
 import { SystemVariables } from '../../../../client/common/variables/systemVariables';
 import { untildify } from '../../../../client/common/helpers';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 type TelemetryEventType = { eventName: EventName; properties: unknown };
 
@@ -62,12 +63,16 @@ suite('Set Interpreter Command', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let multiStepInputFactory: TypeMoq.IMock<IMultiStepInputFactory>;
     let interpreterService: IInterpreterService;
+    let useEnvExtensionStub: sinon.SinonStub;
     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
 
     let setInterpreterCommand: SetInterpreterCommand;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         interpreterSelector = TypeMoq.Mock.ofType<IInterpreterSelector>();
         multiStepInputFactory = TypeMoq.Mock.ofType<IMultiStepInputFactory>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();

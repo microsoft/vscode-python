@@ -3,6 +3,7 @@
 
 'use strict';
 
+import * as sinon from 'sinon';
 import { mock, when, anything, instance, verify, reset } from 'ts-mockito';
 import { EventEmitter, Terminal, Uri } from 'vscode';
 import { IActiveResourceService, IApplicationShell, ITerminalManager } from '../../../client/common/application/types';
@@ -21,6 +22,7 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { ITerminalEnvVarCollectionService } from '../../../client/terminals/types';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
+import * as extapi from '../../../client/envExt/api.internal';
 
 suite('Terminal Activation Indicator Prompt', () => {
     let shell: IApplicationShell;
@@ -34,12 +36,16 @@ suite('Terminal Activation Indicator Prompt', () => {
     let notificationEnabled: IPersistentState<boolean>;
     let configurationService: IConfigurationService;
     let interpreterService: IInterpreterService;
+    let useEnvExtensionStub: sinon.SinonStub;
     const prompts = [Common.doNotShowAgain];
     const envName = 'env';
     const type = PythonEnvType.Virtual;
     const expectedMessage = Interpreters.terminalEnvVarCollectionPrompt.format('Python virtual', `"(${envName})"`);
 
     setup(async () => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         shell = mock<IApplicationShell>();
         terminalManager = mock<ITerminalManager>();
         interpreterService = mock<IInterpreterService>();
@@ -75,6 +81,10 @@ suite('Terminal Activation Indicator Prompt', () => {
             instance(interpreterService),
             instance(experimentService),
         );
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Show notification when a new terminal is opened for which there is no prompt set', async () => {

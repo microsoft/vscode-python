@@ -21,8 +21,10 @@ import * as util from '../../../../client/testing/testController/common/utils';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { traceInfo } from '../../../../client/logging';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('pytest test execution adapter', () => {
+    let useEnvExtensionStub: sinon.SinonStub;
     let configService: IConfigurationService;
     let execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
     let adapter: PytestTestExecutionAdapter;
@@ -35,7 +37,10 @@ suite('pytest test execution adapter', () => {
     let mockProc: MockChildProcess;
     let utilsWriteTestIdsFileStub: sinon.SinonStub;
     let utilsStartRunResultNamedPipeStub: sinon.SinonStub;
+
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
         configService = ({
             getSettings: () => ({
                 testing: { pytestArgs: ['.'] },

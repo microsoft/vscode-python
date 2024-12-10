@@ -4,6 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Terminal } from 'vscode';
 import { TerminalActivator } from '../../../../client/common/terminal/activator';
@@ -18,6 +19,7 @@ import {
     IPythonSettings,
     ITerminalSettings,
 } from '../../../../client/common/types';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('Terminal Activator', () => {
     let activator: TerminalActivator;
@@ -26,7 +28,11 @@ suite('Terminal Activator', () => {
     let handler2: TypeMoq.IMock<ITerminalActivationHandler>;
     let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
     let experimentService: TypeMoq.IMock<IExperimentService>;
+    let useEnvExtensionStub: sinon.SinonStub;
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         baseActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
         terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
         experimentService = TypeMoq.Mock.ofType<IExperimentService>();
@@ -52,6 +58,10 @@ suite('Terminal Activator', () => {
             experimentService.object,
         );
     });
+    teardown(() => {
+        sinon.restore();
+    });
+
     async function testActivationAndHandlers(
         activationSuccessful: boolean,
         activateEnvironmentSetting: boolean,

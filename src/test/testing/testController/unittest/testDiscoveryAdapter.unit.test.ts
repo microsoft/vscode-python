@@ -20,6 +20,7 @@ import {
     Output,
     SpawnOptions,
 } from '../../../../client/common/process/types';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('Unittest test discovery adapter', () => {
     let stubConfigSettings: IConfigurationService;
@@ -32,8 +33,12 @@ suite('Unittest test discovery adapter', () => {
     let expectedPath: string;
     let uri: Uri;
     let utilsStartDiscoveryNamedPipeStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         expectedPath = path.join('/', 'new', 'cwd');
         stubConfigSettings = ({
             getSettings: () => ({

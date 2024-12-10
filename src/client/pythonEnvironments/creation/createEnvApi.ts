@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, Disposable } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickInputButtons } from 'vscode';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
 import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
@@ -21,6 +21,8 @@ import {
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CreateEnvironmentOptionsInternal } from './types';
+import { useEnvExtension } from '../../envExt/api.internal';
+import { PythonEnvironment } from '../../envExt/types';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -65,11 +67,26 @@ export function registerCreateEnvironmentFeatures(
     disposables.push(
         registerCommand(
             Commands.Create_Environment,
-            (
+            async (
                 options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
             ): Promise<CreateEnvironmentResult | undefined> => {
-                const providers = _createEnvironmentProviders.getAll();
-                return handleCreateEnvironmentCommand(providers, options);
+                if (useEnvExtension()) {
+                    try {
+                        const result = await executeCommand<PythonEnvironment | undefined>('python-envs.createAny');
+                        if (result) {
+                            return { path: result.environmentPath.path };
+                        }
+                    } catch (err) {
+                        if (err === QuickInputButtons.Back) {
+                            return { workspaceFolder: undefined, action: 'Back' };
+                        }
+                        throw err;
+                    }
+                } else {
+                    const providers = _createEnvironmentProviders.getAll();
+                    return handleCreateEnvironmentCommand(providers, options);
+                }
+                return undefined;
             },
         ),
         registerCommand(
