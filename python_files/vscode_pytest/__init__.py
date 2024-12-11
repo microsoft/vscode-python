@@ -68,6 +68,7 @@ map_id_to_path = {}
 collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
+FLAKY_MAX_RUNS = None
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
@@ -91,6 +92,11 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
     if "--collect-only" in args:
         global IS_DISCOVERY
         IS_DISCOVERY = True
+
+    # set the reruns value, -1 if not set
+    global FLAKY_MAX_RUNS
+    FLAKY_MAX_RUNS = get_reruns_value(args)
+    print("Plugin info[vscode-pytest]: global FLAKY_MAX_RUNS set to: ", FLAKY_MAX_RUNS)
 
     # check if --rootdir is in the args
     for arg in args:
@@ -118,6 +124,29 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
                 )
                 global SYMLINK_PATH
                 SYMLINK_PATH = rootdir
+
+
+def get_reruns_value(args):
+    """
+    Extracts the value of the --reruns argument from a list of command-line arguments.
+
+    Args:
+        args (list of str): A list of command-line arguments.
+
+    Returns:
+        int: The integer value of the --reruns argument if found, otherwise -1.
+    """
+    for arg in args:
+        if arg.startswith("--reruns"):
+            if "=" in arg:
+                # Extract the value from --reruns=<value>
+                return int(arg.split("=")[1])
+            else:
+                # Get the value from the next argument
+                index = args.index(arg)
+                if index + 1 < len(args):
+                    return int(args[index + 1])
+    return -1
 
 
 def pytest_internalerror(excrepr, excinfo):  # noqa: ARG001
@@ -150,11 +179,38 @@ def pytest_exception_interact(node, call, report):
         else:
             ERRORS.append(report.longreprtext + "\n Check Python Test Logs for more details.")
     else:
+        node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
+        # Check if Pytest-rerunfailures is enabled
+        # check # run this is
+        # check # of reruns allowed
+        # if # of reruns is reached, then send the error message, otherwise do not send the error message
+
+        try:
+            exec_count = node.execution_count
+            # global is set if arg is present during pytest_load_initial_conftests
+            # if not present, then -1
+            flaky_max_runs = FLAKY_MAX_RUNS
+
+            # check for rerunfailures marker
+            for m in node.own_markers:
+                if m.name == "flaky":
+                    flaky_max_runs = m.kwargs.get("reruns", 0)
+                    break
+
+            # flaky_max_runs != -1 means test is flaky
+            if flaky_max_runs != -1 and exec_count <= flaky_max_runs:
+                print("flaky test rerun: ", exec_count)
+                return
+            elif flaky_max_runs != -1 and exec_count > flaky_max_runs:
+                print("Plugin info[vscode-pytest]: max reruns reached.")
+        except AttributeError:
+            pass
+
         # If during execution, send this data that the given node failed.
         report_value = "error"
         if call.excinfo.typename == "AssertionError":
             report_value = "failure"
-        node_id = get_absolute_test_id(node.nodeid, get_node_path(node))
+        # Only add test to collected_tests_so_far if it is not a flaky test that will re-run
         if node_id not in collected_tests_so_far:
             collected_tests_so_far.append(node_id)
             item_result = create_test_outcome(
@@ -280,7 +336,8 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             node_path = cwd
         # Calculate the absolute test id and use this as the ID moving forward.
         absolute_node_id = get_absolute_test_id(report.nodeid, node_path)
-        if absolute_node_id not in collected_tests_so_far:
+        # If the test is not a rerun, add it to the collected_tests_so_far list.
+        if report.outcome != "rerun" and absolute_node_id not in collected_tests_so_far:
             collected_tests_so_far.append(absolute_node_id)
             item_result = create_test_outcome(
                 absolute_node_id,
@@ -654,6 +711,8 @@ def build_nested_folders(
     counter = 0
     max_iter = 100
     while iterator_path != session_node_path:
+        print("iterator_path: ", iterator_path)
+        print("session_node_path: ", session_node_path)
         curr_folder_name = iterator_path.name
         try:
             curr_folder_node: TestNode = created_files_folders_dict[os.fspath(iterator_path)]
