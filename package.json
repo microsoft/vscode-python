@@ -397,14 +397,16 @@
                     "default": "state",
                     "description": "%python.activeStateToolPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.autoComplete.extraPaths": {
                     "default": [],
                     "description": "%python.autoComplete.extraPaths.description%",
                     "scope": "resource",
                     "type": "array",
-                    "uniqueItems": true
+                    "uniqueItems": true,
+                    "ignoreSync": true
                 },
                 "python.createEnvironment.contentButton": {
                     "default": "hide",
@@ -430,13 +432,15 @@
                     "default": "",
                     "description": "%python.condaPath.description%",
                     "scope": "machine",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.defaultInterpreterPath": {
                     "default": "python",
                     "markdownDescription": "%python.defaultInterpreterPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.envFile": {
                     "default": "${workspaceFolder}/.env",
@@ -590,19 +594,22 @@
                     "default": "pipenv",
                     "description": "%python.pipenvPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.poetryPath": {
                     "default": "poetry",
                     "description": "%python.poetryPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.pixiToolPath": {
                     "default": "pixi",
                     "description": "%python.pixiToolPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.tensorBoard.logDirectory": {
                     "default": "",
@@ -610,7 +617,8 @@
                     "scope": "resource",
                     "type": "string",
                     "markdownDeprecationMessage": "%python.tensorBoard.logDirectory.markdownDeprecationMessage%",
-                    "deprecationMessage": "%python.tensorBoard.logDirectory.deprecationMessage%"
+                    "deprecationMessage": "%python.tensorBoard.logDirectory.deprecationMessage%",
+                    "ignoreSync": true
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {
                     "default": false,
@@ -716,7 +724,8 @@
                     "default": "pytest",
                     "description": "%python.testing.pytestPath.description%",
                     "scope": "machine-overridable",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 },
                 "python.testing.unittestArgs": {
                     "default": [
@@ -753,7 +762,8 @@
                     "default": "",
                     "description": "%python.venvPath.description%",
                     "scope": "machine",
-                    "type": "string"
+                    "type": "string",
+                    "ignoreSync": true
                 }
             },
             "title": "Python",
@@ -784,7 +794,8 @@
                             },
                             "debugAdapterPath": {
                                 "description": "Path (fully qualified) to the python debug adapter executable.",
-                                "type": "string"
+                                "type": "string",
+                                "ignoreSync": true
                             },
                             "django": {
                                 "default": false,
@@ -856,7 +867,8 @@
                                     "type": "object"
                                 },
                                 "label": "Path mappings.",
-                                "type": "array"
+                                "type": "array",
+                                "ignoreSync": true
                             },
                             "port": {
                                 "description": "Port to connect to.",
@@ -960,11 +972,13 @@
                             "cwd": {
                                 "default": "${workspaceFolder}",
                                 "description": "Absolute path to the working directory of the program being debugged. Default is the root directory of the file (leave empty).",
-                                "type": "string"
+                                "type": "string",
+                                "ignoreSync": true
                             },
                             "debugAdapterPath": {
                                 "description": "Path (fully qualified) to the python debug adapter executable.",
-                                "type": "string"
+                                "type": "string",
+                                "ignoreSync": true
                             },
                             "django": {
                                 "default": false,
@@ -982,7 +996,8 @@
                             "envFile": {
                                 "default": "${workspaceFolder}/.env",
                                 "description": "Absolute path to a file containing environment variable definitions.",
-                                "type": "string"
+                                "type": "string",
+                                "ignoreSync": true
                             },
                             "gevent": {
                                 "default": false,
@@ -1041,7 +1056,8 @@
                                     "type": "object"
                                 },
                                 "label": "Path mappings.",
-                                "type": "array"
+                                "type": "array",
+                                "ignoreSync": true
                             },
                             "port": {
                                 "default": 0,
@@ -1051,7 +1067,8 @@
                             "program": {
                                 "default": "${file}",
                                 "description": "Absolute path to the program.",
-                                "type": "string"
+                                "type": "string",
+                                "ignoreSync": true
                             },
                             "purpose": {
                                 "default": [],
@@ -1076,7 +1093,8 @@
                             "python": {
                                 "default": "${command:python.interpreterPath}",
                                 "description": "Absolute path to the Python interpreter executable; overrides workspace configuration if set.",
-                                "type": "string"
+                                "type": "string",
+                                "ignoreSync": true
                             },
                             "pythonArgs": {
                                 "default": [],
