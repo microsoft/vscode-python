@@ -1552,7 +1552,8 @@
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
-        "webpack": "webpack"
+        "webpack": "webpack",
+        "check-proposed-api": "node ./src/check-proposed-api.js"
     },
     "dependencies": {
         "@iarna/toml": "^2.2.5",
