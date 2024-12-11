@@ -5,8 +5,8 @@ const packageJsonPath = './package.json';
 function checkProposedApiChanges() {
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
-    const enabledApiProposals = packageJson.enabledApiProposals;
-    const vscodeEngineVersion = packageJson.engines.vscode;
+    const { enabledApiProposals, engines } = packageJson;
+    const vscodeEngineVersion = engines.vscode;
 
     const originalPackageJson = JSON.parse(fs.readFileSync(packageJsonPath + '.original', 'utf8'));
     const originalEnabledApiProposals = originalPackageJson.enabledApiProposals;
