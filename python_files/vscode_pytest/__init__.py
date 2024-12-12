@@ -265,7 +265,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
     if SYMLINK_PATH:
         cwd = SYMLINK_PATH
 
-    if report.when == "call":
+    if report.when == "call" or (report.when == "setup" and report.skipped):
         traceback = None
         message = None
         report_value = "skipped"
