@@ -194,6 +194,11 @@ def test_rootdir_specified():
             expected_execution_test_output.nested_describe_expected_execution_output,
             id="nested_describe_plugin",
         ),
+        pytest.param(
+            ["skip_test_fixture.py::test_docker_client"],
+            expected_execution_test_output.skip_test_fixture_execution_expected_output,
+            id="skip_test_fixture",
+        ),
     ],
 )
 def test_pytest_execution(test_ids, expected_const):

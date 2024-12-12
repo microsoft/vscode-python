@@ -734,3 +734,16 @@ nested_describe_expected_execution_output = {
         "subtest": None,
     },
 }
+
+skip_test_fixture_path = TEST_DATA_PATH / "skip_test_fixture.py"
+skip_test_fixture_execution_expected_output = {
+    get_absolute_test_id("skip_test_fixture.py::test_docker_client", skip_test_fixture_path): {
+        "test": get_absolute_test_id(
+            "skip_test_fixture.py::test_docker_client", skip_test_fixture_path
+        ),
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}
