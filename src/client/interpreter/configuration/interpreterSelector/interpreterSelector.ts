@@ -30,7 +30,17 @@ export class InterpreterSelector implements IInterpreterSelector {
         const interpreters = this.interpreterManager.getInterpreters(resource);
         interpreters.sort(this.envTypeComparer.compare.bind(this.envTypeComparer));
 
-        return interpreters.map((item) => this.suggestionToQuickPickItem(item, resource, useFullDisplayName));
+        const interpreterLists = interpreters.map((item) =>
+            this.suggestionToQuickPickItem(item, resource, useFullDisplayName),
+        );
+        // Truncate ' ' inside parenthesis for Select Interpreter Lists.
+        for (const singleInterpreter of interpreterLists) {
+            if (singleInterpreter.label.includes('(') && singleInterpreter.label.includes(')')) {
+                singleInterpreter.label = singleInterpreter.label.replace(/'/g, '');
+            }
+        }
+
+        return interpreterLists;
     }
 
     public async getAllSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]> {
