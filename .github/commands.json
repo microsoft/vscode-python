@@ -136,7 +136,7 @@
 		"action": "updateLabels",
 		"addLabel": "info-needed",
 		"removeLabel": "~info-needed",
-		"comment": "Thanks for creating this issue! We figured it's missing some basic information or in some other way doesn't follow our issue reporting guidelines. Please take the time to review these and update the issue or even open a new one with the Report Issue command in VS Code (**Help > Report Issue**) to have all the right information collected for you.\n\nHappy Coding!"
+		"comment": "Thanks for creating this issue! We figured it's missing some basic information or in some other way doesn't follow our [issue reporting guidelines](https://aka.ms/pvsc-bug). Please take the time to review these and update the issue or even open a new one with the Report Issue command in VS Code (**Help > Report Issue**) to have all the right information collected for you.\n\nHappy Coding!"
 	},
 	{
 		"type": "label",
