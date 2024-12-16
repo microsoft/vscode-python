@@ -127,6 +127,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
                         );
+                        this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
                     }
                     deferredTillExecClose.resolve();
                 });

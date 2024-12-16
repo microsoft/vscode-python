@@ -1,5 +1,5 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-[tool.coverage.report]
-omit = ["test_ignore.py", "tests/*.py"]
+def test_i_hope_this_is_ignored():
+    assert True
