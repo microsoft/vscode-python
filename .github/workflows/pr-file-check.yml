@@ -3,11 +3,9 @@ name: PR files
 on:
   pull_request:
     types:
-      # On by default if you specify no types.
       - 'opened'
       - 'reopened'
       - 'synchronize'
-      # For `skip-label` only.
       - 'labeled'
       - 'unlabeled'
 
@@ -50,8 +48,8 @@ jobs:
             const labels = context.payload.pull_request.labels.map(label => label.name);
             console.log('PR Body:', context.payload.pull_request.body);
             if (!labels.includes('skip-issue-check')) {
-              const issueNumber = context.payload.pull_request.body.match(/#\d+/);
-              if (!issueNumber) {
+              const issueLink = context.payload.pull_request.body.match(/https:\/\/github\.com\/\S+\/issues\/\d+/);
+              if (!issueLink) {
                 core.setFailed('No associated issue found in the PR description.');
               }
             }
