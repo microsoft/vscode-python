@@ -14,18 +14,6 @@ jobs:
     name: 'Check for changed files'
     runs-on: ubuntu-latest
     steps:
-      - name: 'Add "issue-please" label'
-        if: github.event.action == 'opened'
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              labels: ['issue-please']
-            })
-
       - name: 'package-lock.json matches package.json'
         uses: brettcannon/check-for-changed-files@v1.2.1
         with:
@@ -53,6 +41,11 @@ jobs:
           skip-label: 'skip tests'
           failure-message: 'TypeScript code was edited without also editing a ${file-pattern} file; see the Testing page in our wiki on testing guidelines (the ${skip-label} label can be used to pass this check)'
 
+      - name: Add "issue-please" Label
+        uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          labels: 'issue-please'
       - name: 'Ensure PR has an associated issue'
         uses: actions/github-script@v6
         with:
