@@ -136,7 +136,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         break;
                 }
             } catch (exception) {
-                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception); // keep due to circular dependencies
+                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception); // use console due to circular dependencies with trace calls
             }
         });
     }
