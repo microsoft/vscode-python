@@ -83,6 +83,15 @@ export class CondaService implements ICondaService {
     }
 
     /**
+     * Is the conda executable named "micromamba"?
+     */
+    public async isMicroMamba(): Promise<boolean> {
+        const file = await this.getCondaFile();
+        const name = path.basename(file, '.exe');
+        return name === 'micromamba';
+    }
+
+    /**
      * Return the conda version.
      */
     // eslint-disable-next-line class-methods-use-this

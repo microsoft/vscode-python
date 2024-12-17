@@ -60,6 +60,11 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
 
         const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
 
+        // Directly use the self-contained micromamba executable.
+        if (await this.condaService.isMicroMamba()) {
+            return [`micromamba activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+        }
+
         // New version.
         const interpreterPath = await this.condaService.getInterpreterPathForEnvironment(envInfo);
         const activatePath = await this.condaService.getActivationScriptFromInterpreter(interpreterPath, envInfo.name);
