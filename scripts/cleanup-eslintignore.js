@@ -16,7 +16,7 @@ fs.readFile(eslintignorePath, 'utf8', (err, data) => {
 
     files.forEach((file) => {
         const filePath = path.join(baseDir, file);
-        if (!fs.existsSync(filePath)) {
+        if (!fs.existsSync(filePath) && file !== 'pythonExtensionApi/out/') {
             nonExistentFiles.push(file);
         }
     });
@@ -27,7 +27,7 @@ fs.readFile(eslintignorePath, 'utf8', (err, data) => {
 
         const updatedLines = lines.filter((line) => {
             const trimmedLine = line.trim();
-            return !nonExistentFiles.includes(trimmedLine);
+            return !nonExistentFiles.includes(trimmedLine) || trimmedLine === 'pythonExtensionApi/out/';
         });
         const updatedData = `${updatedLines.join('\n')}\n`;
 
