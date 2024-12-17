@@ -41,11 +41,6 @@ jobs:
           skip-label: 'skip tests'
           failure-message: 'TypeScript code was edited without also editing a ${file-pattern} file; see the Testing page in our wiki on testing guidelines (the ${skip-label} label can be used to pass this check)'
 
-      - name: 'Add issue-please labe on PR open'
-        uses: actions-ecosystem/action-add-labels@v1
-        with:
-          labels: 'issue-please'
-        
       - name: 'Ensure PR has an associated issue'
         uses: actions/github-script@v7
         with:
