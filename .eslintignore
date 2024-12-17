@@ -42,7 +42,6 @@ src/test/utils/fs.ts
 
 src/test/api.functional.test.ts
 
-src/test/testing/mocks.ts
 src/test/testing/common/debugLauncher.unit.test.ts
 src/test/testing/common/services/configSettingService.unit.test.ts
 
@@ -85,9 +84,7 @@ src/test/common/application/commands/reloadCommand.unit.test.ts
 
 src/test/common/installer/channelManager.unit.test.ts
 src/test/common/installer/pipInstaller.unit.test.ts
-src/test/common/installer/installer.invalidPath.unit.test.ts
 src/test/common/installer/pipEnvInstaller.unit.test.ts
-src/test/common/installer/productPath.unit.test.ts
 
 src/test/common/socketCallbackHandler.test.ts
 
@@ -103,17 +100,14 @@ src/test/common/process/proc.unit.test.ts
 src/test/common/interpreterPathService.unit.test.ts
 
 
-src/test/python_files/formatting/dummy.ts
 
 src/test/debugger/extension/adapter/adapter.test.ts
 src/test/debugger/extension/adapter/outdatedDebuggerPrompt.unit.test.ts
 src/test/debugger/extension/adapter/factory.unit.test.ts
-src/test/debugger/extension/adapter/activator.unit.test.ts
 src/test/debugger/extension/adapter/logging.unit.test.ts
 src/test/debugger/extension/hooks/childProcessAttachHandler.unit.test.ts
 src/test/debugger/extension/hooks/childProcessAttachService.unit.test.ts
 src/test/debugger/utils.ts
-src/test/debugger/common/protocolparser.test.ts
 src/test/debugger/envVars.test.ts
 
 src/test/telemetry/index.unit.test.ts
@@ -121,9 +115,7 @@ src/test/telemetry/envFileTelemetry.unit.test.ts
 
 src/test/application/diagnostics/checks/macPythonInterpreter.unit.test.ts
 src/test/application/diagnostics/checks/pythonInterpreter.unit.test.ts
-src/test/application/diagnostics/checks/invalidLaunchJsonDebugger.unit.test.ts
 src/test/application/diagnostics/checks/powerShellActivation.unit.test.ts
-src/test/application/diagnostics/checks/invalidPythonPathInDebugger.unit.test.ts
 src/test/application/diagnostics/checks/envPathVariable.unit.test.ts
 src/test/application/diagnostics/applicationDiagnostics.unit.test.ts
 src/test/application/diagnostics/promptHandler.unit.test.ts
@@ -154,25 +146,18 @@ src/client/activation/extensionSurvey.ts
 src/client/activation/common/analysisOptions.ts
 src/client/activation/languageClientMiddleware.ts
 
-src/client/formatters/serviceRegistry.ts
-src/client/formatters/helper.ts
-src/client/formatters/dummyFormatter.ts
-src/client/formatters/baseFormatter.ts
 
 src/client/testing/serviceRegistry.ts
 src/client/testing/main.ts
 src/client/testing/configurationFactory.ts
 src/client/testing/common/constants.ts
 src/client/testing/common/testUtils.ts
-src/client/testing/common/socketServer.ts
-src/client/testing/common/runner.ts
 
 src/client/common/helpers.ts
 src/client/common/net/browser.ts
 src/client/common/net/socket/socketCallbackHandler.ts
 src/client/common/net/socket/socketServer.ts
 src/client/common/net/socket/SocketStream.ts
-src/client/common/editor.ts
 src/client/common/contextKey.ts
 src/client/common/experiments/telemetry.ts
 src/client/common/platform/serviceRegistry.ts
@@ -257,7 +242,6 @@ src/client/debugger/extension/attachQuickPick/psProcessParser.ts
 src/client/debugger/extension/attachQuickPick/picker.ts
 
 src/client/application/serviceRegistry.ts
-src/client/application/diagnostics/surceMapSupportService.ts
 src/client/application/diagnostics/base.ts
 src/client/application/diagnostics/applicationDiagnostics.ts
 src/client/application/diagnostics/filter.ts
@@ -267,3 +251,4 @@ src/client/application/diagnostics/commands/ignore.ts
 src/client/application/diagnostics/commands/factory.ts
 src/client/application/diagnostics/commands/execVSCCommand.ts
 src/client/application/diagnostics/commands/launchBrowser.ts
+
