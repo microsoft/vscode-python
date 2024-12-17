@@ -12,7 +12,6 @@ import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { buildApi, IBrowserExtensionApi } from './api';
-import { traceError, traceLog } from '../logging';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
@@ -140,7 +139,7 @@ async function runPylance(
 
         await client.start();
     } catch (e) {
-        traceLog(e);
+        console.log(e); // necessary to use console.log for browser
     }
 }
 
@@ -201,7 +200,7 @@ function sendTelemetryEventBrowser(
                         break;
                 }
             } catch (exception) {
-                traceError(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${eventName}`, exception); // necessary to use console.log for browser
             }
         });
     }
