@@ -160,7 +160,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties,
             )} `,
-        ); // keep due to circular dependencies
+        ); // use console due to circular dependencies with trace calls
     }
 }
 
