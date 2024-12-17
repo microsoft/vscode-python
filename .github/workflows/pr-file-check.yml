@@ -9,6 +9,9 @@ on:
       - 'labeled'
       - 'unlabeled'
 
+permissions:
+  issues: write
+
 jobs:
   changed-files-in-pr:
     name: 'Check for changed files'
