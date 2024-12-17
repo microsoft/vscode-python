@@ -46,7 +46,6 @@ jobs:
         with:
           script: |
             const labels = context.payload.pull_request.labels.map(label => label.name);
-            console.log('PR Body:', context.payload.pull_request.body);
             if (!labels.includes('skip-issue-check')) {
               const issueLink = context.payload.pull_request.body.match(/https:\/\/github\.com\/\S+\/issues\/\d+/);
               if (!issueLink) {
