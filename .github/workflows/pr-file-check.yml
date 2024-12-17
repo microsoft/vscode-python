@@ -10,7 +10,7 @@ on:
       - 'unlabeled'
 
 permissions:
-  issues: write
+  pull-requests: write
 
 jobs:
   changed-files-in-pr:
