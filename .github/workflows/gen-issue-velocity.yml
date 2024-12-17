@@ -24,6 +24,6 @@ jobs:
           pip install requests
 
       - name: Run summary script
-        run: python scripts/generate_summary.py
+        run: python scripts/issue_velocity_summary_script.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
