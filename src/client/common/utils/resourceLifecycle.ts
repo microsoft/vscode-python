@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 // eslint-disable-next-line max-classes-per-file
+import { traceWarn } from '../../logging';
 import { IDisposable } from '../types';
 import { Iterable } from './iterable';
 
@@ -32,7 +33,7 @@ export function dispose<T extends IDisposable>(arg: T | Iterable<T> | undefined)
                 try {
                     d.dispose();
                 } catch (e) {
-                    console.warn(`dispose() failed for ${d}`, e);
+                    traceWarn(`dispose() failed for ${d}`, e);
                 }
             }
         }
@@ -149,7 +150,7 @@ export class DisposableStore implements IDisposable {
 
         if (this._isDisposed) {
             if (!DisposableStore.DISABLE_DISPOSED_WARNING) {
-                console.warn(
+                traceWarn(
                     new Error(
                         'Trying to add a disposable to a DisposableStore that has already been disposed of. The added object will be leaked!',
                     ).stack,

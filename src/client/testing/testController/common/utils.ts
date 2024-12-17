@@ -89,7 +89,7 @@ export async function startRunResultNamedPipe(
     if (cancellationToken) {
         disposables.push(
             cancellationToken?.onCancellationRequested(() => {
-                console.log(`Test Result named pipe ${pipeName}  cancelled`);
+                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
                 disposable.dispose();
             }),
         );
@@ -345,7 +345,7 @@ export async function hasSymlinkParent(currentPath: string): Promise<boolean> {
         // Recurse up the directory tree
         return await hasSymlinkParent(parentDirectory);
     } catch (error) {
-        console.error('Error checking symlinks:', error);
+        traceError('Error checking symlinks:', error);
         return false;
     }
 }

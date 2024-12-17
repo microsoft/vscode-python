@@ -273,20 +273,17 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     // if the child has testIds then this is a run request
                     // if the child process exited with a non-zero exit code, then we need to send the error payload.
                     if (code !== 0) {
-                        traceError(
-                            `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal} for workspace ${uri.fsPath}. Creating and sending error execution payload \n`,
-                        );
+                                        traceError(
+                                            `Subprocess closed unsuccessfully with exit code ${code} and signal ${signal} for workspace ${uri.fsPath}. Creating and sending error execution payload \n`,
+                                        );
 
-                        if (runInstance) {
-                            this.resultResolver?.resolveExecution(
-                                utils.createExecutionErrorPayload(code, signal, testIds, cwd),
-                                runInstance,
-                            );
-                        }
-                        // this doesn't work, it instead directs us to the noop one which is defined first
-                        // potentially this is due to the server already being close, if this is the case?
-                        console.log('right before serverDispose');
-                    }
+                                        if (runInstance) {
+                                            this.resultResolver?.resolveExecution(
+                                                utils.createExecutionErrorPayload(code, signal, testIds, cwd),
+                                                runInstance,
+                                            );
+                                        }
+                                    }
 
                     // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
                     // due to the sync reading of the output.
