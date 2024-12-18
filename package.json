@@ -334,18 +334,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.launchTensorBoard",
-                "title": "%python.command.python.launchTensorBoard.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.refreshTensorBoard",
-                "enablement": "python.hasActiveTensorBoardSession",
-                "icon": "$(refresh)",
-                "title": "%python.command.python.refreshTensorBoard.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.reportIssue",
                 "title": "%python.command.python.reportIssue.title%"
             },
@@ -461,8 +449,7 @@
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
-                            "pythonREPLSmartSend",
-                            "pythonRecommendTensorboardExt"
+                            "pythonREPLSmartSend"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -471,8 +458,7 @@
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%",
-                            "%python.experiments.pythonRecommendTensorboardExt.description%"
+                            "%python.experiments.pythonREPLSmartSend.description%"
                         ]
                     },
                     "scope": "window",
@@ -603,14 +589,6 @@
                     "description": "%python.pixiToolPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
-                },
-                "python.tensorBoard.logDirectory": {
-                    "default": "",
-                    "description": "%python.tensorBoard.logDirectory.description%",
-                    "scope": "resource",
-                    "type": "string",
-                    "markdownDeprecationMessage": "%python.tensorBoard.logDirectory.markdownDeprecationMessage%",
-                    "deprecationMessage": "%python.tensorBoard.logDirectory.deprecationMessage%"
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {
                     "default": false,

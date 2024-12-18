@@ -55,9 +55,7 @@ export namespace Commands {
     export const InstallPython = 'python.installPython';
     export const InstallPythonOnLinux = 'python.installPythonOnLinux';
     export const InstallPythonOnMac = 'python.installPythonOnMac';
-    export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const PickLocalProcess = 'python.pickLocalProcess';
-    export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';

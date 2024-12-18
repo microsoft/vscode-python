@@ -11,12 +11,7 @@ import { isPromise } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import {
-    TensorBoardEntrypoint,
-    TensorBoardEntrypointTrigger,
-    TensorBoardPromptSelection,
-    TensorBoardSessionStartResult,
-} from '../tensorBoard/constants';
+import { TensorBoardPromptSelection } from '../tensorBoard/constants';
 import { EventName } from './constants';
 import type { TestTool } from './types';
 
@@ -2578,101 +2573,6 @@ export interface IEventNamePropertyMapping {
 
     // TensorBoard integration events
     /**
-     * Telemetry event sent after the user has clicked on an option in the prompt we display
-     * asking them if they want to launch an integrated TensorBoard session.
-     * `selection` is one of 'yes', 'no', or 'do not ask again'.
-     */
-    /* __GDPR__
-       "tensorboard.launch_prompt_selection" : { "owner": "donjayamanne" }
-     */
-
-    [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
-        selection: TensorBoardPromptSelection;
-    };
-    /**
-     * Telemetry event sent after the python.launchTensorBoard command has been executed.
-     * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or from a codelens or the user clicking 'yes'
-     * on the launch prompt we display.
-     * The `trigger` property indicates whether the entrypoint was triggered by the user
-     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
-     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
-     */
-    /* __GDPR__
-       "tensorboard.session_launch" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_LAUNCH]: {
-        entrypoint: TensorBoardEntrypoint;
-        trigger: TensorBoardEntrypointTrigger;
-    };
-    /**
-     * Telemetry event sent after we have attempted to create a tensorboard program instance
-     * by spawning a daemon to run the tensorboard_launcher.py script. The event is sent with
-     * `duration` which should never exceed 60_000ms. Depending on the value of `result`, `duration` means:
-     * 1. 'success' --> the total amount of time taken for the execObservable daemon to report successful TB session launch
-     * 2. 'canceled' --> the total amount of time that the user waited for the daemon to start before canceling launch
-     * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
-     * In the first two cases, `duration` should not be more than 60_000ms.
-     */
-    /* __GDPR__
-       "tensorboard.session_daemon_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
-        result: TensorBoardSessionStartResult;
-    };
-    /**
-     * Telemetry event sent after the webview framing the TensorBoard website has been successfully shown.
-     * This event is sent with `duration` which represents the total time to create a TensorBoardSession.
-     * Note that this event is only sent if an integrated TensorBoard session is successfully created in full.
-     * This includes checking whether the tensorboard package is installed and installing it if it's not already
-     * installed, requesting the user to select a log directory, starting the tensorboard
-     * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
-     */
-    /* __GDPR__
-       "tensorboard.session_e2e_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
-    /**
-     * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
-     * sent with `duration` specifying the total duration of time that the TensorBoard session
-     * ran for before the user terminated the session.
-     */
-    /* __GDPR__
-       "tensorboard.session_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
-    /**
-     * Telemetry event sent when an entrypoint is displayed to the user. This event is sent once
-     * per entrypoint per session to minimize redundant events since codelenses
-     * can be displayed multiple times per file.
-     * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or from a codelens or the user clicking 'yes'
-     * on the launch prompt we display.
-     * The `trigger` property indicates whether the entrypoint was triggered by the user
-     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
-     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
-     */
-    /* __GDPR__
-       "tensorboard.entrypoint_shown" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
-        entrypoint: TensorBoardEntrypoint;
-        trigger: TensorBoardEntrypointTrigger;
-    };
-    /**
      * Telemetry event sent when the user is prompted to install Python packages that are
      * dependencies for launching an integrated TensorBoard session.
      */
@@ -2732,25 +2632,6 @@ export interface IEventNamePropertyMapping {
        "tensorboard.torch_profiler_import" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
-    /**
-     * Telemetry event sent when the extension host receives a message from the
-     * TensorBoard webview containing a valid jump to source payload from the
-     * PyTorch profiler TensorBoard plugin.
-     */
-    /* __GDPR__
-       "tensorboard_jump_to_source_request" : { "owner": "donjayamanne" }
-     */
-    [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
-    /**
-     * Telemetry event sent when the extension host receives a message from the
-     * TensorBoard webview containing a valid jump to source payload from the
-     * PyTorch profiler TensorBoard plugin, but the source file does not exist
-     * on the machine currently running TensorBoard.
-     */
-    /* __GDPR__
-       "tensorboard_jump_to_source_file_not_found" : { "owner": "donjayamanne" }
-     */
-    [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
      * Telemetry event sent before creating an environment.
