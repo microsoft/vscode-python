@@ -62,6 +62,7 @@ export interface ICondaService {
     getCondaFile(forShellExecution?: boolean): Promise<string>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
     isCondaAvailable(): Promise<boolean>;
+    isMicroMamba(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
     getInterpreterPathForEnvironment(condaEnv: CondaEnvironmentInfo): Promise<string | undefined>;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
