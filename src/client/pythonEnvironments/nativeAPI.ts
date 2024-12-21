@@ -20,14 +20,14 @@ import {
     NativePythonFinder,
 } from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { Architecture, getUserHomeDir } from '../common/utils/platform';
+import { Architecture, getPathEnvVariable, getUserHomeDir } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
 import { cache } from '../common/utils/decorators';
 import { traceError, traceInfo, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind, NativePythonEnvironmentKind } from './base/locators/common/nativePythonUtils';
-import { getCondaEnvDirs, setCondaBinary } from './common/environmentManagers/conda';
+import { getCondaEnvDirs, getCondaPathSetting, setCondaBinary } from './common/environmentManagers/conda';
 import { setPyEnvBinary } from './common/environmentManagers/pyenv';
 import {
     createPythonWatcher,
@@ -164,6 +164,12 @@ function isSubDir(pathToCheck: string | undefined, parents: string[]): boolean {
         }
         return false;
     });
+}
+
+function foundOnPath(fsPath: string): boolean {
+    const paths = getPathEnvVariable().map((p) => path.normalize(p).toLowerCase());
+    const normalized = path.normalize(fsPath).toLowerCase();
+    return paths.some((p) => normalized.includes(p));
 }
 
 function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind, condaEnvDirs: string[]): string {
@@ -387,13 +393,36 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return undefined;
     }
 
+    private condaPathAlreadySet: string | undefined;
+
     // eslint-disable-next-line class-methods-use-this
     private processEnvManager(native: NativeEnvManagerInfo) {
         const tool = native.tool.toLowerCase();
         switch (tool) {
             case 'conda':
-                traceLog(`Conda environment manager found at: ${native.executable}`);
-                setCondaBinary(native.executable);
+                {
+                    traceLog(`Conda environment manager found at: ${native.executable}`);
+                    const settingPath = getCondaPathSetting();
+                    if (!this.condaPathAlreadySet) {
+                        if (settingPath === '') {
+                            if (foundOnPath(native.executable)) {
+                                setCondaBinary(native.executable);
+                                this.condaPathAlreadySet = native.executable;
+                                traceInfo(`Using conda: ${native.executable}`);
+                            } else {
+                                traceInfo(`Conda not found on PATH, skipping: ${native.executable}`);
+                                traceInfo(
+                                    'You can set the path to conda using the setting: `python.condaPath` if you want to use a different conda binary',
+                                );
+                            }
+                        } else {
+                            traceInfo(`Using conda from setting: ${settingPath}`);
+                            this.condaPathAlreadySet = settingPath;
+                        }
+                    } else {
+                        traceInfo(`Conda already set to: ${this.condaPathAlreadySet}`);
+                    }
+                }
                 break;
             case 'pyenv':
                 traceLog(`Pyenv environment manager found at: ${native.executable}`);

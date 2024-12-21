@@ -71,3 +71,11 @@ export function getUserHomeDir(): string | undefined {
 export function isWindows(): boolean {
     return getOSType() === OSType.Windows;
 }
+
+export function getPathEnvVariable(): string[] {
+    const value = getEnvironmentVariable('PATH') || getEnvironmentVariable('Path');
+    if (value) {
+        return value.split(isWindows() ? ';' : ':');
+    }
+    return [];
+}
