@@ -34,7 +34,6 @@ export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
-
 export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> {
     const pipeName: string = generateRandomPipeName('python-test-ids');
     // uses callback so the on connect action occurs after the pipe is created
