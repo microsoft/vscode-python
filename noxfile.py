@@ -53,7 +53,6 @@ def install_python_libs(session: nox.Session):
         )
 
     session.install("packaging")
-    session.install("debugpy")
 
     # Download get-pip script
     session.run(

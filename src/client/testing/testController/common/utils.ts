@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as net from 'net';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -8,10 +7,8 @@ import * as crypto from 'crypto';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
-import { IExperimentService } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
+import { IServiceContainer } from '../../../ioc/types';
 import {
     DiscoveredTestItem,
     DiscoveredTestNode,
@@ -20,8 +17,10 @@ import {
     ITestResultResolver,
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
-import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
+import { createNamedPipeServer, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { IExperimentService } from '../../../common/types';
+import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -61,47 +60,133 @@ export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
-export function extractJsonPayload(rawData: string, uuids: Array<string>): ExtractOutput {
-    /**
-     * Extracts JSON-RPC payload from the provided raw data.
-     * @param {string} rawData - The raw string data from which the JSON payload will be extracted.
-     * @param {Array<string>} uuids - The list of UUIDs that are active.
-     * @returns {string} The remaining raw data after the JSON payload is extracted.
-     */
-
-    const rpcHeaders: ParsedRPCHeadersAndData = parseJsonRPCHeadersAndData(rawData);
-
-    // verify the RPC has a UUID and that it is recognized
-    let uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
-    uuid = checkUuid(uuid, uuids);
-
-    const payloadLength = rpcHeaders.headers.get('Content-Length');
-
-    // separate out the data within context length of the given payload from the remaining data in the buffer
-    const rpcContent: IJSONRPCData = ExtractJsonRPCData(payloadLength, rpcHeaders.remainingRawData);
-    const cleanedJsonData = rpcContent.extractedJSON;
-    const { remainingRawData } = rpcContent;
-
-    // if the given payload has the complete json, process it otherwise wait for the rest in the buffer
-    if (cleanedJsonData.length === Number(payloadLength)) {
-        // call to process this data
-        // remove this data from the buffer
-        return { uuid, cleanedJsonData, remainingRawData };
-    }
-    // wait for the remaining
-    return { uuid: undefined, cleanedJsonData: undefined, remainingRawData: rawData };
+export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> {
+    const pipeName: string = generateRandomPipeName('python-test-ids');
+    // uses callback so the on connect action occurs after the pipe is created
+    await createNamedPipeServer(pipeName, ([_reader, writer]) => {
+        traceVerbose('Test Ids named pipe connected');
+        // const num = await
+        const msg = {
+            jsonrpc: '2.0',
+            params: testIds,
+        } as Message;
+        writer
+            .write(msg)
+            .then(() => {
+                writer.end();
+            })
+            .catch((ex) => {
+                traceError('Failed to write test ids to named pipe', ex);
+            });
+    });
+    return pipeName;
 }
 
-export function checkUuid(uuid: string | undefined, uuids: Array<string>): string | undefined {
-    if (!uuid) {
-        // no UUID found, this could occurred if the payload is full yet so send back without erroring
-        return undefined;
+interface ExecutionResultMessage extends Message {
+    params: ExecutionTestPayload;
+}
+
+/**
+ * Writes an array of test IDs to a temporary file.
+ *
+ * @param testIds - The array of test IDs to write.
+ * @returns A promise that resolves to the file name of the temporary file.
+ */
+export async function writeTestIdsFile(testIds: string[]): Promise<string> {
+    // temp file name in format of test-ids-<randomSuffix>.txt
+    const randomSuffix = crypto.randomBytes(10).toString('hex');
+    const tempName = `test-ids-${randomSuffix}.txt`;
+    // create temp file
+    let tempFileName: string;
+    try {
+        traceLog('Attempting to use temp directory for test ids file, file name:', tempName);
+        tempFileName = path.join(os.tmpdir(), tempName);
+    } catch (error) {
+        // Handle the error when accessing the temp directory
+        traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');
+        // Make new temp directory in extension root dir
+        const tempDir = path.join(EXTENSION_ROOT_DIR, '.temp');
+        await fs.promises.mkdir(tempDir, { recursive: true });
+        tempFileName = path.join(EXTENSION_ROOT_DIR, '.temp', tempName);
+        traceLog('New temp file:', tempFileName);
     }
-    if (!uuids.includes(uuid)) {
-        // no UUID found, this could occurred if the payload is full yet so send back without erroring
-        throw new Error('On data received: Error occurred because the payload UUID is not recognized');
-    }
-    return uuid;
+    // write test ids to file
+    await fs.promises.writeFile(tempFileName, testIds.join('\n'));
+    // return file name
+    return tempFileName;
+}
+
+export function ExtractJsonRPCData(payloadLength: string | undefined, rawData: string): IJSONRPCData {
+    /**
+     * Extracts JSON-RPC content based on provided headers and raw data.
+     *
+     * This function uses the `Content-Length` header from the provided headers map
+     * to determine how much of the rawData string represents the actual JSON content.
+     * After extracting the expected content, it also returns any remaining data
+     * that comes after the extracted content as remaining raw data.
+     *
+     * @param {string | undefined} payloadLength - The value of the `Content-Length` header.
+     * @param {string} rawData - The raw string data from which the JSON content will be extracted.
+     *
+     * @returns {IJSONRPCContent} An object containing the extracted JSON content and any remaining raw data.
+     */
+    const length = parseInt(payloadLength ?? '0', 10);
+    const data = rawData.slice(0, length);
+    const remainingRawData = rawData.slice(length);
+    return {
+        extractedJSON: data,
+        remainingRawData,
+    };
+}
+export async function startRunResultNamedPipe(
+    dataReceivedCallback: (payload: ExecutionTestPayload) => void,
+    deferredTillServerClose: Deferred<void>,
+    cancellationToken?: CancellationToken,
+): Promise<{ name: string } & Disposable> {
+    traceVerbose('Starting Test Result named pipe');
+    const pipeName: string = generateRandomPipeName('python-test-results');
+    let disposeOfServer: () => void = () => {
+        deferredTillServerClose.resolve();
+        /* noop */
+    };
+    const server = await createNamedPipeServer(pipeName, ([reader, _writer]) => {
+        // this lambda function is: onConnectionCallback
+        // this is called once per client connecting to the server
+        traceVerbose(`Test Result named pipe ${pipeName} connected`);
+        let perConnectionDisposables: (Disposable | undefined)[] = [reader];
+
+        // create a function to dispose of the server
+        disposeOfServer = () => {
+            // dispose of all data listeners and cancelation listeners
+            perConnectionDisposables.forEach((d) => d?.dispose());
+            perConnectionDisposables = [];
+            deferredTillServerClose.resolve();
+        };
+        perConnectionDisposables.push(
+            // per connection, add a listener for the cancellation token and the data
+            cancellationToken?.onCancellationRequested(() => {
+                console.log(`Test Result named pipe ${pipeName}  cancelled`);
+                // if cancel is called on one connection, dispose of all connections
+                disposeOfServer();
+            }),
+            reader.listen((data: Message) => {
+                traceVerbose(`Test Result named pipe ${pipeName} received data`);
+                dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
+            }),
+        );
+        server.serverOnClosePromise().then(() => {
+            // this is called once the server close, once per run instance
+            traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
+            // dispose of all data listeners and cancelation listeners
+            disposeOfServer();
+        });
+    });
+
+    return { name: pipeName, dispose: disposeOfServer };
+}
+
+interface DiscoveryResultMessage extends Message {
+    params: DiscoveredTestPayload;
 }
 
 export function parseJsonRPCHeadersAndData(rawData: string): ParsedRPCHeadersAndData {
@@ -140,218 +225,44 @@ export function parseJsonRPCHeadersAndData(rawData: string): ParsedRPCHeadersAnd
         remainingRawData,
     };
 }
-
-export function ExtractJsonRPCData(payloadLength: string | undefined, rawData: string): IJSONRPCData {
-    /**
-     * Extracts JSON-RPC content based on provided headers and raw data.
-     *
-     * This function uses the `Content-Length` header from the provided headers map
-     * to determine how much of the rawData string represents the actual JSON content.
-     * After extracting the expected content, it also returns any remaining data
-     * that comes after the extracted content as remaining raw data.
-     *
-     * @param {string | undefined} payloadLength - The value of the `Content-Length` header.
-     * @param {string} rawData - The raw string data from which the JSON content will be extracted.
-     *
-     * @returns {IJSONRPCContent} An object containing the extracted JSON content and any remaining raw data.
-     */
-    const length = parseInt(payloadLength ?? '0', 10);
-    const data = rawData.slice(0, length);
-    const remainingRawData = rawData.slice(length);
-    return {
-        extractedJSON: data,
-        remainingRawData,
-    };
-}
-
 export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContainer): boolean {
     const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
     return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
-interface ExecutionResultMessage extends Message {
-    params: ExecutionTestPayload;
-}
-
-/**
- * Writes an array of test IDs to a temporary file.
- *
- * @param testIds - The array of test IDs to write.
- * @returns A promise that resolves to the file name of the temporary file.
- */
-export async function writeTestIdsFile(testIds: string[]): Promise<string> {
-    // temp file name in format of test-ids-<randomSuffix>.txt
-    const randomSuffix = crypto.randomBytes(10).toString('hex');
-    const tempName = `test-ids-${randomSuffix}.txt`;
-    // create temp file
-    let tempFileName: string;
-    try {
-        traceLog('Attempting to use temp directory for test ids file, file name:', tempName);
-        tempFileName = path.join(os.tmpdir(), tempName);
-    } catch (error) {
-        // Handle the error when accessing the temp directory
-        traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');
-        // Make new temp directory in extension root dir
-        const tempDir = path.join(EXTENSION_ROOT_DIR, '.temp');
-        await fs.promises.mkdir(tempDir, { recursive: true });
-        tempFileName = path.join(EXTENSION_ROOT_DIR, '.temp', tempName);
-        traceLog('New temp file:', tempFileName);
-    }
-    // write test ids to file
-    await fs.promises.writeFile(tempFileName, testIds.join('\n'));
-    // return file name
-    return tempFileName;
-}
-
-export async function startRunResultNamedPipe(
-    dataReceivedCallback: (payload: ExecutionTestPayload) => void,
-    deferredTillServerClose: Deferred<void>,
-    cancellationToken?: CancellationToken,
-): Promise<string> {
-    traceVerbose('Starting Test Result named pipe');
-    const pipeName: string = generateRandomPipeName('python-test-results');
-
-    const reader = await createReaderPipe(pipeName, cancellationToken);
-    traceVerbose(`Test Results named pipe ${pipeName} connected`);
-    let disposables: Disposable[] = [];
-    const disposable = new Disposable(() => {
-        traceVerbose(`Test Results named pipe ${pipeName} disposed`);
-        disposables.forEach((d) => d.dispose());
-        disposables = [];
-        deferredTillServerClose.resolve();
-    });
-
-    if (cancellationToken) {
-        disposables.push(
-            cancellationToken?.onCancellationRequested(() => {
-                console.log(`Test Result named pipe ${pipeName}  cancelled`);
-                disposable.dispose();
-            }),
-        );
-    }
-    disposables.push(
-        reader,
-        reader.listen((data: Message) => {
-            traceVerbose(`Test Result named pipe ${pipeName} received data`);
-            // if EOT, call decrement connection count (callback)
-            dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
-        }),
-        reader.onClose(() => {
-            // this is called once the server close, once per run instance
-            traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
-            // dispose of all data listeners and cancelation listeners
-            disposable.dispose();
-        }),
-        reader.onError((error) => {
-            traceError(`Test Results named pipe ${pipeName} error:`, error);
-        }),
-    );
-
-    return pipeName;
-}
-
-interface DiscoveryResultMessage extends Message {
-    params: DiscoveredTestPayload;
-}
-
 export async function startDiscoveryNamedPipe(
     callback: (payload: DiscoveredTestPayload) => void,
     cancellationToken?: CancellationToken,
-): Promise<string> {
+): Promise<{ name: string } & Disposable> {
     traceVerbose('Starting Test Discovery named pipe');
-    // const pipeName: string = '/Users/eleanorboyd/testingFiles/inc_dec_example/temp33.txt';
     const pipeName: string = generateRandomPipeName('python-test-discovery');
-    const reader = await createReaderPipe(pipeName, cancellationToken);
-
-    traceVerbose(`Test Discovery named pipe ${pipeName} connected`);
-    let disposables: Disposable[] = [];
-    const disposable = new Disposable(() => {
-        traceVerbose(`Test Discovery named pipe ${pipeName} disposed`);
-        disposables.forEach((d) => d.dispose());
-        disposables = [];
-    });
-
-    if (cancellationToken) {
+    let dispose: () => void = () => {
+        /* noop */
+    };
+    await createNamedPipeServer(pipeName, ([reader, _writer]) => {
+        traceVerbose(`Test Discovery named pipe ${pipeName} connected`);
+        let disposables: (Disposable | undefined)[] = [reader];
+        dispose = () => {
+            traceVerbose(`Test Discovery named pipe ${pipeName} disposed`);
+            disposables.forEach((d) => d?.dispose());
+            disposables = [];
+        };
         disposables.push(
-            cancellationToken.onCancellationRequested(() => {
+            cancellationToken?.onCancellationRequested(() => {
                 traceVerbose(`Test Discovery named pipe ${pipeName}  cancelled`);
-                disposable.dispose();
+                dispose();
+            }),
+            reader.listen((data: Message) => {
+                traceVerbose(`Test Discovery named pipe ${pipeName} received data`);
+                callback((data as DiscoveryResultMessage).params as DiscoveredTestPayload);
+            }),
+            reader.onClose(() => {
+                traceVerbose(`Test Discovery named pipe ${pipeName} closed`);
+                dispose();
             }),
         );
-    }
-
-    disposables.push(
-        reader,
-        reader.listen((data: Message) => {
-            traceVerbose(`Test Discovery named pipe ${pipeName} received data`);
-            callback((data as DiscoveryResultMessage).params as DiscoveredTestPayload);
-        }),
-        reader.onClose(() => {
-            traceVerbose(`Test Discovery named pipe ${pipeName} closed`);
-            disposable.dispose();
-        }),
-        reader.onError((error) => {
-            traceError(`Test Discovery named pipe ${pipeName} error:`, error);
-        }),
-    );
-    return pipeName;
-}
-
-export async function startTestIdServer(testIds: string[]): Promise<number> {
-    const startServer = (): Promise<number> =>
-        new Promise((resolve, reject) => {
-            const server = net.createServer((socket: net.Socket) => {
-                // Convert the test_ids array to JSON
-                const testData = JSON.stringify(testIds);
-
-                // Create the headers
-                const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-
-                // Create the payload by concatenating the headers and the test data
-                const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
-
-                // Send the payload to the socket
-                socket.write(payload);
-
-                // Handle socket events
-                socket.on('data', (data) => {
-                    traceLog('Received data:', data.toString());
-                });
-
-                socket.on('end', () => {
-                    traceLog('Client disconnected');
-                });
-            });
-
-            server.listen(0, () => {
-                const { port } = server.address() as net.AddressInfo;
-                traceLog(`Server listening on port ${port}`);
-                resolve(port);
-            });
-
-            server.on('error', (error: Error) => {
-                reject(error);
-            });
-        });
-
-    // Start the server and wait until it is listening
-    let returnPort = 0;
-    try {
-        await startServer()
-            .then((assignedPort) => {
-                traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
-                returnPort = assignedPort;
-            })
-            .catch((error) => {
-                traceError('Error starting server for pytest test ids server:', error);
-                return 0;
-            })
-            .finally(() => returnPort);
-        return returnPort;
-    } catch {
-        traceError('Error starting server for pytest test ids server, cannot get port.');
-        return returnPort;
-    }
+    });
+    return { name: pipeName, dispose };
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
