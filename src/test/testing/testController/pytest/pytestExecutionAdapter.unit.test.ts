@@ -83,7 +83,14 @@ suite('pytest test execution adapter', () => {
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
 
         utilsStartRunResultNamedPipeStub = sinon.stub(util, 'startRunResultNamedPipe');
-        utilsStartRunResultNamedPipeStub.callsFake(() => Promise.resolve('runResultPipe-mockName'));
+        utilsStartRunResultNamedPipeStub.callsFake(() =>
+            Promise.resolve({
+                name: 'runResultPipe-mockName',
+                dispose: () => {
+                    /* no-op */
+                },
+            }),
+        );
     });
     teardown(() => {
         sinon.restore();
