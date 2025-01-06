@@ -59,24 +59,23 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceError(`No run instance found, cannot resolve execution, for workspace ${uri.fsPath}.`);
             }
         };
-        const cSource = new CancellationTokenSource();
-        runInstance?.token.onCancellationRequested(() => cSource.cancel());
-        const name = await utils.startRunResultNamedPipe(
+        const { name: resultNamedPipeName, dispose: serverDispose } = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
-            cSource.token, // token to cancel
+            runInstance?.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
             console.log(`Test run cancelled, resolving 'till TillAllServerClose' deferred for ${uri.fsPath}.`);
             // if canceled, stop listening for results
             deferredTillServerClose.resolve();
+            serverDispose();
         });
         try {
             await this.runTestsNew(
                 uri,
                 testIds,
-                name,
-                cSource,
+                resultNamedPipeName,
+                serverDispose,
                 runInstance,
                 profileKind,
                 executionFactory,
@@ -99,7 +98,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        serverCancel: CancellationTokenSource,
+        serverDispose: () => void,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
@@ -179,7 +178,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 await debugLauncher.launchDebugger(
                     launchOptions,
                     () => {
-                        serverCancel.cancel();
+                        serverDispose(); // this will resolve the deferredTillAllServerClose
                     },
                     sessionOptions,
                 );
@@ -198,7 +197,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                         traceInfo(`Test run cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
                         proc.kill();
                         deferredTillExecClose.resolve();
-                        serverCancel.cancel();
+                        serverDispose(); // this will resolve the deferredTillAllServerClose
                     });
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
@@ -218,7 +217,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                             );
                         }
                         deferredTillExecClose.resolve();
-                        serverCancel.cancel();
+                        serverDispose(); // this will resolve the deferredTillAllServerClose
                     });
                     await deferredTillExecClose.promise;
                 } else {
@@ -239,7 +238,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                         resultProc?.kill();
                     } else {
                         deferredTillExecClose?.resolve();
-                        serverCancel.cancel();
                     }
                 });
 
@@ -276,9 +274,9 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                                 runInstance,
                             );
                         }
+                        serverDispose();
                     }
                     deferredTillExecClose.resolve();
-                    serverCancel.cancel();
                 });
                 await deferredTillExecClose.promise;
             }

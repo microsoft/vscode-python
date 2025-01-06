@@ -49,16 +49,16 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 traceError(`No run instance found, cannot resolve execution, for workspace ${uri.fsPath}.`);
             }
         };
-        const cSource = new CancellationTokenSource();
-        runInstance?.token.onCancellationRequested(() => cSource.cancel());
-
-        const name = await utils.startRunResultNamedPipe(
+        const { name, dispose: serverDispose } = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
-            cSource.token, // token to cancel
+            runInstance?.token, // token to cancel
         );
         runInstance?.token.onCancellationRequested(() => {
             traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
+            // if canceled, stop listening for results
+            serverDispose(); // this will resolve deferredTillServerClose
+
             const executionPayload: ExecutionTestPayload = {
                 cwd: uri.fsPath,
                 status: 'success',
@@ -72,7 +72,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 uri,
                 testIds,
                 name,
-                cSource,
+                serverDispose,
                 runInstance,
                 profileKind,
                 executionFactory,
@@ -97,7 +97,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         uri: Uri,
         testIds: string[],
         resultNamedPipeName: string,
-        serverCancel: CancellationTokenSource,
+        serverDispose: () => void,
         runInstance?: TestRun,
         profileKind?: TestRunProfileKind,
         executionFactory?: IPythonExecutionFactory,
@@ -239,7 +239,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         resultProc?.kill();
                     } else {
                         deferredTillExecClose.resolve();
-                        serverCancel.cancel();
                     }
                 });
 
@@ -283,12 +282,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                                 runInstance,
                             );
                         }
+                        // this doesn't work, it instead directs us to the noop one which is defined first
+                        // potentially this is due to the server already being close, if this is the case?
+                        serverDispose(); // this will resolve deferredTillServerClose
                     }
-
-                    // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
                     // due to the sync reading of the output.
                     deferredTillExecClose.resolve();
-                    serverCancel.cancel();
                 });
                 await deferredTillExecClose.promise;
             }
