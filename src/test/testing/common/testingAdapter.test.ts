@@ -81,6 +81,8 @@ suite('End to End Tests: test adapters', () => {
         'coverageWorkspace',
     );
     suiteSetup(async () => {
+        serviceContainer = (await initialize()).serviceContainer;
+
         // create symlink for specific symlink test
         const target = rootPathSmallWorkspace;
         const dest = rootPathDiscoverySymlink;
@@ -105,7 +107,6 @@ suite('End to End Tests: test adapters', () => {
     });
 
     setup(async () => {
-        serviceContainer = (await initialize()).serviceContainer;
         getPixiStub = sinon.stub(pixi, 'getPixi');
         getPixiStub.resolves(undefined);
 
@@ -677,7 +678,7 @@ suite('End to End Tests: test adapters', () => {
     });
     test('pytest execution adapter small workspace with correct output', async () => {
         // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
@@ -874,7 +875,7 @@ suite('End to End Tests: test adapters', () => {
     });
     test('pytest execution adapter large workspace', async () => {
         // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
@@ -1061,12 +1062,88 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
+    test('unittest execution adapter seg fault error handling', async () => {
+        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        let callCount = 0;
+        let failureOccurred = false;
+        let failureMsg = '';
+        resultResolver._resolveExecution = async (data, _token?) => {
+            // do the following asserts for each time resolveExecution is called, should be called once per test.
+            callCount = callCount + 1;
+            traceLog(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
+            try {
+                if (data.status === 'error') {
+                    if (data.error === undefined) {
+                        // Dereference a NULL pointer
+                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
+                        if (indexOfTest === -1) {
+                            failureOccurred = true;
+                            failureMsg = 'Expected test to have a null pointer';
+                        }
+                    } else if (data.error.length === 0) {
+                        failureOccurred = true;
+                        failureMsg = "Expected errors in 'error' field";
+                    }
+                } else {
+                    const indexOfTest = JSON.stringify(data.result).search('error');
+                    if (indexOfTest === -1) {
+                        failureOccurred = true;
+                        failureMsg =
+                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
+                    }
+                }
+                if (data.result === undefined) {
+                    failureOccurred = true;
+                    failureMsg = 'Expected results to be present';
+                }
+                // make sure the testID is found in the results
+                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
+                if (indexOfTest === -1) {
+                    failureOccurred = true;
+                    failureMsg = 'Expected testId to be present';
+                }
+            } catch (err) {
+                failureMsg = err ? (err as Error).toString() : '';
+                failureOccurred = true;
+            }
+            return Promise.resolve();
+        };
+
+        const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
+        const testIds: string[] = [testId];
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathErrorWorkspace);
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+
+        // run pytest execution
+        const executionAdapter = new UnittestTestExecutionAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        await executionAdapter
+            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+            .finally(() => {
+                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
+            });
+    });
     test('pytest execution adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        console.log('EFB: beginning function');
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
@@ -1092,7 +1169,7 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            return Promise.resolve();
+            // return Promise.resolve();
         };
 
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;

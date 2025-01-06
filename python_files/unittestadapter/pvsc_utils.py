@@ -18,6 +18,8 @@ sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 from typing_extensions import NotRequired  # noqa: E402
 
+from testing_tools import socket_manager  # noqa: E402
+
 # Types
 
 
@@ -329,10 +331,10 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = open(test_run_pipe, "w", encoding="utf-8", newline="\r\n")  # noqa: SIM115, PTH123
+            __writer = socket_manager.PipeManager(test_run_pipe)
+            __writer.connect()
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
-            print(error_msg, file=sys.stderr)
             __writer = None
             raise VSCodeUnittestError(error_msg) from error
 
@@ -341,11 +343,10 @@ def send_post_request(
         "params": payload,
     }
     data = json.dumps(rpc)
+
     try:
         if __writer:
-            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
-            __writer.write(request)
-            __writer.flush()
+            __writer.write(data)
         else:
             print(
                 f"Connection error[vscode-unittest], writer is None \n[vscode-unittest] data: \n{data} \n",

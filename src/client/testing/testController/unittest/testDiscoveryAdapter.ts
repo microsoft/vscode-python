@@ -44,7 +44,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { unittestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
-        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
             this.resultResolver?.resolveDiscovery(data);
         });
 
@@ -66,7 +66,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         try {
             await this.runDiscovery(uri, options, name, cwd, executionFactory);
         } finally {
-            // none
+            dispose();
         }
         // placeholder until after the rewrite is adopted
         // TODO: remove after adoption.
