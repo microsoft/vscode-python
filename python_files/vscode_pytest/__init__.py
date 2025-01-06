@@ -923,8 +923,7 @@ def send_message(
 
     if __writer is None:
         try:
-            # option B: put this there: , buffering=1024
-            __writer = open(TEST_RUN_PIPE, "wb")  # noqa: SIM115, PTH123 (-1 no ,0 auto,1, int [this is the value of the buffer size])
+            __writer = open(TEST_RUN_PIPE, "wb")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
