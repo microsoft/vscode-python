@@ -923,7 +923,8 @@ def send_message(
 
     if __writer is None:
         try:
-            __writer = open(TEST_RUN_PIPE, "w", encoding="utf-8", newline="\r\n")  # noqa: SIM115, PTH123
+            # option B: put this there: , buffering=1024
+            __writer = open(TEST_RUN_PIPE, "wb")  # noqa: SIM115, PTH123 (-1 no ,0 auto,1, int [this is the value of the buffer size])
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
@@ -943,9 +944,16 @@ def send_message(
     data = json.dumps(rpc, cls=cls_encoder)
     try:
         if __writer:
-            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
-            __writer.write(request)
-            __writer.flush()
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
+            size = 4096
+            encoded = request.encode("utf-8")
+            bytes_written = 0
+            while bytes_written < len(encoded):
+                segment = encoded[bytes_written : bytes_written + size]
+                bytes_written += __writer.write(segment)
+                __writer.flush()
         else:
             print(
                 f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",

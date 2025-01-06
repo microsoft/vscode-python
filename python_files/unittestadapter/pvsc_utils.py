@@ -329,7 +329,7 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = open(test_run_pipe, "w", encoding="utf-8", newline="\r\n")  # noqa: SIM115, PTH123
+            __writer = open(test_run_pipe, "wb")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
             print(error_msg, file=sys.stderr)
@@ -343,9 +343,17 @@ def send_post_request(
     data = json.dumps(rpc)
     try:
         if __writer:
-            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
-            __writer.write(request)
-            __writer.flush()
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
+            size = 4096
+            encoded = request.encode("utf-8")
+            bytes_written = 0
+            while bytes_written < len(encoded):
+                print("writing more bytes!")
+                segment = encoded[bytes_written : bytes_written + size]
+                bytes_written += __writer.write(segment)
+                __writer.flush()
         else:
             print(
                 f"Connection error[vscode-unittest], writer is None \n[vscode-unittest] data: \n{data} \n",

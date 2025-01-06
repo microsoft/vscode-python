@@ -1066,7 +1066,6 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        console.log('EFB: beginning function');
         resultResolver._resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
