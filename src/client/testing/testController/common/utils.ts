@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as net from 'net';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -8,10 +7,8 @@ import * as crypto from 'crypto';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
-import { IExperimentService } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
+import { IServiceContainer } from '../../../ioc/types';
 import {
     DiscoveredTestItem,
     DiscoveredTestNode,
@@ -22,6 +19,8 @@ import {
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createNamedPipeServer, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { IExperimentService } from '../../../common/types';
+import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
 
 export function fixLogLines(content: string): string {
     const lines = content.split(/\r?\n/g);
@@ -117,6 +116,28 @@ export async function writeTestIdsFile(testIds: string[]): Promise<string> {
     return tempFileName;
 }
 
+export function ExtractJsonRPCData(payloadLength: string | undefined, rawData: string): IJSONRPCData {
+    /**
+     * Extracts JSON-RPC content based on provided headers and raw data.
+     *
+     * This function uses the `Content-Length` header from the provided headers map
+     * to determine how much of the rawData string represents the actual JSON content.
+     * After extracting the expected content, it also returns any remaining data
+     * that comes after the extracted content as remaining raw data.
+     *
+     * @param {string | undefined} payloadLength - The value of the `Content-Length` header.
+     * @param {string} rawData - The raw string data from which the JSON content will be extracted.
+     *
+     * @returns {IJSONRPCContent} An object containing the extracted JSON content and any remaining raw data.
+     */
+    const length = parseInt(payloadLength ?? '0', 10);
+    const data = rawData.slice(0, length);
+    const remainingRawData = rawData.slice(length);
+    return {
+        extractedJSON: data,
+        remainingRawData,
+    };
+}
 export async function startRunResultNamedPipe(
     dataReceivedCallback: (payload: ExecutionTestPayload) => void,
     deferredTillServerClose: Deferred<void>,
@@ -166,6 +187,47 @@ export async function startRunResultNamedPipe(
 
 interface DiscoveryResultMessage extends Message {
     params: DiscoveredTestPayload;
+}
+
+export function parseJsonRPCHeadersAndData(rawData: string): ParsedRPCHeadersAndData {
+    /**
+     * Parses the provided raw data to extract JSON-RPC specific headers and remaining data.
+     *
+     * This function aims to extract specific JSON-RPC headers (like UUID, content length,
+     * and content type) from the provided raw string data. Headers are expected to be
+     * delimited by newlines and the format should be "key:value". The function stops parsing
+     * once it encounters an empty line, and the rest of the data after this line is treated
+     * as the remaining raw data.
+     *
+     * @param {string} rawData - The raw string containing headers and possibly other data.
+     * @returns {ParsedRPCHeadersAndData} An object containing the parsed headers as a map and the
+     * remaining raw data after the headers.
+     */
+    const lines = rawData.split('\n');
+    let remainingRawData = '';
+    const headerMap = new Map<string, string>();
+    for (let i = 0; i < lines.length; i += 1) {
+        const line = lines[i];
+        if (line === '') {
+            remainingRawData = lines.slice(i + 1).join('\n');
+            break;
+        }
+        const [key, value] = line.split(':');
+        if (value && value.trim()) {
+            if ([JSONRPC_UUID_HEADER, JSONRPC_CONTENT_LENGTH_HEADER, JSONRPC_CONTENT_TYPE_HEADER].includes(key)) {
+                headerMap.set(key.trim(), value.trim());
+            }
+        }
+    }
+
+    return {
+        headers: headerMap,
+        remainingRawData,
+    };
+}
+export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContainer): boolean {
+    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
+    return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
 export async function startDiscoveryNamedPipe(
