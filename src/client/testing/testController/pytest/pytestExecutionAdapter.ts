@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationTokenSource, DebugSessionOptions, TestRun, TestRunProfileKind, Uri } from 'vscode';
+import { DebugSessionOptions, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as path from 'path';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
@@ -174,7 +174,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 await debugLauncher!.launchDebugger(
                     launchOptions,
                     () => {
-                        serverCancel.cancel();
+                        serverDispose(); // this will resolve the deferredTillAllServerClose
                     },
                     sessionOptions,
                 );
@@ -196,7 +196,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                         proc.kill();
                         deferredTillExecClose.resolve();
-                        serverCancel.cancel();
+                        serverDispose(); // this will resolve the deferredTillAllServerClose
                     });
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
@@ -216,7 +216,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                             );
                         }
                         deferredTillExecClose.resolve();
-                        serverCancel.cancel();
+                        serverDispose(); // this will resolve the deferredTillAllServerClose
                     });
                     await deferredTillExecClose.promise;
                 } else {
