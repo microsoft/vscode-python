@@ -17,7 +17,7 @@ import {
     ITestResultResolver,
 } from './types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
-import { createNamedPipeServer, generateRandomPipeName } from '../../../common/pipes/namedPipes';
+import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IExperimentService } from '../../../common/types';
 import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
@@ -58,28 +58,6 @@ export const MESSAGE_ON_TESTING_OUTPUT_MOVE =
 
 export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
-}
-
-export async function startTestIdsNamedPipe(testIds: string[]): Promise<string> {
-    const pipeName: string = generateRandomPipeName('python-test-ids');
-    // uses callback so the on connect action occurs after the pipe is created
-    await createNamedPipeServer(pipeName, ([_reader, writer]) => {
-        traceVerbose('Test Ids named pipe connected');
-        // const num = await
-        const msg = {
-            jsonrpc: '2.0',
-            params: testIds,
-        } as Message;
-        writer
-            .write(msg)
-            .then(() => {
-                writer.end();
-            })
-            .catch((ex) => {
-                traceError('Failed to write test ids to named pipe', ex);
-            });
-    });
-    return pipeName;
 }
 
 interface ExecutionResultMessage extends Message {
@@ -142,47 +120,47 @@ export async function startRunResultNamedPipe(
     dataReceivedCallback: (payload: ExecutionTestPayload) => void,
     deferredTillServerClose: Deferred<void>,
     cancellationToken?: CancellationToken,
-): Promise<{ name: string } & Disposable> {
+): Promise<string> {
     traceVerbose('Starting Test Result named pipe');
     const pipeName: string = generateRandomPipeName('python-test-results');
-    let disposeOfServer: () => void = () => {
-        deferredTillServerClose.resolve();
-        /* noop */
-    };
-    const server = await createNamedPipeServer(pipeName, ([reader, _writer]) => {
-        // this lambda function is: onConnectionCallback
-        // this is called once per client connecting to the server
-        traceVerbose(`Test Result named pipe ${pipeName} connected`);
-        let perConnectionDisposables: (Disposable | undefined)[] = [reader];
 
-        // create a function to dispose of the server
-        disposeOfServer = () => {
-            // dispose of all data listeners and cancelation listeners
-            perConnectionDisposables.forEach((d) => d?.dispose());
-            perConnectionDisposables = [];
-            deferredTillServerClose.resolve();
-        };
-        perConnectionDisposables.push(
-            // per connection, add a listener for the cancellation token and the data
+    const reader = await createReaderPipe(pipeName, cancellationToken);
+    traceVerbose(`Test Results named pipe ${pipeName} connected`);
+    let disposables: Disposable[] = [];
+    const disposable = new Disposable(() => {
+        traceVerbose(`Test Results named pipe ${pipeName} disposed`);
+        disposables.forEach((d) => d.dispose());
+        disposables = [];
+        deferredTillServerClose.resolve();
+    });
+
+    if (cancellationToken) {
+        disposables.push(
             cancellationToken?.onCancellationRequested(() => {
-                console.log(`Test Result named pipe ${pipeName}  cancelled`);
-                // if cancel is called on one connection, dispose of all connections
-                disposeOfServer();
-            }),
-            reader.listen((data: Message) => {
-                traceVerbose(`Test Result named pipe ${pipeName} received data`);
-                dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
+                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
+                disposable.dispose();
             }),
         );
-        server.serverOnClosePromise().then(() => {
+    }
+    disposables.push(
+        reader,
+        reader.listen((data: Message) => {
+            traceVerbose(`Test Result named pipe ${pipeName} received data`);
+            // if EOT, call decrement connection count (callback)
+            dataReceivedCallback((data as ExecutionResultMessage).params as ExecutionTestPayload);
+        }),
+        reader.onClose(() => {
             // this is called once the server close, once per run instance
             traceVerbose(`Test Result named pipe ${pipeName} closed. Disposing of listener/s.`);
             // dispose of all data listeners and cancelation listeners
-            disposeOfServer();
-        });
-    });
+            disposable.dispose();
+        }),
+        reader.onError((error) => {
+            traceError(`Test Results named pipe ${pipeName} error:`, error);
+        }),
+    );
 
-    return { name: pipeName, dispose: disposeOfServer };
+    return pipeName;
 }
 
 interface DiscoveryResultMessage extends Message {
@@ -233,36 +211,44 @@ export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContai
 export async function startDiscoveryNamedPipe(
     callback: (payload: DiscoveredTestPayload) => void,
     cancellationToken?: CancellationToken,
-): Promise<{ name: string } & Disposable> {
+): Promise<string> {
     traceVerbose('Starting Test Discovery named pipe');
+    // const pipeName: string = '/Users/eleanorboyd/testingFiles/inc_dec_example/temp33.txt';
     const pipeName: string = generateRandomPipeName('python-test-discovery');
-    let dispose: () => void = () => {
-        /* noop */
-    };
-    await createNamedPipeServer(pipeName, ([reader, _writer]) => {
-        traceVerbose(`Test Discovery named pipe ${pipeName} connected`);
-        let disposables: (Disposable | undefined)[] = [reader];
-        dispose = () => {
-            traceVerbose(`Test Discovery named pipe ${pipeName} disposed`);
-            disposables.forEach((d) => d?.dispose());
-            disposables = [];
-        };
+    const reader = await createReaderPipe(pipeName, cancellationToken);
+
+    traceVerbose(`Test Discovery named pipe ${pipeName} connected`);
+    let disposables: Disposable[] = [];
+    const disposable = new Disposable(() => {
+        traceVerbose(`Test Discovery named pipe ${pipeName} disposed`);
+        disposables.forEach((d) => d.dispose());
+        disposables = [];
+    });
+
+    if (cancellationToken) {
         disposables.push(
-            cancellationToken?.onCancellationRequested(() => {
+            cancellationToken.onCancellationRequested(() => {
                 traceVerbose(`Test Discovery named pipe ${pipeName}  cancelled`);
-                dispose();
-            }),
-            reader.listen((data: Message) => {
-                traceVerbose(`Test Discovery named pipe ${pipeName} received data`);
-                callback((data as DiscoveryResultMessage).params as DiscoveredTestPayload);
-            }),
-            reader.onClose(() => {
-                traceVerbose(`Test Discovery named pipe ${pipeName} closed`);
-                dispose();
+                disposable.dispose();
             }),
         );
-    });
-    return { name: pipeName, dispose };
+    }
+
+    disposables.push(
+        reader,
+        reader.listen((data: Message) => {
+            traceVerbose(`Test Discovery named pipe ${pipeName} received data`);
+            callback((data as DiscoveryResultMessage).params as DiscoveredTestPayload);
+        }),
+        reader.onClose(() => {
+            traceVerbose(`Test Discovery named pipe ${pipeName} closed`);
+            disposable.dispose();
+        }),
+        reader.onError((error) => {
+            traceError(`Test Discovery named pipe ${pipeName} error:`, error);
+        }),
+    );
+    return pipeName;
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
