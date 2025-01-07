@@ -92,10 +92,14 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!terminal.shellIntegration && this._terminalFirstLaunched) {
             this._terminalFirstLaunched = false;
             const promise = new Promise<boolean>((resolve) => {
-                const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
+                const disposable = this.terminalManager.onDidChangeTerminalShellIntegration((e) => {
                     clearTimeout(timer);
                     disposable.dispose();
                     resolve(true);
+                    const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
+                    const tempEnv = shellIntegration.env;
+                    console.log(tempEnv);
+                    traceVerbose('Printing temp env from service.ts in terminal1');
                 });
                 const TIMEOUT_DURATION = 500;
                 const timer = setTimeout(() => {
@@ -114,6 +118,11 @@ export class TerminalService implements ITerminalService, Disposable {
             return undefined;
         } else if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
+
+            const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
+            const tempEnv = shellIntegration.env;
+            console.log(tempEnv);
+            traceVerbose('Printing temp env from service.ts in terminal2');
             traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
         } else {
