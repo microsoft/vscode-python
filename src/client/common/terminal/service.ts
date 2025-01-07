@@ -92,7 +92,7 @@ export class TerminalService implements ITerminalService, Disposable {
         if (!terminal.shellIntegration && this._terminalFirstLaunched) {
             this._terminalFirstLaunched = false;
             const promise = new Promise<boolean>((resolve) => {
-                const disposable = this.terminalManager.onDidChangeTerminalShellIntegration((e) => {
+                const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
                     clearTimeout(timer);
                     disposable.dispose();
                     resolve(true);
