@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict
 
 import pytest
 
@@ -595,24 +595,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 file_nodes_dict[os.fspath(parent_path)] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: dict[str, TestNode] = {}
-    for name, file_node in file_nodes_dict.items():
+    for file_node in file_nodes_dict.values():
         # Iterate through all the files that exist and construct them into nested folders.
         root_folder_node: TestNode
-        print(name)
-        # import pytest_ruff
-
-        # if isinstance(name, pytest_ruff.RuffFile):
-        #     # if ruff file, get the other file node and add the ruff test to it
-        #     other = None
-        #     for key, value in file_nodes_dict.items():
-        #         if value == file_node and key != name:
-        #             other = value
-        #             break
-        #     if other is None:
-        #         raise ValueError(f"Could not find matching file node for {name}")
-        #     other.children.append(file_node.children[0])
-        #     break
-
         try:
             root_folder_node: TestNode = build_nested_folders(
                 file_node, created_files_folders_dict, session_node
