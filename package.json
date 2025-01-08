@@ -1147,12 +1147,6 @@
                 "command": "python.execInInteractiveWindowEnter",
                 "key": "enter",
                 "when": "!config.interactiveWindow.executeWithShiftEnter && isCompositeNotebook && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused && !notebookCellListFocused"
-            },
-            {
-                "command": "python.refreshTensorBoard",
-                "key": "ctrl+r",
-                "mac": "cmd+r",
-                "when": "python.hasActiveTensorBoardSession"
             }
         ],
         "languages": [
@@ -1304,20 +1298,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.launchTensorBoard",
-                    "title": "%python.command.python.launchTensorBoard.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.refreshTensorBoard",
-                    "enablement": "python.hasActiveTensorBoardSession",
-                    "icon": "$(refresh)",
-                    "title": "%python.command.python.refreshTensorBoard.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
-                },
-                {
-                    "category": "Python",
                     "command": "python.reportIssue",
                     "title": "%python.command.python.reportIssue.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported"
@@ -1412,13 +1392,6 @@
                     "command": "python.execInREPL",
                     "group": "Python",
                     "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && config.python.REPL.sendToNativeREPL"
-                }
-            ],
-            "editor/title": [
-                {
-                    "command": "python.refreshTensorBoard",
-                    "group": "navigation@0",
-                    "when": "python.hasActiveTensorBoardSession && !virtualWorkspace && shellExecutionSupported"
                 }
             ],
             "editor/title/run": [
