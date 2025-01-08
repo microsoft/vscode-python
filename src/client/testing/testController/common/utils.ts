@@ -209,10 +209,10 @@ export function populateTestTree(
                 const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
 
-                const range = new Range(
-                    new Position(Number(child.lineno) - 1, 0),
-                    new Position(Number(child.lineno), 0),
-                );
+                let range: Range | undefined;
+                if (child.lineno) {
+                    range = new Range(new Position(Number(child.lineno) - 1, 0), new Position(Number(child.lineno), 0));
+                }
                 testItem.canResolveChildren = false;
                 testItem.range = range;
                 testItem.tags = [RunTestTag, DebugTestTag];

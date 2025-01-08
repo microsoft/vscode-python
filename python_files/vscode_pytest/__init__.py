@@ -10,14 +10,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Generator,
-    Literal,
-    TypedDict,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict, cast
 
 import pytest
 
@@ -598,8 +591,19 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
         elif not hasattr(test_case, "callspec"):
-            # This includes test cases that are pytest functions or a doctests.
             parent_path = get_node_path(test_case.parent)
+            # # This includes test cases that are pytest functions or a doctests. got here with ruff test
+            # is_ruff = False
+            # # 'script_a.py::ruff'
+            # for mark in test_case.own_markers:
+            #     if mark.name == "ruff":
+            #         # This is a ruff test, we do not want to include this in the tree.
+            #         print("[vscode-pytest]: Skipping ruff test: ", test_case.nodeid)
+            #         is_ruff = True
+            # if is_ruff:
+            #     # cast RuffFile type  to pytest.File
+            #     print("is_ruff true")
+            #     # parent_case = pytest.Module.from_parent(test_case.parent)
             try:
                 parent_test_case = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
@@ -607,9 +611,24 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 file_nodes_dict[os.fspath(parent_path)] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: dict[str, TestNode] = {}
-    for file_node in file_nodes_dict.values():
+    for name, file_node in file_nodes_dict.items():
         # Iterate through all the files that exist and construct them into nested folders.
         root_folder_node: TestNode
+        print(name)
+        # import pytest_ruff
+
+        # if isinstance(name, pytest_ruff.RuffFile):
+        #     # if ruff file, get the other file node and add the ruff test to it
+        #     other = None
+        #     for key, value in file_nodes_dict.items():
+        #         if value == file_node and key != name:
+        #             other = value
+        #             break
+        #     if other is None:
+        #         raise ValueError(f"Could not find matching file node for {name}")
+        #     other.children.append(file_node.children[0])
+        #     break
+
         try:
             root_folder_node: TestNode = build_nested_folders(
                 file_node, created_files_folders_dict, session_node
