@@ -21,6 +21,10 @@ import {
 } from './types';
 import { traceVerbose } from '../../logging';
 import { getConfiguration } from '../vscodeApis/workspaceApis';
+import { useEnvExtension } from '../../envExt/api.internal';
+import { ensureTerminalLegacy } from '../../envExt/api.legacy';
+import { sleep } from '../utils/async';
+import { isWindows } from '../utils/platform';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -104,7 +108,7 @@ export class TerminalService implements ITerminalService, Disposable {
 
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
-        if (isPythonShell && !pythonrcSetting) {
+        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows())) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
@@ -131,22 +135,29 @@ export class TerminalService implements ITerminalService, Disposable {
         if (this.terminal) {
             return;
         }
-        this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
-        this.terminal = this.terminalManager.createTerminal({
-            name: this.options?.title || 'Python',
-            hideFromUser: this.options?.hideFromUser,
-        });
-        this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
-        // Sometimes the terminal takes some time to start up before it can start accepting input.
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        if (useEnvExtension()) {
+            this.terminal = await ensureTerminalLegacy(this.options?.resource, {
+                name: this.options?.title || 'Python',
+                hideFromUser: this.options?.hideFromUser,
+            });
+        } else {
+            this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
+            this.terminal = this.terminalManager.createTerminal({
+                name: this.options?.title || 'Python',
+                hideFromUser: this.options?.hideFromUser,
+            });
+            this.terminalAutoActivator.disableAutoActivation(this.terminal);
 
-        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
-            resource: this.options?.resource,
-            preserveFocus,
-            interpreter: this.options?.interpreter,
-            hideFromUser: this.options?.hideFromUser,
-        });
+            await sleep(100);
+
+            await this.terminalActivator.activateEnvironmentInTerminal(this.terminal, {
+                resource: this.options?.resource,
+                preserveFocus,
+                interpreter: this.options?.interpreter,
+                hideFromUser: this.options?.hideFromUser,
+            });
+        }
 
         if (!this.options?.hideFromUser) {
             this.terminal.show(preserveFocus);

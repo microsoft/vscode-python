@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2024.21.0-dev",
+    "version": "2024.23.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -302,11 +302,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.enableSourceMapSupport",
-                "title": "%python.command.python.enableSourceMapSupport.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.execInTerminal",
                 "title": "%python.command.python.execInTerminal.title%"
             },
@@ -336,18 +331,6 @@
                 "category": "Python",
                 "command": "python.execInREPL",
                 "title": "%python.command.python.execInREPL.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.launchTensorBoard",
-                "title": "%python.command.python.launchTensorBoard.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.refreshTensorBoard",
-                "enablement": "python.hasActiveTensorBoardSession",
-                "icon": "$(refresh)",
-                "title": "%python.command.python.refreshTensorBoard.title%"
             },
             {
                 "category": "Python",
@@ -443,12 +426,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.diagnostics.sourceMapsEnabled": {
-                    "default": false,
-                    "description": "%python.diagnostics.sourceMapsEnabled.description%",
-                    "scope": "application",
-                    "type": "boolean"
-                },
                 "python.envFile": {
                     "default": "${workspaceFolder}/.env",
                     "description": "%python.envFile.description%",
@@ -472,8 +449,7 @@
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
                             "pythonTestAdapter",
-                            "pythonREPLSmartSend",
-                            "pythonRecommendTensorboardExt"
+                            "pythonREPLSmartSend"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -482,8 +458,7 @@
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
                             "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%",
-                            "%python.experiments.pythonRecommendTensorboardExt.description%"
+                            "%python.experiments.pythonREPLSmartSend.description%"
                         ]
                     },
                     "scope": "window",
@@ -614,14 +589,6 @@
                     "description": "%python.pixiToolPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
-                },
-                "python.tensorBoard.logDirectory": {
-                    "default": "",
-                    "description": "%python.tensorBoard.logDirectory.description%",
-                    "scope": "resource",
-                    "type": "string",
-                    "markdownDeprecationMessage": "%python.tensorBoard.logDirectory.markdownDeprecationMessage%",
-                    "deprecationMessage": "%python.tensorBoard.logDirectory.deprecationMessage%"
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {
                     "default": false,
@@ -1299,12 +1266,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.enableSourceMapSupport",
-                    "title": "%python.command.python.enableSourceMapSupport.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
                     "command": "python.execInTerminal",
                     "title": "%python.command.python.execInTerminal.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
@@ -1577,7 +1538,6 @@
         "arch": "^2.1.0",
         "fs-extra": "^11.2.0",
         "glob": "^7.2.0",
-        "hash.js": "^1.1.7",
         "iconv-lite": "^0.6.3",
         "inversify": "^6.0.2",
         "jsonc-parser": "^3.0.0",

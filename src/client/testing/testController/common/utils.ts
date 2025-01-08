@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as net from 'net';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -8,9 +7,6 @@ import * as crypto from 'crypto';
 import { CancellationToken, Position, TestController, TestItem, Uri, Range, Disposable } from 'vscode';
 import { Message } from 'vscode-jsonrpc';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { EnableTestAdapterRewrite } from '../../../common/experiments/groups';
-import { IExperimentService } from '../../../common/types';
-import { IServiceContainer } from '../../../ioc/types';
 import { DebugTestTag, ErrorTestItemOptions, RunTestTag } from './testItemUtilities';
 import {
     DiscoveredTestItem,
@@ -23,34 +19,11 @@ import { Deferred, createDeferred } from '../../../common/utils/async';
 import { createReaderPipe, generateRandomPipeName } from '../../../common/pipes/namedPipes';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
-export function fixLogLines(content: string): string {
-    const lines = content.split(/\r?\n/g);
-    return `${lines.join('\r\n')}\r\n`;
-}
-
 export function fixLogLinesNoTrailing(content: string): string {
     const lines = content.split(/\r?\n/g);
     return `${lines.join('\r\n')}`;
 }
-export interface IJSONRPCData {
-    extractedJSON: string;
-    remainingRawData: string;
-}
 
-export interface ParsedRPCHeadersAndData {
-    headers: Map<string, string>;
-    remainingRawData: string;
-}
-
-export interface ExtractOutput {
-    uuid: string | undefined;
-    cleanedJsonData: string | undefined;
-    remainingRawData: string;
-}
-
-export const JSONRPC_UUID_HEADER = 'Request-uuid';
-export const JSONRPC_CONTENT_LENGTH_HEADER = 'Content-Length';
-export const JSONRPC_CONTENT_TYPE_HEADER = 'Content-Type';
 export const MESSAGE_ON_TESTING_OUTPUT_MOVE =
     'Starting now, all test run output will be sent to the Test Result panel,' +
     ' while test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +
@@ -59,114 +32,6 @@ export const MESSAGE_ON_TESTING_OUTPUT_MOVE =
 
 export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
-}
-
-export function extractJsonPayload(rawData: string, uuids: Array<string>): ExtractOutput {
-    /**
-     * Extracts JSON-RPC payload from the provided raw data.
-     * @param {string} rawData - The raw string data from which the JSON payload will be extracted.
-     * @param {Array<string>} uuids - The list of UUIDs that are active.
-     * @returns {string} The remaining raw data after the JSON payload is extracted.
-     */
-
-    const rpcHeaders: ParsedRPCHeadersAndData = parseJsonRPCHeadersAndData(rawData);
-
-    // verify the RPC has a UUID and that it is recognized
-    let uuid = rpcHeaders.headers.get(JSONRPC_UUID_HEADER);
-    uuid = checkUuid(uuid, uuids);
-
-    const payloadLength = rpcHeaders.headers.get('Content-Length');
-
-    // separate out the data within context length of the given payload from the remaining data in the buffer
-    const rpcContent: IJSONRPCData = ExtractJsonRPCData(payloadLength, rpcHeaders.remainingRawData);
-    const cleanedJsonData = rpcContent.extractedJSON;
-    const { remainingRawData } = rpcContent;
-
-    // if the given payload has the complete json, process it otherwise wait for the rest in the buffer
-    if (cleanedJsonData.length === Number(payloadLength)) {
-        // call to process this data
-        // remove this data from the buffer
-        return { uuid, cleanedJsonData, remainingRawData };
-    }
-    // wait for the remaining
-    return { uuid: undefined, cleanedJsonData: undefined, remainingRawData: rawData };
-}
-
-export function checkUuid(uuid: string | undefined, uuids: Array<string>): string | undefined {
-    if (!uuid) {
-        // no UUID found, this could occurred if the payload is full yet so send back without erroring
-        return undefined;
-    }
-    if (!uuids.includes(uuid)) {
-        // no UUID found, this could occurred if the payload is full yet so send back without erroring
-        throw new Error('On data received: Error occurred because the payload UUID is not recognized');
-    }
-    return uuid;
-}
-
-export function parseJsonRPCHeadersAndData(rawData: string): ParsedRPCHeadersAndData {
-    /**
-     * Parses the provided raw data to extract JSON-RPC specific headers and remaining data.
-     *
-     * This function aims to extract specific JSON-RPC headers (like UUID, content length,
-     * and content type) from the provided raw string data. Headers are expected to be
-     * delimited by newlines and the format should be "key:value". The function stops parsing
-     * once it encounters an empty line, and the rest of the data after this line is treated
-     * as the remaining raw data.
-     *
-     * @param {string} rawData - The raw string containing headers and possibly other data.
-     * @returns {ParsedRPCHeadersAndData} An object containing the parsed headers as a map and the
-     * remaining raw data after the headers.
-     */
-    const lines = rawData.split('\n');
-    let remainingRawData = '';
-    const headerMap = new Map<string, string>();
-    for (let i = 0; i < lines.length; i += 1) {
-        const line = lines[i];
-        if (line === '') {
-            remainingRawData = lines.slice(i + 1).join('\n');
-            break;
-        }
-        const [key, value] = line.split(':');
-        if (value && value.trim()) {
-            if ([JSONRPC_UUID_HEADER, JSONRPC_CONTENT_LENGTH_HEADER, JSONRPC_CONTENT_TYPE_HEADER].includes(key)) {
-                headerMap.set(key.trim(), value.trim());
-            }
-        }
-    }
-
-    return {
-        headers: headerMap,
-        remainingRawData,
-    };
-}
-
-export function ExtractJsonRPCData(payloadLength: string | undefined, rawData: string): IJSONRPCData {
-    /**
-     * Extracts JSON-RPC content based on provided headers and raw data.
-     *
-     * This function uses the `Content-Length` header from the provided headers map
-     * to determine how much of the rawData string represents the actual JSON content.
-     * After extracting the expected content, it also returns any remaining data
-     * that comes after the extracted content as remaining raw data.
-     *
-     * @param {string | undefined} payloadLength - The value of the `Content-Length` header.
-     * @param {string} rawData - The raw string data from which the JSON content will be extracted.
-     *
-     * @returns {IJSONRPCContent} An object containing the extracted JSON content and any remaining raw data.
-     */
-    const length = parseInt(payloadLength ?? '0', 10);
-    const data = rawData.slice(0, length);
-    const remainingRawData = rawData.slice(length);
-    return {
-        extractedJSON: data,
-        remainingRawData,
-    };
-}
-
-export function pythonTestAdapterRewriteEnabled(serviceContainer: IServiceContainer): boolean {
-    const experiment = serviceContainer.get<IExperimentService>(IExperimentService);
-    return experiment.inExperimentSync(EnableTestAdapterRewrite.experiment);
 }
 
 interface ExecutionResultMessage extends Message {
@@ -224,7 +89,7 @@ export async function startRunResultNamedPipe(
     if (cancellationToken) {
         disposables.push(
             cancellationToken?.onCancellationRequested(() => {
-                console.log(`Test Result named pipe ${pipeName}  cancelled`);
+                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
                 disposable.dispose();
             }),
         );
@@ -295,63 +160,6 @@ export async function startDiscoveryNamedPipe(
         }),
     );
     return pipeName;
-}
-
-export async function startTestIdServer(testIds: string[]): Promise<number> {
-    const startServer = (): Promise<number> =>
-        new Promise((resolve, reject) => {
-            const server = net.createServer((socket: net.Socket) => {
-                // Convert the test_ids array to JSON
-                const testData = JSON.stringify(testIds);
-
-                // Create the headers
-                const headers = [`Content-Length: ${Buffer.byteLength(testData)}`, 'Content-Type: application/json'];
-
-                // Create the payload by concatenating the headers and the test data
-                const payload = `${headers.join('\r\n')}\r\n\r\n${testData}`;
-
-                // Send the payload to the socket
-                socket.write(payload);
-
-                // Handle socket events
-                socket.on('data', (data) => {
-                    traceLog('Received data:', data.toString());
-                });
-
-                socket.on('end', () => {
-                    traceLog('Client disconnected');
-                });
-            });
-
-            server.listen(0, () => {
-                const { port } = server.address() as net.AddressInfo;
-                traceLog(`Server listening on port ${port}`);
-                resolve(port);
-            });
-
-            server.on('error', (error: Error) => {
-                reject(error);
-            });
-        });
-
-    // Start the server and wait until it is listening
-    let returnPort = 0;
-    try {
-        await startServer()
-            .then((assignedPort) => {
-                traceVerbose(`Server started for pytest test ids server and listening on port ${assignedPort}`);
-                returnPort = assignedPort;
-            })
-            .catch((error) => {
-                traceError('Error starting server for pytest test ids server:', error);
-                return 0;
-            })
-            .finally(() => returnPort);
-        return returnPort;
-    } catch {
-        traceError('Error starting server for pytest test ids server, cannot get port.');
-        return returnPort;
-    }
 }
 
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
@@ -537,7 +345,7 @@ export async function hasSymlinkParent(currentPath: string): Promise<boolean> {
         // Recurse up the directory tree
         return await hasSymlinkParent(parentDirectory);
     } catch (error) {
-        console.error('Error checking symlinks:', error);
+        traceError('Error checking symlinks:', error);
         return false;
     }
 }

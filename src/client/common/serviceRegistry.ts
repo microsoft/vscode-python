@@ -88,7 +88,7 @@ import { Random } from './utils/random';
 import { ContextKeyManager } from './application/contextKeyManager';
 import { CreatePythonFileCommandHandler } from './application/commands/createPythonFile';
 import { RequireJupyterPrompt } from '../jupyter/requireJupyterPrompt';
-import { isWindows } from './platform/platformService';
+import { isWindows } from './utils/platform';
 import { PixiActivationCommandProvider } from './terminal/environmentActivationProviders/pixiActivationProvider';
 
 export function registerTypes(serviceManager: IServiceManager): void {

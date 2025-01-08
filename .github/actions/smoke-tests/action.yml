@@ -43,7 +43,7 @@ runs:
 
     # Bits from the VSIX are reused by smokeTest.ts to speed things up.
     - name: Download VSIX
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.artifact_name }}
 
@@ -61,6 +61,6 @@ runs:
       env:
         DISPLAY: 10
         INSTALL_JUPYTER_EXTENSION: true
-      uses: GabrielBB/xvfb-action@v1.5
+      uses: GabrielBB/xvfb-action@v1.7
       with:
         run: node --no-force-async-hooks-checks ./out/test/smokeTest.js

@@ -286,7 +286,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
     if SYMLINK_PATH:
         cwd = SYMLINK_PATH
 
-    if report.when == "call":
+    if report.when == "call" or (report.when == "setup" and report.skipped):
         traceback = None
         message = None
         report_value = "skipped"
@@ -463,7 +463,11 @@ def pytest_sessionfinish(session, exitstatus):
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
-        from coverage import exceptions
+
+        try:
+            from coverage.exceptions import NoSource
+        except ImportError:
+            from coverage.misc import NoSource
 
         cov = coverage.Coverage()
         cov.load()
@@ -474,16 +478,16 @@ def pytest_sessionfinish(session, exitstatus):
         # remove files omitted per coverage report config if any
         omit_files = cov.config.report_omit
         if omit_files:
-            omit_files = set(omit_files)
-            # convert to absolute paths, check against file set
-            omit_files = {os.fspath(pathlib.Path(file).absolute()) for file in omit_files}
-            print("Files to omit from reporting", omit_files)
-            file_set = file_set - omit_files
+            print("Plugin info[vscode-pytest]: Omit files/rules: ", omit_files)
+            for pattern in omit_files:
+                for file in list(file_set):
+                    if pathlib.Path(file).match(pattern):
+                        file_set.remove(file)
 
         for file in file_set:
             try:
                 analysis = cov.analysis2(file)
-            except exceptions.NoSource:
+            except NoSource:
                 # as per issue 24308 this best way to handle this edge case
                 continue
             lines_executable = {int(line_no) for line_no in analysis[1]}
@@ -512,7 +516,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     """
     session_node = create_session_node(session)
     session_children_dict: dict[str, TestNode] = {}
-    file_nodes_dict: dict[Any, TestNode] = {}
+    file_nodes_dict: dict[str, TestNode] = {}
     class_nodes_dict: dict[str, TestNode] = {}
     function_nodes_dict: dict[str, TestNode] = {}
 
@@ -561,11 +565,13 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 function_test_node["children"].append(test_node)
             # Check if the parent node of the function is file, if so create/add to this file node.
             if isinstance(test_case.parent, pytest.File):
+                # calculate the parent path of the test case
+                parent_path = get_node_path(test_case.parent)
                 try:
-                    parent_test_case = file_nodes_dict[test_case.parent]
+                    parent_test_case = file_nodes_dict[os.fspath(parent_path)]
                 except KeyError:
-                    parent_test_case = create_file_node(test_case.parent)
-                    file_nodes_dict[test_case.parent] = parent_test_case
+                    parent_test_case = create_file_node(parent_path)
+                    file_nodes_dict[os.fspath(parent_path)] = parent_test_case
                 if function_test_node not in parent_test_case["children"]:
                     parent_test_case["children"].append(function_test_node)
             # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
@@ -597,22 +603,24 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             else:
                 ERRORS.append(f"Test class {case_iter} has no parent")
                 break
+            parent_path = get_node_path(parent_module)
             # Create a file node that has the last class as a child.
             try:
-                test_file_node: TestNode = file_nodes_dict[parent_module]
+                test_file_node: TestNode = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
-                test_file_node = create_file_node(parent_module)
-                file_nodes_dict[parent_module] = test_file_node
+                test_file_node = create_file_node(parent_path)
+                file_nodes_dict[os.fspath(parent_path)] = test_file_node
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
         elif not hasattr(test_case, "callspec"):
             # This includes test cases that are pytest functions or a doctests.
+            parent_path = get_node_path(test_case.parent)
             try:
-                parent_test_case = file_nodes_dict[test_case.parent]
+                parent_test_case = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
+                parent_test_case = create_file_node(parent_path)
+                file_nodes_dict[os.fspath(parent_path)] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: dict[str, TestNode] = {}
     for file_node in file_nodes_dict.values():
@@ -770,18 +778,17 @@ def create_parameterized_function_node(
     }
 
 
-def create_file_node(file_module: Any) -> TestNode:
-    """Creates a file node from a pytest file module.
+def create_file_node(calculated_node_path: pathlib.Path) -> TestNode:
+    """Creates a file node from a path which has already been calculated using the get_node_path function.
 
     Keyword arguments:
-    file_module -- the pytest file module.
+    calculated_node_path -- the pytest file path.
     """
-    node_path = get_node_path(file_module)
     return {
-        "name": node_path.name,
-        "path": node_path,
+        "name": calculated_node_path.name,
+        "path": calculated_node_path,
         "type_": "file",
-        "id_": os.fspath(node_path),
+        "id_": os.fspath(calculated_node_path),
         "children": [],
     }
 
@@ -947,7 +954,7 @@ def send_message(
 
     if __writer is None:
         try:
-            __writer = open(TEST_RUN_PIPE, "w", encoding="utf-8", newline="\r\n")  # noqa: SIM115, PTH123
+            __writer = open(TEST_RUN_PIPE, "wb")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
@@ -967,9 +974,16 @@ def send_message(
     data = json.dumps(rpc, cls=cls_encoder)
     try:
         if __writer:
-            request = f"""content-length: {len(data)}\ncontent-type: application/json\n\n{data}"""
-            __writer.write(request)
-            __writer.flush()
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
+            size = 4096
+            encoded = request.encode("utf-8")
+            bytes_written = 0
+            while bytes_written < len(encoded):
+                segment = encoded[bytes_written : bytes_written + size]
+                bytes_written += __writer.write(segment)
+                __writer.flush()
         else:
             print(
                 f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",

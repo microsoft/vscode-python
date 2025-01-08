@@ -24,6 +24,7 @@ import {
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { useEnvExtension, getEnvironment, runInBackground } from '../../../envExt/api.internal';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -95,6 +96,48 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = discoveryPipeName;
         traceInfo(`All environment variables set for pytest discovery: ${JSON.stringify(mutableEnv)}`);
+
+        // delete UUID following entire discovery finishing.
+        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
+
+        if (useEnvExtension()) {
+            const pythonEnv = await getEnvironment(uri);
+            if (pythonEnv) {
+                const deferredTillExecClose: Deferred<void> = createTestingDeferred();
+
+                const proc = await runInBackground(pythonEnv, {
+                    cwd,
+                    args: execArgs,
+                    env: (mutableEnv as unknown) as { [key: string]: string },
+                });
+                proc.stdout.on('data', (data) => {
+                    const out = fixLogLinesNoTrailing(data.toString());
+                    traceInfo(out);
+                    this.outputChannel?.append(out);
+                });
+                proc.stderr.on('data', (data) => {
+                    const out = fixLogLinesNoTrailing(data.toString());
+                    traceError(out);
+                    this.outputChannel?.append(out);
+                });
+                proc.onExit((code, signal) => {
+                    this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
+                    if (code !== 0) {
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                        );
+                        this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
+                    }
+                    deferredTillExecClose.resolve();
+                });
+                await deferredTillExecClose.promise;
+            } else {
+                traceError(`Python Environment not found for: ${uri.fsPath}`);
+            }
+            return;
+        }
+
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,
@@ -109,9 +152,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             interpreter,
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
-        // delete UUID following entire discovery finishing.
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
-        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
         const result = execService?.execObservable(execArgs, spawnOptions);

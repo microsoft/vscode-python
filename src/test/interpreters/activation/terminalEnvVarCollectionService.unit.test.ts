@@ -39,6 +39,7 @@ import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { IShellIntegrationDetectionService, ITerminalDeactivateService } from '../../../client/terminals/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import * as extapi from '../../../client/envExt/api.internal';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -53,6 +54,7 @@ suite('Terminal Environment Variable Collection Service', () => {
     let workspaceService: IWorkspaceService;
     let terminalEnvVarCollectionService: TerminalEnvVarCollectionService;
     let terminalDeactivateService: ITerminalDeactivateService;
+    let useEnvExtensionStub: sinon.SinonStub;
     const progressOptions = {
         location: ProgressLocation.Window,
         title: Interpreters.activatingTerminals,
@@ -64,6 +66,9 @@ suite('Terminal Environment Variable Collection Service', () => {
     const defaultShell = defaultShells[getOSType()];
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         workspaceService = mock<IWorkspaceService>();
         terminalDeactivateService = mock<ITerminalDeactivateService>();
         when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve(undefined);

@@ -177,13 +177,8 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
-    readonly tensorBoard: ITensorBoardSettings | undefined;
     readonly REPL: IREPLSettings;
     register(): void;
-}
-
-export interface ITensorBoardSettings {
-    logDirectory: string | undefined;
 }
 
 export interface IInterpreterSettings {

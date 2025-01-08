@@ -2,4 +2,4 @@
 # Licensed under the MIT License.
 
 [tool.coverage.report]
-omit = ["test_ignore.py"]
+omit = ["test_ignore.py", "tests/*.py"]

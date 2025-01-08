@@ -67,3 +67,7 @@ export function getUserHomeDir(): string | undefined {
     }
     return getEnvironmentVariable('HOME') || getEnvironmentVariable('HOMEPATH');
 }
+
+export function isWindows(): boolean {
+    return getOSType() === OSType.Windows;
+}

@@ -42,7 +42,6 @@ export namespace Commands {
     export const Create_Environment_Check = 'python.createEnvironmentCheck';
     export const Create_Terminal = 'python.createTerminal';
     export const Debug_In_Terminal = 'python.debugInTerminal';
-    export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_In_Separate_Terminal = 'python.execInDedicatedTerminal';
@@ -56,9 +55,7 @@ export namespace Commands {
     export const InstallPython = 'python.installPython';
     export const InstallPythonOnLinux = 'python.installPythonOnLinux';
     export const InstallPythonOnMac = 'python.installPythonOnMac';
-    export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const PickLocalProcess = 'python.pickLocalProcess';
-    export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';

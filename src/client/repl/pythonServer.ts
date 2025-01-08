@@ -38,7 +38,7 @@ class PythonServerImpl implements PythonServer, Disposable {
     private initialize(): void {
         this.disposables.push(
             this.connection.onNotification('log', (message: string) => {
-                console.log('Log:', message);
+                traceLog('Log:', message);
             }),
         );
         this.connection.listen();

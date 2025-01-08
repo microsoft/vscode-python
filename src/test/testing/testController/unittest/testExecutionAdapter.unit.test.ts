@@ -21,6 +21,7 @@ import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { MockChildProcess } from '../../../mocks/mockChildProcess';
 import { traceInfo } from '../../../../client/logging';
 import { UnittestTestExecutionAdapter } from '../../../../client/testing/testController/unittest/testExecutionAdapter';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('Unittest test execution adapter', () => {
     let configService: IConfigurationService;
@@ -35,7 +36,10 @@ suite('Unittest test execution adapter', () => {
     let mockProc: MockChildProcess;
     let utilsWriteTestIdsFileStub: sinon.SinonStub;
     let utilsStartRunResultNamedPipeStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
         configService = ({
             getSettings: () => ({
                 testing: { unittestArgs: ['.'] },

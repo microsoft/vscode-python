@@ -26,5 +26,5 @@ pipenvPath: "<placeholder>"
 
 |Extension Name|Extension Id|Version|
 |---|---|---|
-|Python|ms-python.python|2020.2|
+|python|ms-|2020.2|
 </details>

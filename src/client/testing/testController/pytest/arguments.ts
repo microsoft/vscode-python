@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { TestDiscoveryOptions, TestFilter } from '../../common/types';
+import { TestFilter } from '../../common/types';
 import { getPositionalArguments, filterArguments } from '../common/argumentsHelper';
 
 const OptionsWithArguments = [
@@ -134,11 +134,6 @@ const OptionsWithoutArguments = [
     '-d',
 ];
 
-export function pytestGetTestFilesAndFolders(args: string[]): string[] {
-    // If users enter test modules/methods, then its not supported.
-    return getPositionalArguments(args, OptionsWithArguments, OptionsWithoutArguments);
-}
-
 export function removePositionalFoldersAndFiles(args: string[]): string[] {
     return pytestFilterArguments(args, TestFilter.removeTests);
 }
@@ -257,21 +252,4 @@ function pytestFilterArguments(args: string[], argumentToRemoveOrFilter: string[
         filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
     }
     return filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
-}
-
-export function preparePytestArgumentsForDiscovery(options: TestDiscoveryOptions): string[] {
-    // Remove unwanted arguments (which happen to be test directories & test specific args).
-    const args = pytestFilterArguments(options.args, TestFilter.discovery);
-    if (options.ignoreCache && args.indexOf('--cache-clear') === -1) {
-        args.splice(0, 0, '--cache-clear');
-    }
-    if (args.indexOf('-s') === -1) {
-        args.splice(0, 0, '-s');
-    }
-
-    // Only add --rootdir if user has not already provided one
-    if (args.filter((a) => a.startsWith('--rootdir')).length === 0) {
-        args.splice(0, 0, '--rootdir', options.cwd);
-    }
-    return args;
 }

@@ -9,6 +9,8 @@ import { Commands } from '../../../../common/constants';
 import { IConfigurationService, IPathUtils } from '../../../../common/types';
 import { IPythonPathUpdaterServiceManager } from '../../types';
 import { BaseInterpreterSelectorCommand } from './base';
+import { useEnvExtension } from '../../../../envExt/api.internal';
+import { resetInterpreterLegacy } from '../../../../envExt/api.legacy';
 
 @injectable()
 export class ResetInterpreterCommand extends BaseInterpreterSelectorCommand {
@@ -46,6 +48,9 @@ export class ResetInterpreterCommand extends BaseInterpreterSelectorCommand {
                 const configTarget = targetConfig.configTarget;
                 const wkspace = targetConfig.folderUri;
                 await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
+                if (useEnvExtension()) {
+                    await resetInterpreterLegacy(wkspace);
+                }
             }),
         );
     }

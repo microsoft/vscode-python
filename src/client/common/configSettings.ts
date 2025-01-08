@@ -30,14 +30,12 @@ import {
     IInterpreterSettings,
     IPythonSettings,
     IREPLSettings,
-    ITensorBoardSettings,
     ITerminalSettings,
     Resource,
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
-import { getOSType, OSType } from './utils/platform';
-import { isWindows } from './platform/platformService';
+import { getOSType, OSType, isWindows } from './utils/platform';
 import { untildify } from './helpers';
 
 export class PythonSettings implements IPythonSettings {
@@ -107,8 +105,6 @@ export class PythonSettings implements IPythonSettings {
     public devOptions: string[] = [];
 
     public autoComplete!: IAutoCompleteSettings;
-
-    public tensorBoard: ITensorBoardSettings | undefined;
 
     public testing!: ITestingSettings;
 
@@ -387,14 +383,6 @@ export class PythonSettings implements IPythonSettings {
                   optInto: [],
                   optOutFrom: [],
               };
-
-        const tensorBoardSettings = systemVariables.resolveAny(
-            pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
-        )!;
-        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
-        if (this.tensorBoard.logDirectory) {
-            this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
-        }
     }
 
     // eslint-disable-next-line class-methods-use-this

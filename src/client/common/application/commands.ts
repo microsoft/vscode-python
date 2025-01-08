@@ -5,7 +5,6 @@
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
-import { TensorBoardEntrypoint, TensorBoardEntrypointTrigger } from '../../tensorBoard/constants';
 import { Channel, Commands, CommandSource } from '../constants';
 import { CreateEnvironmentOptions } from '../../pythonEnvironments/creation/proposed.createEnvApis';
 
@@ -34,7 +33,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
     [Commands.Start_REPL]: [];
-    [Commands.Enable_SourceMap_Support]: [];
     [Commands.Exec_Selection_In_Terminal]: [];
     [Commands.Exec_Selection_In_Django_Shell]: [];
     [Commands.Create_Terminal]: [];
@@ -42,7 +40,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.ClearStorage]: [];
     [Commands.CreateNewFile]: [];
     [Commands.ReportIssue]: [];
-    [Commands.RefreshTensorBoard]: [];
     [LSCommands.RestartLS]: [];
 }
 
@@ -101,7 +98,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Debug_In_Terminal]: [Uri];
     [Commands.Tests_Configure]: [undefined, undefined | CommandSource, undefined | Uri];
     [Commands.Tests_CopilotSetup]: [undefined | Uri];
-    [Commands.LaunchTensorBoard]: [TensorBoardEntrypoint, TensorBoardEntrypointTrigger];
     ['workbench.view.testing.focus']: [];
     ['cursorMove']: [
         {

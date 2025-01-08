@@ -101,11 +101,14 @@ def test_coverage_w_omit_config():
     │   ├── test_ignore.py
     │   ├── test_ran.py
     │   └── pyproject.toml
+    │   ├── tests
+    │   │   └── test_disregard.py
 
     pyproject.toml file with the following content:
     [tool.coverage.report]
     omit = [
         "test_ignore.py",
+        "tests/*.py" (this will ignore the coverage in the file tests/test_disregard.py)
     ]
 
 

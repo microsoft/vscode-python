@@ -10,8 +10,9 @@ import * as path from 'path';
 import * as rpc from 'vscode-jsonrpc/node';
 import { CancellationError, CancellationToken, Disposable } from 'vscode';
 import { traceVerbose } from '../../logging';
-import { isWindows } from '../platform/platformService';
+import { isWindows } from '../utils/platform';
 import { createDeferred } from '../utils/async';
+import { noop } from '../utils/misc';
 
 const { XDG_RUNTIME_DIR } = process.env;
 export function generateRandomPipeName(prefix: string): string {
@@ -187,6 +188,13 @@ export async function createReaderPipe(pipeName: string, token?: CancellationTok
     } catch {
         // Intentionally ignored
     }
-    const reader = fs.createReadStream(pipeName, { encoding: 'utf-8' });
-    return new rpc.StreamMessageReader(reader, 'utf-8');
+    const fd = await fs.open(pipeName, fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+    const socket = new net.Socket({ fd });
+    const reader = new rpc.SocketMessageReader(socket, 'utf-8');
+    socket.on('close', () => {
+        fs.close(fd).catch(noop);
+        reader.dispose();
+    });
+
+    return reader;
 }

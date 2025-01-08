@@ -344,10 +344,12 @@ suite('Result Resolver tests', () => {
             resultResolver.runIdToTestItem.set(subtestName, mockSubtestItem);
 
             let generatedId: string | undefined;
+            let generatedUri: Uri | undefined;
             testControllerMock
-                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny()))
+                .setup((t) => t.createTestItem(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((id: string) => {
                     generatedId = id;
+                    generatedUri = workspaceUri;
                     traceLog('createTestItem function called with id:', id);
                 })
                 .returns(() => ({ id: 'id_this', label: 'label_this', uri: workspaceUri } as TestItem));
@@ -373,6 +375,7 @@ suite('Result Resolver tests', () => {
 
             // verify that the passed function was called for the single test item
             assert.ok(generatedId);
+            assert.strictEqual(generatedUri, workspaceUri);
             assert.strictEqual(generatedId, '[subTest with spaces and [brackets]]');
         });
         test('resolveExecution handles failed tests correctly', async () => {

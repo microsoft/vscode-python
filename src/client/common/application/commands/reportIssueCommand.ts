@@ -105,15 +105,18 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
         const installedExtensions = getExtensions()
             .filter((extension) => !extension.id.startsWith('vscode.'))
             .sort((a, b) => {
-                if (a.packageJSON.displayName && b.packageJSON.displayName) {
-                    return a.packageJSON.displayName.localeCompare(b.packageJSON.displayName);
+                if (a.packageJSON.name && b.packageJSON.name) {
+                    return a.packageJSON.name.localeCompare(b.packageJSON.name);
                 }
                 return a.id.localeCompare(b.id);
             })
-            .map(
-                (extension) =>
-                    `|${extension.packageJSON.displayName}|${extension.id}|${extension.packageJSON.version}|`,
-            );
+            .map((extension) => {
+                let publisher: string = extension.packageJSON.publisher as string;
+                if (publisher) {
+                    publisher = publisher.substring(0, 3);
+                }
+                return `|${extension.packageJSON.name}|${publisher}|${extension.packageJSON.version}|`;
+            });
 
         await this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',

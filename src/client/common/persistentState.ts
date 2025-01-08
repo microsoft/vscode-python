@@ -20,6 +20,7 @@ import {
 import { cache } from './utils/decorators';
 import { noop } from './utils/misc';
 import { clearCacheDirectory } from '../pythonEnvironments/base/locators/common/nativePythonFinder';
+import { clearCache, useEnvExtension } from '../envExt/api.internal';
 
 let _workspaceState: Memento | undefined;
 const _workspaceKeys: string[] = [];
@@ -134,6 +135,9 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         this.cmdManager?.registerCommand(Commands.ClearStorage, async () => {
             await clearWorkspaceState();
             await this.cleanAllPersistentStates();
+            if (useEnvExtension()) {
+                await clearCache();
+            }
         });
         const globalKeysStorageDeprecated = this.createGlobalPersistentState(GLOBAL_PERSISTENT_KEYS_DEPRECATED, []);
         const workspaceKeysStorageDeprecated = this.createWorkspacePersistentState(

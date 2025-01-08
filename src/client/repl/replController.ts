@@ -11,7 +11,6 @@ export function createReplController(
 
     const controller = vscode.notebooks.createNotebookController('pythonREPL', 'jupyter-notebook', 'Python REPL');
     controller.supportedLanguages = ['python'];
-    controller.supportsExecutionOrder = true;
 
     controller.description = 'Python REPL';
 
