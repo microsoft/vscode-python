@@ -71,6 +71,9 @@ suite('Execution Flow Run Adapters', () => {
             const { token } = cancellationToken;
             testRunMock.setup((t) => t.token).returns(() => token);
 
+            // run result pipe mocking and the related server close dispose
+            let deferredTillServerCloseTester: Deferred<void> | undefined;
+
             // // mock exec service and exec factory
             execServiceStub
                 .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
@@ -97,11 +100,13 @@ suite('Execution Flow Run Adapters', () => {
                 return Promise.resolve('named-pipe');
             });
 
-            // run result pipe mocking and the related server close dispose
-            let deferredTillServerCloseTester: Deferred<void> | undefined;
-            utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, _token) => {
+            utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, token) => {
                 deferredTillServerCloseTester = deferredTillServerClose;
-                return Promise.resolve({ name: 'named-pipes-socket-name', dispose: serverDisposeStub });
+                token?.onCancellationRequested(() => {
+                    deferredTillServerCloseTester?.resolve();
+                });
+
+                return Promise.resolve('named-pipes-socket-name');
             });
             serverDisposeStub.callsFake(() => {
                 console.log('server disposed');
@@ -127,9 +132,6 @@ suite('Execution Flow Run Adapters', () => {
             );
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
-
-            // assert the server dispose function was called correctly
-            sinon.assert.calledOnce(serverDisposeStub);
         });
         test(`Adapter ${adapter}: token called mid-debug resolves correctly`, async () => {
             // mock test run and cancelation token
@@ -137,6 +139,9 @@ suite('Execution Flow Run Adapters', () => {
             const cancellationToken = new CancellationTokenSource();
             const { token } = cancellationToken;
             testRunMock.setup((t) => t.token).returns(() => token);
+
+            // run result pipe mocking and the related server close dispose
+            let deferredTillServerCloseTester: Deferred<void> | undefined;
 
             // // mock exec service and exec factory
             execServiceStub
@@ -164,14 +169,12 @@ suite('Execution Flow Run Adapters', () => {
                 return Promise.resolve('named-pipe');
             });
 
-            // run result pipe mocking and the related server close dispose
-            let deferredTillServerCloseTester: Deferred<void> | undefined;
             utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, _token) => {
                 deferredTillServerCloseTester = deferredTillServerClose;
-                return Promise.resolve({
-                    name: 'named-pipes-socket-name',
-                    dispose: serverDisposeStub,
+                token?.onCancellationRequested(() => {
+                    deferredTillServerCloseTester?.resolve();
                 });
+                return Promise.resolve('named-pipes-socket-name');
             });
             serverDisposeStub.callsFake(() => {
                 console.log('server disposed');
@@ -210,10 +213,6 @@ suite('Execution Flow Run Adapters', () => {
             );
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
-
-            // TODO: fix the server disposal so it is called once not twice,
-            // currently not a problem but would be useful to improve clarity
-            sinon.assert.called(serverDisposeStub);
         });
     });
 });

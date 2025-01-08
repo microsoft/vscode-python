@@ -42,15 +42,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         executionFactory?: IPythonExecutionFactory,
         interpreter?: PythonEnvironment,
     ): Promise<DiscoveredTestPayload> {
-        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
             this.resultResolver?.resolveDiscovery(data);
         });
 
-        try {
-            await this.runPytestDiscovery(uri, name, executionFactory, interpreter);
-        } finally {
-            dispose();
-        }
+        await this.runPytestDiscovery(uri, name, executionFactory, interpreter);
+
         // this is only a placeholder to handle function overloading until rewrite is finished
         const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
         return discoveryPayload;

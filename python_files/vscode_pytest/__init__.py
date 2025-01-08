@@ -21,11 +21,6 @@ from typing import (
 
 import pytest
 
-script_dir = pathlib.Path(__file__).parent.parent
-sys.path.append(os.fspath(script_dir))
-sys.path.append(os.fspath(script_dir / "lib" / "python"))
-from testing_tools import socket_manager  # noqa: E402
-
 if TYPE_CHECKING:
     from pluggy import Result
 
@@ -171,7 +166,7 @@ def pytest_exception_interact(node, call, report):
             collected_test = TestRunResultDict()
             collected_test[node_id] = item_result
             cwd = pathlib.Path.cwd()
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 "success",
                 collected_test if collected_test else None,
@@ -295,7 +290,7 @@ def pytest_report_teststatus(report, config):  # noqa: ARG001
             )
             collected_test = TestRunResultDict()
             collected_test[absolute_node_id] = item_result
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 "success",
                 collected_test if collected_test else None,
@@ -329,7 +324,7 @@ def pytest_runtest_protocol(item, nextitem):  # noqa: ARG001
             )
             collected_test = TestRunResultDict()
             collected_test[absolute_node_id] = item_result
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 "success",
                 collected_test if collected_test else None,
@@ -405,7 +400,7 @@ def pytest_sessionfinish(session, exitstatus):
                 "children": [],
                 "id_": "",
             }
-            post_response(os.fsdecode(cwd), error_node)
+            send_discovery_message(os.fsdecode(cwd), error_node)
         try:
             session_node: TestNode | None = build_test_tree(session)
             if not session_node:
@@ -413,7 +408,7 @@ def pytest_sessionfinish(session, exitstatus):
                     "Something went wrong following pytest finish, \
                         no session node was created"
                 )
-            post_response(os.fsdecode(cwd), session_node)
+            send_discovery_message(os.fsdecode(cwd), session_node)
         except Exception as e:
             ERRORS.append(
                 f"Error Occurred, traceback: {(traceback.format_exc() if e.__traceback__ else '')}"
@@ -425,7 +420,7 @@ def pytest_sessionfinish(session, exitstatus):
                 "children": [],
                 "id_": "",
             }
-            post_response(os.fsdecode(cwd), error_node)
+            send_discovery_message(os.fsdecode(cwd), error_node)
     else:
         if exitstatus == 0 or exitstatus == 1:
             exitstatus_bool = "success"
@@ -435,7 +430,7 @@ def pytest_sessionfinish(session, exitstatus):
             )
             exitstatus_bool = "error"
 
-            execution_post(
+            send_execution_message(
                 os.fsdecode(cwd),
                 exitstatus_bool,
                 None,
@@ -489,7 +484,7 @@ def pytest_sessionfinish(session, exitstatus):
             result=file_coverage_map,
             error=None,
         )
-        send_post_request(payload)
+        send_message(payload)
 
 
 def build_test_tree(session: pytest.Session) -> TestNode:
@@ -500,7 +495,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     """
     session_node = create_session_node(session)
     session_children_dict: dict[str, TestNode] = {}
-    file_nodes_dict: dict[Any, TestNode] = {}
+    file_nodes_dict: dict[str, TestNode] = {}
     class_nodes_dict: dict[str, TestNode] = {}
     function_nodes_dict: dict[str, TestNode] = {}
 
@@ -549,11 +544,13 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 function_test_node["children"].append(test_node)
             # Check if the parent node of the function is file, if so create/add to this file node.
             if isinstance(test_case.parent, pytest.File):
+                # calculate the parent path of the test case
+                parent_path = get_node_path(test_case.parent)
                 try:
-                    parent_test_case = file_nodes_dict[test_case.parent]
+                    parent_test_case = file_nodes_dict[os.fspath(parent_path)]
                 except KeyError:
-                    parent_test_case = create_file_node(test_case.parent)
-                    file_nodes_dict[test_case.parent] = parent_test_case
+                    parent_test_case = create_file_node(parent_path)
+                    file_nodes_dict[os.fspath(parent_path)] = parent_test_case
                 if function_test_node not in parent_test_case["children"]:
                     parent_test_case["children"].append(function_test_node)
             # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
@@ -585,22 +582,24 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             else:
                 ERRORS.append(f"Test class {case_iter} has no parent")
                 break
+            parent_path = get_node_path(parent_module)
             # Create a file node that has the last class as a child.
             try:
-                test_file_node: TestNode = file_nodes_dict[parent_module]
+                test_file_node: TestNode = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
-                test_file_node = create_file_node(parent_module)
-                file_nodes_dict[parent_module] = test_file_node
+                test_file_node = create_file_node(parent_path)
+                file_nodes_dict[os.fspath(parent_path)] = test_file_node
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
         elif not hasattr(test_case, "callspec"):
             # This includes test cases that are pytest functions or a doctests.
+            parent_path = get_node_path(test_case.parent)
             try:
-                parent_test_case = file_nodes_dict[test_case.parent]
+                parent_test_case = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
+                parent_test_case = create_file_node(parent_path)
+                file_nodes_dict[os.fspath(parent_path)] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: dict[str, TestNode] = {}
     for file_node in file_nodes_dict.values():
@@ -758,18 +757,17 @@ def create_parameterized_function_node(
     }
 
 
-def create_file_node(file_module: Any) -> TestNode:
-    """Creates a file node from a pytest file module.
+def create_file_node(calculated_node_path: pathlib.Path) -> TestNode:
+    """Creates a file node from a path which has already been calculated using the get_node_path function.
 
     Keyword arguments:
-    file_module -- the pytest file module.
+    calculated_node_path -- the pytest file path.
     """
-    node_path = get_node_path(file_module)
     return {
-        "name": node_path.name,
-        "path": node_path,
+        "name": calculated_node_path.name,
+        "path": calculated_node_path,
         "type_": "file",
-        "id_": os.fspath(node_path),
+        "id_": os.fspath(calculated_node_path),
         "children": [],
     }
 
@@ -857,8 +855,10 @@ __writer = None
 atexit.register(lambda: __writer.close() if __writer else None)
 
 
-def execution_post(cwd: str, status: Literal["success", "error"], tests: TestRunResultDict | None):
-    """Sends a POST request with execution payload details.
+def send_execution_message(
+    cwd: str, status: Literal["success", "error"], tests: TestRunResultDict | None
+):
+    """Sends message execution payload details.
 
     Args:
         cwd (str): Current working directory.
@@ -870,10 +870,10 @@ def execution_post(cwd: str, status: Literal["success", "error"], tests: TestRun
     )
     if ERRORS:
         payload["error"] = ERRORS
-    send_post_request(payload)
+    send_message(payload)
 
 
-def post_response(cwd: str, session_node: TestNode) -> None:
+def send_discovery_message(cwd: str, session_node: TestNode) -> None:
     """
     Sends a POST request with test session details in payload.
 
@@ -889,7 +889,7 @@ def post_response(cwd: str, session_node: TestNode) -> None:
     }
     if ERRORS is not None:
         payload["error"] = ERRORS
-    send_post_request(payload, cls_encoder=PathEncoder)
+    send_message(payload, cls_encoder=PathEncoder)
 
 
 class PathEncoder(json.JSONEncoder):
@@ -901,7 +901,7 @@ class PathEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def send_post_request(
+def send_message(
     payload: ExecutionPayloadDict | DiscoveryPayloadDict | CoveragePayloadDict,
     cls_encoder=None,
 ):
@@ -926,8 +926,7 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = socket_manager.PipeManager(TEST_RUN_PIPE)
-            __writer.connect()
+            __writer = open(TEST_RUN_PIPE, "wb")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {TEST_RUN_PIPE}[vscode-pytest]: {error}"
             print(error_msg, file=sys.stderr)
@@ -945,10 +944,18 @@ def send_post_request(
         "params": payload,
     }
     data = json.dumps(rpc, cls=cls_encoder)
-
     try:
         if __writer:
-            __writer.write(data)
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
+            size = 4096
+            encoded = request.encode("utf-8")
+            bytes_written = 0
+            while bytes_written < len(encoded):
+                segment = encoded[bytes_written : bytes_written + size]
+                bytes_written += __writer.write(segment)
+                __writer.flush()
         else:
             print(
                 f"Plugin error connection error[vscode-pytest], writer is None \n[vscode-pytest] data: \n{data} \n",
