@@ -495,7 +495,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
     """
     session_node = create_session_node(session)
     session_children_dict: dict[str, TestNode] = {}
-    file_nodes_dict: dict[Any, TestNode] = {}
+    file_nodes_dict: dict[str, TestNode] = {}
     class_nodes_dict: dict[str, TestNode] = {}
     function_nodes_dict: dict[str, TestNode] = {}
 
@@ -544,11 +544,13 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 function_test_node["children"].append(test_node)
             # Check if the parent node of the function is file, if so create/add to this file node.
             if isinstance(test_case.parent, pytest.File):
+                # calculate the parent path of the test case
+                parent_path = get_node_path(test_case.parent)
                 try:
-                    parent_test_case = file_nodes_dict[test_case.parent]
+                    parent_test_case = file_nodes_dict[os.fspath(parent_path)]
                 except KeyError:
-                    parent_test_case = create_file_node(test_case.parent)
-                    file_nodes_dict[test_case.parent] = parent_test_case
+                    parent_test_case = create_file_node(parent_path)
+                    file_nodes_dict[os.fspath(parent_path)] = parent_test_case
                 if function_test_node not in parent_test_case["children"]:
                     parent_test_case["children"].append(function_test_node)
             # If the parent is not a file, it is a class, add the function node as the test node to handle subsequent nesting.
@@ -580,22 +582,24 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             else:
                 ERRORS.append(f"Test class {case_iter} has no parent")
                 break
+            parent_path = get_node_path(parent_module)
             # Create a file node that has the last class as a child.
             try:
-                test_file_node: TestNode = file_nodes_dict[parent_module]
+                test_file_node: TestNode = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
-                test_file_node = create_file_node(parent_module)
-                file_nodes_dict[parent_module] = test_file_node
+                test_file_node = create_file_node(parent_path)
+                file_nodes_dict[os.fspath(parent_path)] = test_file_node
             # Check if the class is already a child of the file node.
             if test_class_node is not None and test_class_node not in test_file_node["children"]:
                 test_file_node["children"].append(test_class_node)
         elif not hasattr(test_case, "callspec"):
             # This includes test cases that are pytest functions or a doctests.
+            parent_path = get_node_path(test_case.parent)
             try:
-                parent_test_case = file_nodes_dict[test_case.parent]
+                parent_test_case = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
-                parent_test_case = create_file_node(test_case.parent)
-                file_nodes_dict[test_case.parent] = parent_test_case
+                parent_test_case = create_file_node(parent_path)
+                file_nodes_dict[os.fspath(parent_path)] = parent_test_case
             parent_test_case["children"].append(test_node)
     created_files_folders_dict: dict[str, TestNode] = {}
     for file_node in file_nodes_dict.values():
@@ -753,18 +757,17 @@ def create_parameterized_function_node(
     }
 
 
-def create_file_node(file_module: Any) -> TestNode:
-    """Creates a file node from a pytest file module.
+def create_file_node(calculated_node_path: pathlib.Path) -> TestNode:
+    """Creates a file node from a path which has already been calculated using the get_node_path function.
 
     Keyword arguments:
-    file_module -- the pytest file module.
+    calculated_node_path -- the pytest file path.
     """
-    node_path = get_node_path(file_module)
     return {
-        "name": node_path.name,
-        "path": node_path,
+        "name": calculated_node_path.name,
+        "path": calculated_node_path,
         "type_": "file",
-        "id_": os.fspath(node_path),
+        "id_": os.fspath(calculated_node_path),
         "children": [],
     }
 
