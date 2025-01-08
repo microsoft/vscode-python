@@ -7,11 +7,12 @@ import ctypes
 
 class TestSegmentationFault(unittest.TestCase):
     def cause_segfault(self):
+        print("Causing a segmentation fault")
         ctypes.string_at(0)  # Dereference a NULL pointer
 
     def test_segfault(self):
-        assert True
         self.cause_segfault()
+        assert True
 
 
 if __name__ == "__main__":
