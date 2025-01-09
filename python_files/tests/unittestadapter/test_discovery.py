@@ -314,9 +314,9 @@ def test_simple_django_collect():
     if actual_list is not None:
         actual_item = actual_list.pop(0)
         assert all(item in actual_item for item in ("status", "cwd"))
-        assert (
-            actual_item.get("status") == "success"
-        ), f"Status is not 'success', error is: {actual_item.get('error')}"
+        assert actual_item.get("status") == "success", (
+            f"Status is not 'success', error is: {actual_item.get('error')}"
+        )
         assert actual_item.get("cwd") == os.fspath(data_path)
         assert len(actual_item["tests"]["children"]) == 1
         assert actual_item["tests"]["children"][0]["children"][0]["id_"] == os.fsdecode(
