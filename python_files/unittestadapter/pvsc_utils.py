@@ -350,7 +350,6 @@ def send_post_request(
             encoded = request.encode("utf-8")
             bytes_written = 0
             while bytes_written < len(encoded):
-                print("writing more bytes!")
                 segment = encoded[bytes_written : bytes_written + size]
                 bytes_written += __writer.write(segment)
                 __writer.flush()
