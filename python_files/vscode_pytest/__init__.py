@@ -10,14 +10,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Generator,
-    Literal,
-    TypedDict,
-)
+from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict
 
 import pytest
 
