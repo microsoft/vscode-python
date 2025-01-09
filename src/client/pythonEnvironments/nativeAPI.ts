@@ -420,7 +420,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                             this.condaPathAlreadySet = settingPath;
                         }
                     } else {
-                        traceInfo(`Conda already set to: ${this.condaPathAlreadySet}`);
+                        traceInfo(`Conda set to: ${this.condaPathAlreadySet}`);
                     }
                 }
                 break;
