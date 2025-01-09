@@ -258,13 +258,13 @@ def test_symlink_run():
             actual_item = actual_list.pop(0)
             try:
                 # Check if all requirements
-                assert all(
-                    item in actual_item for item in ("status", "cwd", "result")
-                ), "Required keys are missing"
+                assert all(item in actual_item for item in ("status", "cwd", "result")), (
+                    "Required keys are missing"
+                )
                 assert actual_item.get("status") == "success", "Status is not 'success'"
-                assert actual_item.get("cwd") == os.fspath(
-                    destination
-                ), f"CWD does not match: {os.fspath(destination)}"
+                assert actual_item.get("cwd") == os.fspath(destination), (
+                    f"CWD does not match: {os.fspath(destination)}"
+                )
                 actual_result_dict = {}
                 actual_result_dict.update(actual_item["result"])
                 assert actual_result_dict == expected_const
