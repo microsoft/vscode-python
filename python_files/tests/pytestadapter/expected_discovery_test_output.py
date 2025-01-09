@@ -1577,3 +1577,94 @@ expected_nested_describe_output = {
     ],
     "id_": TEST_DATA_PATH_STR,
 }
+# This is the expected output for the folder_with_script folder when run with ruff
+# └── .data
+#    └── folder_with_script
+#       └── script_random.py
+#          └── ruff
+#       └── test_simple.py
+#          └── ruff
+#          └── test_function
+ruff_test_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "folder_with_script",
+            "path": os.fspath(TEST_DATA_PATH / "folder_with_script"),
+            "type_": "folder",
+            "id_": os.fspath(TEST_DATA_PATH / "folder_with_script"),
+            "children": [
+                {
+                    "name": "script_random.py",
+                    "path": os.fspath(TEST_DATA_PATH / "folder_with_script" / "script_random.py"),
+                    "type_": "file",
+                    "id_": os.fspath(TEST_DATA_PATH / "folder_with_script" / "script_random.py"),
+                    "children": [
+                        {
+                            "name": "ruff",
+                            "path": os.fspath(
+                                TEST_DATA_PATH / "folder_with_script" / "script_random.py"
+                            ),
+                            "lineno": "",
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "folder_with_script/script_random.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "script_random.py",
+                            ),
+                            "runID": get_absolute_test_id(
+                                "folder_with_script/script_random.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "script_random.py",
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "name": "test_simple.py",
+                    "path": os.fspath(TEST_DATA_PATH / "folder_with_script" / "test_simple.py"),
+                    "type_": "file",
+                    "id_": os.fspath(TEST_DATA_PATH / "folder_with_script" / "test_simple.py"),
+                    "children": [
+                        {
+                            "name": "ruff",
+                            "path": os.fspath(
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py"
+                            ),
+                            "lineno": "",
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                            "runID": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                        },
+                        {
+                            "name": "test_function",
+                            "path": os.fspath(
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py"
+                            ),
+                            "lineno": find_test_line_number(
+                                "test_function",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::test_function",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                            "runID": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::test_function",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                        },
+                    ],
+                },
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
