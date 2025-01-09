@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
+import { ChildProcess } from 'child_process';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
@@ -40,13 +42,34 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
-    public async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
+    public async discoverTests(
+        uri: Uri,
+        executionFactory?: IPythonExecutionFactory,
+        token?: CancellationToken,
+    ): Promise<DiscoveredTestPayload> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
+        token?.onCancellationRequested(() => {
+            traceInfo(`Test discovery cancelled.`);
+            const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
+            return discoveryPayload;
+        });
+
+        const cSource = new CancellationTokenSource();
+        token?.onCancellationRequested(() => cSource.cancel());
+
         const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
-            this.resultResolver?.resolveDiscovery(data);
+            if (!token?.isCancellationRequested) {
+                this.resultResolver?.resolveDiscovery(data);
+            }
+        }, cSource.token);
+
+        token?.onCancellationRequested(() => {
+            traceInfo(`Test discovery cancelled.`);
+            const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
+            return discoveryPayload;
         });
 
         // set up env with the pipe name
@@ -62,10 +85,11 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             command,
             cwd,
             outChannel: this.outputChannel,
+            token,
         };
 
         try {
-            await this.runDiscovery(uri, options, name, cwd, executionFactory);
+            await this.runDiscovery(uri, options, name, cwd, cSource, executionFactory);
         } finally {
             // none
         }
@@ -80,6 +104,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         options: TestCommandOptions,
         testRunPipeName: string,
         cwd: string,
+        cSource: CancellationTokenSource,
         executionFactory?: IPythonExecutionFactory,
     ): Promise<void> {
         // get and edit env vars
@@ -102,6 +127,12 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                     cwd,
                     args,
                     env: (mutableEnv as unknown) as { [key: string]: string },
+                });
+                options.token?.onCancellationRequested(() => {
+                    traceInfo(`Test discovery cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
+                    proc.kill();
+                    deferredTillExecClose.resolve();
+                    cSource.cancel();
                 });
                 proc.stdout.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
@@ -148,7 +179,19 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
             const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
+            let resultProc: ChildProcess | undefined;
+            options.token?.onCancellationRequested(() => {
+                traceInfo(`Test discovery cancelled, killing unittest subprocess for workspace ${uri.fsPath}`);
+                // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
+                if (resultProc) {
+                    resultProc?.kill();
+                } else {
+                    deferredTillExecClose.resolve();
+                    cSource.cancel();
+                }
+            });
             const result = execService?.execObservable(args, spawnOptions);
+            resultProc = result?.proc;
 
             // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
             // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
@@ -168,7 +211,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 // if the child has testIds then this is a run request
                 spawnOptions?.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
 
-                if (code !== 0) {
+                if (code && code !== 0) {
                     // This occurs when we are running discovery
                     traceError(
                         `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${options.cwd}. Creating and sending error discovery payload \n`,

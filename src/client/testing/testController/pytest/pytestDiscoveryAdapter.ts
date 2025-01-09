@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Uri } from 'vscode';
 import * as fs from 'fs';
+import { ChildProcess } from 'child_process';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
@@ -40,13 +41,26 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     async discoverTests(
         uri: Uri,
         executionFactory?: IPythonExecutionFactory,
+        token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<DiscoveredTestPayload> {
-        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
-            this.resultResolver?.resolveDiscovery(data);
+        token?.onCancellationRequested(() => {
+            traceInfo(`Test discovery cancelled.`);
+            const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
+            return discoveryPayload;
         });
 
-        await this.runPytestDiscovery(uri, name, executionFactory, interpreter);
+        const cSource = new CancellationTokenSource();
+        token?.onCancellationRequested(() => cSource.cancel());
+
+        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+            // if the token is cancelled, we don't want process the data
+            if (!token?.isCancellationRequested) {
+                this.resultResolver?.resolveDiscovery(data);
+            }
+        }, cSource.token);
+
+        await this.runPytestDiscovery(uri, name, cSource, executionFactory, interpreter, token);
 
         // this is only a placeholder to handle function overloading until rewrite is finished
         const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
@@ -56,8 +70,10 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     async runPytestDiscovery(
         uri: Uri,
         discoveryPipeName: string,
+        cSource: CancellationTokenSource,
         executionFactory?: IPythonExecutionFactory,
         interpreter?: PythonEnvironment,
+        token?: CancellationToken,
     ): Promise<void> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -111,6 +127,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                     args: execArgs,
                     env: (mutableEnv as unknown) as { [key: string]: string },
                 });
+                token?.onCancellationRequested(() => {
+                    traceInfo(`Test discovery cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
+                    proc.kill();
+                    deferredTillExecClose.resolve();
+                    cSource.cancel();
+                });
                 proc.stdout.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceInfo(out);
@@ -143,6 +165,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             throwOnStdErr: true,
             outputChannel: this.outputChannel,
             env: mutableEnv,
+            token,
         };
 
         // Create the Python environment in which to execute the command.
@@ -154,7 +177,21 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
+
+        let resultProc: ChildProcess | undefined;
+
+        token?.onCancellationRequested(() => {
+            traceInfo(`Test discovery cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
+            // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
+            if (resultProc) {
+                resultProc?.kill();
+            } else {
+                deferredTillExecClose.resolve();
+                cSource.cancel();
+            }
+        });
         const result = execService?.execObservable(execArgs, spawnOptions);
+        resultProc = result?.proc;
 
         // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.

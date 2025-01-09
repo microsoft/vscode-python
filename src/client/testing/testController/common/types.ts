@@ -159,7 +159,8 @@ export interface ITestDiscoveryAdapter {
     discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
     discoverTests(
         uri: Uri,
-        executionFactory: IPythonExecutionFactory,
+        executionFactory?: IPythonExecutionFactory,
+        token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<DiscoveredTestPayload>;
 }
