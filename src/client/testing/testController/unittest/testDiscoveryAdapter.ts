@@ -201,7 +201,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 // if the child has testIds then this is a run request
                 spawnOptions?.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
 
-                if (code && code !== 0) {
+                if (code !== 0) {
                     // This occurs when we are running discovery
                     traceError(
                         `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${options.cwd}. Creating and sending error discovery payload \n`,
