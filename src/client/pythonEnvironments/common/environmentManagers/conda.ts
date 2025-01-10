@@ -24,6 +24,7 @@ import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
 import { sleep } from '../../../common/utils/async';
+import { getConfiguration } from '../../../common/vscodeApis/workspaceApis';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -632,4 +633,9 @@ export function setCondaBinary(executable: string): void {
 export async function getCondaEnvDirs(): Promise<string[] | undefined> {
     const conda = await Conda.getConda();
     return conda?.getEnvDirs();
+}
+
+export function getCondaPathSetting(): string | undefined {
+    const config = getConfiguration('python');
+    return config.get<string>(CONDAPATH_SETTING_KEY, '');
 }
