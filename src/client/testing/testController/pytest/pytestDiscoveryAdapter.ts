@@ -10,7 +10,7 @@ import {
     SpawnOptions,
 } from '../../../common/process/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { Deferred } from '../../../common/utils/async';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import { DiscoveredTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
@@ -44,14 +44,14 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<DiscoveredTestPayload> {
+        const cSource = new CancellationTokenSource();
+        const deferredReturn = createDeferred<DiscoveredTestPayload>();
+
         token?.onCancellationRequested(() => {
             traceInfo(`Test discovery cancelled.`);
-            const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
-            return discoveryPayload;
+            cSource.cancel();
+            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
         });
-
-        const cSource = new CancellationTokenSource();
-        token?.onCancellationRequested(() => cSource.cancel());
 
         const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
             // if the token is cancelled, we don't want process the data
@@ -60,11 +60,11 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             }
         }, cSource.token);
 
-        await this.runPytestDiscovery(uri, name, cSource, executionFactory, interpreter, token);
+        this.runPytestDiscovery(uri, name, cSource, executionFactory, interpreter, token).then(() => {
+            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
+        });
 
-        // this is only a placeholder to handle function overloading until rewrite is finished
-        const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
-        return discoveryPayload;
+        return deferredReturn.promise;
     }
 
     async runPytestDiscovery(

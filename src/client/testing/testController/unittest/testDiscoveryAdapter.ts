@@ -51,26 +51,20 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const { unittestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
+        const cSource = new CancellationTokenSource();
+        const deferredReturn = createDeferred<DiscoveredTestPayload>();
+
         token?.onCancellationRequested(() => {
             traceInfo(`Test discovery cancelled.`);
-            const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
-            return discoveryPayload;
+            cSource.cancel();
+            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
         });
-
-        const cSource = new CancellationTokenSource();
-        token?.onCancellationRequested(() => cSource.cancel());
 
         const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
             if (!token?.isCancellationRequested) {
                 this.resultResolver?.resolveDiscovery(data);
             }
         }, cSource.token);
-
-        token?.onCancellationRequested(() => {
-            traceInfo(`Test discovery cancelled.`);
-            const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
-            return discoveryPayload;
-        });
 
         // set up env with the pipe name
         let env: EnvironmentVariables | undefined = await this.envVarsService?.getEnvironmentVariables(uri);
@@ -88,15 +82,11 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             token,
         };
 
-        try {
-            await this.runDiscovery(uri, options, name, cwd, cSource, executionFactory);
-        } finally {
-            // none
-        }
-        // placeholder until after the rewrite is adopted
-        // TODO: remove after adoption.
-        const discoveryPayload: DiscoveredTestPayload = { cwd, status: 'success' };
-        return discoveryPayload;
+        this.runDiscovery(uri, options, name, cwd, cSource, executionFactory).then(() => {
+            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
+        });
+
+        return deferredReturn.promise;
     }
 
     async runDiscovery(

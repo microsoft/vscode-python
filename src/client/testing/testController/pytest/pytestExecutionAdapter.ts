@@ -244,7 +244,8 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 const result = execService?.execObservable(runArgs, spawnOptions);
-                resultProc = result?.proc;
+
+                
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
