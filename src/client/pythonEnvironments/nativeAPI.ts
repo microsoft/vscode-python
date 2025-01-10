@@ -404,7 +404,7 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
                     traceLog(`Conda environment manager found at: ${native.executable}`);
                     const settingPath = getCondaPathSetting();
                     if (!this.condaPathAlreadySet) {
-                        if (settingPath === '') {
+                        if (settingPath === '' || settingPath === undefined) {
                             if (foundOnPath(native.executable)) {
                                 setCondaBinary(native.executable);
                                 this.condaPathAlreadySet = native.executable;

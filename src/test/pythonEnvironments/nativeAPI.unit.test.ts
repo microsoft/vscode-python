@@ -13,7 +13,7 @@ import {
     NativeEnvManagerInfo,
     NativePythonFinder,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
-import { Architecture, isWindows } from '../../client/common/utils/platform';
+import { Architecture, getPathEnvVariable, isWindows } from '../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../../client/pythonEnvironments/base/info';
 import { NativePythonEnvironmentKind } from '../../client/pythonEnvironments/base/locators/common/nativePythonUtils';
 import * as condaApi from '../../client/pythonEnvironments/common/environmentManagers/conda';
@@ -25,6 +25,8 @@ suite('Native Python API', () => {
     let api: IDiscoveryAPI;
     let mockFinder: typemoq.IMock<NativePythonFinder>;
     let setCondaBinaryStub: sinon.SinonStub;
+    let getCondaPathSettingStub: sinon.SinonStub;
+    let getCondaEnvDirsStub: sinon.SinonStub;
     let setPyEnvBinaryStub: sinon.SinonStub;
     let createPythonWatcherStub: sinon.SinonStub;
     let mockWatcher: typemoq.IMock<pw.PythonWatcher>;
@@ -136,6 +138,8 @@ suite('Native Python API', () => {
 
     setup(() => {
         setCondaBinaryStub = sinon.stub(condaApi, 'setCondaBinary');
+        getCondaEnvDirsStub = sinon.stub(condaApi, 'getCondaEnvDirs');
+        getCondaPathSettingStub = sinon.stub(condaApi, 'getCondaPathSetting');
         setPyEnvBinaryStub = sinon.stub(pyenvApi, 'setPyEnvBinary');
         getWorkspaceFoldersStub = sinon.stub(ws, 'getWorkspaceFolders');
         getWorkspaceFoldersStub.returns([]);
@@ -294,9 +298,12 @@ suite('Native Python API', () => {
     });
 
     test('Setting conda binary', async () => {
+        getCondaPathSettingStub.returns(undefined);
+        getCondaEnvDirsStub.resolves(undefined);
+        const condaFakeDir = getPathEnvVariable()[0];
         const condaMgr: NativeEnvManagerInfo = {
             tool: 'Conda',
-            executable: '/usr/bin/conda',
+            executable: path.join(condaFakeDir, 'conda'),
         };
         mockFinder
             .setup((f) => f.refresh())
