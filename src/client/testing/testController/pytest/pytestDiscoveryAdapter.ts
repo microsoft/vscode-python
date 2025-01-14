@@ -43,14 +43,14 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         executionFactory?: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
-    ): Promise<DiscoveredTestPayload> {
+    ): Promise<void> {
         const cSource = new CancellationTokenSource();
-        const deferredReturn = createDeferred<DiscoveredTestPayload>();
+        const deferredReturn = createDeferred<void>();
 
         token?.onCancellationRequested(() => {
             traceInfo(`Test discovery cancelled.`);
             cSource.cancel();
-            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
+            deferredReturn.resolve();
         });
 
         const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
@@ -61,7 +61,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         }, cSource.token);
 
         this.runPytestDiscovery(uri, name, cSource, executionFactory, interpreter, token).then(() => {
-            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
+            deferredReturn.resolve();
         });
 
         return deferredReturn.promise;

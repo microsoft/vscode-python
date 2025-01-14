@@ -46,18 +46,18 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         uri: Uri,
         executionFactory?: IPythonExecutionFactory,
         token?: CancellationToken,
-    ): Promise<DiscoveredTestPayload> {
+    ): Promise<void> {
         const settings = this.configSettings.getSettings(uri);
         const { unittestArgs } = settings.testing;
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const cSource = new CancellationTokenSource();
-        const deferredReturn = createDeferred<DiscoveredTestPayload>();
+        const deferredReturn = createDeferred<void>();
 
         token?.onCancellationRequested(() => {
             traceInfo(`Test discovery cancelled.`);
             cSource.cancel();
-            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
+            deferredReturn.resolve();
         });
 
         const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
@@ -83,7 +83,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         };
 
         this.runDiscovery(uri, options, name, cwd, cSource, executionFactory).then(() => {
-            deferredReturn.resolve({ cwd: uri.fsPath, status: 'success' });
+            deferredReturn.resolve();
         });
 
         return deferredReturn.promise;

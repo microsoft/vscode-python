@@ -47,7 +47,7 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
-    ): Promise<ExecutionTestPayload> {
+    ): Promise<void> {
         // deferredTillServerClose awaits named pipe server close
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
@@ -87,12 +87,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         } finally {
             await deferredTillServerClose.promise;
         }
-        const executionPayload: ExecutionTestPayload = {
-            cwd: uri.fsPath,
-            status: 'success',
-            error: '',
-        };
-        return executionPayload;
     }
 
     private async runTestsNew(
