@@ -25,7 +25,6 @@ import { useEnvExtension } from '../../envExt/api.internal';
 import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 import { sleep } from '../utils/async';
 import { isWindows } from '../utils/platform';
-import { trace } from 'console';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
