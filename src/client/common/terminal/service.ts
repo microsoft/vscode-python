@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
+import { window, CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -88,6 +88,11 @@ export class TerminalService implements ITerminalService, Disposable {
             terminal.show(true);
         }
 
+        window.onDidChangeTerminalState((e) => {
+            const ourTerminalState = e.state;
+            console.log(ourTerminalState);
+            traceVerbose('Printing our terminal state from service.ts', ourTerminalState);
+        });
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
         if (!terminal.shellIntegration && this._terminalFirstLaunched) {
             this._terminalFirstLaunched = false;
@@ -96,6 +101,7 @@ export class TerminalService implements ITerminalService, Disposable {
                     clearTimeout(timer);
                     disposable.dispose();
                     resolve(true);
+
                     const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
                     const tempEnv = shellIntegration.env;
                     console.log(tempEnv);
