@@ -6,7 +6,7 @@ Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commi
 <details>
   <summary>Release Primary and Secondary Assignments for the 2025 Calendar Year</summary>
 
-| Month      | Primary  | Secondary |
+| Month and version number     | Primary  | Secondary |
 |------------|----------|-----------|
 | January v2025.0.0   | Eleanor  | Karthik   |
 | February v2025.2.0   | Anthony  | Eleanor   |
