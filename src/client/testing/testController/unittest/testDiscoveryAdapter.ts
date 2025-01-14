@@ -52,6 +52,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
 
         const cSource = new CancellationTokenSource();
+        // Create a deferred to return to the caller
         const deferredReturn = createDeferred<void>();
 
         token?.onCancellationRequested(() => {
