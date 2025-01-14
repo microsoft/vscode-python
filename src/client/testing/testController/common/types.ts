@@ -156,18 +156,19 @@ export interface ITestResultResolver {
 }
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature
-    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
+    discoverTests(uri: Uri): Promise<void>;
     discoverTests(
         uri: Uri,
-        executionFactory: IPythonExecutionFactory,
+        executionFactory?: IPythonExecutionFactory,
+        token?: CancellationToken,
         interpreter?: PythonEnvironment,
-    ): Promise<DiscoveredTestPayload>;
+    ): Promise<void>;
 }
 
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
     // ** first line old method signature, second line new method signature
-    runTests(uri: Uri, testIds: string[], profileKind?: boolean | TestRunProfileKind): Promise<ExecutionTestPayload>;
+    runTests(uri: Uri, testIds: string[], profileKind?: boolean | TestRunProfileKind): Promise<void>;
     runTests(
         uri: Uri,
         testIds: string[],
@@ -176,7 +177,7 @@ export interface ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
-    ): Promise<ExecutionTestPayload>;
+    ): Promise<void>;
 }
 
 // Same types as in python_files/unittestadapter/utils.py

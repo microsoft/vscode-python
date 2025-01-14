@@ -38,7 +38,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
-    ): Promise<ExecutionTestPayload> {
+    ): Promise<void> {
         const deferredTillServerClose: Deferred<void> = utils.createTestingDeferred();
 
         // create callback to handle data received on the named pipe
@@ -59,12 +59,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         );
         runInstance?.token.onCancellationRequested(() => {
             traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
-            const executionPayload: ExecutionTestPayload = {
-                cwd: uri.fsPath,
-                status: 'success',
-                error: '',
-            };
-            return executionPayload;
         });
 
         try {
@@ -82,15 +76,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         } finally {
             await deferredTillServerClose.promise;
         }
-
-        // placeholder until after the rewrite is adopted
-        // TODO: remove after adoption.
-        const executionPayload: ExecutionTestPayload = {
-            cwd: uri.fsPath,
-            status: 'success',
-            error: '',
-        };
-        return executionPayload;
     }
 
     private async runTestsNew(
@@ -244,7 +229,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 });
 
                 const result = execService?.execObservable(runArgs, spawnOptions);
-                resultProc = result?.proc;
 
                 // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.

@@ -134,7 +134,7 @@ export class WorkspaceTestAdapter {
         try {
             // ** execution factory only defined for new rewrite way
             if (executionFactory !== undefined) {
-                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, interpreter);
+                await this.discoveryAdapter.discoverTests(this.workspaceUri, executionFactory, token, interpreter);
             } else {
                 await this.discoveryAdapter.discoverTests(this.workspaceUri);
             }
