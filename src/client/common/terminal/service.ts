@@ -25,6 +25,7 @@ import { useEnvExtension } from '../../envExt/api.internal';
 import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 import { sleep } from '../utils/async';
 import { isWindows } from '../utils/platform';
+import { trace } from 'console';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -92,6 +93,13 @@ export class TerminalService implements ITerminalService, Disposable {
             const ourTerminalState = e.state;
             console.log(ourTerminalState);
             traceVerbose('Printing our terminal state from service.ts', ourTerminalState);
+
+            const ourStateTypeless = (ourTerminalState as unknown) as { isInteractedWith: any; shellType: any };
+            const ourState = ourStateTypeless.isInteractedWith;
+            traceVerbose('Printing our terminal state from service.ts', ourState);
+            const ourShellType = ourStateTypeless.shellType;
+            traceVerbose('Printing our terminal state from service.ts', ourShellType);
+            traceVerbose('finished printing our terminal state');
         });
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
         if (!terminal.shellIntegration && this._terminalFirstLaunched) {
