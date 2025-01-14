@@ -4,27 +4,22 @@ All dates should align with VS Code's [iteration](https://github.com/microsoft/v
 Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commits to `main` should only be in response to bugs found during endgame testing until the release candidate is ready.
 
 <details>
-  <summary>Release Primary and Secondary Assignments for the 2024 Calendar Year</summary>
+  <summary>Release Primary and Secondary Assignments for the 2025 Calendar Year</summary>
 
-|   Month   | Primary   | Secondary   |
-|:----------|:----------|:------------|
-| ~~January~~   | ~~Eleanor~~   | ~~Karthik~~     |
-| ~~February~~  | ~~Kartik~~    | ~~Anthony~~     |
-| ~~March~~     | ~~Karthik~~   | ~~Eleanor~~     |
-| ~~April~~     | ~~Paula~~     | ~~Eleanor~~      |
-| ~~May~~     | ~~Anthony~~     | ~~Karthik~~      |
-| ~~June~~     | ~~Karthik~~     | ~~Eleanor~~      |
-| July      | Anthony   | Karthik     |
-| August    | Paula     | Anthony      |
-| September | Anthony   | Eleanor     |
-| October   | Paula     | Karthik     |
-| November  | Eleanor    | Paula     |
-| December  | Eleanor   | Anthony     |
-
-Paula: 3 primary, 2 secondary
-Eleanor: 3 primary (2 left), 3 secondary (2 left)
-Anthony: 2 primary, 3 secondary (2 left)
-Karthik: 2 primary (1 left), 4 secondary (3 left)
+| Month and version number     | Primary  | Secondary |
+|------------|----------|-----------|
+| January v2025.0.0   | Eleanor  | Karthik   |
+| February v2025.2.0   | Anthony  | Eleanor   |
+| March v2025.4.0      | Karthik  | Anthony   |
+| April v2025.6.0      | Eleanor  | Karthik   |
+| May v2025.8.0        | Anthony  | Eleanor   |
+| June v2025.10.0      | Karthik  | Anthony   |
+| July v2025.12.0      | Eleanor  | Karthik   |
+| August v2025.14.0    | Anthony  | Eleanor   |
+| September v2025.16.0  | Karthik  | Anthony   |
+| October v2025.18.0    | Eleanor  | Karthik   |
+| November v2025.20.0   | Anthony  | Eleanor   |
+| December v2025.22.0   | Karthik  | Anthony   |
 
 </details>
 
