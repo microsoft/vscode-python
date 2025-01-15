@@ -232,6 +232,34 @@ def test_pytest_execution(test_ids, expected_const):
     assert actual_result_dict == expected_const
 
 
+def test_pytest_subtest_plugin():
+    test_subtest_plugin_path = TEST_DATA_PATH / "test_pytest_subtests_plugin.py"
+
+    test_a_id = get_absolute_test_id(
+        "test_subtest_plugin_path::test_a",
+        test_subtest_plugin_path,
+    )
+    args = [test_a_id]
+    expected_const = expected_execution_test_output.pytest_subtests_plugin_expected_execution_output
+    actual = runner(args)
+    assert actual
+    actual_list: List[Dict[str, Dict[str, Any]]] = actual
+    assert len(actual_list) == len(expected_const)
+    actual_result_dict = {}
+    if actual_list is not None:
+        for actual_item in actual_list:
+            assert all(item in actual_item for item in ("status", "cwd", "result"))
+            assert actual_item.get("status") == "success"
+            assert actual_item.get("cwd") == os.fspath(TEST_DATA_PATH)
+            actual_result_dict.update(actual_item["result"])
+    for key in actual_result_dict:
+        if actual_result_dict[key]["outcome"] == "subtest-failure":
+            actual_result_dict[key]["message"] = "ERROR MESSAGE"
+        if actual_result_dict[key]["traceback"] is not None:
+            actual_result_dict[key]["traceback"] = "TRACEBACK"
+    assert actual_result_dict == expected_const
+
+
 def test_symlink_run():
     """Test to test pytest discovery with the command line arg --rootdir specified as a symlink path.
 
