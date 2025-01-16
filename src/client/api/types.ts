@@ -227,9 +227,9 @@ export type EnvironmentsChangeEvent = {
 
 export type ActiveEnvironmentPathChangeEvent = EnvironmentPath & {
     /**
-     * Workspace folder the environment changed for.
+     * Resource the environment changed for.
      */
-    readonly resource: WorkspaceFolder | undefined;
+    readonly resource: Resource | undefined;
 };
 
 /**

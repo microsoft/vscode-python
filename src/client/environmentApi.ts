@@ -33,6 +33,8 @@ import {
 } from './api/types';
 import { buildEnvironmentCreationApi } from './pythonEnvironments/creation/createEnvApi';
 import { EnvironmentKnownCache } from './environmentKnownCache';
+import type { JupyterPythonEnvironmentApi } from './jupyter/jupyterIntegration';
+import { noop } from './common/utils/misc';
 
 type ActiveEnvironmentChangeEvent = {
     resource: WorkspaceFolder | undefined;
@@ -115,6 +117,7 @@ function filterUsingVSCodeContext(e: PythonEnvInfo) {
 export function buildEnvironmentApi(
     discoveryApi: IDiscoveryAPI,
     serviceContainer: IServiceContainer,
+    jupyterPythonEnvsApi: JupyterPythonEnvironmentApi,
 ): PythonExtension['environments'] {
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     const configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -146,6 +149,28 @@ export function buildEnvironmentApi(
             })
             .ignoreErrors();
     }
+
+    function getActiveEnvironmentPath(resource?: Resource) {
+        resource = resource && 'uri' in resource ? resource.uri : resource;
+        const jupyterEnv =
+            resource && jupyterPythonEnvsApi.getPythonEnvironment
+                ? jupyterPythonEnvsApi.getPythonEnvironment(resource)
+                : undefined;
+        if (jupyterEnv) {
+            traceVerbose('Python Environment returned from Jupyter', resource?.fsPath, jupyterEnv.id);
+            return {
+                id: jupyterEnv.id,
+                path: jupyterEnv.path,
+            };
+        }
+        const path = configService.getSettings(resource).pythonPath;
+        const id = path === 'python' ? 'DEFAULT_PYTHON' : getEnvID(path);
+        return {
+            id,
+            path,
+        };
+    }
+
     disposables.push(
         discoveryApi.onProgress((e) => {
             if (e.stage === ProgressReportStage.discoveryFinished) {
@@ -206,6 +231,16 @@ export function buildEnvironmentApi(
         }),
         onEnvironmentsChanged,
         onEnvironmentVariablesChanged,
+        jupyterPythonEnvsApi.onDidChangePythonEnvironment
+            ? jupyterPythonEnvsApi.onDidChangePythonEnvironment((e) => {
+                  const jupyterEnv = getActiveEnvironmentPath(e);
+                  onDidActiveInterpreterChangedEvent.fire({
+                      id: jupyterEnv.id,
+                      path: jupyterEnv.path,
+                      resource: e,
+                  });
+              }, undefined)
+            : { dispose: noop },
     );
     if (!knownCache!) {
         knownCache = initKnownCache();
@@ -223,13 +258,7 @@ export function buildEnvironmentApi(
         },
         getActiveEnvironmentPath(resource?: Resource) {
             sendApiTelemetry('getActiveEnvironmentPath');
-            resource = resource && 'uri' in resource ? resource.uri : resource;
-            const path = configService.getSettings(resource).pythonPath;
-            const id = path === 'python' ? 'DEFAULT_PYTHON' : getEnvID(path);
-            return {
-                id,
-                path,
-            };
+            return getActiveEnvironmentPath(resource);
         },
         updateActiveEnvironmentPath(env: Environment | EnvironmentPath | string, resource?: Resource): Promise<void> {
             sendApiTelemetry('updateActiveEnvironmentPath');
