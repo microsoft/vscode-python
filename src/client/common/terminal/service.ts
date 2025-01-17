@@ -109,11 +109,11 @@ export class TerminalService implements ITerminalService, Disposable {
                     disposable.dispose();
                     resolve(true);
 
-                    // const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
-                    // const tempEnv = shellIntegration.env;
-                    // console.log(tempEnv);
-                    // traceVerbose('Printing temp env from service.ts in terminal1', tempEnv);
-                    // traceVerbose('finished printing temp env ');
+                    const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
+                    const tempEnv = shellIntegration.env;
+                    console.log(tempEnv);
+                    traceVerbose('Printing temp env from service.ts in terminal1', tempEnv);
+                    traceVerbose('finished printing temp env ');
                 });
                 const TIMEOUT_DURATION = 500;
                 const timer = setTimeout(() => {
@@ -133,11 +133,11 @@ export class TerminalService implements ITerminalService, Disposable {
         } else if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
 
-            // const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
-            // const tempEnv = shellIntegration.env;
-            // console.log(tempEnv);
-            // traceVerbose('Printing temp env from service.ts in terminal2', tempEnv);
-            // traceVerbose('finished printing temp env ');
+            const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
+            const tempEnv = shellIntegration.env;
+            console.log(tempEnv);
+            traceVerbose('Printing temp env from service.ts in terminal2', tempEnv);
+            traceVerbose('finished printing temp env ');
             // traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
         } else {
