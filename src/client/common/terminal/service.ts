@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
+import { window, CancellationToken, Disposable, Event, EventEmitter, Terminal, TerminalShellExecution } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -88,6 +88,18 @@ export class TerminalService implements ITerminalService, Disposable {
             terminal.show(true);
         }
 
+        window.onDidChangeTerminalState((e) => {
+            const ourTerminalState = e.state;
+            console.log(ourTerminalState);
+            traceVerbose('Printing our terminal state from service.ts', ourTerminalState);
+
+            const ourStateTypeless = (ourTerminalState as unknown) as { isInteractedWith: any; shellType: any };
+            const ourState = ourStateTypeless.isInteractedWith;
+            traceVerbose('Printing our terminal state from service.ts', ourState);
+            const ourShellType = ourStateTypeless.shellType;
+            traceVerbose('Printing our terminal state from service.ts', ourShellType);
+            traceVerbose('finished printing our terminal state');
+        });
         // If terminal was just launched, wait some time for shell integration to onDidChangeShellIntegration.
         if (!terminal.shellIntegration && this._terminalFirstLaunched) {
             this._terminalFirstLaunched = false;
@@ -96,6 +108,12 @@ export class TerminalService implements ITerminalService, Disposable {
                     clearTimeout(timer);
                     disposable.dispose();
                     resolve(true);
+
+                    const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
+                    const tempEnv = shellIntegration.env;
+                    console.log(tempEnv);
+                    traceVerbose('Printing temp env from service.ts in terminal1', tempEnv);
+                    traceVerbose('finished printing temp env ');
                 });
                 const TIMEOUT_DURATION = 500;
                 const timer = setTimeout(() => {
@@ -114,7 +132,13 @@ export class TerminalService implements ITerminalService, Disposable {
             return undefined;
         } else if (terminal.shellIntegration) {
             const execution = terminal.shellIntegration.executeCommand(commandLine);
-            traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
+
+            const shellIntegration = (terminal.shellIntegration as unknown) as { env: any };
+            const tempEnv = shellIntegration.env;
+            console.log(tempEnv);
+            traceVerbose('Printing temp env from service.ts in terminal2', tempEnv);
+            traceVerbose('finished printing temp env ');
+            // traceVerbose(`Shell Integration is enabled, executeCommand: ${commandLine}`);
             return execution;
         } else {
             terminal.sendText(commandLine);
