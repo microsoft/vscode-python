@@ -320,6 +320,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     pytestPath: 'pytest',
                     autoTestDiscoverOnSaveEnabled: true,
+                    autoTestDiscoverOnSavePattern: "**.py"
                 } as ITestingSettings;
             }
         }
@@ -336,6 +337,7 @@ export class PythonSettings implements IPythonSettings {
                   unittestArgs: [],
                   unittestEnabled: false,
                   autoTestDiscoverOnSaveEnabled: true,
+                  autoTestDiscoverOnSavePattern: "**.py",
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         if (this.testing.cwd) {

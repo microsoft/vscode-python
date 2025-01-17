@@ -79,7 +79,8 @@
         "pytestPath": "placeholder",
         "unittestArgs": "placeholder",
         "unittestEnabled": true,
-        "autoTestDiscoverOnSaveEnabled": true
+        "autoTestDiscoverOnSaveEnabled": true,
+        "autoTestDiscoverOnSavePattern": "placeholder"
     },
     "terminal": {
         "activateEnvironment": true,

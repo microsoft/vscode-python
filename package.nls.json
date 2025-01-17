@@ -74,6 +74,7 @@
     "python.terminal.focusAfterLaunch.description": "When launching a python terminal, whether to focus the cursor on the terminal.",
     "python.terminal.launchArgs.description": "Python launch arguments to use when executing a file in the terminal.",
     "python.testing.autoTestDiscoverOnSaveEnabled.description": "Enable auto run test discovery when saving a test file.",
+    "python.testing.autoTestDiscoverOnSavePattern.description": "Glob pattern used to determine which files are used by autoTestDiscoverOnSaveEnabled.",
     "python.testing.cwd.description": "Optional working directory for tests.",
     "python.testing.debugPort.description": "Port number used for debugging of tests.",
     "python.testing.promptToConfigure.description": "Prompt to configure a test framework if potential tests directories are discovered.",

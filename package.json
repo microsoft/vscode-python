@@ -657,6 +657,12 @@
                     "scope": "resource",
                     "type": "boolean"
                 },
+                "python.testing.autoTestDiscoverOnSavePattern": {
+                    "default": "**.py",
+                    "description": "%python.testing.autoTestDiscoverOnSavePattern.description%",
+                    "scope": "resource",
+                    "type": "string"
+                },
                 "python.testing.cwd": {
                     "default": null,
                     "description": "%python.testing.cwd.description%",
