@@ -77,3 +77,5 @@ class PS1:
 
 if sys.platform != "win32" and (not is_wsl) and use_shell_integration:
     sys.ps1 = PS1()
+# TODO: Word this better - get feedback
+print("this is link to launch native repl")
