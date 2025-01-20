@@ -24,6 +24,8 @@ export class CustomTerminalLinkProvider implements vscode.TerminalLinkProvider<C
         _token: vscode.CancellationToken,
     ): vscode.ProviderResult<CustomTerminalLink[]> {
         const links: CustomTerminalLink[] = [];
+        // Question: What if context.line is truncated because of user zoom setting?
+        // Meaning what if this line is separated into two+ line in terminal?
         const expectedNativeLink = 'this is link to launch native repl';
 
         // eslint-disable-next-line no-cond-assign
