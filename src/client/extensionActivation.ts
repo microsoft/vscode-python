@@ -55,6 +55,7 @@ import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeRe
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
+import { traceVerbose } from './logging';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -115,6 +116,20 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     registerStartNativeReplCommand(ext.disposables, interpreterService);
     registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);
     registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager);
+
+    window.onDidChangeTerminalState((e) => {
+        const ourTerminalState = e.state;
+        console.log(ourTerminalState);
+        traceVerbose('Printing our terminal state from service.ts', ourTerminalState);
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const ourStateTypeless = (ourTerminalState as unknown) as { isInteractedWith: any; shellType: any };
+        const ourState = ourStateTypeless.isInteractedWith;
+        traceVerbose('Printing our terminal state from service.ts', ourState);
+        const ourShellType = ourStateTypeless.shellType;
+        traceVerbose('Printing our terminal state from service.ts', ourShellType);
+        traceVerbose('finished printing our terminal state');
+    });
 }
 
 /// //////////////////////////
