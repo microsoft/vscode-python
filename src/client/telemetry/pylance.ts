@@ -67,7 +67,8 @@
       "diagnosticsseen" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "editablepthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "computedpthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+      "computedpthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+
    }
 */
 /* __GDPR__
