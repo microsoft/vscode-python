@@ -65,7 +65,9 @@
       "resolverid" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "rssmb" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "diagnosticsseen" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "editablepthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "computedpthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
    }
 */
 /* __GDPR__
@@ -245,7 +247,8 @@
       "packageslowercase" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "resolverid" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "editablepthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
