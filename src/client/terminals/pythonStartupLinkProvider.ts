@@ -1,5 +1,6 @@
 /* eslint-disable class-methods-use-this */
 import * as vscode from 'vscode';
+import { executeCommand } from '../common/vscodeApis/commandApis';
 
 interface CustomTerminalLink extends vscode.TerminalLink {
     command: string;
@@ -40,8 +41,7 @@ export class CustomTerminalLinkProvider implements vscode.TerminalLinkProvider<C
         return links;
     }
 
-    handleTerminalLink(link: CustomTerminalLink): vscode.ProviderResult<void> {
-        // TODO: probably dont use vscode.commands directly?
-        vscode.commands.executeCommand(link.command);
+    async handleTerminalLink(link: CustomTerminalLink): Promise<void> {
+        await executeCommand(link.command);
     }
 }
