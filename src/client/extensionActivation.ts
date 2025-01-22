@@ -55,7 +55,7 @@ import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeRe
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
-import { CustomTerminalLinkProvider, registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
+import { registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
