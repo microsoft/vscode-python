@@ -116,7 +116,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     registerStartNativeReplCommand(ext.disposables, interpreterService);
     registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);
     registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager);
-    registerCustomTerminalLinkProvider(ext.context); // TODO: Is there way to avoid passing in ext.context?
+    registerCustomTerminalLinkProvider(ext.disposables);
 }
 
 /// //////////////////////////

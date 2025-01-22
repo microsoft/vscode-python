@@ -1,42 +1,36 @@
 /* eslint-disable class-methods-use-this */
-import * as vscode from 'vscode';
+import {
+    CancellationToken,
+    Disposable,
+    ProviderResult,
+    TerminalLink,
+    TerminalLinkContext,
+    TerminalLinkProvider,
+    l10n,
+} from 'vscode';
 import { executeCommand } from '../common/vscodeApis/commandApis';
-import { IExtensionContext } from '../common/types';
 import { registerTerminalLinkProvider } from '../common/vscodeApis/windowApis';
 
-interface CustomTerminalLink extends vscode.TerminalLink {
+interface CustomTerminalLink extends TerminalLink {
     command: string;
 }
 
-export class CustomTerminalLinkProvider implements vscode.TerminalLinkProvider<CustomTerminalLink> {
-    // TODO: How should I properly add this to disposables?
-    // Need advice, do not want to cause memory leak.
-
-    // private disposable: Disposable;
-
-    // constructor() {
-    //     this.disposable = window.registerTerminalLinkProvider(this);
-    // }
-
-    // dispose(): void {
-    //     this.disposable.dispose();
-    // }
-
+export class CustomTerminalLinkProvider implements TerminalLinkProvider<CustomTerminalLink> {
     provideTerminalLinks(
-        context: vscode.TerminalLinkContext,
-        _token: vscode.CancellationToken,
-    ): vscode.ProviderResult<CustomTerminalLink[]> {
+        context: TerminalLinkContext,
+        _token: CancellationToken,
+    ): ProviderResult<CustomTerminalLink[]> {
         const links: CustomTerminalLink[] = [];
         // Question: What if context.line is truncated because of user zoom setting?
         // Meaning what if this line is separated into two+ line in terminal?
-        const expectedNativeLink = 'this is link to launch native repl';
+        const expectedNativeLink = 'VS Code Native REPL';
 
         // eslint-disable-next-line no-cond-assign
-        if (context.line === expectedNativeLink) {
+        if (context.line.includes(expectedNativeLink)) {
             links.push({
-                startIndex: 0,
+                startIndex: context.line.indexOf(expectedNativeLink),
                 length: expectedNativeLink.length,
-                tooltip: 'Launch Native REPL',
+                tooltip: l10n.t('Launch VS Code Native REPL'),
                 command: 'python.startNativeREPL',
             });
         }
@@ -48,7 +42,6 @@ export class CustomTerminalLinkProvider implements vscode.TerminalLinkProvider<C
     }
 }
 
-export function registerCustomTerminalLinkProvider(extensionContext: IExtensionContext): void {
-    const provider = new CustomTerminalLinkProvider();
-    extensionContext.subscriptions.push(registerTerminalLinkProvider(provider));
+export function registerCustomTerminalLinkProvider(disposables: Disposable[]): void {
+    disposables.push(registerTerminalLinkProvider(new CustomTerminalLinkProvider()));
 }
