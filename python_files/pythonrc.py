@@ -8,7 +8,6 @@ original_ps1 = ">>> "
 use_shell_integration = sys.version_info < (3, 13)
 is_wsl = "microsoft-standard-WSL" in platform.release()
 
-
 class REPLHooks:
     def __init__(self):
         self.global_exit = None
@@ -77,6 +76,8 @@ class PS1:
 
 if sys.platform != "win32" and (not is_wsl) and use_shell_integration:
     sys.ps1 = PS1()
-# TODO: Word this better - get feedback
-# TODO: add ctrl/cmd depending on OS
-print("Click to launch VS Code Native REPL")
+
+if sys.platform == "darwin":
+    print("Cmd click to launch VS Code Native REPL")
+else:
+    print("Ctrl click to launch VS Code Native REPL")
