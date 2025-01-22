@@ -2,7 +2,7 @@ import importlib
 import platform
 import sys
 from unittest.mock import Mock
-
+import pytest
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
@@ -61,3 +61,18 @@ def test_excepthook_call():
 
     hooks.my_excepthook("mock_type", "mock_value", "mock_traceback")
     mock_excepthook.assert_called_once_with("mock_type", "mock_value", "mock_traceback")
+
+def test_print_statement_darwin(monkeypatch):
+    monkeypatch.setattr(sys, 'platform', 'darwin')
+    with monkeypatch.context() as m:
+        m.setattr('builtins.print', Mock())
+        importlib.reload(sys.modules['pythonrc'])
+        print.assert_any_call("Cmd click to launch VS Code Native REPL")
+
+
+def test_print_statement_non_darwin(monkeypatch):
+    monkeypatch.setattr(sys, 'platform', 'win32')
+    with monkeypatch.context() as m:
+        m.setattr('builtins.print', Mock())
+        importlib.reload(sys.modules['pythonrc'])
+        print.assert_any_call("Ctrl click to launch VS Code Native REPL")
