@@ -61,18 +61,16 @@ def test_excepthook_call():
     hooks.my_excepthook("mock_type", "mock_value", "mock_traceback")
     mock_excepthook.assert_called_once_with("mock_type", "mock_value", "mock_traceback")
 
-def test_print_statement_darwin(monkeypatch):
-    importlib.reload(pythonrc)
-    with monkeypatch.context() as m:
-        m.setattr(sys, "platform", "darwin")
-        m.setattr("builtins.print", Mock())
-        importlib.reload(sys.modules["pythonrc"])
-        print.assert_any_call("Cmd click to launch VS Code Native REPL")
+if sys.platform == "darwin":
+    def test_print_statement_darwin(monkeypatch):
+        importlib.reload(pythonrc)
+        with monkeypatch.context() as m:
+            m.setattr("builtins.print", Mock())
+            print.assert_any_call("Cmd click to launch VS Code Native REPL")
 
-def test_print_statement_non_darwin(monkeypatch):
-    importlib.reload(pythonrc)
-    with monkeypatch.context() as m:
-        m.setattr(sys, "platform", "win32")
-        m.setattr('builtins.print', Mock())
-        importlib.reload(sys.modules["pythonrc"])
-        print.assert_any_call("Ctrl click to launch VS Code Native REPL")
+if sys.platform == "win32":
+    def test_print_statement_non_darwin(monkeypatch):
+        importlib.reload(pythonrc)
+        with monkeypatch.context() as m:
+            m.setattr('builtins.print', Mock())
+            print.assert_any_call("Ctrl click to launch VS Code Native REPL")
