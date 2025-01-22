@@ -21,6 +21,7 @@ import {
     TerminalShellExecutionStartEvent,
     LogOutputChannel,
     OutputChannel,
+    TerminalLinkProvider,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
 import { Resource } from '../types';
@@ -257,4 +258,8 @@ export function createOutputChannel(name: string, languageId?: string): OutputCh
 }
 export function createLogOutputChannel(name: string, options: { log: true }): LogOutputChannel {
     return window.createOutputChannel(name, options);
+}
+
+export function registerTerminalLinkProvider(provider: TerminalLinkProvider): Disposable {
+    return window.registerTerminalLinkProvider(provider);
 }

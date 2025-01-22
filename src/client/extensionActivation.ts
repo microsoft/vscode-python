@@ -55,7 +55,7 @@ import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeRe
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
 import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
-import { CustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
+import { CustomTerminalLinkProvider, registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
 
 export async function activateComponents(
     // `ext` is passed to any extra activation funcs.
@@ -116,10 +116,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     registerStartNativeReplCommand(ext.disposables, interpreterService);
     registerReplCommands(ext.disposables, interpreterService, executionHelper, commandManager);
     registerReplExecuteOnEnter(ext.disposables, interpreterService, commandManager);
-    // TODO: proably organize this into new file.
-    const linkProvider = new CustomTerminalLinkProvider();
-    // TODO: Do not directly use windows API. Wrap it like we do with command APIs.
-    ext.context.subscriptions.push(window.registerTerminalLinkProvider(linkProvider));
+    registerCustomTerminalLinkProvider(ext.context); // TODO: Is there way to avoid passing in ext.context?
 }
 
 /// //////////////////////////
