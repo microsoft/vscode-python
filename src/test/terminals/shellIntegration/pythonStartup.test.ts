@@ -3,10 +3,11 @@
 
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { GlobalEnvironmentVariableCollection, Uri, WorkspaceConfiguration } from 'vscode';
+import { GlobalEnvironmentVariableCollection, Uri, WorkspaceConfiguration, Disposable } from 'vscode';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { registerPythonStartup } from '../../../client/terminals/pythonStartup';
 import { IExtensionContext } from '../../../client/common/types';
+import * as pythonStartupLinkProvider from '../../../client/terminals/pythonStartupLinkProvider';
 
 suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     let getConfigurationStub: sinon.SinonStub;
@@ -20,7 +21,6 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     setup(() => {
         context = TypeMoq.Mock.ofType<IExtensionContext>();
         globalEnvironmentVariableCollection = TypeMoq.Mock.ofType<GlobalEnvironmentVariableCollection>();
-
         // Question: Why do we have to set up environmentVariableCollection and globalEnvironmentVariableCollection in this flip-flop way?
         // Reference: /vscode-python/src/test/interpreters/activation/terminalEnvVarCollectionService.unit.test.ts
         context.setup((c) => c.environmentVariableCollection).returns(() => globalEnvironmentVariableCollection.object);
@@ -121,5 +121,19 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         await registerPythonStartup(context.object);
 
         globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHONSTARTUP'), TypeMoq.Times.once());
+    });
+
+    test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {
+        const registerTerminalLinkProviderStub = sinon.stub(
+            pythonStartupLinkProvider,
+            'registerCustomTerminalLinkProvider',
+        );
+        const disposableArray: Disposable[] = [];
+        pythonStartupLinkProvider.registerCustomTerminalLinkProvider(disposableArray);
+
+        sinon.assert.calledOnce(registerTerminalLinkProviderStub);
+        sinon.assert.calledWith(registerTerminalLinkProviderStub, disposableArray);
+
+        registerTerminalLinkProviderStub.restore();
     });
 });
