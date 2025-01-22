@@ -2,7 +2,6 @@ import importlib
 import platform
 import sys
 from unittest.mock import Mock
-import pytest
 import pythonrc
 
 is_wsl = "microsoft-standard-WSL" in platform.release()
