@@ -8,6 +8,7 @@ original_ps1 = ">>> "
 use_shell_integration = sys.version_info < (3, 13)
 is_wsl = "microsoft-standard-WSL" in platform.release()
 
+
 class REPLHooks:
     def __init__(self):
         self.global_exit = None
