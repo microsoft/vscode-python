@@ -19,6 +19,7 @@ import { registerPythonStartup } from '../../../client/terminals/pythonStartup';
 import { IExtensionContext } from '../../../client/common/types';
 import * as pythonStartupLinkProvider from '../../../client/terminals/pythonStartupLinkProvider';
 import { CustomTerminalLinkProvider } from '../../../client/terminals/pythonStartupLinkProvider';
+import { Repl } from '../../../client/common/utils/localize';
 
 suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     let getConfigurationStub: sinon.SinonStub;
@@ -163,5 +164,17 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
         assert.isNotNull(links, 'Expected links to be not undefined');
         assert.isArray(links, 'Expected links to be an array');
+        assert.isNotEmpty(links, 'Expected links to be not empty');
+
+        if (Array.isArray(links)) {
+            assert.equal(links[0].command, 'python.startNativeREPL', 'Expected command to be python.startNativeREPL');
+            assert.equal(
+                links[0].startIndex,
+                context.line.indexOf('VS Code Native REPL'),
+                'Expected startIndex to be 0',
+            );
+            assert.equal(links[0].length, 'VS Code Native REPL'.length, 'Expected length to be 16');
+            assert.equal(links[0].tooltip, Repl.launchNativeRepl, 'Expected tooltip to be Launch VS Code Native REPL');
+        }
     });
 });

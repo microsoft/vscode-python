@@ -6,10 +6,10 @@ import {
     TerminalLink,
     TerminalLinkContext,
     TerminalLinkProvider,
-    l10n,
 } from 'vscode';
 import { executeCommand } from '../common/vscodeApis/commandApis';
 import { registerTerminalLinkProvider } from '../common/vscodeApis/windowApis';
+import { Repl } from '../common/utils/localize';
 
 interface CustomTerminalLink extends TerminalLink {
     command: string;
@@ -27,7 +27,7 @@ export class CustomTerminalLinkProvider implements TerminalLinkProvider<CustomTe
             links.push({
                 startIndex: context.line.indexOf(expectedNativeLink),
                 length: expectedNativeLink.length,
-                tooltip: l10n.t('Launch VS Code Native REPL'),
+                tooltip: Repl.launchNativeRepl,
                 command: 'python.startNativeREPL',
             });
         }

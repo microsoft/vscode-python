@@ -92,6 +92,7 @@ export namespace AttachProcess {
 
 export namespace Repl {
     export const disableSmartSend = l10n.t('Disable Smart Send');
+    export const launchNativeRepl = l10n.t('Launch VS Code Native REPL');
 }
 export namespace Pylance {
     export const remindMeLater = l10n.t('Remind me later');
