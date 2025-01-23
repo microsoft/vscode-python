@@ -33,8 +33,6 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     setup(() => {
         context = TypeMoq.Mock.ofType<IExtensionContext>();
         globalEnvironmentVariableCollection = TypeMoq.Mock.ofType<GlobalEnvironmentVariableCollection>();
-        // Question: Why do we have to set up environmentVariableCollection and globalEnvironmentVariableCollection in this flip-flop way?
-        // Reference: /vscode-python/src/test/interpreters/activation/terminalEnvVarCollectionService.unit.test.ts
         context.setup((c) => c.environmentVariableCollection).returns(() => globalEnvironmentVariableCollection.object);
         context.setup((c) => c.storageUri).returns(() => Uri.parse('a'));
 
