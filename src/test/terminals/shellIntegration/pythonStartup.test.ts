@@ -12,7 +12,6 @@ import {
     TerminalLinkContext,
     Terminal,
     EventEmitter,
-    TerminalLink,
 } from 'vscode';
 import { assert } from 'chai';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
