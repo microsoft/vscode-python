@@ -177,4 +177,21 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             assert.equal(links[0].tooltip, Repl.launchNativeRepl, 'Expected tooltip to be Launch VS Code Native REPL');
         }
     });
+
+    test('Verify provideTerminalLinks returns no links when context.line does not contain expectedNativeLink', () => {
+        const provider = new CustomTerminalLinkProvider();
+        const context: TerminalLinkContext = {
+            line: 'Some random string without the expected link',
+            terminal: {} as Terminal,
+        };
+        const token: CancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: new EventEmitter<unknown>().event,
+        };
+
+        const links = provider.provideTerminalLinks(context, token);
+
+        assert.isArray(links, 'Expected links to be an array');
+        assert.isEmpty(links, 'Expected links to be empty');
+    });
 });
