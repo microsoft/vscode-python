@@ -3,11 +3,23 @@
 
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { GlobalEnvironmentVariableCollection, Uri, WorkspaceConfiguration, Disposable } from 'vscode';
+import {
+    GlobalEnvironmentVariableCollection,
+    Uri,
+    WorkspaceConfiguration,
+    Disposable,
+    CancellationToken,
+    TerminalLinkContext,
+    Terminal,
+    EventEmitter,
+    TerminalLink,
+} from 'vscode';
+import { assert } from 'chai';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { registerPythonStartup } from '../../../client/terminals/pythonStartup';
 import { IExtensionContext } from '../../../client/common/types';
 import * as pythonStartupLinkProvider from '../../../client/terminals/pythonStartupLinkProvider';
+import { CustomTerminalLinkProvider } from '../../../client/terminals/pythonStartupLinkProvider';
 
 suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     let getConfigurationStub: sinon.SinonStub;
@@ -135,5 +147,22 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         sinon.assert.calledWith(registerTerminalLinkProviderStub, disposableArray);
 
         registerTerminalLinkProviderStub.restore();
+    });
+
+    test('Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
+        const provider = new CustomTerminalLinkProvider();
+        const context: TerminalLinkContext = {
+            line: 'Some random string with VS Code Native REPL in it',
+            terminal: {} as Terminal,
+        };
+        const token: CancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: new EventEmitter<unknown>().event,
+        };
+
+        const links = provider.provideTerminalLinks(context, token);
+
+        assert.isNotNull(links, 'Expected links to be not undefined');
+        assert.isArray(links, 'Expected links to be an array');
     });
 });
