@@ -21,11 +21,8 @@ export class CustomTerminalLinkProvider implements TerminalLinkProvider<CustomTe
         _token: CancellationToken,
     ): ProviderResult<CustomTerminalLink[]> {
         const links: CustomTerminalLink[] = [];
-        // Question: What if context.line is truncated because of user zoom setting?
-        // Meaning what if this line is separated into two+ line in terminal?
         const expectedNativeLink = 'VS Code Native REPL';
 
-        // eslint-disable-next-line no-cond-assign
         if (context.line.includes(expectedNativeLink)) {
             links.push({
                 startIndex: context.line.indexOf(expectedNativeLink),
