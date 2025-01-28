@@ -90,6 +90,7 @@ export async function startRunResultNamedPipe(
         disposables.push(
             cancellationToken?.onCancellationRequested(() => {
                 traceLog(`Test Result named pipe ${pipeName}  cancelled`);
+                traceLog(`Test Result named pipe ${pipeName}  cancelled`);
                 disposable.dispose();
             }),
         );
@@ -195,6 +196,10 @@ export function populateTestTree(
                 const testItem = testController.createTestItem(child.id_, child.name, Uri.file(child.path));
                 testItem.tags = [RunTestTag, DebugTestTag];
 
+                let range: Range | undefined;
+                if (child.lineno) {
+                    range = new Range(new Position(Number(child.lineno) - 1, 0), new Position(Number(child.lineno), 0));
+                }
                 let range: Range | undefined;
                 if (child.lineno) {
                     range = new Range(new Position(Number(child.lineno) - 1, 0), new Position(Number(child.lineno), 0));
@@ -345,6 +350,7 @@ export async function hasSymlinkParent(currentPath: string): Promise<boolean> {
         // Recurse up the directory tree
         return await hasSymlinkParent(parentDirectory);
     } catch (error) {
+        traceError('Error checking symlinks:', error);
         traceError('Error checking symlinks:', error);
         return false;
     }
