@@ -146,64 +146,90 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
         registerTerminalLinkProviderStub.restore();
     });
+    if (process.platform === 'darwin') {
+        test('Mac - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Cmd click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
 
-    test('Mac - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
-        const provider = new CustomTerminalLinkProvider();
-        const context: TerminalLinkContext = {
-            line: 'Some random string with Cmd click to launch VS Code Native REPL',
-            terminal: {} as Terminal,
-        };
-        const token: CancellationToken = {
-            isCancellationRequested: false,
-            onCancellationRequested: new EventEmitter<unknown>().event,
-        };
+            const links = provider.provideTerminalLinks(context, token);
 
-        const links = provider.provideTerminalLinks(context, token);
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
 
-        assert.isNotNull(links, 'Expected links to be not undefined');
-        assert.isArray(links, 'Expected links to be an array');
-        assert.isNotEmpty(links, 'Expected links to be not empty');
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].command,
+                    'python.startNativeREPL',
+                    'Expected command to be python.startNativeREPL',
+                );
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Cmd click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Cmd click to launch VS Code Native REPL'.length,
+                    'Match expected length',
+                );
+                assert.equal(
+                    links[0].tooltip,
+                    Repl.launchNativeRepl,
+                    'Expected tooltip to be Launch VS Code Native REPL',
+                );
+            }
+        });
+    }
+    if (process.platform !== 'darwin') {
+        test('Windows/Linux - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Ctrl click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
 
-        if (Array.isArray(links)) {
-            assert.equal(links[0].command, 'python.startNativeREPL', 'Expected command to be python.startNativeREPL');
-            assert.equal(
-                links[0].startIndex,
-                context.line.indexOf('Cmd click to launch VS Code Native REPL'),
-                'start index should match',
-            );
-            assert.equal(links[0].length, 'Cmd click to launch VS Code Native REPL'.length, 'Match expected length');
-            assert.equal(links[0].tooltip, Repl.launchNativeRepl, 'Expected tooltip to be Launch VS Code Native REPL');
-        }
-    });
+            const links = provider.provideTerminalLinks(context, token);
 
-    test('Windows/Linux - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
-        const provider = new CustomTerminalLinkProvider();
-        const context: TerminalLinkContext = {
-            line: 'Some random string with Ctrl click to launch VS Code Native REPL',
-            terminal: {} as Terminal,
-        };
-        const token: CancellationToken = {
-            isCancellationRequested: false,
-            onCancellationRequested: new EventEmitter<unknown>().event,
-        };
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
 
-        const links = provider.provideTerminalLinks(context, token);
-
-        assert.isNotNull(links, 'Expected links to be not undefined');
-        assert.isArray(links, 'Expected links to be an array');
-        assert.isNotEmpty(links, 'Expected links to be not empty');
-
-        if (Array.isArray(links)) {
-            assert.equal(links[0].command, 'python.startNativeREPL', 'Expected command to be python.startNativeREPL');
-            assert.equal(
-                links[0].startIndex,
-                context.line.indexOf('Ctrl click to launch VS Code Native REPL'),
-                'start index should match',
-            );
-            assert.equal(links[0].length, 'Ctrl click to launch VS Code Native REPL'.length, 'Match expected Length');
-            assert.equal(links[0].tooltip, Repl.launchNativeRepl, 'Expected tooltip to be Launch VS Code Native REPL');
-        }
-    });
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].command,
+                    'python.startNativeREPL',
+                    'Expected command to be python.startNativeREPL',
+                );
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Ctrl click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Ctrl click to launch VS Code Native REPL'.length,
+                    'Match expected Length',
+                );
+                assert.equal(
+                    links[0].tooltip,
+                    Repl.launchNativeRepl,
+                    'Expected tooltip to be Launch VS Code Native REPL',
+                );
+            }
+        });
+    }
 
     test('Verify provideTerminalLinks returns no links when context.line does not contain expectedNativeLink', () => {
         const provider = new CustomTerminalLinkProvider();
