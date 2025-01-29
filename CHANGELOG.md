@@ -9472,6 +9472,7 @@ community for creating a fantastic programming language and community to be a
 part of!
 
 ### Enhancements
+## new one maybe?
 
 1. Adds support for code completion in the debug console window.
    ([#1076](https://github.com/Microsoft/vscode-python/issues/1076))
