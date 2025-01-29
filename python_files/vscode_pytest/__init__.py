@@ -35,6 +35,10 @@ class TestData(TypedDict):
     id_: str
 
 
+class randomIdea(TypedDict):
+    name: str
+
+
 class TestItem(TestData):
     """A class defining test items."""
 
