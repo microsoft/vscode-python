@@ -36,7 +36,7 @@ class TestData(TypedDict):
 
 
 class randomIdea(TypedDict):
-    name: str
+    name: str  # now lets add something else
 
 
 class TestItem(TestData):
