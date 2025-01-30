@@ -89,6 +89,7 @@ def test_parameterized_error_collect():
     file_path_str = "error_parametrize_discovery.py"
     actual = helpers.runner(["--collect-only", file_path_str])
     assert actual
+    assert 1 == 1
     actual_list: List[Dict[str, Any]] = actual
     if actual_list is not None:
         for actual_item in actual_list:
