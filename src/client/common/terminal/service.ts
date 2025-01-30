@@ -110,6 +110,7 @@ export class TerminalService implements ITerminalService, Disposable {
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
 
+        let minorVersion: number | undefined;
         // Need to check for if Python version is >= 3.13 since we have turned off SI on python side.
         // Because we are not sending explicit commandline info to core, it will inject ^C. (We want to avoid)
         if (this.options && this.options.resource) {
@@ -117,9 +118,10 @@ export class TerminalService implements ITerminalService, Disposable {
                 this.options.resource,
                 this.serviceContainer.get<IInterpreterService>(IInterpreterService),
             );
-            const minorVersion = pythonVersion?.version?.minor;
+            minorVersion = pythonVersion?.version?.minor;
+        }
 
-        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || ((minorVersion ?? 0) >= 13)) {
+        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || (minorVersion ?? 0) >= 13) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
