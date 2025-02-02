@@ -25,7 +25,7 @@ import { useEnvExtension } from '../../envExt/api.internal';
 import { ensureTerminalLegacy } from '../../envExt/api.legacy';
 import { sleep } from '../utils/async';
 import { isWindows } from '../utils/platform';
-import { getPythonMinorVersion } from '../../repl/replUtils';
+// import { getPythonMinorVersion } from '../../repl/replUtils';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -110,14 +110,15 @@ export class TerminalService implements ITerminalService, Disposable {
         const config = getConfiguration('python');
         const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
 
-        const minorVersion = this.options?.resource
-            ? await getPythonMinorVersion(
-                  this.options.resource,
-                  this.serviceContainer.get<IInterpreterService>(IInterpreterService),
-              )
-            : undefined;
+        // const minorVersion = this.options?.resource
+        //     ? await getPythonMinorVersion(
+        //           this.options.resource,
+        //           this.serviceContainer.get<IInterpreterService>(IInterpreterService),
+        //       )
+        //     : undefined;
+        // || (minorVersion ?? 0) >= 13
 
-        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || (minorVersion ?? 0) >= 13) {
+        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows())) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
