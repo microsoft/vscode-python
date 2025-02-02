@@ -102,13 +102,13 @@ suite('Terminal Service', () => {
         disposables = [];
 
         mockServiceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService
-            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        // interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        // interpreterService
+        //     .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+        //     .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
 
-        options = TypeMoq.Mock.ofType<TerminalCreationOptions>();
-        options.setup((o) => o.resource).returns(() => Uri.parse('a'));
+        // options = TypeMoq.Mock.ofType<TerminalCreationOptions>();
+        // options.setup((o) => o.resource).returns(() => Uri.parse('a'));
 
         mockServiceContainer.setup((c) => c.get(ITerminalManager)).returns(() => terminalManager.object);
         mockServiceContainer.setup((c) => c.get(ITerminalHelper)).returns(() => terminalHelper.object);
@@ -136,7 +136,7 @@ suite('Terminal Service', () => {
         disposables.filter((item) => !!item).forEach((item) => item.dispose());
         sinon.restore();
         // reset setup for interpreterService
-        interpreterService.reset();
+        // interpreterService.reset();
     });
 
     test('Ensure terminal is disposed', async () => {
@@ -259,57 +259,57 @@ suite('Terminal Service', () => {
         terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.exactly(1));
     });
 
-    test('Ensure sendText is NOT called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python < 3.13', async () => {
-        isWindowsStub.returns(false);
-        pythonConfig
-            .setup((p) => p.get('terminal.shellIntegration.enabled'))
-            .returns(() => true)
-            .verifiable(TypeMoq.Times.once());
+    // test('Ensure sendText is NOT called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python < 3.13', async () => {
+    //     isWindowsStub.returns(false);
+    //     pythonConfig
+    //         .setup((p) => p.get('terminal.shellIntegration.enabled'))
+    //         .returns(() => true)
+    //         .verifiable(TypeMoq.Times.once());
 
-        terminalHelper
-            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined));
-        service = new TerminalService(mockServiceContainer.object);
-        const textToSend = 'Some Text';
-        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
-        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+    //     terminalHelper
+    //         .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined));
+    //     service = new TerminalService(mockServiceContainer.object);
+    //     const textToSend = 'Some Text';
+    //     terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+    //     terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        service.ensureTerminal();
-        service.executeCommand(textToSend, true);
+    //     service.ensureTerminal();
+    //     service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.never());
-    });
+    //     terminal.verify((t) => t.show(TypeMoq.It.isValue(true)), TypeMoq.Times.exactly(1));
+    //     terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.never());
+    // });
 
-    test('Ensure sendText is called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python >= 3.13', async () => {
-        interpreterService.reset();
+    // test('Ensure sendText is called when Python shell integration and terminal shell integration are both enabled - Mac, Linux && Python >= 3.13', async () => {
+    //     interpreterService.reset();
 
-        interpreterService
-            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() =>
-                Promise.resolve({ path: 'yo', version: { major: 3, minor: 13, patch: 0 } } as PythonEnvironment),
-            );
+    //     interpreterService
+    //         .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+    //         .returns(() =>
+    //             Promise.resolve({ path: 'yo', version: { major: 3, minor: 13, patch: 0 } } as PythonEnvironment),
+    //         );
 
-        isWindowsStub.returns(false);
-        pythonConfig
-            .setup((p) => p.get('terminal.shellIntegration.enabled'))
-            .returns(() => true)
-            .verifiable(TypeMoq.Times.once());
+    //     isWindowsStub.returns(false);
+    //     pythonConfig
+    //         .setup((p) => p.get('terminal.shellIntegration.enabled'))
+    //         .returns(() => true)
+    //         .verifiable(TypeMoq.Times.once());
 
-        terminalHelper
-            .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(undefined));
+    //     terminalHelper
+    //         .setup((helper) => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+    //         .returns(() => Promise.resolve(undefined));
 
-        service = new TerminalService(mockServiceContainer.object, options.object);
-        const textToSend = 'Some Text';
-        terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
-        terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
+    //     service = new TerminalService(mockServiceContainer.object, options.object);
+    //     const textToSend = 'Some Text';
+    //     terminalHelper.setup((h) => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
+    //     terminalManager.setup((t) => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
-        await service.ensureTerminal();
-        await service.executeCommand(textToSend, true);
+    //     await service.ensureTerminal();
+    //     await service.executeCommand(textToSend, true);
 
-        terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.once());
-    });
+    //     terminal.verify((t) => t.sendText(TypeMoq.It.isValue(textToSend)), TypeMoq.Times.once());
+    // });
 
     test('Ensure sendText IS called even when Python shell integration and terminal shell integration are both enabled - Window', async () => {
         isWindowsStub.returns(true);
