@@ -11,7 +11,7 @@ import {
     TerminalShellExecution,
     TerminalShellExecutionEndEvent,
     TerminalShellIntegration,
-    Uri,
+    // Uri,
     Terminal as VSCodeTerminal,
     WorkspaceConfiguration,
 } from 'vscode';
@@ -22,7 +22,7 @@ import { TerminalService } from '../../../client/common/terminal/service';
 import {
     ITerminalActivator,
     ITerminalHelper,
-    TerminalCreationOptions,
+    // TerminalCreationOptions,
     TerminalShellType,
 } from '../../../client/common/terminal/types';
 import { IDisposableRegistry } from '../../../client/common/types';
@@ -33,7 +33,7 @@ import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis'
 import * as platform from '../../../client/common/utils/platform';
 import * as extapi from '../../../client/envExt/api.internal';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
+// import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 
 suite('Terminal Service', () => {
     let service: TerminalService;
@@ -55,7 +55,7 @@ suite('Terminal Service', () => {
     let isWindowsStub: sinon.SinonStub;
     let useEnvExtensionStub: sinon.SinonStub;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
-    let options: TypeMoq.IMock<TerminalCreationOptions>;
+    // let options: TypeMoq.IMock<TerminalCreationOptions>;
 
     setup(() => {
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
