@@ -21,7 +21,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { PYTHON_PATH, getPythonSemVer } from '../../common';
+import { PYTHON_PATH } from '../../common';
 import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
 import { l10n } from '../../mocks/vsc';
