@@ -38,7 +38,7 @@ import { ReplType } from '../../../client/repl/types';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
 
-suite('Terminal - Code Execution Helper', () => {
+suite('Terminal - Code Execution Helper', async () => {
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
