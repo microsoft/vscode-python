@@ -135,8 +135,7 @@ suite('Terminal Service', () => {
         }
         disposables.filter((item) => !!item).forEach((item) => item.dispose());
         sinon.restore();
-        // reset setup for interpreterService
-        // interpreterService.reset();
+        interpreterService.reset();
     });
 
     test('Ensure terminal is disposed', async () => {
