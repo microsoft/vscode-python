@@ -24,8 +24,10 @@ Feature freeze is Monday @ 17:00 America/Vancouver, XXX XX. At that point, commi
 </details>
 
 
-# Release candidate (Monday, XXX XX)
+# Release candidate (Thursday, XXX XX)
+NOTE: This Thursday occurs during TESTING week. Branching should be done during this week to freeze the release with only the correct changes. Any last minute fixes go in as candidates into the release branch and will require team approval.
 
+Other:
 NOTE: Third Party Notices are automatically added by our build pipelines using  https://tools.opensource.microsoft.com/notice.
 NOTE: the number of this release is in the issue title and can be substituted in wherever you see [YYYY.minor].
 
