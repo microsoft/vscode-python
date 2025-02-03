@@ -168,11 +168,10 @@ suite('REPL - Smart Send', async () => {
         commandManager.verifyAll();
     });
 
-    const pythonVersion = await getPythonSemVer();
-    console.log('Just printed pythoNVersion: \n');
-    console.log(pythonVersion);
-    if (pythonVersion && pythonVersion.minor < 13) {
-        test('Smart send should perform smart selection and move cursor', async () => {
+    const pythonTestVersion = await getPythonSemVer();
+
+    if (pythonTestVersion && pythonTestVersion.minor < 13) {
+        test('Smart send should perform smart selection and move cursor - Python < 3.13', async () => {
             configurationService
                 .setup((c) => c.getSettings(TypeMoq.It.isAny()))
                 .returns({

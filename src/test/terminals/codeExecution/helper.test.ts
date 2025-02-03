@@ -233,10 +233,11 @@ suite('Terminal - Code Execution Helper', async () => {
         const normalizedExpected = expectedSource.replace(/\r\n/g, '\n');
         expect(normalizedCode).to.be.equal(normalizedExpected);
     }
-    const pythonVersion = await getPythonSemVer();
-    if (pythonVersion && pythonVersion.minor < 13) {
+
+    const pythonTestVersion = await getPythonSemVer();
+    if (pythonTestVersion && pythonTestVersion.minor < 13) {
         ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
-            test(`Ensure code is normalized (Sample${fileNameSuffix})`, async () => {
+            test(`Ensure code is normalized (Sample${fileNameSuffix}) - Python < 3.13`, async () => {
                 configurationService
                     .setup((c) => c.getSettings(TypeMoq.It.isAny()))
                     .returns({
@@ -255,6 +256,7 @@ suite('Terminal - Code Execution Helper', async () => {
             });
         });
     }
+
     test("Display message if there's no active file", async () => {
         documentManager.setup((doc) => doc.activeTextEditor).returns(() => undefined);
 
