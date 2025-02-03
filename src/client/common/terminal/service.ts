@@ -116,9 +116,8 @@ export class TerminalService implements ITerminalService, Disposable {
                   this.serviceContainer.get<IInterpreterService>(IInterpreterService),
               )
             : undefined;
-        || (minorVersion ?? 0) >= 13
 
-        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows())) {
+        if ((isPythonShell && !pythonrcSetting) || (isPythonShell && isWindows()) || (minorVersion ?? 0) >= 13) {
             // If user has explicitly disabled SI for Python, use sendText for inside Terminal REPL.
             terminal.sendText(commandLine);
             return undefined;
