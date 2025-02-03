@@ -241,21 +241,31 @@ export class JupyterExtensionPythonEnvironments extends DisposableBase implement
 
     private getJupyterApi() {
         if (!this.jupyterExtension) {
-            const api = this.extensions.getExtension<JupyterPythonEnvironmentApi>(JUPYTER_EXTENSION_ID)?.exports;
-            if (!api) {
+            const ext = this.extensions.getExtension<JupyterPythonEnvironmentApi>(JUPYTER_EXTENSION_ID);
+            if (!ext) {
                 return undefined;
             }
-            this.jupyterExtension = api;
-            if (api.onDidChangePythonEnvironment) {
-                this._register(
-                    api.onDidChangePythonEnvironment(
-                        this._onDidChangePythonEnvironment.fire,
-                        this._onDidChangePythonEnvironment,
-                    ),
-                );
+            if (!ext.isActive) {
+                ext.activate().then(() => {
+                    this.hookupOnDidChangePythonEnvironment(ext.exports);
+                });
+                return undefined;
             }
+            this.hookupOnDidChangePythonEnvironment(ext.exports);
         }
         return this.jupyterExtension;
+    }
+
+    private hookupOnDidChangePythonEnvironment(api: JupyterPythonEnvironmentApi) {
+        this.jupyterExtension = api;
+        if (api.onDidChangePythonEnvironment) {
+            this._register(
+                api.onDidChangePythonEnvironment(
+                    this._onDidChangePythonEnvironment.fire,
+                    this._onDidChangePythonEnvironment,
+                ),
+            );
+        }
     }
 }
 
