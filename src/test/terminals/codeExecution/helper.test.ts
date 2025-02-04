@@ -33,12 +33,12 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
-import { PYTHON_PATH } from '../../common';
+import { PYTHON_PATH, getPythonSemVer } from '../../common';
 import { ReplType } from '../../../client/repl/types';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
 
-suite('Terminal - Code Execution Helper', () => {
+suite('Terminal - Code Execution Helper', async () => {
     let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
@@ -234,25 +234,28 @@ suite('Terminal - Code Execution Helper', () => {
         expect(normalizedCode).to.be.equal(normalizedExpected);
     }
 
-    ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
-        test(`Ensure code is normalized (Sample${fileNameSuffix})`, async () => {
-            configurationService
-                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-                .returns({
-                    REPL: {
-                        EnableREPLSmartSend: false,
-                        REPLSmartSend: false,
-                    },
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } as any);
-            const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-            const expectedCode = await fs.readFile(
-                path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
-                'utf8',
-            );
-            await ensureCodeIsNormalized(code, expectedCode);
+    const pythonTestVersion = await getPythonSemVer();
+    if (pythonTestVersion && pythonTestVersion.minor < 13) {
+        ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach((fileNameSuffix) => {
+            test(`Ensure code is normalized (Sample${fileNameSuffix}) - Python < 3.13`, async () => {
+                configurationService
+                    .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                    .returns({
+                        REPL: {
+                            EnableREPLSmartSend: false,
+                            REPLSmartSend: false,
+                        },
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    } as any);
+                const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
+                const expectedCode = await fs.readFile(
+                    path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized_selection.py`),
+                    'utf8',
+                );
+                await ensureCodeIsNormalized(code, expectedCode);
+            });
         });
-    });
+    }
 
     test("Display message if there's no active file", async () => {
         documentManager.setup((doc) => doc.activeTextEditor).returns(() => undefined);

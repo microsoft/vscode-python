@@ -118,3 +118,17 @@ export function getTabNameForUri(uri: Uri): string | undefined {
 
     return undefined;
 }
+
+/**
+ * Function that will return the minor version of current active Python interpreter.
+ */
+export async function getPythonMinorVersion(
+    uri: Uri | undefined,
+    interpreterService: IInterpreterService,
+): Promise<number | undefined> {
+    if (uri) {
+        const pythonVersion = await getActiveInterpreter(uri, interpreterService);
+        return pythonVersion?.version?.minor;
+    }
+    return undefined;
+}
