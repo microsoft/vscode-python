@@ -120,10 +120,10 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
-        # If selection ends with trailing dictionary or list, remove last new-line for "cleaner run".
+        # If selection ends with trailing dictionary or list, remove last unnecessary newline.
         if selection[-2] == "}" or selection[-2] == "]":
             source = source[:-1]
-        # If the selection contains trailing return dictionary, insert newline to run automatically.
+        # If the selection contains trailing return dictionary, insert newline to trigger execute.
         if check_end_with_return_dict(selection):
             source = source + "\n"
     except Exception:
