@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Terminal, Uri } from 'vscode';
+import { Terminal, Uri, WorkspaceFolder } from 'vscode';
 import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalOptions } from './types';
@@ -10,7 +10,7 @@ import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
 import { traceError, traceInfo } from '../logging';
 import { reportActiveInterpreterChanged } from '../environmentApi';
-import { getWorkspaceFolder } from '../common/vscodeApis/workspaceApis';
+import { getWorkspaceFolder, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 
 function toEnvironmentType(pythonEnv: PythonEnvironment): EnvironmentType {
     if (pythonEnv.envId.managerId.toLowerCase().endsWith('system')) {
@@ -106,16 +106,25 @@ export async function getActiveInterpreterLegacy(resource?: Uri): Promise<Python
     const pythonEnv = await getEnvironment(resource);
     const oldEnv = previousEnvMap.get(uri?.fsPath || '');
     const newEnv = pythonEnv ? toLegacyType(pythonEnv) : undefined;
-    if (newEnv && oldEnv?.envId.id !== pythonEnv?.envId.id) {
+
+    const folders = getWorkspaceFolders() ?? [];
+    const shouldReport =
+        (folders.length === 0 && resource === undefined) || (folders.length > 0 && resource !== undefined);
+    if (shouldReport && newEnv && oldEnv?.envId.id !== pythonEnv?.envId.id) {
         reportActiveInterpreterChanged({
             resource: getWorkspaceFolder(resource),
             path: newEnv.path,
         });
+        previousEnvMap.set(uri?.fsPath || '', pythonEnv);
     }
     return pythonEnv ? toLegacyType(pythonEnv) : undefined;
 }
 
-export async function ensureEnvironmentContainsPythonLegacy(pythonPath: string): Promise<void> {
+export async function ensureEnvironmentContainsPythonLegacy(
+    pythonPath: string,
+    workspaceFolder: WorkspaceFolder | undefined,
+    callback: () => void,
+): Promise<void> {
     const api = await getEnvExtApi();
     const pythonEnv = await api.resolveEnvironment(Uri.file(pythonPath));
     if (!pythonEnv) {
@@ -132,6 +141,12 @@ export async function ensureEnvironmentContainsPythonLegacy(pythonPath: string):
         traceInfo(`EnvExt: Python not found in ${envType} environment ${pythonPath}`);
         traceInfo(`EnvExt: Installing Python in ${envType} environment ${pythonPath}`);
         await api.installPackages(pythonEnv, ['python']);
+        previousEnvMap.set(workspaceFolder?.uri.fsPath || '', pythonEnv);
+        reportActiveInterpreterChanged({
+            path: pythonPath,
+            resource: workspaceFolder,
+        });
+        callback();
     }
 }
 
