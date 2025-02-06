@@ -75,6 +75,11 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         }
         if (debugConfiguration.clientOS === undefined) {
             debugConfiguration.clientOS = getOSType() === OSType.Windows ? 'windows' : 'unix';
+            if (debugConfiguration.clientOS === 'windows') {
+                AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.WindowsOption);
+            } else {
+                AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.UnixOption);
+            }
         }
         if (debugConfiguration.showReturnValue) {
             AttachConfigurationResolver.debugOption(debugOptions, DebugOptions.ShowReturnValue);
