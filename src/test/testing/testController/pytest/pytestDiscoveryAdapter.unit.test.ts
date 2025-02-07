@@ -71,6 +71,7 @@ suite('pytest test discovery adapter', () => {
         mockProc = new MockChildProcess('', ['']);
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
         outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
 
         const output = new Observable<Output<string>>(() => {
