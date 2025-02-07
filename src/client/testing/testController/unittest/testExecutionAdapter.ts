@@ -14,7 +14,7 @@ import {
     TestCommandOptions,
     TestExecutionCommand,
 } from '../common/types';
-import { traceError, traceInfo, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { MESSAGE_ON_TESTING_OUTPUT_MOVE, fixLogLinesNoTrailing } from '../common/utils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import {
@@ -130,7 +130,11 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
         // create named pipe server to send test ids
         const testIdsFileName = await utils.writeTestIdsFile(testIds);
         mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
-        traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
+        traceInfo(
+            `All environment variables set for unittest execution, PYTHONPATH: ${JSON.stringify(
+                mutableEnv.PYTHONPATH,
+            )}`,
+        );
 
         const spawnOptions: SpawnOptions = {
             token: options.token,
@@ -145,6 +149,10 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             resource: options.workspaceFolder,
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+
+        const execInfo = await execService?.getExecutablePath();
+        traceVerbose(`Executable path for unittest execution: ${execInfo}.`);
+
         const args = [options.command.script].concat(options.command.args);
 
         if (options.outChannel) {

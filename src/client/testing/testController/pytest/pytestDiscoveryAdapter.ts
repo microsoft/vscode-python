@@ -111,7 +111,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = discoveryPipeName;
-        traceInfo(`All environment variables set for pytest discovery: ${JSON.stringify(mutableEnv)}`);
+        traceInfo(
+            `All environment variables set for pytest discovery, PYTHONPATH: ${JSON.stringify(mutableEnv.PYTHONPATH)}`,
+        );
 
         // delete UUID following entire discovery finishing.
         const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
@@ -175,6 +177,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             interpreter,
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+
+        const execInfo = await execService?.getExecutablePath();
+        traceVerbose(`Executable path for pytest discovery: ${execInfo}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
 
