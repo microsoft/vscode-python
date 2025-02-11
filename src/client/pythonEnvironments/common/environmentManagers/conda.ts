@@ -564,11 +564,8 @@ export class Conda {
             return undefined;
         }
         const args = [];
-        if (env.name) {
-            args.push('-n', env.name);
-        } else {
-            args.push('-p', env.prefix);
-        }
+        args.push('-p', env.prefix);
+
         const python = [
             forShellExecution ? this.shellCommand : this.command,
             'run',
