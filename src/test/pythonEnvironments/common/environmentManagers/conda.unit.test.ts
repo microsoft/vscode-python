@@ -536,7 +536,7 @@ suite('Conda and its environments are located correctly', () => {
         expect(args).to.not.equal(undefined);
         assert.deepStrictEqual(
             args,
-            ['conda', 'run', '-n', 'envName', '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
+            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             'Incorrect args for case 1',
         );
 
