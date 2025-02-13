@@ -3,7 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { uniq } from 'lodash';
-import { minimatch } from 'minimatch';
+import * as minimatch from 'minimatch';
 import {
     CancellationToken,
     TestController,
@@ -216,7 +216,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.autoTestDiscoverOnSaveEnabled) {
                 traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
                 this.watchForSettingsChanges(workspace);
-                this.watchForTestContentChangeOnSave(settings.testing.autoTestDiscoverOnSavePattern);
+                this.watchForTestContentChangeOnSave();
             }
         });
     }
@@ -550,10 +550,11 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
     }
 
-    private watchForTestContentChangeOnSave(testFileGlob: String): void {
+    private watchForTestContentChangeOnSave(): void {
         this.disposables.push(
             onDidSaveTextDocument(async (doc: TextDocument) => {
-                if (minimatch(doc.uri.fs, testFileGlob)) {
+                const settings = this.configSettings.getSettings(doc.uri);
+                if (minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
                     this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
