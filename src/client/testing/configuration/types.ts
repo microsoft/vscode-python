@@ -11,6 +11,7 @@ export interface ITestingSettings {
     unittestArgs: string[];
     cwd?: string;
     readonly autoTestDiscoverOnSaveEnabled: boolean;
+    readonly autoTestDiscoverOnSavePattern: string;
 }
 
 export type TestSettingsPropertyNames = {

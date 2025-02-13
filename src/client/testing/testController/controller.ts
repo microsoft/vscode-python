@@ -3,6 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { uniq } from 'lodash';
+import { minimatch } from 'minimatch';
 import {
     CancellationToken,
     TestController,
@@ -215,7 +216,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
             if (settings.testing.autoTestDiscoverOnSaveEnabled) {
                 traceVerbose(`Testing: Setting up watcher for ${workspace.uri.fsPath}`);
                 this.watchForSettingsChanges(workspace);
-                this.watchForTestContentChangeOnSave();
+                this.watchForTestContentChangeOnSave(settings.testing.autoTestDiscoverOnSavePattern);
             }
         });
     }
@@ -549,10 +550,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         );
     }
 
-    private watchForTestContentChangeOnSave(): void {
+    private watchForTestContentChangeOnSave(testFileGlob: String): void {
         this.disposables.push(
             onDidSaveTextDocument(async (doc: TextDocument) => {
-                if (doc.fileName.endsWith('.py')) {
+                if (minimatch(doc.uri.fs, testFileGlob)) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
                     this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
