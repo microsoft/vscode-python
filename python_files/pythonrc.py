@@ -77,3 +77,8 @@ class PS1:
 
 if sys.platform != "win32" and (not is_wsl) and use_shell_integration:
     sys.ps1 = PS1()
+
+if sys.platform == "darwin":
+    print("Cmd click to launch VS Code Native REPL")
+else:
+    print("Ctrl click to launch VS Code Native REPL")

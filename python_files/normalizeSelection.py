@@ -120,8 +120,12 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
+        # If selection ends with trailing dictionary or list, remove last unnecessary newline.
         if selection[-2] == "}" or selection[-2] == "]":
             source = source[:-1]
+        # If the selection contains trailing return dictionary, insert newline to trigger execute.
+        if check_end_with_return_dict(selection):
+            source = source + "\n"
     except Exception:
         # If there's a problem when parsing statements,
         # append a blank line to end the block and send it as-is.
@@ -132,6 +136,11 @@ def normalize_lines(selection):
 
 top_level_nodes = []
 min_key = None
+
+
+def check_end_with_return_dict(code):
+    stripped_code = code.strip()
+    return stripped_code.endswith("}") and "return {" in stripped_code.strip()
 
 
 def check_exact_exist(top_level_nodes, start_line, end_line):

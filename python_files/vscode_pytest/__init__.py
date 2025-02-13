@@ -462,6 +462,11 @@ def pytest_sessionfinish(session, exitstatus):
             except NoSource:
                 # as per issue 24308 this best way to handle this edge case
                 continue
+            except Exception as e:
+                print(
+                    f"Plugin error[vscode-pytest]: Skipping analysis of file: {file} due to error: {e}"
+                )
+                continue
             lines_executable = {int(line_no) for line_no in analysis[1]}
             lines_missed = {int(line_no) for line_no in analysis[3]}
             lines_covered = lines_executable - lines_missed

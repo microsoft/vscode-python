@@ -28,7 +28,7 @@ import {
     fixLogLinesNoTrailing,
     startDiscoveryNamedPipe,
 } from '../common/utils';
-import { traceError, traceInfo, traceLog } from '../../../logging';
+import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
 
 /**
@@ -169,6 +169,8 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 resource: options.workspaceFolder,
             };
             const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+            const execInfo = await execService?.getExecutablePath();
+            traceVerbose(`Executable path for unittest discovery: ${execInfo}.`);
 
             let resultProc: ChildProcess | undefined;
             options.token?.onCancellationRequested(() => {

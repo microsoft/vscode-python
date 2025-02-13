@@ -15,7 +15,11 @@ import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
+import {
+    JupyterExtensionIntegration,
+    JupyterExtensionPythonEnvironments,
+    JupyterPythonEnvironmentApi,
+} from './jupyter/jupyterIntegration';
 import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
@@ -33,11 +37,16 @@ export function buildApi(
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
+    serviceManager.addSingleton<JupyterExtensionPythonEnvironments>(
+        JupyterExtensionPythonEnvironments,
+        JupyterExtensionPythonEnvironments,
+    );
     serviceManager.addSingleton<TensorboardExtensionIntegration>(
         TensorboardExtensionIntegration,
         TensorboardExtensionIntegration,
     );
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
+    const jupyterPythonEnvApi = serviceContainer.get<JupyterPythonEnvironmentApi>(JupyterExtensionPythonEnvironments);
     const tensorboardIntegration = serviceContainer.get<TensorboardExtensionIntegration>(
         TensorboardExtensionIntegration,
     );
@@ -146,7 +155,7 @@ export function buildApi(
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
             getTelemetryReporter: () => getTelemetryReporter(),
         },
-        environments: buildEnvironmentApi(discoveryApi, serviceContainer),
+        environments: buildEnvironmentApi(discoveryApi, serviceContainer, jupyterPythonEnvApi),
     };
 
     // In test environment return the DI Container.

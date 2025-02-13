@@ -3,10 +3,23 @@
 
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
-import { GlobalEnvironmentVariableCollection, Uri, WorkspaceConfiguration } from 'vscode';
+import {
+    GlobalEnvironmentVariableCollection,
+    Uri,
+    WorkspaceConfiguration,
+    Disposable,
+    CancellationToken,
+    TerminalLinkContext,
+    Terminal,
+    EventEmitter,
+} from 'vscode';
+import { assert } from 'chai';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import { registerPythonStartup } from '../../../client/terminals/pythonStartup';
 import { IExtensionContext } from '../../../client/common/types';
+import * as pythonStartupLinkProvider from '../../../client/terminals/pythonStartupLinkProvider';
+import { CustomTerminalLinkProvider } from '../../../client/terminals/pythonStartupLinkProvider';
+import { Repl } from '../../../client/common/utils/localize';
 
 suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     let getConfigurationStub: sinon.SinonStub;
@@ -20,9 +33,6 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     setup(() => {
         context = TypeMoq.Mock.ofType<IExtensionContext>();
         globalEnvironmentVariableCollection = TypeMoq.Mock.ofType<GlobalEnvironmentVariableCollection>();
-
-        // Question: Why do we have to set up environmentVariableCollection and globalEnvironmentVariableCollection in this flip-flop way?
-        // Reference: /vscode-python/src/test/interpreters/activation/terminalEnvVarCollectionService.unit.test.ts
         context.setup((c) => c.environmentVariableCollection).returns(() => globalEnvironmentVariableCollection.object);
         context.setup((c) => c.storageUri).returns(() => Uri.parse('a'));
 
@@ -121,5 +131,120 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         await registerPythonStartup(context.object);
 
         globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHONSTARTUP'), TypeMoq.Times.once());
+    });
+
+    test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {
+        const registerTerminalLinkProviderStub = sinon.stub(
+            pythonStartupLinkProvider,
+            'registerCustomTerminalLinkProvider',
+        );
+        const disposableArray: Disposable[] = [];
+        pythonStartupLinkProvider.registerCustomTerminalLinkProvider(disposableArray);
+
+        sinon.assert.calledOnce(registerTerminalLinkProviderStub);
+        sinon.assert.calledWith(registerTerminalLinkProviderStub, disposableArray);
+
+        registerTerminalLinkProviderStub.restore();
+    });
+    if (process.platform === 'darwin') {
+        test('Mac - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Cmd click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
+
+            const links = provider.provideTerminalLinks(context, token);
+
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
+
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].command,
+                    'python.startNativeREPL',
+                    'Expected command to be python.startNativeREPL',
+                );
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Cmd click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Cmd click to launch VS Code Native REPL'.length,
+                    'Match expected length',
+                );
+                assert.equal(
+                    links[0].tooltip,
+                    Repl.launchNativeRepl,
+                    'Expected tooltip to be Launch VS Code Native REPL',
+                );
+            }
+        });
+    }
+    if (process.platform !== 'darwin') {
+        test('Windows/Linux - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Ctrl click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
+
+            const links = provider.provideTerminalLinks(context, token);
+
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
+
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].command,
+                    'python.startNativeREPL',
+                    'Expected command to be python.startNativeREPL',
+                );
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Ctrl click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Ctrl click to launch VS Code Native REPL'.length,
+                    'Match expected Length',
+                );
+                assert.equal(
+                    links[0].tooltip,
+                    Repl.launchNativeRepl,
+                    'Expected tooltip to be Launch VS Code Native REPL',
+                );
+            }
+        });
+    }
+
+    test('Verify provideTerminalLinks returns no links when context.line does not contain expectedNativeLink', () => {
+        const provider = new CustomTerminalLinkProvider();
+        const context: TerminalLinkContext = {
+            line: 'Some random string without the expected link',
+            terminal: {} as Terminal,
+        };
+        const token: CancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: new EventEmitter<unknown>().event,
+        };
+
+        const links = provider.provideTerminalLinks(context, token);
+
+        assert.isArray(links, 'Expected links to be an array');
+        assert.isEmpty(links, 'Expected links to be empty');
     });
 });

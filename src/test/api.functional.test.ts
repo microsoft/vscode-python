@@ -19,6 +19,8 @@ import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { IDiscoveryAPI } from '../client/pythonEnvironments/base/locator';
 import * as pythonDebugger from '../client/debugger/pythonDebugger';
+import { JupyterExtensionPythonEnvironments, JupyterPythonEnvironmentApi } from '../client/jupyter/jupyterIntegration';
+import { EventEmitter, Uri } from 'vscode';
 
 suite('Extension API', () => {
     const debuggerPath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'lib', 'python', 'debugpy');
@@ -49,6 +51,14 @@ suite('Extension API', () => {
             instance(environmentVariablesProvider),
         );
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
+        const onDidChangePythonEnvironment = new EventEmitter<Uri>();
+        const jupyterApi: JupyterPythonEnvironmentApi = {
+            onDidChangePythonEnvironment: onDidChangePythonEnvironment.event,
+            getPythonEnvironment: (_uri: Uri) => undefined,
+        };
+        when(serviceContainer.get<JupyterPythonEnvironmentApi>(JupyterExtensionPythonEnvironments)).thenReturn(
+            jupyterApi,
+        );
         when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
         getDebugpyPathStub = sinon.stub(pythonDebugger, 'getDebugpyPath');
         getDebugpyPathStub.resolves(debuggerPath);

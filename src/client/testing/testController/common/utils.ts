@@ -53,6 +53,8 @@ export async function writeTestIdsFile(testIds: string[]): Promise<string> {
     try {
         traceLog('Attempting to use temp directory for test ids file, file name:', tempName);
         tempFileName = path.join(os.tmpdir(), tempName);
+        // attempt access to written file to check permissions
+        await fs.promises.access(os.tmpdir());
     } catch (error) {
         // Handle the error when accessing the temp directory
         traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');

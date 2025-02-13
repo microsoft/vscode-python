@@ -116,6 +116,10 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         };
         // need to check what will happen in the exec service is NOT defined and is null
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+
+        const execInfo = await execService?.getExecutablePath();
+        traceVerbose(`Executable path for pytest execution: ${execInfo}.`);
+
         try {
             // Remove positional test folders and files, we will add as needed per node
             let testArgs = removePositionalFoldersAndFiles(pytestArgs);
@@ -133,7 +137,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             // create a file with the test ids and set the environment variable to the file name
             const testIdsFileName = await utils.writeTestIdsFile(testIds);
             mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
-            traceInfo(`All environment variables set for pytest execution: ${JSON.stringify(mutableEnv)}`);
+            traceInfo(
+                `All environment variables set for pytest execution, PYTHONPATH: ${JSON.stringify(
+                    mutableEnv.PYTHONPATH,
+                )}`,
+            );
 
             const spawnOptions: SpawnOptions = {
                 cwd,

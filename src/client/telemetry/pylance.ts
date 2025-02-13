@@ -47,8 +47,6 @@
 */
 /* __GDPR__
    "language_server/analysis_complete" : {
-      "common.remotename" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "common.uikind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "configparseerroroccurred" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "elapsedms" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "externalmb" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
@@ -65,7 +63,10 @@
       "resolverid" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "rssmb" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "diagnosticsseen" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "editablepthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "computedpthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
+
    }
 */
 /* __GDPR__
@@ -149,8 +150,6 @@
 */
 /* __GDPR__
    "language_server/exception_intellicode" : {
-      "common.remotename" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "common.uikind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
@@ -196,8 +195,6 @@
       "absoluteuserunresolved" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "builtinimportstubs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "builtinimporttotal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "common.remotename" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "common.uikind" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "installsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "localimportstubs" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "localimporttotal" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
@@ -245,14 +242,13 @@
       "packageslowercase" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "resolverid" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "editablepthcount": { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
    "language_server/intellicode_completion_item_selected" : {
       "class" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "common.remotename" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "common.uikind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "count" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "elapsedtime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "failurereason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
@@ -273,8 +269,6 @@
 */
 /* __GDPR__
    "language_server/intellicode_enabled" : {
-      "common.remotename" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
-      "common.uikind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "enabled" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "installsource" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },

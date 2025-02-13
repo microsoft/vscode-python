@@ -290,11 +290,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     @cache(-1, true)
     private async ensureEnvironmentContainsPython(pythonPath: string, workspaceFolder: WorkspaceFolder | undefined) {
         if (useEnvExtension()) {
-            await ensureEnvironmentContainsPythonLegacy(pythonPath);
-            this.didChangeInterpreterEmitter.fire(workspaceFolder?.uri);
-            reportActiveInterpreterChanged({
-                path: pythonPath,
-                resource: workspaceFolder,
+            await ensureEnvironmentContainsPythonLegacy(pythonPath, workspaceFolder, () => {
+                this.didChangeInterpreterEmitter.fire(workspaceFolder?.uri);
             });
             return;
         }

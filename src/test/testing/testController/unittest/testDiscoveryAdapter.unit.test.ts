@@ -68,6 +68,7 @@ suite('Unittest test discovery adapter', () => {
                     },
                 };
             });
+        execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
         execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
         deferred = createDeferred();
         execFactory
