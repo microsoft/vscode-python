@@ -3,6 +3,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { uniq } from 'lodash';
+import * as minimatch from 'minimatch';
 import {
     CancellationToken,
     TestController,
@@ -552,7 +553,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
     private watchForTestContentChangeOnSave(): void {
         this.disposables.push(
             onDidSaveTextDocument(async (doc: TextDocument) => {
-                if (doc.fileName.endsWith('.py')) {
+                const settings = this.configSettings.getSettings(doc.uri);
+                if (minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
                     this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
