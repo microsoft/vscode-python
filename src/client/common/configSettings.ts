@@ -320,7 +320,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     pytestPath: 'pytest',
                     autoTestDiscoverOnSaveEnabled: true,
-                    autoTestDiscoverOnSavePattern: '**.py',
+                    autoTestDiscoverOnSavePattern: '**/*.py',
                 } as ITestingSettings;
             }
         }
