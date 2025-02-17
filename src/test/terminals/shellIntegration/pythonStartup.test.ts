@@ -12,6 +12,7 @@ import {
     TerminalLinkContext,
     Terminal,
     EventEmitter,
+    workspace,
 } from 'vscode';
 import { assert } from 'chai';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
@@ -35,6 +36,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         globalEnvironmentVariableCollection = TypeMoq.Mock.ofType<GlobalEnvironmentVariableCollection>();
         context.setup((c) => c.environmentVariableCollection).returns(() => globalEnvironmentVariableCollection.object);
         context.setup((c) => c.storageUri).returns(() => Uri.parse('a'));
+        context.setup((c) => c.subscriptions).returns(() => []);
 
         globalEnvironmentVariableCollection
             .setup((c) => c.replace(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -146,6 +148,17 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
         registerTerminalLinkProviderStub.restore();
     });
+
+    test('Verify onDidChangeConfiguration is called when configuration changes', async () => {
+        const onDidChangeConfigurationSpy = sinon.spy(workspace, 'onDidChangeConfiguration');
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
+
+        await registerPythonStartup(context.object);
+
+        assert.isTrue(onDidChangeConfigurationSpy.calledOnce);
+        onDidChangeConfigurationSpy.restore();
+    });
+
     if (process.platform === 'darwin') {
         test('Mac - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
             const provider = new CustomTerminalLinkProvider();
