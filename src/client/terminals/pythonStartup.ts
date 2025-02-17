@@ -3,10 +3,10 @@
 
 import { ExtensionContext, Uri } from 'vscode';
 import * as path from 'path';
-import { copy, createDirectory, getConfiguration } from '../common/vscodeApis/workspaceApis';
+import { copy, createDirectory, getConfiguration, onDidChangeConfiguration } from '../common/vscodeApis/workspaceApis';
 import { EXTENSION_ROOT_DIR } from '../constants';
 
-export async function registerPythonStartup(context: ExtensionContext): Promise<void> {
+async function applyPythonStartupSetting(context: ExtensionContext): Promise<void> {
     const config = getConfiguration('python');
     const pythonrcSetting = config.get<boolean>('terminal.shellIntegration.enabled');
 
@@ -24,4 +24,15 @@ export async function registerPythonStartup(context: ExtensionContext): Promise<
     } else {
         context.environmentVariableCollection.delete('PYTHONSTARTUP');
     }
+}
+
+export async function registerPythonStartup(context: ExtensionContext): Promise<void> {
+    await applyPythonStartupSetting(context);
+    context.subscriptions.push(
+        onDidChangeConfiguration(async (e) => {
+            if (e.affectsConfiguration('python.terminal.shellIntegration.enabled')) {
+                await applyPythonStartupSetting(context);
+            }
+        }),
+    );
 }
