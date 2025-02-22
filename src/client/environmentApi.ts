@@ -11,7 +11,7 @@ import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from './pythonEnvironment
 import { getEnvPath } from './pythonEnvironments/base/info/env';
 import { IDiscoveryAPI, ProgressReportStage } from './pythonEnvironments/base/locator';
 import { IPythonExecutionFactory } from './common/process/types';
-import { traceError, traceVerbose } from './logging';
+import { traceError, traceInfo, traceVerbose } from './logging';
 import { isParentPath, normCasePath } from './common/platform/fs-paths';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
@@ -42,7 +42,13 @@ type ActiveEnvironmentChangeEvent = {
 };
 
 const onDidActiveInterpreterChangedEvent = new EventEmitter<ActiveEnvironmentPathChangeEvent>();
+const previousEnvMap = new Map<string, string>();
 export function reportActiveInterpreterChanged(e: ActiveEnvironmentChangeEvent): void {
+    const oldPath = previousEnvMap.get(e.resource?.uri.fsPath ?? '');
+    if (oldPath === e.path) {
+        return;
+    }
+    previousEnvMap.set(e.resource?.uri.fsPath ?? '', e.path);
     onDidActiveInterpreterChangedEvent.fire({ id: getEnvID(e.path), path: e.path, resource: e.resource });
     reportActiveInterpreterChangedDeprecated({ path: e.path, resource: e.resource?.uri });
 }
@@ -172,6 +178,13 @@ export function buildEnvironmentApi(
     }
 
     disposables.push(
+        onDidActiveInterpreterChangedEvent.event((e) => {
+            let scope = 'global';
+            if (e.resource) {
+                scope = e.resource instanceof Uri ? e.resource.fsPath : e.resource.uri.fsPath;
+            }
+            traceInfo(`Active interpreter [${scope}]: `, e.path);
+        }),
         discoveryApi.onProgress((e) => {
             if (e.stage === ProgressReportStage.discoveryFinished) {
                 knownCache = initKnownCache();
