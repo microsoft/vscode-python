@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Terminal, Uri } from 'vscode';
+import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget } from 'vscode';
 import { getExtension } from '../common/vscodeApis/extensionsApi';
 import {
     GetEnvironmentScope,
@@ -10,8 +10,10 @@ import {
     PythonEnvironmentApi,
     PythonProcess,
     RefreshEnvironmentsScope,
+    DidChangeEnvironmentEventArgs,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
+import { IInterpreterPathService } from '../common/types';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
@@ -24,6 +26,17 @@ export function useEnvExtension(): boolean {
     return _useExt;
 }
 
+const onDidChangeEnvironmentEnvExtEmitter: EventEmitter<DidChangeEnvironmentEventArgs> = new EventEmitter<
+    DidChangeEnvironmentEventArgs
+>();
+export function onDidChangeEnvironmentEnvExt(
+    listener: (e: DidChangeEnvironmentEventArgs) => unknown,
+    thisArgs?: unknown,
+    disposables?: Disposable[],
+): Disposable {
+    return onDidChangeEnvironmentEnvExtEmitter.event(listener, thisArgs, disposables);
+}
+
 let _extApi: PythonEnvironmentApi | undefined;
 export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     if (_extApi) {
@@ -33,14 +46,15 @@ export async function getEnvExtApi(): Promise<PythonEnvironmentApi> {
     if (!extension) {
         throw new Error('Python Environments extension not found.');
     }
-    if (extension?.isActive) {
-        _extApi = extension.exports as PythonEnvironmentApi;
-        return _extApi;
+    if (!extension?.isActive) {
+        await extension.activate();
     }
 
-    await extension.activate();
-
     _extApi = extension.exports as PythonEnvironmentApi;
+    _extApi.onDidChangeEnvironment((e) => {
+        onDidChangeEnvironmentEnvExtEmitter.fire(e);
+    });
+
     return _extApi;
 }
 
@@ -104,5 +118,34 @@ export async function clearCache(): Promise<void> {
     const envExtApi = await getEnvExtApi();
     if (envExtApi) {
         await executeCommand('python-envs.clearCache');
+    }
+}
+
+export function registerEnvExtFeatures(
+    disposables: Disposable[],
+    interpreterPathService: IInterpreterPathService,
+): void {
+    if (useEnvExtension()) {
+        disposables.push(
+            onDidChangeEnvironmentEnvExt(async (e: DidChangeEnvironmentEventArgs) => {
+                const previousPath = interpreterPathService.get(e.uri);
+
+                if (previousPath !== e.new?.environmentPath.fsPath) {
+                    if (e.uri) {
+                        await interpreterPathService.update(
+                            e.uri,
+                            ConfigurationTarget.WorkspaceFolder,
+                            e.new?.environmentPath.fsPath,
+                        );
+                    } else {
+                        await interpreterPathService.update(
+                            undefined,
+                            ConfigurationTarget.Global,
+                            e.new?.environmentPath.fsPath,
+                        );
+                    }
+                }
+            }),
+        );
     }
 }
