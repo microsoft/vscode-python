@@ -28,7 +28,6 @@ import { CommandManager } from './application/commandManager';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from './application/commands/reportIssueCommand';
 import { DebugService } from './application/debugService';
-import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
@@ -188,9 +187,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReportIssueCommandHandler,
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        DebugSessionTelemetry,
     );
 }

@@ -9,7 +9,6 @@ import { EventName } from './constants';
 export type EditorLoadTelemetry = IEventNamePropertyMapping[EventName.EDITOR_LOAD];
 
 export type PythonInterpreterTelemetry = IEventNamePropertyMapping[EventName.PYTHON_INTERPRETER];
-export type DebuggerTelemetry = IEventNamePropertyMapping[EventName.DEBUGGER];
 export type TestTool = 'pytest' | 'unittest';
 export type TestRunTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_RUN];
 export type TestDiscoveryTelemetry = IEventNamePropertyMapping[EventName.UNITTEST_DISCOVERY_DONE];

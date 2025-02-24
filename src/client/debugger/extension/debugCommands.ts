@@ -33,7 +33,6 @@ export class DebugCommands implements IExtensionSingleActivationService {
     public activate(): Promise<void> {
         this.disposables.push(
             this.commandManager.registerCommand(Commands.Debug_In_Terminal, async (file?: Uri) => {
-                sendTelemetryEvent(EventName.DEBUG_IN_TERMINAL_BUTTON);
                 const interpreter = await this.interpreterService.getActiveInterpreter(file);
                 if (!interpreter) {
                     this.commandManager.executeCommand(Commands.TriggerEnvironmentSelection, file).then(noop, noop);

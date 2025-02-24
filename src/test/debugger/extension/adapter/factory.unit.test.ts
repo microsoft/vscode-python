@@ -23,7 +23,6 @@ import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { EnvironmentType } from '../../../../client/pythonEnvironments/info';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
-import { EventName } from '../../../../client/telemetry/constants';
 import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { ICommandManager } from '../../../../client/common/application/types';
@@ -269,16 +268,12 @@ suite('Debugging - Adapter Factory', () => {
     test('Send attach to local process telemetry if attaching to a local process', async () => {
         const session = createSession({ request: 'attach', processId: 1234 });
         await factory.createDebugAdapterDescriptor(session, nodeExecutable);
-
-        assert.ok(Reporter.eventNames.includes(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS));
     });
 
     test("Don't send any telemetry if not attaching to a local process", async () => {
         const session = createSession({});
 
         await factory.createDebugAdapterDescriptor(session, nodeExecutable);
-
-        assert.ok(Reporter.eventNames.includes(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH));
     });
 
     test('Use "debugAdapterPath" when specified', async () => {
