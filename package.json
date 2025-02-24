@@ -377,6 +377,11 @@
                 "category": "Python",
                 "command": "python.installJupyter",
                 "title": "%python.command.python.installJupyter.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.copyImportPath",
+                "title": "%python.command.python.copyImportPath.title%"
             }
         ],
         "configuration": {
@@ -1412,6 +1417,13 @@
                     "group": "navigation@0",
                     "title": "%python.command.python.execInDedicatedTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "command": "python.copyImportPath",
+                    "group": "1_cutcopypaste@1060",
+                    "when": "resourceLangId == python"
                 }
             ],
             "explorer/context": [
