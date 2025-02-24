@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IDebugService } from '../../../common/application/types';
 import { DebugConfiguration, DebugSession, l10n, WorkspaceFolder, DebugSessionOptions } from 'vscode';
-import { noop } from '../../../common/utils/misc'; 
+import { noop } from '../../../common/utils/misc';
 import { AttachRequestArguments } from '../../types';
 import { IChildProcessAttachService } from './types';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
