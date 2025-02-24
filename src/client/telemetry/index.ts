@@ -1972,8 +1972,13 @@ export interface IEventNamePropertyMapping {
     [EventName.REPL]: {
         /**
          * Whether the user launched the Terminal REPL or Native REPL
+         *
+         * Terminal - Terminal REPL user ran `Python: Start Terminal REPL` command.
+         * Native - Native REPL user ran `Python: Start Native Python REPL` command.
+         * manualTerminal - User started REPL in terminal using `python`, `python3` or `py` etc without arguments in terminal.
+         * runningScript - User ran a script in terminal like `python myscript.py`.
          */
-        replType: 'Terminal' | 'Native' | 'manualTerminal';
+        replType: 'Terminal' | 'Native' | 'manualTerminal' | `runningScript`;
     };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
