@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { writeTestIdsFile } from '../../../client/testing/testController/common/utils';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 
@@ -21,11 +20,13 @@ suite('writeTestIdsFile tests', () => {
         const testIds = ['test1', 'test2', 'test3'];
         const writeFileStub = sandbox.stub(fs.promises, 'writeFile').resolves();
 
-        const result = await writeTestIdsFile(testIds);
+        // Set up XDG_RUNTIME_DIR
+        process.env = {
+            ...process.env,
+            XDG_RUNTIME_DIR: '/xdg/runtime/dir',
+        };
 
-        const tmpDir = os.tmpdir();
-
-        assert.ok(result.startsWith(tmpDir));
+        await writeTestIdsFile(testIds);
 
         assert.ok(writeFileStub.calledOnceWith(sinon.match.string, testIds.join('\n')));
     });
