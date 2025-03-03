@@ -39,6 +39,22 @@ interface ExecutionResultMessage extends Message {
 }
 
 /**
+ * Retrieves the path to the temporary directory.
+ * 
+ * On Windows, it returns the default temporary directory.
+ * On macOS/Linux, it prefers the `XDG_RUNTIME_DIR` environment variable if set,
+ * otherwise, it falls back to the default temporary directory.
+ * 
+ * @returns {string} The path to the temporary directory.
+ */
+function getTempDir(): string {
+    if (process.platform === 'win32') {
+        return os.tmpdir(); // Default Windows behavior
+    }
+    return process.env.XDG_RUNTIME_DIR || os.tmpdir(); // Prefer XDG_RUNTIME_DIR on macOS/Linux
+}
+
+/**
  * Writes an array of test IDs to a temporary file.
  *
  * @param testIds - The array of test IDs to write.
@@ -50,11 +66,12 @@ export async function writeTestIdsFile(testIds: string[]): Promise<string> {
     const tempName = `test-ids-${randomSuffix}.txt`;
     // create temp file
     let tempFileName: string;
+    const tempDir: string = getTempDir();
     try {
         traceLog('Attempting to use temp directory for test ids file, file name:', tempName);
-        tempFileName = path.join(os.tmpdir(), tempName);
+        tempFileName = path.join(tempDir, tempName);
         // attempt access to written file to check permissions
-        await fs.promises.access(os.tmpdir());
+        await fs.promises.access(tempDir);
     } catch (error) {
         // Handle the error when accessing the temp directory
         traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');
