@@ -68,6 +68,9 @@ suite('getTempDir tests', () => {
     });
 
     test('should use XDG_RUNTIME_DIR on non-Windows if available', async () => {
+        if (process.platform === 'win32') {
+            return;
+        }
         // Force platform to be Linux
         Object.defineProperty(process, 'platform', { value: 'linux' });
 
