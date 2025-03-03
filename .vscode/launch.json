@@ -144,15 +144,14 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                        "./out/test/**/*.unit.test.js",
-                        "--require=out/test/unittests.js",
-                        "--ui=tdd",
-                        "--recursive",
-                        "--colors",
-                        "--grep",
-                        "getTempDir tests",
-                        "--timeout=300000"
-                    ],
+                "./out/test/**/*.unit.test.js",
+                "--require=out/test/unittests.js",
+                "--ui=tdd",
+                "--recursive",
+                "--colors",
+                //"--grep", "<suite name>",
+                "--timeout=300000"
+            ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
             "skipFiles": ["<node_internals>/**"]

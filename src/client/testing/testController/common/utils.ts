@@ -40,11 +40,11 @@ interface ExecutionResultMessage extends Message {
 
 /**
  * Retrieves the path to the temporary directory.
- * 
+ *
  * On Windows, it returns the default temporary directory.
  * On macOS/Linux, it prefers the `XDG_RUNTIME_DIR` environment variable if set,
  * otherwise, it falls back to the default temporary directory.
- * 
+ *
  * @returns {string} The path to the temporary directory.
  */
 function getTempDir(): string {
