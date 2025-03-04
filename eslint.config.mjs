@@ -3,8 +3,10 @@ import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import noOnlyTests from 'eslint-plugin-no-only-tests';
 import prettier from 'eslint-config-prettier';
+import js from '@eslint/js';
 
 export default [
+    js.configs.recommended,
     {
         languageOptions: {
             parser: tsParser,
@@ -13,7 +15,7 @@ export default [
                 sourceType: 'module',
             },
             globals: {
-                ...eslint.configs.node.globals,
+                ...js.configs.recommended.languageOptions.globals,
                 mocha: true,
             },
         },
