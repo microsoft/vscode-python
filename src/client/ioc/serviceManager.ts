@@ -19,9 +19,12 @@ export class ServiceManager implements IServiceManager {
         bindings?: symbol[],
     ): void {
         if (name) {
-            this.container.bind<T>(serviceIdentifier).to(constructor).whenTargetNamed(name);
+            this.container
+                .bind<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>)
+                .to(constructor)
+                .whenTargetNamed(name);
         } else {
-            this.container.bind<T>(serviceIdentifier).to(constructor);
+            this.container.bind<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>).to(constructor);
         }
 
         if (bindings) {
@@ -39,7 +42,9 @@ export class ServiceManager implements IServiceManager {
     }
 
     public addBinding<T1, T2>(from: identifier<T1>, to: identifier<T2>): void {
-        this.container.bind(to).toService(from);
+        this.container
+            .bind<T2>(to as interfaces.ServiceIdentifier<T2>)
+            .toService(from as interfaces.ServiceIdentifier<T1>);
     }
 
     public addSingleton<T>(
@@ -51,9 +56,16 @@ export class ServiceManager implements IServiceManager {
         bindings?: symbol[],
     ): void {
         if (name) {
-            this.container.bind<T>(serviceIdentifier).to(constructor).inSingletonScope().whenTargetNamed(name);
+            this.container
+                .bind<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>)
+                .to(constructor)
+                .inSingletonScope()
+                .whenTargetNamed(name);
         } else {
-            this.container.bind<T>(serviceIdentifier).to(constructor).inSingletonScope();
+            this.container
+                .bind<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>)
+                .to(constructor)
+                .inSingletonScope();
         }
 
         if (bindings) {
@@ -69,21 +81,26 @@ export class ServiceManager implements IServiceManager {
         name?: string | number | symbol | undefined,
     ): void {
         if (name) {
-            this.container.bind<T>(serviceIdentifier).toConstantValue(instance).whenTargetNamed(name);
+            this.container
+                .bind<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>)
+                .toConstantValue(instance)
+                .whenTargetNamed(name);
         } else {
-            this.container.bind<T>(serviceIdentifier).toConstantValue(instance);
+            this.container.bind<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>).toConstantValue(instance);
         }
     }
 
     public get<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T {
-        return name ? this.container.getNamed<T>(serviceIdentifier, name) : this.container.get<T>(serviceIdentifier);
+        return name
+            ? this.container.getNamed<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>, name)
+            : this.container.get<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>);
     }
 
     public tryGet<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T | undefined {
         try {
             return name
-                ? this.container.getNamed<T>(serviceIdentifier, name)
-                : this.container.get<T>(serviceIdentifier);
+                ? this.container.getNamed<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>, name)
+                : this.container.get<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>);
         } catch {
             // This might happen after the container has been destroyed
         }
@@ -93,8 +110,8 @@ export class ServiceManager implements IServiceManager {
 
     public getAll<T>(serviceIdentifier: identifier<T>, name?: string | number | symbol | undefined): T[] {
         return name
-            ? this.container.getAllNamed<T>(serviceIdentifier, name)
-            : this.container.getAll<T>(serviceIdentifier);
+            ? this.container.getAllNamed<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>, name)
+            : this.container.getAll<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>);
     }
 
     public rebind<T>(
