@@ -11,7 +11,7 @@ import { PYTHON_PATH } from '../../common';
 
 interface IProcData {
     proc: ChildProcess;
-    exited: Deferred<Boolean>;
+    exited: Deferred<boolean>;
 }
 
 suite('Process - Process Service', function () {
@@ -27,7 +27,7 @@ suite('Process - Process Service', function () {
 
     function spawnProc(): IProcData {
         const proc = spawn(PYTHON_PATH, ['-c', 'while(True): import time;time.sleep(0.5);print(1)']);
-        const exited = createDeferred<Boolean>();
+        const exited = createDeferred<boolean>();
         proc.on('exit', () => exited.resolve(true));
         procsToKill.push({ proc, exited });
 

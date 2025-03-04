@@ -72,6 +72,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
         this.registerHandlers();
         this.registerCommands();
 
+        // eslint-disable-next-line no-extra-boolean-cast
         if (!!tests.testResults) {
             await this.updateTestUIButtons();
             this.disposableRegistry.push(
@@ -170,31 +171,32 @@ export class UnitTestManagementService implements IExtensionActivationService {
                     this.testController?.refreshTestData(resource, { forceRefresh: true });
                 },
             ),
-            commandManager.registerCommand(constants.Commands.Tests_CopilotSetup, (resource?: Uri):
-                | { message: string; command: Command }
-                | undefined => {
-                const wkspaceFolder =
-                    this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders?.at(0);
-                if (!wkspaceFolder) {
-                    return undefined;
-                }
+            commandManager.registerCommand(
+                constants.Commands.Tests_CopilotSetup,
+                (resource?: Uri): { message: string; command: Command } | undefined => {
+                    const wkspaceFolder =
+                        this.workspaceService.getWorkspaceFolder(resource) ||
+                        this.workspaceService.workspaceFolders?.at(0);
+                    if (!wkspaceFolder) {
+                        return undefined;
+                    }
 
-                const configurationService = this.serviceContainer.get<ITestConfigurationService>(
-                    ITestConfigurationService,
-                );
-                if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
-                    return undefined;
-                }
+                    const configurationService =
+                        this.serviceContainer.get<ITestConfigurationService>(ITestConfigurationService);
+                    if (configurationService.hasConfiguredTests(wkspaceFolder.uri)) {
+                        return undefined;
+                    }
 
-                return {
-                    message: Testing.copilotSetupMessage,
-                    command: {
-                        title: Testing.configureTests,
-                        command: constants.Commands.Tests_Configure,
-                        arguments: [undefined, constants.CommandSource.ui, resource],
-                    },
-                };
-            }),
+                    return {
+                        message: Testing.copilotSetupMessage,
+                        command: {
+                            title: Testing.configureTests,
+                            command: constants.Commands.Tests_Configure,
+                            arguments: [undefined, constants.CommandSource.ui, resource],
+                        },
+                    };
+                },
+            ),
         );
     }
 
