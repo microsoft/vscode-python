@@ -127,11 +127,8 @@ export default [
 
             // Duplicates and overrides (TypeScript handles these)
             'no-dupe-class-members': 'off',
-            '@typescript-eslint/no-dupe-class-members': 'error',
             'no-redeclare': 'off',
             'no-undef': 'off',
-            'no-useless-constructor': 'off',
-            '@typescript-eslint/no-useless-constructor': 'error',
 
             // Miscellaneous rules
             'no-control-regex': 'off',

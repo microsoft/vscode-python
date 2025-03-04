@@ -15,8 +15,16 @@ runs:
         node-version: ${{ inputs.node_version }}
         cache: 'npm'
 
+    - name: Clean npm cache (force fresh install)
+      run: npm cache clean --force
+      shell: bash
+
     - name: Install Node dependencies
       run: npm ci --prefer-offline
+      shell: bash
+
+    - name: Verify installed dependencies
+      run: npm list
       shell: bash
 
     - name: Run `gulp prePublishNonBundle`
