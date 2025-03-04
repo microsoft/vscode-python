@@ -8,7 +8,7 @@ import js from '@eslint/js';
 export default [
     {
         // Base JS recommended config
-        ignores: ['**/node_modules/**'],
+        ignores: ['**/node_modules/**', '**/out/**'],
         linterOptions: {
             reportUnusedDisableDirectives: 'off',
         },
