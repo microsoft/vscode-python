@@ -1,3 +1,10 @@
+/**
+ * ESLint Configuration for VS Code Python Extension
+ * This file configures linting rules for the TypeScript/JavaScript codebase.
+ * It uses the new flat config format introduced in ESLint 8.21.0
+ */
+
+// Import essential ESLint plugins and configurations
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import noOnlyTests from 'eslint-plugin-no-only-tests';
@@ -6,8 +13,8 @@ import importPlugin from 'eslint-plugin-import';
 import js from '@eslint/js';
 
 export default [
+    // Base configuration for all files
     {
-        // Base JS recommended config
         ignores: ['**/node_modules/**', '**/out/**'],
         linterOptions: {
             reportUnusedDisableDirectives: 'off',
@@ -17,6 +24,7 @@ export default [
             'no-undef': 'off',
         },
     },
+    // TypeScript-specific configuration
     {
         files: ['**/*.ts', '**/*.tsx'],
         languageOptions: {
@@ -53,23 +61,32 @@ export default [
             },
         },
         rules: {
-            'import/no-unresolved': 'off', // ✅ Suppresses errors for "import/no-unresolved"
-            // ✅ Suppresses undefined variable errors (e.g., "suite" not defined)
-            '@typescript-eslint/explicit-module-boundary-types': 'off', // ✅ Suppresses function return type errors
+            // Base configurations
             ...tseslint.configs.recommended.rules,
             ...prettier.rules,
 
+            // TypeScript-specific rules
             '@typescript-eslint/ban-ts-comment': [
                 'error',
                 {
                     'ts-ignore': 'allow-with-description',
                 },
             ],
-            'no-bitwise': 'off',
-            'no-dupe-class-members': 'off',
-            '@typescript-eslint/no-dupe-class-members': 'error',
+            '@typescript-eslint/ban-types': 'off',
+            '@typescript-eslint/explicit-module-boundary-types': 'off',
             '@typescript-eslint/no-empty-interface': 'off',
+            '@typescript-eslint/no-explicit-any': 'off',
+            '@typescript-eslint/no-namespace': 'off',
             '@typescript-eslint/no-non-null-assertion': 'off',
+            '@typescript-eslint/no-loss-of-precision': 'off',
+            '@typescript-eslint/no-unused-vars': [
+                'warn',
+                {
+                    varsIgnorePattern: '^_',
+                    argsIgnorePattern: '^_',
+                },
+            ],
+            '@typescript-eslint/no-var-requires': 'off',
             '@typescript-eslint/no-use-before-define': [
                 'error',
                 {
@@ -77,23 +94,58 @@ export default [
                 },
             ],
 
-            'no-useless-constructor': 'off',
-            '@typescript-eslint/no-useless-constructor': 'error',
-            '@typescript-eslint/no-var-requires': 'off',
-            'func-names': 'off',
+            // Import rules
             'import/extensions': 'off',
             'import/namespace': 'off',
             'import/no-extraneous-dependencies': 'off',
+            'import/no-unresolved': 'off',
             'import/prefer-default-export': 'off',
+
+            // Testing rules
+            'no-only-tests/no-only-tests': [
+                'error',
+                {
+                    block: ['test', 'suite'],
+                    focus: ['only'],
+                },
+            ],
+
+            // Code style rules
             'linebreak-style': 'off',
-            'no-await-in-loop': 'off',
+            'no-bitwise': 'off',
             'no-console': 'off',
+            'no-underscore-dangle': 'off',
+            'operator-assignment': 'off',
+            'func-names': 'off',
+
+            // Error handling and control flow
+            'no-empty': ['error', { allowEmptyCatch: true }],
+            'no-async-promise-executor': 'off',
+            'no-await-in-loop': 'off',
+            'no-unreachable': 'off',
+            'no-void': 'off',
+
+            // Duplicates and overrides (TypeScript handles these)
+            'no-dupe-class-members': 'off',
+            '@typescript-eslint/no-dupe-class-members': 'error',
+            'no-redeclare': 'off',
+            'no-undef': 'off',
+            'no-useless-constructor': 'off',
+            '@typescript-eslint/no-useless-constructor': 'error',
+
+            // Miscellaneous rules
             'no-control-regex': 'off',
             'no-extend-native': 'off',
+            'no-inner-declarations': 'off',
             'no-multi-str': 'off',
-            'no-shadow': 'off',
             'no-param-reassign': 'off',
             'no-prototype-builtins': 'off',
+            'no-empty-function': 'off',
+            'no-template-curly-in-string': 'off',
+            'no-useless-escape': 'off',
+            strict: 'off',
+
+            // Restricted syntax
             'no-restricted-syntax': [
                 'error',
                 {
@@ -112,30 +164,6 @@ export default [
                         '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
                 },
             ],
-            'no-template-curly-in-string': 'off',
-            'no-underscore-dangle': 'off',
-            'no-useless-escape': 'off',
-            'no-void': 'off',
-            'operator-assignment': 'off',
-            strict: 'off',
-            'no-only-tests/no-only-tests': ['error', { block: ['test', 'suite'], focus: ['only'] }],
-            'class-methods-use-this': 'off',
-            '@typescript-eslint/ban-types': 'off',
-            // '@typescript-eslint/no-empty-function': 'off',
-            // 'import/no-unresolved': ['error', { ignore: ['vscode'] }],
-            '@typescript-eslint/no-explicit-any': 'off',
-            // add no-unreachable
-            'no-unreachable': 'off',
-            //add @typescript-eslint/no-empty-function
-            'no-empty-function': 'off',
-            'no-redeclare': 'off',
-            '@typescript-eslint/no-loss-of-precision': 'off', // add @typescript-eslint/no-loss-of-precision
-            'no-empty': ['error', { allowEmptyCatch: true }],
-            'no-inner-declarations': 'off',
-            'no-async-promise-executor': 'off',
-            '@typescript-eslint/no-namespace': 'off',
-            '@typescript-eslint/no-unused-vars': ['warn', { varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
-            'no-undef': 'off',
         },
     },
 ];
