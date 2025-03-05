@@ -55,6 +55,7 @@ export default [
             '@typescript-eslint': tseslint,
             'no-only-tests': noOnlyTests,
             import: importPlugin,
+            prettier: prettier,
         },
         settings: {
             'import/resolver': {
@@ -143,6 +144,7 @@ export default [
             'no-empty-function': 'off',
             'no-template-curly-in-string': 'off',
             'no-useless-escape': 'off',
+            'no-extra-parentheses': 'off',
             strict: 'off',
 
             // Restricted syntax
