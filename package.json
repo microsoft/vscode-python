@@ -1577,7 +1577,6 @@
         "del": "^6.0.0",
         "download": "^8.0.0",
         "eslint": "^7.2.0",
-        "eslint-config-airbnb": "^18.2.0",
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-import": "^2.29.1",
         "eslint-plugin-jsx-a11y": "^6.3.1",
