@@ -145,6 +145,8 @@ export default [
             'no-template-curly-in-string': 'off',
             'no-useless-escape': 'off',
             'no-extra-parentheses': 'off',
+            'no-extra-paren': 'off',
+            '@typescript-eslint/no-extra-parens': 'off',
             strict: 'off',
 
             // Restricted syntax

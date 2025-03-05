@@ -11,5 +11,7 @@ module.exports = {
                 tabWidth: 2
             }
         }
-    ]
+    ],
+// add "arrowParens": "always"
+    "arrowParens": "always",
 };
