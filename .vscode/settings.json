@@ -28,7 +28,7 @@
             "source.fixAll.eslint": "explicit",
             "source.organizeImports.isort": "explicit"
         },
-        "editor.defaultFormatter": "charliermarsh.ruff"
+        "editor.defaultFormatter": "charliermarsh.ruff",
     },
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
@@ -67,9 +67,12 @@
     "git.pullBeforeCheckout": true,
     // Open merge editor for resolving conflicts.
     "git.mergeEditor": true,
-    "python.testing.pytestArgs": ["python_files/tests"],
+    "python.testing.pytestArgs": [
+        "python_files/tests"
+    ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "rust-analyzer.linkedProjects": [".\\python-env-tools\\Cargo.toml"],
-    "prettier.configPath": "./.prettierrc"
+    "rust-analyzer.linkedProjects": [
+        ".\\python-env-tools\\Cargo.toml"
+    ]
 }

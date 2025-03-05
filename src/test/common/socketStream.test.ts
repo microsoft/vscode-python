@@ -42,7 +42,7 @@ suite('SocketStream', () => {
         const byteValue = buffer[0];
         const socket = new MockSocket();
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         assert.strictEqual(stream.ReadByte(), byteValue);
         done();
@@ -52,7 +52,7 @@ suite('SocketStream', () => {
         const socket = new MockSocket();
         const buffer = uint64be.encode(num);
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         assert.strictEqual(stream.ReadInt32(), num);
         done();
@@ -62,7 +62,7 @@ suite('SocketStream', () => {
         const socket = new MockSocket();
         const buffer = uint64be.encode(num);
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         assert.strictEqual(stream.ReadInt64(), num);
         done();
@@ -72,7 +72,7 @@ suite('SocketStream', () => {
         const socket = new MockSocket();
         const buffer = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length), Buffer.from(message)]);
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         assert.strictEqual(stream.ReadString(), message);
         done();
@@ -86,7 +86,7 @@ suite('SocketStream', () => {
             stringBuffer,
         ]);
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         assert.strictEqual(stream.ReadString(), message);
         done();
@@ -100,7 +100,7 @@ suite('SocketStream', () => {
         const partOfSecondMessage = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length)]);
         buffer = Buffer.concat([buffer, partOfSecondMessage]);
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         stream.BeginTransaction();
         assert.strictEqual(stream.ReadString(), message, 'First message not read properly');
@@ -123,7 +123,7 @@ suite('SocketStream', () => {
         const partOfSecondMessage = Buffer.concat([Buffer.from('A'), uint64be.encode(message.length)]);
         buffer = Buffer.concat([buffer, partOfSecondMessage]);
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
 
         stream.BeginTransaction();
         assert.strictEqual(stream.ReadString(), message, 'First message not read properly');
@@ -139,7 +139,7 @@ suite('SocketStream', () => {
         const buffer = Buffer.from('');
         const socket = new MockSocket();
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
         stream.Write(Buffer.from(message));
 
         assert.strictEqual(socket.dataWritten, message);
@@ -150,7 +150,7 @@ suite('SocketStream', () => {
         const buffer = Buffer.from('');
         const socket = new MockSocket();
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
         stream.WriteInt32(num);
 
         assert.strictEqual(uint64be.decode(socket.rawDataWritten), num);
@@ -161,7 +161,7 @@ suite('SocketStream', () => {
         const buffer = Buffer.from('');
         const socket = new MockSocket();
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
         stream.WriteInt64(num);
 
         assert.strictEqual(uint64be.decode(socket.rawDataWritten), num);
@@ -172,7 +172,7 @@ suite('SocketStream', () => {
         const buffer = Buffer.from('');
         const socket = new MockSocket();
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
         stream.WriteString(message);
 
         assert.strictEqual(socket.dataWritten, message);
@@ -183,7 +183,7 @@ suite('SocketStream', () => {
         const buffer = Buffer.from('');
         const socket = new MockSocket();
 
-        const stream = new SocketStream((socket as any) as net.Socket, buffer);
+        const stream = new SocketStream(socket as any as net.Socket, buffer);
         stream.WriteString(message);
 
         assert.strictEqual(socket.dataWritten, message);

@@ -121,18 +121,16 @@ export class SystemVariables extends AbstractSystemVariables {
         }
         this._execPath = process.execPath;
         Object.keys(process.env).forEach((key) => {
-            ((this as any) as Record<string, string | undefined>)[`env:${key}`] = ((this as any) as Record<
-                string,
-                string | undefined
-            >)[`env.${key}`] = process.env[key];
+            (this as any as Record<string, string | undefined>)[`env:${key}`] = (
+                this as any as Record<string, string | undefined>
+            )[`env.${key}`] = process.env[key];
         });
         workspace = workspace ?? new WorkspaceService();
         try {
             workspace.workspaceFolders?.forEach((folder) => {
                 const basename = Path.basename(folder.uri.fsPath);
-                ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${basename}`] =
-                    folder.uri.fsPath;
-                ((this as any) as Record<string, string | undefined>)[`workspaceFolder:${folder.name}`] =
+                (this as any as Record<string, string | undefined>)[`workspaceFolder:${basename}`] = folder.uri.fsPath;
+                (this as any as Record<string, string | undefined>)[`workspaceFolder:${folder.name}`] =
                     folder.uri.fsPath;
             });
         } catch {

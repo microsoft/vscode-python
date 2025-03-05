@@ -105,7 +105,7 @@ suite('Terminal Service', () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
 
         options = TypeMoq.Mock.ofType<TerminalCreationOptions>();
         options.setup((o) => o.resource).returns(() => Uri.parse('a'));

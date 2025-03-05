@@ -53,9 +53,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         let { pythonPath } = options;
         if (!pythonPath || pythonPath === 'python') {
-            const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(
-                IActivatedEnvironmentLaunch,
-            );
+            const activatedEnvLaunch =
+                this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
             await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
             // If python path wasn't passed in, we need to auto select it and then read it
             // from the configuration.

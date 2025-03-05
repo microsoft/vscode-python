@@ -22,8 +22,9 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
         clientOptions: LanguageClientOptions,
     ): Promise<LanguageClient> {
         // this must exist for node language client
-        const commandArgs = (clientOptions.connectionOptions
-            ?.cancellationStrategy as FileBasedCancellationStrategy).getCommandLineArguments();
+        const commandArgs = (
+            clientOptions.connectionOptions?.cancellationStrategy as FileBasedCancellationStrategy
+        ).getCommandLineArguments();
 
         const extension = this.extensions.getExtension(PYLANCE_EXTENSION_ID);
         const languageServerFolder = extension ? extension.extensionPath : '';

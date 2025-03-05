@@ -34,7 +34,7 @@ suite('Debugging - commands', () => {
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
             .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
         sinon.stub(telemetry, 'sendTelemetryEvent').callsFake(() => {
             /** noop */
         });

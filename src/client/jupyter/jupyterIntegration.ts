@@ -183,9 +183,7 @@ export interface JupyterPythonEnvironmentApi {
      * If the Uri is not associated with a Jupyter Notebook or Interactive Window, then this method returns undefined.
      * @param uri
      */
-    getPythonEnvironment?(
-        uri: Uri,
-    ):
+    getPythonEnvironment?(uri: Uri):
         | undefined
         | {
               /**
@@ -213,9 +211,7 @@ export class JupyterExtensionPythonEnvironments extends DisposableBase implement
         super();
     }
 
-    public getPythonEnvironment(
-        uri: Uri,
-    ):
+    public getPythonEnvironment(uri: Uri):
         | undefined
         | {
               /**

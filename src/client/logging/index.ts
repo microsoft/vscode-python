@@ -126,7 +126,7 @@ function tracing<T>(log: (t: TraceInfo) => void, run: () => T): T {
 
         // If method being wrapped returns a promise then wait for it.
         if (isPromise(result)) {
-            ((result as unknown) as Promise<void>)
+            (result as unknown as Promise<void>)
                 .then((data) => {
                     log({ elapsed: timer.elapsedTime, returnValue: data });
                     return data;
@@ -191,7 +191,7 @@ function logResult(logInfo: LogInfo, traced: TraceInfo, call?: CallInfo) {
         }
     } else {
         logTo(LogLevel.Error, [formatted, traced.err]);
-        sendTelemetryEvent(('ERROR' as unknown) as EventName, undefined, undefined, traced.err);
+        sendTelemetryEvent('ERROR' as unknown as EventName, undefined, undefined, traced.err);
     }
 }
 

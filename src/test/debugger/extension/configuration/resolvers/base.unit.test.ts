@@ -156,7 +156,7 @@ suite('Debugging - Config Resolver', () => {
         expect(uri).to.be.deep.equal(undefined, 'not undefined');
     });
     test('Do nothing if debug configuration is undefined', async () => {
-        await resolver.resolveAndUpdatePythonPath(undefined, (undefined as unknown) as LaunchRequestArguments);
+        await resolver.resolveAndUpdatePythonPath(undefined, undefined as unknown as LaunchRequestArguments);
     });
     test('python in debug config must point to pythonPath in settings if pythonPath in config is not set', async () => {
         const config = {};

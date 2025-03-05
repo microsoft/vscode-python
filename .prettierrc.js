@@ -12,6 +12,4 @@ module.exports = {
             }
         }
     ],
-// add "arrowParens": "always"
-    "arrowParens": "always",
 };

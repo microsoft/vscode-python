@@ -161,7 +161,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isLinux).returns(() => isLinux);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.initializeRepl();
@@ -196,7 +196,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => true);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -223,7 +223,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => true);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -241,7 +241,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => false);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -269,7 +269,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -297,7 +297,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -320,7 +320,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: PYTHON_PATH } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: PYTHON_PATH } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => []);
 
                 await executor.executeFile(file);
@@ -343,7 +343,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => false);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
@@ -389,7 +389,7 @@ suite('Terminal - Code Execution', () => {
             ): Promise<void> {
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup((t) => t.executeInFileDir).returns(() => false);
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
@@ -459,7 +459,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => isWindows);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
@@ -511,7 +511,7 @@ suite('Terminal - Code Execution', () => {
             ) {
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 const condaFile = 'conda';
@@ -569,7 +569,7 @@ suite('Terminal - Code Execution', () => {
                 await executor.execute('');
                 await executor.execute('   ');
 
-                await executor.execute((undefined as any) as string);
+                await executor.execute(undefined as any as string);
 
                 terminalService.verify(
                     async (t) => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
@@ -585,7 +585,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => false);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
@@ -606,7 +606,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => false);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
@@ -639,7 +639,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => false);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
@@ -664,7 +664,7 @@ suite('Terminal - Code Execution', () => {
                 platform.setup((p) => p.isWindows).returns(() => false);
                 interpreterService
                     .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                    .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1', resource);

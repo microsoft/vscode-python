@@ -25,9 +25,8 @@ export class CondaService implements ICondaService {
     ): Promise<{ path: string | undefined; type: 'local' | 'global' } | undefined> {
         const condaPath = await this.getCondaFileFromInterpreter(interpreterPath, envName);
 
-        const activatePath = (condaPath
-            ? path.join(path.dirname(condaPath), 'activate')
-            : 'activate'
+        const activatePath = (
+            condaPath ? path.join(path.dirname(condaPath), 'activate') : 'activate'
         ).fileToCommandArgumentForPythonExt(); // maybe global activate?
 
         // try to find the activate script in the global conda root prefix.

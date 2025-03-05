@@ -57,7 +57,7 @@ suite('Terminal - Service Registry', () => {
                             typemoq.It.is((v: any) => args[0] === v),
                             typemoq.It.is((value: any) => args[1] === value),
 
-                            typemoq.It.isValue((args[2] as unknown) as string),
+                            typemoq.It.isValue(args[2] as unknown as string),
                         ),
                     )
                     .verifiable(typemoq.Times.once());

@@ -250,7 +250,7 @@ suite('Terminal Service helpers', () => {
                     when(pipenvActivationProvider.isShellSupported(anything())).thenReturn(false);
 
                     const cmd = await helper.getEnvironmentActivationCommands(
-                        ('someShell' as any) as TerminalShellType,
+                        'someShell' as any as TerminalShellType,
                         resource,
                     );
 
