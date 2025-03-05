@@ -13,6 +13,9 @@ import importPlugin from 'eslint-plugin-import';
 import js from '@eslint/js';
 
 export default [
+    {
+        ignores: ['**/node_modules/**', '**/out/**'],
+    },
     // Base configuration for all files
     {
         ignores: ['**/node_modules/**', '**/out/**'],
