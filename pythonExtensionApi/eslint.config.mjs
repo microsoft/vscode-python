@@ -7,7 +7,7 @@ export default [
         ignores: ['**/out/**'],
     },
     {
-        files: ['**/main.d.ts'],
+        files: ['**/*.ts', '**/*.tsx'],
         languageOptions: {
             parser: tsParser,
         },

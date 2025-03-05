@@ -26,9 +26,12 @@
         "url": "https://github.com/Microsoft/vscode-python/issues"
     },
     "devDependencies": {
-        "typescript": "~5.2",
         "@types/vscode": "^1.93.0",
-        "source-map": "^0.8.0-beta.0"
+        "@typescript-eslint/eslint-plugin": "^8.26.0",
+        "@typescript-eslint/parser": "^8.26.0",
+        "eslint": "^8.57.1",
+        "source-map": "^0.8.0-beta.0",
+        "typescript": "~5.2"
     },
     "scripts": {
         "prepublishOnly": "echo \"⛔ Can only publish from a secure pipeline ⛔\" && node ../build/fail",
