@@ -112,6 +112,7 @@ export interface IPythonEnvironment {
 export type ShellExecFunc = (command: string, options?: ShellOptions | undefined) => Promise<ExecutionResult<string>>;
 
 export class StdErrError extends Error {
+    // eslint-disable-next-line @typescript-eslint/no-useless-constructor
     constructor(message: string) {
         super(message);
     }

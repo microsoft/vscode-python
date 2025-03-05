@@ -94,6 +94,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this._terminalFirstLaunched = false;
             const promise = new Promise<boolean>((resolve) => {
                 const disposable = this.terminalManager.onDidChangeTerminalShellIntegration(() => {
+                    // eslint-disable-next-line @typescript-eslint/no-use-before-define
                     clearTimeout(timer);
                     disposable.dispose();
                     resolve(true);

@@ -29,8 +29,8 @@ export class ServiceContainer implements IServiceContainer {
         name?: string | number | symbol | undefined,
     ): T[] {
         return name
-            ? this.container.getAllNamed<T>(serviceIdentifier, name)
-            : this.container.getAll<T>(serviceIdentifier);
+            ? this.container.getAllNamed<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>, name)
+            : this.container.getAll<T>(serviceIdentifier as interfaces.ServiceIdentifier<T>);
     }
 
     public tryGet<T>(
