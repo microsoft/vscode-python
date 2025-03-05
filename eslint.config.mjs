@@ -29,7 +29,7 @@ export default [
     },
     // TypeScript-specific configuration
     {
-        files: ['**/*.ts', '**/*.tsx'],
+        files: ['**/*.ts', '**/*.tsx', 'src', 'pythonExtensionApi/src'],
         languageOptions: {
             parser: tsParser,
             parserOptions: {
