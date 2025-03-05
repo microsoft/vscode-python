@@ -35,7 +35,7 @@
         "prepack": "npm run all:publish",
         "compile": "node ./node_modules/typescript/lib/tsc.js -b ./tsconfig.json",
         "clean": "node ../node_modules/rimraf/bin.js out",
-        "lint": "node ../node_modules/eslint/bin/eslint.js --ext ts src",
+        "lint": "node ../node_modules/eslint/bin/eslint.js",
         "all": "npm run clean && npm run compile",
         "formatTypings": "node ../node_modules/eslint/bin/eslint.js --fix ./out/main.d.ts",
         "all:publish": "git clean -xfd . && npm install && npm run compile && npm run formatTypings"
