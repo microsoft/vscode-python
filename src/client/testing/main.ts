@@ -72,6 +72,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
         this.registerHandlers();
         this.registerCommands();
 
+        // eslint-disable-next-line no-extra-boolean-cast
         if (!!tests.testResults) {
             await this.updateTestUIButtons();
             this.disposableRegistry.push(

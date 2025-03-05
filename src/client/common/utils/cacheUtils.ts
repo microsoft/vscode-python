@@ -48,6 +48,7 @@ export class InMemoryCache<T> {
      */
     public get data(): T | undefined {
         if (!this.hasData) {
+            // eslint-disable-next-line getter-return
             return;
         }
         return this.cacheData?.value;

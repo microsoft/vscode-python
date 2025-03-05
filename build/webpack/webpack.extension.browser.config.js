@@ -13,7 +13,7 @@ const packageRoot = path.resolve(__dirname, '..', '..');
 const outDir = path.resolve(packageRoot, 'dist');
 
 /** @type {(env: any, argv: { mode: 'production' | 'development' | 'none' }) => import('webpack').Configuration} */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line no-unused-vars
 const nodeConfig = (_, { mode }) => ({
     context: packageRoot,
     entry: {
