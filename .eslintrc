@@ -53,7 +53,7 @@
         "@typescript-eslint/no-var-requires": "off",
 
         // Other rules
-        "class-methods-use-this": ["error", {"exceptMethods": ["dispose"]}],
+        "class-methods-use-this": ["error", { "exceptMethods": ["dispose"] }],
         "func-names": "off",
         "import/extensions": "off",
         "import/namespace": "off",
