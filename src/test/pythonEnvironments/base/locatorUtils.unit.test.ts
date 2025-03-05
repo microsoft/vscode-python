@@ -87,14 +87,16 @@ suite('Python envs locator utils - getQueryFilter', () => {
             assert.deepEqual(filtered, []);
         });
 
-        ([
-            [PythonEnvKind.Unknown, [env3]],
-            [PythonEnvKind.System, [env1, env5]],
-            [PythonEnvKind.MicrosoftStore, []],
-            [PythonEnvKind.Pyenv, [env2, env4]],
-            [PythonEnvKind.Venv, [envL1, envSL1, envSL5]],
-            [PythonEnvKind.Conda, [env6, envL2, envSL3]],
-        ] as [PythonEnvKind, PythonEnvInfo[]][]).forEach(([kind, expected]) => {
+        (
+            [
+                [PythonEnvKind.Unknown, [env3]],
+                [PythonEnvKind.System, [env1, env5]],
+                [PythonEnvKind.MicrosoftStore, []],
+                [PythonEnvKind.Pyenv, [env2, env4]],
+                [PythonEnvKind.Venv, [envL1, envSL1, envSL5]],
+                [PythonEnvKind.Conda, [env6, envL2, envSL3]],
+            ] as [PythonEnvKind, PythonEnvInfo[]][]
+        ).forEach(([kind, expected]) => {
             test(`match some (one kind: ${kind})`, () => {
                 const query: PythonLocatorQuery = { kinds: [kind] };
 

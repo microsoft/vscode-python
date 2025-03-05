@@ -41,6 +41,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
                     ? path.join(this.process.env.APPDATA, vscodeFolderName, 'User', 'settings.json')
                     : undefined;
             default:
+                // eslint-disable-next-line getter-return
                 return;
         }
     }

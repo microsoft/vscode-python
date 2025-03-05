@@ -53,7 +53,7 @@ export function getArchitecture(): Architecture {
  * Look up the requested env var value (or  undefined` if not set).
  */
 export function getEnvironmentVariable(key: string): string | undefined {
-    return ((process.env as any) as EnvironmentVariables)[key];
+    return (process.env as any as EnvironmentVariables)[key];
 }
 
 /**

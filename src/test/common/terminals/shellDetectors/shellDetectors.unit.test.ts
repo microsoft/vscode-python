@@ -103,9 +103,9 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             when(appEnv.shell).thenReturn('defaultshellPath');
             expect(
-                shellDetector.identify(telemetryProperties, ({
+                shellDetector.identify(telemetryProperties, {
                     creationOptions: { shellPath },
-                } as unknown) as Terminal),
+                } as unknown as Terminal),
             ).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
         });
     });

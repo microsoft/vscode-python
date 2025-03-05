@@ -76,7 +76,7 @@ suite('Global Pip in Terminal Trigger', () => {
         execEvent.setup((e) => e.shellIntegration).returns(() => shellIntegration.object);
         shellIntegration
             .setup((s) => s.executeCommand(typemoq.It.isAnyString()))
-            .returns(() => (({} as unknown) as TerminalShellExecution));
+            .returns(() => ({} as unknown as TerminalShellExecution));
     });
 
     teardown(() => {
@@ -113,7 +113,7 @@ suite('Global Pip in Terminal Trigger', () => {
         registerTriggerForPipInTerminal(disposables);
 
         shellIntegration.setup((s) => s.cwd).returns(() => outsideWorkspace);
-        await handler?.(({ shellIntegration: shellIntegration.object } as unknown) as TerminalShellExecutionStartEvent);
+        await handler?.({ shellIntegration: shellIntegration.object } as unknown as TerminalShellExecutionStartEvent);
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
@@ -129,7 +129,7 @@ suite('Global Pip in Terminal Trigger', () => {
         const disposables: Disposable[] = [];
         registerTriggerForPipInTerminal(disposables);
 
-        await handler?.(({ shellIntegration: shellIntegration.object } as unknown) as TerminalShellExecutionStartEvent);
+        await handler?.({ shellIntegration: shellIntegration.object } as unknown as TerminalShellExecutionStartEvent);
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
@@ -147,7 +147,7 @@ suite('Global Pip in Terminal Trigger', () => {
         registerTriggerForPipInTerminal(disposables);
 
         await handler?.({
-            terminal: ({} as unknown) as Terminal,
+            terminal: {} as unknown as Terminal,
             shellIntegration: shellIntegration.object,
             execution: {
                 cwd: workspace1.uri,
@@ -179,7 +179,7 @@ suite('Global Pip in Terminal Trigger', () => {
         registerTriggerForPipInTerminal(disposables);
 
         await handler?.({
-            terminal: ({} as unknown) as Terminal,
+            terminal: {} as unknown as Terminal,
             shellIntegration: shellIntegration.object,
             execution: {
                 cwd: workspace1.uri,
@@ -213,7 +213,7 @@ suite('Global Pip in Terminal Trigger', () => {
             registerTriggerForPipInTerminal(disposables);
 
             await handler?.({
-                terminal: ({} as unknown) as Terminal,
+                terminal: {} as unknown as Terminal,
                 shellIntegration: shellIntegration.object,
                 execution: {
                     cwd: workspace1.uri,
@@ -251,7 +251,7 @@ suite('Global Pip in Terminal Trigger', () => {
         registerTriggerForPipInTerminal(disposables);
 
         await handler?.({
-            terminal: ({} as unknown) as Terminal,
+            terminal: {} as unknown as Terminal,
             shellIntegration: shellIntegration.object,
             execution: {
                 cwd: workspace1.uri,

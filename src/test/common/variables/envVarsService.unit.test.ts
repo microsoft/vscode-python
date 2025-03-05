@@ -554,10 +554,12 @@ VAR2_B="${VAR1}\\n"def \n\
             });
 
             test('Curly braces are required for substitution', () => {
-                const vars = parseEnvFile('\
+                const vars = parseEnvFile(
+                    '\
 SPAM=1234 \n\
 EGGS=$SPAM \n\
-                ');
+                ',
+                );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
                 expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
@@ -649,11 +651,14 @@ FOO=foo\\$bar \n\
             });
 
             test('base substitution variables', () => {
-                const vars = parseEnvFile('\
+                const vars = parseEnvFile(
+                    '\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
-                ', {
-                    REPO: '/home/user/git/foobar',
-                });
+                ',
+                    {
+                        REPO: '/home/user/git/foobar',
+                    },
+                );
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');
                 expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');

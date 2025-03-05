@@ -45,8 +45,7 @@ suite('Environment Info Service', () => {
         stubShellExec.returns(
             new Promise<ExecutionResult<string>>((resolve) => {
                 resolve({
-                    stdout:
-                        '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
+                    stdout: '{"versionInfo": [3, 8, 3, "final", 0], "sysPrefix": "path", "sysVersion": "3.8.3 (tags/v3.8.3:6f8c832, May 13 2020, 22:37:02) [MSC v.1924 64 bit (AMD64)]", "is64Bit": true}',
                     stderr: 'Some std error', // This should be ignored.
                 });
             }),

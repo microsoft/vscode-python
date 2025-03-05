@@ -234,9 +234,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 // Note the following triggers autoselection if no interpreter is explictly
                 // selected, i.e the value is `python`.
                 // During shutdown we might not be able to get items out of the service container.
-                const pythonExecutionFactory = this.serviceContainer.tryGet<IPythonExecutionFactory>(
-                    IPythonExecutionFactory,
-                );
+                const pythonExecutionFactory =
+                    this.serviceContainer.tryGet<IPythonExecutionFactory>(IPythonExecutionFactory);
                 const pythonExecutionService = pythonExecutionFactory
                     ? await pythonExecutionFactory.create({ resource })
                     : undefined;

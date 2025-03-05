@@ -15,7 +15,7 @@ suite('Configuration Settings', () => {
     test('Check Values', (done) => {
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot);
 
-        const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as vscode.Uri);
+        const pythonConfig = vscode.workspace.getConfiguration('python', null as any as vscode.Uri);
         const pythonSettings = getExtensionSettings(vscode.Uri.file(workspaceRoot));
         Object.keys(pythonSettings).forEach((key) => {
             let settingValue = pythonConfig.get(key, 'Not a config');

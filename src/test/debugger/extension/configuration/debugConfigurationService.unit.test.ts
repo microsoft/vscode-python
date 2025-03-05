@@ -22,9 +22,9 @@ suite('Debugging - Configuration Service', () => {
         configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object);
     });
     test('Should use attach resolver when passing attach config', async () => {
-        const config = ({
+        const config = {
             request: 'attach',
-        } as DebugConfiguration) as AttachRequestArguments;
+        } as DebugConfiguration as AttachRequestArguments;
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         const expectedConfig = { yay: 1 };
 
@@ -32,7 +32,7 @@ suite('Debugging - Configuration Service', () => {
             .setup((a) =>
                 a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny()),
             )
-            .returns(() => Promise.resolve((expectedConfig as unknown) as AttachRequestArguments))
+            .returns(() => Promise.resolve(expectedConfig as unknown as AttachRequestArguments))
             .verifiable(typemoq.Times.once());
         launchResolver
             .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
@@ -53,11 +53,11 @@ suite('Debugging - Configuration Service', () => {
                 .setup((a) =>
                     a.resolveDebugConfiguration(
                         typemoq.It.isValue(folder),
-                        typemoq.It.isValue((config as DebugConfiguration) as LaunchRequestArguments),
+                        typemoq.It.isValue(config as DebugConfiguration as LaunchRequestArguments),
                         typemoq.It.isAny(),
                     ),
                 )
-                .returns(() => Promise.resolve((expectedConfig as unknown) as LaunchRequestArguments))
+                .returns(() => Promise.resolve(expectedConfig as unknown as LaunchRequestArguments))
                 .verifiable(typemoq.Times.once());
             attachResolver
                 .setup((a) => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))

@@ -49,7 +49,7 @@ suite('Install check diagnostics tests', () => {
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
             .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'python' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'python' } as unknown as PythonEnvironment));
         getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
         getConfigurationStub.callsFake((section?: string, _scope?: ConfigurationScope | null) => {
             if (section === 'python') {

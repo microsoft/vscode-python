@@ -115,9 +115,9 @@ export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncItera
  * An iterator that yields nothing.
  */
 export function iterEmpty<T>(): IAsyncIterableIterator<T> {
-    return ((async function* () {
+    return (async function* () {
         /** No body. */
-    })() as unknown) as IAsyncIterableIterator<T>;
+    })() as unknown as IAsyncIterableIterator<T>;
 }
 
 type NextResult<T> = { index: number } & (

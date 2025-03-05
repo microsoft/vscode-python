@@ -30,7 +30,7 @@ suite('xPip installer', async () => {
             .returns(() => interpreterService.object);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve((interpreter as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve(interpreter as unknown as PythonEnvironment));
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
             .returns(() => pythonExecutionFactory.object);
@@ -88,7 +88,7 @@ suite('xPip installer', async () => {
         interpreterService.reset();
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve((condaInterpreter as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve(condaInterpreter as unknown as PythonEnvironment));
         const result = await pipInstaller.isSupported(resource);
         expect(result).to.equal(false);
     });

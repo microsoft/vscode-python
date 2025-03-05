@@ -35,13 +35,13 @@ function ver(
         micro = -1;
     }
     const info = {
-        major: (major as unknown) as number,
-        minor: (minor as unknown) as number,
-        micro: (micro as unknown) as number,
+        major: major as unknown as number,
+        minor: minor as unknown as number,
+        micro: micro as unknown as number,
         raw: undefined,
     };
     if (unnormalized !== undefined) {
-        ((info as unknown) as any).unnormalized = unnormalized;
+        (info as unknown as any).unnormalized = unnormalized;
     }
     return info;
 }
@@ -143,7 +143,7 @@ suite('common utils - normalizeVersionInfo', () => {
             const info = ver(1, 2, 3);
             info.raw = '1.2.3';
 
-            ((info as unknown) as any).unnormalized = unnorm('', '', '');
+            (info as unknown as any).unnormalized = unnorm('', '', '');
             const expected = info;
 
             const normalized = normalizeVersionInfo(info);
@@ -188,7 +188,7 @@ suite('common utils - normalizeVersionInfo', () => {
         ].forEach((data) => {
             const [info, expected] = data;
 
-            ((expected as unknown) as any).unnormalized = unnorm('', '', '');
+            (expected as unknown as any).unnormalized = unnorm('', '', '');
             expected.raw = '';
             test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {
                 const normalized = normalizeVersionInfo(info);
@@ -199,16 +199,18 @@ suite('common utils - normalizeVersionInfo', () => {
     });
 
     suite('partially "invalid"', () => {
-        ([
-            [ver(undefined, 4, 5), unnorm('missing', '', '')],
-            [ver(3, null, 5), unnorm('', 'missing', '')],
-            [ver(3, 4, NaN), unnorm('', '', 'missing')],
-            [ver(3, 4, ''), unnorm('', '', 'string not numeric')],
-            [ver(3, 4, ' '), unnorm('', '', 'string not numeric')],
-            [ver(3, 4, 'foo'), unnorm('', '', 'string not numeric')],
-            [ver(3, 4, {}), unnorm('', '', 'unsupported type')],
-            [ver(3, 4, []), unnorm('', '', 'unsupported type')],
-        ] as [VersionInfo, Unnormalized][]).forEach((data) => {
+        (
+            [
+                [ver(undefined, 4, 5), unnorm('missing', '', '')],
+                [ver(3, null, 5), unnorm('', 'missing', '')],
+                [ver(3, 4, NaN), unnorm('', '', 'missing')],
+                [ver(3, 4, ''), unnorm('', '', 'string not numeric')],
+                [ver(3, 4, ' '), unnorm('', '', 'string not numeric')],
+                [ver(3, 4, 'foo'), unnorm('', '', 'string not numeric')],
+                [ver(3, 4, {}), unnorm('', '', 'unsupported type')],
+                [ver(3, 4, []), unnorm('', '', 'unsupported type')],
+            ] as [VersionInfo, Unnormalized][]
+        ).forEach((data) => {
             const [info, unnormalized] = data;
             const expected = { ...info };
             if (info.major !== 3) {
@@ -219,7 +221,7 @@ suite('common utils - normalizeVersionInfo', () => {
                 expected.micro = -1;
             }
 
-            ((expected as unknown) as any).unnormalized = unnormalized;
+            (expected as unknown as any).unnormalized = unnormalized;
             expected.raw = '';
             test(`[${info.major}, ${info.minor}, ${info.micro}]`, () => {
                 const normalized = normalizeVersionInfo(info);
@@ -310,28 +312,30 @@ suite('common utils - parseVersionInfo', () => {
     });
 
     suite('valid versions', () => {
-        ([
-            // plain
-            ...VERSIONS.map(([v, s]) => [s, { version: v, before: '', after: '' }]),
-            ['02.7', res(2, 7, -1, '', '')],
-            ['2.07', res(2, 7, -1, '', '')],
-            ['2.7.01', res(2, 7, 1, '', '')],
-            // with before/after
-            [' 2.7.9 ', res(2, 7, 9, ' ', ' ')],
-            ['2.7.9-3.2.7', res(2, 7, 9, '', '-3.2.7')],
-            ['python2.7.exe', res(2, 7, -1, 'python', '.exe')],
-            ['1.2.3.4.5-x2.2', res(1, 2, 3, '', '.4.5-x2.2')],
-            ['3.8.1a2', res(3, 8, 1, '', 'a2')],
-            ['3.8.1-alpha2', res(3, 8, 1, '', '-alpha2')],
+        (
             [
-                '3.7.5 (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]',
-                res(3, 7, 5, '', ' (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]'),
-            ],
-            ['python2', res(2, -1, -1, 'python', '')],
-            // without the "before" the following won't match.
-            ['python2.a', res(2, -1, -1, 'python', '.a')],
-            ['python2.b7', res(2, -1, -1, 'python', '.b7')],
-        ] as [string, ParseResult<VersionInfo>][]).forEach((data) => {
+                // plain
+                ...VERSIONS.map(([v, s]) => [s, { version: v, before: '', after: '' }]),
+                ['02.7', res(2, 7, -1, '', '')],
+                ['2.07', res(2, 7, -1, '', '')],
+                ['2.7.01', res(2, 7, 1, '', '')],
+                // with before/after
+                [' 2.7.9 ', res(2, 7, 9, ' ', ' ')],
+                ['2.7.9-3.2.7', res(2, 7, 9, '', '-3.2.7')],
+                ['python2.7.exe', res(2, 7, -1, 'python', '.exe')],
+                ['1.2.3.4.5-x2.2', res(1, 2, 3, '', '.4.5-x2.2')],
+                ['3.8.1a2', res(3, 8, 1, '', 'a2')],
+                ['3.8.1-alpha2', res(3, 8, 1, '', '-alpha2')],
+                [
+                    '3.7.5 (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]',
+                    res(3, 7, 5, '', ' (default, Nov  7 2019, 10:50:52) \\n[GCC 8.3.0]'),
+                ],
+                ['python2', res(2, -1, -1, 'python', '')],
+                // without the "before" the following won't match.
+                ['python2.a', res(2, -1, -1, 'python', '.a')],
+                ['python2.b7', res(2, -1, -1, 'python', '.b7')],
+            ] as [string, ParseResult<VersionInfo>][]
+        ).forEach((data) => {
             const [verStr, result] = data;
             if (verStr === '') {
                 return;

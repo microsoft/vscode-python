@@ -61,16 +61,16 @@ suite('pytest test discovery adapter', () => {
         };
 
         // set up config service
-        configService = ({
+        configService = {
             getSettings: () => ({
                 testing: { pytestArgs: ['.'] },
             }),
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
-        execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execService.setup((p) => (p as unknown as any).then).returns(() => undefined);
         execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
         outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
 
@@ -147,14 +147,14 @@ suite('pytest test discovery adapter', () => {
     test('Test discovery correctly pulls pytest args from config service settings', async () => {
         // set up a config service with different pytest args
         const expectedPathNew = path.join('other', 'path');
-        const configServiceNew: IConfigurationService = ({
+        const configServiceNew: IConfigurationService = {
             getSettings: () => ({
                 testing: {
                     pytestArgs: ['.', 'abc', 'xyz'],
                     cwd: expectedPathNew,
                 },
             }),
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         sinon.stub(fs.promises, 'lstat').callsFake(
             async () =>
@@ -220,14 +220,14 @@ suite('pytest test discovery adapter', () => {
         sinon.stub(fs.promises, 'realpath').callsFake(async (pathEntered) => pathEntered.toString());
 
         // set up a config service with different pytest args
-        const configServiceNew: IConfigurationService = ({
+        const configServiceNew: IConfigurationService = {
             getSettings: () => ({
                 testing: {
                     pytestArgs: ['.', 'abc', 'xyz'],
                     cwd: expectedPath,
                 },
             }),
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         // set up exec mock
         deferred = createDeferred();
@@ -288,14 +288,14 @@ suite('pytest test discovery adapter', () => {
         sinon.stub(fs.promises, 'realpath').callsFake(async () => 'diff value');
 
         // set up a config service with different pytest args
-        const configServiceNew: IConfigurationService = ({
+        const configServiceNew: IConfigurationService = {
             getSettings: () => ({
                 testing: {
                     pytestArgs: ['.', 'abc', 'xyz'],
                     cwd: expectedPath,
                 },
             }),
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         // set up exec mock
         deferred = createDeferred();
@@ -373,7 +373,7 @@ suite('pytest test discovery adapter', () => {
     test('Test discovery cancelled while exec observable is running and proc is closed', async () => {
         //
         const execService2 = typeMoq.Mock.ofType<IPythonExecutionService>();
-        execService2.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execService2.setup((p) => (p as unknown as any).then).returns(() => undefined);
         execService2
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {

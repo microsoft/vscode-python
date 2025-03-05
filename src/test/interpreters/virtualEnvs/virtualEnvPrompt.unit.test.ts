@@ -47,10 +47,10 @@ suite('Virtual Environment Prompt', () => {
         interpreterService = mock<IInterpreterService>();
         isCreatingEnvironmentStub = sinon.stub(createEnvApi, 'isCreatingEnvironment');
         isCreatingEnvironmentStub.returns(false);
-        when(interpreterService.getActiveInterpreter(anything())).thenResolve(({
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve({
             id: 'selected',
             path: 'path/to/selected',
-        } as unknown) as PythonEnvironment);
+        } as unknown as PythonEnvironment);
         disposable = mock(Disposable);
         appShell = mock(ApplicationShell);
         environmentPrompt = new VirtualEnvironmentPromptTest(
@@ -110,7 +110,7 @@ suite('Virtual Environment Prompt', () => {
         when(helper.getBestInterpreter(deepEqual([interpreter1, interpreter2] as any))).thenReturn(interpreter2 as any);
         reset(interpreterService);
         when(interpreterService.getActiveInterpreter(anything())).thenResolve(
-            (interpreter2 as unknown) as PythonEnvironment,
+            interpreter2 as unknown as PythonEnvironment,
         );
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object,

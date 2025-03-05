@@ -238,7 +238,7 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(tgt)) // Provide the target's parent.
                 .returns(() => 'x/y');
             raw.setup((r) => r.stat(Uri('x/y'))) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.resolve());
 
@@ -253,12 +253,12 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(tgt)) // Provide the target's parent.
                 .returns(() => 'x/y');
             raw.setup((r) => r.stat(Uri('x/y'))) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             const err = vscode.FileSystemError.FileExists('...');
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.reject(err));
             raw.setup((r) => r.stat(Uri(tgt))) // It's a file.
-                .returns(() => Promise.resolve(({ type: FileType.File } as unknown) as FileStat));
+                .returns(() => Promise.resolve({ type: FileType.File } as unknown as FileStat));
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: true })) // expect the specific filename
                 .returns(() => Promise.resolve());
 
@@ -273,7 +273,7 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(tgt)) // Provide the target's parent.
                 .returns(() => 'x/y');
             raw.setup((r) => r.stat(Uri('x/y'))) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.resolve());
 
@@ -288,12 +288,12 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(tgt)) // Provide the target's parent.
                 .returns(() => 'x/y');
             raw.setup((r) => r.stat(Uri('x/y'))) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             const err = vscode.FileSystemError.FileExists('...');
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.reject(err));
             raw.setup((r) => r.stat(Uri(tgt))) // It's a directory.
-                .returns(() => Promise.resolve(({ type: FileType.Directory } as unknown) as FileStat));
+                .returns(() => Promise.resolve({ type: FileType.Directory } as unknown as FileStat));
 
             const promise = filesystem.move(src, tgt);
 
@@ -307,13 +307,13 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(tgt)) // Provide the target's parent.
                 .returns(() => 'x/y');
             raw.setup((r) => r.stat(Uri('x/y'))) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             const err = vscode.FileSystemError.FileExists('...');
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.reject(err));
             raw.setup((r) => r.stat(Uri(tgt))) // It's a symlink.
                 .returns(() =>
-                    Promise.resolve(({ type: FileType.SymbolicLink | FileType.Directory } as unknown) as FileStat),
+                    Promise.resolve({ type: FileType.SymbolicLink | FileType.Directory } as unknown as FileStat),
                 );
             raw.setup((r) => r.rename(Uri(src), Uri(tgt), { overwrite: true })) // expect the specific filename
                 .returns(() => Promise.resolve());
@@ -340,7 +340,7 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(TypeMoq.It.isAny())) // Provide the target's parent.
                 .returns(() => '');
             raw.setup((r) => r.stat(TypeMoq.It.isAny())) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             const err = new Error('oops!');
             raw.setup((r) => r.rename(TypeMoq.It.isAny(), TypeMoq.It.isAny(), { overwrite: false })) // We don't care about the filename.
                 .throws(err);
@@ -455,7 +455,7 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(tgt)) // Provide the target's parent.
                 .returns(() => 'x/y/z');
             raw.setup((r) => r.stat(Uri('x/y/z'))) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             raw.setup((r) => r.copy(Uri(src), Uri(tgt), { overwrite: true })) // Expect the specific args.
                 .returns(() => Promise.resolve());
 
@@ -481,7 +481,7 @@ suite('Raw FileSystem', () => {
             raw.setup((r) => r.dirname(TypeMoq.It.isAny())) // Provide the target's parent.
                 .returns(() => '');
             raw.setup((r) => r.stat(TypeMoq.It.isAny())) // The parent dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             raw.setup((r) => r.copy(TypeMoq.It.isAny(), TypeMoq.It.isAny(), { overwrite: true })) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
@@ -607,7 +607,7 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
             raw.setup((r) => r.stat(Uri(dirname))) // The dir exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             raw.setup((r) => r.delete(Uri(dirname), opts)) // Expect the specific dirname.
                 .returns(() => Promise.resolve());
 
@@ -618,7 +618,7 @@ suite('Raw FileSystem', () => {
 
         test('fails if the low-level call fails', async () => {
             raw.setup((r) => r.stat(TypeMoq.It.isAny())) // The "file" exists.
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             raw.setup((r) => r.delete(TypeMoq.It.isAny(), opts)) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
@@ -1300,7 +1300,7 @@ suite('FileSystemUtils', () => {
             const dirname = 'x/y/z/spam';
             const filename = `${dirname}/___vscpTest___`;
             deps.setup((d) => d.stat(dirname)) // Success!
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             deps.setup((d) => d.writeText(filename, '')) // Success!
                 .returns(() => Promise.resolve());
             deps.setup((d) => d.rmfile(filename)) // Success!
@@ -1319,7 +1319,7 @@ suite('FileSystemUtils', () => {
 
             (err as any).code = 'EACCES'; // errno
             deps.setup((d) => d.stat(dirname)) // Success!
-                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+                .returns(() => Promise.resolve(undefined as unknown as FileStat));
             deps.setup((d) => d.writeText(filename, '')) // not permitted
                 .returns(() => Promise.reject(err));
 
@@ -1430,7 +1430,7 @@ suite('FileSystemUtils', () => {
         test('no matches (undefined)', async () => {
             const pattern = `x/y/z/spam.*`;
             deps.setup((d) => d.globFile(pattern, undefined)) // found none
-                .returns(() => Promise.resolve((undefined as unknown) as string[]));
+                .returns(() => Promise.resolve(undefined as unknown as string[]));
 
             const files = await utils.search(pattern);
 
@@ -1443,7 +1443,7 @@ suite('FileSystemUtils', () => {
         test('file exists', async () => {
             const filename = 'x/y/z/spam.py';
             deps.setup((d) => d.statSync(filename)) // The file exists.
-                .returns(() => (undefined as unknown) as FileStat);
+                .returns(() => undefined as unknown as FileStat);
 
             const exists = utils.fileExistsSync(filename);
 

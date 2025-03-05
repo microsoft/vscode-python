@@ -125,7 +125,7 @@ export class EventEmitter<T> implements vscode.EventEmitter<T> {
     public emitter: NodeEventEmitter;
 
     constructor() {
-        this.event = (this.add.bind(this) as unknown) as vscode.Event<T>;
+        this.event = this.add.bind(this) as unknown as vscode.Event<T>;
         this.emitter = new NodeEventEmitter();
     }
 

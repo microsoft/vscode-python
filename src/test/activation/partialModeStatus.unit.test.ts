@@ -20,15 +20,15 @@ suite('Partial Mode Status', async () => {
     let vscodeMock: typeof vscodeTypes;
     setup(() => {
         workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
-        languageItem = ({
+        languageItem = {
             name: '',
             severity: 2,
             text: '',
             detail: undefined,
             command: undefined,
-        } as unknown) as LanguageStatusItem;
+        } as unknown as LanguageStatusItem;
         actualSelector = undefined;
-        vscodeMock = ({
+        vscodeMock = {
             languages: {
                 createLanguageStatusItem: (_: string, selector: DocumentSelector) => {
                     actualSelector = selector;
@@ -43,7 +43,7 @@ suite('Partial Mode Status', async () => {
             Uri: {
                 parse: (s: string) => s,
             },
-        } as unknown) as typeof vscodeTypes;
+        } as unknown as typeof vscodeTypes;
         rewiremock.enable();
         rewiremock('vscode').with(vscodeMock);
     });
@@ -78,7 +78,7 @@ suite('Partial Mode Status', async () => {
         assert.deepEqual(actualSelector!, {
             language: 'python',
         });
-        assert.deepEqual(languageItem, ({
+        assert.deepEqual(languageItem, {
             name: LanguageService.statusItem.name,
             severity: vscodeMock.LanguageStatusSeverity.Warning,
             text: LanguageService.statusItem.text,
@@ -88,7 +88,7 @@ suite('Partial Mode Status', async () => {
                 command: 'vscode.open',
                 arguments: ['https://aka.ms/AAdzyh4'],
             },
-        } as unknown) as LanguageStatusItem);
+        } as unknown as LanguageStatusItem);
     });
 
     test('Expected status item is created if workspace is virtual', async () => {
@@ -104,7 +104,7 @@ suite('Partial Mode Status', async () => {
         assert.deepEqual(actualSelector!, {
             language: 'python',
         });
-        assert.deepEqual(languageItem, ({
+        assert.deepEqual(languageItem, {
             name: LanguageService.statusItem.name,
             severity: vscodeMock.LanguageStatusSeverity.Warning,
             text: LanguageService.statusItem.text,
@@ -114,7 +114,7 @@ suite('Partial Mode Status', async () => {
                 command: 'vscode.open',
                 arguments: ['https://aka.ms/AAdzyh4'],
             },
-        } as unknown) as LanguageStatusItem);
+        } as unknown as LanguageStatusItem);
     });
 
     test('Expected status item is created if workspace is both virtual and untrusted', async () => {
@@ -130,7 +130,7 @@ suite('Partial Mode Status', async () => {
         assert.deepEqual(actualSelector!, {
             language: 'python',
         });
-        assert.deepEqual(languageItem, ({
+        assert.deepEqual(languageItem, {
             name: LanguageService.statusItem.name,
             severity: vscodeMock.LanguageStatusSeverity.Warning,
             text: LanguageService.statusItem.text,
@@ -140,6 +140,6 @@ suite('Partial Mode Status', async () => {
                 command: 'vscode.open',
                 arguments: ['https://aka.ms/AAdzyh4'],
             },
-        } as unknown) as LanguageStatusItem);
+        } as unknown as LanguageStatusItem);
     });
 });

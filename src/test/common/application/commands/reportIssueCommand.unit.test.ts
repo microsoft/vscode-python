@@ -56,10 +56,10 @@ suite('Report Issue Command', () => {
                 languageServer: LanguageServerType.Node,
             }),
         );
-        const interpreter = ({
+        const interpreter = {
             envType: EnvironmentType.Venv,
             version: { raw: '3.9.0' },
-        } as unknown) as PythonEnvironment;
+        } as unknown as PythonEnvironment;
         when(interpreterService.getActiveInterpreter()).thenResolve(interpreter);
         when(configurationService.getSettings()).thenReturn({
             experiments: {

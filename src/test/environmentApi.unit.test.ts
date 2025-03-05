@@ -138,7 +138,7 @@ suite('Python Environment API', () => {
 
     test('getEnvironmentVariables: With WorkspaceFolder resource', async () => {
         const resource = Uri.file('x');
-        const folder = ({ uri: resource } as unknown) as WorkspaceFolder;
+        const folder = { uri: resource } as unknown as WorkspaceFolder;
         const envVars = { PATH: 'path' };
         envVarsProvider.setup((e) => e.getEnvironmentVariablesSync(resource)).returns(() => envVars);
         const vars = environmentApi.getEnvironmentVariables(folder);
@@ -161,7 +161,7 @@ suite('Python Environment API', () => {
         const pythonPath = 'this/is/a/test/path';
         configService
             .setup((c) => c.getSettings(undefined))
-            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+            .returns(() => ({ pythonPath } as unknown as IPythonSettings));
         const actual = environmentApi.getActiveEnvironmentPath();
         assert.deepEqual(actual, {
             id: normCasePath(pythonPath),
@@ -173,7 +173,7 @@ suite('Python Environment API', () => {
         const pythonPath = 'python';
         configService
             .setup((c) => c.getSettings(undefined))
-            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+            .returns(() => ({ pythonPath } as unknown as IPythonSettings));
         const actual = environmentApi.getActiveEnvironmentPath();
         assert.deepEqual(actual, {
             id: 'DEFAULT_PYTHON',
@@ -186,7 +186,7 @@ suite('Python Environment API', () => {
         const resource = Uri.file(__filename);
         configService
             .setup((c) => c.getSettings(resource))
-            .returns(() => (({ pythonPath } as unknown) as IPythonSettings));
+            .returns(() => ({ pythonPath } as unknown as IPythonSettings));
         const actual = environmentApi.getActiveEnvironmentPath(resource);
         assert.deepEqual(actual, {
             id: normCasePath(pythonPath),

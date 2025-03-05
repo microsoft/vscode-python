@@ -61,7 +61,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
             if (argSetting) {
                 if (typeof argSetting === 'object') {
                     let propertyHeaderAdded = false;
-                    const argSettingsDict = (settings[property] as unknown) as Record<string, unknown>;
+                    const argSettingsDict = settings[property] as unknown as Record<string, unknown>;
                     if (typeof argSettingsDict === 'object') {
                         Object.keys(argSetting).forEach((item) => {
                             const prop = argSetting[item];

@@ -13,7 +13,7 @@ export class CurrentProcess implements ICurrentProcess {
         return process as any;
     };
     public get env(): EnvironmentVariables {
-        return (process.env as any) as EnvironmentVariables;
+        return process.env as any as EnvironmentVariables;
     }
     public get argv(): string[] {
         return process.argv;

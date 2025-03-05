@@ -87,7 +87,7 @@ export function getExistingReplViewColumn(notebookDocument: NotebookDocument): V
     for (const tabGroup of ourTb.all) {
         for (const tab of tabGroup.tabs) {
             if (tab.label === 'Python REPL') {
-                const tabInput = (tab.input as unknown) as TabInputNotebook;
+                const tabInput = tab.input as unknown as TabInputNotebook;
                 const tabUri = tabInput.uri.toString();
                 if (tab.input && tabUri === ourNotebookUri) {
                     // This is the tab we are looking for.

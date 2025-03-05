@@ -39,7 +39,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                             interpreterService
                                 .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-                                .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                                .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                             serviceContainer
                                 .setup((c) => c.get(IInterpreterService))
                                 .returns(() => interpreterService.object);
@@ -89,7 +89,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                     interpreterService
                         .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-                        .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                        .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                     serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
                     serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
                     serviceContainer.setup((c) => c.get(IPlatformService)).returns(() => platform.object);
@@ -181,7 +181,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                     interpreterService
                         .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-                        .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                        .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                     serviceContainer.setup((c) => c.get(IInterpreterService)).returns(() => interpreterService.object);
                 });
 

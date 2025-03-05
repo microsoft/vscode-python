@@ -140,7 +140,7 @@ suite('Conda and its environments are located correctly', () => {
                 }
 
                 if (options === undefined) {
-                    return (Object.keys(getFile(filePath, 'throwIfMissing')) as unknown) as fs.Dirent[];
+                    return Object.keys(getFile(filePath, 'throwIfMissing')) as unknown as fs.Dirent[];
                 }
 
                 const names = Object.keys(dir);
@@ -148,23 +148,21 @@ suite('Conda and its environments are located correctly', () => {
                     return names;
                 }
 
-                return names.map(
-                    (name): fs.Dirent => {
-                        const isFile = typeof dir[name] === 'string';
-                        return {
-                            name,
-                            path: dir.name?.toString() ?? '',
-                            isFile: () => isFile,
-                            isDirectory: () => !isFile,
-                            isBlockDevice: () => false,
-                            isCharacterDevice: () => false,
-                            isSymbolicLink: () => false,
-                            isFIFO: () => false,
-                            isSocket: () => false,
-                            parentPath: '',
-                        };
-                    },
-                );
+                return names.map((name): fs.Dirent => {
+                    const isFile = typeof dir[name] === 'string';
+                    return {
+                        name,
+                        path: dir.name?.toString() ?? '',
+                        isFile: () => isFile,
+                        isDirectory: () => !isFile,
+                        isBlockDevice: () => false,
+                        isCharacterDevice: () => false,
+                        isSymbolicLink: () => false,
+                        isFIFO: () => false,
+                        isSocket: () => false,
+                        parentPath: '',
+                    };
+                });
             },
         );
         const readFileStub = async (

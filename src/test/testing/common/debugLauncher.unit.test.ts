@@ -112,7 +112,7 @@ suite('Unit Tests - Debug Launcher', () => {
     ) {
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'python' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'python' } as unknown as PythonEnvironment));
         settings.setup((p) => p.envFile).returns(() => __filename);
         const args = expected.args;
         const debugArgs = testProvider === 'unittest' ? args.filter((item: string) => item !== '--debug') : args;

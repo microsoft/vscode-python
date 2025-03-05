@@ -24,11 +24,11 @@ suite('Language Server - Jedi LS extension manager', () => {
             {} as IInterpreterPathService,
             {} as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
         );
     });
 
@@ -38,9 +38,9 @@ suite('Language Server - Jedi LS extension manager', () => {
     });
 
     test('canStartLanguageServer should return true if an interpreter is passed in', () => {
-        const result = manager.canStartLanguageServer(({
+        const result = manager.canStartLanguageServer({
             path: 'path/to/interpreter',
-        } as unknown) as PythonEnvironment);
+        } as unknown as PythonEnvironment);
 
         assert.strictEqual(result, true);
     });

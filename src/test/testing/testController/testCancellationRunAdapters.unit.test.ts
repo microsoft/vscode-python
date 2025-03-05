@@ -40,12 +40,12 @@ suite('Execution Flow Run Adapters', () => {
         useEnvExtensionStub.returns(false);
         // general vars
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
-        configService = ({
+        configService = {
             getSettings: () => ({
                 testing: { pytestArgs: ['.'], unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
             isTestExecution: () => false,
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         // set up execService and execFactory, all mocked
         execServiceStub = typeMoq.Mock.ofType<IPythonExecutionService>();
@@ -58,7 +58,7 @@ suite('Execution Flow Run Adapters', () => {
 
         // debug specific mocks
         debugLauncher = typeMoq.Mock.ofType<ITestDebugLauncher>();
-        debugLauncher.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        debugLauncher.setup((p) => (p as unknown as any).then).returns(() => undefined);
     });
     teardown(() => {
         sinon.restore();
@@ -90,8 +90,8 @@ suite('Execution Flow Run Adapters', () => {
             execFactoryStub
                 .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
                 .returns(() => Promise.resolve(execServiceStub.object));
-            execFactoryStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-            execServiceStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+            execFactoryStub.setup((p) => (p as unknown as any).then).returns(() => undefined);
+            execServiceStub.setup((p) => (p as unknown as any).then).returns(() => undefined);
 
             // test ids named pipe mocking
             const deferredStartTestIdsNamedPipe = createDeferred();
@@ -159,8 +159,8 @@ suite('Execution Flow Run Adapters', () => {
             execFactoryStub
                 .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
                 .returns(() => Promise.resolve(execServiceStub.object));
-            execFactoryStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-            execServiceStub.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+            execFactoryStub.setup((p) => (p as unknown as any).then).returns(() => undefined);
+            execServiceStub.setup((p) => (p as unknown as any).then).returns(() => undefined);
 
             // test ids named pipe mocking
             const deferredStartTestIdsNamedPipe = createDeferred();

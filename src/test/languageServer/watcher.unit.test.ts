@@ -42,22 +42,22 @@ suite('Language server watcher', () => {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => 'python',
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
                     /* do nothing */
@@ -65,19 +65,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -98,18 +98,18 @@ suite('Language server watcher', () => {
             } as IConfigurationService,
             {} as IExperimentService,
             {} as IInterpreterHelper,
-            ({
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -118,15 +118,15 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
+            } as unknown as IWorkspaceService,
             {} as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -143,18 +143,18 @@ suite('Language server watcher', () => {
             } as IConfigurationService,
             {} as IExperimentService,
             {} as IInterpreterHelper,
-            ({
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 isTrusted: false,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -163,15 +163,15 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
+            } as unknown as IWorkspaceService,
             {} as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -194,39 +194,39 @@ suite('Language server watcher', () => {
         getActiveInterpreterStub.onFirstCall().returns('python');
         getActiveInterpreterStub.onSecondCall().returns('other/python');
 
-        const interpreterService = ({
+        const interpreterService = {
             getActiveInterpreter: getActiveInterpreterStub,
             onDidChangeInterpreterInformation: () => {
                 /* do nothing */
             },
-        } as unknown) as IInterpreterService;
+        } as unknown as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
+            {
                 get: () => {
                     /* do nothing */
                 },
-            } as unknown) as IServiceContainer,
+            } as unknown as IServiceContainer,
             {} as ILanguageServerOutputChannel,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
+            } as unknown as IInterpreterPathService,
             interpreterService,
-            ({
+            {
                 onDidEnvironmentVariablesChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IEnvironmentVariablesProvider,
-            ({
+            } as unknown as IEnvironmentVariablesProvider,
+            {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -235,19 +235,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -288,22 +288,22 @@ suite('Language server watcher', () => {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => ({ folderUri: Uri.parse('workspace') }),
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => 'python',
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
                     /* do nothing */
@@ -311,19 +311,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -358,7 +358,7 @@ suite('Language server watcher', () => {
     test('When the config settings change, but the python.languageServer setting is not affected, the watcher should not restart the language server', async () => {
         let onDidChangeConfigListener: (event: ConfigurationChangeEvent) => Promise<void> = () => Promise.resolve();
 
-        const workspaceService = ({
+        const workspaceService = {
             getWorkspaceFolder: (uri: Uri) => ({ uri }),
             onDidChangeConfiguration: (listener: (event: ConfigurationChangeEvent) => Promise<void>) => {
                 onDidChangeConfigListener = listener;
@@ -366,7 +366,7 @@ suite('Language server watcher', () => {
             onDidChangeWorkspaceFolders: () => {
                 /* do nothing */
             },
-        } as unknown) as IWorkspaceService;
+        } as unknown as IWorkspaceService;
 
         watcher = new LanguageServerWatcher(
             {} as IServiceContainer,
@@ -375,34 +375,34 @@ suite('Language server watcher', () => {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => 'python',
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             workspaceService,
-            ({
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -420,7 +420,7 @@ suite('Language server watcher', () => {
     test('When the config settings change, and the python.languageServer setting is affected, the watcher should restart the language server', async () => {
         let onDidChangeConfigListener: (event: ConfigurationChangeEvent) => Promise<void> = () => Promise.resolve();
 
-        const workspaceService = ({
+        const workspaceService = {
             getWorkspaceFolder: (uri: Uri) => ({ uri }),
             onDidChangeConfiguration: (listener: (event: ConfigurationChangeEvent) => Promise<void>) => {
                 onDidChangeConfigListener = listener;
@@ -429,49 +429,49 @@ suite('Language server watcher', () => {
                 /* do nothing */
             },
             workspaceFolders: [{ uri: Uri.parse('workspace') }],
-        } as unknown) as IWorkspaceService;
+        } as unknown as IWorkspaceService;
 
         const getSettingsStub = sandbox.stub();
         getSettingsStub.onFirstCall().returns({ languageServer: LanguageServerType.None });
         getSettingsStub.onSecondCall().returns({ languageServer: LanguageServerType.Node });
 
-        const configService = ({
+        const configService = {
             getSettings: getSettingsStub,
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         watcher = new LanguageServerWatcher(
             {} as IServiceContainer,
             {} as ILanguageServerOutputChannel,
             configService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => 'python',
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
             workspaceService,
-            ({
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -499,22 +499,22 @@ suite('Language server watcher', () => {
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
                     /* do nothing */
@@ -522,19 +522,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -560,22 +560,22 @@ suite('Language server watcher', () => {
                 }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
                     /* do nothing */
@@ -583,22 +583,22 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
-            ({
+            } as unknown as IExtensions,
+            {
                 showWarningMessage: () => Promise.resolve(undefined),
-            } as unknown) as IApplicationShell,
+            } as unknown as IApplicationShell,
             disposables,
         );
         watcher.register();
@@ -619,22 +619,22 @@ suite('Language server watcher', () => {
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
-            ({
+            } as unknown as IInterpreterPathService,
+            {
                 getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
                 onDidChangeInterpreterInformation: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterService,
+            } as unknown as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 isTrusted: false,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -643,19 +643,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -706,22 +706,22 @@ suite('Language server watcher', () => {
                     getSettings: () => ({ languageServer }),
                 } as IConfigurationService,
                 {} as IExperimentService,
-                ({
+                {
                     getActiveWorkspaceUri: () => undefined,
-                } as unknown) as IInterpreterHelper,
-                ({
+                } as unknown as IInterpreterHelper,
+                {
                     onDidChange: () => {
                         /* do nothing */
                     },
-                } as unknown) as IInterpreterPathService,
-                ({
+                } as unknown as IInterpreterPathService,
+                {
                     getActiveInterpreter: getActiveInterpreterStub,
                     onDidChangeInterpreterInformation: () => {
                         /* do nothing */
                     },
-                } as unknown) as IInterpreterService,
+                } as unknown as IInterpreterService,
                 {} as IEnvironmentVariablesProvider,
-                ({
+                {
                     isTrusted: true,
                     getWorkspaceFolder: (uri: Uri) => ({ uri }),
                     onDidChangeConfiguration: () => {
@@ -730,22 +730,22 @@ suite('Language server watcher', () => {
                     onDidChangeWorkspaceFolders: () => {
                         /* do nothing */
                     },
-                } as unknown) as IWorkspaceService,
-                ({
+                } as unknown as IWorkspaceService,
+                {
                     registerCommand: () => {
                         /* do nothing */
                     },
-                } as unknown) as ICommandManager,
+                } as unknown as ICommandManager,
                 {} as IFileSystem,
-                ({
+                {
                     getExtension: () => undefined,
                     onDidChange: () => {
                         /* do nothing */
                     },
-                } as unknown) as IExtensions,
-                ({
+                } as unknown as IExtensions,
+                {
                     showWarningMessage: () => Promise.resolve(undefined),
-                } as unknown) as IApplicationShell,
+                } as unknown as IApplicationShell,
                 disposables,
             );
             watcher.register();
@@ -775,7 +775,7 @@ suite('Language server watcher', () => {
             let onDidChangeWorkspaceFoldersListener: (event: WorkspaceFoldersChangeEvent) => Promise<void> = () =>
                 Promise.resolve();
 
-            const workspaceService = ({
+            const workspaceService = {
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
                     /* do nothing */
@@ -785,7 +785,7 @@ suite('Language server watcher', () => {
                 },
                 workspaceFolders: [{ uri: Uri.parse('workspace1') }, { uri: Uri.parse('workspace2') }],
                 isTrusted: true,
-            } as unknown) as IWorkspaceService;
+            } as unknown as IWorkspaceService;
 
             watcher = new LanguageServerWatcher(
                 {} as IServiceContainer,
@@ -794,37 +794,37 @@ suite('Language server watcher', () => {
                     getSettings: () => ({ languageServer }),
                 } as IConfigurationService,
                 {} as IExperimentService,
-                ({
+                {
                     getActiveWorkspaceUri: () => undefined,
-                } as unknown) as IInterpreterHelper,
-                ({
+                } as unknown as IInterpreterHelper,
+                {
                     onDidChange: () => {
                         /* do nothing */
                     },
-                } as unknown) as IInterpreterPathService,
-                ({
+                } as unknown as IInterpreterPathService,
+                {
                     getActiveInterpreter: () => ({ version: { major: 3, minor: 7 } }),
                     onDidChangeInterpreterInformation: () => {
                         /* do nothing */
                     },
-                } as unknown) as IInterpreterService,
+                } as unknown as IInterpreterService,
                 {} as IEnvironmentVariablesProvider,
                 workspaceService,
-                ({
+                {
                     registerCommand: () => {
                         /* do nothing */
                     },
-                } as unknown) as ICommandManager,
+                } as unknown as ICommandManager,
                 {} as IFileSystem,
-                ({
+                {
                     getExtension: () => undefined,
                     onDidChange: () => {
                         /* do nothing */
                     },
-                } as unknown) as IExtensions,
-                ({
+                } as unknown as IExtensions,
+                {
                     showWarningMessage: () => Promise.resolve(undefined),
-                } as unknown) as IApplicationShell,
+                } as unknown as IApplicationShell,
                 disposables,
             );
             watcher.register();
@@ -845,14 +845,14 @@ suite('Language server watcher', () => {
     });
 
     test('The language server should be restarted if the interpreter info changed', async () => {
-        const info = ({
+        const info = {
             envPath: 'foo',
             path: 'path/to/foo/bin/python',
-        } as unknown) as PythonEnvironment;
+        } as unknown as PythonEnvironment;
 
         let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
 
-        const interpreterService = ({
+        const interpreterService = {
             onDidChangeInterpreterInformation: (
                 listener: (event: PythonEnvironment) => Promise<void>,
                 thisArg: unknown,
@@ -863,34 +863,34 @@ suite('Language server watcher', () => {
                 envPath: 'foo',
                 path: 'path/to/foo',
             }),
-        } as unknown) as IInterpreterService;
+        } as unknown as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
+            {
                 get: () => {
                     /* do nothing */
                 },
-            } as unknown) as IServiceContainer,
+            } as unknown as IServiceContainer,
             {} as ILanguageServerOutputChannel,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
+            } as unknown as IInterpreterPathService,
             interpreterService,
-            ({
+            {
                 onDidEnvironmentVariablesChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IEnvironmentVariablesProvider,
-            ({
+            } as unknown as IEnvironmentVariablesProvider,
+            {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -899,19 +899,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -928,14 +928,14 @@ suite('Language server watcher', () => {
     });
 
     test('The language server should not be restarted if the interpreter info did not change', async () => {
-        const info = ({
+        const info = {
             envPath: 'foo',
             path: 'path/to/foo',
-        } as unknown) as PythonEnvironment;
+        } as unknown as PythonEnvironment;
 
         let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
 
-        const interpreterService = ({
+        const interpreterService = {
             onDidChangeInterpreterInformation: (
                 listener: (event: PythonEnvironment) => Promise<void>,
                 thisArg: unknown,
@@ -943,34 +943,34 @@ suite('Language server watcher', () => {
                 onDidChangeInfoListener = listener.bind(thisArg);
             },
             getActiveInterpreter: () => info,
-        } as unknown) as IInterpreterService;
+        } as unknown as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
+            {
                 get: () => {
                     /* do nothing */
                 },
-            } as unknown) as IServiceContainer,
+            } as unknown as IServiceContainer,
             {} as ILanguageServerOutputChannel,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
+            } as unknown as IInterpreterPathService,
             interpreterService,
-            ({
+            {
                 onDidEnvironmentVariablesChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IEnvironmentVariablesProvider,
-            ({
+            } as unknown as IEnvironmentVariablesProvider,
+            {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -979,19 +979,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -1008,14 +1008,14 @@ suite('Language server watcher', () => {
     });
 
     test('The language server should not be restarted if the interpreter info changed but the env path is an empty string', async () => {
-        const info = ({
+        const info = {
             envPath: '',
             path: 'path/to/foo',
-        } as unknown) as PythonEnvironment;
+        } as unknown as PythonEnvironment;
 
         let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
 
-        const interpreterService = ({
+        const interpreterService = {
             onDidChangeInterpreterInformation: (
                 listener: (event: PythonEnvironment) => Promise<void>,
                 thisArg: unknown,
@@ -1026,34 +1026,34 @@ suite('Language server watcher', () => {
                 envPath: 'foo',
                 path: 'path/to/foo',
             }),
-        } as unknown) as IInterpreterService;
+        } as unknown as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
+            {
                 get: () => {
                     /* do nothing */
                 },
-            } as unknown) as IServiceContainer,
+            } as unknown as IServiceContainer,
             {} as ILanguageServerOutputChannel,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
+            } as unknown as IInterpreterPathService,
             interpreterService,
-            ({
+            {
                 onDidEnvironmentVariablesChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IEnvironmentVariablesProvider,
-            ({
+            } as unknown as IEnvironmentVariablesProvider,
+            {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -1062,19 +1062,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );
@@ -1091,14 +1091,14 @@ suite('Language server watcher', () => {
     });
 
     test('The language server should not be restarted if the interpreter info changed but the env path is undefined', async () => {
-        const info = ({
+        const info = {
             envPath: undefined,
             path: 'path/to/foo',
-        } as unknown) as PythonEnvironment;
+        } as unknown as PythonEnvironment;
 
         let onDidChangeInfoListener: (event: PythonEnvironment) => Promise<void> = () => Promise.resolve();
 
-        const interpreterService = ({
+        const interpreterService = {
             onDidChangeInterpreterInformation: (
                 listener: (event: PythonEnvironment) => Promise<void>,
                 thisArg: unknown,
@@ -1109,34 +1109,34 @@ suite('Language server watcher', () => {
                 envPath: 'foo',
                 path: 'path/to/foo',
             }),
-        } as unknown) as IInterpreterService;
+        } as unknown as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
+            {
                 get: () => {
                     /* do nothing */
                 },
-            } as unknown) as IServiceContainer,
+            } as unknown as IServiceContainer,
             {} as ILanguageServerOutputChannel,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
             {} as IExperimentService,
-            ({
+            {
                 getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
+            } as unknown as IInterpreterHelper,
+            {
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IInterpreterPathService,
+            } as unknown as IInterpreterPathService,
             interpreterService,
-            ({
+            {
                 onDidEnvironmentVariablesChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IEnvironmentVariablesProvider,
-            ({
+            } as unknown as IEnvironmentVariablesProvider,
+            {
                 isTrusted: true,
                 getWorkspaceFolder: (uri: Uri) => ({ uri }),
                 onDidChangeConfiguration: () => {
@@ -1145,19 +1145,19 @@ suite('Language server watcher', () => {
                 onDidChangeWorkspaceFolders: () => {
                     /* do nothing */
                 },
-            } as unknown) as IWorkspaceService,
-            ({
+            } as unknown as IWorkspaceService,
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
                 onDidChange: () => {
                     /* do nothing */
                 },
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
             disposables,
         );

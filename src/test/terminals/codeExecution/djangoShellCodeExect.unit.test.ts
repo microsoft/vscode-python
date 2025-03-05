@@ -100,7 +100,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         platform.setup((p) => p.isWindows).returns(() => isWindows);
         interpreterService
             .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
         terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
@@ -221,7 +221,7 @@ suite('Terminal - Django Shell Code Execution', () => {
     ) {
         interpreterService
             .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
         terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
         const condaFile = 'conda';

@@ -43,9 +43,9 @@ suite('Terminal Activator', () => {
         configService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
             .returns(() => {
-                return ({
+                return {
                     terminal: terminalSettings.object,
-                } as unknown) as IPythonSettings;
+                } as unknown as IPythonSettings;
             });
         activator = new (class extends TerminalActivator {
             protected initialize() {

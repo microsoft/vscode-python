@@ -23,7 +23,7 @@ export class CommandManager implements ICommandManager {
     // eslint-disable-next-line class-methods-use-this
     public registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
-        U extends ICommandNameArgumentTypeMapping[E]
+        U extends ICommandNameArgumentTypeMapping[E],
         // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/no-explicit-any
     >(command: E, callback: (...args: U) => any, thisArg?: any): Disposable {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -73,7 +73,7 @@ export class CommandManager implements ICommandManager {
     public executeCommand<
         T,
         E extends keyof ICommandNameArgumentTypeMapping,
-        U extends ICommandNameArgumentTypeMapping[E]
+        U extends ICommandNameArgumentTypeMapping[E],
     >(command: E, ...rest: U): Thenable<T | undefined> {
         return commands.executeCommand<T>(command, ...rest);
     }
