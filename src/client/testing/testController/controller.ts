@@ -202,6 +202,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                     this.envVarsService,
                 );
             }
+            // random comment
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 testProvider,
