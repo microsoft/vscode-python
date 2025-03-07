@@ -255,7 +255,7 @@ function putIntoStorage(storage: IPersistentStorage<PythonEnvInfo[]>, envs: Pyth
             if (e.searchLocation) {
                 // Make TS believe it is string. This is temporary. We need to serialize this in
                 // a custom way.
-                e.searchLocation = (e.searchLocation.toString() as unknown) as Uri;
+                e.searchLocation = e.searchLocation.toString() as unknown as Uri;
             }
             return e;
         }),

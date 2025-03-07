@@ -8,4 +8,5 @@
 // matches the 'main' module.
 
 // RegEx to match `import torch.profiler` or `from torch import profiler`
-export const TorchProfilerImportRegEx = /^\s*(?:import (?:(\w+, )*torch\.profiler(, \w+)*))|(?:from torch import (?:(\w+, )*profiler(, \w+)*))/;
+export const TorchProfilerImportRegEx =
+    /^\s*(?:import (?:(\w+, )*torch\.profiler(, \w+)*))|(?:from torch import (?:(\w+, )*profiler(, \w+)*))/;

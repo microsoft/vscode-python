@@ -236,10 +236,10 @@ suite('Interpreters Display', () => {
                 const expectedDisplayName = '3.10.1';
 
                 setupWorkspaceFolder(resource, workspaceFolder);
-                const pythonInterpreter: PythonEnvironment = ({
+                const pythonInterpreter: PythonEnvironment = {
                     detailedDisplayName: displayName,
                     path: pythonPath,
-                } as any) as PythonEnvironment;
+                } as any as PythonEnvironment;
                 interpreterService
                     .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
                     .returns(() => Promise.resolve(pythonInterpreter));

@@ -80,7 +80,7 @@ function copyStrict<T extends BasicVersionInfo>(info: T): RawBasicVersionInfo {
         micro: info.micro,
     };
 
-    const { unnormalized } = (info as unknown) as RawBasicVersionInfo;
+    const { unnormalized } = info as unknown as RawBasicVersionInfo;
     if (unnormalized !== undefined) {
         copied.unnormalized = {
             major: unnormalized.major,
@@ -134,7 +134,7 @@ function validateVersionPart(prop: string, part: number, unnormalized?: ErrorMsg
  * is responsible for any other properties beyond that.
  */
 function validateBasicVersionInfo<T extends BasicVersionInfo>(info: T): void {
-    const raw = (info as unknown) as RawBasicVersionInfo;
+    const raw = info as unknown as RawBasicVersionInfo;
     validateVersionPart('major', info.major, raw.unnormalized?.major);
     validateVersionPart('minor', info.minor, raw.unnormalized?.minor);
     validateVersionPart('micro', info.micro, raw.unnormalized?.micro);
@@ -224,7 +224,7 @@ export function parseBasicVersionInfo<T extends BasicVersionInfo>(verStr: string
     const micro = microStr ? parseInt(microStr, 10) : -1;
     return {
         // This is effectively normalized.
-        version: ({ major, minor, micro } as unknown) as T,
+        version: { major, minor, micro } as unknown as T,
         before: before || '',
         after: after || '',
     };
@@ -388,10 +388,10 @@ export function areSimilarVersions<T extends BasicVersionInfo, V extends BasicVe
 
     if (result < 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return ((right as unknown) as any)[prop] === -1;
+        return (right as unknown as any)[prop] === -1;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return ((left as unknown) as any)[prop] === -1;
+    return (left as unknown as any)[prop] === -1;
 }
 
 // semver

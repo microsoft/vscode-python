@@ -86,9 +86,9 @@ suite('Debugging - Adapter Factory', () => {
         ).thenReturn(instance(state));
 
         const configurationService = mock(ConfigurationService);
-        when(configurationService.getSettings(undefined)).thenReturn(({
+        when(configurationService.getSettings(undefined)).thenReturn({
             experiments: { enabled: true },
-        } as any) as IPythonSettings);
+        } as any as IPythonSettings);
 
         interpreterService = mock(InterpreterService);
 

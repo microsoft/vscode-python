@@ -40,7 +40,8 @@ Things we are ignoring the following for simplicity/performance:
 - Non-standard whitespace separators within the import statement (i.e. more than a single space, tabs)
 
 */
-const ImportRegEx = /^\s*(from (?<fromImport>\w+)(?:\.\w+)* import \w+(?:, \w+)*(?: as \w+)?|import (?<importImport>\w+(?:, \w+)*)(?: as \w+)?)$/;
+const ImportRegEx =
+    /^\s*(from (?<fromImport>\w+)(?:\.\w+)* import \w+(?:, \w+)*(?: as \w+)?|import (?<importImport>\w+(?:, \w+)*)(?: as \w+)?)$/;
 const MAX_DOCUMENT_LINES = 1000;
 
 // Capture isTestExecution on module load so that a test can turn it off and still

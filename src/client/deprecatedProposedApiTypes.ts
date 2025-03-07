@@ -58,9 +58,7 @@ export interface DeprecatedProposedAPI {
          * * When no resource is provided, the setting scoped to the first workspace folder is returned.
          * * If no folder is present, it returns the global setting.
          */
-        getExecutionDetails(
-            resource?: Resource,
-        ): Promise<{
+        getExecutionDetails(resource?: Resource): Promise<{
             /**
              * E.g of execution commands returned could be,
              * * `['<path to the interpreter set in settings>']`

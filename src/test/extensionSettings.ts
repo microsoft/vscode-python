@@ -36,7 +36,8 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
             return undefined;
         }
     }
-    const pythonSettings = require('../client/common/configSettings') as typeof import('../client/common/configSettings');
+    const pythonSettings =
+        require('../client/common/configSettings') as typeof import('../client/common/configSettings');
     const workspaceService = new WorkspaceService();
     const workspaceMemento = new MockMemento();
     const globalMemento = new MockMemento();

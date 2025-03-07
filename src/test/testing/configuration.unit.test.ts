@@ -498,7 +498,7 @@ suite('Unit Tests - ConfigurationService', () => {
                     .setup((c) => c.enable())
                     .returns(() => Promise.resolve())
                     .verifiable(typeMoq.Times.once());
-                const configManagersToVerify: typeof configMgr[] = [configMgr];
+                const configManagersToVerify: (typeof configMgr)[] = [configMgr];
 
                 await testConfigService.target.promptToEnableAndConfigureTestFramework(workspaceUri);
 

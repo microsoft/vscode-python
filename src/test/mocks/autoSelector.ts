@@ -14,7 +14,8 @@ import { PythonEnvironment } from '../../client/pythonEnvironments/info';
 
 @injectable()
 export class MockAutoSelectionService
-    implements IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService {
+    implements IInterpreterAutoSelectionService, IInterpreterAutoSelectionProxyService
+{
     // eslint-disable-next-line class-methods-use-this
     public async setWorkspaceInterpreter(_resource: Resource, _interpreter: PythonEnvironment): Promise<void> {
         return Promise.resolve();

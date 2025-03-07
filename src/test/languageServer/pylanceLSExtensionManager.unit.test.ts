@@ -29,11 +29,11 @@ suite('Language Server - Pylance LS extension manager', () => {
             {} as IInterpreterPathService,
             {} as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 registerCommand: () => {
                     /** do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
             {} as IExtensions,
             {} as IApplicationShell,
@@ -55,15 +55,15 @@ suite('Language Server - Pylance LS extension manager', () => {
             {} as IInterpreterPathService,
             {} as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 registerCommand: () => {
                     /** do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => ({}),
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
         );
 
@@ -82,15 +82,15 @@ suite('Language Server - Pylance LS extension manager', () => {
             {} as IInterpreterPathService,
             {} as IInterpreterService,
             {} as IEnvironmentVariablesProvider,
-            ({
+            {
                 registerCommand: () => {
                     /* do nothing */
                 },
-            } as unknown) as ICommandManager,
+            } as unknown as ICommandManager,
             {} as IFileSystem,
-            ({
+            {
                 getExtension: () => undefined,
-            } as unknown) as IExtensions,
+            } as unknown as IExtensions,
             {} as IApplicationShell,
         );
 
