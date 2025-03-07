@@ -462,6 +462,7 @@ export async function waitForCondition(
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
 
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearTimeout(timer);
             reject(new Error(errorMessage));
         }, timeoutMs);
