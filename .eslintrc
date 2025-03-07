@@ -10,7 +10,6 @@
         "no-only-tests"
     ],
     "extends": [
-        "airbnb",
         "plugin:@typescript-eslint/recommended",
         "plugin:import/errors",
         "plugin:import/warnings",
@@ -54,7 +53,7 @@
         "@typescript-eslint/no-var-requires": "off",
 
         // Other rules
-        "class-methods-use-this": ["error", {"exceptMethods": ["dispose"]}],
+        "class-methods-use-this": ["error", { "exceptMethods": ["dispose"] }],
         "func-names": "off",
         "import/extensions": "off",
         "import/namespace": "off",
@@ -101,6 +100,8 @@
         ],
         "operator-assignment": "off",
         "strict": "off",
-        "no-only-tests/no-only-tests": ["error", { "block": ["test", "suite"], "focus": ["only"] }]
+        "no-only-tests/no-only-tests": ["error", { "block": ["test", "suite"], "focus": ["only"] }],
+        "prefer-const": "off",
+        "import/no-named-as-default-member": "off"
     }
 }
