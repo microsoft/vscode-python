@@ -76,6 +76,7 @@ export class NativeRepl implements Disposable {
                     await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
                     this.pythonServer.dispose();
                     this.pythonServer = createPythonServer([this.interpreter.path as string], this.cwd);
+                    this.disposables.push(this.pythonServer);
                     if (this.replController) {
                         this.replController.dispose();
                     }
