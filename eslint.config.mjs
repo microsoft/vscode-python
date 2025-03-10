@@ -11,7 +11,7 @@ import noOnlyTests from 'eslint-plugin-no-only-tests';
 import prettier from 'eslint-config-prettier';
 import importPlugin from 'eslint-plugin-import';
 import js from '@eslint/js';
-import noBadGdprCommentPlugin from './.eslintplugin/no-bad-gdpr-comment.js'; // Ensure the path is correct
+import noBadGdprCommentPlugin from './.eslintplugin/no-bad-gdpr-comment.js';
 
 export default [
     {
@@ -274,7 +274,7 @@ export default [
             'no-only-tests': noOnlyTests,
             import: importPlugin,
             prettier: prettier,
-            'no-bad-gdpr-comment': noBadGdprCommentPlugin, // Register your plugin
+            'no-bad-gdpr-comment': noBadGdprCommentPlugin,
         },
         settings: {
             'import/resolver': {
@@ -284,7 +284,7 @@ export default [
             },
         },
         rules: {
-            'no-bad-gdpr-comment/no-bad-gdpr-comment': 'warn', // Enable your rule
+            'no-bad-gdpr-comment/no-bad-gdpr-comment': 'error',
             // Base configurations
             ...tseslint.configs.recommended.rules,
             ...prettier.rules,
