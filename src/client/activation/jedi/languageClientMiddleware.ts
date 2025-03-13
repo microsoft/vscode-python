@@ -8,6 +8,5 @@ import { LanguageServerType } from '../types';
 export class JediLanguageClientMiddleware extends LanguageClientMiddleware {
     public constructor(serviceContainer: IServiceContainer, serverVersion?: string) {
         super(serviceContainer, LanguageServerType.Jedi, serverVersion);
-        this.setupHidingMiddleware(serviceContainer);
     }
 }

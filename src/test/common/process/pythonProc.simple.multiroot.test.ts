@@ -6,9 +6,9 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { execFile } from 'child_process';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { ConfigurationTarget, Uri } from 'vscode';
+import * as fs from '../../../client/common/platform/fs-paths';
 import { IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
@@ -18,7 +18,7 @@ import { clearPythonPathInWorkspaceFolder } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from '../../initialize';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 const multirootPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc');
 const workspace4Path = Uri.file(path.join(multirootPath, 'workspace4'));

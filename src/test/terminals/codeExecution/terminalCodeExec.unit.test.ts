@@ -643,10 +643,10 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1');
-                terminalService.verify(async (t) => t.sendText('cmd1'), TypeMoq.Times.once());
+                terminalService.verify(async (t) => t.executeCommand('cmd1', true), TypeMoq.Times.once());
 
                 await executor.execute('cmd2');
-                terminalService.verify(async (t) => t.sendText('cmd2'), TypeMoq.Times.once());
+                terminalService.verify(async (t) => t.executeCommand('cmd2', true), TypeMoq.Times.once());
             });
 
             test('Ensure code is sent to the same terminal for a particular resource', async () => {
@@ -668,10 +668,10 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 await executor.execute('cmd1', resource);
-                terminalService.verify(async (t) => t.sendText('cmd1'), TypeMoq.Times.once());
+                terminalService.verify(async (t) => t.executeCommand('cmd1', true), TypeMoq.Times.once());
 
                 await executor.execute('cmd2', resource);
-                terminalService.verify(async (t) => t.sendText('cmd2'), TypeMoq.Times.once());
+                terminalService.verify(async (t) => t.executeCommand('cmd2', true), TypeMoq.Times.once());
             });
         });
     });

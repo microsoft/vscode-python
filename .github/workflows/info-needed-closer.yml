@@ -6,6 +6,9 @@ on:
     types: [trigger-needs-more-info]
   workflow_dispatch:
 
+permissions:
+  issues: write
+
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -21,6 +24,7 @@ jobs:
       - name: Run info-needed Closer
         uses: ./actions/needs-more-info-closer
         with:
+          token: ${{secrets.GITHUB_TOKEN}}
           label: info-needed
           closeDays: 30
           closeComment: "Because we have not heard back with the information we requested, we are closing this issue for now. If you are able to provide the info later on, then we will be happy to re-open this issue to pick up where we left off. \n\nHappy Coding!"

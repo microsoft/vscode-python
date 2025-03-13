@@ -37,8 +37,9 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { PythonEnvType } from '../../../client/pythonEnvironments/base/info';
 import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { IShellIntegrationService, ITerminalDeactivateService } from '../../../client/terminals/types';
+import { IShellIntegrationDetectionService, ITerminalDeactivateService } from '../../../client/terminals/types';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import * as extapi from '../../../client/envExt/api.internal';
 
 suite('Terminal Environment Variable Collection Service', () => {
     let platform: IPlatformService;
@@ -53,17 +54,21 @@ suite('Terminal Environment Variable Collection Service', () => {
     let workspaceService: IWorkspaceService;
     let terminalEnvVarCollectionService: TerminalEnvVarCollectionService;
     let terminalDeactivateService: ITerminalDeactivateService;
+    let useEnvExtensionStub: sinon.SinonStub;
     const progressOptions = {
         location: ProgressLocation.Window,
         title: Interpreters.activatingTerminals,
     };
     let configService: IConfigurationService;
-    let shellIntegrationService: IShellIntegrationService;
+    let shellIntegrationService: IShellIntegrationDetectionService;
     const displayPath = 'display/path';
     const customShell = 'powershell';
     const defaultShell = defaultShells[getOSType()];
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         workspaceService = mock<IWorkspaceService>();
         terminalDeactivateService = mock<ITerminalDeactivateService>();
         when(terminalDeactivateService.getScriptLocation(anything(), anything())).thenResolve(undefined);
@@ -76,7 +81,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         context = mock<IExtensionContext>();
         shell = mock<IApplicationShell>();
         const envVarProvider = mock<IEnvironmentVariablesProvider>();
-        shellIntegrationService = mock<IShellIntegrationService>();
+        shellIntegrationService = mock<IShellIntegrationDetectionService>();
         when(shellIntegrationService.isWorking()).thenResolve(true);
         globalCollection = mock<GlobalEnvironmentVariableCollection>();
         collection = mock<EnvironmentVariableCollection>();
@@ -134,7 +139,6 @@ suite('Terminal Environment Variable Collection Service', () => {
 
     test('When not in experiment, do not apply activated variables to the collection and clear it instead', async () => {
         reset(experimentService);
-        when(context.environmentVariableCollection).thenReturn(instance(collection));
         when(experimentService.inExperimentSync(TerminalEnvVarActivation.experiment)).thenReturn(false);
         const applyCollectionStub = sinon.stub(terminalEnvVarCollectionService, '_applyCollection');
         applyCollectionStub.resolves();
@@ -147,7 +151,7 @@ suite('Terminal Environment Variable Collection Service', () => {
         verify(applicationEnvironment.onDidChangeShell(anything(), anything(), anything())).never();
         assert(applyCollectionStub.notCalled, 'Collection should not be applied on activation');
 
-        verify(collection.clear()).atLeast(1);
+        verify(globalCollection.clear()).atLeast(1);
     });
 
     test('When interpreter changes, apply new activated variables to the collection', async () => {

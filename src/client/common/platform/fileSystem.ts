@@ -333,7 +333,7 @@ export class FileSystemUtils implements IFileSystemUtils {
             pathUtils.paths,
             tmp || TemporaryFileSystem.withDefaults(),
             getHash || getHashString,
-            globFiles || promisify(glob),
+            globFiles || promisify(glob.default),
         );
     }
 

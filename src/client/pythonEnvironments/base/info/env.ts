@@ -42,6 +42,12 @@ export function buildEnvInfo(init?: {
     sysPrefix?: string;
     searchLocation?: Uri;
     type?: PythonEnvType;
+    /**
+     * Command used to run Python in this environment.
+     * E.g. `conda run -n envName python` or `python.exe`
+     */
+    pythonRunCommand?: string[];
+    identifiedUsingNativeLocator?: boolean;
 }): PythonEnvInfo {
     const env: PythonEnvInfo = {
         name: init?.name ?? '',
@@ -69,6 +75,8 @@ export function buildEnvInfo(init?: {
             org: init?.org ?? '',
         },
         source: init?.source ?? [],
+        pythonRunCommand: init?.pythonRunCommand,
+        identifiedUsingNativeLocator: init?.identifiedUsingNativeLocator,
     };
     if (init !== undefined) {
         updateEnv(env, init);
@@ -276,13 +284,19 @@ export function areSameEnv(
     if (leftInfo === undefined || rightInfo === undefined) {
         return undefined;
     }
-    const leftFilename = leftInfo.executable!.filename;
-    const rightFilename = rightInfo.executable!.filename;
-
+    if (
+        (leftInfo.executable?.filename && !rightInfo.executable?.filename) ||
+        (!leftInfo.executable?.filename && rightInfo.executable?.filename)
+    ) {
+        return false;
+    }
     if (leftInfo.id && leftInfo.id === rightInfo.id) {
         // In case IDs are available, use it.
         return true;
     }
+
+    const leftFilename = leftInfo.executable!.filename;
+    const rightFilename = rightInfo.executable!.filename;
 
     if (getEnvID(leftFilename, leftInfo.location) === getEnvID(rightFilename, rightInfo.location)) {
         // Otherwise use ID function to get the ID. Note ID returned by function may itself change if executable of

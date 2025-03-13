@@ -8,7 +8,6 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 
-import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
 import { IApplicationEnvironment } from '../../../client/common/application/types';
@@ -27,6 +26,7 @@ import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockMemento } from '../../mocks/mementos';
+import { untildify } from '../../../client/common/helpers';
 
 suite('Python Settings', async () => {
     class CustomPythonSettings extends PythonSettings {
@@ -83,6 +83,7 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
+            'pixiToolPath',
             'defaultInterpreterPath',
         ]) {
             config
@@ -141,6 +142,7 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
+            'pixiToolPath',
             'defaultInterpreterPath',
         ].forEach(async (settingName) => {
             testIfValueIsUpdated(settingName, 'stringValue');

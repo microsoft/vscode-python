@@ -2,8 +2,9 @@
 # Licensed under the MIT License.
 
 import os
-from unittestadapter.pvsc_utils import TestNodeTypeEnum
 import pathlib
+
+from unittestadapter.pvsc_utils import TestNodeTypeEnum
 
 TEST_DATA_PATH = pathlib.Path(__file__).parent / ".data"
 

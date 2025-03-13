@@ -11,7 +11,7 @@ import {
     EnvironmentVariableMutatorOptions,
     ProgressLocation,
 } from 'vscode';
-import { pathExists } from 'fs-extra';
+import { pathExists, normCase } from '../../common/platform/fs-paths';
 import { IExtensionActivationService } from '../../activation/types';
 import { IApplicationShell, IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { inTerminalEnvVarExperiment } from '../../common/experiments/helpers';
@@ -35,10 +35,15 @@ import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { TerminalShellType } from '../../common/terminal/types';
 import { OSType } from '../../common/utils/platform';
-import { normCase } from '../../common/platform/fs-paths';
+
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
-import { IShellIntegrationService, ITerminalDeactivateService, ITerminalEnvVarCollectionService } from '../types';
+import {
+    IShellIntegrationDetectionService,
+    ITerminalDeactivateService,
+    ITerminalEnvVarCollectionService,
+} from '../types';
 import { ProgressService } from '../../common/application/progressService';
+import { useEnvExtension } from '../../envExt/api.internal';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
@@ -80,7 +85,8 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ITerminalDeactivateService) private readonly terminalDeactivateService: ITerminalDeactivateService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(IShellIntegrationService) private readonly shellIntegrationService: IShellIntegrationService,
+        @inject(IShellIntegrationDetectionService)
+        private readonly shellIntegrationDetectionService: IShellIntegrationDetectionService,
         @inject(IEnvironmentVariablesProvider)
         private readonly environmentVariablesProvider: IEnvironmentVariablesProvider,
     ) {
@@ -113,7 +119,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this,
                     this.disposables,
                 );
-                this.shellIntegrationService.onDidChangeStatus(
+                this.shellIntegrationDetectionService.onDidChangeStatus(
                     async () => {
                         traceInfo("Shell integration status changed, can confirm it's working.");
                         await this._applyCollection(undefined).ignoreErrors();
@@ -139,7 +145,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     this.disposables,
                 );
                 const { shell } = this.applicationEnvironment;
-                const isActive = await this.shellIntegrationService.isWorking();
+                const isActive = await this.shellIntegrationDetectionService.isWorking();
                 const shellType = identifyShellFromShellPath(shell);
                 if (!isActive && shellType !== TerminalShellType.commandPrompt) {
                     traceWarn(
@@ -170,6 +176,12 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         const workspaceFolder = this.getWorkspaceFolder(resource);
         const settings = this.configurationService.getSettings(resource);
         const envVarCollection = this.getEnvironmentVariableCollection({ workspaceFolder });
+        if (useEnvExtension()) {
+            envVarCollection.clear();
+            traceVerbose('Do not activate terminal env vars as env extension is being used');
+            return;
+        }
+
         if (!settings.terminal.activateEnvironment) {
             envVarCollection.clear();
             traceVerbose('Activating environments in terminal is disabled for', resource?.fsPath);
@@ -328,7 +340,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                 // PS1 should be set but no PS1 was set.
                 return;
             }
-            const config = await this.shellIntegrationService.isWorking();
+            const config = await this.shellIntegrationDetectionService.isWorking();
             if (!config) {
                 traceVerbose('PS1 is not set when shell integration is disabled.');
                 return;
@@ -366,6 +378,11 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         try {
             const settings = this.configurationService.getSettings(resource);
             const workspaceFolder = this.getWorkspaceFolder(resource);
+            if (useEnvExtension()) {
+                this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
+                traceVerbose('Do not activate microvenv as env extension is being used');
+                return;
+            }
             if (!settings.terminal.activateEnvironment) {
                 this.getEnvironmentVariableCollection({ workspaceFolder }).clear();
                 traceVerbose(
@@ -395,7 +412,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     }
 
     private async getPrependOptions(): Promise<EnvironmentVariableMutatorOptions> {
-        const isActive = await this.shellIntegrationService.isWorking();
+        const isActive = await this.shellIntegrationDetectionService.isWorking();
         // Ideally we would want to prepend exactly once, either at shell integration or process creation.
         // TODO: Stop prepending altogether once https://github.com/microsoft/vscode/issues/145234 is available.
         return isActive
@@ -455,6 +472,7 @@ function shouldSkip(env: string) {
         'PYTHONUTF8',
         // We have deactivate service which takes care of setting it.
         '_OLD_VIRTUAL_PATH',
+        'PWD',
     ].includes(env);
 }
 

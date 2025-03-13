@@ -13,10 +13,6 @@ import { BaseShellDetector } from './baseShellDetector';
 
 /**
  * Identifies the shell based on the user settings.
- *
- * @export
- * @class SettingsShellDetector
- * @extends {BaseShellDetector}
  */
 @injectable()
 export class SettingsShellDetector extends BaseShellDetector {

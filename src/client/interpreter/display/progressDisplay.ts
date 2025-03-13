@@ -17,7 +17,7 @@ import { IComponentAdapter } from '../contracts';
 
 // The parts of IComponentAdapter used here.
 @injectable()
-export class InterpreterLocatorProgressStatubarHandler implements IExtensionSingleActivationService {
+export class InterpreterLocatorProgressStatusBarHandler implements IExtensionSingleActivationService {
     public readonly supportedWorkspaceTypes = { untrustedWorkspace: false, virtualWorkspace: true };
 
     private deferred: Deferred<void> | undefined;
@@ -39,6 +39,8 @@ export class InterpreterLocatorProgressStatubarHandler implements IExtensionSing
                     if (refreshPromise) {
                         refreshPromise.then(() => this.hideProgress());
                     }
+                } else if (event.stage === ProgressReportStage.discoveryFinished) {
+                    this.hideProgress();
                 }
             },
             this,

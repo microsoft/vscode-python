@@ -1,7 +1,7 @@
 import { expect, should as chaiShould, use as chaiUse } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
-import { instance, mock, when } from 'ts-mockito';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
@@ -13,7 +13,6 @@ import { CommandManager } from '../../client/common/application/commandManager';
 import { ReloadVSCodeCommandHandler } from '../../client/common/application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from '../../client/common/application/commands/reportIssueCommand';
 import { DebugService } from '../../client/common/application/debugService';
-import { DebugSessionTelemetry } from '../../client/common/application/debugSessionTelemetry';
 import { DocumentManager } from '../../client/common/application/documentManager';
 import { Extensions } from '../../client/common/application/extensions';
 import {
@@ -101,8 +100,9 @@ import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { closeActiveWindows, initializeTest } from '../initialize';
+import { createTypeMoq } from '../mocks/helper';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -149,8 +149,8 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
             ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
 
-            mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
-            mockTerminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
+            mockTerminalService = createTypeMoq<ITerminalService>();
+            mockTerminalFactory = createTypeMoq<ITerminalServiceFactory>();
             // If resource is provided, then ensure we do not invoke without the resource.
             mockTerminalFactory
                 .setup((t) => t.getTerminalService(TypeMoq.It.isAny()))
@@ -160,11 +160,13 @@ suite('Module Installer', () => {
                 ITerminalServiceFactory,
                 mockTerminalFactory.object,
             );
-            const activatedEnvironmentLaunch = mock<IActivatedEnvironmentLaunch>();
-            when(activatedEnvironmentLaunch.selectIfLaunchedViaActivatedEnv()).thenResolve(undefined);
+            const activatedEnvironmentLaunch = createTypeMoq<IActivatedEnvironmentLaunch>();
+            activatedEnvironmentLaunch
+                .setup((t) => t.selectIfLaunchedViaActivatedEnv())
+                .returns(() => Promise.resolve(undefined));
             ioc.serviceManager.addSingletonInstance<IActivatedEnvironmentLaunch>(
                 IActivatedEnvironmentLaunch,
-                instance(activatedEnvironmentLaunch),
+                activatedEnvironmentLaunch.object,
             );
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller);
             ioc.serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, CondaInstaller);
@@ -182,10 +184,10 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
 
             await ioc.registerMockInterpreterTypes();
-            condaService = TypeMoq.Mock.ofType<ICondaService>();
-            condaLocatorService = TypeMoq.Mock.ofType<IComponentAdapter>();
+            condaService = createTypeMoq<ICondaService>();
+            condaLocatorService = createTypeMoq<IComponentAdapter>();
             ioc.serviceManager.rebindInstance<ICondaService>(ICondaService, condaService.object);
-            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            interpreterService = createTypeMoq<IInterpreterService>();
             ioc.serviceManager.rebindInstance<IInterpreterService>(IInterpreterService, interpreterService.object);
 
             ioc.serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
@@ -256,10 +258,6 @@ suite('Module Installer', () => {
                 IExtensionSingleActivationService,
                 ReportIssueCommandHandler,
             );
-            ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
-                IExtensionSingleActivationService,
-                DebugSessionTelemetry,
-            );
         }
         test('Ensure pip is supported and conda is not', async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
@@ -267,10 +265,8 @@ suite('Module Installer', () => {
                 new MockModuleInstaller('mock', true),
             );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-
-            const processService = (await ioc.serviceContainer
-                .get<IProcessServiceFactory>(IProcessServiceFactory)
-                .create()) as MockProcessService;
+            const factory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
+            const processService = (await factory.create()) as MockProcessService;
             processService.onExec((file, args, _options, callback) => {
                 if (args.length > 1 && args[0] === '-c' && args[1] === 'import pip') {
                     callback({ stdout: '' });
@@ -321,13 +317,13 @@ suite('Module Installer', () => {
             await expect(pipInstaller.isSupported()).to.eventually.equal(true, 'Pip is not supported');
         });
         test('Ensure conda is supported', async () => {
-            const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            const serviceContainer = createTypeMoq<IServiceContainer>();
 
-            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+            const configService = createTypeMoq<IConfigurationService>();
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                 .returns(() => configService.object);
-            const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+            const settings = createTypeMoq<IPythonSettings>();
             const pythonPath = 'pythonABC';
             settings.setup((s) => s.pythonPath).returns(() => pythonPath);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -347,13 +343,13 @@ suite('Module Installer', () => {
             await expect(condaInstaller.isSupported()).to.eventually.equal(true, 'Conda is not supported');
         });
         test('Ensure conda is not supported even if conda is available', async () => {
-            const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            const serviceContainer = createTypeMoq<IServiceContainer>();
 
-            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+            const configService = createTypeMoq<IConfigurationService>();
             serviceContainer
                 .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                 .returns(() => configService.object);
-            const settings = TypeMoq.Mock.ofType<IPythonSettings>();
+            const settings = createTypeMoq<IPythonSettings>();
             const pythonPath = 'pythonABC';
             settings.setup((s) => s.pythonPath).returns(() => pythonPath);
             configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);

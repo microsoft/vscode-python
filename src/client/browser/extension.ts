@@ -108,7 +108,7 @@ async function runPylance(
             middleware,
         };
 
-        const client = new LanguageClient('python', 'Python Language Server', clientOptions, worker);
+        const client = new LanguageClient('python', 'Python Language Server', worker, clientOptions);
         languageClient = client;
 
         context.subscriptions.push(
@@ -139,7 +139,7 @@ async function runPylance(
 
         await client.start();
     } catch (e) {
-        console.log(e);
+        console.log(e); // necessary to use console.log for browser
     }
 }
 
@@ -200,7 +200,7 @@ function sendTelemetryEventBrowser(
                         break;
                 }
             } catch (exception) {
-                console.error(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${eventName}`, exception); // necessary to use console.log for browser
             }
         });
     }

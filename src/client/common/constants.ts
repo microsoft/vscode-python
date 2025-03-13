@@ -42,26 +42,27 @@ export namespace Commands {
     export const Create_Environment_Check = 'python.createEnvironmentCheck';
     export const Create_Terminal = 'python.createTerminal';
     export const Debug_In_Terminal = 'python.debugInTerminal';
-    export const Enable_SourceMap_Support = 'python.enableSourceMapSupport';
     export const Exec_In_Terminal = 'python.execInTerminal';
     export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_In_Separate_Terminal = 'python.execInDedicatedTerminal';
     export const Exec_In_REPL = 'python.execInREPL';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
+    export const Exec_In_REPL_Enter = 'python.execInREPLEnter';
+    export const Exec_In_IW_Enter = 'python.execInInteractiveWindowEnter';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const GetSelectedInterpreterPath = 'python.interpreterPath';
     export const InstallJupyter = 'python.installJupyter';
     export const InstallPython = 'python.installPython';
     export const InstallPythonOnLinux = 'python.installPythonOnLinux';
     export const InstallPythonOnMac = 'python.installPythonOnMac';
-    export const LaunchTensorBoard = 'python.launchTensorBoard';
     export const PickLocalProcess = 'python.pickLocalProcess';
-    export const RefreshTensorBoard = 'python.refreshTensorBoard';
     export const ReportIssue = 'python.reportIssue';
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Start_REPL = 'python.startREPL';
+    export const Start_Native_REPL = 'python.startNativeREPL';
     export const Tests_Configure = 'python.configureTests';
+    export const Tests_CopilotSetup = 'python.copilotSetupTests';
     export const TriggerEnvironmentSelection = 'python.triggerEnvSelection';
     export const ViewOutput = 'python.viewOutput';
 }
@@ -107,8 +108,6 @@ export function isTestExecution(): boolean {
 /**
  * Whether we're running unit tests (*.unit.test.ts).
  * These tests have a special meaning, they run fast.
- * @export
- * @returns {boolean}
  */
 export function isUnitTestExecution(): boolean {
     return process.env.VSC_PYTHON_UNIT_TEST === '1';

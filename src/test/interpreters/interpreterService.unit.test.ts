@@ -36,10 +36,12 @@ import { ServiceManager } from '../../client/ioc/serviceManager';
 import { PYTHON_PATH } from '../common';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import * as proposedApi from '../../client/environmentApi';
+import { createTypeMoq } from '../mocks/helper';
+import * as extapi from '../../client/envExt/api.internal';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Interpreters service', () => {
     let serviceManager: ServiceManager;
@@ -61,29 +63,33 @@ suite('Interpreters service', () => {
     let installer: TypeMoq.IMock<IInstaller>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     let reportActiveInterpreterChangedStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         const cont = new Container();
         serviceManager = new ServiceManager(cont);
         serviceContainer = new ServiceContainer(cont);
 
-        interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
-        updater = TypeMoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
-        pyenvs = TypeMoq.Mock.ofType<IComponentAdapter>();
-        helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
-        workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        config = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
-        persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
-        pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
-        configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        installer = TypeMoq.Mock.ofType<IInstaller>();
-        appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        experiments = TypeMoq.Mock.ofType<IExperimentService>();
+        interpreterPathService = createTypeMoq<IInterpreterPathService>();
+        updater = createTypeMoq<IPythonPathUpdaterServiceManager>();
+        pyenvs = createTypeMoq<IComponentAdapter>();
+        helper = createTypeMoq<IInterpreterHelper>();
+        workspace = createTypeMoq<IWorkspaceService>();
+        config = createTypeMoq<WorkspaceConfiguration>();
+        fileSystem = createTypeMoq<IFileSystem>();
+        interpreterDisplay = createTypeMoq<IInterpreterDisplay>();
+        persistentStateFactory = createTypeMoq<IPersistentStateFactory>();
+        pythonExecutionFactory = createTypeMoq<IPythonExecutionFactory>();
+        pythonExecutionService = createTypeMoq<IPythonExecutionService>();
+        configService = createTypeMoq<IConfigurationService>();
+        installer = createTypeMoq<IInstaller>();
+        appShell = createTypeMoq<IApplicationShell>();
+        experiments = createTypeMoq<IExperimentService>();
 
-        pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+        pythonSettings = createTypeMoq<IPythonSettings>();
         pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
         configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
@@ -166,7 +172,7 @@ suite('Interpreters service', () => {
 
     test('Changes to active document should invoke interpreter.refresh method', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
-        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const documentManager = createTypeMoq<IDocumentManager>();
 
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e: TextEditor | undefined) => any | undefined;
@@ -179,9 +185,9 @@ suite('Interpreters service', () => {
         serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
         service.initialize();
-        const textEditor = TypeMoq.Mock.ofType<TextEditor>();
+        const textEditor = createTypeMoq<TextEditor>();
         const uri = Uri.file(path.join('usr', 'file.py'));
-        const document = TypeMoq.Mock.ofType<TextDocument>();
+        const document = createTypeMoq<TextDocument>();
         textEditor.setup((t) => t.document).returns(() => document.object);
         document.setup((d) => d.uri).returns(() => uri);
         activeTextEditorChangeHandler!(textEditor.object);
@@ -191,7 +197,7 @@ suite('Interpreters service', () => {
 
     test('If there is no active document then interpreter.refresh should not be invoked', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
-        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const documentManager = createTypeMoq<IDocumentManager>();
 
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let activeTextEditorChangeHandler: (e?: TextEditor | undefined) => any | undefined;
@@ -211,7 +217,7 @@ suite('Interpreters service', () => {
 
     test('Register the correct handler', async () => {
         const service = new InterpreterService(serviceContainer, pyenvs.object);
-        const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
+        const documentManager = createTypeMoq<IDocumentManager>();
 
         workspace.setup((w) => w.workspaceFolders).returns(() => [{ uri: '' }] as any);
         let interpreterPathServiceHandler: (e: InterpreterConfigurationScope) => any | undefined = () => 0;

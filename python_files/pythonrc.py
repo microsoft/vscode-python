@@ -1,12 +1,15 @@
+import platform
 import sys
 
 if sys.platform != "win32":
     import readline
 
 original_ps1 = ">>> "
+use_shell_integration = sys.version_info < (3, 13)
+is_wsl = "microsoft-standard-WSL" in platform.release()
 
 
-class repl_hooks:
+class REPLHooks:
     def __init__(self):
         self.global_exit = None
         self.failure_flag = False
@@ -21,11 +24,11 @@ class repl_hooks:
 
         self.original_displayhook(value)
 
-    def my_excepthook(self, type, value, traceback):
+    def my_excepthook(self, type_, value, traceback):
         self.global_exit = value
         self.failure_flag = True
 
-        self.original_excepthook(type, value, traceback)
+        self.original_excepthook(type_, value, traceback)
 
 
 def get_last_command():
@@ -37,18 +40,14 @@ def get_last_command():
     return last_command
 
 
-class ps1:
-    hooks = repl_hooks()
+class PS1:
+    hooks = REPLHooks()
     sys.excepthook = hooks.my_excepthook
     sys.displayhook = hooks.my_displayhook
 
     # str will get called for every prompt with exit code to show success/failure
     def __str__(self):
-        exit_code = 0
-        if self.hooks.failure_flag:
-            exit_code = 1
-        else:
-            exit_code = 0
+        exit_code = int(bool(self.hooks.failure_flag))
         self.hooks.failure_flag = False
         # Guide following official VS Code doc for shell integration sequence:
         result = ""
@@ -76,5 +75,10 @@ class ps1:
         return result
 
 
-if sys.platform != "win32":
-    sys.ps1 = ps1()
+if sys.platform != "win32" and (not is_wsl) and use_shell_integration:
+    sys.ps1 = PS1()
+
+if sys.platform == "darwin":
+    print("Cmd click to launch VS Code Native REPL")
+else:
+    print("Ctrl click to launch VS Code Native REPL")

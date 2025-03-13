@@ -16,6 +16,7 @@ export enum PythonEnvKind {
     Pyenv = 'global-pyenv',
     Poetry = 'poetry',
     Hatch = 'hatch',
+    Pixi = 'pixi',
     ActiveState = 'activestate',
     Custom = 'global-custom',
     OtherGlobal = 'global-other',
@@ -46,6 +47,7 @@ export interface EnvPathType {
 export const virtualEnvKinds = [
     PythonEnvKind.Poetry,
     PythonEnvKind.Hatch,
+    PythonEnvKind.Pixi,
     PythonEnvKind.Pipenv,
     PythonEnvKind.Venv,
     PythonEnvKind.VirtualEnvWrapper,
@@ -203,6 +205,12 @@ export type PythonEnvInfo = _PythonEnvInfo & {
     display?: string;
     detailedDisplayName?: string;
     searchLocation?: Uri;
+    /**
+     * Command used to run Python in this environment.
+     * E.g. `conda run -n envName python` or `python.exe`
+     */
+    pythonRunCommand?: string[];
+    identifiedUsingNativeLocator?: boolean;
 };
 
 /**

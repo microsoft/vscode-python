@@ -14,7 +14,7 @@ import { TestConfigurationManagerFactory } from '../../client/testing/configurat
 import * as pytest from '../../client/testing/configuration/pytest/testConfigurationManager';
 import * as unittest from '../../client/testing/configuration/unittest/testConfigurationManager';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Unit Tests - ConfigurationManagerFactory', () => {
     let factory: ITestConfigurationManagerFactory;

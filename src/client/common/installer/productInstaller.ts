@@ -43,7 +43,7 @@ export { Product } from '../types';
 // Installer implementations can check this to determine a suitable installation channel for a product
 // This is temporary and can be removed when https://github.com/microsoft/vscode-jupyter/issues/5034 is unblocked
 const UnsupportedChannelsForProduct = new Map<Product, Set<EnvironmentType>>([
-    [Product.torchProfilerInstallName, new Set([EnvironmentType.Conda])],
+    [Product.torchProfilerInstallName, new Set([EnvironmentType.Conda, EnvironmentType.Pixi])],
 ]);
 
 abstract class BaseInstaller implements IBaseInstaller {

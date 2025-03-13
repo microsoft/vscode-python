@@ -25,10 +25,42 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src/client
+
+    buildPlatforms:
+      - name: Linux
+        vsceTarget: 'web'
+      - name: Linux
+        packageArch: arm64
+        vsceTarget: linux-arm64
+      - name: Linux
+        packageArch: arm
+        vsceTarget: linux-armhf
+      - name: Linux
+        packageArch: x64
+        vsceTarget: linux-x64
+      - name: Linux
+        packageArch: arm64
+        vsceTarget: alpine-arm64
+      - name: Linux
+        packageArch: x64
+        vsceTarget: alpine-x64
+      - name: MacOS
+        packageArch: arm64
+        vsceTarget: darwin-arm64
+      - name: MacOS
+        packageArch: x64
+        vsceTarget: darwin-x64
+      - name: Windows
+        packageArch: arm
+        vsceTarget: win32-arm64
+      - name: Windows
+        packageArch: x64
+        vsceTarget: win32-x64
+
     buildSteps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '18.17.1'
+          versionSpec: '20.18.0'
         displayName: Select Node version
 
       - task: UsePythonVersion@0
@@ -38,35 +70,58 @@ extends:
           architecture: 'x64'
         displayName: Select Python version
 
-      - script: npm ci
-        displayName: Install NPM dependencies
-
       - script: python -m pip install -U pip
         displayName: Upgrade pip
 
       - script: python -m pip install wheel nox
         displayName: Install wheel and nox
 
-      - script: |
-          nox --session install_python_libs
-        displayName: Install debugpy, Jedi, get-pip, etc
+      - script: npm ci
+        displayName: Install NPM dependencies
 
-      - script: |
-          python ./build/update_ext_version.py --release --for-publishing
-        displayName: Update build number
+      - script: nox --session install_python_libs
+        displayName: Install Jedi, get-pip, etc
 
-      - script: |
-          python ./build/update_package_file.py
+      - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
 
       - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
 
-      - script: gulp prePublishBundle
+      - script: npx gulp prePublishBundle
         displayName: Build
+
+      - bash: |
+            mkdir -p $(Build.SourcesDirectory)/python-env-tools/bin
+            chmod +x $(Build.SourcesDirectory)/python-env-tools/bin
+        displayName: Make Directory for python-env-tool binary
+
+      - task: DownloadPipelineArtifact@2
+        inputs:
+            buildType: 'specific'
+            project: 'Monaco'
+            definition: 593
+            buildVersionToDownload: 'latestFromBranch'
+            branchName: 'refs/heads/release/2025.2'
+            targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
+            artifactName: 'bin-$(vsceTarget)'
+            itemPattern: |
+              pet.exe
+              pet
+              ThirdPartyNotices.txt
+
+      - bash: |
+            ls -lf ./python-env-tools/bin
+            chmod +x ./python-env-tools/bin/pet*
+            ls -lf ./python-env-tools/bin
+        displayName: Set chmod for pet binary
+
+      - script: python -c "import shutil; shutil.rmtree('.nox', ignore_errors=True)"
+        displayName: Clean up Nox
     tsa:
         config:
             areaPath: 'Visual Studio Code Python Extensions'
             serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
         enabled: true
+    apiScanDependentPipelineId: '593' # python-environment-tools
     apiScanSoftwareVersion: '2024'

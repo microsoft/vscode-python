@@ -1,58 +1,38 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import json
 import os
 import pathlib
 import sys
 import traceback
 import unittest
-from typing import List, Optional, Union
+from typing import List, Optional
 
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
-sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from typing_extensions import Literal, NotRequired, TypedDict  # noqa: E402
-
-from testing_tools import socket_manager  # noqa: E402
+from django_handler import django_discovery_runner  # noqa: E402
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402
-    TestNode,
+    DiscoveryPayloadDict,
+    VSCodeUnittestError,
     build_test_tree,
     parse_unittest_args,
+    send_post_request,
 )
-
-DEFAULT_PORT = 45454
-
-
-class PayloadDict(TypedDict):
-    cwd: str
-    status: Literal["success", "error"]
-    tests: Optional[TestNode]
-    error: NotRequired[List[str]]
-
-
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
-
-    command_type: Union[Literal["discovery"], Literal["execution"]]
-    eot: bool
 
 
 def discover_tests(
     start_dir: str,
     pattern: str,
     top_level_dir: Optional[str],
-    uuid: Optional[str],
-) -> PayloadDict:
+) -> DiscoveryPayloadDict:
     """Returns a dictionary containing details of the discovered tests.
 
     The returned dict has the following keys:
 
     - cwd: Absolute path to the test start directory;
-    - uuid: UUID sent by the caller of the Python script, that needs to be sent back as an integrity check;
     - status: Test discovery status, can be "success" or "error";
     - tests: Discoverered tests if any, not present otherwise. Note that the status can be "error" but the payload can still contain tests;
     - error: Discovery error if any, not present otherwise.
@@ -77,13 +57,13 @@ def discover_tests(
         "status": "error",
     }
     """
-    cwd = os.path.abspath(start_dir)
+    cwd = os.path.abspath(start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
-        parent_dir = os.path.dirname(start_dir)
+        parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
         sys.path.insert(0, parent_dir)
     else:
         sys.path.insert(0, cwd)
-    payload: PayloadDict = {"cwd": cwd, "status": "success", "tests": None}
+    payload: DiscoveryPayloadDict = {"cwd": cwd, "status": "success", "tests": None}
     tests = None
     error: List[str] = []
 
@@ -96,7 +76,7 @@ def discover_tests(
             top_level_dir = start_dir
 
         # Get abspath of top level directory for build_test_tree.
-        top_level_dir = os.path.abspath(top_level_dir)
+        top_level_dir = os.path.abspath(top_level_dir)  # noqa: PTH100
 
         tests, error = build_test_tree(suite, top_level_dir)  # test tree built successfully here.
 
@@ -114,24 +94,6 @@ def discover_tests(
     return payload
 
 
-def post_response(payload: Union[PayloadDict, EOTPayloadDict], port: int, uuid: str) -> None:
-    # Build the request data (it has to be a POST request or the Node side will not process it), and send it.
-    addr = ("localhost", port)
-    data = json.dumps(payload)
-    request = f"""Content-Length: {len(data)}
-Content-Type: application/json
-Request-uuid: {uuid}
-
-{data}"""
-    try:
-        with socket_manager.SocketManager(addr) as s:
-            if s.socket is not None:
-                s.socket.sendall(request.encode("utf-8"))
-    except Exception as e:
-        print(f"Error sending response: {e}")
-        print(f"Request data: {request}")
-
-
 if __name__ == "__main__":
     # Get unittest discovery arguments.
     argv = sys.argv[1:]
@@ -146,23 +108,32 @@ if __name__ == "__main__":
         _locals,
     ) = parse_unittest_args(argv[index + 1 :])
 
-    testPort = int(os.environ.get("TEST_PORT", DEFAULT_PORT))
-    testUuid = os.environ.get("TEST_UUID")
-    if testPort is DEFAULT_PORT:
-        print(
-            "Error[vscode-unittest]: TEST_PORT is not set.",
-            " TEST_UUID = ",
-            testUuid,
+    test_run_pipe = os.getenv("TEST_RUN_PIPE")
+    if not test_run_pipe:
+        error_msg = (
+            "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
+            "Please confirm this environment variable is not being changed or removed "
+            "as it is required for successful test discovery and execution."
+            f"TEST_RUN_PIPE = {test_run_pipe}\n"
         )
-    if testUuid is not None:
-        # Perform test discovery.
-        payload = discover_tests(start_dir, pattern, top_level_dir, testUuid)
-        # Post this discovery payload.
-        post_response(payload, testPort, testUuid)
-        # Post EOT token.
-        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-        post_response(eot_payload, testPort, testUuid)
+        print(error_msg, file=sys.stderr)
+        raise VSCodeUnittestError(error_msg)
+
+    if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
+        # Django configuration requires manage.py path to enable.
+        print(
+            f"MANAGE_PY_PATH is set, running Django discovery with path to manage.py as: ${manage_py_path}"
+        )
+        try:
+            # collect args for Django discovery runner.
+            args = argv[index + 1 :] or []
+            django_discovery_runner(manage_py_path, args)
+        except Exception as e:
+            error_msg = f"Error configuring Django test runner: {e}"
+            print(error_msg, file=sys.stderr)
+            raise VSCodeUnittestError(error_msg)  # noqa: B904
     else:
-        print("Error: no uuid provided or parsed.")
-        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-        post_response(eot_payload, testPort, "")
+        # Perform regular unittest test discovery.
+        payload = discover_tests(start_dir, pattern, top_level_dir)
+        # Post this discovery payload.
+        send_post_request(payload, test_run_pipe)

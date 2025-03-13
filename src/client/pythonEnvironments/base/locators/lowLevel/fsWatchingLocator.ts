@@ -6,7 +6,7 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { FileChangeType, watchLocationForPattern } from '../../../../common/platform/fileSystemWatcher';
 import { sleep } from '../../../../common/utils/async';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceVerbose, traceWarn } from '../../../../logging';
 import { getEnvironmentDirFromPath } from '../../../common/commonUtils';
 import {
     PythonEnvStructure,
@@ -32,13 +32,13 @@ function checkDirWatchable(dirname: string): DirUnwatchableReason {
         names = fs.readdirSync(dirname);
     } catch (err) {
         const exception = err as NodeJS.ErrnoException;
-        traceError('Reading directory to watch failed', exception);
+        traceVerbose('Reading directory failed', exception);
         if (exception.code === 'ENOENT') {
             // Treat a missing directory as unwatchable since it can lead to CPU load issues:
             // https://github.com/microsoft/vscode-python/issues/18459
             return 'directory does not exist';
         }
-        throw err; // re-throw
+        return undefined;
     }
     // The limit here is an educated guess.
     if (names.length > 200) {
@@ -117,7 +117,7 @@ export abstract class FSWatchingLocator extends LazyResourceBasedLocator {
             // that might be watched due to a glob are not checked.
             const unwatchable = await checkDirWatchable(root);
             if (unwatchable) {
-                traceError(`Dir "${root}" is not watchable (${unwatchable})`);
+                traceWarn(`Dir "${root}" is not watchable (${unwatchable})`);
                 return undefined;
             }
             return root;

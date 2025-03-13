@@ -3,7 +3,7 @@
 
 'use strict';
 
-import * as fsapi from 'fs-extra';
+import * as fsapi from '../../client/common/platform/fs-paths';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import { parseTree } from '../../client/common/utils/text';

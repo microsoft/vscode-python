@@ -24,7 +24,7 @@ import {
     CreateEnvironmentResult,
 } from '../../../../client/pythonEnvironments/creation/proposed.createEnvApis';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 suite('Conda Creation provider tests', () => {
     let condaProvider: CreateEnvironmentProvider;
@@ -166,6 +166,7 @@ suite('Conda Creation provider tests', () => {
                 out: {
                     subscribe: (
                         _next?: (value: Output<string>) => void,
+                        // eslint-disable-next-line no-shadow
                         error?: (error: unknown) => void,
                         complete?: () => void,
                     ) => {

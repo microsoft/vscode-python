@@ -27,11 +27,4 @@ declare module 'vscode' {
          */
         getScoped(scope: EnvironmentVariableScope): EnvironmentVariableCollection;
     }
-
-    export type EnvironmentVariableScope = {
-        /**
-         * Any specific workspace folder to get collection for. If unspecified, collection applicable to all workspace folders is returned.
-         */
-        workspaceFolder?: WorkspaceFolder;
-    };
 }

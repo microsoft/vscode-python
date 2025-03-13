@@ -11,7 +11,7 @@ import { Commands } from '../../../client/common/constants';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { Interpreters } from '../../../client/common/utils/localize';
 import { IComponentAdapter } from '../../../client/interpreter/contracts';
-import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
+import { InterpreterLocatorProgressStatusBarHandler } from '../../../client/interpreter/display/progressDisplay';
 import { ProgressNotificationEvent, ProgressReportStage } from '../../../client/pythonEnvironments/base/locator';
 import { noop } from '../../core';
 
@@ -41,7 +41,7 @@ suite('Interpreters - Display Progress', () => {
     });
     test('Display discovering message when refreshing interpreters for the first time', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), [], componentAdapter);
+        const statusBar = new InterpreterLocatorProgressStatusBarHandler(instance(shell), [], componentAdapter);
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
@@ -53,7 +53,7 @@ suite('Interpreters - Display Progress', () => {
 
     test('Display refreshing message when refreshing interpreters for the second time', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), [], componentAdapter);
+        const statusBar = new InterpreterLocatorProgressStatusBarHandler(instance(shell), [], componentAdapter);
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();
@@ -70,7 +70,7 @@ suite('Interpreters - Display Progress', () => {
 
     test('Progress message is hidden when loading has completed', async () => {
         const shell = mock(ApplicationShell);
-        const statusBar = new InterpreterLocatorProgressStatubarHandler(instance(shell), [], componentAdapter);
+        const statusBar = new InterpreterLocatorProgressStatusBarHandler(instance(shell), [], componentAdapter);
         when(shell.withProgress(anything(), anything())).thenResolve();
 
         await statusBar.activate();

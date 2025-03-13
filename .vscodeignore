@@ -4,9 +4,11 @@
 .editorconfig
 .env
 .eslintrc
+.eslintignore
 .gitattributes
 .gitignore
 .gitmodules
+.git*
 .npmrc
 .nvmrc
 .nycrc
@@ -21,10 +23,13 @@ test.ipynb
 tsconfig*.json
 tsfmt.json
 vscode-python-signing.*
+noxfile.py
 
+.config/**
 .github/**
 .mocha-reporter/**
 .nvm/**
+.nox/**
 .nyc_output
 .prettierrc.js
 .sonarcloud.properties
@@ -58,6 +63,7 @@ out/testMultiRootWkspc/**
 precommit.hook
 python_files/**/*.pyc
 python_files/lib/**/*.egg-info/**
+python_files/lib/jedilsp/bin/**
 python_files/lib/python/bin/**
 python_files/tests/**
 scripts/**
@@ -66,3 +72,17 @@ test/**
 tmp/**
 typings/**
 types/**
+**/__pycache__/**
+**/.devcontainer/**
+
+python-env-tools/.gitignore
+python-env-tools/bin/.gitignore
+python-env-tools/.github/**
+python-env-tools/.vscode/**
+python-env-tools/crates/**
+python-env-tools/target/**
+python-env-tools/Cargo.*
+python-env-tools/.cargo/**
+
+python-env-tools/**/*.md
+pythonExtensionApi/**

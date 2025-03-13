@@ -54,11 +54,30 @@ export enum QuickPickItemKind {
 }
 
 export class Disposable {
-    constructor(private callOnDispose: () => void) {}
+    static from(...disposables: { dispose(): () => void }[]): Disposable {
+        return new Disposable(() => {
+            if (disposables) {
+                for (const disposable of disposables) {
+                    if (disposable && typeof disposable.dispose === 'function') {
+                        disposable.dispose();
+                    }
+                }
 
-    public dispose(): void {
-        if (this.callOnDispose) {
-            this.callOnDispose();
+                disposables = [];
+            }
+        });
+    }
+
+    private _callOnDispose: (() => void) | undefined;
+
+    constructor(callOnDispose: () => void) {
+        this._callOnDispose = callOnDispose;
+    }
+
+    dispose(): void {
+        if (typeof this._callOnDispose === 'function') {
+            this._callOnDispose();
+            this._callOnDispose = undefined;
         }
     }
 }
@@ -350,6 +369,8 @@ export class CodeActionKind {
 
     public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
 
+    public static readonly Notebook: CodeActionKind = new CodeActionKind('notebook');
+
     private constructor(private _value: string) {}
 
     public append(parts: string): CodeActionKind {
@@ -554,4 +575,22 @@ export class Location {
         this.uri = uri;
         this.range = rangeOrPosition;
     }
+}
+
+/**
+ * The kind of executions that {@link TestRunProfile TestRunProfiles} control.
+ */
+export enum TestRunProfileKind {
+    /**
+     * The `Run` test profile kind.
+     */
+    Run = 1,
+    /**
+     * The `Debug` test profile kind.
+     */
+    Debug = 2,
+    /**
+     * The `Coverage` test profile kind.
+     */
+    Coverage = 3,
 }

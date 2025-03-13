@@ -44,6 +44,8 @@ import {
     TriggerRefreshOptions,
 } from '../pythonEnvironments/base/locator';
 import { sleep } from '../common/utils/async';
+import { useEnvExtension } from '../envExt/api.internal';
+import { ensureEnvironmentContainsPythonLegacy, getActiveInterpreterLegacy } from '../envExt/api.legacy';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -217,6 +219,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonEnvironment | undefined> {
+        if (useEnvExtension()) {
+            return getActiveInterpreterLegacy(resource);
+        }
+
         const activatedEnvLaunch = this.serviceContainer.get<IActivatedEnvironmentLaunch>(IActivatedEnvironmentLaunch);
         let path = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv(true);
         // This is being set as interpreter in background, after which it'll show up in `.pythonPath` config.
@@ -283,6 +289,13 @@ export class InterpreterService implements Disposable, IInterpreterService {
 
     @cache(-1, true)
     private async ensureEnvironmentContainsPython(pythonPath: string, workspaceFolder: WorkspaceFolder | undefined) {
+        if (useEnvExtension()) {
+            await ensureEnvironmentContainsPythonLegacy(pythonPath, workspaceFolder, () => {
+                this.didChangeInterpreterEmitter.fire(workspaceFolder?.uri);
+            });
+            return;
+        }
+
         const installer = this.serviceContainer.get<IInstaller>(IInstaller);
         if (!(await installer.isInstalled(Product.python))) {
             // If Python is not installed into the environment, install it.

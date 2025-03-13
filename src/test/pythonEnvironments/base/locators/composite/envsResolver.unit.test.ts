@@ -72,6 +72,8 @@ suite('Python envs locator - Environments Resolver', () => {
         updatedEnv.arch = Architecture.x64;
         updatedEnv.display = expectedDisplay;
         updatedEnv.detailedDisplayName = expectedDetailedDisplay;
+        updatedEnv.identifiedUsingNativeLocator = updatedEnv.identifiedUsingNativeLocator ?? undefined;
+        updatedEnv.pythonRunCommand = updatedEnv.pythonRunCommand ?? undefined;
         if (env.kind === PythonEnvKind.Conda) {
             env.type = PythonEnvType.Conda;
         }
@@ -106,6 +108,8 @@ suite('Python envs locator - Environments Resolver', () => {
             searchLocation: Uri.file(location),
             source: [],
             type,
+            identifiedUsingNativeLocator: undefined,
+            pythonRunCommand: undefined,
         };
     }
     suite('iterEnvs()', () => {

@@ -10,18 +10,22 @@ import {
     Location,
     TestRun,
     MarkdownString,
+    TestCoverageCount,
+    FileCoverage,
+    FileCoverageDetail,
+    StatementCoverage,
+    Range,
 } from 'vscode';
 import * as util from 'util';
-import { DiscoveredTestPayload, EOTTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
+import { CoveragePayload, DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
 import { TestProvider } from '../../types';
-import { traceError, traceLog } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testItemUtilities';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
 import { buildErrorNodeOptions, populateTestTree, splitTestNameWithRegex } from './utils';
-import { Deferred } from '../../../common/utils/async';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -36,6 +40,8 @@ export class PythonResultResolver implements ITestResultResolver {
 
     public subTestStats: Map<string, { passed: number; failed: number }> = new Map();
 
+    public detailedCoverageMap = new Map<string, FileCoverageDetail[]>();
+
     constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
         this.testController = testController;
         this.testProvider = testProvider;
@@ -45,28 +51,15 @@ export class PythonResultResolver implements ITestResultResolver {
         this.vsIdToRunId = new Map<string, string>();
     }
 
-    public resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): Promise<void> {
+    public resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
         if (!payload) {
             // No test data is available
-            return Promise.resolve();
+        } else {
+            this._resolveDiscovery(payload as DiscoveredTestPayload, token);
         }
-        if ('eot' in payload) {
-            // the payload is an EOT payload, so resolve the deferred promise.
-            traceLog('ResultResolver EOT received for discovery.');
-            const eotPayload = payload as EOTTestPayload;
-            if (eotPayload.eot === true) {
-                deferredTillEOT.resolve();
-                return Promise.resolve();
-            }
-        }
-        return this._resolveDiscovery(payload as DiscoveredTestPayload, token);
     }
 
-    public _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void> {
+    public _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void {
         const workspacePath = this.workspaceUri.fsPath;
         const rawTestData = payload as DiscoveredTestPayload;
         // Check if there were any errors in the discovery process.
@@ -109,27 +102,63 @@ export class PythonResultResolver implements ITestResultResolver {
             tool: this.testProvider,
             failed: false,
         });
-        return Promise.resolve();
     }
 
-    public resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): Promise<void> {
-        if (payload !== undefined && 'eot' in payload) {
-            // the payload is an EOT payload, so resolve the deferred promise.
-            traceLog('ResultResolver EOT received for execution.');
-            const eotPayload = payload as EOTTestPayload;
-            if (eotPayload.eot === true) {
-                deferredTillEOT.resolve();
-                return Promise.resolve();
-            }
+    public resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void {
+        if ('coverage' in payload) {
+            // coverage data is sent once per connection
+            traceVerbose('Coverage data received.');
+            this._resolveCoverage(payload as CoveragePayload, runInstance);
+        } else {
+            this._resolveExecution(payload as ExecutionTestPayload, runInstance);
         }
-        return this._resolveExecution(payload as ExecutionTestPayload, runInstance);
     }
 
-    public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): Promise<void> {
+    public _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void {
+        if (payload.result === undefined) {
+            return;
+        }
+        for (const [key, value] of Object.entries(payload.result)) {
+            const fileNameStr = key;
+            const fileCoverageMetrics = value;
+            const linesCovered = fileCoverageMetrics.lines_covered ? fileCoverageMetrics.lines_covered : []; // undefined if no lines covered
+            const linesMissed = fileCoverageMetrics.lines_missed ? fileCoverageMetrics.lines_missed : []; // undefined if no lines missed
+
+            const lineCoverageCount = new TestCoverageCount(
+                linesCovered.length,
+                linesCovered.length + linesMissed.length,
+            );
+            const uri = Uri.file(fileNameStr);
+            const fileCoverage = new FileCoverage(uri, lineCoverageCount);
+            runInstance.addCoverage(fileCoverage);
+
+            // create detailed coverage array for each file (only line coverage on detailed, not branch)
+            const detailedCoverageArray: FileCoverageDetail[] = [];
+            // go through all covered lines, create new StatementCoverage, and add to detailedCoverageArray
+            for (const line of linesCovered) {
+                // line is 1-indexed, so we need to subtract 1 to get the 0-indexed line number
+                // true value means line is covered
+                const statementCoverage = new StatementCoverage(
+                    true,
+                    new Range(line - 1, 0, line - 1, Number.MAX_SAFE_INTEGER),
+                );
+                detailedCoverageArray.push(statementCoverage);
+            }
+            for (const line of linesMissed) {
+                // line is 1-indexed, so we need to subtract 1 to get the 0-indexed line number
+                // false value means line is NOT covered
+                const statementCoverage = new StatementCoverage(
+                    false,
+                    new Range(line - 1, 0, line - 1, Number.MAX_SAFE_INTEGER),
+                );
+                detailedCoverageArray.push(statementCoverage);
+            }
+
+            this.detailedCoverageMap.set(uri.fsPath, detailedCoverageArray);
+        }
+    }
+
+    public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void {
         const rawTestExecData = payload as ExecutionTestPayload;
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
             // Map which holds the subtest information for each test item.
@@ -160,8 +189,10 @@ export class PythonResultResolver implements ITestResultResolver {
                     // search through freshly built array of testItem to find the failed test and update UI.
                     testCases.forEach((indiItem) => {
                         if (indiItem.id === grabVSid) {
-                            if (indiItem.uri && indiItem.range) {
-                                message.location = new Location(indiItem.uri, indiItem.range);
+                            if (indiItem.uri) {
+                                if (indiItem.range) {
+                                    message.location = new Location(indiItem.uri, indiItem.range);
+                                }
                                 runInstance.errored(indiItem, message);
                             }
                         }
@@ -181,8 +212,10 @@ export class PythonResultResolver implements ITestResultResolver {
                     // search through freshly built array of testItem to find the failed test and update UI.
                     testCases.forEach((indiItem) => {
                         if (indiItem.id === grabVSid) {
-                            if (indiItem.uri && indiItem.range) {
-                                message.location = new Location(indiItem.uri, indiItem.range);
+                            if (indiItem.uri) {
+                                if (indiItem.range) {
+                                    message.location = new Location(indiItem.uri, indiItem.range);
+                                }
                                 runInstance.failed(indiItem, message);
                             }
                         }
@@ -193,7 +226,7 @@ export class PythonResultResolver implements ITestResultResolver {
                     if (grabTestItem !== undefined) {
                         testCases.forEach((indiItem) => {
                             if (indiItem.id === grabVSid) {
-                                if (indiItem.uri && indiItem.range) {
+                                if (indiItem.uri) {
                                     runInstance.passed(grabTestItem);
                                 }
                             }
@@ -205,7 +238,7 @@ export class PythonResultResolver implements ITestResultResolver {
                     if (grabTestItem !== undefined) {
                         testCases.forEach((indiItem) => {
                             if (indiItem.id === grabVSid) {
-                                if (indiItem.uri && indiItem.range) {
+                                if (indiItem.uri) {
                                     runInstance.skipped(grabTestItem);
                                 }
                             }
@@ -229,7 +262,11 @@ export class PythonResultResolver implements ITestResultResolver {
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
-                        const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
+                        const subTestItem = this.testController?.createTestItem(
+                            subtestId,
+                            subtestId,
+                            parentTestItem.uri,
+                        );
                         // create a new test item for the subtest
                         if (subTestItem) {
                             const traceback = data.traceback ?? '';
@@ -264,7 +301,11 @@ export class PythonResultResolver implements ITestResultResolver {
                             // clear since subtest items don't persist between runs
                             clearAllChildren(parentTestItem);
                         }
-                        const subTestItem = this.testController?.createTestItem(subtestId, subtestId);
+                        const subTestItem = this.testController?.createTestItem(
+                            subtestId,
+                            subtestId,
+                            parentTestItem.uri,
+                        );
                         // create a new test item for the subtest
                         if (subTestItem) {
                             parentTestItem.children.add(subTestItem);
@@ -279,6 +320,5 @@ export class PythonResultResolver implements ITestResultResolver {
                 }
             }
         }
-        return Promise.resolve();
     }
 }

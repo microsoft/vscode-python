@@ -1,20 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { TestController, TestRun, Uri } from 'vscode';
+import { TestController, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import * as fs from 'fs';
+import * as os from 'os';
+import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
-import { PythonTestServer } from '../../../client/testing/testController/common/server';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
-import { ITestDebugLauncher } from '../../../client/testing/common/types';
 import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
-import { traceLog } from '../../../client/logging';
+import { traceError, traceLog } from '../../../client/logging';
 import { PytestTestExecutionAdapter } from '../../../client/testing/testController/pytest/pytestExecutionAdapter';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
@@ -22,18 +22,19 @@ import { PythonResultResolver } from '../../../client/testing/testController/com
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { createTypeMoq } from '../../mocks/helper';
+import * as pixi from '../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: ITestResultResolver;
-    let pythonTestServer: PythonTestServer;
     let pythonExecFactory: IPythonExecutionFactory;
-    let debugLauncher: ITestDebugLauncher;
     let configService: IConfigurationService;
     let serviceContainer: IServiceContainer;
     let envVarsService: IEnvironmentVariablesProvider;
     let workspaceUri: Uri;
     let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
     let testController: TestController;
+    let getPixiStub: sinon.SinonStub;
     const unittestProvider: TestProvider = UNITTEST_PROVIDER;
     const pytestProvider: TestProvider = PYTEST_PROVIDER;
     const rootPathSmallWorkspace = path.join(
@@ -66,38 +67,57 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'symlinkWorkspace',
     );
+    const nestedTarget = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testTestingRootWkspc', 'target workspace');
+    const nestedSymlink = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'symlink_parent-folder',
+    );
+    const rootPathCoverageWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'coverageWorkspace',
+    );
     suiteSetup(async () => {
-        serviceContainer = (await initialize()).serviceContainer;
-
         // create symlink for specific symlink test
         const target = rootPathSmallWorkspace;
         const dest = rootPathDiscoverySymlink;
         try {
             fs.symlink(target, dest, 'dir', (err) => {
                 if (err) {
-                    console.error(err);
+                    traceError(err);
                 } else {
-                    console.log('Symlink created successfully for end to end tests.');
+                    traceLog('Symlink created successfully for regular symlink end to end tests.');
+                }
+            });
+            fs.symlink(nestedTarget, nestedSymlink, 'dir', (err) => {
+                if (err) {
+                    traceError(err);
+                } else {
+                    traceLog('Symlink created successfully for nested symlink end to end tests.');
                 }
             });
         } catch (err) {
-            console.error(err);
+            traceError(err);
         }
     });
 
     setup(async () => {
+        serviceContainer = (await initialize()).serviceContainer;
+        getPixiStub = sinon.stub(pixi, 'getPixi');
+        getPixiStub.resolves(undefined);
+
         // create objects that were injected
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        debugLauncher = serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
         testController = serviceContainer.get<TestController>(ITestController);
         envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
 
         // create objects that were not injected
-        pythonTestServer = new PythonTestServer(pythonExecFactory, debugLauncher);
-        await pythonTestServer.serverReady();
 
-        testOutputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        testOutputChannel = createTypeMoq<ITestOutputChannel>();
         testOutputChannel
             .setup((x) => x.append(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
@@ -115,8 +135,8 @@ suite('End to End Tests: test adapters', () => {
                 // Whatever you need to return
             });
     });
-    teardown(async () => {
-        pythonTestServer.dispose();
+    teardown(() => {
+        sinon.restore();
     });
     suiteTeardown(async () => {
         // remove symlink
@@ -124,13 +144,25 @@ suite('End to End Tests: test adapters', () => {
         if (fs.existsSync(dest)) {
             fs.unlink(dest, (err) => {
                 if (err) {
-                    console.error(err);
+                    traceError(err);
                 } else {
-                    console.log('Symlink removed successfully after tests.');
+                    traceLog('Symlink removed successfully after tests, rootPathDiscoverySymlink.');
                 }
             });
         } else {
-            console.log('Symlink was not found to remove after tests, exiting successfully');
+            traceLog('Symlink was not found to remove after tests, exiting successfully, rootPathDiscoverySymlink.');
+        }
+
+        if (fs.existsSync(nestedSymlink)) {
+            fs.unlink(nestedSymlink, (err) => {
+                if (err) {
+                    traceError(err);
+                } else {
+                    traceLog('Symlink removed successfully after tests, nestedSymlink.');
+                }
+            });
+        } else {
+            traceLog('Symlink was not found to remove after tests, exiting successfully, nestedSymlink.');
         }
     });
     test('unittest discovery adapter small workspace', async () => {
@@ -144,6 +176,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
+        // const deferredTillEOT = createTestingDeferred();
         resultResolver._resolveDiscovery = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
@@ -157,14 +190,13 @@ suite('End to End Tests: test adapters', () => {
 
         // run unittest discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
             envVarsService,
         );
 
-        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
 
             // 1. Check the status is "success"
@@ -181,7 +213,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
-
     test('unittest discovery adapter large workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
@@ -204,14 +235,13 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
             envVarsService,
         );
 
-        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // 1. Check the status is "success"
             assert.strictEqual(
                 actualData.status,
@@ -234,25 +264,23 @@ suite('End to End Tests: test adapters', () => {
             status: 'success' | 'error';
             error?: string[];
         };
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathSmallWorkspace);
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         resultResolver._resolveDiscovery = async (payload, _token?) => {
-            traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
             envVarsService,
         );
 
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathSmallWorkspace);
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
 
@@ -269,7 +297,103 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
+    test('pytest discovery adapter nested symlink', async () => {
+        if (os.platform() === 'win32') {
+            console.log('Skipping test for windows');
+            return;
+        }
+
+        // result resolver and saved data for assertions
+        let actualData: {
+            cwd: string;
+            tests?: unknown;
+            status: 'success' | 'error';
+            error?: string[];
+        };
+        // set workspace to test workspace folder
+        const workspacePath = path.join(nestedSymlink, 'custom_sub_folder');
+        const workspacePathParent = nestedSymlink;
+        workspaceUri = Uri.parse(workspacePath);
+        const filePath = path.join(workspacePath, 'test_simple.py');
+        const stats = fs.lstatSync(workspacePathParent);
+
+        // confirm that the path is a symbolic link
+        assert.ok(stats.isSymbolicLink(), 'The PARENT path is not a symbolic link but must be for this test.');
+
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        let callCount = 0;
+        resultResolver._resolveDiscovery = async (payload, _token?) => {
+            traceLog(`resolveDiscovery ${payload}`);
+            callCount = callCount + 1;
+            actualData = payload;
+            return Promise.resolve();
+        };
+        // run pytest discovery
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
+            // verification after discovery is complete
+
+            // 1. Check the status is "success"
+            assert.strictEqual(
+                actualData.status,
+                'success',
+                `Expected status to be 'success' instead status is ${actualData.status}`,
+            ); // 2. Confirm no errors
+            assert.strictEqual(actualData.error?.length, 0, "Expected no errors in 'error' field");
+            // 3. Confirm tests are found
+            assert.ok(actualData.tests, 'Expected tests to be present');
+            // 4. Confirm that the cwd returned is the symlink path and the test's path is also using the symlink as the root
+            if (process.platform === 'win32') {
+                // covert string to lowercase for windows as the path is case insensitive
+                traceLog('windows machine detected, converting path to lowercase for comparison');
+                const a = actualData.cwd.toLowerCase();
+                const b = filePath.toLowerCase();
+                const testSimpleActual = (actualData.tests as {
+                    children: {
+                        path: string;
+                    }[];
+                }).children[0].path.toLowerCase();
+                const testSimpleExpected = filePath.toLowerCase();
+                assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
+                assert.strictEqual(
+                    testSimpleActual,
+                    testSimpleExpected,
+                    `Expected test path to be the symlink path actual: ${testSimpleActual} expected: ${testSimpleExpected}`,
+                );
+            } else {
+                assert.strictEqual(
+                    path.join(actualData.cwd),
+                    path.join(workspacePath),
+                    'Expected cwd to be the symlink path, check for non-windows machines',
+                );
+                assert.strictEqual(
+                    (actualData.tests as {
+                        children: {
+                            path: string;
+                        }[];
+                    }).children[0].path,
+                    filePath,
+                    'Expected test path to be the symlink path, check for non windows machines',
+                );
+            }
+
+            // 5. Confirm that resolveDiscovery was called once
+            assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
+        });
+    });
     test('pytest discovery adapter small workspace with symlink', async () => {
+        if (os.platform() === 'win32') {
+            console.log('Skipping test for windows');
+            return;
+        }
+
         // result resolver and saved data for assertions
         let actualData: {
             cwd: string;
@@ -295,7 +419,6 @@ suite('End to End Tests: test adapters', () => {
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -372,7 +495,6 @@ suite('End to End Tests: test adapters', () => {
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -427,7 +549,6 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run execution
         const executionAdapter = new UnittestTestExecutionAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -451,7 +572,13 @@ suite('End to End Tests: test adapters', () => {
             })
             .returns(() => false);
         await executionAdapter
-            .runTests(workspaceUri, ['test_simple.SimpleClass.test_simple_unit'], false, testRun.object)
+            .runTests(
+                workspaceUri,
+                ['test_simple.SimpleClass.test_simple_unit'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                pythonExecFactory,
+            )
             .finally(() => {
                 // verify that the _resolveExecution was called once per test
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
@@ -502,7 +629,6 @@ suite('End to End Tests: test adapters', () => {
 
         // run unittest execution
         const executionAdapter = new UnittestTestExecutionAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -526,7 +652,13 @@ suite('End to End Tests: test adapters', () => {
             })
             .returns(() => false);
         await executionAdapter
-            .runTests(workspaceUri, ['test_parameterized_subtest.NumbersTest.test_even'], false, testRun.object)
+            .runTests(
+                workspaceUri,
+                ['test_parameterized_subtest.NumbersTest.test_even'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                pythonExecFactory,
+            )
             .then(() => {
                 // verify that the _resolveExecution was called once per test
                 assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
@@ -545,7 +677,7 @@ suite('End to End Tests: test adapters', () => {
     });
     test('pytest execution adapter small workspace with correct output', async () => {
         // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
@@ -572,7 +704,6 @@ suite('End to End Tests: test adapters', () => {
 
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -599,7 +730,7 @@ suite('End to End Tests: test adapters', () => {
             .runTests(
                 workspaceUri,
                 [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
-                false,
+                TestRunProfileKind.Run,
                 testRun.object,
                 pythonExecFactory,
             )
@@ -633,9 +764,117 @@ suite('End to End Tests: test adapters', () => {
                 }
             });
     });
-    test('pytest execution adapter large workspace', async () => {
+
+    test('Unittest execution with coverage, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        resultResolver._resolveCoverage = async (payload, _token?) => {
+            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+            assert.ok(payload.result, 'Expected results to be present');
+            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+            // since only one test was run, the other test in the same file will have missed coverage lines
+            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            return Promise.resolve();
+        };
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        // run execution
+        const executionAdapter = new UnittestTestExecutionAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        let collectedOutput = '';
+        testRun
+            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+            .callback((output: string) => {
+                collectedOutput += output;
+                traceLog('appendOutput was called with:', output);
+            })
+            .returns(() => false);
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                ['test_even.TestNumbers.test_odd'],
+                TestRunProfileKind.Coverage,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .finally(() => {
+                assert.ok(collectedOutput, 'expect output to be collected');
+            });
+    });
+    test('pytest coverage execution, small workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        resultResolver._resolveCoverage = async (payload, _runInstance?) => {
+            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+            assert.ok(payload.result, 'Expected results to be present');
+            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+            // since only one test was run, the other test in the same file will have missed coverage lines
+            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+
+            return Promise.resolve();
+        };
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+
+        // run pytest execution
+        const executionAdapter = new PytestTestExecutionAdapter(
+            configService,
+            testOutputChannel.object,
+            resultResolver,
+            envVarsService,
+        );
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        let collectedOutput = '';
+        testRun
+            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+            .callback((output: string) => {
+                collectedOutput += output;
+                traceLog('appendOutput was called with:', output);
+            })
+            .returns(() => false);
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                [`${rootPathCoverageWorkspace}/test_even.py::TestNumbers::test_odd`],
+                TestRunProfileKind.Coverage,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .then(() => {
+                assert.ok(collectedOutput, 'expect output to be collected');
+            });
+    });
+    test('pytest execution adapter large workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
@@ -670,7 +909,6 @@ suite('End to End Tests: test adapters', () => {
 
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -693,17 +931,19 @@ suite('End to End Tests: test adapters', () => {
                 traceLog('appendOutput was called with:', output);
             })
             .returns(() => false);
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
-            // verify that the _resolveExecution was called once per test
-            assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
-            assert.strictEqual(failureOccurred, false, failureMsg);
+        await executionAdapter
+            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+            .then(() => {
+                // verify that the _resolveExecution was called once per test
+                assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
 
-            // verify output works for large repo
-            assert.ok(
-                collectedOutput.includes('test session starts'),
-                'The test string does not contain the expected stdout output from pytest.',
-            );
-        });
+                // verify output works for large repo
+                assert.ok(
+                    collectedOutput.includes('test session starts'),
+                    'The test string does not contain the expected stdout output from pytest.',
+                );
+            });
     });
     test('unittest discovery adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
@@ -743,7 +983,6 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -758,7 +997,7 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        await discoveryAdapter.discoverTests(workspaceUri).finally(() => {
+        await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
@@ -803,7 +1042,6 @@ suite('End to End Tests: test adapters', () => {
         };
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -820,82 +1058,6 @@ suite('End to End Tests: test adapters', () => {
                 callCount >= 1,
                 `Expected _resolveDiscovery to be called at least once, call count was instead ${callCount}`,
             );
-            assert.strictEqual(failureOccurred, false, failureMsg);
-        });
-    });
-    test('unittest execution adapter seg fault error handling', async () => {
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (data, _token?) => {
-            // do the following asserts for each time resolveExecution is called, should be called once per test.
-            callCount = callCount + 1;
-            traceLog(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
-            try {
-                if (data.status === 'error') {
-                    if (data.error === undefined) {
-                        // Dereference a NULL pointer
-                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
-                        if (indexOfTest === -1) {
-                            failureOccurred = true;
-                            failureMsg = 'Expected test to have a null pointer';
-                        }
-                    } else if (data.error.length === 0) {
-                        failureOccurred = true;
-                        failureMsg = "Expected errors in 'error' field";
-                    }
-                } else {
-                    const indexOfTest = JSON.stringify(data.result).search('error');
-                    if (indexOfTest === -1) {
-                        failureOccurred = true;
-                        failureMsg =
-                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
-                    }
-                }
-                if (data.result === undefined) {
-                    failureOccurred = true;
-                    failureMsg = 'Expected results to be present';
-                }
-                // make sure the testID is found in the results
-                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
-                if (indexOfTest === -1) {
-                    failureOccurred = true;
-                    failureMsg = 'Expected testId to be present';
-                }
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
-
-        const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
-        const testIds: string[] = [testId];
-
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
-
-        // run pytest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            pythonTestServer,
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object).finally(() => {
-            assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
@@ -941,7 +1103,6 @@ suite('End to End Tests: test adapters', () => {
 
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
-            pythonTestServer,
             configService,
             testOutputChannel.object,
             resultResolver,
@@ -956,9 +1117,11 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
-            assert.strictEqual(failureOccurred, false, failureMsg);
-        });
+        await executionAdapter
+            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+            .finally(() => {
+                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
+            });
     });
 });

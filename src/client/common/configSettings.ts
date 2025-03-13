@@ -30,16 +30,13 @@ import {
     IInterpreterSettings,
     IPythonSettings,
     IREPLSettings,
-    ITensorBoardSettings,
     ITerminalSettings,
     Resource,
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
-import { getOSType, OSType } from './utils/platform';
-import { isWindows } from './platform/platformService';
-
-const untildify = require('untildify');
+import { getOSType, OSType, isWindows } from './utils/platform';
+import { untildify } from './helpers';
 
 export class PythonSettings implements IPythonSettings {
     private get onDidChange(): Event<ConfigurationChangeEvent | undefined> {
@@ -103,11 +100,11 @@ export class PythonSettings implements IPythonSettings {
 
     public poetryPath = '';
 
+    public pixiToolPath = '';
+
     public devOptions: string[] = [];
 
     public autoComplete!: IAutoCompleteSettings;
-
-    public tensorBoard: ITensorBoardSettings | undefined;
 
     public testing!: ITestingSettings;
 
@@ -260,6 +257,9 @@ export class PythonSettings implements IPythonSettings {
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
+        const pixiToolPath = systemVariables.resolveAny(pythonSettings.get<string>('pixiToolPath'))!;
+        this.pixiToolPath =
+            pixiToolPath && pixiToolPath.length > 0 ? getAbsolutePath(pixiToolPath, workspaceRoot) : pixiToolPath;
 
         this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? {
             infoVisibility: 'onPythonRelated',
@@ -320,6 +320,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     pytestPath: 'pytest',
                     autoTestDiscoverOnSaveEnabled: true,
+                    autoTestDiscoverOnSavePattern: '**/*.py',
                 } as ITestingSettings;
             }
         }
@@ -336,6 +337,7 @@ export class PythonSettings implements IPythonSettings {
                   unittestArgs: [],
                   unittestEnabled: false,
                   autoTestDiscoverOnSaveEnabled: true,
+                  autoTestDiscoverOnSavePattern: '**/*.py',
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         if (this.testing.cwd) {
@@ -364,6 +366,7 @@ export class PythonSettings implements IPythonSettings {
                   launchArgs: [],
                   activateEnvironment: true,
                   activateEnvInCurrentTerminal: false,
+                  enableShellIntegration: false,
               };
 
         this.REPL = pythonSettings.get<IREPLSettings>('REPL')!;
@@ -382,14 +385,6 @@ export class PythonSettings implements IPythonSettings {
                   optInto: [],
                   optOutFrom: [],
               };
-
-        const tensorBoardSettings = systemVariables.resolveAny(
-            pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
-        )!;
-        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
-        if (this.tensorBoard.logDirectory) {
-            this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
-        }
     }
 
     // eslint-disable-next-line class-methods-use-this

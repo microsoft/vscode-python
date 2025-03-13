@@ -17,6 +17,7 @@ import {
     StdErrError,
     ExecutionResult,
 } from './types';
+import { traceWarn } from '../../../logging';
 
 const PS_ERROR_SCREEN_BOGUS = /your [0-9]+x[0-9]+ screen size is bogus\. expect trouble/;
 
@@ -208,6 +209,6 @@ function killPid(pid: number): void {
             process.kill(pid);
         }
     } catch {
-        console.warn('Unable to kill process with pid', pid);
+        traceWarn('Unable to kill process with pid', pid);
     }
 }

@@ -39,6 +39,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { identifyShellFromShellPath } from '../../common/terminal/shellDetectors/baseShellDetector';
 import { getSearchPathEnvVarNames } from '../../common/utils/exec';
 import { cache } from '../../common/utils/decorators';
+import { getRunPixiPythonCommand } from '../../pythonEnvironments/common/environmentManagers/pixi';
 
 const ENVIRONMENT_PREFIX = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const CACHE_DURATION = 10 * 60 * 1000;
@@ -252,6 +253,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // Using environment prefix isn't needed as the marker script already takes care of it.
                     command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
                 }
+            } else if (interpreter?.envType === EnvironmentType.Pixi) {
+                const pythonArgv = await getRunPixiPythonCommand(interpreter.path);
+                if (pythonArgv) {
+                    command = [...pythonArgv, ...args].map((arg) => arg.toCommandArgumentForPythonExt()).join(' ');
+                }
             }
             if (!command) {
                 const activationCommands = await this.helper.getEnvironmentActivationShellCommands(
@@ -380,9 +386,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         return undefined;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     @traceDecoratorError('Failed to parse Environment variables')
     @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
-    // eslint-disable-next-line class-methods-use-this
     private parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         if (output.indexOf(ENVIRONMENT_PREFIX) === -1) {
             return parse(output);

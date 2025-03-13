@@ -5,13 +5,7 @@ import normalizeSelection
 
 
 def test_dictionary_mouse_mover():
-    """
-    Having the mouse cursor on second line,
-    'my_dict = {'
-    and pressing shift+enter should bring the
-    mouse cursor to line 6, on and to be able to run
-    'print('only send the dictionary')'
-    """
+    """Having the mouse cursor on second line, 'my_dict = {' and pressing shift+enter should bring the mouse cursor to line 6, on and to be able to run 'print('only send the dictionary')'."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -24,18 +18,16 @@ def test_dictionary_mouse_mover():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 2, 2, False)
+    result = normalizeSelection.traverse_file(src, 2, 2, was_highlighted=False)
 
     assert result["which_line_next"] == 6
 
 
 def test_beginning_func():
-    """
-    Pressing shift+enter on the very first line,
-    of function definition, such as 'my_func():'
-    It should properly skip the comment and assert the
-    next executable line to be executed is line 5 at
-    'my_dict = {'
+    """Pressing shift+enter on the very first line, of function definition, such as 'my_func():'.
+
+    It should properly skip the comment and assert the next executable line to be
+    executed is line 5 at 'my_dict = {'.
     """
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
@@ -51,7 +43,7 @@ def test_beginning_func():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["which_line_next"] == 5
 
@@ -69,7 +61,7 @@ def test_cursor_forloop():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 2, 2, False)
+    result = normalizeSelection.traverse_file(src, 2, 2, was_highlighted=False)
 
     assert result["which_line_next"] == 6
 
@@ -85,7 +77,7 @@ def test_inside_forloop():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 2, 2, False)
+    result = normalizeSelection.traverse_file(src, 2, 2, was_highlighted=False)
 
     assert result["which_line_next"] == 3
 
@@ -98,7 +90,7 @@ def test_skip_sameline_statements():
         print("Next line to be run is here!")
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["which_line_next"] == 2
 
@@ -119,17 +111,14 @@ def test_skip_multi_comp_lambda():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     # Shift enter from the very first ( should make
     # next executable statement as the lambda expression
     assert result["which_line_next"] == 7
 
 
 def test_move_whole_class():
-    """
-    Shift+enter on a class definition
-    should move the cursor after running whole class.
-    """
+    """Shift+enter on a class definition should move the cursor after running whole class."""
     importlib.reload(normalizeSelection)
     src = textwrap.dedent(
         """\
@@ -142,7 +131,7 @@ def test_move_whole_class():
         print("We should be here after running whole class")
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["which_line_next"] == 7
 
@@ -163,7 +152,7 @@ def test_def_to_def():
             print("Not here but above")
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
 
     assert result["which_line_next"] == 9
 
@@ -181,7 +170,7 @@ def test_try_catch_move():
         """
     )
 
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     assert result["which_line_next"] == 6
 
 
@@ -199,5 +188,5 @@ def test_skip_nested():
         print("Cursor should be here after running line 1")
         """
     )
-    result = normalizeSelection.traverse_file(src, 1, 1, False)
+    result = normalizeSelection.traverse_file(src, 1, 1, was_highlighted=False)
     assert result["which_line_next"] == 8

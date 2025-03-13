@@ -24,7 +24,7 @@ import { ExecutionInfo } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { noop } from '../../core';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Process - Python tool execution service', () => {
     const resource = Uri.parse('one');

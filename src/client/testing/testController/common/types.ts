@@ -4,6 +4,7 @@
 import {
     CancellationToken,
     Event,
+    FileCoverageDetail,
     OutputChannel,
     TestController,
     TestItem,
@@ -12,15 +13,9 @@ import {
     Uri,
     WorkspaceFolder,
 } from 'vscode';
-import { ITestDebugLauncher, TestDiscoveryOptions } from '../../common/types';
+import { ITestDebugLauncher } from '../../common/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { Deferred } from '../../../common/utils/async';
-import { EnvironmentVariables } from '../../../common/variables/types';
-
-export type TestRunInstanceOptions = TestRunOptions & {
-    exclude?: readonly TestItem[];
-    debug: boolean;
-};
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
 
 export enum TestDataKinds {
     Workspace,
@@ -38,11 +33,6 @@ export interface TestData {
     kind: TestDataKinds;
 }
 
-export const ITestDiscoveryHelper = Symbol('ITestDiscoveryHelper');
-export interface ITestDiscoveryHelper {
-    runTestDiscovery(options: TestDiscoveryOptions): Promise<RawDiscoveredTests[]>;
-}
-
 export type TestRefreshOptions = { forceRefresh: boolean };
 
 export const ITestController = Symbol('ITestController');
@@ -54,41 +44,13 @@ export interface ITestController {
     onRunWithoutConfiguration: Event<WorkspaceFolder[]>;
 }
 
-export interface ITestRun {
-    includes: readonly TestItem[];
-    excludes: readonly TestItem[];
-    runKind: TestRunProfileKind;
-    runInstance: TestRun;
-}
-
 export const ITestFrameworkController = Symbol('ITestFrameworkController');
 export interface ITestFrameworkController {
     resolveChildren(testController: TestController, item: TestItem, token?: CancellationToken): Promise<void>;
-    refreshTestData(testController: TestController, resource?: Uri, token?: CancellationToken): Promise<void>;
-    runTests(
-        testRun: ITestRun,
-        workspace: WorkspaceFolder,
-        token: CancellationToken,
-        testController?: TestController,
-    ): Promise<void>;
 }
 
 export const ITestsRunner = Symbol('ITestsRunner');
-export interface ITestsRunner {
-    runTests(
-        testRun: ITestRun,
-        options: TestRunOptions,
-        idToRawData: Map<string, TestData>,
-        testController?: TestController,
-    ): Promise<void>;
-}
-
-export type TestRunOptions = {
-    workspaceFolder: Uri;
-    cwd: string;
-    args: string[];
-    token: CancellationToken;
-};
+export interface ITestsRunner {}
 
 // We expose these here as a convenience and to cut down on churn
 // elsewhere in the code.
@@ -148,84 +110,74 @@ export type TestCommandOptions = {
     workspaceFolder: Uri;
     cwd: string;
     command: TestDiscoveryCommand | TestExecutionCommand;
-    uuid: string;
     token?: CancellationToken;
     outChannel?: OutputChannel;
-    debugBool?: boolean;
+    profileKind?: TestRunProfileKind;
     testIds?: string[];
 };
 
-export type TestCommandOptionsPytest = {
-    workspaceFolder: Uri;
-    cwd: string;
-    commandStr: string;
-    token?: CancellationToken;
-    outChannel?: OutputChannel;
-    debugBool?: boolean;
-    testIds?: string[];
-    env: { [key: string]: string | undefined };
-};
-
-/**
- * Interface describing the server that will send test commands to the Python side, and process responses.
- *
- * Consumers will call sendCommand in order to execute Python-related code,
- * and will subscribe to the onDataReceived event to wait for the results.
- */
-export interface ITestServer {
-    readonly onDataReceived: Event<DataReceivedEvent>;
-    readonly onRunDataReceived: Event<DataReceivedEvent>;
-    readonly onDiscoveryDataReceived: Event<DataReceivedEvent>;
-    sendCommand(
-        options: TestCommandOptions,
-        env: EnvironmentVariables,
-        runTestIdsPort?: string,
-        runInstance?: TestRun,
-        testIds?: string[],
-        callback?: () => void,
-    ): Promise<void>;
-    serverReady(): Promise<void>;
-    getPort(): number;
-    createUUID(cwd: string): string;
-    deleteUUID(uuid: string): void;
-    triggerRunDataReceivedEvent(data: DataReceivedEvent): void;
-    triggerDiscoveryDataReceivedEvent(data: DataReceivedEvent): void;
-}
+// /**
+//  * Interface describing the server that will send test commands to the Python side, and process responses.
+//  *
+//  * Consumers will call sendCommand in order to execute Python-related code,
+//  * and will subscribe to the onDataReceived event to wait for the results.
+//  */
+// export interface ITestServer {
+//     readonly onDataReceived: Event<DataReceivedEvent>;
+//     readonly onRunDataReceived: Event<DataReceivedEvent>;
+//     readonly onDiscoveryDataReceived: Event<DataReceivedEvent>;
+//     sendCommand(
+//         options: TestCommandOptions,
+//         env: EnvironmentVariables,
+//         runTestIdsPort?: string,
+//         runInstance?: TestRun,
+//         testIds?: string[],
+//         callback?: () => void,
+//         executionFactory?: IPythonExecutionFactory,
+//     ): Promise<void>;
+//     serverReady(): Promise<void>;
+//     getPort(): number;
+//     createUUID(cwd: string): string;
+//     deleteUUID(uuid: string): void;
+//     triggerRunDataReceivedEvent(data: DataReceivedEvent): void;
+//     triggerDiscoveryDataReceivedEvent(data: DataReceivedEvent): void;
+// }
 export interface ITestResultResolver {
     runIdToVSid: Map<string, string>;
     runIdToTestItem: Map<string, TestItem>;
     vsIdToRunId: Map<string, string>;
-    resolveDiscovery(
-        payload: DiscoveredTestPayload | EOTTestPayload,
-        deferredTillEOT: Deferred<void>,
-        token?: CancellationToken,
-    ): Promise<void>;
-    resolveExecution(
-        payload: ExecutionTestPayload | EOTTestPayload,
-        runInstance: TestRun,
-        deferredTillEOT: Deferred<void>,
-    ): Promise<void>;
-    _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): Promise<void>;
-    _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): Promise<void>;
+    detailedCoverageMap: Map<string, FileCoverageDetail[]>;
+
+    resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
+    resolveExecution(payload: ExecutionTestPayload | CoveragePayload, runInstance: TestRun): void;
+    _resolveDiscovery(payload: DiscoveredTestPayload, token?: CancellationToken): void;
+    _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void;
+    _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void;
 }
 export interface ITestDiscoveryAdapter {
     // ** first line old method signature, second line new method signature
-    discoverTests(uri: Uri): Promise<DiscoveredTestPayload>;
-    discoverTests(uri: Uri, executionFactory: IPythonExecutionFactory): Promise<DiscoveredTestPayload>;
+    discoverTests(uri: Uri): Promise<void>;
+    discoverTests(
+        uri: Uri,
+        executionFactory?: IPythonExecutionFactory,
+        token?: CancellationToken,
+        interpreter?: PythonEnvironment,
+    ): Promise<void>;
 }
 
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
     // ** first line old method signature, second line new method signature
-    runTests(uri: Uri, testIds: string[], debugBool?: boolean): Promise<ExecutionTestPayload>;
+    runTests(uri: Uri, testIds: string[], profileKind?: boolean | TestRunProfileKind): Promise<void>;
     runTests(
         uri: Uri,
         testIds: string[],
-        debugBool?: boolean,
+        profileKind?: boolean | TestRunProfileKind,
         runInstance?: TestRun,
         executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
-    ): Promise<ExecutionTestPayload>;
+        interpreter?: PythonEnvironment,
+    ): Promise<void>;
 }
 
 // Same types as in python_files/unittestadapter/utils.py
@@ -255,9 +207,21 @@ export type DiscoveredTestPayload = {
     error?: string[];
 };
 
-export type EOTTestPayload = {
-    commandType: 'discovery' | 'execution';
-    eot: boolean;
+export type CoveragePayload = {
+    coverage: boolean;
+    cwd: string;
+    result?: {
+        [filePathStr: string]: FileCoverageMetrics;
+    };
+    error: string;
+};
+
+// using camel-case for these types to match the python side
+export type FileCoverageMetrics = {
+    // eslint-disable-next-line camelcase
+    lines_covered: number[];
+    // eslint-disable-next-line camelcase
+    lines_missed: number[];
 };
 
 export type ExecutionTestPayload = {

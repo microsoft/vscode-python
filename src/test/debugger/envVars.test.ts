@@ -17,7 +17,7 @@ import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TES
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { normCase } from '../../client/common/platform/fs-paths';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Resolving Environment Variables when Debugging', () => {
     let ioc: UnitTestIocContainer;

@@ -16,7 +16,7 @@ import { TestConfigSettingsService } from '../../../../client/testing/common/con
 import { ITestConfigSettingsService, UnitTestProduct } from '../../../../client/testing/common/types';
 import { BufferedTestConfigSettingsService } from '../../../../client/testing/common/bufferedTestConfigSettingService';
 
-use(chaiPromise);
+use(chaiPromise.default);
 
 const updateMethods: (keyof Omit<ITestConfigSettingsService, 'getTestEnablingSetting'>)[] = [
     'updateTestArgs',

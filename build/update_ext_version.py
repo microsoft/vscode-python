@@ -86,7 +86,7 @@ def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
         raise ValueError(
             f"Major version [{major}] must be the current year [{current_year}].",
             f"If changing major version after new year's, change to {current_year}.1.0",
-            f"Minor version must be updated based on release or pre-release channel.",
+            "Minor version must be updated based on release or pre-release channel.",
         )
 
     if args.release and not is_even(minor):
@@ -102,9 +102,7 @@ def main(package_json: pathlib.Path, argv: Sequence[str]) -> None:
     if args.build_id:
         # If build id is provided it should fall within the 0-INT32 max range
         # that the max allowed value for publishing to the Marketplace.
-        if args.build_id < 0 or (
-            args.for_publishing and args.build_id > ((2**32) - 1)
-        ):
+        if args.build_id < 0 or (args.for_publishing and args.build_id > ((2**32) - 1)):
             raise ValueError(f"Build ID must be within [0, {(2**32) - 1}]")
 
         package["version"] = ".".join((major, minor, str(args.build_id)))

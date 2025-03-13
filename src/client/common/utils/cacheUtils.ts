@@ -5,11 +5,7 @@
 
 const globalCacheStore = new Map<string, { expiry: number; data: any }>();
 
-/**
- * Gets a cache store to be used to store return values of methods or any other.
- *
- * @returns
- */
+// Gets a cache store to be used to store return values of methods or any other.
 export function getGlobalCacheStore() {
     return globalCacheStore;
 }

@@ -10,15 +10,6 @@ import { Commands } from '../constants';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
-    export const warnSourceMaps = l10n.t(
-        'Source map support is enabled in the Python Extension, this will adversely impact performance of the extension.',
-    );
-    export const disableSourceMaps = l10n.t('Disable Source Map Support');
-
-    export const warnBeforeEnablingSourceMaps = l10n.t(
-        'Enabling source map support in the Python Extension will adversely impact performance of the extension.',
-    );
-    export const enableSourceMapsAndReloadVSC = l10n.t('Enable and reload Window.');
     export const lsNotSupported = l10n.t(
         'Your operating system does not meet the minimum requirements of the Python Language Server. Reverting to the alternative autocompletion provider, Jedi.',
     );
@@ -101,6 +92,7 @@ export namespace AttachProcess {
 
 export namespace Repl {
     export const disableSmartSend = l10n.t('Disable Smart Send');
+    export const launchNativeRepl = l10n.t('Launch VS Code Native REPL');
 }
 export namespace Pylance {
     export const remindMeLater = l10n.t('Remind me later');
@@ -147,8 +139,6 @@ export namespace TensorBoard {
     export const upgradePrompt = l10n.t(
         'Integrated TensorBoard support is only available for TensorBoard >= 2.4.1. Would you like to upgrade your copy of TensorBoard?',
     );
-    export const launchNativeTensorBoardSessionCodeLens = l10n.t('▶ Launch TensorBoard Session');
-    export const launchNativeTensorBoardSessionCodeAction = l10n.t('Launch TensorBoard session');
     export const missingSourceFile = l10n.t(
         'The Python extension could not locate the requested source file on disk. Please manually specify the file.',
     );
@@ -432,6 +422,7 @@ export namespace Testing {
     export const errorUnittestExecution = l10n.t('Unittest test execution error');
     export const cancelPytestExecution = l10n.t('Canceled pytest test execution');
     export const errorPytestExecution = l10n.t('pytest test execution error');
+    export const copilotSetupMessage = l10n.t('Confirm your Python testing framework to enable test discovery.');
 }
 
 export namespace OutdatedDebugger {
@@ -521,7 +512,9 @@ export namespace CreateEnv {
             'A virtual environment is not currently selected for your Python interpreter. Would you like to create a virtual environment?',
         );
         export const createEnvironment = l10n.t('Create');
-        export const disableCheck = l10n.t('Disable');
-        export const disableCheckWorkspace = l10n.t('Disable (Workspace)');
+
+        export const globalPipInstallTriggerMessage = l10n.t(
+            'You may have installed Python packages into your global environment, which can cause conflicts between package versions. Would you like to create a virtual environment with these packages to isolate your dependencies?',
+        );
     }
 }

@@ -9,7 +9,8 @@ import { commonPosixBinPaths, getPythonBinFromPosixPaths } from '../../../common
 import { isPyenvShimDir } from '../../../common/environmentManagers/pyenv';
 import { getOSType, OSType } from '../../../../common/utils/platform';
 import { isMacDefaultPythonPath } from '../../../common/environmentManagers/macDefault';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../../logging';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
     public readonly providerId = 'posixKnownPaths';
@@ -26,7 +27,8 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
         }
 
         const iterator = async function* (kind: PythonEnvKind) {
-            traceVerbose('Searching for interpreters in posix paths locator');
+            const stopWatch = new StopWatch();
+            traceInfo('Searching for interpreters in posix paths locator');
             try {
                 // Filter out pyenv shims. They are not actual python binaries, they are used to launch
                 // the binaries specified in .python-version file in the cwd. We should not be reporting
@@ -50,7 +52,9 @@ export class PosixKnownPathsLocator extends Locator<BasicEnvInfo> {
             } catch (ex) {
                 traceError('Failed to process posix paths', ex);
             }
-            traceVerbose('Finished searching for interpreters in posix paths locator');
+            traceInfo(
+                `Finished searching for interpreters in posix paths locator: ${stopWatch.elapsedTime} milliseconds`,
+            );
         };
         return iterator(this.kind);
     }

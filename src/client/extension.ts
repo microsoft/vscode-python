@@ -6,10 +6,6 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-// Initialize source maps (this must never be moved up nor further down).
-import { initialize } from './sourceMapSupport';
-initialize(require('vscode'));
-
 //===============================================
 // We start tracking the extension's startup time at this point.  The
 // locations at which we record various Intervals are marked below in

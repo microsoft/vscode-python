@@ -28,7 +28,6 @@ import { CommandManager } from './application/commandManager';
 import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from './application/commands/reportIssueCommand';
 import { DebugService } from './application/debugService';
-import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
@@ -88,7 +87,8 @@ import { Random } from './utils/random';
 import { ContextKeyManager } from './application/contextKeyManager';
 import { CreatePythonFileCommandHandler } from './application/commands/createPythonFile';
 import { RequireJupyterPrompt } from '../jupyter/requireJupyterPrompt';
-import { isWindows } from './platform/platformService';
+import { isWindows } from './utils/platform';
+import { PixiActivationCommandProvider } from './terminal/environmentActivationProviders/pixiActivationProvider';
 
 export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingletonInstance<boolean>(IsWindows, isWindows());
@@ -163,6 +163,11 @@ export function registerTypes(serviceManager: IServiceManager): void {
     );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
+        PixiActivationCommandProvider,
+        TerminalActivationProviders.pixi,
+    );
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
         PipEnvActivationCommandProvider,
         TerminalActivationProviders.pipenv,
     );
@@ -182,9 +187,5 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         ReportIssueCommandHandler,
-    );
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        DebugSessionTelemetry,
     );
 }

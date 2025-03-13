@@ -17,6 +17,7 @@ import {
     EnvironmentWillCreateEvent,
     EnvironmentDidCreateEvent,
 } from './proposed.createEnvApis';
+import { CreateEnvironmentOptionsInternal } from './types';
 
 const onCreateEnvironmentStartedEvent = new EventEmitter<EnvironmentWillCreateEvent>();
 const onCreateEnvironmentExitedEvent = new EventEmitter<EnvironmentDidCreateEvent>();
@@ -55,7 +56,7 @@ export function getCreationEvents(): {
 
 async function createEnvironment(
     provider: CreateEnvironmentProvider,
-    options: CreateEnvironmentOptions,
+    options: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
 ): Promise<CreateEnvironmentResult | undefined> {
     let result: CreateEnvironmentResult | undefined;
     let err: Error | undefined;
@@ -83,13 +84,20 @@ interface CreateEnvironmentProviderQuickPickItem extends QuickPickItem {
 
 async function showCreateEnvironmentQuickPick(
     providers: readonly CreateEnvironmentProvider[],
-    options?: CreateEnvironmentOptions,
+    options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
 ): Promise<CreateEnvironmentProvider | undefined> {
     const items: CreateEnvironmentProviderQuickPickItem[] = providers.map((p) => ({
         label: p.name,
         description: p.description,
         id: p.id,
     }));
+
+    if (options?.providerId) {
+        const provider = providers.find((p) => p.id === options.providerId);
+        if (provider) {
+            return provider;
+        }
+    }
 
     let selectedItem: CreateEnvironmentProviderQuickPickItem | CreateEnvironmentProviderQuickPickItem[] | undefined;
 
@@ -119,7 +127,9 @@ async function showCreateEnvironmentQuickPick(
     return undefined;
 }
 
-function getOptionsWithDefaults(options?: CreateEnvironmentOptions): CreateEnvironmentOptions {
+function getOptionsWithDefaults(
+    options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
+): CreateEnvironmentOptions & CreateEnvironmentOptionsInternal {
     return {
         installPackages: true,
         ignoreSourceControl: true,
@@ -131,7 +141,7 @@ function getOptionsWithDefaults(options?: CreateEnvironmentOptions): CreateEnvir
 
 export async function handleCreateEnvironmentCommand(
     providers: readonly CreateEnvironmentProvider[],
-    options?: CreateEnvironmentOptions,
+    options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
 ): Promise<CreateEnvironmentResult | undefined> {
     const optionsWithDefaults = getOptionsWithDefaults(options);
     let selectedProvider: CreateEnvironmentProvider | undefined;

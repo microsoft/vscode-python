@@ -1,0 +1,12 @@
+{
+    "tool": "Credential Scanner",
+    "suppressions": [
+      {
+        "file": [
+          "file:///mnt/vss/_work/1/a/extension/extension/.nox/install_python_libs/lib/python3.8/site-packages/setuptools/_distutils/command%5Cregister.py",
+          "file:///mnt/vss/_work/1/b/extension/extension/.nox/install_python_libs/lib/python3.8/site-packages/setuptools/_distutils/command%5Cregister.py"
+        ],
+        "_justification": "These are not real passwords. For documentation purposes only."
+      }
+    ]
+  }

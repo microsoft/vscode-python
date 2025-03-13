@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { expect, use } from 'chai';
-import * as fs from 'fs-extra';
+import * as fs from '../../../client/common/platform/fs-paths';
 import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 import { TemporaryFile } from '../../../client/common/platform/types';
 import { assertDoesNotExist, assertExists, FSFixture } from './utils';

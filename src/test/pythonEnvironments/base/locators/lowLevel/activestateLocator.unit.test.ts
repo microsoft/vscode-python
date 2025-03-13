@@ -3,7 +3,7 @@
 
 import * as path from 'path';
 import * as sinon from 'sinon';
-import * as fsapi from 'fs-extra';
+import * as fsapi from '../../../../../client/common/platform/fs-paths';
 import { PythonEnvKind } from '../../../../../client/pythonEnvironments/base/info';
 import * as externalDependencies from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { getEnvs } from '../../../../../client/pythonEnvironments/base/locatorUtils';
@@ -38,7 +38,7 @@ suite('ActiveState Locator', () => {
 
         const stateToolDir = ActiveState.getStateToolDir();
         if (stateToolDir) {
-            sinon.stub(fsapi, 'pathExists').callsFake((dir: string) => dir === stateToolDir);
+            sinon.stub(fsapi, 'pathExists').callsFake((dir: string) => Promise.resolve(dir === stateToolDir));
         }
 
         sinon.stub(externalDependencies, 'getPythonSetting').returns(undefined);

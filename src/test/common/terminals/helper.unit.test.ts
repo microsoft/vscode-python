@@ -32,6 +32,7 @@ import { IComponentAdapter } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
+import { PixiActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pixiActivationProvider';
 
 suite('Terminal Service helpers', () => {
     let helper: TerminalHelper;
@@ -46,6 +47,7 @@ suite('Terminal Service helpers', () => {
     let nushellActivationProvider: ITerminalActivationCommandProvider;
     let pyenvActivationProvider: ITerminalActivationCommandProvider;
     let pipenvActivationProvider: ITerminalActivationCommandProvider;
+    let pixiActivationProvider: ITerminalActivationCommandProvider;
     let pythonSettings: PythonSettings;
     let shellDetectorIdentifyTerminalShell: sinon.SinonStub<[(Terminal | undefined)?], TerminalShellType>;
     let mockDetector: IShellDetector;
@@ -72,6 +74,7 @@ suite('Terminal Service helpers', () => {
         nushellActivationProvider = mock(Nushell);
         pyenvActivationProvider = mock(PyEnvActivationCommandProvider);
         pipenvActivationProvider = mock(PipEnvActivationCommandProvider);
+        pixiActivationProvider = mock(PixiActivationCommandProvider);
         pythonSettings = mock(PythonSettings);
         shellDetectorIdentifyTerminalShell = sinon.stub(ShellDetector.prototype, 'identifyTerminalShell');
         helper = new TerminalHelper(
@@ -86,12 +89,37 @@ suite('Terminal Service helpers', () => {
             instance(nushellActivationProvider),
             instance(pyenvActivationProvider),
             instance(pipenvActivationProvider),
+            instance(pixiActivationProvider),
             [instance(mockDetector)],
         );
     }
     teardown(() => shellDetectorIdentifyTerminalShell.restore());
     suite('Misc', () => {
         setup(doSetup);
+        test('Creating terminal should not automatically contain PYTHONSTARTUP', () => {
+            const theTitle = 'Hello';
+            const terminal = 'Terminal Created';
+            when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
+            const term = helper.createTerminal(theTitle);
+            const args = capture(terminalManager.createTerminal).first()[0];
+            expect(term).to.be.deep.equal(terminal);
+            const terminalOptions = args.env;
+            const safeTerminalOptions = terminalOptions || {};
+            expect(safeTerminalOptions).to.not.have.property('PYTHONSTARTUP');
+        });
+
+        test('Env should be undefined if not explicitly passed in ', () => {
+            const theTitle = 'Hello';
+            const terminal = 'Terminal Created';
+            when(terminalManager.createTerminal(anything())).thenReturn(terminal as any);
+
+            const term = helper.createTerminal(theTitle);
+
+            verify(terminalManager.createTerminal(anything())).once();
+            const args = capture(terminalManager.createTerminal).first()[0];
+            expect(term).to.be.deep.equal(terminal);
+            expect(args.env).to.be.deep.equal(undefined);
+        });
 
         test('Create terminal without a title', () => {
             const terminal = 'Terminal Created';
@@ -207,8 +235,8 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.equal(condaActivationCommands);
-                    verify(pythonSettings.pythonPath).once();
-                    verify(condaService.isCondaEnvironment(pythonPath)).once();
+                    verify(pythonSettings.pythonPath).atLeast(1);
+                    verify(condaService.isCondaEnvironment(pythonPath)).atLeast(1);
                     verify(condaActivationProvider.getActivationCommands(resource, anything())).once();
                 });
                 test('Activation command must return undefined if none of the proivders support the shell', async () => {
@@ -227,8 +255,8 @@ suite('Terminal Service helpers', () => {
                     );
 
                     expect(cmd).to.equal(undefined, 'Command must be undefined');
-                    verify(pythonSettings.pythonPath).once();
-                    verify(condaService.isCondaEnvironment(pythonPath)).once();
+                    verify(pythonSettings.pythonPath).atLeast(1);
+                    verify(condaService.isCondaEnvironment(pythonPath)).atLeast(1);
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(nushellActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(pyenvActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -251,8 +279,8 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.pythonPath).once();
-                    verify(condaService.isCondaEnvironment(pythonPath)).once();
+                    verify(pythonSettings.pythonPath).atLeast(1);
+                    verify(condaService.isCondaEnvironment(pythonPath)).atLeast(1);
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(bashActivationProvider.getActivationCommands(resource, anything())).once();
                     verify(nushellActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -283,7 +311,7 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.pythonPath).once();
+                    verify(pythonSettings.pythonPath).atLeast(1);
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(bashActivationProvider.getActivationCommands(resource, anything())).never();
@@ -309,7 +337,7 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.pythonPath).once();
+                    verify(pythonSettings.pythonPath).atLeast(1);
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.isShellSupported(anything())).atLeast(1);
                     verify(nushellActivationProvider.isShellSupported(anything())).atLeast(1);
@@ -336,7 +364,7 @@ suite('Terminal Service helpers', () => {
                     const cmd = await helper.getEnvironmentActivationCommands(anything(), resource);
 
                     expect(cmd).to.deep.equal(expectCommand);
-                    verify(pythonSettings.pythonPath).once();
+                    verify(pythonSettings.pythonPath).atLeast(1);
                     verify(condaService.isCondaEnvironment(pythonPath)).once();
                     verify(bashActivationProvider.getActivationCommands(resource, anything())).once();
                     verify(cmdActivationProvider.getActivationCommands(resource, anything())).once();
@@ -383,8 +411,13 @@ suite('Terminal Service helpers', () => {
                             );
 
                             expect(cmd).to.equal(undefined, 'Command must be undefined');
-                            verify(pythonSettings.pythonPath).times(interpreter ? 0 : 1);
-                            verify(condaService.isCondaEnvironment(pythonPath)).times(interpreter ? 0 : 1);
+                            if (interpreter) {
+                                verify(pythonSettings.pythonPath).never();
+                                verify(condaService.isCondaEnvironment(pythonPath)).never();
+                            } else {
+                                verify(pythonSettings.pythonPath).atLeast(1);
+                                verify(condaService.isCondaEnvironment(pythonPath)).atLeast(1);
+                            }
                             verify(bashActivationProvider.isShellSupported(shellToExpect)).atLeast(1);
                             verify(pyenvActivationProvider.isShellSupported(anything())).never();
                             verify(pipenvActivationProvider.isShellSupported(anything())).never();

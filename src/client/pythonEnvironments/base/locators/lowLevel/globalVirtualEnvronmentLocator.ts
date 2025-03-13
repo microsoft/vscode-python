@@ -10,7 +10,7 @@ import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
-import { pathExists, untildify } from '../../../common/externalDependencies';
+import { pathExists } from '../../../common/externalDependencies';
 import { getProjectDir, isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
     isVenvEnvironment,
@@ -19,7 +19,9 @@ import {
 } from '../../../common/environmentManagers/simplevirtualenvs';
 import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../../logging';
+import { StopWatch } from '../../../../common/utils/stopWatch';
+import { untildify } from '../../../../common/helpers';
 
 const DEFAULT_SEARCH_DEPTH = 2;
 /**
@@ -118,6 +120,8 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
         const searchDepth = this.searchDepth ?? DEFAULT_SEARCH_DEPTH;
 
         async function* iterator() {
+            const stopWatch = new StopWatch();
+            traceInfo('Searching for global virtual environments');
             const envRootDirs = await getGlobalVirtualEnvDirs();
             const envGenerators = envRootDirs.map((envRootDir) => {
                 async function* generator() {
@@ -152,7 +156,7 @@ export class GlobalVirtualEnvironmentLocator extends FSWatchingLocator {
             });
 
             yield* iterable(chain(envGenerators));
-            traceVerbose(`Finished searching for global virtual envs`);
+            traceInfo(`Finished searching for global virtual envs: ${stopWatch.elapsedTime} milliseconds`);
         }
 
         return iterator();

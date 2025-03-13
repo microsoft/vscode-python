@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { CancellationToken, QuickPickItem, WorkspaceFolder } from 'vscode';
+import * as fsapi from '../../../common/platform/fs-paths';
 import { MultiStepAction, showErrorMessage, showQuickPickWithBack } from '../../../common/vscodeApis/windowApis';
 import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 import { Common, CreateEnv } from '../../../common/utils/localize';
@@ -32,6 +32,7 @@ async function getWorkspacesForQuickPick(workspaces: readonly WorkspaceFolder[])
 export interface PickWorkspaceFolderOptions {
     allowMultiSelect?: boolean;
     token?: CancellationToken;
+    preSelectedWorkspace?: WorkspaceFolder;
 }
 
 export async function pickWorkspaceFolder(
@@ -50,6 +51,15 @@ export async function pickWorkspaceFolder(
             await executeCommand('vscode.openFolder');
         }
         return undefined;
+    }
+
+    if (options?.preSelectedWorkspace) {
+        if (context === MultiStepAction.Back) {
+            // In this case there is no Quick Pick shown, should just go to previous
+            throw MultiStepAction.Back;
+        }
+
+        return options.preSelectedWorkspace;
     }
 
     if (workspaces.length === 1) {

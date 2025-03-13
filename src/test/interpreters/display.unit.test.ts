@@ -32,6 +32,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 import * as logging from '../../client/logging';
 import { EnvironmentType, PythonEnvironment } from '../../client/pythonEnvironments/info';
 import { ThemeColor } from '../mocks/vsc';
+import * as extapi from '../../client/envExt/api.internal';
 
 const info: PythonEnvironment = {
     architecture: Architecture.Unknown,
@@ -58,6 +59,7 @@ suite('Interpreters Display', () => {
     let pathUtils: TypeMoq.IMock<IPathUtils>;
     let languageStatusItem: TypeMoq.IMock<LanguageStatusItem>;
     let traceLogStub: sinon.SinonStub;
+    let useEnvExtensionStub: sinon.SinonStub;
     async function createInterpreterDisplay(filters: IInterpreterStatusbarVisibilityFilter[] = []) {
         interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
         try {
@@ -67,6 +69,9 @@ suite('Interpreters Display', () => {
     }
 
     async function setupMocks(useLanguageStatus: boolean) {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();

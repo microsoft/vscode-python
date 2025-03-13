@@ -11,6 +11,7 @@
     "condaPath": "placeholder",
     "pipenvPath": "placeholder",
     "poetryPath": "placeholder",
+    "pixiToolPath": "placeholder",
     "devOptions": false,
     "globalModuleInstallation": false,
     "languageServer": true,
@@ -78,7 +79,8 @@
         "pytestPath": "placeholder",
         "unittestArgs": "placeholder",
         "unittestEnabled": true,
-        "autoTestDiscoverOnSaveEnabled": true
+        "autoTestDiscoverOnSaveEnabled": true,
+        "autoTestDiscoverOnSavePattern": "placeholder"
     },
     "terminal": {
         "activateEnvironment": true,

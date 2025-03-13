@@ -5,7 +5,7 @@
 import { expect } from 'chai';
 import rewiremock from 'rewiremock';
 import * as sinon from 'sinon';
-import * as fs from 'fs-extra';
+import * as fs from '../../client/common/platform/fs-paths';
 
 import {
     _resetSharedProperties,

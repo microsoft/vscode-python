@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import * as fs from 'fs';
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { uniq } from 'lodash';
+import * as fsapi from '../../common/platform/fs-paths';
 import { getSearchPathEntries } from '../../common/utils/exec';
 import { resolveSymbolicLink } from './externalDependencies';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../logging';

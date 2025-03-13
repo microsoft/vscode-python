@@ -6,21 +6,23 @@
 import { ActiveState } from '../../../common/environmentManagers/activestate';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { LazyResourceBasedLocator } from '../common/resourceBasedLocator';
 import { findInterpretersInDir } from '../../../common/commonUtils';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 export class ActiveStateLocator extends LazyResourceBasedLocator {
     public readonly providerId: string = 'activestate';
 
     // eslint-disable-next-line class-methods-use-this
     public async *doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
+        const stopWatch = new StopWatch();
         const state = await ActiveState.getState();
         if (state === undefined) {
             traceVerbose(`Couldn't locate the state binary.`);
             return;
         }
-        traceVerbose(`Searching for active state environments`);
+        traceInfo(`Searching for active state environments`);
         const projects = await state.getProjects();
         if (projects === undefined) {
             traceVerbose(`Couldn't fetch State Tool projects.`);
@@ -41,6 +43,6 @@ export class ActiveStateLocator extends LazyResourceBasedLocator {
                 }
             }
         }
-        traceVerbose(`Finished searching for active state environments`);
+        traceInfo(`Finished searching for active state environments: ${stopWatch.elapsedTime} milliseconds`);
     }
 }

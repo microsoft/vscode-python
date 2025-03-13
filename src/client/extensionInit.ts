@@ -4,8 +4,7 @@
 'use strict';
 
 import { Container } from 'inversify';
-import { Disposable, Memento, window } from 'vscode';
-import { instance, mock } from 'ts-mockito';
+import { Disposable, l10n, Memento, window } from 'vscode';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -29,7 +28,7 @@ import * as pythonEnvironments from './pythonEnvironments';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { registerLogger } from './logging';
 import { OutputChannelLogger } from './logging/outputChannelLogger';
-import { WorkspaceService } from './common/application/workspace';
+import { isTrusted, isVirtualWorkspace } from './common/vscodeApis/workspaceApis';
 
 // The code in this module should do nothing more complex than register
 // objects to DI and simple init (e.g. no side effects).  That implies
@@ -57,13 +56,11 @@ export function initializeGlobals(
     disposables.push(standardOutputChannel);
     disposables.push(registerLogger(new OutputChannelLogger(standardOutputChannel)));
 
-    const workspaceService = new WorkspaceService();
-    const unitTestOutChannel =
-        workspaceService.isVirtualWorkspace || !workspaceService.isTrusted
-            ? // Do not create any test related output UI when using virtual workspaces.
-              instance(mock<ITestOutputChannel>())
-            : window.createOutputChannel(OutputChannelNames.pythonTest);
+    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest);
     disposables.push(unitTestOutChannel);
+    if (isVirtualWorkspace() || !isTrusted()) {
+        unitTestOutChannel.appendLine(l10n.t('Unit tests are not supported in this environment.'));
+    }
 
     serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, standardOutputChannel);
     serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, unitTestOutChannel);

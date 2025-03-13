@@ -14,7 +14,7 @@ import { TerminalShellType } from '../../common/terminal/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { traceError, traceVerbose } from '../../logging';
-import { IShellIntegrationService } from '../types';
+import { IShellIntegrationDetectionService } from '../types';
 
 /**
  * This is a list of shells which support shell integration:
@@ -33,7 +33,7 @@ export enum isShellIntegrationWorking {
 }
 
 @injectable()
-export class ShellIntegrationService implements IShellIntegrationService {
+export class ShellIntegrationDetectionService implements IShellIntegrationDetectionService {
     private isWorkingForShell = new Set<TerminalShellType>();
 
     private readonly didChange = new EventEmitter<void>();

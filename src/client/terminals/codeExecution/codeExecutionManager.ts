@@ -4,12 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { Disposable, EventEmitter, Terminal, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry, IConfigurationService, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -22,6 +21,8 @@ import {
     CreateEnvironmentCheckKind,
     triggerCreateEnvironmentCheckNonBlocking,
 } from '../../pythonEnvironments/creation/createEnvironmentTrigger';
+import { ReplType } from '../../repl/types';
+import { runInDedicatedTerminal, runInTerminal, useEnvExtension } from '../../envExt/api.internal';
 
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
@@ -30,14 +31,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
-        @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private readonly configSettings: IConfigurationService,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
     ) {}
-
-    public get onExecutedCode(): Event<string> {
-        return this.eventEmitter.event;
-    }
 
     public registerCommands() {
         [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon, Commands.Exec_In_Separate_Terminal].forEach(
@@ -45,6 +41,16 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                 this.disposableRegistry.push(
                     this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
                         traceVerbose(`Attempting to run Python file`, file?.fsPath);
+
+                        if (useEnvExtension()) {
+                            try {
+                                await this.executeUsingExtension(file, cmd === Commands.Exec_In_Separate_Terminal);
+                            } catch (ex) {
+                                traceError('Failed to execute file in terminal', ex);
+                            }
+                            return;
+                        }
+
                         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
                         const interpreter = await interpreterService.getActiveInterpreter(file);
                         if (!interpreter) {
@@ -106,6 +112,42 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             ),
         );
     }
+
+    private async executeUsingExtension(file: Resource, dedicated: boolean): Promise<void> {
+        const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
+        file = file instanceof Uri ? file : undefined;
+        let fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();
+        if (!fileToExecute) {
+            return;
+        }
+        const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
+        if (fileAfterSave) {
+            fileToExecute = fileAfterSave;
+        }
+
+        const show = this.shouldTerminalFocusOnStart(fileToExecute);
+        let terminal: Terminal | undefined;
+        if (dedicated) {
+            terminal = await runInDedicatedTerminal(
+                fileToExecute,
+                [fileToExecute.fsPath.fileToCommandArgumentForPythonExt()],
+                undefined,
+                show,
+            );
+        } else {
+            terminal = await runInTerminal(
+                fileToExecute,
+                [fileToExecute.fsPath.fileToCommandArgumentForPythonExt()],
+                undefined,
+                show,
+            );
+        }
+
+        if (terminal) {
+            terminal.show();
+        }
+    }
+
     private async executeFileInTerminal(
         file: Resource,
         trigger: 'command' | 'icon',
@@ -125,15 +167,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
         if (fileAfterSave) {
             fileToExecute = fileAfterSave;
-        }
-
-        try {
-            const contents = await this.fileSystem.readFile(fileToExecute.fsPath);
-            this.eventEmitter.fire(contents);
-        } catch {
-            // Ignore any errors that occur for firing this event. It's only used
-            // for telemetry
-            noop();
         }
 
         const executionService = this.serviceContainer.get<ICodeExecutionService>(ICodeExecutionService, 'standard');
@@ -159,12 +192,16 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             return;
         }
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
-        const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor!);
+        const codeToExecute = await codeExecutionHelper.getSelectedTextToExecute(activeEditor);
         let wholeFileContent = '';
         if (activeEditor && activeEditor.document) {
             wholeFileContent = activeEditor.document.getText();
         }
-        const normalizedCode = await codeExecutionHelper.normalizeLines(codeToExecute!, wholeFileContent);
+        const normalizedCode = await codeExecutionHelper.normalizeLines(
+            codeToExecute!,
+            ReplType.terminal,
+            wholeFileContent,
+        );
         if (!normalizedCode || normalizedCode.trim().length === 0) {
             return;
         }
@@ -177,7 +214,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             noop();
         }
 
-        await executionService.execute(normalizedCode, activeEditor!.document.uri);
+        await executionService.execute(normalizedCode, activeEditor.document.uri);
     }
 
     private shouldTerminalFocusOnStart(uri: Uri | undefined): boolean {

@@ -4,8 +4,9 @@ import '../../../../common/extensions';
 import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { Conda, getCondaEnvironmentsTxt } from '../../../common/environmentManagers/conda';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { FSWatchingLocator } from './fsWatchingLocator';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 export class CondaEnvironmentLocator extends FSWatchingLocator {
     public readonly providerId: string = 'conda-envs';
@@ -20,6 +21,8 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
 
     // eslint-disable-next-line class-methods-use-this
     public async *doIterEnvs(_: unknown): IPythonEnvsIterator<BasicEnvInfo> {
+        const stopWatch = new StopWatch();
+        traceInfo('Searching for conda environments');
         const conda = await Conda.getConda();
         if (conda === undefined) {
             traceVerbose(`Couldn't locate the conda binary.`);
@@ -38,6 +41,6 @@ export class CondaEnvironmentLocator extends FSWatchingLocator {
                 traceError(`Failed to process conda env: ${JSON.stringify(env)}`, ex);
             }
         }
-        traceVerbose(`Finished searching for conda environments`);
+        traceInfo(`Finished searching for conda environments: ${stopWatch.elapsedTime} milliseconds`);
     }
 }

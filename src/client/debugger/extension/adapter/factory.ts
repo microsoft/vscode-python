@@ -15,10 +15,8 @@ import {
 } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
-import { traceLog, traceVerbose } from '../../../logging';
+import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
@@ -26,6 +24,7 @@ import { Common, Interpreters } from '../../../common/utils/localize';
 import { IPersistentStateFactory } from '../../../common/types';
 import { Commands } from '../../../common/constants';
 import { ICommandManager } from '../../../common/application/types';
+import { getDebugpyPath } from '../../pythonDebugger';
 
 // persistent state names, exported to make use of in testing
 export enum debugStateKeys {
@@ -75,10 +74,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
         const command = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
         if (command.length !== 0) {
-            if (configuration.request === 'attach' && configuration.processId !== undefined) {
-                sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
-            }
-
             const executable = command.shift() ?? 'python';
 
             // "logToFile" is not handled directly by the adapter - instead, we need to pass
@@ -90,19 +85,15 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
                 return new DebugAdapterExecutable(executable, args);
             }
-
-            const debuggerAdapterPathToUse = path.join(
-                EXTENSION_ROOT_DIR,
-                'python_files',
-                'lib',
-                'python',
-                'debugpy',
-                'adapter',
-            );
+            const debugpyPath = await getDebugpyPath();
+            if (!debugpyPath) {
+                traceError('Could not find debugpy path.');
+                throw new Error('Could not find debugpy path.');
+            }
+            const debuggerAdapterPathToUse = path.join(debugpyPath, 'adapter');
 
             const args = command.concat([debuggerAdapterPathToUse, ...logArgs]);
             traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
-            sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
             return new DebugAdapterExecutable(executable, args);
         }
 

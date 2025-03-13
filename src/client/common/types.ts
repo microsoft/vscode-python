@@ -24,7 +24,6 @@ import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
 export interface IDisposable {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispose(): void | undefined | Promise<void>;
 }
 
@@ -167,6 +166,7 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
+    readonly pixiToolPath: string;
     readonly devOptions: string[];
     readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
@@ -177,13 +177,8 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
-    readonly tensorBoard: ITensorBoardSettings | undefined;
     readonly REPL: IREPLSettings;
     register(): void;
-}
-
-export interface ITensorBoardSettings {
-    logDirectory: string | undefined;
 }
 
 export interface IInterpreterSettings {
@@ -196,10 +191,12 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
     readonly activateEnvInCurrentTerminal: boolean;
+    readonly enableShellIntegration: boolean;
 }
 
 export interface IREPLSettings {
     readonly enableREPLSmartSend: boolean;
+    readonly sendToNativeREPL: boolean;
 }
 
 export interface IExperiments {

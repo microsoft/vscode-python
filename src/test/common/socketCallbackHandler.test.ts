@@ -189,7 +189,7 @@ suite('SocketCallbackHandler', () => {
         expect(port).to.be.greaterThan(0);
     });
     test('Succesfully starts with specific port', async () => {
-        const availablePort = await getFreePort({ host: 'localhost' });
+        const availablePort = await getFreePort.default({ host: 'localhost' });
         const port = await socketServer.Start({ port: availablePort, host: 'localhost' });
         expect(port).to.be.equal(availablePort);
     });
@@ -311,7 +311,7 @@ suite('SocketCallbackHandler', () => {
     });
     test('Succesful Handshake with specific port', async () => {
         const availablePort = await new Promise<number>((resolve, reject) =>
-            getFreePort({ host: 'localhost' }).then(resolve, reject),
+            getFreePort.default({ host: 'localhost' }).then(resolve, reject),
         );
         const port = await socketServer.Start({ port: availablePort, host: 'localhost' });
 

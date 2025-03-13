@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as minimatch from 'minimatch';
 import * as path from 'path';
+import * as fsapi from '../../../../common/platform/fs-paths';
 import { PythonEnvKind } from '../../info';
 import { IPythonEnvsIterator, BasicEnvInfo } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
@@ -12,7 +12,8 @@ import {
     isStorePythonInstalled,
     getMicrosoftStoreAppsRoot,
 } from '../../../common/environmentManagers/microsoftStoreEnv';
-import { traceVerbose } from '../../../../logging';
+import { traceInfo } from '../../../../logging';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 /**
  * This is a glob pattern which matches following file names:
@@ -34,7 +35,7 @@ const pythonExeGlob = 'python3.{[0-9],[0-9][0-9]}.exe';
  * @returns {boolean} : Returns true if the path matches pattern for windows python executable.
  */
 function isMicrosoftStorePythonExePattern(interpreterPath: string): boolean {
-    return minimatch(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
+    return minimatch.default(path.basename(interpreterPath), pythonExeGlob, { nocase: true });
 }
 
 /**
@@ -87,13 +88,14 @@ export class MicrosoftStoreLocator extends FSWatchingLocator {
 
     protected doIterEnvs(): IPythonEnvsIterator<BasicEnvInfo> {
         const iterator = async function* (kind: PythonEnvKind) {
-            traceVerbose('Searching for windows store envs');
+            const stopWatch = new StopWatch();
+            traceInfo('Searching for windows store envs');
             const exes = await getMicrosoftStorePythonExes();
             yield* exes.map(async (executablePath: string) => ({
                 kind,
                 executablePath,
             }));
-            traceVerbose(`Finished searching for windows store envs`);
+            traceInfo(`Finished searching for windows store envs: ${stopWatch.elapsedTime} milliseconds`);
         };
         return iterator(this.kind);
     }

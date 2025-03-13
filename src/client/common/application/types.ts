@@ -40,6 +40,8 @@ import {
     StatusBarItem,
     Terminal,
     TerminalOptions,
+    TerminalShellExecutionEndEvent,
+    TerminalShellIntegrationChangeEvent,
     TextDocument,
     TextDocumentChangeEvent,
     TextDocumentShowOptions,
@@ -816,9 +818,6 @@ export interface IWorkspaceService {
 
     /**
      * Generate a key that's unique to the workspace folder (could be fsPath).
-     * @param {(Uri | undefined)} resource
-     * @returns {string}
-     * @memberof IWorkspaceService
      */
     getWorkspaceFolderIdentifier(resource: Uri | undefined, defaultValue?: string): string;
     /**
@@ -936,6 +935,10 @@ export interface ITerminalManager {
      * @return A new Terminal.
      */
     createTerminal(options: TerminalOptions): Terminal;
+
+    onDidChangeTerminalShellIntegration(handler: (e: TerminalShellIntegrationChangeEvent) => void): Disposable;
+
+    onDidEndTerminalShellExecution(handler: (e: TerminalShellExecutionEndEvent) => void): Disposable;
 }
 
 export const IDebugService = Symbol('IDebugManager');

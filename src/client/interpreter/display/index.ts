@@ -24,6 +24,7 @@ import {
     IInterpreterService,
     IInterpreterStatusbarVisibilityFilter,
 } from '../contracts';
+import { useEnvExtension } from '../../envExt/api.internal';
 
 /**
  * Based on https://github.com/microsoft/vscode-python/issues/18040#issuecomment-992567670.
@@ -67,6 +68,9 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
     }
 
     public async activate(): Promise<void> {
+        if (useEnvExtension()) {
+            return;
+        }
         const application = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (this.useLanguageStatus) {
             this.languageStatus = application.createLanguageStatusItem('python.selectedInterpreter', {
@@ -111,6 +115,12 @@ export class InterpreterDisplay implements IInterpreterDisplay, IExtensionSingle
         }
     }
     private async updateDisplay(workspaceFolder?: Uri) {
+        if (useEnvExtension()) {
+            this.statusBar?.hide();
+            this.languageStatus?.dispose();
+            this.languageStatus = undefined;
+            return;
+        }
         const interpreter = await this.interpreterService.getActiveInterpreter(workspaceFolder);
         if (
             this.currentlySelectedInterpreterDisplay &&

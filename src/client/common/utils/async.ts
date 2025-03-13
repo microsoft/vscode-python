@@ -155,6 +155,7 @@ export async function* chain<T>(
 ): IAsyncIterableIterator<T> {
     const promises = iterators.map(getNext);
     let numRunning = iterators.length;
+
     while (numRunning > 0) {
         // Promise.race will not fail, because each promise calls getNext,
         // Which handles failures by wrapping each iterator in a try/catch block.
@@ -232,13 +233,18 @@ export async function flattenIterator<T>(iterator: IAsyncIterator<T>): Promise<T
 }
 
 /**
+ * Get everything yielded by the iterable.
+ */
+export async function flattenIterable<T>(iterableItem: AsyncIterable<T>): Promise<T[]> {
+    const results: T[] = [];
+    for await (const item of iterableItem) {
+        results.push(item);
+    }
+    return results;
+}
+
+/**
  * Wait for a condition to be fulfilled within a timeout.
- *
- * @export
- * @param {() => Promise<boolean>} condition
- * @param {number} timeoutMs
- * @param {string} errorMessage
- * @returns {Promise<void>}
  */
 export async function waitForCondition(
     condition: () => Promise<boolean>,

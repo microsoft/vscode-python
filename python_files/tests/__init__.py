@@ -1,5 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
+# ruff:noqa: PTH118, PTH120
 import os.path
 
 TEST_ROOT = os.path.dirname(__file__)

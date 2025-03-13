@@ -7,7 +7,8 @@ import { FSWatchingLocator } from './fsWatchingLocator';
 import { getInterpreterPathFromDir } from '../../../common/commonUtils';
 import { getSubDirs } from '../../../common/externalDependencies';
 import { getPyenvVersionsDir } from '../../../common/environmentManagers/pyenv';
-import { traceError, traceVerbose } from '../../../../logging';
+import { traceError, traceInfo } from '../../../../logging';
+import { StopWatch } from '../../../../common/utils/stopWatch';
 
 /**
  * Gets all the pyenv environments.
@@ -16,25 +17,31 @@ import { traceError, traceVerbose } from '../../../../logging';
  * all the environments (global or virtual) in that directory.
  */
 async function* getPyenvEnvironments(): AsyncIterableIterator<BasicEnvInfo> {
-    traceVerbose('Searching for pyenv environments');
-    const pyenvVersionDir = getPyenvVersionsDir();
+    const stopWatch = new StopWatch();
+    traceInfo('Searching for pyenv environments');
+    try {
+        const pyenvVersionDir = getPyenvVersionsDir();
 
-    const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
-    for await (const subDirPath of subDirs) {
-        const interpreterPath = await getInterpreterPathFromDir(subDirPath);
+        const subDirs = getSubDirs(pyenvVersionDir, { resolveSymlinks: true });
+        for await (const subDirPath of subDirs) {
+            const interpreterPath = await getInterpreterPathFromDir(subDirPath);
 
-        if (interpreterPath) {
-            try {
-                yield {
-                    kind: PythonEnvKind.Pyenv,
-                    executablePath: interpreterPath,
-                };
-            } catch (ex) {
-                traceError(`Failed to process environment: ${interpreterPath}`, ex);
+            if (interpreterPath) {
+                try {
+                    yield {
+                        kind: PythonEnvKind.Pyenv,
+                        executablePath: interpreterPath,
+                    };
+                } catch (ex) {
+                    traceError(`Failed to process environment: ${interpreterPath}`, ex);
+                }
             }
         }
+    } catch (ex) {
+        // This is expected when pyenv is not installed
+        traceInfo(`pyenv is not installed`);
     }
-    traceVerbose('Finished searching for pyenv environments');
+    traceInfo(`Finished searching for pyenv environments: ${stopWatch.elapsedTime} milliseconds`);
 }
 
 export class PyenvLocator extends FSWatchingLocator {

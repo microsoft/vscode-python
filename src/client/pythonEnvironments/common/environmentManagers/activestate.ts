@@ -75,8 +75,8 @@ export class ActiveState {
 
     private static readonly defaultStateCommand: string = 'state';
 
-    @cache(30_000, true, 10_000)
     // eslint-disable-next-line class-methods-use-this
+    @cache(30_000, true, 10_000)
     private async getProjectsCached(): Promise<ProjectInfo[] | undefined> {
         try {
             const stateCommand =

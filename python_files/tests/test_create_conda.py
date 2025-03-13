@@ -4,8 +4,9 @@
 import importlib
 import sys
 
-import create_conda
 import pytest
+
+import create_conda
 
 
 @pytest.mark.parametrize("env_exists", [True, False])

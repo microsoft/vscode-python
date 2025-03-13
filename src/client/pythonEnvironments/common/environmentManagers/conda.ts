@@ -1,6 +1,6 @@
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import { lt, SemVer } from 'semver';
+import * as fsapi from '../../../common/platform/fs-paths';
 import { getEnvironmentVariable, getOSType, getUserHomeDir, OSType } from '../../../common/utils/platform';
 import {
     arePathsSame,
@@ -24,6 +24,7 @@ import { OUTPUT_MARKER_SCRIPT } from '../../../common/process/internal/scripts';
 import { splitLines } from '../../../common/stringUtils';
 import { SpawnOptions } from '../../../common/process/types';
 import { sleep } from '../../../common/utils/async';
+import { getConfiguration } from '../../../common/vscodeApis/workspaceApis';
 
 export const AnacondaCompanyName = 'Anaconda, Inc.';
 export const CONDAPATH_SETTING_KEY = 'condaPath';
@@ -44,6 +45,10 @@ export type CondaInfo = {
     root_prefix?: string; // eslint-disable-line camelcase
     conda_version?: string; // eslint-disable-line camelcase
     conda_shlvl?: number; // eslint-disable-line camelcase
+    config_files?: string[]; // eslint-disable-line camelcase
+    rc_path?: string; // eslint-disable-line camelcase
+    sys_rc_path?: string; // eslint-disable-line camelcase
+    user_rc_path?: string; // eslint-disable-line camelcase
 };
 
 type CondaEnvInfo = {
@@ -287,6 +292,10 @@ export class Conda {
         return Conda.condaPromise.get(shellPath);
     }
 
+    public static setConda(condaPath: string): void {
+        Conda.condaPromise.set(undefined, Promise.resolve(new Conda(condaPath)));
+    }
+
     /**
      * Locates the preferred "conda" utility on this system by considering user settings,
      * binaries on PATH, Python interpreters in the registry, and known install locations.
@@ -487,6 +496,15 @@ export class Conda {
         );
     }
 
+    /**
+     * Retrieves list of directories where conda environments are stored.
+     */
+    @cache(30_000, true, 10_000)
+    public async getEnvDirs(): Promise<string[]> {
+        const info = await this.getInfo();
+        return info.envs_dirs ?? [];
+    }
+
     public async getName(prefix: string, info?: CondaInfo): Promise<string | undefined> {
         info = info ?? (await this.getInfo(true));
         if (info.root_prefix && arePathsSame(prefix, info.root_prefix)) {
@@ -546,11 +564,8 @@ export class Conda {
             return undefined;
         }
         const args = [];
-        if (env.name) {
-            args.push('-n', env.name);
-        } else {
-            args.push('-p', env.prefix);
-        }
+        args.push('-p', env.prefix);
+
         const python = [
             forShellExecution ? this.shellCommand : this.command,
             'run',
@@ -606,4 +621,18 @@ export class Conda {
         }
         return true;
     }
+}
+
+export function setCondaBinary(executable: string): void {
+    Conda.setConda(executable);
+}
+
+export async function getCondaEnvDirs(): Promise<string[] | undefined> {
+    const conda = await Conda.getConda();
+    return conda?.getEnvDirs();
+}
+
+export function getCondaPathSetting(): string | undefined {
+    const config = getConfiguration('python');
+    return config.get<string>(CONDAPATH_SETTING_KEY, '');
 }
