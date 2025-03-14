@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ExtensionSurveyPrompt, extensionSurveyStateKeys } from '../../client/activation/extensionSurvey';
-import { IApplicationEnvironment, IApplicationShell } from '../../client/common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { ShowExtensionSurveyPrompt } from '../../client/common/experiments/groups';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPlatformService } from '../../client/common/platform/types';
@@ -23,6 +23,7 @@ import { createDeferred } from '../../client/common/utils/async';
 import { Common, ExtensionSurveyBanner } from '../../client/common/utils/localize';
 import { OSType } from '../../client/common/utils/platform';
 import { sleep } from '../core';
+import { WorkspaceConfiguration } from 'vscode';
 
 suite('Extension survey prompt - shouldShowBanner()', () => {
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -35,6 +36,8 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
     let disableSurveyForTime: TypeMoq.IMock<IPersistentState<any>>;
     let doNotShowAgain: TypeMoq.IMock<IPersistentState<any>>;
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+
     setup(() => {
         experiments = TypeMoq.Mock.ofType<IExperimentService>();
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -45,6 +48,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         when(
             persistentStateFactory.createGlobalPersistentState(
                 extensionSurveyStateKeys.disableSurveyForTime,
@@ -63,6 +67,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             10,
         );
     });
@@ -122,6 +127,23 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         }
         random.verifyAll();
     });
+    test('Returns false if telemetry.disableFeedback is enabled', async () => {
+        disableSurveyForTime.setup((d) => d.value).returns(() => false);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
+
+        const telemetryConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        workspaceService.setup((w) => w.getConfiguration('telemetry')).returns(() => telemetryConfig.object);
+        telemetryConfig
+            .setup((t) => t.get(TypeMoq.It.isValue('disableFeedback'), TypeMoq.It.isValue(false)))
+            .returns(() => true);
+
+        const result = extensionSurveyPrompt.shouldShowBanner();
+
+        expect(result).to.equal(false, 'Banner should not be shown when telemetry.disableFeedback is true');
+        workspaceService.verify((w) => w.getConfiguration('telemetry'), TypeMoq.Times.once());
+        telemetryConfig.verify((t) => t.get('disableFeedback', false), TypeMoq.Times.once());
+    });
+
     test('Returns true if user is in the random sampling', async () => {
         disableSurveyForTime.setup((d) => d.value).returns(() => false);
         doNotShowAgain.setup((d) => d.value).returns(() => false);
@@ -142,6 +164,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             100,
         );
         disableSurveyForTime.setup((d) => d.value).returns(() => false);
@@ -162,6 +185,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             0,
         );
         disableSurveyForTime.setup((d) => d.value).returns(() => false);
@@ -186,6 +210,7 @@ suite('Extension survey prompt - showSurvey()', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         browserService = TypeMoq.Mock.ofType<IBrowserService>();
@@ -195,6 +220,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         when(
             persistentStateFactory.createGlobalPersistentState(
                 extensionSurveyStateKeys.disableSurveyForTime,
@@ -214,6 +240,7 @@ suite('Extension survey prompt - showSurvey()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             10,
         );
     });
@@ -406,6 +433,7 @@ suite('Extension survey prompt - activate()', () => {
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
+    let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         browserService = TypeMoq.Mock.ofType<IBrowserService>();
@@ -414,6 +442,7 @@ suite('Extension survey prompt - activate()', () => {
         experiments = TypeMoq.Mock.ofType<IExperimentService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
+        workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
     });
 
     teardown(() => {
@@ -431,6 +460,7 @@ suite('Extension survey prompt - activate()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             10,
         );
         experiments
@@ -460,6 +490,7 @@ suite('Extension survey prompt - activate()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             10,
             50,
         );
@@ -494,6 +525,7 @@ suite('Extension survey prompt - activate()', () => {
             experiments.object,
             appEnvironment.object,
             platformService.object,
+            workspaceService.object,
             10,
             50,
         );
