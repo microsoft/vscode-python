@@ -104,6 +104,7 @@ class PythonServerImpl implements PythonServer, Disposable {
         this.connection.sendNotification('exit');
         this.disposables.forEach((d) => d.dispose());
         this.connection.dispose();
+        serverInstance = undefined;
     }
 }
 
