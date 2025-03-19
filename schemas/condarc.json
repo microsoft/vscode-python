@@ -59,7 +59,14 @@
             }
         },
         "ssl_verify": {
-            "type": "boolean"
+            "oneOf": [
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "string"
+                }
+            ]
         },
         "offline": {
             "type": "boolean"
