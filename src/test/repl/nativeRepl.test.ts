@@ -95,4 +95,26 @@ suite('REPL - Native REPL', () => {
         setReplDirectoryStub.restore();
         setReplControllerSpy.restore();
     });
+
+    test('Closing REPL should dispose of the previous instance and create a new one on reopening', async () => {
+        const disposeSpy = sinon.spy(NativeRepl.prototype, 'dispose');
+        const createStub = sinon.stub(NativeRepl, 'create').callThrough();
+        interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+        const interpreter = await interpreterService.object.getActiveInterpreter();
+
+        const firstRepl = await getNativeRepl(interpreter as PythonEnvironment, disposableArray);
+
+        firstRepl.dispose();
+
+        const secondRepl = await getNativeRepl(interpreter as PythonEnvironment, disposableArray);
+
+        expect(disposeSpy.calledOnce).to.be.true;
+        expect(createStub.calledTwice).to.be.true;
+        expect(firstRepl).to.not.equal(secondRepl);
+
+        disposeSpy.restore();
+        createStub.restore();
+    });
 });
