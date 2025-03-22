@@ -244,7 +244,7 @@ def runner_with_cwd_env(
     """
     process_args: List[str]
     pipe_name: str
-    if "MANAGE_PY_PATH" in env_add:
+    if "MANAGE_PY_PATH" in env_add and "COVERAGE_ENABLED" not in env_add:
         # If we are running Django, generate a unittest-specific pipe name.
         process_args = [sys.executable, *args]
         pipe_name = generate_random_pipe_name("unittest-discovery-test")

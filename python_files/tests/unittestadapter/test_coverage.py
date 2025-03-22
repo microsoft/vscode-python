@@ -8,6 +8,8 @@ import os
 import pathlib
 import sys
 
+import pytest
+
 sys.path.append(os.fspath(pathlib.Path(__file__).parent))
 
 python_files_path = pathlib.Path(__file__).parent.parent.parent
@@ -49,3 +51,41 @@ def test_basic_coverage():
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14}
     assert set(focal_function_coverage.get("lines_missed")) == {6}
+
+
+@pytest.mark.timeout(30)
+def test_basic_django_coverage():
+    """This test validates that the coverage is correctly calculated for a Django project."""
+    data_path: pathlib.Path = TEST_DATA_PATH / "simple_django"
+    manage_py_path: str = os.fsdecode(data_path / "manage.py")
+    execution_script: pathlib.Path = python_files_path / "unittestadapter" / "execution.py"
+
+    test_ids = [
+        "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question",
+        "polls.tests.QuestionModelTests.test_was_published_recently_with_future_question_2",
+        "polls.tests.QuestionModelTests.test_question_creation_and_retrieval",
+    ]
+
+    script_str = os.fsdecode(execution_script)
+    actual = helpers.runner_with_cwd_env(
+        [script_str, "--udiscovery", "-p", "*test*.py", *test_ids],
+        data_path,
+        {
+            "MANAGE_PY_PATH": manage_py_path,
+            "_TEST_VAR_UNITTEST": "True",
+            "COVERAGE_ENABLED": os.fspath(data_path),
+        },
+    )
+
+    assert actual
+    coverage = actual[-1]
+    assert coverage
+    results = coverage["result"]
+    assert results
+    assert len(results) == 15
+    polls_views_coverage = results.get(str(data_path / "polls" / "views.py"))
+    assert polls_views_coverage
+    assert polls_views_coverage.get("lines_covered") is not None
+    assert polls_views_coverage.get("lines_missed") is not None
+    assert set(polls_views_coverage.get("lines_covered")) == {3, 4, 6}
+    assert set(polls_views_coverage.get("lines_missed")) == {7}
