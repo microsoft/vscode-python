@@ -59,7 +59,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
             return false;
         }
 
-        let feedbackEnabled = false;
+        let feedbackEnabled = true;
 
         const telemetryConfig = this.workspace.getConfiguration('telemetry');
         if (telemetryConfig) {
