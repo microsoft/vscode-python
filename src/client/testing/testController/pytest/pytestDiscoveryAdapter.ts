@@ -112,7 +112,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = discoveryPipeName;
         traceInfo(
-            `All environment variables set for pytest discovery, PYTHONPATH: ${JSON.stringify(mutableEnv.PYTHONPATH)}`,
+            `Environment variables set for pytest discovery: PYTHONPATH=${mutableEnv.PYTHONPATH}, TEST_RUN_PIPE=${mutableEnv.TEST_RUN_PIPE}`,
         );
 
         // delete UUID following entire discovery finishing.

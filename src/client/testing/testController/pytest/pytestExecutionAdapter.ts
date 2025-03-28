@@ -138,9 +138,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             const testIdsFileName = await utils.writeTestIdsFile(testIds);
             mutableEnv.RUN_TEST_IDS_PIPE = testIdsFileName;
             traceInfo(
-                `All environment variables set for pytest execution, PYTHONPATH: ${JSON.stringify(
-                    mutableEnv.PYTHONPATH,
-                )}`,
+                `Environment variables set for pytest execution: PYTHONPATH=${mutableEnv.PYTHONPATH}, TEST_RUN_PIPE=${mutableEnv.TEST_RUN_PIPE}, RUN_TEST_IDS_PIPE=${mutableEnv.RUN_TEST_IDS_PIPE}`,
             );
 
             const spawnOptions: SpawnOptions = {
