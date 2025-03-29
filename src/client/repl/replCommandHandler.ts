@@ -1,6 +1,4 @@
 import {
-    commands,
-    window,
     NotebookController,
     NotebookEditor,
     ViewColumn,
@@ -9,11 +7,13 @@ import {
     NotebookCellKind,
     NotebookEdit,
     WorkspaceEdit,
-    workspace,
     Uri,
 } from 'vscode';
 import { getExistingReplViewColumn, getTabNameForUri } from './replUtils';
 import { PVSC_EXTENSION_ID } from '../common/constants';
+import { showNotebookDocument } from '../common/vscodeApis/windowApis';
+import { openNotebookDocument, applyEdit } from '../common/vscodeApis/workspaceApis';
+import { executeCommand } from '../common/vscodeApis/commandApis';
 
 /**
  * Function that opens/show REPL using IW UI.
@@ -26,7 +26,7 @@ export async function openInteractiveREPL(
     let viewColumn = ViewColumn.Beside;
     if (notebookDocument instanceof Uri) {
         // Case where NotebookDocument is undefined, but workspace mementoURI exists.
-        notebookDocument = await workspace.openNotebookDocument(notebookDocument);
+        notebookDocument = await openNotebookDocument(notebookDocument);
     } else if (notebookDocument) {
         // Case where NotebookDocument (REPL document already exists in the tab)
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
@@ -34,9 +34,9 @@ export async function openInteractiveREPL(
     } else if (!notebookDocument) {
         // Case where NotebookDocument doesnt exist, or
         // became outdated (untitled.ipynb created without Python extension knowing, effectively taking over original Python REPL's URI)
-        notebookDocument = await workspace.openNotebookDocument('jupyter-notebook');
+        notebookDocument = await openNotebookDocument('jupyter-notebook');
     }
-    const editor = await window.showNotebookDocument(notebookDocument!, {
+    const editor = await showNotebookDocument(notebookDocument!, {
         viewColumn,
         asRepl: 'Python REPL',
         preserveFocus,
@@ -52,7 +52,7 @@ export async function openInteractiveREPL(
         return undefined;
     }
 
-    await commands.executeCommand('notebook.selectKernel', {
+    await executeCommand('notebook.selectKernel', {
         editor,
         id: notebookController.id,
         extension: PVSC_EXTENSION_ID,
@@ -69,7 +69,7 @@ export async function selectNotebookKernel(
     notebookControllerId: string,
     extensionId: string,
 ): Promise<void> {
-    await commands.executeCommand('notebook.selectKernel', {
+    await executeCommand('notebook.selectKernel', {
         notebookEditor,
         id: notebookControllerId,
         extension: extensionId,
@@ -84,7 +84,7 @@ export async function executeNotebookCell(notebookEditor: NotebookEditor, code: 
     const cellIndex = replOptions?.appendIndex ?? notebook.cellCount;
     await addCellToNotebook(notebook, cellIndex, code);
     // Execute the cell
-    commands.executeCommand('notebook.cell.execute', {
+    executeCommand('notebook.cell.execute', {
         ranges: [{ start: cellIndex, end: cellIndex + 1 }],
         document: notebook.uri,
     });
@@ -100,5 +100,5 @@ async function addCellToNotebook(notebookDocument: NotebookDocument, index: numb
     const notebookEdit = NotebookEdit.insertCells(index, [notebookCellData]);
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.set(notebookDocument!.uri, [notebookEdit]);
-    await workspace.applyEdit(workspaceEdit);
+    await applyEdit(workspaceEdit);
 }
