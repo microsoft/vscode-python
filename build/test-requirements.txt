@@ -32,6 +32,7 @@ django-stubs
 coverage
 pytest-cov
 pytest-json
+pytest-timeout
 
 
 # for pytest-describe related tests
