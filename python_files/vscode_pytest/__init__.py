@@ -474,6 +474,9 @@ def pytest_sessionfinish(session, exitstatus):
                 "lines_covered": list(lines_covered),  # list of int
                 "lines_missed": list(lines_missed),  # list of int
             }
+            # convert relative path to absolute path
+            if not pathlib.Path(file).is_absolute():
+                file = str(pathlib.Path(file).resolve())
             file_coverage_map[file] = file_info
 
         payload: CoveragePayloadDict = CoveragePayloadDict(
