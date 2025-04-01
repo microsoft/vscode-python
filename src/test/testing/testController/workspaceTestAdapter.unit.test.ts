@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 
 import { TestController, TestItem, TestItemCollection, TestRun, Uri } from 'vscode';
-import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
+import { IConfigurationService, ILogOutputChannel } from '../../../client/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter'; // 7/7
 import { WorkspaceTestAdapter } from '../../../client/testing/testController/workspaceTestAdapter';
@@ -25,7 +25,7 @@ suite('Workspace test adapter', () => {
 
         let discoverTestsStub: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
-        let outputChannel: typemoq.IMock<ITestOutputChannel>;
+        let outputChannel: typemoq.IMock<ILogOutputChannel>;
 
         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
         let execFactory: typemoq.IMock<IPythonExecutionFactory>;
@@ -106,7 +106,7 @@ suite('Workspace test adapter', () => {
 
             discoverTestsStub = sinon.stub(UnittestTestDiscoveryAdapter.prototype, 'discoverTests');
             sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
-            outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
+            outputChannel = typemoq.Mock.ofType<ILogOutputChannel>();
         });
 
         teardown(() => {
@@ -254,7 +254,7 @@ suite('Workspace test adapter', () => {
         let stubResultResolver: ITestResultResolver;
         let executionTestsStub: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
-        let outputChannel: typemoq.IMock<ITestOutputChannel>;
+        let outputChannel: typemoq.IMock<ILogOutputChannel>;
         let runInstance: typemoq.IMock<TestRun>;
         let testControllerMock: typemoq.IMock<TestController>;
         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
@@ -331,7 +331,7 @@ suite('Workspace test adapter', () => {
 
             executionTestsStub = sandbox.stub(UnittestTestExecutionAdapter.prototype, 'runTests');
             sendTelemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
-            outputChannel = typemoq.Mock.ofType<ITestOutputChannel>();
+            outputChannel = typemoq.Mock.ofType<ILogOutputChannel>();
             runInstance = typemoq.Mock.ofType<TestRun>();
 
             const testProvider = 'pytest';

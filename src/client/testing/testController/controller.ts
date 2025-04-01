@@ -25,7 +25,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { ICommandManager, IWorkspaceService } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { IPythonExecutionFactory } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ITestOutputChannel, Resource } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogOutputChannel, Resource } from '../../common/types';
 import { DelayedTrigger, IDelayedTrigger } from '../../common/utils/delayTrigger';
 import { noop } from '../../common/utils/misc';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -98,7 +98,7 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory,
         @inject(ITestDebugLauncher) private readonly debugLauncher: ITestDebugLauncher,
-        @inject(ITestOutputChannel) private readonly testOutputChannel: ITestOutputChannel,
+        @inject(ILogOutputChannel) private readonly logOutputChannel: ILogOutputChannel,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider,
     ) {
         this.refreshCancellation = new CancellationTokenSource();
@@ -176,13 +176,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
                 discoveryAdapter = new UnittestTestDiscoveryAdapter(
                     this.configSettings,
-                    this.testOutputChannel,
+                    this.logOutputChannel,
                     resultResolver,
                     this.envVarsService,
                 );
                 executionAdapter = new UnittestTestExecutionAdapter(
                     this.configSettings,
-                    this.testOutputChannel,
+                    this.logOutputChannel,
                     resultResolver,
                     this.envVarsService,
                 );
@@ -191,13 +191,13 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                 resultResolver = new PythonResultResolver(this.testController, testProvider, workspace.uri);
                 discoveryAdapter = new PytestTestDiscoveryAdapter(
                     this.configSettings,
-                    this.testOutputChannel,
+                    this.logOutputChannel,
                     resultResolver,
                     this.envVarsService,
                 );
                 executionAdapter = new PytestTestExecutionAdapter(
                     this.configSettings,
-                    this.testOutputChannel,
+                    this.logOutputChannel,
                     resultResolver,
                     this.envVarsService,
                 );

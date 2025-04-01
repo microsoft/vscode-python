@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { Observable } from 'rxjs';
 import * as sinon from 'sinon';
-import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
+import { IConfigurationService, ILogOutputChannel } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { Deferred, createDeferred } from '../../../../client/common/utils/async';
@@ -25,7 +25,7 @@ import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('Unittest test discovery adapter', () => {
     let configService: IConfigurationService;
-    let outputChannel: typeMoq.IMock<ITestOutputChannel>;
+    let outputChannel: typeMoq.IMock<ILogOutputChannel>;
     let mockProc: MockChildProcess;
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
@@ -47,7 +47,7 @@ suite('Unittest test discovery adapter', () => {
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
         } as unknown) as IConfigurationService;
-        outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        outputChannel = typeMoq.Mock.ofType<ILogOutputChannel>();
 
         // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);

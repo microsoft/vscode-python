@@ -11,7 +11,7 @@ import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
+import { IConfigurationService, ILogOutputChannel } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { traceError, traceLog } from '../../../client/logging';
@@ -32,7 +32,7 @@ suite('End to End Tests: test adapters', () => {
     let serviceContainer: IServiceContainer;
     let envVarsService: IEnvironmentVariablesProvider;
     let workspaceUri: Uri;
-    let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
+    let logOutputChannel: typeMoq.IMock<ILogOutputChannel>;
     let testController: TestController;
     let getPixiStub: sinon.SinonStub;
     const unittestProvider: TestProvider = UNITTEST_PROVIDER;
@@ -117,8 +117,8 @@ suite('End to End Tests: test adapters', () => {
 
         // create objects that were not injected
 
-        testOutputChannel = createTypeMoq<ITestOutputChannel>();
-        testOutputChannel
+        logOutputChannel = createTypeMoq<ILogOutputChannel>();
+        logOutputChannel
             .setup((x) => x.append(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
                 traceLog('output channel - ', appendVal.toString());
@@ -126,7 +126,7 @@ suite('End to End Tests: test adapters', () => {
             .returns(() => {
                 // Whatever you need to return
             });
-        testOutputChannel
+        logOutputChannel
             .setup((x) => x.appendLine(typeMoq.It.isAny()))
             .callback((appendVal: any) => {
                 traceLog('output channel ', appendVal.toString());
@@ -191,7 +191,7 @@ suite('End to End Tests: test adapters', () => {
         // run unittest discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -236,7 +236,7 @@ suite('End to End Tests: test adapters', () => {
         // run discovery
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -276,7 +276,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -331,7 +331,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -420,7 +420,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -496,7 +496,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -550,7 +550,7 @@ suite('End to End Tests: test adapters', () => {
         // run execution
         const executionAdapter = new UnittestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -630,7 +630,7 @@ suite('End to End Tests: test adapters', () => {
         // run unittest execution
         const executionAdapter = new UnittestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -705,7 +705,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -785,7 +785,7 @@ suite('End to End Tests: test adapters', () => {
         // run execution
         const executionAdapter = new UnittestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -839,7 +839,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -910,7 +910,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -984,7 +984,7 @@ suite('End to End Tests: test adapters', () => {
 
         const discoveryAdapter = new UnittestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -1043,7 +1043,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest discovery
         const discoveryAdapter = new PytestTestDiscoveryAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );
@@ -1104,7 +1104,7 @@ suite('End to End Tests: test adapters', () => {
         // run pytest execution
         const executionAdapter = new PytestTestExecutionAdapter(
             configService,
-            testOutputChannel.object,
+            logOutputChannel.object,
             resultResolver,
             envVarsService,
         );

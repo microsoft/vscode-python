@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import * as fs from 'fs';
 import * as sinon from 'sinon';
-import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
+import { IConfigurationService, ILogOutputChannel } from '../../../../client/common/types';
 import { PytestTestDiscoveryAdapter } from '../../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import {
     IPythonExecutionFactory,
@@ -29,7 +29,7 @@ suite('pytest test discovery adapter', () => {
     let adapter: PytestTestDiscoveryAdapter;
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let deferred: Deferred<void>;
-    let outputChannel: typeMoq.IMock<ITestOutputChannel>;
+    let outputChannel: typeMoq.IMock<ILogOutputChannel>;
     let expectedPath: string;
     let uri: Uri;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -72,7 +72,7 @@ suite('pytest test discovery adapter', () => {
         execService = typeMoq.Mock.ofType<IPythonExecutionService>();
         execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
         execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
-        outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
+        outputChannel = typeMoq.Mock.ofType<ILogOutputChannel>();
 
         const output = new Observable<Output<string>>(() => {
             /* no op */

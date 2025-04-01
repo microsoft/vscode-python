@@ -9,7 +9,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
+import { IConfigurationService, ILogOutputChannel } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
@@ -32,7 +32,7 @@ import { useEnvExtension, getEnvironment, runInBackground } from '../../../envEx
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly outputChannel: ITestOutputChannel,
+        private readonly outputChannel: ILogOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
