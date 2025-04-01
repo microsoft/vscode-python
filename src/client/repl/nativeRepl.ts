@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 // Native Repl class that holds instance of pythonServer and replController
 
 import {
@@ -7,13 +10,12 @@ import {
     QuickPickItem,
     TextEditor,
     Uri,
-    workspace,
     WorkspaceFolder,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
-import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { getWorkspaceFolders, onDidCloseNotebookDocument } from '../common/vscodeApis/workspaceApis';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer, PythonServer } from './pythonServer';
 import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from './replCommandHandler';
@@ -69,7 +71,7 @@ export class NativeRepl implements Disposable {
      */
     private watchNotebookClosed(): void {
         this.disposables.push(
-            workspace.onDidCloseNotebookDocument(async (nb) => {
+            onDidCloseNotebookDocument(async (nb) => {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
                     this.newReplSession = true;

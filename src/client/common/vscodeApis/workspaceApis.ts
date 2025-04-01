@@ -60,6 +60,10 @@ export function onDidChangeConfiguration(handler: (e: vscode.ConfigurationChange
     return vscode.workspace.onDidChangeConfiguration(handler);
 }
 
+export function onDidCloseNotebookDocument(handler: (e: vscode.NotebookDocument) => void): vscode.Disposable {
+    return vscode.workspace.onDidCloseNotebookDocument(handler);
+}
+
 export function createFileSystemWatcher(
     globPattern: vscode.GlobPattern,
     ignoreCreateEvents?: boolean,
