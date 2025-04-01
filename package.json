@@ -748,6 +748,43 @@
                 "configurationAttributes": {
                     "attach": {
                         "properties": {
+                            "autoReload": {
+                                "default": {},
+                                "description": "Configures automatic reload of code on edit.",
+                                "properties": {
+                                    "enable": {
+                                        "default": false,
+                                        "description": "Automatically reload code on edit.",
+                                        "type": "boolean"
+                                    },
+                                    "exclude": {
+                                        "default": [
+                                            "**/.git/**",
+                                            "**/.metadata/**",
+                                            "**/__pycache__/**",
+                                            "**/node_modules/**",
+                                            "**/site-packages/**"
+                                        ],
+                                        "description": "Glob patterns of paths to exclude from auto reload.",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    },
+                                    "include": {
+                                        "default": [
+                                            "**/*.py",
+                                            "**/*.pyw"
+                                        ],
+                                        "description": "Glob patterns of paths to include in auto reload.",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            },
                             "connect": {
                                 "label": "Attach by connecting to debugpy over a socket.",
                                 "properties": {
