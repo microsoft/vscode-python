@@ -639,11 +639,7 @@
                     "default": false,
                     "description": "%python.REPL.sendToNativeREPL.description%",
                     "scope": "resource",
-                    "type": "boolean",
-                    "tags": [
-                        "onExP",
-                        "preview"
-                    ]
+                    "type": "boolean"
                 },
                 "python.REPL.provideVariables": {
                     "default": true,
