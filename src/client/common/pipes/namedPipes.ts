@@ -92,7 +92,7 @@ class CombinedReader implements rpc.MessageReader {
 
     private _onPartialMessage = new rpc.Emitter<rpc.PartialMessageInfo>();
 
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    // eslint-disable-next-line class-methods-use-this, @typescript-eslint/no-empty-function
     private _callback: rpc.DataCallback = () => {};
 
     private _disposables: rpc.Disposable[] = [];

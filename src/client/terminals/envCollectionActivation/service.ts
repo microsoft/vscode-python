@@ -221,9 +221,10 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         env.PS1 = await this.getPS1(shell, resource, env);
         const defaultPrependOptions = await this.getPrependOptions();
 
+        const deactivate = await this.terminalDeactivateService.getScriptLocation(shell, resource);
         // Clear any previously set env vars from collection
         envVarCollection.clear();
-        const deactivate = await this.terminalDeactivateService.getScriptLocation(shell, resource);
+
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
