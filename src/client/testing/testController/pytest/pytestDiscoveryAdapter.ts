@@ -196,7 +196,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-        // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
 
         result?.proc?.stdout?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());

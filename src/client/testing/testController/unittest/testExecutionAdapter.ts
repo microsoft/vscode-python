@@ -246,8 +246,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 resultProc = result?.proc;
 
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-                // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
-                // TODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
 
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
