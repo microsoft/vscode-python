@@ -15,7 +15,6 @@ import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import { DiscoveredTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
 import {
-    MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
@@ -138,15 +137,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 proc.stdout.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceInfo(out);
-                    this.outputChannel?.append(out);
                 });
                 proc.stderr.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceError(out);
-                    this.outputChannel?.append(out);
                 });
                 proc.onExit((code, signal) => {
-                    this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
@@ -205,15 +201,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         result?.proc?.stdout?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());
             traceInfo(out);
-            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.stderr?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());
             traceError(out);
-            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.on('exit', (code, signal) => {
-            this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
             if (code !== 0) {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}.`,

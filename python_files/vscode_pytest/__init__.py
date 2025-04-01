@@ -121,7 +121,7 @@ def pytest_internalerror(excrepr, excinfo):  # noqa: ARG001
     excinfo -- the exception information of type ExceptionInfo.
     """
     # call.excinfo.exconly() returns the exception as a string.
-    ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
+    ERRORS.append(excinfo.exconly() + "\n Check Python Logs for more details.")
 
 
 def pytest_exception_interact(node, call, report):
@@ -139,9 +139,9 @@ def pytest_exception_interact(node, call, report):
         if call.excinfo and call.excinfo.typename != "AssertionError":
             if report.outcome == "skipped" and "SkipTest" in str(call):
                 return
-            ERRORS.append(call.excinfo.exconly() + "\n Check Python Test Logs for more details.")
+            ERRORS.append(call.excinfo.exconly() + "\n Check Python Logs for more details.")
         else:
-            ERRORS.append(report.longreprtext + "\n Check Python Test Logs for more details.")
+            ERRORS.append(report.longreprtext + "\n Check Python Logs for more details.")
     else:
         # If during execution, send this data that the given node failed.
         report_value = "error"
@@ -204,7 +204,7 @@ def pytest_keyboard_interrupt(excinfo):
     excinfo -- the exception information of type ExceptionInfo.
     """
     # The function execonly() returns the exception as a string.
-    ERRORS.append(excinfo.exconly() + "\n Check Python Test Logs for more details.")
+    ERRORS.append(excinfo.exconly() + "\n Check Python Logs for more details.")
 
 
 class TestOutcome(Dict):

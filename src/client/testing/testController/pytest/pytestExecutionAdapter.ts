@@ -194,15 +194,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
                         runInstance?.appendOutput(out);
-                        this.outputChannel?.append(out);
                     });
                     proc.stderr.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
                         runInstance?.appendOutput(out);
-                        this.outputChannel?.append(out);
                     });
                     proc.onExit((code, signal) => {
-                        this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                         if (code !== 0) {
                             traceError(
                                 `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
@@ -244,15 +241,12 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = utils.fixLogLinesNoTrailing(data.toString());
                     runInstance?.appendOutput(out);
-                    this.outputChannel?.append(out);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = utils.fixLogLinesNoTrailing(data.toString());
                     runInstance?.appendOutput(out);
-                    this.outputChannel?.append(out);
                 });
                 result?.proc?.on('exit', (code, signal) => {
-                    this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,

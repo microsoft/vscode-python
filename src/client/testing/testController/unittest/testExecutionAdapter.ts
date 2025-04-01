@@ -15,7 +15,7 @@ import {
     TestExecutionCommand,
 } from '../common/types';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
-import { MESSAGE_ON_TESTING_OUTPUT_MOVE, fixLogLinesNoTrailing } from '../common/utils';
+import { fixLogLinesNoTrailing } from '../common/utils';
 import { EnvironmentVariables, IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
@@ -205,15 +205,12 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
                         runInstance?.appendOutput(out);
-                        this.outputChannel?.append(out);
                     });
                     proc.stderr.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
                         runInstance?.appendOutput(out);
-                        this.outputChannel?.append(out);
                     });
                     proc.onExit((code, signal) => {
-                        this.outputChannel?.append(utils.MESSAGE_ON_TESTING_OUTPUT_MOVE);
                         if (code !== 0) {
                             traceError(
                                 `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
@@ -255,17 +252,14 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     runInstance?.appendOutput(`${out}`);
-                    spawnOptions?.outputChannel?.append(out);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     runInstance?.appendOutput(`${out}`);
-                    spawnOptions?.outputChannel?.append(out);
                 });
 
                 result?.proc?.on('exit', (code, signal) => {
                     // if the child has testIds then this is a run request
-                    spawnOptions?.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0 && testIds) {
                         // This occurs when we are running the test and there is an error which occurs.
 
