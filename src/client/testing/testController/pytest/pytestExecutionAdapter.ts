@@ -4,7 +4,7 @@
 import { CancellationTokenSource, DebugSessionOptions, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as path from 'path';
 import { ChildProcess } from 'child_process';
-import { IConfigurationService, ILogOutputChannel } from '../../../common/types';
+import { IConfigurationService } from '../../../common/types';
 import { Deferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import { ExecutionTestPayload, ITestExecutionAdapter, ITestResultResolver } from '../common/types';
@@ -25,7 +25,6 @@ import { getEnvironment, runInBackground, useEnvExtension } from '../../../envEx
 export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly outputChannel: ILogOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
@@ -146,7 +145,6 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             const spawnOptions: SpawnOptions = {
                 cwd,
                 throwOnStdErr: true,
-                outputChannel: this.outputChannel,
                 env: mutableEnv,
                 token: runInstance?.token,
             };

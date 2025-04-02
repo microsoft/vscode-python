@@ -11,7 +11,7 @@ import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
-import { IConfigurationService, ILogOutputChannel } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { traceError, traceLog } from '../../../client/logging';
@@ -22,7 +22,6 @@ import { PythonResultResolver } from '../../../client/testing/testController/com
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { createTypeMoq } from '../../mocks/helper';
 import * as pixi from '../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 suite('End to End Tests: test adapters', () => {
@@ -32,7 +31,6 @@ suite('End to End Tests: test adapters', () => {
     let serviceContainer: IServiceContainer;
     let envVarsService: IEnvironmentVariablesProvider;
     let workspaceUri: Uri;
-    let logOutputChannel: typeMoq.IMock<ILogOutputChannel>;
     let testController: TestController;
     let getPixiStub: sinon.SinonStub;
     const unittestProvider: TestProvider = UNITTEST_PROVIDER;
@@ -116,24 +114,6 @@ suite('End to End Tests: test adapters', () => {
         envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
 
         // create objects that were not injected
-
-        logOutputChannel = createTypeMoq<ILogOutputChannel>();
-        logOutputChannel
-            .setup((x) => x.append(typeMoq.It.isAny()))
-            .callback((appendVal: any) => {
-                traceLog('output channel - ', appendVal.toString());
-            })
-            .returns(() => {
-                // Whatever you need to return
-            });
-        logOutputChannel
-            .setup((x) => x.appendLine(typeMoq.It.isAny()))
-            .callback((appendVal: any) => {
-                traceLog('output channel ', appendVal.toString());
-            })
-            .returns(() => {
-                // Whatever you need to return
-            });
     });
     teardown(() => {
         sinon.restore();
@@ -189,12 +169,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest discovery
-        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
@@ -234,12 +209,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run discovery
-        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // 1. Check the status is "success"
@@ -274,12 +244,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
@@ -329,12 +294,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
@@ -418,12 +378,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
@@ -494,12 +449,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
@@ -548,12 +498,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -628,12 +573,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -703,12 +643,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -783,12 +718,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathCoverageWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -837,12 +767,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -908,12 +833,7 @@ suite('End to End Tests: test adapters', () => {
         }
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -982,12 +902,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
-        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -1041,12 +956,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
@@ -1102,12 +1012,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            logOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)

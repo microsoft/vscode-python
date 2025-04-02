@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { CancellationTokenSource, DebugSessionOptions, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
-import { IConfigurationService, ILogOutputChannel } from '../../../common/types';
+import { IConfigurationService } from '../../../common/types';
 import { Deferred, createDeferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
@@ -35,7 +35,6 @@ import { getEnvironment, runInBackground, useEnvExtension } from '../../../envEx
 export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly outputChannel: ILogOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
@@ -122,7 +121,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             cwd,
             profileKind,
             testIds,
-            outChannel: this.outputChannel,
             token: runInstance?.token,
         };
         traceLog(`Running UNITTEST execution for the following test ids: ${testIds}`);
@@ -140,7 +138,6 @@ export class UnittestTestExecutionAdapter implements ITestExecutionAdapter {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
-            outputChannel: options.outChannel,
             env: mutableEnv,
         };
         // Create the Python environment in which to execute the command.

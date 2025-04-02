@@ -5,7 +5,7 @@ import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ChildProcess } from 'child_process';
-import { IConfigurationService, ILogOutputChannel } from '../../../common/types';
+import { IConfigurationService } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DiscoveredTestPayload,
@@ -32,7 +32,6 @@ import { getEnvironment, runInBackground, useEnvExtension } from '../../../envEx
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly logOutputChannel: ILogOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
@@ -74,7 +73,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             workspaceFolder: uri,
             command,
             cwd,
-            outChannel: this.logOutputChannel,
             token,
         };
 
@@ -147,7 +145,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
-            outputChannel: options.outChannel,
             env: mutableEnv,
         };
 

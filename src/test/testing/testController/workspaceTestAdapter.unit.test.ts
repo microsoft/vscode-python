@@ -6,7 +6,7 @@ import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 
 import { TestController, TestItem, TestItemCollection, TestRun, Uri } from 'vscode';
-import { IConfigurationService, ILogOutputChannel } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { UnittestTestDiscoveryAdapter } from '../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter'; // 7/7
 import { WorkspaceTestAdapter } from '../../../client/testing/testController/workspaceTestAdapter';
@@ -25,7 +25,6 @@ suite('Workspace test adapter', () => {
 
         let discoverTestsStub: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
-        let outputChannel: typemoq.IMock<ILogOutputChannel>;
 
         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
         let execFactory: typemoq.IMock<IPythonExecutionFactory>;
@@ -106,7 +105,6 @@ suite('Workspace test adapter', () => {
 
             discoverTestsStub = sinon.stub(UnittestTestDiscoveryAdapter.prototype, 'discoverTests');
             sendTelemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
-            outputChannel = typemoq.Mock.ofType<ILogOutputChannel>();
         });
 
         teardown(() => {
@@ -119,8 +117,8 @@ suite('Workspace test adapter', () => {
         test('If discovery failed correctly create error node', async () => {
             discoverTestsStub.rejects(new Error('foo'));
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
             const uriFoo = Uri.parse('foo');
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
@@ -158,8 +156,8 @@ suite('Workspace test adapter', () => {
         test("When discovering tests, the workspace test adapter should call the test discovery adapter's discoverTest method", async () => {
             discoverTestsStub.resolves();
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 testDiscoveryAdapter,
@@ -184,8 +182,8 @@ suite('Workspace test adapter', () => {
                     }),
             );
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 testDiscoveryAdapter,
@@ -206,8 +204,8 @@ suite('Workspace test adapter', () => {
         test('If discovery succeeds, send a telemetry event with the "failed" key set to false', async () => {
             discoverTestsStub.resolves({ status: 'success' });
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
@@ -229,8 +227,8 @@ suite('Workspace test adapter', () => {
         test('If discovery failed, send a telemetry event with the "failed" key set to true, and add an error node to the test controller', async () => {
             discoverTestsStub.rejects(new Error('foo'));
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
@@ -254,7 +252,6 @@ suite('Workspace test adapter', () => {
         let stubResultResolver: ITestResultResolver;
         let executionTestsStub: sinon.SinonStub;
         let sendTelemetryStub: sinon.SinonStub;
-        let outputChannel: typemoq.IMock<ILogOutputChannel>;
         let runInstance: typemoq.IMock<TestRun>;
         let testControllerMock: typemoq.IMock<TestController>;
         let telemetryEvent: { eventName: EventName; properties: Record<string, unknown> }[] = [];
@@ -331,7 +328,6 @@ suite('Workspace test adapter', () => {
 
             executionTestsStub = sandbox.stub(UnittestTestExecutionAdapter.prototype, 'runTests');
             sendTelemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent').callsFake(mockSendTelemetryEvent);
-            outputChannel = typemoq.Mock.ofType<ILogOutputChannel>();
             runInstance = typemoq.Mock.ofType<TestRun>();
 
             const testProvider = 'pytest';
@@ -346,8 +342,8 @@ suite('Workspace test adapter', () => {
             sandbox.restore();
         });
         test('When executing tests, the right tests should be sent to be executed', async () => {
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 testDiscoveryAdapter,
@@ -394,8 +390,8 @@ suite('Workspace test adapter', () => {
         });
 
         test("When executing tests, the workspace test adapter should call the test execute adapter's executionTest method", async () => {
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 testDiscoveryAdapter,
@@ -420,8 +416,8 @@ suite('Workspace test adapter', () => {
                     }),
             );
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
                 testDiscoveryAdapter,
@@ -442,8 +438,8 @@ suite('Workspace test adapter', () => {
         test('If execution failed correctly create error node', async () => {
             executionTestsStub.rejects(new Error('foo'));
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
@@ -480,8 +476,8 @@ suite('Workspace test adapter', () => {
         test('If execution failed, send a telemetry event with the "failed" key set to true, and add an error node to the test controller', async () => {
             executionTestsStub.rejects(new Error('foo'));
 
-            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings, outputChannel.object);
-            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings, outputChannel.object);
+            const testDiscoveryAdapter = new UnittestTestDiscoveryAdapter(stubConfigSettings);
+            const testExecutionAdapter = new UnittestTestExecutionAdapter(stubConfigSettings);
 
             const workspaceTestAdapter = new WorkspaceTestAdapter(
                 'unittest',
