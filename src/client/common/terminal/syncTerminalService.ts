@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject } from 'inversify';
-import { CancellationToken, Disposable, Event, TerminalShellExecution } from 'vscode';
+import { CancellationToken, Disposable, Event, Terminal, TerminalShellExecution } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceVerbose } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -150,6 +150,17 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     }
     public show(preserveFocus?: boolean | undefined): Promise<void> {
         return this.terminalService.show(preserveFocus);
+    }
+
+    /**
+     * Ensures that a terminal exists, creating one if necessary.
+     *
+     * @param {boolean} [preserveFocus] Whether the editor should keep focus after the terminal is shown. Defaults to `true`.
+     * @returns {Promise<Terminal>} The terminal instance.
+     * @memberof SynchronousTerminalService
+     */
+    public async ensureTerminal(preserveFocus: boolean = true): Promise<Terminal> {
+        return this.terminalService.ensureTerminal(preserveFocus);
     }
 
     private createLockFile(): Promise<TemporaryFile> {
