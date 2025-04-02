@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2025.3.0-dev",
+    "version": "2025.5.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -448,8 +448,7 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
-                            "pythonTestAdapter",
-                            "pythonREPLSmartSend"
+                            "pythonTestAdapter"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -457,8 +456,7 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
-                            "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%"
+                            "%python.experiments.pythonTestAdapter.description%"
                         ]
                     },
                     "scope": "window",
@@ -475,8 +473,7 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
-                            "pythonTestAdapter",
-                            "pythonREPLSmartSend"
+                            "pythonTestAdapter"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -484,8 +481,7 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
-                            "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%"
+                            "%python.experiments.pythonTestAdapter.description%"
                         ]
                     },
                     "scope": "window",
@@ -639,11 +635,7 @@
                     "default": false,
                     "description": "%python.REPL.sendToNativeREPL.description%",
                     "scope": "resource",
-                    "type": "boolean",
-                    "tags": [
-                        "onExP",
-                        "preview"
-                    ]
+                    "type": "boolean"
                 },
                 "python.REPL.provideVariables": {
                     "default": true,

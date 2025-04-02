@@ -127,21 +127,38 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         }
         random.verifyAll();
     });
-    test('Returns false if telemetry.disableFeedback is enabled', async () => {
+    test('Returns true if telemetry.feedback.enabled is enabled', async () => {
         disableSurveyForTime.setup((d) => d.value).returns(() => false);
         doNotShowAgain.setup((d) => d.value).returns(() => false);
 
         const telemetryConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceService.setup((w) => w.getConfiguration('telemetry')).returns(() => telemetryConfig.object);
         telemetryConfig
-            .setup((t) => t.get(TypeMoq.It.isValue('disableFeedback'), TypeMoq.It.isValue(false)))
+            .setup((t) => t.get(TypeMoq.It.isValue('feedback.enabled'), TypeMoq.It.isValue(true)))
             .returns(() => true);
 
         const result = extensionSurveyPrompt.shouldShowBanner();
 
-        expect(result).to.equal(false, 'Banner should not be shown when telemetry.disableFeedback is true');
+        expect(result).to.equal(true, 'Banner should be shown when telemetry.feedback.enabled is true');
         workspaceService.verify((w) => w.getConfiguration('telemetry'), TypeMoq.Times.once());
-        telemetryConfig.verify((t) => t.get('disableFeedback', false), TypeMoq.Times.once());
+        telemetryConfig.verify((t) => t.get('feedback.enabled', true), TypeMoq.Times.once());
+    });
+
+    test('Returns false if telemetry.feedback.enabled is disabled', async () => {
+        disableSurveyForTime.setup((d) => d.value).returns(() => false);
+        doNotShowAgain.setup((d) => d.value).returns(() => false);
+
+        const telemetryConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        workspaceService.setup((w) => w.getConfiguration('telemetry')).returns(() => telemetryConfig.object);
+        telemetryConfig
+            .setup((t) => t.get(TypeMoq.It.isValue('feedback.enabled'), TypeMoq.It.isValue(true)))
+            .returns(() => false);
+
+        const result = extensionSurveyPrompt.shouldShowBanner();
+
+        expect(result).to.equal(false, 'Banner should not be shown when feedback.enabled is false');
+        workspaceService.verify((w) => w.getConfiguration('telemetry'), TypeMoq.Times.once());
+        telemetryConfig.verify((t) => t.get('feedback.enabled', true), TypeMoq.Times.once());
     });
 
     test('Returns true if user is in the random sampling', async () => {

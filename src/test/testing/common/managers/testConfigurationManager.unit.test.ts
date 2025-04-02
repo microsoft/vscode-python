@@ -5,7 +5,7 @@
 
 import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
-import { IInstaller, ITestOutputChannel, Product } from '../../../../client/common/types';
+import { IInstaller, ILogOutputChannel, Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
@@ -41,7 +41,7 @@ suite('Unit Test Configuration Manager (unit)', () => {
                 const installer = TypeMoq.Mock.ofType<IInstaller>().object;
                 const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 serviceContainer
-                    .setup((s) => s.get(TypeMoq.It.isValue(ITestOutputChannel)))
+                    .setup((s) => s.get(TypeMoq.It.isValue(ILogOutputChannel)))
                     .returns(() => outputChannel);
                 serviceContainer
                     .setup((s) => s.get(TypeMoq.It.isValue(ITestConfigSettingsService)))

@@ -10,7 +10,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../cli
 import {
     IConfigurationService,
     IInstaller,
-    ITestOutputChannel,
+    ILogOutputChannel,
     IPythonSettings,
     Product,
 } from '../../client/common/types';
@@ -61,7 +61,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 configurationService.setup((c) => c.getSettings(workspaceUri)).returns(() => pythonSettings.object);
 
                 serviceContainer
-                    .setup((c) => c.get(typeMoq.It.isValue(ITestOutputChannel)))
+                    .setup((c) => c.get(typeMoq.It.isValue(ILogOutputChannel)))
                     .returns(() => outputChannel.object);
                 serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IInstaller))).returns(() => installer.object);
                 serviceContainer

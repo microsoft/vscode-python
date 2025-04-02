@@ -7,7 +7,7 @@ import * as sinon from 'sinon';
 import * as path from 'path';
 import { Observable } from 'rxjs';
 import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../../client/common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { Deferred, createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
@@ -121,7 +121,7 @@ suite('Execution Flow Run Adapters', () => {
             });
 
             // define adapter and run tests
-            const testAdapter = createAdapter(adapter, configService, typeMoq.Mock.ofType<ITestOutputChannel>().object);
+            const testAdapter = createAdapter(adapter, configService);
             await testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
@@ -202,7 +202,7 @@ suite('Execution Flow Run Adapters', () => {
                 });
 
             // define adapter and run tests
-            const testAdapter = createAdapter(adapter, configService, typeMoq.Mock.ofType<ITestOutputChannel>().object);
+            const testAdapter = createAdapter(adapter, configService);
             await testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
@@ -221,9 +221,8 @@ suite('Execution Flow Run Adapters', () => {
 function createAdapter(
     adapterType: string,
     configService: IConfigurationService,
-    outputChannel: ITestOutputChannel,
 ): PytestTestExecutionAdapter | UnittestTestExecutionAdapter {
-    if (adapterType === 'pytest') return new PytestTestExecutionAdapter(configService, outputChannel);
-    if (adapterType === 'unittest') return new UnittestTestExecutionAdapter(configService, outputChannel);
+    if (adapterType === 'pytest') return new PytestTestExecutionAdapter(configService);
+    if (adapterType === 'unittest') return new UnittestTestExecutionAdapter(configService);
     throw Error('un-compatible adapter type');
 }
