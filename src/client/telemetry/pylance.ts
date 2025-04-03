@@ -152,7 +152,7 @@
    "language_server/completion_context_items" : {
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "context" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
-      "count" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "count" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" }
    }
 */
 /* __GDPR__
