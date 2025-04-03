@@ -7,7 +7,11 @@ import pathlib
 import subprocess
 import sys
 from contextlib import contextmanager, suppress
-from typing import Generator, List
+from typing import TYPE_CHECKING, Generator, List
+
+if TYPE_CHECKING:
+    from importlib.machinery import ModuleSpec
+
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
@@ -89,7 +93,11 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
         sys.path.insert(0, os.fspath(django_project_dir))
         print(f"Django project directory: {django_project_dir}")
 
-        manage_spec = importlib.util.spec_from_file_location("manage", manage_py_path)
+        manage_spec: ModuleSpec | None = importlib.util.spec_from_file_location(
+            "manage", manage_py_path
+        )
+        if manage_spec is None or manage_spec.loader is None:
+            raise VSCodeUnittestError("Error importing manage.py when running Django testing.")
         manage_module = importlib.util.module_from_spec(manage_spec)
         manage_spec.loader.exec_module(manage_module)
 
