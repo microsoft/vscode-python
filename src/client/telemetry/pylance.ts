@@ -149,6 +149,13 @@
    }
 */
 /* __GDPR__
+   "language_server/completion_context_items" : {
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "context" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "count" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+   }
+*/
+/* __GDPR__
    "language_server/exception_intellicode" : {
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
