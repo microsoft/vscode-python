@@ -56,6 +56,14 @@ export interface ITerminalService extends IDisposable {
     sendText(text: string): Promise<void>;
     executeCommand(commandLine: string, isPythonShell: boolean): Promise<TerminalShellExecution | undefined>;
     show(preserveFocus?: boolean): Promise<void>;
+    /**
+     * Ensures that a terminal exists, creating one if necessary.
+     *
+     * @param {boolean} [preserveFocus] Whether the editor should keep focus after the terminal is shown. Defaults to `true`.
+     * @returns {Promise<Terminal>} The terminal instance.
+     * @memberof ITerminalService
+     */
+    ensureTerminal(preserveFocus?: boolean): Promise<Terminal>;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
