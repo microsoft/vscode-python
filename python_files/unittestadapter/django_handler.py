@@ -1,17 +1,12 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-import importlib.util
 import os
 import pathlib
 import subprocess
 import sys
 from contextlib import contextmanager, suppress
-from typing import TYPE_CHECKING, Generator, List
-
-if TYPE_CHECKING:
-    from importlib.machinery import ModuleSpec
-
+from typing import Generator, List
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
@@ -104,11 +99,10 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
         print(f"Django manage.py arguments: {manage_argv}")
 
         try:
-            with (
-                override_argv(manage_argv),
-                suppress(SystemExit),
-                manage_path.open() as manage_file,
-            ):
+            argv_context = override_argv(manage_argv)
+            suppress_context = suppress(SystemExit)
+            manage_file = manage_path.open()
+            with argv_context, suppress_context, manage_file:
                 manage_code = manage_file.read()
                 exec(manage_code, {"__name__": "__main__"})
         except OSError as e:
