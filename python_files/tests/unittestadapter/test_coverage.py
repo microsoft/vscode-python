@@ -52,6 +52,7 @@ def test_basic_coverage():
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14}
     assert set(focal_function_coverage.get("lines_missed")) == {6}
 
+
 @pytest.mark.parametrize("manage_py_file", ["manage.py", "old_manage.py"])
 @pytest.mark.timeout(30)
 def test_basic_django_coverage(manage_py_file):
