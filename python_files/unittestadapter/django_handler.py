@@ -75,8 +75,9 @@ def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
 
 
 def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List[str]) -> None:
+    manage_path: pathlib.Path = pathlib.Path(manage_py_path)
     # Attempt a small amount of validation on the manage.py path.
-    if not pathlib.Path(manage_py_path).exists():
+    if not manage_path.exists():
         raise VSCodeUnittestError("Error running Django, manage.py path does not exist.")
 
     try:
@@ -89,20 +90,12 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
         else:
             env["PYTHONPATH"] = os.fspath(custom_test_runner_dir)
 
-        django_project_dir: pathlib.Path = pathlib.Path(manage_py_path).parent
+        django_project_dir: pathlib.Path = manage_path.parent
         sys.path.insert(0, os.fspath(django_project_dir))
         print(f"Django project directory: {django_project_dir}")
 
-        manage_spec: ModuleSpec | None = importlib.util.spec_from_file_location(
-            "manage", manage_py_path
-        )
-        if manage_spec is None or manage_spec.loader is None:
-            raise VSCodeUnittestError("Error importing manage.py when running Django testing.")
-        manage_module = importlib.util.module_from_spec(manage_spec)
-        manage_spec.loader.exec_module(manage_module)
-
         manage_argv: List[str] = [
-            manage_py_path,
+            str(manage_path),
             "test",
             "--testrunner=django_test_runner.CustomExecutionTestRunner",
             *args,
@@ -110,7 +103,15 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
         ]
         print(f"Django manage.py arguments: {manage_argv}")
 
-        with override_argv(manage_argv), suppress(SystemExit):
-            manage_module.main()
+        try:
+            with (
+                override_argv(manage_argv),
+                suppress(SystemExit),
+                manage_path.open() as manage_file,
+            ):
+                manage_code = manage_file.read()
+                exec(manage_code, {"__name__": "__main__"})
+        except OSError as e:
+            raise VSCodeUnittestError("Error running Django, unable to read manage.py") from e
     except Exception as e:
         print(f"Error during Django test execution: {e}", file=sys.stderr)

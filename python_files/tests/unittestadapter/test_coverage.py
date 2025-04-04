@@ -52,12 +52,12 @@ def test_basic_coverage():
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14}
     assert set(focal_function_coverage.get("lines_missed")) == {6}
 
-
+@pytest.mark.parametrize("manage_py_file", ["manage.py", "old_manage.py"])
 @pytest.mark.timeout(30)
-def test_basic_django_coverage():
+def test_basic_django_coverage(manage_py_file):
     """This test validates that the coverage is correctly calculated for a Django project."""
     data_path: pathlib.Path = TEST_DATA_PATH / "simple_django"
-    manage_py_path: str = os.fsdecode(data_path / "manage.py")
+    manage_py_path: str = os.fsdecode(data_path / manage_py_file)
     execution_script: pathlib.Path = python_files_path / "unittestadapter" / "execution.py"
 
     test_ids = [
@@ -82,7 +82,7 @@ def test_basic_django_coverage():
     assert coverage
     results = coverage["result"]
     assert results
-    assert len(results) == 15
+    assert len(results) == 16
     polls_views_coverage = results.get(str(data_path / "polls" / "views.py"))
     assert polls_views_coverage
     assert polls_views_coverage.get("lines_covered") is not None
