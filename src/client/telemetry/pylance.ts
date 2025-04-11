@@ -156,6 +156,25 @@
    }
 */
 /* __GDPR__
+   "language_server/documentcolor_slow" : {
+      "bindcallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "bindtime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "parsecallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "parsetime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "readfilecallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "readfiletime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "resolvecallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "resolvetime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "tokenizecallcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "tokenizetime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "totaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "typeevalcount" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "typeevaltime" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+   }
+*/
+/* __GDPR__
    "language_server/exception_intellicode" : {
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
       "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
