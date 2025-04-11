@@ -79,8 +79,6 @@ class FileCoverageInfo(TypedDict):
     total_branches: int
 
 
-
-
 class CoveragePayloadDict(Dict):
     """A dictionary that is used to send a execution post request to the server."""
 
