@@ -11,6 +11,8 @@ import traceback
 import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Set, Tuple, Type, Union
+from packaging.version import Version
+
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -316,12 +318,18 @@ if __name__ == "__main__":
     # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
     cov = None
     is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
+    include_branches = False
     if is_coverage_run:
         print(
             "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
             workspace_root,
         )
         import coverage
+        coverage_version = Version(coverage.__version__)
+        # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
+        if coverage_version >= Version("7.7.0"):
+            include_branches = True
+
 
         source_ar: List[str] = []
         if workspace_root:
@@ -330,7 +338,7 @@ if __name__ == "__main__":
             source_ar.append(top_level_dir)
         if start_dir:
             source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
-        cov = coverage.Coverage(branch=True, source=source_ar)  # is at least 1 of these required??
+        cov = coverage.Coverage(branch=include_branches, source=source_ar)  # is at least 1 of these required??
         cov.start()
 
     # If no error occurred, we will have test ids to run.
@@ -362,12 +370,22 @@ if __name__ == "__main__":
         file_coverage_map: Dict[str, FileCoverageInfo] = {}
         for file in file_set:
             analysis = cov.analysis2(file)
+            taken_file_branches = 0
+            total_file_branches = -1
+
+            if include_branches:
+                branch_stats: dict[int, tuple[int, int]] = cov.branch_stats(file)
+                total_file_branches = sum([total_exits for total_exits, _ in branch_stats.values()])
+                taken_file_branches = sum([taken_exits for _, taken_exits in branch_stats.values()])
+
             lines_executable = {int(line_no) for line_no in analysis[1]}
             lines_missed = {int(line_no) for line_no in analysis[3]}
             lines_covered = lines_executable - lines_missed
             file_info: FileCoverageInfo = {
                 "lines_covered": list(lines_covered),  # list of int
                 "lines_missed": list(lines_missed),  # list of int
+                "executed_branches": taken_file_branches,
+                "total_branches": total_file_branches,
             }
             file_coverage_map[file] = file_info
 

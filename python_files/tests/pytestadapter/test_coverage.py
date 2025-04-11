@@ -45,6 +45,8 @@ def test_simple_pytest_coverage():
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14, 17}
     assert len(set(focal_function_coverage.get("lines_missed"))) >= 3
+    assert focal_function_coverage.get("executed_branches") == 4
+    assert focal_function_coverage.get("total_branches") == 6
 
 
 coverage_gen_file_path = TEST_DATA_PATH / "coverage_gen" / "coverage.json"
@@ -88,6 +90,8 @@ def test_coverage_gen_report(cleanup_coverage_gen_file):  # noqa: ARG001
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14, 17}
     assert set(focal_function_coverage.get("lines_missed")) == {18, 19, 6}
+    assert focal_function_coverage.get("executed_branches") == 4
+    assert focal_function_coverage.get("total_branches") == 6
     # assert that the coverage file was created at the right path
     assert os.path.exists(coverage_gen_file_path)  # noqa: PTH110
 
@@ -129,3 +133,4 @@ def test_coverage_w_omit_config():
     assert results
     # assert one file is reported and one file (as specified in pyproject.toml) is omitted
     assert len(results) == 1
+

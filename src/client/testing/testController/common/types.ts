@@ -222,6 +222,8 @@ export type FileCoverageMetrics = {
     lines_covered: number[];
     // eslint-disable-next-line camelcase
     lines_missed: number[];
+    executed_branches: number;
+    total_branches: number;
 };
 
 export type ExecutionTestPayload = {

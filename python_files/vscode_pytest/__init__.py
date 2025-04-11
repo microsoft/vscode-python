@@ -11,6 +11,7 @@ import pathlib
 import sys
 import traceback
 from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict
+from packaging.version import Version
 
 import pytest
 
@@ -61,6 +62,7 @@ map_id_to_path = {}
 collected_tests_so_far = []
 TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
 SYMLINK_PATH = None
+INCLUDE_BRANCHES = False
 
 
 def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
@@ -70,6 +72,9 @@ def pytest_load_initial_conftests(early_config, parser, args):  # noqa: ARG001
         raise VSCodePytestError(
             "\n \nERROR: pytest-cov is not installed, please install this before running pytest with coverage as pytest-cov is required. \n"
         )
+    if "--cov-branch" in args:
+        global INCLUDE_BRANCHES
+        INCLUDE_BRANCHES = True
 
     global TEST_RUN_PIPE
     TEST_RUN_PIPE = os.getenv("TEST_RUN_PIPE")
@@ -363,6 +368,8 @@ def check_skipped_condition(item):
 class FileCoverageInfo(TypedDict):
     lines_covered: list[int]
     lines_missed: list[int]
+    executed_branches: int
+    total_branches: int
 
 
 def pytest_sessionfinish(session, exitstatus):
@@ -436,6 +443,15 @@ def pytest_sessionfinish(session, exitstatus):
         # load the report and build the json result to return
         import coverage
 
+        coverage_version = Version(coverage.__version__)
+        global INCLUDE_BRANCHES
+        # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
+        if coverage_version < Version("7.7.0") and INCLUDE_BRANCHES:
+            print(
+                "Plugin warning[vscode-pytest]: Branch coverage not supported in this coverage versions < 7.7.0. Please upgrade coverage package if you would like to see branch coverage."
+            )
+            INCLUDE_BRANCHES = False
+
         try:
             from coverage.exceptions import NoSource
         except ImportError:
@@ -448,9 +464,8 @@ def pytest_sessionfinish(session, exitstatus):
         file_coverage_map: dict[str, FileCoverageInfo] = {}
 
         # remove files omitted per coverage report config if any
-        omit_files = cov.config.report_omit
-        if omit_files:
-            print("Plugin info[vscode-pytest]: Omit files/rules: ", omit_files)
+        omit_files: list[str] | None = cov.config.report_omit
+        if omit_files is not None:
             for pattern in omit_files:
                 for file in list(file_set):
                     if pathlib.Path(file).match(pattern):
@@ -459,6 +474,14 @@ def pytest_sessionfinish(session, exitstatus):
         for file in file_set:
             try:
                 analysis = cov.analysis2(file)
+                taken_file_branches = 0
+                total_file_branches = -1
+
+                if INCLUDE_BRANCHES:
+                    branch_stats: dict[int, tuple[int, int]] = cov.branch_stats(file)
+                    total_file_branches = sum([total_exits for total_exits, _ in branch_stats.values()])
+                    taken_file_branches = sum([taken_exits for _, taken_exits in branch_stats.values()])
+
             except NoSource:
                 # as per issue 24308 this best way to handle this edge case
                 continue
@@ -473,6 +496,8 @@ def pytest_sessionfinish(session, exitstatus):
             file_info: FileCoverageInfo = {
                 "lines_covered": list(lines_covered),  # list of int
                 "lines_missed": list(lines_missed),  # list of int
+                "executed_branches": taken_file_branches,
+                "total_branches": total_file_branches,
             }
             # convert relative path to absolute path
             if not pathlib.Path(file).is_absolute():

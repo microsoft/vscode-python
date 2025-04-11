@@ -711,6 +711,8 @@ suite('End to End Tests: test adapters', () => {
             // since only one test was run, the other test in the same file will have missed coverage lines
             assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
             assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
+            assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
             return Promise.resolve();
         };
 
@@ -759,6 +761,8 @@ suite('End to End Tests: test adapters', () => {
             // since only one test was run, the other test in the same file will have missed coverage lines
             assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
             assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
+            assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
 
             return Promise.resolve();
         };

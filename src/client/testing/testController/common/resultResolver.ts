@@ -17,7 +17,13 @@ import {
     Range,
 } from 'vscode';
 import * as util from 'util';
-import { CoveragePayload, DiscoveredTestPayload, ExecutionTestPayload, ITestResultResolver } from './types';
+import {
+    CoveragePayload,
+    DiscoveredTestPayload,
+    ExecutionTestPayload,
+    FileCoverageMetrics,
+    ITestResultResolver,
+} from './types';
 import { TestProvider } from '../../types';
 import { traceError, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
@@ -120,16 +126,25 @@ export class PythonResultResolver implements ITestResultResolver {
         }
         for (const [key, value] of Object.entries(payload.result)) {
             const fileNameStr = key;
-            const fileCoverageMetrics = value;
+            const fileCoverageMetrics: FileCoverageMetrics = value;
             const linesCovered = fileCoverageMetrics.lines_covered ? fileCoverageMetrics.lines_covered : []; // undefined if no lines covered
             const linesMissed = fileCoverageMetrics.lines_missed ? fileCoverageMetrics.lines_missed : []; // undefined if no lines missed
+            const executedBranches = fileCoverageMetrics.executed_branches;
+            const totalBranches = fileCoverageMetrics.total_branches;
 
             const lineCoverageCount = new TestCoverageCount(
                 linesCovered.length,
                 linesCovered.length + linesMissed.length,
             );
+            let fileCoverage: FileCoverage;
             const uri = Uri.file(fileNameStr);
-            const fileCoverage = new FileCoverage(uri, lineCoverageCount);
+            if (totalBranches === -1) {
+                // branch coverage was not enabled and should not be displayed
+                fileCoverage = new FileCoverage(uri, lineCoverageCount);
+            } else {
+                const branchCoverageCount = new TestCoverageCount(executedBranches, totalBranches);
+                fileCoverage = new FileCoverage(uri, lineCoverageCount, branchCoverageCount);
+            }
             runInstance.addCoverage(fileCoverage);
 
             // create detailed coverage array for each file (only line coverage on detailed, not branch)

@@ -28,8 +28,8 @@ namedpipe; platform_system == "Windows"
 # typing for Django files
 django-stubs
 
-# for coverage
-coverage
+# for branch coverage testing, need version >= 7.7
+coverage>=7.7
 pytest-cov
 pytest-json
 pytest-timeout

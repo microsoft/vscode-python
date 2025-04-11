@@ -51,6 +51,8 @@ def test_basic_coverage():
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14}
     assert set(focal_function_coverage.get("lines_missed")) == {6}
+    assert focal_function_coverage.get("executed_branches") == 3
+    assert focal_function_coverage.get("total_branches") == 4
 
 
 @pytest.mark.parametrize("manage_py_file", ["manage.py", "old_manage.py"])
