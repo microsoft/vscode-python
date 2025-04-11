@@ -5,7 +5,9 @@ import os
 import pathlib
 import sys
 
+import coverage
 import pytest
+from packaging.version import Version
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
@@ -34,9 +36,9 @@ def test_simple_pytest_coverage():
     cov_folder_path = TEST_DATA_PATH / "coverage_gen"
     actual = runner_with_cwd_env(args, cov_folder_path, env_add)
     assert actual
-    coverage = actual[-1]
-    assert coverage
-    results = coverage["result"]
+    cov = actual[-1]
+    assert cov
+    results = cov["result"]
     assert results
     assert len(results) == 3
     focal_function_coverage = results.get(os.fspath(TEST_DATA_PATH / "coverage_gen" / "reverse.py"))
@@ -45,8 +47,12 @@ def test_simple_pytest_coverage():
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14, 17}
     assert len(set(focal_function_coverage.get("lines_missed"))) >= 3
-    assert focal_function_coverage.get("executed_branches") == 4
-    assert focal_function_coverage.get("total_branches") == 6
+
+    coverage_version = Version(coverage.__version__)
+    # only include check for branches if the version is >= 7.7.0
+    if coverage_version >= Version("7.7.0"):
+        assert focal_function_coverage.get("executed_branches") == 4
+        assert focal_function_coverage.get("total_branches") == 6
 
 
 coverage_gen_file_path = TEST_DATA_PATH / "coverage_gen" / "coverage.json"
@@ -79,9 +85,9 @@ def test_coverage_gen_report(cleanup_coverage_gen_file):  # noqa: ARG001
     print("cov_folder_path", cov_folder_path)
     actual = runner_with_cwd_env(args, cov_folder_path, env_add)
     assert actual
-    coverage = actual[-1]
-    assert coverage
-    results = coverage["result"]
+    cov = actual[-1]
+    assert cov
+    results = cov["result"]
     assert results
     assert len(results) == 3
     focal_function_coverage = results.get(os.fspath(TEST_DATA_PATH / "coverage_gen" / "reverse.py"))
@@ -90,8 +96,11 @@ def test_coverage_gen_report(cleanup_coverage_gen_file):  # noqa: ARG001
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14, 17}
     assert set(focal_function_coverage.get("lines_missed")) == {18, 19, 6}
-    assert focal_function_coverage.get("executed_branches") == 4
-    assert focal_function_coverage.get("total_branches") == 6
+    coverage_version = Version(coverage.__version__)
+    # only include check for branches if the version is >= 7.7.0
+    if coverage_version >= Version("7.7.0"):
+        assert focal_function_coverage.get("executed_branches") == 4
+        assert focal_function_coverage.get("total_branches") == 6
     # assert that the coverage file was created at the right path
     assert os.path.exists(coverage_gen_file_path)  # noqa: PTH110
 
@@ -127,10 +136,9 @@ def test_coverage_w_omit_config():
     actual = runner_with_cwd_env([], cov_folder_path, env_add)
     assert actual
     print("actual", json.dumps(actual, indent=2))
-    coverage = actual[-1]
-    assert coverage
-    results = coverage["result"]
+    cov = actual[-1]
+    assert cov
+    results = cov["result"]
     assert results
     # assert one file is reported and one file (as specified in pyproject.toml) is omitted
     assert len(results) == 1
-

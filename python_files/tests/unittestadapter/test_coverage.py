@@ -8,7 +8,9 @@ import os
 import pathlib
 import sys
 
+import coverage
 import pytest
+from packaging.version import Version
 
 sys.path.append(os.fspath(pathlib.Path(__file__).parent))
 
@@ -40,9 +42,9 @@ def test_basic_coverage():
     )
 
     assert actual
-    coverage = actual[-1]
-    assert coverage
-    results = coverage["result"]
+    cov = actual[-1]
+    assert cov
+    results = cov["result"]
     assert results
     assert len(results) == 3
     focal_function_coverage = results.get(os.fspath(TEST_DATA_PATH / "coverage_ex" / "reverse.py"))
@@ -51,8 +53,11 @@ def test_basic_coverage():
     assert focal_function_coverage.get("lines_missed") is not None
     assert set(focal_function_coverage.get("lines_covered")) == {4, 5, 7, 9, 10, 11, 12, 13, 14}
     assert set(focal_function_coverage.get("lines_missed")) == {6}
-    assert focal_function_coverage.get("executed_branches") == 3
-    assert focal_function_coverage.get("total_branches") == 4
+    coverage_version = Version(coverage.__version__)
+    # only include check for branches if the version is >= 7.7.0
+    if coverage_version >= Version("7.7.0"):
+        assert focal_function_coverage.get("executed_branches") == 3
+        assert focal_function_coverage.get("total_branches") == 4
 
 
 @pytest.mark.parametrize("manage_py_file", ["manage.py", "old_manage.py"])
@@ -81,9 +86,9 @@ def test_basic_django_coverage(manage_py_file):
     )
 
     assert actual
-    coverage = actual[-1]
-    assert coverage
-    results = coverage["result"]
+    cov = actual[-1]
+    assert cov
+    results = cov["result"]
     assert results
     assert len(results) == 16
     polls_views_coverage = results.get(str(data_path / "polls" / "views.py"))
