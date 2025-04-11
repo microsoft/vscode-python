@@ -97,3 +97,10 @@ def test_basic_django_coverage(manage_py_file):
     assert polls_views_coverage.get("lines_missed") is not None
     assert set(polls_views_coverage.get("lines_covered")) == {3, 4, 6}
     assert set(polls_views_coverage.get("lines_missed")) == {7}
+
+    model_cov = results.get(str(data_path / "polls" / "models.py"))
+    coverage_version = Version(coverage.__version__)
+    # only include check for branches if the version is >= 7.7.0
+    if coverage_version >= Version("7.7.0"):
+        assert model_cov.get("executed_branches") == 1
+        assert model_cov.get("total_branches") == 2
