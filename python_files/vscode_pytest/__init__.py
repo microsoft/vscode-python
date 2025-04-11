@@ -11,9 +11,9 @@ import pathlib
 import sys
 import traceback
 from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict
-from packaging.version import Version
 
 import pytest
+from packaging.version import Version
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -479,8 +479,12 @@ def pytest_sessionfinish(session, exitstatus):
 
                 if INCLUDE_BRANCHES:
                     branch_stats: dict[int, tuple[int, int]] = cov.branch_stats(file)
-                    total_file_branches = sum([total_exits for total_exits, _ in branch_stats.values()])
-                    taken_file_branches = sum([taken_exits for _, taken_exits in branch_stats.values()])
+                    total_file_branches = sum(
+                        [total_exits for total_exits, _ in branch_stats.values()]
+                    )
+                    taken_file_branches = sum(
+                        [taken_exits for _, taken_exits in branch_stats.values()]
+                    )
 
             except NoSource:
                 # as per issue 24308 this best way to handle this edge case

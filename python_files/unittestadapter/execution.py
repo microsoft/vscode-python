@@ -11,8 +11,8 @@ import traceback
 import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Set, Tuple, Type, Union
-from packaging.version import Version
 
+from packaging.version import Version
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -325,11 +325,11 @@ if __name__ == "__main__":
             workspace_root,
         )
         import coverage
+
         coverage_version = Version(coverage.__version__)
         # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
         if coverage_version >= Version("7.7.0"):
             include_branches = True
-
 
         source_ar: List[str] = []
         if workspace_root:
@@ -338,7 +338,9 @@ if __name__ == "__main__":
             source_ar.append(top_level_dir)
         if start_dir:
             source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
-        cov = coverage.Coverage(branch=include_branches, source=source_ar)  # is at least 1 of these required??
+        cov = coverage.Coverage(
+            branch=include_branches, source=source_ar
+        )  # is at least 1 of these required??
         cov.start()
 
     # If no error occurred, we will have test ids to run.
