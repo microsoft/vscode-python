@@ -378,6 +378,9 @@
    "language_server/settings" : {
       "addimportexactmatchonly" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "aicodeactionsimplementabstractclasses" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "aiCodeActionsGenerateDocstring" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "aiCodeActionsGenerateSymbols" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
+      "aiCodeActionsConvertFormatString" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autoimportcompletions" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "autosearchpaths" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
       "callArgumentNameInlayHints" : { "classification": "SystemMetaData", "purpose": "FeatureInsight" },
