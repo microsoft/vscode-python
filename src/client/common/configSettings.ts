@@ -268,14 +268,29 @@ export class PythonSettings implements IPythonSettings {
         let userLS = pythonSettings.get<string>('languageServer');
         userLS = systemVariables.resolveAny(userLS);
 
+        // Default language server type: if `IDefaultLanguageServer?.defaultLSType` is undefined, default to `None`.
+        let defaultLS = LanguageServerType.None;
+
+        let defaultLSType = this.defaultLS?.defaultLSType;
+        if (defaultLSType !== undefined) {
+            // If we are sure what to default the language server type to, use it.
+            if (defaultLSType.type === "always") {
+                defaultLS = defaultLSType.languageServerType;
+            }
+            // If Pyrefly extension is installed, keep defaultLS = None unless Pyrefly has disabled language services.
+            else if (defaultLSType.type  === "none or (if pyrefly language services disabled)" && pythonSettings.get<WorkspaceConfiguration>('pyrefly')?.get<boolean>('disableLanguageServices') !== true) {
+                defaultLS = defaultLSType.languageServerType;
+            }
+        }
+
         // Validate the user's input; if invalid, set it to the default.
-        if (
+        else if (
             !userLS ||
             userLS === 'Default' ||
             userLS === 'Microsoft' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
-            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
+            this.languageServer = defaultLS;
             this.languageServerIsDefault = true;
         } else if (userLS === 'JediLSP') {
             // Switch JediLSP option to Jedi.

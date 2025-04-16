@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { PYLANCE_EXTENSION_ID } from '../../common/constants';
+import { PYLANCE_EXTENSION_ID, PYREFLY_EXTENSION_ID } from '../../common/constants';
 import { IDefaultLanguageServer, IExtensions, DefaultLSType } from '../../common/types';
 import { IServiceManager } from '../../ioc/types';
 import { LanguageServerType } from '../types';
@@ -28,9 +28,13 @@ export async function setDefaultLanguageServer(
 }
 
 async function getDefaultLanguageServer(extensions: IExtensions): Promise<DefaultLSType> {
+    let type = LanguageServerType.Jedi;
     if (extensions.getExtension(PYLANCE_EXTENSION_ID)) {
-        return LanguageServerType.Node;
+        type =  LanguageServerType.Node;
     }
-
-    return LanguageServerType.Jedi;
+    
+    if (extensions.getExtension(PYREFLY_EXTENSION_ID)) {
+        return {type: "none or (if pyrefly language services disabled)", languageServerType: type};
+    }
+    return {type: "always", languageServerType: type};
 }

@@ -8,7 +8,7 @@ import { anything, instance, mock, when, verify } from 'ts-mockito';
 import { Extension } from 'vscode';
 import { setDefaultLanguageServer } from '../../client/activation/common/defaultlanguageServer';
 import { LanguageServerType } from '../../client/activation/types';
-import { PYLANCE_EXTENSION_ID } from '../../client/common/constants';
+import { PYLANCE_EXTENSION_ID, PYREFLY_EXTENSION_ID } from '../../client/common/constants';
 import { IDefaultLanguageServer, IExtensions } from '../../client/common/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
@@ -37,7 +37,7 @@ suite('Activation - setDefaultLanguageServer()', () => {
 
         verify(extensions.getExtension(PYLANCE_EXTENSION_ID)).once();
         verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).once();
-        expect(defaultServerType).to.equal(LanguageServerType.Jedi);
+        expect(defaultServerType).to.deep.equal({type: "always", languageServerType: LanguageServerType.Jedi});
     });
 
     test('Pylance installed', async () => {
@@ -54,6 +54,23 @@ suite('Activation - setDefaultLanguageServer()', () => {
 
         verify(extensions.getExtension(PYLANCE_EXTENSION_ID)).once();
         verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).once();
-        expect(defaultServerType).to.equal(LanguageServerType.Node);
+        expect(defaultServerType).to.deep.equal({type: "always", languageServerType: LanguageServerType.Node});
+    });
+
+    test('Pyrefly installed', async () => {
+        let defaultServerType;
+
+        when(extensions.getExtension(PYREFLY_EXTENSION_ID)).thenReturn(instance(extension));
+        when(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).thenCall(
+            (_symbol, value: IDefaultLanguageServer) => {
+                defaultServerType = value.defaultLSType;
+            },
+        );
+
+        await setDefaultLanguageServer(instance(extensions), instance(serviceManager));
+
+        verify(extensions.getExtension(PYREFLY_EXTENSION_ID)).once();
+        verify(serviceManager.addSingletonInstance<IDefaultLanguageServer>(IDefaultLanguageServer, anything())).once();
+        expect(defaultServerType).to.deep.equal({type: "none or (if pyrefly language services disabled)", languageServerType: LanguageServerType.Jedi});
     });
 });
