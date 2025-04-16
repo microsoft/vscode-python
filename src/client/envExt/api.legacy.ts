@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Terminal, Uri, WorkspaceFolder } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalOptions } from './types';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
-import { traceError, traceInfo } from '../logging';
+import { traceError } from '../logging';
 import { reportActiveInterpreterChanged } from '../environmentApi';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 
