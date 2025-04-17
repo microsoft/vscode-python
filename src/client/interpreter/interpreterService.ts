@@ -45,7 +45,7 @@ import {
 } from '../pythonEnvironments/base/locator';
 import { sleep } from '../common/utils/async';
 import { useEnvExtension } from '../envExt/api.internal';
-import { ensureEnvironmentContainsPythonLegacy, getActiveInterpreterLegacy } from '../envExt/api.legacy';
+import { getActiveInterpreterLegacy } from '../envExt/api.legacy';
 
 type StoredPythonEnvironment = PythonEnvironment & { store?: boolean };
 
@@ -290,9 +290,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     @cache(-1, true)
     private async ensureEnvironmentContainsPython(pythonPath: string, workspaceFolder: WorkspaceFolder | undefined) {
         if (useEnvExtension()) {
-            await ensureEnvironmentContainsPythonLegacy(pythonPath, workspaceFolder, () => {
-                this.didChangeInterpreterEmitter.fire(workspaceFolder?.uri);
-            });
             return;
         }
 

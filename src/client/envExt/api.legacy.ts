@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Terminal, Uri, WorkspaceFolder } from 'vscode';
+import { Terminal, Uri } from 'vscode';
 import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
 import { PythonEnvironment, PythonTerminalOptions } from './types';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
-import { traceError, traceInfo } from '../logging';
+import { traceError } from '../logging';
 import { reportActiveInterpreterChanged } from '../environmentApi';
 import { getWorkspaceFolder, getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
 
@@ -118,36 +118,6 @@ export async function getActiveInterpreterLegacy(resource?: Uri): Promise<Python
         previousEnvMap.set(uri?.fsPath || '', pythonEnv);
     }
     return pythonEnv ? toLegacyType(pythonEnv) : undefined;
-}
-
-export async function ensureEnvironmentContainsPythonLegacy(
-    pythonPath: string,
-    workspaceFolder: WorkspaceFolder | undefined,
-    callback: () => void,
-): Promise<void> {
-    const api = await getEnvExtApi();
-    const pythonEnv = await api.resolveEnvironment(Uri.file(pythonPath));
-    if (!pythonEnv) {
-        traceError(`EnvExt: Failed to resolve environment for ${pythonPath}`);
-        return;
-    }
-
-    const envType = toEnvironmentType(pythonEnv);
-    if (envType === EnvironmentType.Conda) {
-        const packages = await api.getPackages(pythonEnv);
-        if (packages && packages.length > 0 && packages.some((pkg) => pkg.name.toLowerCase() === 'python')) {
-            return;
-        }
-        traceInfo(`EnvExt: Python not found in ${envType} environment ${pythonPath}`);
-        traceInfo(`EnvExt: Installing Python in ${envType} environment ${pythonPath}`);
-        await api.installPackages(pythonEnv, ['python']);
-        previousEnvMap.set(workspaceFolder?.uri.fsPath || '', pythonEnv);
-        reportActiveInterpreterChanged({
-            path: pythonPath,
-            resource: workspaceFolder,
-        });
-        callback();
-    }
 }
 
 export async function setInterpreterLegacy(pythonPath: string, uri: Uri | undefined): Promise<void> {
