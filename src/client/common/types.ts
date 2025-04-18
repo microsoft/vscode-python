@@ -348,22 +348,7 @@ export interface IInterpreterPathService {
     copyOldInterpreterStorageValuesToNew(resource: Resource): Promise<void>;
 }
 
-/**
- * If Pyrefly extension is installed, LS default should be `None`. But if Pyrefly language services are disabled, 
- * fall back to T.
- */
-export type PyreflyOr<T extends LanguageServerType> = {
-    type: 'none or (if pyrefly language services disabled)',
-    languageServerType: T,
-};
-
-export type Always<T extends LanguageServerType> = {
-    type: 'always',
-    languageServerType: T,
-};
-
-type DefaultLSTypes = LanguageServerType.Jedi | LanguageServerType.Node;
-export type DefaultLSType = Always<DefaultLSTypes> | PyreflyOr<DefaultLSTypes>;
+export type DefaultLSType = LanguageServerType.Jedi | LanguageServerType.Node;
 
 /**
  * Interface used to retrieve the default language server.
