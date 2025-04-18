@@ -8,7 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
 import { isUnitTestExecution } from '../constants';
-import { IConfigurationService, IDefaultLanguageServer, IInterpreterPathService, IPythonSettings } from '../types';
+import { IConfigurationService, IDefaultLanguageServer, IExtensions, IInterpreterPathService, IPythonSettings } from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
@@ -29,12 +29,14 @@ export class ConfigurationService implements IConfigurationService {
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const defaultLS = this.serviceContainer.tryGet<IDefaultLanguageServer>(IDefaultLanguageServer);
+        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
         return PythonSettings.getInstance(
             resource,
             InterpreterAutoSelectionService,
             this.workspaceService,
             interpreterPathService,
             defaultLS,
+            extensions,
         );
     }
 
