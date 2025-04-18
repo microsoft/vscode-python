@@ -173,7 +173,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
-            new MockExtensions()
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 

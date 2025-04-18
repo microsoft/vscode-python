@@ -281,12 +281,13 @@ export class PythonSettings implements IPythonSettings {
         ) {
             if (
                 this.extensions.getExtension(PYREFLY_EXTENSION_ID) &&
-                pythonSettings.get<boolean>('pyrefly.disableLanguageServices') !== true) {
-                    this.languageServer = LanguageServerType.None;
-                } else {
-                    this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
-                }
-                this.languageServerIsDefault = true;
+                pythonSettings.get<boolean>('pyrefly.disableLanguageServices') !== true
+            ) {
+                this.languageServer = LanguageServerType.None;
+            } else {
+                this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
+            }
+            this.languageServerIsDefault = true;
         } else if (userLS === 'JediLSP') {
             // Switch JediLSP option to Jedi.
             this.languageServer = LanguageServerType.Jedi;

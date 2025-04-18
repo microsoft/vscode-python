@@ -58,7 +58,7 @@ suite('Python Settings', async () => {
                 remoteName: undefined,
             } as IApplicationEnvironment),
             undefined,
-            extensions
+            extensions,
         );
         settings = new CustomPythonSettings(
             undefined,
@@ -68,7 +68,7 @@ suite('Python Settings', async () => {
                 remoteName: undefined,
             } as IApplicationEnvironment),
             undefined,
-            extensions
+            extensions,
         );
         expected.defaultInterpreterPath = 'python';
     });

@@ -10,10 +10,10 @@ export class MockExtensions implements IExtensions {
     })();
     getExtension(extensionId: string): Extension<unknown> | undefined;
     getExtension<T>(extensionId: string): Extension<T> | undefined;
-    getExtension(_extensionId: unknown): import("vscode").Extension<unknown> | undefined {
+    getExtension(_extensionId: unknown): import('vscode').Extension<unknown> | undefined {
         throw new Error('Method not implemented.');
     }
-    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string; }> {
+    determineExtensionFromCallStack(): Promise<{ extensionId: string; displayName: string }> {
         throw new Error('Method not implemented.');
     }
 }
