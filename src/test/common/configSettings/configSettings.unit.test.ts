@@ -27,6 +27,7 @@ import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockMemento } from '../../mocks/mementos';
 import { untildify } from '../../../client/common/helpers';
+import { MockExtensions } from '../../mocks/extensions';
 
 suite('Python Settings', async () => {
     class CustomPythonSettings extends PythonSettings {
@@ -47,6 +48,7 @@ suite('Python Settings', async () => {
         const workspaceService = new WorkspaceService();
         const workspaceMemento = new MockMemento();
         const globalMemento = new MockMemento();
+        const extensions = new MockExtensions();
         const persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento);
         expected = new CustomPythonSettings(
             undefined,
@@ -56,6 +58,7 @@ suite('Python Settings', async () => {
                 remoteName: undefined,
             } as IApplicationEnvironment),
             undefined,
+            extensions
         );
         settings = new CustomPythonSettings(
             undefined,
@@ -65,6 +68,7 @@ suite('Python Settings', async () => {
                 remoteName: undefined,
             } as IApplicationEnvironment),
             undefined,
+            extensions
         );
         expected.defaultInterpreterPath = 'python';
     });

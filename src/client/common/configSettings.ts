@@ -281,7 +281,7 @@ export class PythonSettings implements IPythonSettings {
         ) {
             if (
                 this.extensions.getExtension(PYREFLY_EXTENSION_ID) &&
-                pythonSettings.get<WorkspaceConfiguration>('pyrefly')?.get<boolean>('disableLanguageServices') !== true) {
+                pythonSettings.get<boolean>('pyrefly.disableLanguageServices') !== true) {
                     this.languageServer = LanguageServerType.None;
                 } else {
                     this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
