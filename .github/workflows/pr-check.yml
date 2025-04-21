@@ -147,7 +147,7 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['3.8', '3.x', '3.13-dev'] # run for 3 pytest versions, most recent stable, oldest version supported and pre-release
+        python: ['3.9', '3.x', '3.13'] # run for 3 pytest versions, most recent stable, oldest version supported and pre-release
         pytest-version: ['pytest', 'pytest@pre-release', 'pytest==6.2.0']
 
     steps:
