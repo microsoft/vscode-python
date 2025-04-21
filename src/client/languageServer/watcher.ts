@@ -297,8 +297,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
                 await this.refreshLanguageServer(resource);
             } else if (event.affectsConfiguration(`python.analysis.pylanceLspClientEnabled`, resource)) {
                 await this.refreshLanguageServer(resource, /* forced */ true);
-            } else if (event.affectsConfiguration('python.pyrefly.languageServer', resource)) {
-                await this.refreshLanguageServer(resource);
             }
         });
     }
