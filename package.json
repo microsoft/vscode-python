@@ -325,7 +325,9 @@
             {
                 "category": "Python",
                 "command": "python.execSelectionInTerminal",
-                "title": "%python.command.python.execSelectionInTerminal.title%"
+                "title": "%python.command.python.execSelectionInTerminal.title%",
+                "shortTitle": "%python.command.python.execSelectionInTerminal.shortTitle%"
+                
             },
             {
                 "category": "Python",
@@ -1567,7 +1569,7 @@
         "cross-env": "^7.0.3",
         "cross-spawn": "^6.0.5",
         "del": "^6.0.0",
-        "download": "^8.0.0",
+        "download": "^3.3.0",
         "eslint": "^8.57.1",
         "eslint-config-prettier": "^8.3.0",
         "eslint-plugin-import": "^2.31.0",
