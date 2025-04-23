@@ -27,6 +27,7 @@ import { ITestingSettings } from '../../../client/testing/configuration/types';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockMemento } from '../../mocks/mementos';
 import { untildify } from '../../../client/common/helpers';
+import { MockExtensions } from '../../mocks/extensions';
 
 suite('Python Settings', async () => {
     class CustomPythonSettings extends PythonSettings {
@@ -40,6 +41,7 @@ suite('Python Settings', async () => {
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
     let expected: CustomPythonSettings;
     let settings: CustomPythonSettings;
+    let extensions: MockExtensions;
     setup(() => {
         sinon.stub(EnvFileTelemetry, 'sendSettingTelemetry').returns();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Loose);
@@ -47,6 +49,7 @@ suite('Python Settings', async () => {
         const workspaceService = new WorkspaceService();
         const workspaceMemento = new MockMemento();
         const globalMemento = new MockMemento();
+        extensions = new MockExtensions();
         const persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento);
         expected = new CustomPythonSettings(
             undefined,
@@ -55,7 +58,8 @@ suite('Python Settings', async () => {
             new InterpreterPathService(persistentStateFactory, workspaceService, [], {
                 remoteName: undefined,
             } as IApplicationEnvironment),
-            undefined,
+            { defaultLSType: LanguageServerType.Jedi },
+            extensions,
         );
         settings = new CustomPythonSettings(
             undefined,
@@ -64,7 +68,8 @@ suite('Python Settings', async () => {
             new InterpreterPathService(persistentStateFactory, workspaceService, [], {
                 remoteName: undefined,
             } as IApplicationEnvironment),
-            undefined,
+            { defaultLSType: LanguageServerType.Jedi },
+            extensions,
         );
         expected.defaultInterpreterPath = 'python';
     });
@@ -226,7 +231,7 @@ suite('Python Settings', async () => {
         const values = [
             { ls: LanguageServerType.Jedi, expected: LanguageServerType.Jedi, default: false },
             { ls: LanguageServerType.JediLSP, expected: LanguageServerType.Jedi, default: false },
-            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.None, default: true },
+            { ls: LanguageServerType.Microsoft, expected: LanguageServerType.Jedi, default: true },
             { ls: LanguageServerType.Node, expected: LanguageServerType.Node, default: false },
             { ls: LanguageServerType.None, expected: LanguageServerType.None, default: false },
         ];
@@ -235,7 +240,48 @@ suite('Python Settings', async () => {
             testLanguageServer(v.ls, v.expected, v.default);
         });
 
-        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.None, true);
+        testLanguageServer('invalid' as LanguageServerType, LanguageServerType.Jedi, true);
+    });
+
+    function testPyreflySettings(pyreflyInstalled: boolean, pyreflyDisabled: boolean, languageServerDisabled: boolean) {
+        test(`pyrefly ${pyreflyInstalled ? 'installed' : 'not installed'} and ${
+            pyreflyDisabled ? 'disabled' : 'enabled'
+        }`, () => {
+            if (pyreflyInstalled) {
+                extensions.extensionIdsToFind = ['meta.pyrefly'];
+            } else {
+                extensions.extensionIdsToFind = [];
+            }
+            config.setup((c) => c.get<boolean>('pyrefly.disableLanguageServices')).returns(() => pyreflyDisabled);
+
+            config
+                .setup((c) => c.get<string>('languageServer'))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+
+            settings.update(config.object);
+
+            if (languageServerDisabled) {
+                expect(settings.languageServer).to.equal(LanguageServerType.None);
+            } else {
+                expect(settings.languageServer).not.to.equal(LanguageServerType.None);
+            }
+            expect(settings.languageServerIsDefault).to.equal(true);
+            config.verifyAll();
+        });
+    }
+
+    suite('pyrefly languageServer settings', async () => {
+        const values = [
+            { pyreflyInstalled: true, pyreflyDisabled: false, languageServerDisabled: true },
+            { pyreflyInstalled: true, pyreflyDisabled: true, languageServerDisabled: false },
+            { pyreflyInstalled: false, pyreflyDisabled: true, languageServerDisabled: false },
+            { pyreflyInstalled: false, pyreflyDisabled: false, languageServerDisabled: false },
+        ];
+
+        values.forEach((v) => {
+            testPyreflySettings(v.pyreflyInstalled, v.pyreflyDisabled, v.languageServerDisabled);
+        });
     });
 
     function testExperiments(enabled: boolean) {

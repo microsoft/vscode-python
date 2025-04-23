@@ -17,6 +17,7 @@ import { PythonEnvironment } from '../../../client/pythonEnvironments/info';
 import * as EnvFileTelemetry from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { untildify } from '../../../client/common/helpers';
+import { MockExtensions } from '../../mocks/extensions';
 
 suite('Python Settings - pythonPath', () => {
     class CustomPythonSettings extends PythonSettings {
@@ -64,6 +65,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 
@@ -78,6 +80,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 
@@ -93,6 +96,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
 
         configSettings.update(pythonSettings.object);
@@ -110,6 +114,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 
@@ -126,6 +131,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 
@@ -145,6 +151,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 
@@ -166,6 +173,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         configSettings.update(pythonSettings.object);
 
@@ -184,6 +192,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         interpreterPathService.setup((i) => i.get(typemoq.It.isAny())).returns(() => 'custom');
         pythonSettings.setup((p) => p.get(typemoq.It.isValue('defaultInterpreterPath'))).returns(() => 'python');
@@ -204,6 +213,7 @@ suite('Python Settings - pythonPath', () => {
             workspaceService.object,
             interpreterPathService.object,
             undefined,
+            new MockExtensions(),
         );
         interpreterPathService.setup((i) => i.get(resource)).returns(() => 'python');
         configSettings.update(pythonSettings.object);
