@@ -457,6 +457,16 @@
       "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
    }
 */
+/* __GDPR__
+   "language_server/mcp_tool" : {
+      "kind" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "duration" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "cancelled" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "cancellation_reason" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "lsversion" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" },
+      "failed" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth" }
+   }
+*/
 /**
  * Telemetry event sent when LSP server crashes
  */
