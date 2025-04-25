@@ -2,7 +2,6 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "title": "%shortTitle%",
     "version": "2025.5.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
@@ -326,7 +325,8 @@
             {
                 "category": "Python",
                 "command": "python.execSelectionInTerminal",
-                "title": "%python.command.python.execSelectionInTerminal.title%"
+                "title": "%python.command.python.execSelectionInTerminal.title%",
+                "shortTitle": "%python.menu.execSelectionInTerminal.title%"
             },
             {
                 "category": "Python",
