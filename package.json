@@ -326,7 +326,7 @@
                 "category": "Python",
                 "command": "python.execSelectionInTerminal",
                 "title": "%python.command.python.execSelectionInTerminal.title%",
-                "shortTitle": "%python.menu.execSelectionInTerminal.title%"
+                "shortTitle": "%python.command.python.execSelectionInTerminal.shortTitle"
             },
             {
                 "category": "Python",
