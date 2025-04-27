@@ -5,7 +5,6 @@
     "python.command.python.createNewFile.title": "New Python File",
     "python.command.python.createTerminal.title": "Create Terminal",
     "python.command.python.execInTerminal.title": "Run Python File in Terminal",
-    "python.menu.execSelectionInTerminal.title": "Run Selection",
     "python.command.python.execInTerminalIcon.title": "Run Python File",
     "python.command.python.execInDedicatedTerminal.title": "Run Python File in Dedicated Terminal", 
     "python.command.python.setInterpreter.title": "Select Interpreter",
