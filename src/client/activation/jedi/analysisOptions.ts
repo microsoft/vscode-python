@@ -85,6 +85,9 @@ export class JediLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
                     maxSymbols: 0,
                 },
             },
+            semantic_tokens: {
+                enable: true,
+            },
         };
     }
 }
