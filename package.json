@@ -1140,6 +1140,11 @@
         ],
         "keybindings": [
             {
+                "command": "python.copyImportPath",
+                "key": "ctrl+alt+shift+i",
+                "when": "editorTextFocus && resourceLangId == python"
+            },
+            {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
