@@ -2,7 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { inject, injectable } from 'inversify';
 
-import { ICommandManager, IWorkspaceService } from '../../common/application/types';
+import { IClipboard, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { Commands } from '../../common/constants';
 import { getSysPath } from '../../common/utils/pythonUtils';
@@ -14,6 +14,7 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
     constructor(
         @inject(ICommandManager) private readonly commands: ICommandManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IClipboard) private readonly clipboard: IClipboard,
     ) {}
 
     async activate(): Promise<void> {
@@ -28,7 +29,8 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
         }
 
         const importPath = this.resolveImportPath(uri.fsPath);
-        await vscode.env.clipboard.writeText(importPath);
+        // await vscode.env.clipboard.writeText(importPath);
+        await this.clipboard.writeText(importPath);
         void vscode.window.showInformationMessage(`Copied: ${importPath}`);
     }
 
