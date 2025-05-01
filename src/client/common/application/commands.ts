@@ -108,4 +108,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
         },
     ];
     ['cursorEnd']: [];
+    ['python-envs.createTerminal']: [undefined | Uri];
 }

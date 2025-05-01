@@ -23,19 +23,28 @@ export function fixLogLinesNoTrailing(content: string): string {
     const lines = content.split(/\r?\n/g);
     return `${lines.join('\r\n')}`;
 }
-
-export const MESSAGE_ON_TESTING_OUTPUT_MOVE =
-    'Starting now, all test run output will be sent to the Test Result panel,' +
-    ' while test discovery output will be sent to the "Python" output channel instead of the "Python Test Log" channel.' +
-    ' The "Python Test Log" channel will be deprecated within the next month.' +
-    ' See https://github.com/microsoft/vscode-python/wiki/New-Method-for-Output-Handling-in-Python-Testing for details.';
-
 export function createTestingDeferred(): Deferred<void> {
     return createDeferred<void>();
 }
 
 interface ExecutionResultMessage extends Message {
     params: ExecutionTestPayload;
+}
+
+/**
+ * Retrieves the path to the temporary directory.
+ *
+ * On Windows, it returns the default temporary directory.
+ * On macOS/Linux, it prefers the `XDG_RUNTIME_DIR` environment variable if set,
+ * otherwise, it falls back to the default temporary directory.
+ *
+ * @returns {string} The path to the temporary directory.
+ */
+function getTempDir(): string {
+    if (process.platform === 'win32') {
+        return os.tmpdir(); // Default Windows behavior
+    }
+    return process.env.XDG_RUNTIME_DIR || os.tmpdir(); // Prefer XDG_RUNTIME_DIR on macOS/Linux
 }
 
 /**
@@ -50,11 +59,12 @@ export async function writeTestIdsFile(testIds: string[]): Promise<string> {
     const tempName = `test-ids-${randomSuffix}.txt`;
     // create temp file
     let tempFileName: string;
+    const tempDir: string = getTempDir();
     try {
         traceLog('Attempting to use temp directory for test ids file, file name:', tempName);
-        tempFileName = path.join(os.tmpdir(), tempName);
+        tempFileName = path.join(tempDir, tempName);
         // attempt access to written file to check permissions
-        await fs.promises.access(os.tmpdir());
+        await fs.promises.access(tempDir);
     } catch (error) {
         // Handle the error when accessing the temp directory
         traceError('Error accessing temp directory:', error, ' Attempt to use extension root dir instead');

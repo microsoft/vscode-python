@@ -5,7 +5,7 @@ import * as path from 'path';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ChildProcess } from 'child_process';
-import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
+import { IConfigurationService } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import {
     DiscoveredTestPayload,
@@ -22,12 +22,7 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import {
-    MESSAGE_ON_TESTING_OUTPUT_MOVE,
-    createDiscoveryErrorPayload,
-    fixLogLinesNoTrailing,
-    startDiscoveryNamedPipe,
-} from '../common/utils';
+import { createDiscoveryErrorPayload, fixLogLinesNoTrailing, startDiscoveryNamedPipe } from '../common/utils';
 import { traceError, traceInfo, traceLog, traceVerbose } from '../../../logging';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
 
@@ -37,7 +32,6 @@ import { getEnvironment, runInBackground, useEnvExtension } from '../../../envEx
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
@@ -79,7 +73,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             workspaceFolder: uri,
             command,
             cwd,
-            outChannel: this.outputChannel,
             token,
         };
 
@@ -128,15 +121,12 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 proc.stdout.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceInfo(out);
-                    this.outputChannel?.append(out);
                 });
                 proc.stderr.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceError(out);
-                    this.outputChannel?.append(out);
                 });
                 proc.onExit((code, signal) => {
-                    this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
@@ -155,7 +145,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             token: options.token,
             cwd: options.cwd,
             throwOnStdErr: true,
-            outputChannel: options.outChannel,
             env: mutableEnv,
         };
 
@@ -187,22 +176,17 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             resultProc = result?.proc;
 
             // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-            // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
-            // TODO: after a release, remove run output from the "Python Test Log" channel and send it to the "Test Result" channel instead.
             result?.proc?.stdout?.on('data', (data) => {
                 const out = fixLogLinesNoTrailing(data.toString());
-                spawnOptions?.outputChannel?.append(`${out}`);
                 traceInfo(out);
             });
             result?.proc?.stderr?.on('data', (data) => {
                 const out = fixLogLinesNoTrailing(data.toString());
-                spawnOptions?.outputChannel?.append(`${out}`);
                 traceError(out);
             });
 
             result?.proc?.on('exit', (code, signal) => {
                 // if the child has testIds then this is a run request
-                spawnOptions?.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
 
                 if (code !== 0) {
                     // This occurs when we are running discovery

@@ -27,11 +27,10 @@ import {
     ICurrentProcess,
     IDisposableRegistry,
     IMemento,
-    ILogOutputChannel,
     IPathUtils,
     IsWindows,
     WORKSPACE_MEMENTO,
-    ITestOutputChannel,
+    ILogOutputChannel,
 } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
@@ -84,7 +83,7 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, stdOutputChannel);
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
-        this.serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, testOutputChannel);
+        this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, testOutputChannel);
 
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,

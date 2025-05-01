@@ -13,7 +13,6 @@ import { CommandManager } from '../../client/common/application/commandManager';
 import { ReloadVSCodeCommandHandler } from '../../client/common/application/commands/reloadCommand';
 import { ReportIssueCommandHandler } from '../../client/common/application/commands/reportIssueCommand';
 import { DebugService } from '../../client/common/application/debugService';
-import { DebugSessionTelemetry } from '../../client/common/application/debugSessionTelemetry';
 import { DocumentManager } from '../../client/common/application/documentManager';
 import { Extensions } from '../../client/common/application/extensions';
 import {
@@ -258,10 +257,6 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
                 IExtensionSingleActivationService,
                 ReportIssueCommandHandler,
-            );
-            ioc.serviceManager.addSingleton<IExtensionSingleActivationService>(
-                IExtensionSingleActivationService,
-                DebugSessionTelemetry,
             );
         }
         test('Ensure pip is supported and conda is not', async () => {

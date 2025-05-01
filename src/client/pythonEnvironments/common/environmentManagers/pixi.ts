@@ -154,8 +154,9 @@ export class Pixi {
      *
      * @param envDir The root directory (or prefix) of a conda environment
      */
-    @cache(5_000, true, 10_000)
+
     // eslint-disable-next-line class-methods-use-this
+    @cache(5_000, true, 10_000)
     async getPixiEnvironmentMetadata(envDir: string): Promise<PixiEnvMetadata | undefined> {
         const pixiPath = path.join(envDir, 'conda-meta/pixi');
         try {

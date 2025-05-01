@@ -22,6 +22,9 @@ import {
     LogOutputChannel,
     OutputChannel,
     TerminalLinkProvider,
+    NotebookDocument,
+    NotebookEditor,
+    NotebookDocumentShowOptions,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
 import { Resource } from '../types';
@@ -29,6 +32,13 @@ import { getWorkspaceFolders } from './workspaceApis';
 
 export function showTextDocument(uri: Uri): Thenable<TextEditor> {
     return window.showTextDocument(uri);
+}
+
+export function showNotebookDocument(
+    document: NotebookDocument,
+    options?: NotebookDocumentShowOptions,
+): Thenable<NotebookEditor> {
+    return window.showNotebookDocument(document, options);
 }
 
 export function showQuickPick<T extends QuickPickItem>(

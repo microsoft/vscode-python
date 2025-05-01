@@ -13,6 +13,7 @@ import { PersistentStateFactory } from '../client/common/persistentState';
 import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonEnvironment } from '../client/pythonEnvironments/info';
 import { MockMemento } from './mocks/mementos';
+import { MockExtensions } from './mocks/extensions';
 
 export function getExtensionSettings(resource: Uri | undefined): IPythonSettings {
     const vscode = require('vscode') as typeof import('vscode');
@@ -41,6 +42,7 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
     const workspaceMemento = new MockMemento();
     const globalMemento = new MockMemento();
     const persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento);
+    const extensions = new MockExtensions();
     return pythonSettings.PythonSettings.getInstance(
         resource,
         new AutoSelectionService(),
@@ -49,5 +51,6 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
             remoteName: undefined,
         } as IApplicationEnvironment),
         undefined,
+        extensions,
     );
 }

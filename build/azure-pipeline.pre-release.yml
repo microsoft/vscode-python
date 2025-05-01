@@ -71,7 +71,7 @@ extends:
 
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
           addToPath: true
           architecture: 'x64'
         displayName: Select Python version
@@ -102,6 +102,32 @@ extends:
             chmod +x $(Build.SourcesDirectory)/python-env-tools/bin
         displayName: Make Directory for python-env-tool binary
 
+      - bash: |
+          if [ "$(vsceTarget)" == "win32-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-pc-windows-msvc"
+          elif [ "$(vsceTarget)" == "win32-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-pc-windows-msvc"
+          elif [ "$(vsceTarget)" == "linux-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          elif [ "$(vsceTarget)" == "linux-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-unknown-linux-gnu"
+          elif [ "$(vsceTarget)" == "linux-armhf" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]armv7-unknown-linux-gnueabihf"
+          elif [ "$(vsceTarget)" == "darwin-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-apple-darwin"
+          elif [ "$(vsceTarget)" == "darwin-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-apple-darwin"
+          elif [ "$(vsceTarget)" == "alpine-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          elif [ "$(vsceTarget)" == "alpine-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-unknown-linux-gnu"
+          elif [ "$(vsceTarget)" == "web" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          else
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          fi
+        displayName: Set buildTarget variable
+
       - task: DownloadPipelineArtifact@2
         inputs:
             buildType: 'specific'
@@ -110,7 +136,7 @@ extends:
             buildVersionToDownload: 'latest'
             branchName: 'refs/heads/main'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
-            artifactName: 'bin-$(vsceTarget)'
+            artifactName: 'bin-$(buildTarget)'
             itemPattern: |
               pet.exe
               pet

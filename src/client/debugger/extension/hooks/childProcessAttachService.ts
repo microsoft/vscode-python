@@ -7,8 +7,6 @@ import { inject, injectable } from 'inversify';
 import { IDebugService } from '../../../common/application/types';
 import { DebugConfiguration, DebugSession, l10n, WorkspaceFolder, DebugSessionOptions } from 'vscode';
 import { noop } from '../../../common/utils/misc';
-import { captureTelemetry } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments } from '../../types';
 import { IChildProcessAttachService } from './types';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
@@ -22,7 +20,6 @@ import { getWorkspaceFolders } from '../../../common/vscodeApis/workspaceApis';
 export class ChildProcessAttachService implements IChildProcessAttachService {
     constructor(@inject(IDebugService) private readonly debugService: IDebugService) {}
 
-    @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
     public async attach(data: AttachRequestArguments & DebugConfiguration, parentSession: DebugSession): Promise<void> {
         const debugConfig: AttachRequestArguments & DebugConfiguration = data;
         const folder = this.getRelatedWorkspaceFolder(debugConfig);

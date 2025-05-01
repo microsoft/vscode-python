@@ -9,13 +9,12 @@ import {
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
+import { IConfigurationService } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
 import { DiscoveredTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
 import {
-    MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
@@ -33,7 +32,6 @@ import { useEnvExtension, getEnvironment, runInBackground } from '../../../envEx
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
@@ -112,7 +110,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = discoveryPipeName;
         traceInfo(
-            `All environment variables set for pytest discovery, PYTHONPATH: ${JSON.stringify(mutableEnv.PYTHONPATH)}`,
+            `Environment variables set for pytest discovery: PYTHONPATH=${mutableEnv.PYTHONPATH}, TEST_RUN_PIPE=${mutableEnv.TEST_RUN_PIPE}`,
         );
 
         // delete UUID following entire discovery finishing.
@@ -138,15 +136,12 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 proc.stdout.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceInfo(out);
-                    this.outputChannel?.append(out);
                 });
                 proc.stderr.on('data', (data) => {
                     const out = fixLogLinesNoTrailing(data.toString());
                     traceError(out);
-                    this.outputChannel?.append(out);
                 });
                 proc.onExit((code, signal) => {
-                    this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
                     if (code !== 0) {
                         traceError(
                             `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
@@ -165,7 +160,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,
-            outputChannel: this.outputChannel,
             env: mutableEnv,
             token,
         };
@@ -200,20 +194,16 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
         // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-        // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
 
         result?.proc?.stdout?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());
             traceInfo(out);
-            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.stderr?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());
             traceError(out);
-            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.on('exit', (code, signal) => {
-            this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
             if (code !== 0) {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}.`,

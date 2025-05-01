@@ -17,8 +17,6 @@ import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { traceError, traceLog, traceVerbose } from '../../../logging';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 import { showErrorMessage } from '../../../common/vscodeApis/windowApis';
@@ -76,10 +74,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
         const command = await this.getDebugAdapterPython(configuration, session.workspaceFolder);
         if (command.length !== 0) {
-            if (configuration.request === 'attach' && configuration.processId !== undefined) {
-                sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
-            }
-
             const executable = command.shift() ?? 'python';
 
             // "logToFile" is not handled directly by the adapter - instead, we need to pass
@@ -100,7 +94,6 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
             const args = command.concat([debuggerAdapterPathToUse, ...logArgs]);
             traceLog(`DAP Server launched with command: ${executable} ${args.join(' ')}`);
-            sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
             return new DebugAdapterExecutable(executable, args);
         }
 

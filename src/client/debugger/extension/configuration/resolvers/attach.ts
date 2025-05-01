@@ -87,7 +87,6 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             debugConfiguration.remoteRoot,
             workspaceFolder,
         );
-        AttachConfigurationResolver.sendTelemetry('attach', debugConfiguration);
     }
 
     // eslint-disable-next-line class-methods-use-this

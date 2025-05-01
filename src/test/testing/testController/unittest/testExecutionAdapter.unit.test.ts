@@ -7,7 +7,7 @@ import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
-import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
+import { IConfigurationService } from '../../../../client/common/types';
 import {
     IPythonExecutionFactory,
     IPythonExecutionService,
@@ -116,8 +116,7 @@ suite('Unittest test execution adapter', () => {
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const uri = Uri.file(myTestPath);
-        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-        adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
+        adapter = new UnittestTestExecutionAdapter(configService);
         const testIds = ['test1id', 'test2id'];
 
         adapter.runTests(uri, testIds, TestRunProfileKind.Run, testRun.object, execFactory.object);
@@ -147,8 +146,7 @@ suite('Unittest test execution adapter', () => {
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const uri = Uri.file(myTestPath);
-        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-        adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
+        adapter = new UnittestTestExecutionAdapter(configService);
         adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
 
         await deferred2.promise;
@@ -205,8 +203,7 @@ suite('Unittest test execution adapter', () => {
             isTestExecution: () => false,
         } as unknown) as IConfigurationService;
         const uri = Uri.file(myTestPath);
-        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-        adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
+        adapter = new UnittestTestExecutionAdapter(configService);
         adapter.runTests(uri, [], TestRunProfileKind.Run, testRun.object, execFactory.object);
 
         await deferred2.promise;
@@ -261,8 +258,7 @@ suite('Unittest test execution adapter', () => {
                     } as any),
             );
         const uri = Uri.file(myTestPath);
-        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-        adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
+        adapter = new UnittestTestExecutionAdapter(configService);
         adapter.runTests(uri, [], TestRunProfileKind.Debug, testRun.object, execFactory.object, debugLauncher.object);
         await deferred3.promise;
         debugLauncher.verify(
@@ -302,8 +298,7 @@ suite('Unittest test execution adapter', () => {
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
         const uri = Uri.file(myTestPath);
-        const outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-        adapter = new UnittestTestExecutionAdapter(configService, outputChannel.object);
+        adapter = new UnittestTestExecutionAdapter(configService);
         adapter.runTests(uri, [], TestRunProfileKind.Coverage, testRun.object, execFactory.object);
 
         await deferred2.promise;

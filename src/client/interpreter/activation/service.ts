@@ -386,9 +386,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         return undefined;
     }
 
+    // eslint-disable-next-line class-methods-use-this
     @traceDecoratorError('Failed to parse Environment variables')
     @traceDecoratorVerbose('parseEnvironmentOutput', TraceOptions.None)
-    // eslint-disable-next-line class-methods-use-this
     private parseEnvironmentOutput(output: string, parse: (out: string) => NodeJS.ProcessEnv | undefined) {
         if (output.indexOf(ENVIRONMENT_PREFIX) === -1) {
             return parse(output);

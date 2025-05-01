@@ -75,6 +75,8 @@ class ExecutionPayloadDict(TypedDict):
 class FileCoverageInfo(TypedDict):
     lines_covered: List[int]
     lines_missed: List[int]
+    executed_branches: int
+    total_branches: int
 
 
 class CoveragePayloadDict(Dict):

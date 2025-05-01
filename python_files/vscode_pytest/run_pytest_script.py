@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 coverage_enabled = True
                 break
         if not coverage_enabled:
-            args = [*args, "--cov=."]
+            args = [*args, "--cov=.", "--cov-branch"]
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     if run_test_ids_pipe:

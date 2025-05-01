@@ -5,7 +5,8 @@ import os
 import pathlib
 import subprocess
 import sys
-from typing import List
+from contextlib import contextmanager, suppress
+from typing import Generator, List
 
 script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
@@ -14,6 +15,17 @@ sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 from pvsc_utils import (  # noqa: E402
     VSCodeUnittestError,
 )
+
+
+@contextmanager
+def override_argv(argv: List[str]) -> Generator:
+    """Context manager to temporarily override sys.argv with the provided arguments."""
+    original_argv = sys.argv
+    sys.argv = argv
+    try:
+        yield
+    finally:
+        sys.argv = original_argv
 
 
 def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
@@ -58,8 +70,9 @@ def django_discovery_runner(manage_py_path: str, args: List[str]) -> None:
 
 
 def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List[str]) -> None:
+    manage_path: pathlib.Path = pathlib.Path(manage_py_path)
     # Attempt a small amount of validation on the manage.py path.
-    if not pathlib.Path(manage_py_path).exists():
+    if not manage_path.exists():
         raise VSCodeUnittestError("Error running Django, manage.py path does not exist.")
 
     try:
@@ -72,31 +85,27 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
         else:
             env["PYTHONPATH"] = os.fspath(custom_test_runner_dir)
 
-        # Build command to run 'python manage.py test'.
-        command: List[str] = [
-            sys.executable,
-            manage_py_path,
+        django_project_dir: pathlib.Path = manage_path.parent
+        sys.path.insert(0, os.fspath(django_project_dir))
+        print(f"Django project directory: {django_project_dir}")
+
+        manage_argv: List[str] = [
+            str(manage_path),
             "test",
             "--testrunner=django_test_runner.CustomExecutionTestRunner",
+            *args,
+            *test_ids,
         ]
-        # Add any additional arguments to the command provided by the user.
-        command.extend(args)
-        # Add the test_ids to the command.
-        print("Test IDs: ", test_ids)
-        print("args: ", args)
-        command.extend(test_ids)
-        print("Running Django run tests with command: ", command)
-        subprocess_execution = subprocess.run(
-            command,
-            capture_output=True,
-            text=True,
-            env=env,
-        )
-        print(subprocess_execution.stderr, file=sys.stderr)
-        print(subprocess_execution.stdout, file=sys.stdout)
-        # Zero return code indicates success, 1 indicates test failures, so both are considered successful.
-        if subprocess_execution.returncode not in (0, 1):
-            error_msg = "Django test execution process exited with non-zero error code See stderr above for more details."
-            print(error_msg, file=sys.stderr)
+        print(f"Django manage.py arguments: {manage_argv}")
+
+        try:
+            argv_context = override_argv(manage_argv)
+            suppress_context = suppress(SystemExit)
+            manage_file = manage_path.open()
+            with argv_context, suppress_context, manage_file:
+                manage_code = manage_file.read()
+                exec(manage_code, {"__name__": "__main__"})
+        except OSError as e:
+            raise VSCodeUnittestError("Error running Django, unable to read manage.py") from e
     except Exception as e:
         print(f"Error during Django test execution: {e}", file=sys.stderr)

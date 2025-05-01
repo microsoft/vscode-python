@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare interface String {
     /**
      * Appropriately formats a string so it can be used as an argument for a command in a shell.

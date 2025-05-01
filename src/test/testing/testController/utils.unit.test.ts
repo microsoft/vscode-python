@@ -2,7 +2,6 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import { writeTestIdsFile } from '../../../client/testing/testController/common/utils';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 
@@ -21,11 +20,13 @@ suite('writeTestIdsFile tests', () => {
         const testIds = ['test1', 'test2', 'test3'];
         const writeFileStub = sandbox.stub(fs.promises, 'writeFile').resolves();
 
-        const result = await writeTestIdsFile(testIds);
+        // Set up XDG_RUNTIME_DIR
+        process.env = {
+            ...process.env,
+            XDG_RUNTIME_DIR: '/xdg/runtime/dir',
+        };
 
-        const tmpDir = os.tmpdir();
-
-        assert.ok(result.startsWith(tmpDir));
+        await writeTestIdsFile(testIds);
 
         assert.ok(writeFileStub.calledOnceWith(sinon.match.string, testIds.join('\n')));
     });
@@ -46,5 +47,43 @@ suite('writeTestIdsFile tests', () => {
         assert.ok(accessStub.called);
         assert.ok(mkdirStub.called);
         assert.ok(writeFileStub.calledOnceWith(sinon.match.string, testIds.join('\n')));
+    });
+});
+
+suite('getTempDir tests', () => {
+    let sandbox: sinon.SinonSandbox;
+    let originalPlatform: NodeJS.Platform;
+    let originalEnv: NodeJS.ProcessEnv;
+
+    setup(() => {
+        sandbox = sinon.createSandbox();
+        originalPlatform = process.platform;
+        originalEnv = process.env;
+    });
+
+    teardown(() => {
+        sandbox.restore();
+        Object.defineProperty(process, 'platform', { value: originalPlatform });
+        process.env = originalEnv;
+    });
+
+    test('should use XDG_RUNTIME_DIR on non-Windows if available', async () => {
+        if (process.platform === 'win32') {
+            return;
+        }
+        // Force platform to be Linux
+        Object.defineProperty(process, 'platform', { value: 'linux' });
+
+        // Set up XDG_RUNTIME_DIR
+        process.env = { ...process.env, XDG_RUNTIME_DIR: '/xdg/runtime/dir' };
+
+        const testIds = ['test1', 'test2', 'test3'];
+        sandbox.stub(fs.promises, 'access').resolves();
+        sandbox.stub(fs.promises, 'writeFile').resolves();
+
+        // This will use getTempDir internally
+        const result = await writeTestIdsFile(testIds);
+
+        assert.ok(result.startsWith('/xdg/runtime/dir'));
     });
 });

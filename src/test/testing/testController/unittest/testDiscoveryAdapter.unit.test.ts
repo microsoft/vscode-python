@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import { CancellationTokenSource, Uri } from 'vscode';
 import { Observable } from 'rxjs';
 import * as sinon from 'sinon';
-import { IConfigurationService, ITestOutputChannel } from '../../../../client/common/types';
+import { IConfigurationService } from '../../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { UnittestTestDiscoveryAdapter } from '../../../../client/testing/testController/unittest/testDiscoveryAdapter';
 import { Deferred, createDeferred } from '../../../../client/common/utils/async';
@@ -25,7 +25,6 @@ import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('Unittest test discovery adapter', () => {
     let configService: IConfigurationService;
-    let outputChannel: typeMoq.IMock<ITestOutputChannel>;
     let mockProc: MockChildProcess;
     let execService: typeMoq.IMock<IPythonExecutionService>;
     let execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
@@ -47,7 +46,6 @@ suite('Unittest test discovery adapter', () => {
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
         } as unknown) as IConfigurationService;
-        outputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
 
         // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);
@@ -94,7 +92,7 @@ suite('Unittest test discovery adapter', () => {
     });
 
     test('DiscoverTests should send the discovery command to the test server with the correct args', async () => {
-        const adapter = new UnittestTestDiscoveryAdapter(configService, outputChannel.object);
+        const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
         const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
@@ -137,7 +135,7 @@ suite('Unittest test discovery adapter', () => {
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'], cwd: expectedNewPath.toString() },
             }),
         } as unknown) as IConfigurationService;
-        const adapter = new UnittestTestDiscoveryAdapter(configService, outputChannel.object);
+        const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
         const argsExpected = [script, '--udiscovery', '-v', '-s', '.', '-p', 'test*'];
@@ -189,7 +187,7 @@ suite('Unittest test discovery adapter', () => {
         );
         sinon.stub(fs.promises, 'realpath').callsFake(async (pathEntered) => pathEntered.toString());
 
-        const adapter = new UnittestTestDiscoveryAdapter(configService, outputChannel.object);
+        const adapter = new UnittestTestDiscoveryAdapter(configService);
         const discoveryPromise = adapter.discoverTests(uri, execFactory.object, cancellationTokenSource.token);
 
         // Trigger cancellation before exec observable call finishes
@@ -239,7 +237,7 @@ suite('Unittest test discovery adapter', () => {
         );
         sinon.stub(fs.promises, 'realpath').callsFake(async (pathEntered) => pathEntered.toString());
 
-        const adapter = new UnittestTestDiscoveryAdapter(configService, outputChannel.object);
+        const adapter = new UnittestTestDiscoveryAdapter(configService);
         const discoveryPromise = adapter.discoverTests(uri, execFactory.object, cancellationTokenSource.token);
 
         // add in await and trigger

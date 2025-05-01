@@ -60,8 +60,13 @@ export class TerminalProvider implements Disposable {
 
     @captureTelemetry(EventName.TERMINAL_CREATE, { triggeredBy: 'commandpalette' })
     private async onCreateTerminal() {
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         const activeResource = this.activeResourceService.getActiveResource();
+        if (useEnvExtension()) {
+            const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
+            await commandManager.executeCommand('python-envs.createTerminal', activeResource);
+        }
+
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory);
         await terminalService.createTerminalService(activeResource, 'Python').show(false);
     }
 }
