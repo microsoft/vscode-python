@@ -99,7 +99,6 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         try {
             if (!inTerminalEnvVarExperiment(this.experimentService)) {
                 this.context.environmentVariableCollection.clear();
-                await registerPythonStartup(this.context);
                 await this.handleMicroVenv(resource);
                 if (!this.registeredOnce) {
                     this.interpreterService.onDidChangeInterpreter(
@@ -111,6 +110,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
                     );
                     this.registeredOnce = true;
                 }
+                await registerPythonStartup(this.context);
                 return;
             }
             if (!this.registeredOnce) {
