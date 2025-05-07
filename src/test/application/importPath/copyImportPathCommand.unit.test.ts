@@ -5,6 +5,7 @@
 
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { expect } from 'chai';
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { CopyImportPathCommand } from '../../../client/application/importPath/copyImportPathCommand';
 import { IClipboard, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
@@ -45,9 +46,10 @@ suite('Copy Import Path Command', () => {
     });
 
     test('execute() – sys.path match takes precedence', async () => {
-        const absPath = '/home/user/project/src/pkg/module.py';
+        const projectRoot = path.join(path.sep, 'home', 'user', 'project');
+        const absPath = path.join(projectRoot, 'src', 'pkg', 'module.py');
         const uri = vscode.Uri.file(absPath);
-        ((pythonUtils as unknown) as { getSysPath: () => string[] }).getSysPath = () => ['/home/user/project/src'];
+        ((pythonUtils as unknown) as { getSysPath: () => string[] }).getSysPath = () => [path.join(projectRoot, 'src')];
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
         ((vscode.window as unknown) as { activeTextEditor: { document: { uri: vscode.Uri } } }).activeTextEditor = {
@@ -59,12 +61,13 @@ suite('Copy Import Path Command', () => {
     });
 
     test('execute() – workspaceFolder used when no sys.path match', async () => {
-        const absPath = '/home/user/project/tools/util.py';
+        const projectRoot = path.join(path.sep, 'home', 'user', 'project');
+        const absPath = path.join(projectRoot, 'tools', 'util.py');
         const uri = vscode.Uri.file(absPath);
         ((pythonUtils as unknown) as { getSysPath: () => string[] }).getSysPath = () => [];
 
         const wsFolder = {
-            uri: vscode.Uri.file('/home/user/project'),
+            uri: vscode.Uri.file(projectRoot),
             name: 'project',
             index: 0,
         } as vscode.WorkspaceFolder;
@@ -78,7 +81,7 @@ suite('Copy Import Path Command', () => {
     });
 
     test('execute() – falls back to filename when no matches', async () => {
-        const absPath = '/tmp/standalone.py';
+        const absPath = path.join(path.sep, 'tmp', 'standalone.py');
         const uri = vscode.Uri.file(absPath);
         ((pythonUtils as unknown) as { getSysPath: () => string[] }).getSysPath = () => [];
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
