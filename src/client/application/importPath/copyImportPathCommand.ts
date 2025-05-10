@@ -29,7 +29,6 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
         }
 
         const importPath = this.resolveImportPath(uri.fsPath);
-        // await vscode.env.clipboard.writeText(importPath);
         await this.clipboard.writeText(importPath);
         void vscode.window.showInformationMessage(`Copied: ${importPath}`);
     }
