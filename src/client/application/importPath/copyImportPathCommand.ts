@@ -6,6 +6,7 @@ import { IClipboard, ICommandManager, IWorkspaceService } from '../../common/app
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { Commands } from '../../common/constants';
 import { getSysPath } from '../../common/utils/pythonUtils';
+import { IInterpreterPathService } from '../../common/types';
 
 @injectable()
 export class CopyImportPathCommand implements IExtensionSingleActivationService {
@@ -15,6 +16,7 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
         @inject(ICommandManager) private readonly commands: ICommandManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IClipboard) private readonly clipboard: IClipboard,
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService,
     ) {}
 
     async activate(): Promise<void> {
@@ -28,7 +30,9 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
             return;
         }
 
-        const importPath = this.resolveImportPath(uri.fsPath);
+        const resource: vscode.Uri | undefined = uri ?? this.workspace.workspaceFolders?.[0]?.uri;
+        const pythonPath = this.interpreterPathService.get(resource);
+        const importPath = this.resolveImportPath(uri.fsPath, pythonPath);
         await this.clipboard.writeText(importPath);
         void vscode.window.showInformationMessage(`Copied: ${importPath}`);
     }
@@ -45,9 +49,9 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
      * @param absPath - The absolute path to a `.py` file.
      * @returns The resolved import path in dotted notation (e.g., 'pkg.module').
      */
-    private resolveImportPath(absPath: string): string {
+    private resolveImportPath(absPath: string, pythonPath?: string): string {
         // ---------- ① sys.path ----------
-        for (const sysRoot of getSysPath()) {
+        for (const sysRoot of getSysPath(pythonPath)) {
             if (sysRoot && absPath.startsWith(sysRoot)) {
                 return CopyImportPathCommand.toDotted(path.relative(sysRoot, absPath));
             }

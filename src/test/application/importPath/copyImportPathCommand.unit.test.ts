@@ -13,12 +13,15 @@ import * as pythonUtils from '../../../client/common/utils/pythonUtils';
 import { ClipboardService } from '../../../client/common/application/clipboard';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { WorkspaceService } from '../../../client/common/application/workspace';
+import { IInterpreterPathService } from '../../../client/common/types';
+import { InterpreterPathService } from '../../../client/common/interpreterPathService';
 
 suite('Copy Import Path Command', () => {
     let command: CopyImportPathCommand;
     let commandManager: ICommandManager;
     let workspaceService: IWorkspaceService;
     let clipboard: IClipboard;
+    let interpreterPathService: IInterpreterPathService;
     let originalGetSysPath: () => string[];
 
     let clipboardText = '';
@@ -27,7 +30,13 @@ suite('Copy Import Path Command', () => {
         commandManager = mock(CommandManager);
         workspaceService = mock(WorkspaceService);
         clipboard = mock(ClipboardService);
-        command = new CopyImportPathCommand(instance(commandManager), instance(workspaceService), instance(clipboard));
+        interpreterPathService = mock(InterpreterPathService);
+        command = new CopyImportPathCommand(
+            instance(commandManager),
+            instance(workspaceService),
+            instance(clipboard),
+            instance(interpreterPathService),
+        );
         originalGetSysPath = pythonUtils.getSysPath;
 
         clipboardText = '';
