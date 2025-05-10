@@ -73,6 +73,8 @@
         "workspaceContains:Pipfile",
         "workspaceContains:setup.py",
         "workspaceContains:requirements.txt",
+        "workspaceContains:pylock.toml",
+        "workspaceContains:**/pylock.*.toml",
         "workspaceContains:manage.py",
         "workspaceContains:app.py",
         "workspaceContains:.venv",

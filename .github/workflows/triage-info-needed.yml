@@ -7,13 +7,12 @@ on:
 env:
   TRIAGERS: '["karrtikr","karthiknadig","paulacamargo25","eleanorjboyd", "brettcannon","anthonykim1"]'
 
-permissions:
-  issues: write
-
 jobs:
   add_label:
-    runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'triage-needed') && !contains(github.event.issue.labels.*.name, 'info-needed')
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Checkout Actions
         uses: actions/checkout@v4
@@ -21,6 +20,7 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+          persist-credentials: false
 
       - name: Install Actions
         run: npm install --production --prefix ./actions
@@ -35,6 +35,8 @@ jobs:
   remove_label:
     if: contains(github.event.issue.labels.*.name, 'info-needed') && contains(github.event.issue.labels.*.name, 'triage-needed')
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Checkout Actions
         uses: actions/checkout@v4
@@ -42,6 +44,7 @@ jobs:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
           path: ./actions
+          persist-credentials: false
 
       - name: Install Actions
         run: npm install --production --prefix ./actions

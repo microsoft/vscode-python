@@ -9,13 +9,15 @@ on:
       - 'labeled'
       - 'unlabeled'
 
+permissions: {}
+
 jobs:
   changed-files-in-pr:
     name: 'Check for changed files'
     runs-on: ubuntu-latest
     steps:
       - name: 'package-lock.json matches package.json'
-        uses: brettcannon/check-for-changed-files@v1.2.1
+        uses: brettcannon/check-for-changed-files@871d7b8b5917a4f6f06662e2262e8ffc51dff6d1 # v1.2.1
         with:
           prereq-pattern: 'package.json'
           file-pattern: 'package-lock.json'
@@ -23,7 +25,7 @@ jobs:
           failure-message: '${prereq-pattern} was edited but ${file-pattern} was not (the ${skip-label} label can be used to pass this check)'
 
       - name: 'package.json matches package-lock.json'
-        uses: brettcannon/check-for-changed-files@v1.2.1
+        uses: brettcannon/check-for-changed-files@871d7b8b5917a4f6f06662e2262e8ffc51dff6d1 # v1.2.1
         with:
           prereq-pattern: 'package-lock.json'
           file-pattern: 'package.json'
@@ -31,7 +33,7 @@ jobs:
           failure-message: '${prereq-pattern} was edited but ${file-pattern} was not (the ${skip-label} label can be used to pass this check)'
 
       - name: 'Tests'
-        uses: brettcannon/check-for-changed-files@v1.2.1
+        uses: brettcannon/check-for-changed-files@871d7b8b5917a4f6f06662e2262e8ffc51dff6d1 # v1.2.1
         with:
           prereq-pattern: src/**/*.ts
           file-pattern: |
