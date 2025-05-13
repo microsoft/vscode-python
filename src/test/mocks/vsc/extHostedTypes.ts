@@ -2000,12 +2000,31 @@ export enum TreeItemCollapsibleState {
     Expanded = 2,
 }
 
+/**
+ * Represents an icon in the UI. This is either an uri, separate uris for the light- and dark-themes,
+ * or a {@link ThemeIcon theme icon}.
+ */
+export type IconPath =
+    | vscUri.URI
+    | {
+          /**
+           * The icon path for the light theme.
+           */
+          light: vscUri.URI;
+          /**
+           * The icon path for the dark theme.
+           */
+          dark: vscUri.URI;
+      }
+    | ThemeIcon;
+
 export class TreeItem {
-    label?: string;
+    label?: string | vscode.TreeItemLabel;
+    id?: string;
 
     resourceUri?: vscUri.URI;
 
-    iconPath?: string | vscUri.URI | { light: string | vscUri.URI; dark: string | vscUri.URI };
+    iconPath?: string | IconPath;
 
     command?: vscode.Command;
 
