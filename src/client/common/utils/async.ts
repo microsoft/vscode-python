@@ -5,9 +5,6 @@
 
 'use strict';
 
-import type { CancellationToken } from 'vscode';
-import { CancellationError } from 'vscode';
-
 export async function sleep(timeout: number): Promise<number> {
     return new Promise<number>((resolve) => {
         setTimeout(() => resolve(timeout), timeout);
@@ -269,19 +266,5 @@ export async function waitForCondition(
             clearTimeout(timer);
             resolve();
         }, 10);
-    });
-}
-
-/**
- * Returns a promise that rejects with an {@CancellationError} as soon as the passed token is cancelled.
- * @see {@link raceCancellation}
- */
-export function raceCancellationError<T>(promise: Promise<T>, token: CancellationToken): Promise<T> {
-    return new Promise((resolve, reject) => {
-        const ref = token.onCancellationRequested(() => {
-            ref.dispose();
-            reject(new CancellationError());
-        });
-        promise.then(resolve, reject).finally(() => ref.dispose());
     });
 }
