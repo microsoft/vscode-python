@@ -122,7 +122,7 @@ def test_create_env(env_exists, git_ignore, install):
 def test_install_packages(install_type):
     importlib.reload(create_venv)
     create_venv.is_installed = lambda _x: True
-    create_venv.file_exists = lambda x: install_type in x
+    create_venv.file_exists = lambda x: install_type in str(x)
 
     pip_upgraded = False
     installing = None
