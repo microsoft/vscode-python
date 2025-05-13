@@ -47,7 +47,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.94.0-20240918"
+        "vscode": "^1.95.0"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -1554,7 +1554,7 @@
         "@types/sinon": "^17.0.3",
         "@types/stack-trace": "0.0.29",
         "@types/tmp": "^0.0.33",
-        "@types/vscode": "^1.100.0",
+        "@types/vscode": "^1.95.0",
         "@types/which": "^2.0.1",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
