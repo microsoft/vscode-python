@@ -26,7 +26,7 @@ import { asyncFilter } from '../common/utils/arrayUtils';
 import { CondaEnvironmentInfo, isCondaEnvironment } from './common/environmentManagers/conda';
 import { isMicrosoftStoreEnvironment } from './common/environmentManagers/microsoftStoreEnv';
 import { CondaService } from './common/environmentManagers/condaService';
-import { traceVerbose } from '../logging';
+import { traceError, traceVerbose } from '../logging';
 
 const convertedKinds = new Map(
     Object.entries({
@@ -159,11 +159,16 @@ class ComponentAdapter implements IComponentAdapter {
 
     // We use the same getInterpreters() here as for IInterpreterLocatorService.
     public async getInterpreterDetails(pythonPath: string): Promise<PythonEnvironment | undefined> {
-        const env = await this.api.resolveEnv(pythonPath);
-        if (!env) {
+        try {
+            const env = await this.api.resolveEnv(pythonPath);
+            if (!env) {
+                return undefined;
+            }
+            return convertEnvInfo(env);
+        } catch (ex) {
+            traceError(`Failed to resolve interpreter: ${pythonPath}`, ex);
             return undefined;
         }
-        return convertEnvInfo(env);
     }
 
     // Implements ICondaService
