@@ -141,9 +141,9 @@ export class TerminalService implements ITerminalService, Disposable {
         }
     }
     // TODO: Debt switch to Promise<Terminal> ---> breaks 20 tests
-    public async ensureTerminal(preserveFocus: boolean = true): Promise<void> {
+    public async ensureTerminal(preserveFocus: boolean = true): Promise<Terminal> {
         if (this.terminal) {
-            return;
+            return this.terminal;
         }
 
         if (useEnvExtension()) {
@@ -174,7 +174,7 @@ export class TerminalService implements ITerminalService, Disposable {
         }
 
         this.sendTelemetry().ignoreErrors();
-        return;
+        return this.terminal;
     }
     private terminalCloseHandler(terminal: Terminal) {
         if (terminal === this.terminal) {
