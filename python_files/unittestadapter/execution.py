@@ -12,8 +12,6 @@ import unittest
 from types import TracebackType
 from typing import Dict, List, Optional, Set, Tuple, Type, Union
 
-from packaging.version import Version
-
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
 os.environ[path_var_name] = (
@@ -325,6 +323,13 @@ if __name__ == "__main__":
             workspace_root,
         )
         import coverage
+
+        # insert "python_files/lib/python" into the path so packaging can be imported
+        python_files_dir = pathlib.Path(__file__).parent.parent
+        bundled_dir = pathlib.Path(python_files_dir / "lib" / "python")
+        sys.path.append(os.fspath(bundled_dir))
+
+        from packaging.version import Version
 
         coverage_version = Version(coverage.__version__)
         # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
