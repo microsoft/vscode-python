@@ -1462,6 +1462,64 @@
                 "fileMatch": "meta.yaml",
                 "url": "./schemas/conda-meta.json"
             }
+        ],
+        "languageModelTools": [
+            {
+                "name": "python_environment",
+                "displayName": "Get Python Environment Information",
+                "modelDescription": "Provides details about the Python environment for a specified file or workspace, including environment type, Python version, run command, and installed packages with their versions.",
+                "toolReferenceName": "pythonGetEnvironmentInfo",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(files)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string"
+                        }
+                    },
+                    "description": "The path to the Python file or workspace to get the environment information for.",
+                    "required": [
+                        "resourcePath"
+                    ]
+                },
+                "when": "!pythonEnvExtensionInstalled"
+            },
+            {
+                "name": "python_install_package",
+                "displayName": "Install Python Package",
+                "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment.",
+                "toolReferenceName": "pythonInstallPackage",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(package)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "packageList": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "The list of packages to install."
+                        },
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace to get the environment information for."
+                        }
+                    },
+                    "required": [
+                        "packageList",
+                        "resourcePath"
+                    ]
+                },
+                "when": "!pythonEnvExtensionInstalled"
+            }
         ]
     },
     "copilot": {
