@@ -1465,11 +1465,61 @@
         ],
         "languageModelTools": [
             {
-                "name": "python_environment",
+                "name": "get_python_environment_info",
                 "displayName": "Get Python Environment Information",
                 "userDescription": "%python.languageModelTools.python_environment.userDescription%",
-                "modelDescription": "Provides details about the Python environment for a specified file or workspace, including environment type, Python version, run command, and installed packages with their versions. Use this tool to determine the correct command for executing Python code in this workspace.",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Environment (conda, venv, etec), 2. Version of Python, 3.  this tool gets details about the Python environment including environment type, Python version, command used to execute Python, and a list of all installed packages with their versions. Use this tool to determine the correct command for executing Python in a terminal.",
                 "toolReferenceName": "pythonGetEnvironmentInfo",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(files)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string"
+                        }
+                    },
+                    "description": "The path to the Python file or workspace to get the environment information for.",
+                    "required": [
+                        "resourcePath"
+                    ]
+                },
+                "when": "false"
+            },
+            {
+                "name": "get_python_executable",
+                "displayName": "Get Python Executable",
+                "userDescription": "%python.languageModelTools.get_python_executable.userDescription%",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`.",
+                "toolReferenceName": "pythonExecutableCommand",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(files)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string"
+                        }
+                    },
+                    "description": "The path to the Python file or workspace to get the environment information for.",
+                    "required": [
+                        "resourcePath"
+                    ]
+                },
+                "when": "!pythonEnvExtensionInstalled"
+            },
+            {
+                "name": "list_python_packages",
+                "displayName": "List Python Packages",
+                "userDescription": "%python.languageModelTools.list_python_packages.userDescription%",
+                "modelDescription": "This tool will retrieve the list of all installed packages installed in a Python Environment for the specified file or workspace. ALWAYS use this tool instead of executing Python command in the terminal to fetch the list of installed packages. WARNING: Packages installed can change over time, hence the list of packages returned by this tool may not be accurate. Use this tool to get the list of installed packages in a Python environment.",
+                "toolReferenceName": "listPythonPackages",
                 "tags": [
                     "ms-python.python"
                 ],

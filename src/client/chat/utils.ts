@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 import { CancellationError, CancellationToken, Uri } from 'vscode';
+import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
+import { PythonExtension, ResolvedEnvironment } from '../api/types';
 
 export function resolveFilePath(filepath: string): Uri {
     // starts with a scheme
@@ -24,4 +26,18 @@ export function raceCancellationError<T>(promise: Promise<T>, token: Cancellatio
         });
         promise.then(resolve, reject).finally(() => ref.dispose());
     });
+}
+
+export async function getEnvDisplayName(discovery: IDiscoveryAPI, resource: Uri, api: PythonExtension['environments']) {
+    try {
+        const envPath = api.getActiveEnvironmentPath(resource);
+        const env = await discovery.resolveEnv(envPath.path);
+        return env?.display || env?.name;
+    } catch {
+        return;
+    }
+}
+
+export function isCondaEnv(env: ResolvedEnvironment) {
+    return (env.environment?.type || '').toLowerCase() === 'conda';
 }

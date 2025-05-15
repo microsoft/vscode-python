@@ -4,12 +4,14 @@
 import { commands, extensions, lm } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
-import { GetEnvironmentInfoTool } from './getPythonEnvTool';
 import { InstallPackagesTool } from './installPackagesTool';
 import { IExtensionContext } from '../common/types';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
 import { ENVS_EXTENSION_ID } from '../envExt/api.internal';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
+import { ListPythonPackagesTool } from './listPackagesTool';
+import { GetExecutableTool } from './getExecutableTool';
+import { GetEnvironmentInfoTool } from './getPythonEnvTool';
 
 export function registerTools(
     context: IExtensionContext,
@@ -27,6 +29,18 @@ export function registerTools(
 
     ourTools.add(
         lm.registerTool(GetEnvironmentInfoTool.toolName, new GetEnvironmentInfoTool(environmentsApi, serviceContainer)),
+    );
+    ourTools.add(
+        lm.registerTool(
+            GetExecutableTool.toolName,
+            new GetExecutableTool(environmentsApi, serviceContainer, discoverApi),
+        ),
+    );
+    ourTools.add(
+        lm.registerTool(
+            ListPythonPackagesTool.toolName,
+            new ListPythonPackagesTool(environmentsApi, serviceContainer, discoverApi),
+        ),
     );
     ourTools.add(
         lm.registerTool(

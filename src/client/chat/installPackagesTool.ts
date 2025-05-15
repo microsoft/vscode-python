@@ -11,11 +11,10 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
-    Uri,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
-import { raceCancellationError } from './utils';
+import { getEnvDisplayName, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
@@ -118,15 +117,5 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             confirmationMessages: { title, message },
             invocationMessage,
         };
-    }
-}
-
-async function getEnvDisplayName(discovery: IDiscoveryAPI, resource: Uri, api: PythonExtension['environments']) {
-    try {
-        const envPath = api.getActiveEnvironmentPath(resource);
-        const env = await discovery.resolveEnv(envPath.path);
-        return env?.display || env?.name;
-    } catch {
-        return;
     }
 }
