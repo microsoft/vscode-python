@@ -1,5 +1,6 @@
 **/*.map
 **/*.analyzer.html
+**/.env
 *.vsix
 .editorconfig
 .env
