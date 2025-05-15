@@ -24,7 +24,7 @@ import { traceError } from '../logging';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 
 export interface IResourceReference {
-    resourcePath: string;
+    resourcePath?: string;
 }
 
 export class ListPythonPackagesTool implements LanguageModelTool<IResourceReference> {
@@ -51,7 +51,7 @@ export class ListPythonPackagesTool implements LanguageModelTool<IResourceRefere
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
             const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
             if (!environment) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath.fsPath);
+                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
 
             const packages = isCondaEnv(environment)
@@ -102,7 +102,7 @@ export class ListPythonPackagesTool implements LanguageModelTool<IResourceRefere
 }
 
 
-async function listPipPackages(execFactory: IPythonExecutionFactory, resource: Uri): Promise<[packageName:string, version:string][]> {
+async function listPipPackages(execFactory: IPythonExecutionFactory, resource: Uri | undefined): Promise<[packageName:string, version:string][]> {
     // Add option --format to subcommand list of pip  cache, with abspath choice to output the full path of a wheel file. (#8355)
     // Added in 202. Thats almost 5 years ago. When Python 3.8 was released.
     const exec = await execFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, resource });
@@ -113,7 +113,7 @@ async function listPipPackages(execFactory: IPythonExecutionFactory, resource: U
 async function listCondaPackages(
     execFactory: IPythonExecutionFactory,
     env: ResolvedEnvironment,
-    resource: Uri,
+    resource: Uri | undefined,
     processService: IProcessService,
 ): Promise<[packageName:string, version:string][]> {
     const conda = await Conda.getConda();

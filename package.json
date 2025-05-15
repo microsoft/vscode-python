@@ -1507,10 +1507,8 @@
                             "type": "string"
                         }
                     },
-                    "description": "The path to the Python file or workspace to get the environment information for.",
-                    "required": [
-                        "resourcePath"
-                    ]
+                    "description": "The path to the Python file or workspace to get the executable information for. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace.",
+                    "required": []
                 },
                 "when": "!pythonEnvExtensionInstalled"
             },
@@ -1532,10 +1530,8 @@
                             "type": "string"
                         }
                     },
-                    "description": "The path to the Python file or workspace to get the environment information for.",
-                    "required": [
-                        "resourcePath"
-                    ]
+                    "description": "The path to the Python file or workspace to list the packages. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace.",
+                    "required": []
                 },
                 "when": "!pythonEnvExtensionInstalled"
             },
@@ -1562,12 +1558,11 @@
                         },
                         "resourcePath": {
                             "type": "string",
-                            "description": "The path to the Python file or workspace to get the environment information for."
+                            "description": "The path to the Python file or workspace into which the packages are installed. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
                         }
                     },
                     "required": [
-                        "packageList",
-                        "resourcePath"
+                        "packageList"
                     ]
                 },
                 "when": "!pythonEnvExtensionInstalled"

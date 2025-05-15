@@ -21,7 +21,7 @@ import { ModuleInstallerType } from '../pythonEnvironments/info';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 
 export interface IInstallPackageArgs {
-    resourcePath: string;
+    resourcePath?: string;
     packageList: string[];
 }
 
@@ -51,7 +51,7 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
             const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
             if (!environment || !environment.version) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath.fsPath);
+                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
             const isConda = (environment.environment?.type || '').toLowerCase() === 'conda';
             const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);

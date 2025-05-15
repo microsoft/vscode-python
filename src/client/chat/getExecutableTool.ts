@@ -25,7 +25,7 @@ import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 
 export interface IResourceReference {
-    resourcePath: string;
+    resourcePath?: string;
 }
 
 export class GetExecutableTool implements LanguageModelTool<IResourceReference> {
@@ -54,7 +54,7 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
             const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
             if (!environment || !environment.version) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath.fsPath);
+                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
             const runCommand = await raceCancellationError(this.getTerminalCommand(environment, resourcePath), token);
 
@@ -78,7 +78,7 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         }
     }
 
-    private async getTerminalCommand(environment: ResolvedEnvironment, resource: Uri) {
+    private async getTerminalCommand(environment: ResolvedEnvironment, resource?: Uri) {
         let cmd: { command: string; args: string[] };
         if (isCondaEnv(environment)) {
             cmd =

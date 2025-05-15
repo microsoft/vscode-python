@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, Uri } from 'vscode';
+import { CancellationError, CancellationToken, Uri, workspace } from 'vscode';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { PythonExtension, ResolvedEnvironment } from '../api/types';
 
-export function resolveFilePath(filepath: string): Uri {
+export function resolveFilePath(filepath?: string): Uri | undefined {
+    if (!filepath) {
+        return workspace.workspaceFolders ? workspace.workspaceFolders[0].uri : undefined;
+    }
     // starts with a scheme
     try {
         return Uri.parse(filepath);
@@ -28,7 +31,7 @@ export function raceCancellationError<T>(promise: Promise<T>, token: Cancellatio
     });
 }
 
-export async function getEnvDisplayName(discovery: IDiscoveryAPI, resource: Uri, api: PythonExtension['environments']) {
+export async function getEnvDisplayName(discovery: IDiscoveryAPI, resource: Uri | undefined, api: PythonExtension['environments']) {
     try {
         const envPath = api.getActiveEnvironmentPath(resource);
         const env = await discovery.resolveEnv(envPath.path);
