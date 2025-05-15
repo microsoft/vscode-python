@@ -21,7 +21,6 @@ import { getEnvironmentDetails, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
-import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -55,18 +54,6 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!ConfigurePythonEnvTool.EnvironmentConfigured) {
-            return new LanguageModelToolResult([
-                new LanguageModelTextPart(
-                    [
-                        `A Python environment is not configured. Please configure a Python environment first using the ${ConfigurePythonEnvTool.toolName}.`,
-                        `The ${ConfigurePythonEnvTool.toolName} tool will guide the user through the process of configuring a Python environment.`,
-                        'Once the environment is configured, you can use this tool to get the Python executable information.',
-                    ].join('\n'),
-                ),
-            ]);
-        }
-
         const resourcePath = resolveFilePath(options.input.resourcePath);
 
         try {
