@@ -17,11 +17,11 @@ import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { raceCancellationError } from './utils';
+import { getEnvironmentDetails, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
-import { getTerminalCommand } from './getExecutableTool';
 import { ITerminalHelper } from '../common/terminal/types';
+import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -55,6 +55,18 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!ConfigurePythonEnvTool.EnvironmentConfigured) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    [
+                        `A Python environment is not configured. Please configure a Python environment first using the ${ConfigurePythonEnvTool.toolName}.`,
+                        `The ${ConfigurePythonEnvTool.toolName} tool will guide the user through the process of configuring a Python environment.`,
+                        'Once the environment is configured, you can use this tool to get the Python executable information.',
+                    ].join('\n'),
+                ),
+            ]);
+        }
+
         const resourcePath = resolveFilePath(options.input.resourcePath);
 
         try {
@@ -64,32 +76,24 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
             if (!environment || !environment.version) {
                 throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
-            const [packages, runCommand] = await Promise.all([
-                getPythonPackagesResponse(
-                    environment,
-                    this.pythonExecFactory,
-                    this.processServiceFactory,
-                    resourcePath,
-                    token,
-                ),
-                raceCancellationError(
-                    getTerminalCommand(environment, resourcePath, this.terminalExecutionService, this.terminalHelper),
-                    token,
-                ),
-            ]);
+            const packages = await getPythonPackagesResponse(
+                environment,
+                this.pythonExecFactory,
+                this.processServiceFactory,
+                resourcePath,
+                token,
+            );
 
-            const message = [
-                `Following is the information about the Python environment:`,
-                `1. Environment Type: ${environment.environment?.type || 'unknown'}`,
-                `2. Version: ${environment.version.sysVersion || 'unknown'}`,
-                '',
-                `3. Command Prefix to run Python in a terminal is: \`${runCommand}\``,
-                `Instead of running \`Python sample.py\` in the terminal, you will now run: \`${runCommand} sample.py\``,
-                `Similarly, instead of running \`Python -c "import sys;...."\` in the terminal, you will now run: \`${runCommand} -c "import sys;...."\``,
-                `4. ${packages}`,
-            ];
+            const message = await getEnvironmentDetails(
+                resourcePath,
+                this.api,
+                this.terminalExecutionService,
+                this.terminalHelper,
+                packages,
+                token,
+            );
 
-            return new LanguageModelToolResult([new LanguageModelTextPart(message.join('\n'))]);
+            return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
         } catch (error) {
             if (error instanceof CancellationError) {
                 throw error;

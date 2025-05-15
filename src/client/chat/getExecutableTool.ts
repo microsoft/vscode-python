@@ -11,18 +11,17 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
-    Uri,
 } from 'vscode';
-import { PythonExtension, ResolvedEnvironment } from '../api/types';
+import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvDisplayName, isCondaEnv, raceCancellationError } from './utils';
+import { getEnvDisplayName, getEnvironmentDetails, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { traceError } from '../logging';
-import { ITerminalHelper, TerminalShellType } from '../common/terminal/types';
+import { ITerminalHelper } from '../common/terminal/types';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
+import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -47,30 +46,30 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!ConfigurePythonEnvTool.EnvironmentConfigured) {
+            return new LanguageModelToolResult([
+                new LanguageModelTextPart(
+                    [
+                        `A Python environment is not configured. Please configure a Python environment first using the ${ConfigurePythonEnvTool.toolName}.`,
+                        `The ${ConfigurePythonEnvTool.toolName} tool will guide the user through the process of configuring a Python environment.`,
+                        'Once the environment is configured, you can use this tool to get the Python executable information.',
+                    ].join('\n'),
+                ),
+            ]);
+        }
+
         const resourcePath = resolveFilePath(options.input.resourcePath);
 
         try {
-            // environment
-            const envPath = this.api.getActiveEnvironmentPath(resourcePath);
-            const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
-            if (!environment || !environment.version) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
-            }
-            const runCommand = await raceCancellationError(
-                getTerminalCommand(environment, resourcePath, this.terminalExecutionService, this.terminalHelper),
+            const message = await getEnvironmentDetails(
+                resourcePath,
+                this.api,
+                this.terminalExecutionService,
+                this.terminalHelper,
+                undefined,
                 token,
             );
-
-            const message = [
-                `Following is the information about the Python environment:`,
-                `1. Environment Type: ${environment.environment?.type || 'unknown'}`,
-                `2. Version: ${environment.version.sysVersion || 'unknown'}`,
-                '',
-                `3. Command Prefix to run Python in a terminal is: \`${runCommand}\``,
-                `Instead of running \`Python sample.py\` in the terminal, you will now run: \`${runCommand} sample.py\``,
-                `Similarly instead of running \`Python -c "import sys;...."\` in the terminal, you will now run: \`${runCommand} -c "import sys;...."\``,
-            ];
-            return new LanguageModelToolResult([new LanguageModelTextPart(message.join('\n'))]);
+            return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
         } catch (error) {
             if (error instanceof CancellationError) {
                 throw error;
@@ -93,37 +92,4 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
                 : l10n.t('Fetching Python executable information'),
         };
     }
-}
-
-export async function getTerminalCommand(
-    environment: ResolvedEnvironment,
-    resource: Uri | undefined,
-    terminalExecutionService: TerminalCodeExecutionProvider,
-    terminalHelper: ITerminalHelper,
-): Promise<string> {
-    let cmd: { command: string; args: string[] };
-    if (isCondaEnv(environment)) {
-        cmd = (await getCondaRunCommand(environment)) || (await terminalExecutionService.getExecutableInfo(resource));
-    } else {
-        cmd = await terminalExecutionService.getExecutableInfo(resource);
-    }
-    return terminalHelper.buildCommandForTerminal(TerminalShellType.other, cmd.command, cmd.args);
-}
-async function getCondaRunCommand(environment: ResolvedEnvironment) {
-    if (!environment.executable.uri) {
-        return;
-    }
-    const conda = await Conda.getConda();
-    if (!conda) {
-        return;
-    }
-    const condaEnv = await conda.getCondaEnvironment(environment.executable.uri?.fsPath);
-    if (!condaEnv) {
-        return;
-    }
-    const cmd = await conda.getRunPythonArgs(condaEnv, true, false);
-    if (!cmd) {
-        return;
-    }
-    return { command: cmd[0], args: cmd.slice(1) };
 }
