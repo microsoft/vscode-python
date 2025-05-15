@@ -11,37 +11,27 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
-    Uri,
 } from 'vscode';
-import { PythonExtension, ResolvedEnvironment } from '../api/types';
+import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
 import { raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
-import { parsePipList } from './pipListUtils';
-import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
-import { traceError } from '../logging';
+import { getPythonPackagesResponse } from './listPackagesTool';
+import { getTerminalCommand } from './getExecutableTool';
+import { ITerminalHelper } from '../common/terminal/types';
 
 export interface IResourceReference {
     resourcePath?: string;
 }
 
-interface EnvironmentInfo {
-    type: string; // e.g. conda, venv, virtualenv, sys
-    version: string;
-    runCommand: string;
-    packages: string[] | string; //include versions too
-}
-
-/**
- * A tool to get the information about the Python environment.
- */
 export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly pythonExecFactory: IPythonExecutionFactory;
     private readonly processServiceFactory: IProcessServiceFactory;
+    private readonly terminalHelper: ITerminalHelper;
     public static readonly toolName = 'get_python_environment_info';
     constructor(
         private readonly api: PythonExtension['environments'],
@@ -53,6 +43,7 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         );
         this.pythonExecFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
     /**
      * Invokes the tool to get the information about the Python environment.
@@ -66,14 +57,6 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
     ): Promise<LanguageModelToolResult> {
         const resourcePath = resolveFilePath(options.input.resourcePath);
 
-        // environment info set to default values
-        const envInfo: EnvironmentInfo = {
-            type: 'no type found',
-            version: 'no version found',
-            packages: 'no packages found',
-            runCommand: 'no run command found',
-        };
-
         try {
             // environment
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
@@ -81,38 +64,38 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
             if (!environment || !environment.version) {
                 throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
-            const cmd = await raceCancellationError(
-                this.terminalExecutionService.getExecutableInfo(resourcePath),
-                token,
-            );
-            const executable = cmd.pythonExecutable;
-            envInfo.runCommand = cmd.args.length > 0 ? `${cmd.command} ${cmd.args.join(' ')}` : executable;
-            envInfo.version = environment.version.sysVersion;
+            const [packages, runCommand] = await Promise.all([
+                getPythonPackagesResponse(
+                    environment,
+                    this.pythonExecFactory,
+                    this.processServiceFactory,
+                    resourcePath,
+                    token,
+                ),
+                raceCancellationError(
+                    getTerminalCommand(environment, resourcePath, this.terminalExecutionService, this.terminalHelper),
+                    token,
+                ),
+            ]);
 
-            const isConda = (environment.environment?.type || '').toLowerCase() === 'conda';
-            envInfo.packages = isConda
-                ? await raceCancellationError(
-                      listCondaPackages(
-                          this.pythonExecFactory,
-                          environment,
-                          resourcePath,
-                          await raceCancellationError(this.processServiceFactory.create(resourcePath), token),
-                      ),
-                      token,
-                  )
-                : await raceCancellationError(listPipPackages(this.pythonExecFactory, resourcePath), token);
+            const message = [
+                `Following is the information about the Python environment:`,
+                `1. Environment Type: ${environment.environment?.type || 'unknown'}`,
+                `2. Version: ${environment.version.sysVersion || 'unknown'}`,
+                '',
+                `3. Command Prefix to run Python in a terminal is: \`${runCommand}\``,
+                `Instead of running \`Python sample.py\` in the terminal, you will now run: \`${runCommand} sample.py\``,
+                `Similarly, instead of running \`Python -c "import sys;...."\` in the terminal, you will now run: \`${runCommand} -c "import sys;...."\``,
+                `4. ${packages}`,
+            ];
 
-            // format and return
-            return new LanguageModelToolResult([BuildEnvironmentInfoContent(envInfo)]);
+            return new LanguageModelToolResult([new LanguageModelTextPart(message.join('\n'))]);
         } catch (error) {
             if (error instanceof CancellationError) {
                 throw error;
             }
             const errorMessage: string = `An error occurred while fetching environment information: ${error}`;
-            const partialContent = BuildEnvironmentInfoContent(envInfo);
-            return new LanguageModelToolResult([
-                new LanguageModelTextPart(`${errorMessage}\n\n${partialContent.value}`),
-            ]);
+            return new LanguageModelToolResult([new LanguageModelTextPart(errorMessage)]);
         }
     }
 
@@ -124,70 +107,4 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
             invocationMessage: l10n.t('Fetching Python environment information'),
         };
     }
-}
-
-function BuildEnvironmentInfoContent(envInfo: EnvironmentInfo): LanguageModelTextPart {
-    // Create a formatted string that looks like JSON but preserves comments
-    const envTypeDescriptor: string = `This environment is managed by ${envInfo.type} environment manager. Use the install tool to install packages into this environment.`;
-    const content = `{
-    // ${JSON.stringify(envTypeDescriptor)}
-  "environmentType": ${JSON.stringify(envInfo.type)},
-  // Python version of the environment
-  "pythonVersion": ${JSON.stringify(envInfo.version)},
-  // Use this command to run Python script or code in the terminal.
-  "runCommand": ${JSON.stringify(envInfo.runCommand)},
-  // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
-  "packages": ${JSON.stringify(Array.isArray(envInfo.packages) ? envInfo.packages : envInfo.packages, null, 2)}
-}`;
-
-    return new LanguageModelTextPart(content);
-}
-
-async function listPipPackages(execFactory: IPythonExecutionFactory, resource: Uri | undefined) {
-    // Add option --format to subcommand list of pip  cache, with abspath choice to output the full path of a wheel file. (#8355)
-    // Added in 202. Thats almost 5 years ago. When Python 3.8 was released.
-    const exec = await execFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, resource });
-    const output = await exec.execModule('pip', ['list'], { throwOnStdErr: false, encoding: 'utf8' });
-    return parsePipList(output.stdout).map((pkg) => (pkg.version ? `${pkg.name} (${pkg.version})` : pkg.name));
-}
-
-async function listCondaPackages(
-    execFactory: IPythonExecutionFactory,
-    env: ResolvedEnvironment,
-    resource: Uri | undefined,
-    processService: IProcessService,
-) {
-    const conda = await Conda.getConda();
-    if (!conda) {
-        traceError('Conda is not installed, falling back to pip packages');
-        return listPipPackages(execFactory, resource);
-    }
-    if (!env.executable.uri) {
-        traceError('Conda environment executable not found, falling back to pip packages');
-        return listPipPackages(execFactory, resource);
-    }
-    const condaEnv = await conda.getCondaEnvironment(env.executable.uri.fsPath);
-    if (!condaEnv) {
-        traceError('Conda environment not found, falling back to pip packages');
-        return listPipPackages(execFactory, resource);
-    }
-    const cmd = await conda.getListPythonPackagesArgs(condaEnv, true);
-    if (!cmd) {
-        traceError('Conda list command not found, falling back to pip packages');
-        return listPipPackages(execFactory, resource);
-    }
-    const output = await processService.exec(cmd[0], cmd.slice(1), { shell: true });
-    if (!output.stdout) {
-        traceError('Unable to get conda packages, falling back to pip packages');
-        return listPipPackages(execFactory, resource);
-    }
-    const content = output.stdout.split(/\r?\n/).filter((l) => !l.startsWith('#'));
-    const packages: string[] = [];
-    content.forEach((l) => {
-        const parts = l.split(' ').filter((p) => p.length > 0);
-        if (parts.length === 3) {
-            packages.push(`${parts[0]} (${parts[1]})`);
-        }
-    });
-    return packages;
 }

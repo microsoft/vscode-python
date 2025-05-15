@@ -1466,9 +1466,9 @@
         "languageModelTools": [
             {
                 "name": "get_python_environment_info",
-                "displayName": "Get Python Environment Information",
-                "userDescription": "%python.languageModelTools.python_environment.userDescription%",
-                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Environment (conda, venv, etec), 2. Version of Python, 3.  this tool gets details about the Python environment including environment type, Python version, command used to execute Python, and a list of all installed packages with their versions. Use this tool to determine the correct command for executing Python in a terminal.",
+                "displayName": "Get Python Environment Info",
+                "userDescription": "%python.languageModelTools.get_python_environment_info.userDescription%",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Environment (conda, venv, etec), 2. Version of Python, 3. List of all installed packages with their versions. ",
                 "toolReferenceName": "pythonGetEnvironmentInfo",
                 "tags": [
                     "ms-python.python"
@@ -1486,8 +1486,7 @@
                     "required": [
                         "resourcePath"
                     ]
-                },
-                "when": "false"
+                }
             },
             {
                 "name": "get_python_executable",
@@ -1509,8 +1508,7 @@
                     },
                     "description": "The path to the Python file or workspace to get the executable information for. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace.",
                     "required": []
-                },
-                "when": "!pythonEnvExtensionInstalled"
+                }
             },
             {
                 "name": "list_python_packages",
@@ -1533,7 +1531,7 @@
                     "description": "The path to the Python file or workspace to list the packages. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace.",
                     "required": []
                 },
-                "when": "!pythonEnvExtensionInstalled"
+                "when": "false"
             },
             {
                 "name": "python_install_package",

@@ -56,7 +56,10 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
             if (!environment || !environment.version) {
                 throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
-            const runCommand = await raceCancellationError(this.getTerminalCommand(environment, resourcePath), token);
+            const runCommand = await raceCancellationError(
+                getTerminalCommand(environment, resourcePath, this.terminalExecutionService, this.terminalHelper),
+                token,
+            );
 
             const message = [
                 `Following is the information about the Python environment:`,
@@ -78,37 +81,6 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         }
     }
 
-    private async getTerminalCommand(environment: ResolvedEnvironment, resource?: Uri) {
-        let cmd: { command: string; args: string[] };
-        if (isCondaEnv(environment)) {
-            cmd =
-                (await this.getCondaRunCommand(environment)) ||
-                (await this.terminalExecutionService.getExecutableInfo(resource));
-        } else {
-            cmd = await this.terminalExecutionService.getExecutableInfo(resource);
-        }
-        return this.terminalHelper.buildCommandForTerminal(TerminalShellType.other, cmd.command, cmd.args);
-    }
-
-    private async getCondaRunCommand(environment: ResolvedEnvironment) {
-        if (!environment.executable.uri) {
-            return;
-        }
-        const conda = await Conda.getConda();
-        if (!conda) {
-            return;
-        }
-        const condaEnv = await conda.getCondaEnvironment(environment.executable.uri?.fsPath);
-        if (!condaEnv) {
-            return;
-        }
-        const cmd = await conda.getRunPythonArgs(condaEnv, true, false);
-        if (!cmd) {
-            return;
-        }
-        return { command: cmd[0], args: cmd.slice(1) };
-    }
-
     async prepareInvocation?(
         options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
         token: CancellationToken,
@@ -121,4 +93,37 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
                 : l10n.t('Fetching Python executable information'),
         };
     }
+}
+
+export async function getTerminalCommand(
+    environment: ResolvedEnvironment,
+    resource: Uri | undefined,
+    terminalExecutionService: TerminalCodeExecutionProvider,
+    terminalHelper: ITerminalHelper,
+): Promise<string> {
+    let cmd: { command: string; args: string[] };
+    if (isCondaEnv(environment)) {
+        cmd = (await getCondaRunCommand(environment)) || (await terminalExecutionService.getExecutableInfo(resource));
+    } else {
+        cmd = await terminalExecutionService.getExecutableInfo(resource);
+    }
+    return terminalHelper.buildCommandForTerminal(TerminalShellType.other, cmd.command, cmd.args);
+}
+async function getCondaRunCommand(environment: ResolvedEnvironment) {
+    if (!environment.executable.uri) {
+        return;
+    }
+    const conda = await Conda.getConda();
+    if (!conda) {
+        return;
+    }
+    const condaEnv = await conda.getCondaEnvironment(environment.executable.uri?.fsPath);
+    if (!condaEnv) {
+        return;
+    }
+    const cmd = await conda.getRunPythonArgs(condaEnv, true, false);
+    if (!cmd) {
+        return;
+    }
+    return { command: cmd[0], args: cmd.slice(1) };
 }

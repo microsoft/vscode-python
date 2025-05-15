@@ -54,31 +54,14 @@ export class ListPythonPackagesTool implements LanguageModelTool<IResourceRefere
                 throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
 
-            const packages = isCondaEnv(environment)
-                ? await raceCancellationError(
-                      listCondaPackages(
-                          this.pythonExecFactory,
-                          environment,
-                          resourcePath,
-                          await raceCancellationError(this.processServiceFactory.create(resourcePath), token),
-                      ),
-                      token,
-                  )
-                : await raceCancellationError(listPipPackages(this.pythonExecFactory, resourcePath), token);
-
-            if (!packages.length) {
-                return new LanguageModelToolResult([new LanguageModelTextPart('No packages found')]);
-            }
-
-            // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
-            const response = [
-                'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
-            ];
-            packages.forEach((pkg) => {
-                const [name, version] = pkg;
-                response.push(version ? `- ${name} (${version})` : `- ${name}`);
-            });
-            return new LanguageModelToolResult([new LanguageModelTextPart(response.join('\n'))]);
+            const message = await getPythonPackagesResponse(
+                environment,
+                this.pythonExecFactory,
+                this.processServiceFactory,
+                resourcePath,
+                token,
+            );
+            return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
         } catch (error) {
             if (error instanceof CancellationError) {
                 throw error;
@@ -101,6 +84,40 @@ export class ListPythonPackagesTool implements LanguageModelTool<IResourceRefere
                 : l10n.t('Fetching Python environment information'),
         };
     }
+}
+
+export async function getPythonPackagesResponse(
+    environment: ResolvedEnvironment,
+    pythonExecFactory: IPythonExecutionFactory,
+    processServiceFactory: IProcessServiceFactory,
+    resourcePath: Uri | undefined,
+    token: CancellationToken,
+): Promise<string> {
+    const packages = isCondaEnv(environment)
+        ? await raceCancellationError(
+              listCondaPackages(
+                  pythonExecFactory,
+                  environment,
+                  resourcePath,
+                  await raceCancellationError(processServiceFactory.create(resourcePath), token),
+              ),
+              token,
+          )
+        : await raceCancellationError(listPipPackages(pythonExecFactory, resourcePath), token);
+
+    if (!packages.length) {
+        return 'No packages found';
+    }
+
+    // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
+    const response = [
+        'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
+    ];
+    packages.forEach((pkg) => {
+        const [name, version] = pkg;
+        response.push(version ? `- ${name} (${version})` : `- ${name}`);
+    });
+    return response.join('\n');
 }
 
 async function listPipPackages(

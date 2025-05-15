@@ -1,6 +1,6 @@
 {
     "python.command.python.startTerminalREPL.title": "Start Terminal REPL",
-    "python.languageModelTools.python_environment.userDescription": "Get Python Environment info for a file or path, including version, packages, and the command to run it.",
+    "python.languageModelTools.get_python_environment_info.userDescription": "Get information for a Python Environment, such as Type, Version, Packages, and more.",
     "python.languageModelTools.python_install_package.userDescription": "Installs Python packages in a Python Environment.",
     "python.languageModelTools.get_python_executable.userDescription": "Get executable info for a Python Environment",
     "python.languageModelTools.list_python_packages.userDescription": "Get a list of all installed packages in a Python Environment.",
