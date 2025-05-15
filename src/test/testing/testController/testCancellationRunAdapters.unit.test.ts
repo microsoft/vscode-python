@@ -38,9 +38,9 @@ suite('Execution Flow Run Adapters', () => {
 
     setup(() => {
         const proc = typeMoq.Mock.ofType<MockChildProcess>();
-        proc.setup((p) => p.on).returns(() => noop as any );
-        proc.setup((p) => p.stdout).returns(() => null );
-        proc.setup((p) => p.stderr).returns(() => null );
+        proc.setup((p) => p.on).returns(() => noop as any);
+        proc.setup((p) => p.stdout).returns(() => null);
+        proc.setup((p) => p.stderr).returns(() => null);
         mockProc = proc.object;
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
