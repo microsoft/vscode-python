@@ -96,18 +96,22 @@ export class ListPythonPackagesTool implements LanguageModelTool<IResourceRefere
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);
         return {
-            invocationMessage: envName ?  l10n.t('Listing packages in {0}', envName) : l10n.t('Fetching Python environment information'),
+            invocationMessage: envName
+                ? l10n.t('Listing packages in {0}', envName)
+                : l10n.t('Fetching Python environment information'),
         };
     }
 }
 
-
-async function listPipPackages(execFactory: IPythonExecutionFactory, resource: Uri | undefined): Promise<[packageName:string, version:string][]> {
+async function listPipPackages(
+    execFactory: IPythonExecutionFactory,
+    resource: Uri | undefined,
+): Promise<[string, string][]> {
     // Add option --format to subcommand list of pip  cache, with abspath choice to output the full path of a wheel file. (#8355)
     // Added in 202. Thats almost 5 years ago. When Python 3.8 was released.
     const exec = await execFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, resource });
     const output = await exec.execModule('pip', ['list'], { throwOnStdErr: false, encoding: 'utf8' });
-    return parsePipList(output.stdout).map((pkg) => [pkg.name, pkg.version] );
+    return parsePipList(output.stdout).map((pkg) => [pkg.name, pkg.version]);
 }
 
 async function listCondaPackages(
@@ -115,7 +119,7 @@ async function listCondaPackages(
     env: ResolvedEnvironment,
     resource: Uri | undefined,
     processService: IProcessService,
-): Promise<[packageName:string, version:string][]> {
+): Promise<[string, string][]> {
     const conda = await Conda.getConda();
     if (!conda) {
         traceError('Conda is not installed, falling back to pip packages');

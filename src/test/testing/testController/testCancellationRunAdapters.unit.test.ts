@@ -36,6 +36,7 @@ suite('Execution Flow Run Adapters', () => {
     let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        mockProc = {} as MockChildProcess;
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
         // general vars
