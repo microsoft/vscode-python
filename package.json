@@ -1487,6 +1487,27 @@
                 }
             },
             {
+                "name": "create_python_virtual_environment",
+                "displayName": "Create Python Virtual Environment",
+                "modelDescription": "This tool will create a Python virtual environment in the specified workspace.",
+                "toolReferenceName": "createPythonVirtualEnvironment",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(files)",
+                "canBeReferencedInPrompt": false,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string"
+                        }
+                    },
+                    "description": "The path to the Python file or workspace to get the environment information for.",
+                    "required": []
+                }
+            },
+            {
                 "name": "get_python_executable",
                 "displayName": "Get Python Executable",
                 "userDescription": "%python.languageModelTools.get_python_executable.userDescription%",
@@ -1560,6 +1581,29 @@
                     "required": [
                         "packageList"
                     ]
+                },
+                "when": "!pythonEnvExtensionInstalled"
+            },
+            {
+                "name": "configure_python_environment",
+                "displayName": "Configure Python Environment",
+                "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
+                "modelDescription": "Configures the Python environment in the given workspace. Use this tool to set up the user's chosen environment.",
+                "toolReferenceName": "pythonConfigureEnvironment",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(package)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which the Python environment is to be configured."
+                        }
+                    },
+                    "required": []
                 },
                 "when": "!pythonEnvExtensionInstalled"
             }

@@ -12,6 +12,8 @@ import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { ListPythonPackagesTool } from './listPackagesTool';
 import { GetExecutableTool } from './getExecutableTool';
 import { GetEnvironmentInfoTool } from './getPythonEnvTool';
+import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
+import { CreateVenvTool } from './createVenvTool';
 
 export function registerTools(
     context: IExtensionContext,
@@ -48,6 +50,10 @@ export function registerTools(
             new InstallPackagesTool(environmentsApi, serviceContainer, discoverApi),
         ),
     );
+    ourTools.add(
+        lm.registerTool(ConfigurePythonEnvTool.toolName, new ConfigurePythonEnvTool(environmentsApi, serviceContainer)),
+    );
+    ourTools.add(lm.registerTool(CreateVenvTool.toolName, new CreateVenvTool()));
     ourTools.add(
         extensions.onDidChange(() => {
             const envExtension = extensions.getExtension(ENVS_EXTENSION_ID);

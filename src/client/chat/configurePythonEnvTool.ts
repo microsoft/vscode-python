@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import {
+    lm,
     CancellationError,
     CancellationToken,
     l10n,
@@ -16,23 +17,27 @@ import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
 import { getEnvironmentDetails, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
-import { getPythonPackagesResponse } from './listPackagesTool';
+import { IInterpreterQuickPick } from '../interpreter/configuration/types';
 import { ITerminalHelper } from '../common/terminal/types';
-import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
+import { StopWatch } from '../common/utils/stopWatch';
+import { sleep } from '../common/utils/async';
+import { CreateVenvTool } from './createVenvTool';
 
 export interface IResourceReference {
     resourcePath?: string;
 }
 
-export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceReference> {
+export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceReference> {
+    public static get EnvironmentConfigured() {
+        return ConfigurePythonEnvTool._environmentConfigured;
+    }
+    private static _environmentConfigured = false;
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
-    private readonly pythonExecFactory: IPythonExecutionFactory;
-    private readonly processServiceFactory: IProcessServiceFactory;
+    private readonly interpreterPicker: IInterpreterQuickPick;
     private readonly terminalHelper: ITerminalHelper;
-    public static readonly toolName = 'get_python_environment_info';
+    public static readonly toolName = 'configure_python_environment';
     constructor(
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
@@ -41,8 +46,7 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
             ICodeExecutionService,
             'standard',
         );
-        this.pythonExecFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
+        this.interpreterPicker = this.serviceContainer.get<IInterpreterQuickPick>(IInterpreterQuickPick);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
     /**
@@ -55,44 +59,51 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!ConfigurePythonEnvTool.EnvironmentConfigured) {
-            return new LanguageModelToolResult([
-                new LanguageModelTextPart(
-                    [
-                        `A Python environment is not configured. Please configure a Python environment first using the ${ConfigurePythonEnvTool.toolName}.`,
-                        `The ${ConfigurePythonEnvTool.toolName} tool will guide the user through the process of configuring a Python environment.`,
-                        'Once the environment is configured, you can use this tool to get the Python executable information.',
-                    ].join('\n'),
-                ),
-            ]);
-        }
-
         const resourcePath = resolveFilePath(options.input.resourcePath);
 
         try {
+            if (!ConfigurePythonEnvTool.EnvironmentConfigured) {
+                // Try to create one.
+                const result = await lm.invokeTool(CreateVenvTool.toolName, { resourcePath: options.input.resourcePath } as any, token);
+                console.log('CreateVenvTool result:', result);
+                const interpreterPath = await this.interpreterPicker.getInterpreterViaQuickPick(
+                    resourcePath,
+                    undefined,
+                    {
+                        showCreateEnvironment: true,
+                    },
+                );
+                if (!interpreterPath) {
+                    return new LanguageModelToolResult([
+                        new LanguageModelTextPart('No Python Environment configured.'),
+                    ]);
+                }
+                ConfigurePythonEnvTool._environmentConfigured = true;
+
+                const stopWatch = new StopWatch();
+                while (stopWatch.elapsedTime < 5_000) {
+                    try {
+                        await this.api.getActiveEnvironmentPath(resourcePath);
+                    } catch {
+                        await sleep(500);
+                        continue;
+                    }
+                }
+            }
             // environment
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
             const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
             if (!environment || !environment.version) {
                 throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
             }
-            const packages = await getPythonPackagesResponse(
-                environment,
-                this.pythonExecFactory,
-                this.processServiceFactory,
-                resourcePath,
-                token,
-            );
-
             const message = await getEnvironmentDetails(
                 resourcePath,
                 this.api,
                 this.terminalExecutionService,
                 this.terminalHelper,
-                packages,
+                undefined,
                 token,
             );
-
             return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
         } catch (error) {
             if (error instanceof CancellationError) {
@@ -107,8 +118,17 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
+        if (ConfigurePythonEnvTool._environmentConfigured) {
+            return {};
+        }
         return {
-            invocationMessage: l10n.t('Fetching Python environment information'),
+            confirmationMessages: {
+                title: l10n.t('Configure your Python Environment?'),
+                message: l10n.t(
+                    'You can either select a Python environment or create a new Environment.  \nThe latter being the recommended option.',
+                ),
+            },
+            invocationMessage: l10n.t('Configuring Python environment'),
         };
     }
 }

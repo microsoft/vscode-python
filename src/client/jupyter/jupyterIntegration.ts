@@ -63,6 +63,11 @@ type PythonApiForJupyterExtension = {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
+    /**
+     * Returns the Environment that was last used in a Python tool.
+     */
+    getLastUsedEnvInTool(uri: Uri): Promise<Environment | undefined>;
 };
 
 type JupyterExtensionApi = {
