@@ -1483,9 +1483,7 @@
                         }
                     },
                     "description": "The path to the Python file or workspace to get the environment information for.",
-                    "required": [
-                        "resourcePath"
-                    ]
+                    "required": []
                 }
             },
             {
