@@ -1465,7 +1465,7 @@
         ],
         "languageModelTools": [
             {
-                "name": "python_environment",
+                "name": "get_python_environment",
                 "displayName": "Get Python Environment Information",
                 "userDescription": "%python.languageModelTools.python_environment.userDescription%",
                 "modelDescription": "Provides details about the Python environment for a specified file or workspace, including environment type, Python version, run command, and installed packages with their versions. Use this tool to determine the correct command for executing Python code in this workspace.",
@@ -1490,7 +1490,7 @@
                 "when": "!pythonEnvExtensionInstalled"
             },
             {
-                "name": "python_install_package",
+                "name": "install_python_package",
                 "displayName": "Install Python Package",
                 "userDescription": "%python.languageModelTools.python_install_package.userDescription%",
                 "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment.",
