@@ -1534,7 +1534,7 @@
                 "when": "false"
             },
             {
-                "name": "python_install_package",
+                "name": "install_python_package",
                 "displayName": "Install Python Package",
                 "userDescription": "%python.languageModelTools.python_install_package.userDescription%",
                 "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment.",

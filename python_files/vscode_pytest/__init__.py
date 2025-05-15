@@ -13,7 +13,6 @@ import traceback
 from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, TypedDict
 
 import pytest
-from packaging.version import Version
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -442,6 +441,13 @@ def pytest_sessionfinish(session, exitstatus):
     if is_coverage_run == "True":
         # load the report and build the json result to return
         import coverage
+
+        # insert "python_files/lib/python" into the path so packaging can be imported
+        python_files_dir = pathlib.Path(__file__).parent.parent
+        bundled_dir = pathlib.Path(python_files_dir / "lib" / "python")
+        sys.path.append(os.fspath(bundled_dir))
+
+        from packaging.version import Version
 
         coverage_version = Version(coverage.__version__)
         global INCLUDE_BRANCHES

@@ -26,7 +26,7 @@ export interface IInstallPackageArgs {
 }
 
 export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArgs> {
-    public static readonly toolName = 'python_install_package';
+    public static readonly toolName = 'install_python_package';
     constructor(
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
