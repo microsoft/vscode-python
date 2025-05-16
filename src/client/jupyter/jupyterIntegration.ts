@@ -22,8 +22,9 @@ import {
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { getDebugpyPath } from '../debugger/pythonDebugger';
-import type { Environment } from '../api/types';
+import type { Environment, EnvironmentPath, PythonExtension } from '../api/types';
 import { DisposableBase } from '../common/utils/resourceLifecycle';
+import { getLastEnvUsedByTool } from '../chat/lastUsedEnvs';
 
 type PythonApiForJupyterExtension = {
     /**
@@ -63,6 +64,11 @@ type PythonApiForJupyterExtension = {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
+    /**
+     * Returns the Environment that was last used in a Python tool.
+     */
+    getLastUsedEnvInLmTool(uri: Uri): EnvironmentPath | undefined;
 };
 
 type JupyterExtensionApi = {
@@ -78,6 +84,7 @@ export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
     private pylanceExtension: Extension<PylanceApi> | undefined;
+    private environmentApi: PythonExtension['environments'] | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -90,6 +97,9 @@ export class JupyterExtensionIntegration {
         @inject(IContextKeyManager) private readonly contextManager: IContextKeyManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
     ) {}
+    public registerEnvApi(api: PythonExtension['environments']) {
+        this.environmentApi = api;
+    }
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
         this.contextManager.setContext(ExtensionContextKey.IsJupyterInstalled, true);
@@ -121,6 +131,12 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
+            getLastUsedEnvInLmTool: (uri) => {
+                if (!this.environmentApi) {
+                    return undefined;
+                }
+                return getLastEnvUsedByTool(uri, this.environmentApi);
+            },
         });
         return undefined;
     }
