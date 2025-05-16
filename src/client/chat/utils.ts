@@ -7,6 +7,7 @@ import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { ITerminalHelper, TerminalShellType } from '../common/terminal/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
+import { trackEnvUsedByTool } from './lastUsedEnvs';
 
 export function resolveFilePath(filepath?: string): Uri | undefined {
     if (!filepath) {
@@ -70,7 +71,7 @@ export async function getEnvironmentDetails(
         getTerminalCommand(environment, resourcePath, terminalExecutionService, terminalHelper),
         token,
     );
-
+    trackEnvUsedByTool(resourcePath, environment);
     const message = [
         `Following is the information about the Python environment:`,
         `1. Environment Type: ${environment.environment?.type || 'unknown'}`,
