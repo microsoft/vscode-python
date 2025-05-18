@@ -321,17 +321,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.execSelectionInDjangoShell",
-                "title": "%python.command.python.execSelectionInDjangoShell.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.execSelectionInTerminal",
-                "title": "%python.command.python.execSelectionInTerminal.title%",
-                "shortTitle": "%python.command.python.execSelectionInTerminal.shortTitle%"
-            },
-            {
-                "category": "Python",
                 "command": "python.execInREPL",
                 "title": "%python.command.python.execInREPL.title%"
             },
@@ -1130,11 +1119,6 @@
         ],
         "keybindings": [
             {
-                "command": "python.execSelectionInTerminal",
-                "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
-            },
-            {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
                 "when": "config.python.REPL.sendToNativeREPL && editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
@@ -1281,18 +1265,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.execSelectionInDjangoShell",
-                    "title": "%python.command.python.execSelectionInDjangoShell.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.execSelectionInTerminal",
-                    "title": "%python.command.python.execSelectionInTerminal.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
-                },
-                {
-                    "category": "Python",
                     "command": "python.execInREPL",
                     "title": "%python.command.python.execInREPL.title%",
                     "when": "false"
@@ -1378,16 +1350,6 @@
                     "command": "python.execInTerminal",
                     "group": "Python",
                     "when": "resourceLangId == python && !virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "command": "python.execSelectionInDjangoShell",
-                    "group": "Python",
-                    "when": "editorHasSelection && editorLangId == python && python.isDjangoProject && !virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "command": "python.execSelectionInTerminal",
-                    "group": "Python",
-                    "when": "!config.python.REPL.sendToNativeREPL && editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported"
                 },
                 {
                     "command": "python.execInREPL",
