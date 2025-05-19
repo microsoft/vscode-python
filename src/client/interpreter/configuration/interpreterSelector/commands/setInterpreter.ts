@@ -49,6 +49,7 @@ import { BaseInterpreterSelectorCommand } from './base';
 import { untildify } from '../../../../common/helpers';
 import { useEnvExtension } from '../../../../envExt/api.internal';
 import { setInterpreterLegacy } from '../../../../envExt/api.legacy';
+import { CreateEnvironmentResult } from '../../../../pythonEnvironments/creation/proposed.createEnvApis';
 
 export type InterpreterStateArgs = { path?: string; workspace: Resource };
 export type QuickPickType = IInterpreterQuickPickItem | ISpecialQuickPickItem | QuickPickItem;
@@ -229,12 +230,13 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             sendTelemetryEvent(EventName.SELECT_INTERPRETER_ENTER_OR_FIND);
             return this._enterOrBrowseInterpreterPath.bind(this);
         } else if (selection.label === this.createEnvironmentSuggestion.label) {
-            this.commandManager
-                .executeCommand(Commands.Create_Environment, {
+            const createdEnv = (await Promise.resolve(
+                this.commandManager.executeCommand(Commands.Create_Environment, {
                     showBackButton: false,
                     selectEnvironment: true,
-                })
-                .then(noop, noop);
+                }),
+            ).catch(noop)) as CreateEnvironmentResult | undefined;
+            state.path = createdEnv?.path;
         } else if (selection.label === this.noPythonInstalled.label) {
             this.commandManager.executeCommand(Commands.InstallPython).then(noop, noop);
             this.wasNoPythonInstalledItemClicked = true;
