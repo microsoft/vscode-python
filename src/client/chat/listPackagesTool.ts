@@ -1,90 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import {
-    CancellationError,
-    CancellationToken,
-    l10n,
-    LanguageModelTextPart,
-    LanguageModelTool,
-    LanguageModelToolInvocationOptions,
-    LanguageModelToolInvocationPrepareOptions,
-    LanguageModelToolResult,
-    PreparedToolInvocation,
-    Uri,
-} from 'vscode';
-import { PythonExtension, ResolvedEnvironment } from '../api/types';
-import { IServiceContainer } from '../ioc/types';
+import { CancellationToken, Uri } from 'vscode';
+import { ResolvedEnvironment } from '../api/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { getEnvDisplayName, isCondaEnv, raceCancellationError } from './utils';
-import { resolveFilePath } from './utils';
+import { isCondaEnv, raceCancellationError } from './utils';
 import { parsePipList } from './pipListUtils';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 import { traceError } from '../logging';
-import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-
-export interface IResourceReference {
-    resourcePath?: string;
-}
-
-export class ListPythonPackagesTool implements LanguageModelTool<IResourceReference> {
-    private readonly pythonExecFactory: IPythonExecutionFactory;
-    private readonly processServiceFactory: IProcessServiceFactory;
-    public static readonly toolName = 'list_python_packages';
-    constructor(
-        private readonly api: PythonExtension['environments'],
-        private readonly serviceContainer: IServiceContainer,
-        private readonly discovery: IDiscoveryAPI,
-    ) {
-        this.pythonExecFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-    }
-
-    async invoke(
-        options: LanguageModelToolInvocationOptions<IResourceReference>,
-        token: CancellationToken,
-    ): Promise<LanguageModelToolResult> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
-
-        try {
-            // environment
-            const envPath = this.api.getActiveEnvironmentPath(resourcePath);
-            const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
-            if (!environment) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
-            }
-
-            const message = await getPythonPackagesResponse(
-                environment,
-                this.pythonExecFactory,
-                this.processServiceFactory,
-                resourcePath,
-                token,
-            );
-            return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
-        } catch (error) {
-            if (error instanceof CancellationError) {
-                throw error;
-            }
-            return new LanguageModelToolResult([
-                new LanguageModelTextPart(`An error occurred while fetching environment information: ${error}`),
-            ]);
-        }
-    }
-
-    async prepareInvocation?(
-        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
-        token: CancellationToken,
-    ): Promise<PreparedToolInvocation> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
-        const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);
-        return {
-            invocationMessage: envName
-                ? l10n.t('Listing packages in {0}', envName)
-                : l10n.t('Fetching Python environment information'),
-        };
-    }
-}
 
 export async function getPythonPackagesResponse(
     environment: ResolvedEnvironment,

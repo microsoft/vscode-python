@@ -29,7 +29,7 @@ export interface IResourceReference {
 export class GetExecutableTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
-    public static readonly toolName = 'get_python_executable';
+    public static readonly toolName = 'get_python_executable_details';
     constructor(
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,

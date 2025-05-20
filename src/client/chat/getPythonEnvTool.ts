@@ -31,7 +31,7 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
     private readonly pythonExecFactory: IPythonExecutionFactory;
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly terminalHelper: ITerminalHelper;
-    public static readonly toolName = 'get_python_environment_info';
+    public static readonly toolName = 'get_python_environment_details';
     constructor(
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,

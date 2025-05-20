@@ -1,9 +1,9 @@
 {
     "python.command.python.startTerminalREPL.title": "Start Terminal REPL",
-    "python.languageModelTools.get_python_environment_info.userDescription": "Get information for a Python Environment, such as Type, Version, Packages, and more.",
-    "python.languageModelTools.python_install_package.userDescription": "Installs Python packages in a Python Environment.",
-    "python.languageModelTools.get_python_executable.userDescription": "Get executable info for a Python Environment",
-    "python.languageModelTools.list_python_packages.userDescription": "Get a list of all installed packages in a Python Environment.",
+    "python.languageModelTools.get_python_environment_details.userDescription": "Get information for a Python Environment, such as Type, Version, Packages, and more.",
+    "python.languageModelTools.install_python_packages.userDescription": "Installs Python packages in a Python Environment.",
+    "python.languageModelTools.get_python_executable_details.userDescription": "Get executable info for a Python Environment",
+    "python.languageModelTools.configure_python_environment.userDescription": "Configure a Python Environment for a workspace",
     "python.command.python.startNativeREPL.title": "Start Native Python REPL",
     "python.command.python.createEnvironment.title": "Create Environment...",
     "python.command.python.createNewFile.title": "New Python File",
