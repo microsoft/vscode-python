@@ -10,6 +10,7 @@ import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../common/
 import { traceError } from '../../logging';
 import { IExtensionActivationService } from '../../activation/types';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { isParentPath } from '../../common/platform/fs-paths';
 
 const MEMENTO_KEY = 'userSelectedEnvPath';
 
@@ -75,13 +76,24 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
         if (recommendedEnv) {
             return { environment: recommendedEnv, reason: preferred.reason };
         }
+        const globalEnv = await this.api.resolveEnvironment(this.api.getActiveEnvironmentPath());
+        if (activeEnv && globalEnv?.path !== activeEnv?.path) {
+            // User has definitely got a workspace specific environment selected.
+            // Given the fact that global !== workspace env, we can safely assume that
+            // at some time, the user has selected a workspace specific environment.
+            // This applies to cases where the user has selected a workspace specific environment before this version of the extension
+            // and we did not store it in the workspace state.
+            // So we can safely return the global environment as the recommended environment.
+            return { environment: activeEnv, reason: 'workspaceUserSelected' };
+        }
         return undefined;
     }
-    getRecommededInternal(
+    async getRecommededInternal(
         resource: Resource,
-    ):
+    ): Promise<
         | { environmentPath: string; reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended' }
-        | undefined {
+        | undefined
+    > {
         let workspaceState: string | undefined = undefined;
         try {
             workspaceState = getWorkspaceStateValue<string>(MEMENTO_KEY);
@@ -106,6 +118,16 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
             }
         }
 
+        if (workspace.workspaceFolders?.length && this.api) {
+            // Check if we have a .venv or .conda environment in the workspace
+            // This is required for cases where user has selected a workspace specific environment
+            // but before this version of the extension, we did not store it in the workspace state.
+            const workspaceEnv = await getWorkspaceSpecificVirtualEnvironment(this.api, resource);
+            if (workspaceEnv) {
+                return { environmentPath: workspaceEnv.path, reason: 'workspaceUserSelected' };
+            }
+        }
+
         const globalSelectedEnvPath = this.extensionContext.globalState.get<string | undefined>(MEMENTO_KEY);
         if (globalSelectedEnvPath) {
             return { environmentPath: globalSelectedEnvPath, reason: 'globalUserSelected' };
@@ -117,6 +139,37 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
               }
             : undefined;
     }
+}
+
+async function getWorkspaceSpecificVirtualEnvironment(api: PythonExtension['environments'], resource: Resource) {
+    const workspaceUri =
+        (resource ? workspace.getWorkspaceFolder(resource)?.uri : undefined) ||
+        (workspace.workspaceFolders?.length ? workspace.workspaceFolders[0].uri : undefined);
+    if (!workspaceUri) {
+        return undefined;
+    }
+    let workspaceEnv = api.known.find((env) => {
+        if (!env.environment?.folderUri) {
+            return false;
+        }
+        if (env.environment.type !== 'VirtualEnvironment' && env.environment.type !== 'Conda') {
+            return false;
+        }
+        return isParentPath(env.environment.folderUri.fsPath, workspaceUri.fsPath);
+    });
+    let resolvedEnv = workspaceEnv ? api.resolveEnvironment(workspaceEnv) : undefined;
+    if (resolvedEnv) {
+        return resolvedEnv;
+    }
+    workspaceEnv = api.known.find((env) => {
+        // Look for any other type of env thats inside this workspace
+        // Or look for an env thats associated with this workspace (pipenv or the like).
+        return (
+            (env.environment?.folderUri && isParentPath(env.environment.folderUri.fsPath, workspaceUri.fsPath)) ||
+            (env.environment?.workspaceFolder && env.environment.workspaceFolder.uri.fsPath === workspaceUri.fsPath)
+        );
+    });
+    return workspaceEnv ? api.resolveEnvironment(workspaceEnv) : undefined;
 }
 
 function getDataToStore(environmentPath: string | undefined, uri: Uri | undefined): string | undefined {
