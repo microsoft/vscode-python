@@ -1473,7 +1473,7 @@
                 "tags": [
                     "enable_other_tool_configure_python_environment"
                 ],
-                "icon": "$(files)",
+                "icon": "$(snake)",
                 "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
@@ -1496,7 +1496,7 @@
                 "tags": [
                     "enable_other_tool_configure_python_environment"
                 ],
-                "icon": "$(snake)",
+                "icon": "$(terminal)",
                 "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
@@ -1516,7 +1516,9 @@
                 "userDescription": "%python.languageModelTools.install_python_packages.userDescription%",
                 "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "pythonInstallPackage",
-                "tags": [],
+                "tags": [
+                    "enable_other_tool_configure_python_environment"
+                ],
                 "icon": "$(package)",
                 "canBeReferencedInPrompt": true,
                 "inputSchema": {
@@ -1546,10 +1548,8 @@
                 "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools.",
                 "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
                 "toolReferenceName": "configurePythonEnvironment",
-                "tags": [
-                    "ms-python.python"
-                ],
-                "icon": "$(files)",
+                "tags": [],
+                "icon": "$(gear)",
                 "canBeReferencedInPrompt": true,
                 "inputSchema": {
                     "type": "object",
