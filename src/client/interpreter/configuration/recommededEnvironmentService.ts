@@ -7,7 +7,7 @@ import { PythonExtension, ResolvedEnvironment } from '../../api/types';
 import { IExtensionContext, Resource } from '../../common/types';
 import { commands, Uri, workspace } from 'vscode';
 import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../common/persistentState';
-import { traceError } from '../../logging';
+import { traceError, traceVerbose } from '../../logging';
 import { IExtensionActivationService } from '../../activation/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { isParentPath } from '../../common/platform/fs-paths';
@@ -111,6 +111,9 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
                 const existingJson: Record<string, string> = JSON.parse(workspaceState);
                 const selectedEnvPath = existingJson[workspaceUri];
                 if (selectedEnvPath) {
+                    traceVerbose(
+                        `Found workspace specific environment (from memento) ${selectedEnvPath} for resource ${resource?.toString()}`,
+                    );
                     return { environmentPath: selectedEnvPath, reason: 'workspaceUserSelected' };
                 }
             } catch (ex) {
@@ -124,20 +127,34 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
             // but before this version of the extension, we did not store it in the workspace state.
             const workspaceEnv = await getWorkspaceSpecificVirtualEnvironment(this.api, resource);
             if (workspaceEnv) {
+                traceVerbose(
+                    `Found workspace specific environment (from api) ${
+                        workspaceEnv.path
+                    } for resource ${resource?.toString()}`,
+                );
                 return { environmentPath: workspaceEnv.path, reason: 'workspaceUserSelected' };
             }
         }
 
         const globalSelectedEnvPath = this.extensionContext.globalState.get<string | undefined>(MEMENTO_KEY);
         if (globalSelectedEnvPath) {
+            traceVerbose(
+                `Found global environment (from memento) ${globalSelectedEnvPath} for resource ${resource?.toString()}`,
+            );
             return { environmentPath: globalSelectedEnvPath, reason: 'globalUserSelected' };
         }
-        return this.api && workspace.isTrusted
-            ? {
-                  environmentPath: this.api.getActiveEnvironmentPath(resource).path,
-                  reason: 'defaultRecommended',
-              }
-            : undefined;
+        if (this.api && workspace.isTrusted) {
+            const environmentPath = this.api.getActiveEnvironmentPath(resource).path;
+            traceVerbose(
+                `Found default environment (from activeEnv Path) ${environmentPath} for resource ${resource?.toString()}`,
+            );
+            return {
+                environmentPath,
+                reason: 'defaultRecommended',
+            };
+        }
+
+        return undefined;
     }
 }
 
