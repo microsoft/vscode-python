@@ -17,7 +17,7 @@ import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { getEnvironmentDetails, raceCancellationError } from './utils';
+import { getEnvironmentDetails, NoEnvironmentError, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -82,6 +82,13 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
 
             return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
         } catch (error) {
+            if (error instanceof NoEnvironmentError) {
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        'Failed to configure a Python Environment, as the environment could not be found.',
+                    ),
+                ]);
+            }
             if (error instanceof CancellationError) {
                 throw error;
             }

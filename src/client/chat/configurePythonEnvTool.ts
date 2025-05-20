@@ -19,7 +19,7 @@ import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvironmentDetails, raceCancellationError } from './utils';
+import { getEnvironmentDetails, NoEnvironmentError, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -67,33 +67,51 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        const resource = resolveFilePath(options.input.resourcePath);
-        const recommededEnv = await this.recommendedEnvService.getRecommededEnvironment(resource);
-        // Already selected workspace env, hence nothing to do.
-        if (recommededEnv?.reason === 'workspaceUserSelected' && workspace.workspaceFolders?.length) {
-            return await getEnvDetailsForResponse(
-                recommededEnv.environment,
-                this.api,
-                this.terminalExecutionService,
-                this.terminalHelper,
-                resource,
-                token,
-            );
-        }
-        // No workspace folders, and the user selected a global environment.
-        if (recommededEnv?.reason === 'globalUserSelected' && !workspace.workspaceFolders?.length) {
-            return await getEnvDetailsForResponse(
-                recommededEnv.environment,
-                this.api,
-                this.terminalExecutionService,
-                this.terminalHelper,
-                resource,
-                token,
-            );
-        }
+        try {
+            const resource = resolveFilePath(options.input.resourcePath);
+            const recommededEnv = await this.recommendedEnvService.getRecommededEnvironment(resource);
+            // Already selected workspace env, hence nothing to do.
+            if (recommededEnv?.reason === 'workspaceUserSelected' && workspace.workspaceFolders?.length) {
+                return await getEnvDetailsForResponse(
+                    recommededEnv.environment,
+                    this.api,
+                    this.terminalExecutionService,
+                    this.terminalHelper,
+                    resource,
+                    token,
+                );
+            }
+            // No workspace folders, and the user selected a global environment.
+            if (recommededEnv?.reason === 'globalUserSelected' && !workspace.workspaceFolders?.length) {
+                return await getEnvDetailsForResponse(
+                    recommededEnv.environment,
+                    this.api,
+                    this.terminalExecutionService,
+                    this.terminalHelper,
+                    resource,
+                    token,
+                );
+            }
 
-        if (!workspace.workspaceFolders?.length) {
-            const selected = await Promise.resolve(commands.executeCommand(Commands.Set_Interpreter));
+            if (!workspace.workspaceFolders?.length) {
+                const selected = await Promise.resolve(commands.executeCommand(Commands.Set_Interpreter));
+                const env = await this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource));
+                if (selected && env) {
+                    return await getEnvDetailsForResponse(
+                        env,
+                        this.api,
+                        this.terminalExecutionService,
+                        this.terminalHelper,
+                        resource,
+                        token,
+                    );
+                }
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart('User did not select a Python environment.'),
+                ]);
+            }
+
+            const selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
             const env = await this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource));
             if (selected && env) {
                 return await getEnvDetailsForResponse(
@@ -106,25 +124,18 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
                 );
             }
             return new LanguageModelToolResult([
-                new LanguageModelTextPart('User did not select a Python environment.'),
+                new LanguageModelTextPart('User did not create nor select a Python environment.'),
             ]);
+        } catch (ex) {
+            if (ex instanceof NoEnvironmentError) {
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        'Failed to configure a Python Environment, as the environment could not be found.',
+                    ),
+                ]);
+            }
+            throw ex;
         }
-
-        const selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
-        const env = await this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource));
-        if (selected && env) {
-            return await getEnvDetailsForResponse(
-                env,
-                this.api,
-                this.terminalExecutionService,
-                this.terminalHelper,
-                resource,
-                token,
-            );
-        }
-        return new LanguageModelToolResult([
-            new LanguageModelTextPart('User did not create nor select a Python environment.'),
-        ]);
     }
 
     async prepareInvocation?(

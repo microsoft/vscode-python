@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, Uri, workspace } from 'vscode';
+import {
+    CancellationError,
+    CancellationToken,
+    LanguageModelTextPart,
+    LanguageModelToolResult,
+    Uri,
+    workspace,
+} from 'vscode';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { ITerminalHelper, TerminalShellType } from '../common/terminal/types';
@@ -52,6 +59,12 @@ export function isCondaEnv(env: ResolvedEnvironment) {
     return (env.environment?.type || '').toLowerCase() === 'conda';
 }
 
+export class NoEnvironmentError extends Error {
+    constructor(message: string) {
+        super(message);
+    }
+}
+
 export async function getEnvironmentDetails(
     resourcePath: Uri | undefined,
     api: PythonExtension['environments'],
@@ -64,7 +77,7 @@ export async function getEnvironmentDetails(
     const envPath = api.getActiveEnvironmentPath(resourcePath);
     const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
     if (!environment || !environment.version) {
-        throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+        throw new NoEnvironmentError('No environment found for the provided resource path: ' + resourcePath?.fsPath);
     }
     const runCommand = await raceCancellationError(
         getTerminalCommand(environment, resourcePath, terminalExecutionService, terminalHelper),
@@ -114,4 +127,17 @@ async function getCondaRunCommand(environment: ResolvedEnvironment) {
         return;
     }
     return { command: cmd[0], args: cmd.slice(1) };
+}
+
+function throwErrorIfUriIsNotebook(uri: Uri | undefined) {
+    if (!uri) {
+        return;
+    }
+    if (
+        uri.scheme === 'vscode-notebook-cell' ||
+        uri.fsPath.endsWith('.ipynb') ||
+        workspace.notebookDocuments.some((doc) => doc.uri.fsPath === uri.fsPath)
+    ) {
+        throw new Error('This tool does not support Notebooks, use a relevant tool instead.');
+    }
 }

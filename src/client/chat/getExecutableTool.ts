@@ -16,7 +16,7 @@ import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvDisplayName, getEnvironmentDetails, raceCancellationError } from './utils';
+import { getEnvDisplayName, getEnvironmentDetails, NoEnvironmentError, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { traceError } from '../logging';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -58,6 +58,14 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
             );
             return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
         } catch (error) {
+            if (error instanceof NoEnvironmentError) {
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        'Failed to configure a Python Environment, as the environment could not be found.',
+                    ),
+                ]);
+            }
+
             if (error instanceof CancellationError) {
                 throw error;
             }

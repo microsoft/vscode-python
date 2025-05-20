@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
-import { getEnvDisplayName, raceCancellationError } from './utils';
+import { getEnvDisplayName, NoEnvironmentError, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
@@ -51,7 +51,7 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
             const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
             if (!environment || !environment.version) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+                throw new NoEnvironmentError('No environment found');
             }
             const isConda = (environment.environment?.type || '').toLowerCase() === 'conda';
             const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
@@ -70,6 +70,14 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
             return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
         } catch (error) {
+            if (error instanceof NoEnvironmentError) {
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        'Failed to configure a Python Environment, as the environment could not be found.',
+                    ),
+                ]);
+            }
+
             if (error instanceof CancellationError) {
                 throw error;
             }
