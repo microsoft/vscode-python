@@ -1465,29 +1465,6 @@
         ],
         "languageModelTools": [
             {
-                "name": "configure_python_environment",
-                "displayName": "Configure Python Environment",
-                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools.",
-                "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
-                "toolReferenceName": "configurePythonEnvironment",
-                "tags": [
-                    "ms-python.python"
-                ],
-                "icon": "$(files)",
-                "canBeReferencedInPrompt": true,
-                "inputSchema": {
-                    "type": "object",
-                    "properties": {
-                        "resourcePath": {
-                            "type": "string",
-                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
-                        }
-                    },
-                    "required": []
-                },
-                "when": "!pythonEnvExtensionInstalled"
-            },
-            {
                 "name": "get_python_environment_details",
                 "displayName": "Get Python Environment Info",
                 "userDescription": "%python.languageModelTools.get_python_environment_details.userDescription%",
@@ -1560,6 +1537,29 @@
                     "required": [
                         "packageList"
                     ]
+                },
+                "when": "!pythonEnvExtensionInstalled"
+            },
+            {
+                "name": "configure_python_environment",
+                "displayName": "Configure Python Environment",
+                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools.",
+                "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
+                "toolReferenceName": "configurePythonEnvironment",
+                "tags": [
+                    "ms-python.python"
+                ],
+                "icon": "$(files)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        }
+                    },
+                    "required": []
                 },
                 "when": "!pythonEnvExtensionInstalled"
             }
