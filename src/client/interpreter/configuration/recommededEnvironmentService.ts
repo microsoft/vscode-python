@@ -5,7 +5,7 @@ import { inject, injectable } from 'inversify';
 import { IRecommendedEnvironmentService } from './types';
 import { PythonExtension, ResolvedEnvironment } from '../../api/types';
 import { IExtensionContext, Resource } from '../../common/types';
-import { Uri, workspace } from 'vscode';
+import { commands, Uri, workspace } from 'vscode';
 import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../common/persistentState';
 import { traceError } from '../../logging';
 
@@ -18,6 +18,11 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
 
     registerEnvApi(api: PythonExtension['environments']) {
         this.api = api;
+        this.extensionContext.subscriptions.push(
+            commands.registerCommand('python.getRecommendedEnvironment', async (resource: Resource) => {
+                return this.getRecommededEnvironment(resource);
+            }),
+        );
     }
 
     trackUserSelectedEnvironment(environmentPath: string | undefined, uri: Uri | undefined) {
