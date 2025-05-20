@@ -3,9 +3,9 @@
 
 import { ConfigurationTarget, Disposable, QuickInputButtons } from 'vscode';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
+import { IDisposableRegistry, IPathUtils } from '../../common/types';
 import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
-import { IInterpreterQuickPick, IRecommendedEnvironmentService } from '../../interpreter/configuration/types';
+import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
@@ -61,9 +61,8 @@ export const { onCreateEnvironmentStarted, onCreateEnvironmentExited, isCreating
 export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
     interpreterQuickPick: IInterpreterQuickPick,
-    interpreterPathService: IInterpreterPathService,
+    pythonPathUpdater: IPythonPathUpdaterServiceManager,
     pathUtils: IPathUtils,
-    recommededEnvService: IRecommendedEnvironmentService,
 ): void {
     disposables.push(
         registerCommand(
@@ -104,12 +103,12 @@ export function registerCreateEnvironmentFeatures(
         registerCreateEnvironmentProvider(condaCreationProvider()),
         onCreateEnvironmentExited(async (e: EnvironmentDidCreateEvent) => {
             if (e.path && e.options?.selectEnvironment) {
-                await interpreterPathService.update(
-                    e.workspaceFolder?.uri,
-                    ConfigurationTarget.WorkspaceFolder,
+                await pythonPathUpdater.updatePythonPath(
                     e.path,
+                    ConfigurationTarget.WorkspaceFolder,
+                    'ui',
+                    e.workspaceFolder?.uri,
                 );
-                recommededEnvService.trackUserSelectedEnvironment(e.path, e.workspaceFolder?.uri);
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
         }),

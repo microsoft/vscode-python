@@ -7,14 +7,16 @@ import * as sinon from 'sinon';
 import * as typemoq from 'typemoq';
 import { assert, use as chaiUse } from 'chai';
 import { ConfigurationTarget, Uri } from 'vscode';
-import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../../client/common/types';
+import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import * as commandApis from '../../../client/common/vscodeApis/commandApis';
-import { IInterpreterQuickPick } from '../../../client/interpreter/configuration/types';
+import {
+    IInterpreterQuickPick,
+    IPythonPathUpdaterServiceManager,
+} from '../../../client/interpreter/configuration/types';
 import { registerCreateEnvironmentFeatures } from '../../../client/pythonEnvironments/creation/createEnvApi';
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
 import { handleCreateEnvironmentCommand } from '../../../client/pythonEnvironments/creation/createEnvironment';
 import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
-import { noop } from '../../core';
 
 chaiUse(chaiAsPromised.default);
 
@@ -24,7 +26,7 @@ suite('Create Environment APIs', () => {
     let showInformationMessageStub: sinon.SinonStub;
     const disposables: IDisposableRegistry = [];
     let interpreterQuickPick: typemoq.IMock<IInterpreterQuickPick>;
-    let interpreterPathService: typemoq.IMock<IInterpreterPathService>;
+    let interpreterPathService: typemoq.IMock<IPythonPathUpdaterServiceManager>;
     let pathUtils: typemoq.IMock<IPathUtils>;
 
     setup(() => {
@@ -33,7 +35,7 @@ suite('Create Environment APIs', () => {
 
         registerCommandStub = sinon.stub(commandApis, 'registerCommand');
         interpreterQuickPick = typemoq.Mock.ofType<IInterpreterQuickPick>();
-        interpreterPathService = typemoq.Mock.ofType<IInterpreterPathService>();
+        interpreterPathService = typemoq.Mock.ofType<IPythonPathUpdaterServiceManager>();
         pathUtils = typemoq.Mock.ofType<IPathUtils>();
 
         registerCommandStub.callsFake((_command: string, _callback: (...args: any[]) => any) => ({
@@ -49,11 +51,6 @@ suite('Create Environment APIs', () => {
             interpreterQuickPick.object,
             interpreterPathService.object,
             pathUtils.object,
-            {
-                getRecommededEnvironment: () => Promise.resolve(undefined),
-                registerEnvApi: noop,
-                trackUserSelectedEnvironment: noop,
-            },
         );
     });
     teardown(() => {
@@ -88,10 +85,11 @@ suite('Create Environment APIs', () => {
 
             interpreterPathService
                 .setup((p) =>
-                    p.update(
-                        typemoq.It.isAny(),
-                        ConfigurationTarget.WorkspaceFolder,
+                    p.updatePythonPath(
                         typemoq.It.isValue('/path/to/env'),
+                        ConfigurationTarget.WorkspaceFolder,
+                        'ui',
+                        typemoq.It.isAny(),
                     ),
                 )
                 .returns(() => Promise.resolve())
