@@ -3,7 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { IRecommendedEnvironmentService } from './types';
-import { PythonExtension } from '../../api/types';
+import { PythonExtension, ResolvedEnvironment } from '../../api/types';
 import { IExtensionContext, Resource } from '../../common/types';
 import { Uri, workspace } from 'vscode';
 import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../common/persistentState';
@@ -32,7 +32,38 @@ export class RecommendedEnvironmentService implements IRecommendedEnvironmentSer
         }
     }
 
-    getRecommededEnvironment(
+    async getRecommededEnvironment(
+        resource: Resource,
+    ): Promise<
+        | {
+              environment: ResolvedEnvironment;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined
+    > {
+        if (!workspace.isTrusted || !this.api) {
+            return undefined;
+        }
+        const preferred = await this.getRecommededInternal(resource);
+        if (!preferred) {
+            return undefined;
+        }
+        const activeEnv = await this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource));
+        const recommendedEnv = await this.api.resolveEnvironment(preferred.environmentPath);
+        if (activeEnv && recommendedEnv && activeEnv.id !== recommendedEnv.id) {
+            traceError(
+                `Active environment ${activeEnv.id} is different from recommended environment ${
+                    recommendedEnv.id
+                } for resource ${resource?.toString()}`,
+            );
+            return undefined;
+        }
+        if (recommendedEnv) {
+            return { environment: recommendedEnv, reason: preferred.reason };
+        }
+        return undefined;
+    }
+    getRecommededInternal(
         resource: Resource,
     ):
         | { environmentPath: string; reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended' }

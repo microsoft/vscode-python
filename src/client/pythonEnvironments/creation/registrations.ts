@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
-import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
+import { IInterpreterQuickPick, IRecommendedEnvironmentService } from '../../interpreter/configuration/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { registerCreateEnvironmentFeatures } from './createEnvApi';
 import { registerCreateEnvironmentButtonFeatures } from './createEnvButtonContext';
@@ -16,8 +16,9 @@ export function registerAllCreateEnvironmentFeatures(
     interpreterPathService: IInterpreterPathService,
     interpreterService: IInterpreterService,
     pathUtils: IPathUtils,
+    recommededEnvService: IRecommendedEnvironmentService
 ): void {
-    registerCreateEnvironmentFeatures(disposables, interpreterQuickPick, interpreterPathService, pathUtils);
+    registerCreateEnvironmentFeatures(disposables, interpreterQuickPick, interpreterPathService, pathUtils, recommededEnvService);
     registerCreateEnvironmentButtonFeatures(disposables);
     registerPyProjectTomlFeatures(disposables);
     registerInstalledPackagesDiagnosticsProvider(disposables, interpreterService);

@@ -72,7 +72,7 @@ type PythonApiForJupyterExtension = {
      * Returns the preferred environment for the given URI.
      */
     getRecommededEnvironment(
-        uri: Uri,
+        uri: Uri | undefined,
     ): Promise<
         | {
               environment: EnvironmentPath;
@@ -147,14 +147,7 @@ export class JupyterExtensionIntegration {
                 if (!this.environmentApi) {
                     return undefined;
                 }
-                const preferred = this.preferredEnvironmentService.getRecommededEnvironment(uri);
-                if (!preferred) {
-                    return undefined;
-                }
-                const environment = workspace.isTrusted
-                    ? await this.environmentApi.resolveEnvironment(preferred.environmentPath)
-                    : undefined;
-                return environment ? { environment, reason: preferred.reason } : undefined;
+                return this.preferredEnvironmentService.getRecommededEnvironment(uri);
             },
         });
         return undefined;

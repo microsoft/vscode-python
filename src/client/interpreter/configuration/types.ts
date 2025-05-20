@@ -1,7 +1,7 @@
 import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
-import { PythonExtension } from '../../api/types';
+import { PythonExtension, ResolvedEnvironment } from '../../api/types';
 
 export interface IPythonPathUpdaterService {
     updatePythonPath(pythonPath: string | undefined): Promise<void>;
@@ -104,7 +104,11 @@ export interface IRecommendedEnvironmentService {
     trackUserSelectedEnvironment(environmentPath: string | undefined, uri: Uri | undefined): void;
     getRecommededEnvironment(
         resource: Resource,
-    ):
-        | { environmentPath: string; reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended' }
-        | undefined;
+    ): Promise<
+        | {
+              environment: ResolvedEnvironment;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined
+    >;
 }

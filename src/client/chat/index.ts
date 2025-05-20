@@ -43,7 +43,7 @@ export function registerTools(
         ),
     );
     ourTools.add(
-        lm.registerTool(ConfigurePythonEnvTool.toolName, new ConfigurePythonEnvTool(environmentsApi, discoverApi, serviceContainer)),
+        lm.registerTool(ConfigurePythonEnvTool.toolName, new ConfigurePythonEnvTool(environmentsApi, serviceContainer)),
     );
     ourTools.add(
         extensions.onDidChange(() => {

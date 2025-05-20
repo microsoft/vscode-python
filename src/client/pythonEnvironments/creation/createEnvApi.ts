@@ -5,7 +5,7 @@ import { ConfigurationTarget, Disposable, QuickInputButtons } from 'vscode';
 import { Commands } from '../../common/constants';
 import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
 import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
-import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
+import { IInterpreterQuickPick, IRecommendedEnvironmentService } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
 import { VenvCreationProvider } from './provider/venvCreationProvider';
@@ -63,6 +63,7 @@ export function registerCreateEnvironmentFeatures(
     interpreterQuickPick: IInterpreterQuickPick,
     interpreterPathService: IInterpreterPathService,
     pathUtils: IPathUtils,
+    recommededEnvService: IRecommendedEnvironmentService,
 ): void {
     disposables.push(
         registerCommand(
@@ -108,6 +109,7 @@ export function registerCreateEnvironmentFeatures(
                     ConfigurationTarget.WorkspaceFolder,
                     e.path,
                 );
+                recommededEnvService.trackUserSelectedEnvironment(e.path, e.workspaceFolder?.uri);
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
         }),

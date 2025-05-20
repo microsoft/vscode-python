@@ -14,6 +14,7 @@ import { registerCreateEnvironmentFeatures } from '../../../client/pythonEnviron
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
 import { handleCreateEnvironmentCommand } from '../../../client/pythonEnvironments/creation/createEnvironment';
 import { CreateEnvironmentProvider } from '../../../client/pythonEnvironments/creation/proposed.createEnvApis';
+import { noop } from '../../core';
 
 chaiUse(chaiAsPromised.default);
 
@@ -48,6 +49,11 @@ suite('Create Environment APIs', () => {
             interpreterQuickPick.object,
             interpreterPathService.object,
             pathUtils.object,
+            {
+                getRecommededEnvironment: () => Promise.resolve(undefined),
+                registerEnvApi: noop,
+                trackUserSelectedEnvironment: noop,
+            },
         );
     });
     teardown(() => {
