@@ -19,7 +19,6 @@ import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-import { trackEnvUsedByTool } from './lastUsedEnvs';
 
 export interface IInstallPackageArgs {
     resourcePath?: string;
@@ -67,7 +66,6 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             for (const packageName of options.input.packageList) {
                 await installer.installModule(packageName, resourcePath, token, undefined, { installAsProcess: true });
             }
-            trackEnvUsedByTool(resourcePath, environment);
             // format and return
             const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
             return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);

@@ -22,7 +22,6 @@ import { parsePipList } from './pipListUtils';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 import { traceError } from '../logging';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-import { trackEnvUsedByTool } from './lastUsedEnvs';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -109,7 +108,6 @@ export async function getPythonPackagesResponse(
     if (!packages.length) {
         return 'No packages found';
     }
-    trackEnvUsedByTool(resourcePath, environment);
     // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
     const response = [
         'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',

@@ -12,7 +12,11 @@ import { IContextKeyManager, IWorkspaceService } from '../common/application/typ
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../common/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
-import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
+import {
+    IInterpreterQuickPickItem,
+    IInterpreterSelector,
+    IRecommendedEnvironmentService,
+} from '../interpreter/configuration/types';
 import {
     ICondaService,
     IInterpreterDisplay,
@@ -24,7 +28,6 @@ import { ExtensionContextKey } from '../common/application/contextKeys';
 import { getDebugpyPath } from '../debugger/pythonDebugger';
 import type { Environment, EnvironmentPath, PythonExtension } from '../api/types';
 import { DisposableBase } from '../common/utils/resourceLifecycle';
-import { getLastEnvUsedByTool } from '../chat/lastUsedEnvs';
 
 type PythonApiForJupyterExtension = {
     /**
@@ -66,9 +69,17 @@ type PythonApiForJupyterExtension = {
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
 
     /**
-     * Returns the Environment that was last used in a Python tool.
+     * Returns the preferred environment for the given URI.
      */
-    getLastUsedEnvInLmTool(uri: Uri): EnvironmentPath | undefined;
+    getRecommededEnvironment(
+        uri: Uri,
+    ): Promise<
+        | {
+              environment: EnvironmentPath;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined
+    >;
 };
 
 type JupyterExtensionApi = {
@@ -96,6 +107,7 @@ export class JupyterExtensionIntegration {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IContextKeyManager) private readonly contextManager: IContextKeyManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IRecommendedEnvironmentService) private preferredEnvironmentService: IRecommendedEnvironmentService,
     ) {}
     public registerEnvApi(api: PythonExtension['environments']) {
         this.environmentApi = api;
@@ -131,11 +143,18 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
-            getLastUsedEnvInLmTool: (uri) => {
+            getRecommededEnvironment: async (uri) => {
                 if (!this.environmentApi) {
                     return undefined;
                 }
-                return getLastEnvUsedByTool(uri, this.environmentApi);
+                const preferred = this.preferredEnvironmentService.getRecommededEnvironment(uri);
+                if (!preferred) {
+                    return undefined;
+                }
+                const environment = workspace.isTrusted
+                    ? await this.environmentApi.resolveEnvironment(preferred.environmentPath)
+                    : undefined;
+                return environment ? { environment, reason: preferred.reason } : undefined;
             },
         });
         return undefined;

@@ -565,8 +565,11 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
         return Promise.resolve();
     }
 
+    /**
+     * @returns true when an interpreter was set, undefined if the user cancelled the quickpick.
+     */
     @captureTelemetry(EventName.SELECT_INTERPRETER)
-    public async setInterpreter(): Promise<void> {
+    public async setInterpreter(): Promise<true | undefined> {
         const targetConfig = await this.getConfigTargets();
         if (!targetConfig) {
             return;
@@ -588,6 +591,7 @@ export class SetInterpreterCommand extends BaseInterpreterSelectorCommand implem
             if (useEnvExtension()) {
                 await setInterpreterLegacy(interpreterState.path, wkspace);
             }
+            return true;
         }
     }
 
