@@ -65,6 +65,7 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
         IRecommendedEnvironmentService,
         RecommendedEnvironmentService,
     );
+    serviceManager.addBinding(IRecommendedEnvironmentService, IExtensionActivationService);
     serviceManager.addSingleton(IInterpreterQuickPick, SetInterpreterCommand);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);

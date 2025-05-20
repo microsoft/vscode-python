@@ -8,21 +8,30 @@ import { IExtensionContext, Resource } from '../../common/types';
 import { commands, Uri, workspace } from 'vscode';
 import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../../common/persistentState';
 import { traceError } from '../../logging';
+import { IExtensionActivationService } from '../../activation/types';
+import { StopWatch } from '../../common/utils/stopWatch';
 
 const MEMENTO_KEY = 'userSelectedEnvPath';
 
 @injectable()
-export class RecommendedEnvironmentService implements IRecommendedEnvironmentService {
+export class RecommendedEnvironmentService implements IRecommendedEnvironmentService, IExtensionActivationService {
     private api?: PythonExtension['environments'];
     constructor(@inject(IExtensionContext) private readonly extensionContext: IExtensionContext) {}
+    supportedWorkspaceTypes: { untrustedWorkspace: boolean; virtualWorkspace: boolean } = {
+        untrustedWorkspace: true,
+        virtualWorkspace: false,
+    };
 
-    registerEnvApi(api: PythonExtension['environments']) {
-        this.api = api;
+    async activate(_resource: Resource, _startupStopWatch?: StopWatch): Promise<void> {
         this.extensionContext.subscriptions.push(
             commands.registerCommand('python.getRecommendedEnvironment', async (resource: Resource) => {
                 return this.getRecommededEnvironment(resource);
             }),
         );
+    }
+
+    registerEnvApi(api: PythonExtension['environments']) {
+        this.api = api;
     }
 
     trackUserSelectedEnvironment(environmentPath: string | undefined, uri: Uri | undefined) {
