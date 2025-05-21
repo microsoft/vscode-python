@@ -7,7 +7,6 @@ import {
     extensions,
     LanguageModelTextPart,
     LanguageModelToolResult,
-    NotebookDocument,
     Uri,
     workspace,
 } from 'vscode';
