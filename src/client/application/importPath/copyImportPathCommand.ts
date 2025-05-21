@@ -25,7 +25,7 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
 
     private async execute(fileUri?: vscode.Uri): Promise<void> {
         const uri = fileUri ?? vscode.window.activeTextEditor?.document.uri;
-        if (!uri || uri.scheme !== 'file' || !uri.fsPath.endsWith('.py')) {
+        if (!uri || !uri.fsPath.endsWith('.py')) {
             void vscode.window.showWarningMessage('No Python file selected for import-path copy.');
             return;
         }
