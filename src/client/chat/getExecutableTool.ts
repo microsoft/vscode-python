@@ -16,7 +16,7 @@ import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvDisplayName, getEnvironmentDetails, raceCancellationError, throwIfNotebookUri } from './utils';
+import { getEnvDisplayName, getEnvironmentDetails, getToolResponseIfNotebook, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { traceError } from '../logging';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -46,6 +46,10 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
         const resourcePath = resolveFilePath(options.input.resourcePath);
+        const notebookResponse = getToolResponseIfNotebook(resourcePath);
+        if (notebookResponse) {
+            return notebookResponse;
+        }
 
         try {
             const message = await getEnvironmentDetails(
@@ -72,7 +76,10 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
         const resourcePath = resolveFilePath(options.input.resourcePath);
-        throwIfNotebookUri(resourcePath);
+        if (getToolResponseIfNotebook(resourcePath)) {
+            return {};
+        }
+
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);
         return {
             invocationMessage: envName

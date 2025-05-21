@@ -19,7 +19,7 @@ import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvironmentDetails, raceCancellationError, throwIfNotebookUri } from './utils';
+import { getEnvironmentDetails, getToolResponseIfNotebook, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -68,6 +68,11 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
         const resource = resolveFilePath(options.input.resourcePath);
+        const notebookResponse = getToolResponseIfNotebook(resource);
+        if (notebookResponse) {
+            return notebookResponse;
+        }
+
         const recommededEnv = await this.recommendedEnvService.getRecommededEnvironment(resource);
         // Already selected workspace env, hence nothing to do.
         if (recommededEnv?.reason === 'workspaceUserSelected' && workspace.workspaceFolders?.length) {
@@ -135,7 +140,9 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
             return {};
         }
         const resource = resolveFilePath(options.input.resourcePath);
-        throwIfNotebookUri(resource);
+        if (getToolResponseIfNotebook(resource)) {
+            return {};
+        }
         const recommededEnv = await this.recommendedEnvService.getRecommededEnvironment(resource);
         // Already selected workspace env, hence nothing to do.
         if (recommededEnv?.reason === 'workspaceUserSelected' && workspace.workspaceFolders?.length) {

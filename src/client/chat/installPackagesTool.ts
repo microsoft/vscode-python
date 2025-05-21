@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
-import { getEnvDisplayName, raceCancellationError, throwIfNotebookUri } from './utils';
+import { getEnvDisplayName, getToolResponseIfNotebook, raceCancellationError } from './utils';
 import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
@@ -45,6 +45,10 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
         const packagePlurality = packageCount === 1 ? 'package' : 'packages';
+        const notebookResponse = getToolResponseIfNotebook(resourcePath);
+        if (notebookResponse) {
+            return notebookResponse;
+        }
 
         try {
             // environment
@@ -84,7 +88,9 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
     ): Promise<PreparedToolInvocation> {
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
-        throwIfNotebookUri(resourcePath);
+        if (getToolResponseIfNotebook(resourcePath)) {
+            return {};
+        }
 
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);
         let title = '';
