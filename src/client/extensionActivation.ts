@@ -45,7 +45,7 @@ import { DebugService } from './common/application/debugService';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { WorkspaceService } from './common/application/workspace';
-import { IInterpreterQuickPick } from './interpreter/configuration/types';
+import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from './interpreter/configuration/types';
 import { registerAllCreateEnvironmentFeatures } from './pythonEnvironments/creation/registrations';
 import { registerCreateEnvironmentTriggers } from './pythonEnvironments/creation/createEnvironmentTrigger';
 import { initializePersistentStateForTriggers } from './common/persistentState';
@@ -108,7 +108,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     registerAllCreateEnvironmentFeatures(
         ext.disposables,
         interpreterQuickPick,
-        interpreterPathService,
+        ext.legacyIOC.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager),
         interpreterService,
         pathUtils,
     );

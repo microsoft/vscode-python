@@ -19,7 +19,11 @@ import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { IDiscoveryAPI } from '../client/pythonEnvironments/base/locator';
 import * as pythonDebugger from '../client/debugger/pythonDebugger';
-import { JupyterExtensionPythonEnvironments, JupyterPythonEnvironmentApi } from '../client/jupyter/jupyterIntegration';
+import {
+    JupyterExtensionIntegration,
+    JupyterExtensionPythonEnvironments,
+    JupyterPythonEnvironmentApi,
+} from '../client/jupyter/jupyterIntegration';
 import { EventEmitter, Uri } from 'vscode';
 
 suite('Extension API', () => {
@@ -49,6 +53,9 @@ suite('Extension API', () => {
         );
         when(serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider)).thenReturn(
             instance(environmentVariablesProvider),
+        );
+        when(serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration)).thenReturn(
+            instance(mock<JupyterExtensionIntegration>()),
         );
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
         const onDidChangePythonEnvironment = new EventEmitter<Uri>();

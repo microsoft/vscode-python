@@ -43,6 +43,8 @@ import { disposeAll } from './common/utils/resourceLifecycle';
 import { ProposedExtensionAPI } from './proposedApiTypes';
 import { buildProposedApi } from './proposedApi';
 import { GLOBAL_PERSISTENT_KEYS } from './common/persistentState';
+import { registerTools } from './chat';
+import { IRecommendedEnvironmentService } from './interpreter/configuration/types';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -162,6 +164,10 @@ async function activateUnsafe(
         components.pythonEnvs,
     );
     const proposedApi = buildProposedApi(components.pythonEnvs, ext.legacyIOC.serviceContainer);
+    registerTools(context, components.pythonEnvs, api.environments, ext.legacyIOC.serviceContainer);
+    ext.legacyIOC.serviceContainer
+        .get<IRecommendedEnvironmentService>(IRecommendedEnvironmentService)
+        .registerEnvApi(api.environments);
     return [{ ...api, ...proposedApi }, activationPromise, ext.legacyIOC.serviceContainer];
 }
 

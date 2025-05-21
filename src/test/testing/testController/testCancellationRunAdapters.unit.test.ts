@@ -16,6 +16,7 @@ import { UnittestTestExecutionAdapter } from '../../../client/testing/testContro
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import * as util from '../../../client/testing/testController/common/utils';
 import * as extapi from '../../../client/envExt/api.internal';
+import { noop } from '../../core';
 
 const adapters: Array<string> = ['pytest', 'unittest'];
 
@@ -36,6 +37,11 @@ suite('Execution Flow Run Adapters', () => {
     let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        const proc = typeMoq.Mock.ofType<MockChildProcess>();
+        proc.setup((p) => p.on).returns(() => noop as any);
+        proc.setup((p) => p.stdout).returns(() => null);
+        proc.setup((p) => p.stderr).returns(() => null);
+        mockProc = proc.object;
         useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
         useEnvExtensionStub.returns(false);
         // general vars
