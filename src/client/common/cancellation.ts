@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken, CancellationTokenSource, CancellationError as VSCCancellationError } from 'vscode';
 import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 
@@ -12,6 +12,10 @@ import * as localize from './utils/localize';
 export class CancellationError extends Error {
     constructor() {
         super(localize.Common.canceled);
+    }
+
+    static isCancellationError(error: unknown): error is CancellationError {
+        return error instanceof CancellationError || error instanceof VSCCancellationError;
     }
 }
 /**

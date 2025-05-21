@@ -12,7 +12,11 @@ import { IContextKeyManager, IWorkspaceService } from '../common/application/typ
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../common/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
-import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
+import {
+    IInterpreterQuickPickItem,
+    IInterpreterSelector,
+    IRecommendedEnvironmentService,
+} from '../interpreter/configuration/types';
 import {
     ICondaService,
     IInterpreterDisplay,
@@ -22,7 +26,7 @@ import {
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { getDebugpyPath } from '../debugger/pythonDebugger';
-import type { Environment } from '../api/types';
+import type { Environment, EnvironmentPath, PythonExtension } from '../api/types';
 import { DisposableBase } from '../common/utils/resourceLifecycle';
 
 type PythonApiForJupyterExtension = {
@@ -63,6 +67,19 @@ type PythonApiForJupyterExtension = {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
+    /**
+     * Returns the preferred environment for the given URI.
+     */
+    getRecommededEnvironment(
+        uri: Uri | undefined,
+    ): Promise<
+        | {
+              environment: EnvironmentPath;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined
+    >;
 };
 
 type JupyterExtensionApi = {
@@ -78,6 +95,7 @@ export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
     private pylanceExtension: Extension<PylanceApi> | undefined;
+    private environmentApi: PythonExtension['environments'] | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -89,7 +107,11 @@ export class JupyterExtensionIntegration {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IContextKeyManager) private readonly contextManager: IContextKeyManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IRecommendedEnvironmentService) private preferredEnvironmentService: IRecommendedEnvironmentService,
     ) {}
+    public registerEnvApi(api: PythonExtension['environments']) {
+        this.environmentApi = api;
+    }
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
         this.contextManager.setContext(ExtensionContextKey.IsJupyterInstalled, true);
@@ -121,6 +143,12 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
+            getRecommededEnvironment: async (uri) => {
+                if (!this.environmentApi) {
+                    return undefined;
+                }
+                return this.preferredEnvironmentService.getRecommededEnvironment(uri);
+            },
         });
         return undefined;
     }

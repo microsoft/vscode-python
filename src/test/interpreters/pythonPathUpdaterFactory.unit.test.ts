@@ -17,6 +17,7 @@ suite('Python Path Settings Updater', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentService>();
         serviceContainer
             .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);

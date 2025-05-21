@@ -98,11 +98,20 @@ def run_process(args: Sequence[str], error_message: str) -> None:
         raise VenvError(error_message) from exc
 
 
+def get_win_venv_path(name: str) -> str:
+    venv_dir = CWD / name
+    # If using MSYS2 Python, the Python executable is located in the 'bin' directory.
+    if file_exists(venv_dir / "bin" / "python.exe"):
+        return os.fspath(venv_dir / "bin" / "python.exe")
+    else:
+        return os.fspath(venv_dir / "Scripts" / "python.exe")
+
+
 def get_venv_path(name: str) -> str:
     # See `venv` doc here for more details on binary location:
     # https://docs.python.org/3/library/venv.html#creating-virtual-environments
     if sys.platform == "win32":
-        return os.fspath(CWD / name / "Scripts" / "python.exe")
+        return get_win_venv_path(name)
     else:
         return os.fspath(CWD / name / "bin" / "python")
 

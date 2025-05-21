@@ -476,14 +476,18 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         if (envPath === undefined) {
             return undefined;
         }
-        const native = await this.finder.resolve(envPath);
-        if (native) {
-            if (native.kind === NativePythonEnvironmentKind.Conda && this._condaEnvDirs.length === 0) {
-                this._condaEnvDirs = (await getCondaEnvDirs()) ?? [];
+        try {
+            const native = await this.finder.resolve(envPath);
+            if (native) {
+                if (native.kind === NativePythonEnvironmentKind.Conda && this._condaEnvDirs.length === 0) {
+                    this._condaEnvDirs = (await getCondaEnvDirs()) ?? [];
+                }
+                return this.addEnv(native);
             }
-            return this.addEnv(native);
+            return undefined;
+        } catch {
+            return undefined;
         }
-        return undefined;
     }
 
     private initializeWatcher(): void {

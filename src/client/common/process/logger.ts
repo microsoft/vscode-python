@@ -12,6 +12,7 @@ import { IProcessLogger, SpawnOptions } from './types';
 import { escapeRegExp } from 'lodash';
 import { replaceAll } from '../stringUtils';
 import { identifyShellFromShellPath } from '../terminal/shellDetectors/baseShellDetector';
+import '../../common/extensions';
 
 @injectable()
 export class ProcessLogger implements IProcessLogger {

@@ -27,6 +27,7 @@ import {
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
+    IRecommendedEnvironmentService,
 } from '../../client/interpreter/configuration/types';
 import {
     IActivatedEnvironmentLaunch,
@@ -44,6 +45,7 @@ import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/cond
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { InterpreterPathCommand } from '../../client/interpreter/interpreterPathCommand';
+import { RecommendedEnvironmentService } from '../../client/interpreter/configuration/recommededEnvironmentService';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
@@ -64,6 +66,7 @@ suite('Interpreters - Service Registry', () => {
 
             [IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory],
             [IPythonPathUpdaterServiceManager, PythonPathUpdaterService],
+            [IRecommendedEnvironmentService, RecommendedEnvironmentService],
             [IInterpreterSelector, InterpreterSelector],
             [IInterpreterHelper, InterpreterHelper],
             [IInterpreterComparer, EnvironmentTypeComparer],
