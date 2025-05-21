@@ -16,7 +16,7 @@ import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvDisplayName, getEnvironmentDetails, raceCancellationError } from './utils';
+import { getEnvDisplayName, getEnvironmentDetails, raceCancellationError, throwIfNotebookUri } from './utils';
 import { resolveFilePath } from './utils';
 import { traceError } from '../logging';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -72,6 +72,7 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
         const resourcePath = resolveFilePath(options.input.resourcePath);
+        throwIfNotebookUri(resourcePath);
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);
         return {
             invocationMessage: envName

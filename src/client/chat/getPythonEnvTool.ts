@@ -17,7 +17,7 @@ import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { getEnvironmentDetails, raceCancellationError } from './utils';
+import { getEnvironmentDetails, raceCancellationError, throwIfNotebookUri } from './utils';
 import { resolveFilePath } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -91,9 +91,11 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
     }
 
     async prepareInvocation?(
-        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
+        const resourcePath = resolveFilePath(options.input.resourcePath);
+        throwIfNotebookUri(resourcePath);
         return {
             invocationMessage: l10n.t('Fetching Python environment information'),
         };

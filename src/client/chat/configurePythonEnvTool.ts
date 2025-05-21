@@ -19,7 +19,7 @@ import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvironmentDetails, raceCancellationError } from './utils';
+import { getEnvironmentDetails, raceCancellationError, throwIfNotebookUri } from './utils';
 import { resolveFilePath } from './utils';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -135,6 +135,7 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
             return {};
         }
         const resource = resolveFilePath(options.input.resourcePath);
+        throwIfNotebookUri(resource);
         const recommededEnv = await this.recommendedEnvService.getRecommededEnvironment(resource);
         // Already selected workspace env, hence nothing to do.
         if (recommededEnv?.reason === 'workspaceUserSelected' && workspace.workspaceFolders?.length) {

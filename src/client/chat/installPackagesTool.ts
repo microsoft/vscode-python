@@ -14,7 +14,7 @@ import {
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
-import { getEnvDisplayName, raceCancellationError } from './utils';
+import { getEnvDisplayName, raceCancellationError, throwIfNotebookUri } from './utils';
 import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
@@ -84,6 +84,7 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
     ): Promise<PreparedToolInvocation> {
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
+        throwIfNotebookUri(resourcePath);
 
         const envName = await raceCancellationError(getEnvDisplayName(this.discovery, resourcePath, this.api), token);
         let title = '';

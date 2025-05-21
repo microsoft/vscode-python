@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationError, CancellationToken, Uri, workspace } from 'vscode';
+import { CancellationError, CancellationToken, extensions, NotebookDocument, Uri, workspace } from 'vscode';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { ITerminalHelper, TerminalShellType } from '../common/terminal/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
+import { JUPYTER_EXTENSION_ID } from '../common/constants';
 
 export function resolveFilePath(filepath?: string): Uri | undefined {
     if (!filepath) {
@@ -114,4 +115,31 @@ async function getCondaRunCommand(environment: ResolvedEnvironment) {
         return;
     }
     return { command: cmd[0], args: cmd.slice(1) };
+}
+
+export function throwIfNotebookUri(resource: Uri | undefined) {
+    if (!resource) {
+        return;
+    }
+    const notebook = workspace.notebookDocuments.find(
+        (doc) => doc.uri.toString() === resource.toString() || doc.uri.path === resource.path,
+    );
+    if ((notebook && isJupyterNotebook(notebook)) || resource.path.toLowerCase().endsWith('.ipynb')) {
+        const isJupyterExtensionAvailable = extensions.getExtension(JUPYTER_EXTENSION_ID);
+        if (isJupyterExtensionAvailable) {
+            throw new Error(
+                'This tool cannot be used for Jupyter Notebooks, try using notebook specific tools instead.',
+            );
+        }
+        throw new Error(
+            `This tool cannot be used for Jupyter Notebooks. Install the Jupyter Extension (${JUPYTER_EXTENSION_ID}) & try using notebook specific tools instead.`,
+        );
+    }
+    if (notebook) {
+        throw new Error('This tool cannot be used for Notebooks, try using notebook specific tools instead.');
+    }
+}
+
+function isJupyterNotebook(notebook: NotebookDocument) {
+    return notebook.notebookType === 'jupyter-notebook';
 }
