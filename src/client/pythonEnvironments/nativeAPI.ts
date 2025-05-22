@@ -112,14 +112,14 @@ function getDisplayName(version: PythonVersion, kind: PythonEnvKind, arch: Archi
     const kindStr = kindToShortString(kind);
     if (arch === Architecture.x86) {
         if (kindStr) {
-            return name ? `Python ${versionStr} 32-bit ('${name}')` : `Python ${versionStr} 32-bit (${kindStr})`;
+            return name ? `Python ${versionStr} 32-bit (${name})` : `Python ${versionStr} 32-bit (${kindStr})`;
         }
-        return name ? `Python ${versionStr} 32-bit ('${name}')` : `Python ${versionStr} 32-bit`;
+        return name ? `Python ${versionStr} 32-bit (${name})` : `Python ${versionStr} 32-bit`;
     }
     if (kindStr) {
-        return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr} (${kindStr})`;
+        return name ? `Python ${versionStr} (${name})` : `Python ${versionStr} (${kindStr})`;
     }
-    return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr}`;
+    return name ? `Python ${versionStr} (${name})` : `Python ${versionStr}`;
 }
 
 function validEnv(nativeEnv: NativeEnvInfo): boolean {
