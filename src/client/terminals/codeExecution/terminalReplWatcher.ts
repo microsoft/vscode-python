@@ -13,8 +13,6 @@ function checkREPLCommand(command: string): undefined | 'manualTerminal' | `runn
         (lower.startsWith('py ') && lower.includes(' -m pytest')) ||
         (lower.startsWith('python') && lower.includes(' -m unittest')) ||
         (lower.startsWith('py ') && lower.includes(' -m unittest')) ||
-        (lower.startsWith('python') && lower.includes(' -m nose')) ||
-        (lower.startsWith('py ') && lower.includes(' -m nose')) ||
         lower.includes('py.test')
     ) {
         return 'runningTest';
