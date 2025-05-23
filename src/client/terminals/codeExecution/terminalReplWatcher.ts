@@ -3,8 +3,24 @@ import { onDidStartTerminalShellExecution } from '../../common/vscodeApis/window
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 
-function checkREPLCommand(command: string): undefined | 'manualTerminal' | `runningScript` {
+function checkREPLCommand(command: string): undefined | 'manualTerminal' | `runningScript` | 'runningTest' {
     const lower = command.toLowerCase().trimStart();
+    
+    // Check for test commands
+    if (
+        lower.includes('pytest') || 
+        (lower.startsWith('python') && lower.includes(' -m pytest')) || 
+        (lower.startsWith('py ') && lower.includes(' -m pytest')) ||
+        (lower.startsWith('python') && lower.includes(' -m unittest')) ||
+        (lower.startsWith('py ') && lower.includes(' -m unittest')) ||
+        (lower.startsWith('python') && lower.includes(' -m nose')) ||
+        (lower.startsWith('py ') && lower.includes(' -m nose')) ||
+        lower.includes('py.test')
+    ) {
+        return 'runningTest';
+    }
+    
+    // Regular Python commands
     if (lower.startsWith('python') || lower.startsWith('py ')) {
         const parts = lower.split(' ');
         if (parts.length === 1) {
@@ -20,7 +36,12 @@ export function registerTriggerForTerminalREPL(disposables: Disposable[]): void 
         onDidStartTerminalShellExecution(async (e: TerminalShellExecutionStartEvent) => {
             const replType = checkREPLCommand(e.execution.commandLine.value);
             if (e.execution.commandLine.isTrusted && replType) {
-                sendTelemetryEvent(EventName.REPL, undefined, { replType });
+                // Send test-specific telemetry if it's a test command
+                if (replType === 'runningTest') {
+                    sendTelemetryEvent(EventName.UNITTEST_RUN_CLI);
+                } else {
+                    sendTelemetryEvent(EventName.REPL, undefined, { replType });
+                }
             }
         }),
     );
