@@ -2458,4 +2458,9 @@ export interface IEventNamePropertyMapping {
                 "errortype": { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "comment": "Type of error when calling TAS (ServerError, NoResponse, etc.)"}
             }
     */
+    [EventName.COPY_IMPORT_PATH]: {
+        trigger: 'api' | 'contextMenu' | 'palette';
+        outcome: 'success' | 'noFile' | 'notPy' | 'error';
+        strategy?: 'sysPath' | 'workspace' | 'fallback';
+    };
 }

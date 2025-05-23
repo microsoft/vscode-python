@@ -1,4 +1,5 @@
 import { execFileSync } from 'child_process';
+import { traceWarn } from '../../logging';
 
 export function getSysPath(pythonCmd = 'python3'): string[] {
     // cleanSysPathCommand removes the working directory from sys.path.
@@ -19,7 +20,7 @@ export function getSysPath(pythonCmd = 'python3'): string[] {
         });
         return JSON.parse(out);
     } catch (err) {
-        console.warn('[CopyImportPath] getSysPath failed:', err);
+        traceWarn('[CopyImportPath] getSysPath failed:', err);
         return [];
     }
 }

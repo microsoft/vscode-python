@@ -7,6 +7,8 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { Commands } from '../../common/constants';
 import { getSysPath } from '../../common/utils/pythonUtils';
 import { IInterpreterPathService } from '../../common/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 
 @injectable()
 export class CopyImportPathCommand implements IExtensionSingleActivationService {
@@ -24,17 +26,42 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
     }
 
     private async execute(fileUri?: vscode.Uri): Promise<void> {
-        const uri = fileUri ?? vscode.window.activeTextEditor?.document.uri;
-        if (!uri || !uri.fsPath.endsWith('.py')) {
-            void vscode.window.showWarningMessage('No Python file selected for import-path copy.');
-            return;
-        }
+        const trigger = fileUri ? 'api' : vscode.window.activeTextEditor ? 'contextMenu' : 'palette';
+        let outcome: 'success' | 'noFile' | 'notPy' | 'error' = 'success';
+        let strategy: 'sysPath' | 'workspace' | 'fallback' | undefined = undefined;
+        let exObj: Error | undefined = undefined;
 
-        const resource: vscode.Uri | undefined = uri ?? this.workspace.workspaceFolders?.[0]?.uri;
-        const pythonPath = this.interpreterPathService.get(resource);
-        const importPath = this.resolveImportPath(uri.fsPath, pythonPath);
-        await this.clipboard.writeText(importPath);
-        void vscode.window.showInformationMessage(`Copied: ${importPath}`);
+        try {
+            const uri = fileUri ?? vscode.window.activeTextEditor?.document.uri;
+            if (!uri) {
+                outcome = 'noFile';
+                return;
+            }
+            if (!uri.fsPath.endsWith('.py')) {
+                outcome = 'notPy';
+                return;
+            }
+            const resource = uri ?? this.workspace.workspaceFolders?.[0]?.uri;
+            const pythonPath = this.interpreterPathService.get(resource);
+            const [importPath, strat] = this.resolveImportPath(uri.fsPath, pythonPath);
+            strategy = strat;
+            await this.clipboard.writeText(importPath);
+            void vscode.window.showInformationMessage(`Copied: ${importPath}`);
+        } catch (ex) {
+            outcome = 'error';
+            exObj = ex as Error;
+        } finally {
+            sendTelemetryEvent(
+                EventName.COPY_IMPORT_PATH,
+                undefined,
+                {
+                    trigger,
+                    outcome,
+                    strategy,
+                },
+                exObj,
+            );
+        }
     }
 
     /**
@@ -46,25 +73,26 @@ export class CopyImportPathCommand implements IExtensionSingleActivationService 
      * 2. If the file is located under the current workspace folder, the path relative to the workspace root is used.
      * 3. Otherwise, the import path falls back to the file name (without extension).
      *
-     * @param absPath - The absolute path to a `.py` file.
-     * @returns The resolved import path in dotted notation (e.g., 'pkg.module').
+     * @param absPath Absolute path to a `.py` file.
+     * @param pythonPath Optional Python interpreter path to determine `sys.path`.
+     * @returns A tuple: [import path in dotted notation, resolution source: 'sysPath' | 'workspace' | 'fallback']
      */
-    private resolveImportPath(absPath: string, pythonPath?: string): string {
+    private resolveImportPath(absPath: string, pythonPath?: string): [string, 'sysPath' | 'workspace' | 'fallback'] {
         // ---------- ① sys.path ----------
         for (const sysRoot of getSysPath(pythonPath)) {
             if (sysRoot && absPath.startsWith(sysRoot)) {
-                return CopyImportPathCommand.toDotted(path.relative(sysRoot, absPath));
+                return [CopyImportPathCommand.toDotted(path.relative(sysRoot, absPath)), 'sysPath'];
             }
         }
 
-        // ---------- ② workspaceFolder ----------
+        // ---------- ② workspace ----------
         const ws = this.workspace.getWorkspaceFolder(vscode.Uri.file(absPath));
         if (ws && absPath.startsWith(ws.uri.fsPath)) {
-            return CopyImportPathCommand.toDotted(path.relative(ws.uri.fsPath, absPath));
+            return [CopyImportPathCommand.toDotted(path.relative(ws.uri.fsPath, absPath)), 'workspace'];
         }
 
         // ---------- ③ fallback ----------
-        return path.basename(absPath, '.py');
+        return [path.basename(absPath, '.py'), 'fallback'];
     }
 
     private static toDotted(relPath: string): string {
