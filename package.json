@@ -78,7 +78,11 @@
         "workspaceContains:manage.py",
         "workspaceContains:app.py",
         "workspaceContains:.venv",
-        "workspaceContains:.conda"
+        "workspaceContains:.conda",
+        "onLanguageModelTool:get_python_environment_details",
+        "onLanguageModelTool:get_python_executable_details",
+        "onLanguageModelTool:install_python_packages",
+        "onLanguageModelTool:configure_python_environment"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
