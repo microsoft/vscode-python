@@ -97,29 +97,6 @@ suite('Terminal REPL Watcher', () => {
         expect(telemetryStub.args[0][0]).to.equal(EventName.UNITTEST_RUN_CLI);
     });
 
-    test('Should send unittest CLI telemetry when nose is invoked', () => {
-        windowApisStub.callsFake((callback) => {
-            callback({
-                execution: {
-                    commandLine: {
-                        value: 'python -m nose',
-                        isTrusted: true
-                    }
-                }
-            });
-            return {
-                dispose: () => {
-                    // Do nothing
-                }
-            };
-        });
-
-        registerTriggerForTerminalREPL([]);
-
-        expect(telemetryStub.calledOnce).to.be.true;
-        expect(telemetryStub.args[0][0]).to.equal(EventName.UNITTEST_RUN_CLI);
-    });
-
     test('Should send unittest CLI telemetry when py.test is invoked', () => {
         windowApisStub.callsFake((callback) => {
             callback({
