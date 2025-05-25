@@ -14,7 +14,13 @@ import {
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
-import { getEnvDisplayName, getToolResponseIfNotebook, IResourceReference, isCondaEnv, raceCancellationError } from './utils';
+import {
+    getEnvDisplayName,
+    getToolResponseIfNotebook,
+    IResourceReference,
+    isCondaEnv,
+    raceCancellationError,
+} from './utils';
 import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
