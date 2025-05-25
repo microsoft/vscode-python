@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    CancellationError,
     CancellationToken,
     l10n,
     LanguageModelTextPart,
@@ -16,15 +15,16 @@ import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
-import { getEnvDisplayName, getEnvironmentDetails, getToolResponseIfNotebook, raceCancellationError } from './utils';
+import {
+    getEnvDisplayName,
+    getEnvironmentDetails,
+    getToolResponseIfNotebook,
+    IResourceReference,
+    raceCancellationError,
+} from './utils';
 import { resolveFilePath } from './utils';
-import { traceError } from '../logging';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-
-export interface IResourceReference {
-    resourcePath?: string;
-}
 
 export class GetExecutableTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
@@ -51,24 +51,15 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
             return notebookResponse;
         }
 
-        try {
-            const message = await getEnvironmentDetails(
-                resourcePath,
-                this.api,
-                this.terminalExecutionService,
-                this.terminalHelper,
-                undefined,
-                token,
-            );
-            return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
-        } catch (error) {
-            if (error instanceof CancellationError) {
-                throw error;
-            }
-            traceError('Error while getting environment information', error);
-            const errorMessage: string = `An error occurred while fetching environment information: ${error}`;
-            return new LanguageModelToolResult([new LanguageModelTextPart(errorMessage)]);
-        }
+        const message = await getEnvironmentDetails(
+            resourcePath,
+            this.api,
+            this.terminalExecutionService,
+            this.terminalHelper,
+            undefined,
+            token,
+        );
+        return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
     }
 
     async prepareInvocation?(

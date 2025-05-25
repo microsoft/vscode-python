@@ -11,11 +11,16 @@ import {
     workspace,
 } from 'vscode';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-import { PythonExtension, ResolvedEnvironment } from '../api/types';
+import { Environment, PythonExtension, ResolvedEnvironment, VersionInfo } from '../api/types';
 import { ITerminalHelper, TerminalShellType } from '../common/terminal/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 import { JUPYTER_EXTENSION_ID, NotebookCellScheme } from '../common/constants';
+import { dirname, join } from 'path';
+
+export interface IResourceReference {
+    resourcePath?: string;
+}
 
 export function resolveFilePath(filepath?: string): Uri | undefined {
     if (!filepath) {
@@ -155,4 +160,72 @@ export function getToolResponseIfNotebook(resource: Uri | undefined) {
             ),
         ]);
     }
+}
+
+export function isCancellationError(error: unknown): boolean {
+    return !!error && (error instanceof CancellationError || (error as Error).name === 'CancellationError');
+}
+
+export function doesWorkspaceHaveVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtension['environments']) {
+    const workspaceFolder =
+        resource && workspace.workspaceFolders?.length
+            ? workspace.getWorkspaceFolder(resource)
+            : workspace.workspaceFolders?.length === 1
+            ? workspace.workspaceFolders[0]
+            : undefined;
+    if (!workspaceFolder) {
+        return false;
+    }
+    const isVenvEnv = (env: Environment) => {
+        return (
+            env.environment?.folderUri &&
+            env.executable.sysPrefix &&
+            dirname(env.executable.sysPrefix) === workspaceFolder.uri.fsPath &&
+            env.environment.name === '.venv' &&
+            env.environment.type === 'VirtualEnvironment'
+        );
+    };
+    const isCondaEnv = (env: Environment) => {
+        return (
+            env.environment?.folderUri &&
+            env.executable.sysPrefix &&
+            dirname(env.executable.sysPrefix) === workspaceFolder.uri.fsPath &&
+            env.environment.folderUri.fsPath === join(workspaceFolder.uri.fsPath, '.conda') &&
+            env.environment.type === 'Conda'
+        );
+    };
+    // If we alraedy have a .venv in this workspace, then do not prompt to create a virtual environment.
+    return api.known.find((e) => isVenvEnv(e) || isCondaEnv(e));
+}
+
+export async function getEnvDetailsForResponse(
+    environment: ResolvedEnvironment | undefined,
+    api: PythonExtension['environments'],
+    terminalExecutionService: TerminalCodeExecutionProvider,
+    terminalHelper: ITerminalHelper,
+    resource: Uri | undefined,
+    token: CancellationToken,
+): Promise<LanguageModelToolResult> {
+    const envPath = api.getActiveEnvironmentPath(resource);
+    environment = environment || (await raceCancellationError(api.resolveEnvironment(envPath), token));
+    if (!environment || !environment.version) {
+        throw new Error('No environment found for the provided resource path: ' + resource?.fsPath);
+    }
+    const message = await getEnvironmentDetails(
+        resource,
+        api,
+        terminalExecutionService,
+        terminalHelper,
+        undefined,
+        token,
+    );
+    return new LanguageModelToolResult([
+        new LanguageModelTextPart(`A Python Environment has been configured.  \n` + message),
+    ]);
+}
+export function getDisplayVersion(version?: VersionInfo): string | undefined {
+    if (!version || version.major === undefined || version.minor === undefined || version.micro === undefined) {
+        return undefined;
+    }
+    return `${version.major}.${version.minor}.${version.micro}`;
 }

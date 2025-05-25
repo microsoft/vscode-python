@@ -1475,6 +1475,7 @@
                 "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Environment (conda, venv, etec), 2. Version of Python, 3. List of all installed packages with their versions. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "pythonGetEnvironmentInfo",
                 "tags": [
+                    "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
                 "icon": "$(snake)",
@@ -1498,6 +1499,7 @@
                 "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "pythonExecutableCommand",
                 "tags": [
+                    "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
                 "icon": "$(terminal)",
@@ -1521,6 +1523,7 @@
                 "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "pythonInstallPackage",
                 "tags": [
+                    "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
                 "icon": "$(package)",
@@ -1552,7 +1555,9 @@
                 "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools.",
                 "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
                 "toolReferenceName": "configurePythonEnvironment",
-                "tags": [],
+                "tags": [
+                    "extension_installed_by_tool"
+                ],
                 "icon": "$(gear)",
                 "canBeReferencedInPrompt": true,
                 "inputSchema": {
@@ -1566,6 +1571,46 @@
                     "required": []
                 },
                 "when": "!pythonEnvExtensionInstalled"
+            },
+            {
+                "name": "create_virtual_environment",
+                "displayName": "Create a Virtual Environment",
+                "modelDescription": "This tool will create a Virual Environment",
+                "tags": [
+                    "extension_installed_by_tool"
+                ],
+                "canBeReferencedInPrompt": false,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        }
+                    },
+                    "required": []
+                },
+                "when": "false"
+            },
+            {
+                "name": "selectEnvironment",
+                "displayName": "Select a Python Environment",
+                "modelDescription": "This tool will prompt the user to select an existing Python Environment",
+                "tags": [
+                    "extension_installed_by_tool"
+                ],
+                "canBeReferencedInPrompt": false,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        }
+                    },
+                    "required": []
+                },
+                "when": "false"
             }
         ]
     },

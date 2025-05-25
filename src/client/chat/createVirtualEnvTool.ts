@@ -1,0 +1,191 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+import {
+    CancellationToken,
+    l10n,
+    LanguageModelTool,
+    LanguageModelToolInvocationOptions,
+    LanguageModelToolInvocationPrepareOptions,
+    LanguageModelToolResult,
+    PreparedToolInvocation,
+    Uri,
+    workspace,
+} from 'vscode';
+import { PythonExtension } from '../api/types';
+import { IServiceContainer } from '../ioc/types';
+import { ICodeExecutionService } from '../terminals/types';
+import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
+import {
+    doesWorkspaceHaveVenvOrCondaEnv,
+    getDisplayVersion,
+    getEnvDetailsForResponse,
+    IResourceReference,
+    raceCancellationError,
+} from './utils';
+import { resolveFilePath } from './utils';
+import { ITerminalHelper } from '../common/terminal/types';
+import { raceTimeout } from '../common/utils/async';
+import { IInterpreterPathService } from '../common/types';
+import { DisposableStore } from '../common/utils/resourceLifecycle';
+import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
+import { EnvironmentType } from '../pythonEnvironments/info';
+import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
+import { convertEnvInfoToPythonEnvironment } from '../pythonEnvironments/legacyIOC';
+import { sortInterpreters } from '../interpreter/helpers';
+import { isStableVersion } from '../pythonEnvironments/info/pythonVersion';
+import { createVirtualEnvironment } from '../pythonEnvironments/creation/createEnvApi';
+
+export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReference> {
+    private readonly terminalExecutionService: TerminalCodeExecutionProvider;
+    private readonly terminalHelper: ITerminalHelper;
+    private readonly recommendedEnvService: IRecommendedEnvironmentService;
+
+    public static readonly toolName = 'create_virtual_environment';
+    constructor(
+        private readonly discoveryApi: IDiscoveryAPI,
+        private readonly api: PythonExtension['environments'],
+        private readonly serviceContainer: IServiceContainer,
+    ) {
+        this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
+            ICodeExecutionService,
+            'standard',
+        );
+        this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
+        this.recommendedEnvService = this.serviceContainer.get<IRecommendedEnvironmentService>(
+            IRecommendedEnvironmentService,
+        );
+    }
+
+    async invoke(
+        options: LanguageModelToolInvocationOptions<IResourceReference>,
+        token: CancellationToken,
+    ): Promise<LanguageModelToolResult | undefined> {
+        const resource = resolveFilePath(options.input.resourcePath);
+        let info = await this.getPreferredEnvForCreation(resource);
+        if (!info) {
+            return;
+        }
+        const { workspaceFolder, preferredGlobalPythonEnv } = info;
+        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const disposables = new DisposableStore();
+        try {
+            const interpreterChanged = new Promise<void>((resolve) => {
+                disposables.add(interpreterPathService.onDidChange(() => resolve()));
+            });
+
+            const created = await raceCancellationError(
+                createVirtualEnvironment({
+                    interpreter: preferredGlobalPythonEnv.id,
+                    workspaceFolder,
+                }),
+                token,
+            );
+            if (!created?.path) {
+                return;
+            }
+            // Wait a few secs to ensure the env is selected as the active environment..
+            // If this doesn't work, then something went wrong.
+            await raceTimeout(5_000, interpreterChanged);
+            const env = await this.api.resolveEnvironment(created.path);
+            if (!env) {
+                return;
+            }
+            return await getEnvDetailsForResponse(
+                env,
+                this.api,
+                this.terminalExecutionService,
+                this.terminalHelper,
+                resource,
+                token,
+            );
+        } finally {
+            disposables.dispose();
+        }
+    }
+
+    public async canCreateNewVirtualEnv(resource: Uri | undefined, token: CancellationToken): Promise<boolean> {
+        if (doesWorkspaceHaveVenvOrCondaEnv(resource, this.api)) {
+            // If we already have a .venv or .conda in this workspace, then do not prompt to create a virtual environment.
+            return false;
+        }
+
+        const info = await raceCancellationError(this.getPreferredEnvForCreation(resource), token);
+        return info ? true : false;
+    }
+
+    async prepareInvocation?(
+        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        token: CancellationToken,
+    ): Promise<PreparedToolInvocation> {
+        const resource = resolveFilePath(options.input.resourcePath);
+        const info = await raceCancellationError(this.getPreferredEnvForCreation(resource), token);
+        if (!info) {
+            return {};
+        }
+        const { preferredGlobalPythonEnv } = info;
+        const version = getDisplayVersion(preferredGlobalPythonEnv.version);
+        return {
+            confirmationMessages: {
+                title: l10n.t('Create a Virtual Environment{0}?', version ? ` (${version})` : ''),
+                message: l10n.t(`Virtual Environments provide the benefit of package isolation and more.`),
+            },
+        };
+    }
+    async hasAlreadyGotAWorkspaceSpecificEnvironment(resource: Uri | undefined) {
+        const recommededEnv = await this.recommendedEnvService.getRecommededEnvironment(resource);
+        // Already selected workspace env, hence nothing to do.
+        if (recommededEnv?.reason === 'workspaceUserSelected' && workspace.workspaceFolders?.length) {
+            return recommededEnv.environment;
+        }
+        // No workspace folders, and the user selected a global environment.
+        if (recommededEnv?.reason === 'globalUserSelected' && !workspace.workspaceFolders?.length) {
+            return recommededEnv.environment;
+        }
+    }
+
+    private async getPreferredEnvForCreation(resource: Uri | undefined) {
+        if (await this.hasAlreadyGotAWorkspaceSpecificEnvironment(resource)) {
+            return undefined;
+        }
+
+        // If we have a resource or have only one workspace folder && there is no .venv and no workspace specific environment.
+        // Then lets recommend creating a virtual environment.
+        const workspaceFolder =
+            resource && workspace.workspaceFolders?.length
+                ? workspace.getWorkspaceFolder(resource)
+                : workspace.workspaceFolders?.length === 1
+                ? workspace.workspaceFolders[0]
+                : undefined;
+        if (!workspaceFolder) {
+            // No workspace folder, hence no need to create a virtual environment.
+            return undefined;
+        }
+
+        // Find the latest stable version of Python from the list of know envs.
+        let globalPythonEnvs = this.discoveryApi
+            .getEnvs()
+            .map((env) => convertEnvInfoToPythonEnvironment(env))
+            .filter((env) =>
+                [
+                    EnvironmentType.System,
+                    EnvironmentType.MicrosoftStore,
+                    EnvironmentType.Global,
+                    EnvironmentType.Pyenv,
+                ].includes(env.envType),
+            )
+            .filter((env) => env.version && isStableVersion(env.version));
+
+        globalPythonEnvs = sortInterpreters(globalPythonEnvs);
+        const preferredGlobalPythonEnv = globalPythonEnvs.length
+            ? this.api.known.find((e) => e.id === globalPythonEnvs[globalPythonEnvs.length - 1].id)
+            : undefined;
+
+        return workspaceFolder && preferredGlobalPythonEnv
+            ? {
+                  workspaceFolder,
+                  preferredGlobalPythonEnv,
+              }
+            : undefined;
+    }
+}

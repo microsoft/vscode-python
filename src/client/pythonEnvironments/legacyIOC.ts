@@ -46,6 +46,10 @@ const convertedKinds = new Map(
     }),
 );
 
+export function convertEnvInfoToPythonEnvironment(info: PythonEnvInfo): PythonEnvironment {
+    return convertEnvInfo(info);
+}
+
 function convertEnvInfo(info: PythonEnvInfo): PythonEnvironment {
     const { name, location, executable, arch, kind, version, distro, id } = info;
     const { filename, sysPrefix } = executable;

@@ -12,6 +12,8 @@ import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { GetExecutableTool } from './getExecutableTool';
 import { GetEnvironmentInfoTool } from './getPythonEnvTool';
 import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
+import { SelectPythonEnvTool } from './selectEnvTool';
+import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 
 export function registerTools(
     context: IExtensionContext,
@@ -43,7 +45,19 @@ export function registerTools(
         ),
     );
     ourTools.add(
-        lm.registerTool(ConfigurePythonEnvTool.toolName, new ConfigurePythonEnvTool(environmentsApi, serviceContainer)),
+        lm.registerTool(
+            CreateVirtualEnvTool.toolName,
+            new CreateVirtualEnvTool(discoverApi, environmentsApi, serviceContainer),
+        ),
+    );
+    ourTools.add(
+        lm.registerTool(SelectPythonEnvTool.toolName, new SelectPythonEnvTool(environmentsApi, serviceContainer)),
+    );
+    ourTools.add(
+        lm.registerTool(
+            ConfigurePythonEnvTool.toolName,
+            new ConfigurePythonEnvTool(discoverApi, environmentsApi, serviceContainer),
+        ),
     );
     ourTools.add(
         extensions.onDidChange(() => {
