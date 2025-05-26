@@ -163,7 +163,9 @@ export function getToolResponseIfNotebook(resource: Uri | undefined) {
 }
 
 export function isCancellationError(error: unknown): boolean {
-    return !!error && (error instanceof CancellationError || (error as Error).name === 'CancellationError');
+    return (
+        !!error && (error instanceof CancellationError || (error as Error).message === new CancellationError().message)
+    );
 }
 
 export function doesWorkspaceHaveVenvOrCondaEnv(resource: Uri | undefined, api: PythonExtension['environments']) {
