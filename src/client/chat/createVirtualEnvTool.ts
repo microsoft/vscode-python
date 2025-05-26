@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import {
+    CancellationError,
     CancellationToken,
     l10n,
     LanguageModelTool,
@@ -12,7 +13,7 @@ import {
     Uri,
     workspace,
 } from 'vscode';
-import { PythonExtension } from '../api/types';
+import { PythonExtension, ResolvedEnvironment } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
@@ -26,7 +27,7 @@ import {
 } from './utils';
 import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
-import { raceTimeout } from '../common/utils/async';
+import { raceTimeout, sleep } from '../common/utils/async';
 import { IInterpreterPathService } from '../common/types';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
@@ -36,7 +37,8 @@ import { convertEnvInfoToPythonEnvironment } from '../pythonEnvironments/legacyI
 import { sortInterpreters } from '../interpreter/helpers';
 import { isStableVersion } from '../pythonEnvironments/info/pythonVersion';
 import { createVirtualEnvironment } from '../pythonEnvironments/creation/createEnvApi';
-import { traceError, traceWarn } from '../logging';
+import { traceError, traceVerbose, traceWarn } from '../logging';
+import { StopWatch } from '../common/utils/stopWatch';
 
 export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
@@ -62,12 +64,12 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
     async invoke(
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
-    ): Promise<LanguageModelToolResult | undefined> {
+    ): Promise<LanguageModelToolResult> {
         const resource = resolveFilePath(options.input.resourcePath);
         let info = await this.getPreferredEnvForCreation(resource);
         if (!info) {
-            traceWarn(`${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
-            return;
+            traceWarn(`Called ${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
+            throw new CancellationError();
         }
         const { workspaceFolder, preferredGlobalPythonEnv } = info;
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
@@ -85,16 +87,30 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
                 token,
             );
             if (!created?.path) {
-                traceWarn(`${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
-                return;
+                traceWarn(`${CreateVirtualEnvTool.toolName} tool not invoked, virtual env not created.`);
+                throw new CancellationError();
             }
+
             // Wait a few secs to ensure the env is selected as the active environment..
             // If this doesn't work, then something went wrong.
             await raceTimeout(5_000, interpreterChanged);
-            const env = await this.api.resolveEnvironment(created.path);
+
+            const stopWatch = new StopWatch();
+            let env: ResolvedEnvironment | undefined;
+            while (stopWatch.elapsedTime < 5_000 || !env) {
+                env = await this.api.resolveEnvironment(created.path);
+                if (env) {
+                    break;
+                } else {
+                    traceVerbose(
+                        `${CreateVirtualEnvTool.toolName} tool invoked, env created but not yet resolved, waiting...`,
+                    );
+                    await sleep(200);
+                }
+            }
             if (!env) {
-                traceError(`${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
-                return;
+                traceError(`${CreateVirtualEnvTool.toolName} tool invoked, env created but unable to resolve details.`);
+                throw new CancellationError();
             }
             return await getEnvDetailsForResponse(
                 env,
