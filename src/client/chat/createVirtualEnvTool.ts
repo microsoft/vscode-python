@@ -21,6 +21,7 @@ import {
     getDisplayVersion,
     getEnvDetailsForResponse,
     IResourceReference,
+    isCancellationError,
     raceCancellationError,
 } from './utils';
 import { resolveFilePath } from './utils';
@@ -35,6 +36,7 @@ import { convertEnvInfoToPythonEnvironment } from '../pythonEnvironments/legacyI
 import { sortInterpreters } from '../interpreter/helpers';
 import { isStableVersion } from '../pythonEnvironments/info/pythonVersion';
 import { createVirtualEnvironment } from '../pythonEnvironments/creation/createEnvApi';
+import { traceError, traceWarn } from '../logging';
 
 export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
@@ -64,6 +66,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
         const resource = resolveFilePath(options.input.resourcePath);
         let info = await this.getPreferredEnvForCreation(resource);
         if (!info) {
+            traceWarn(`${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
             return;
         }
         const { workspaceFolder, preferredGlobalPythonEnv } = info;
@@ -82,6 +85,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
                 token,
             );
             if (!created?.path) {
+                traceWarn(`${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
                 return;
             }
             // Wait a few secs to ensure the env is selected as the active environment..
@@ -89,6 +93,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
             await raceTimeout(5_000, interpreterChanged);
             const env = await this.api.resolveEnvironment(created.path);
             if (!env) {
+                traceError(`${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
                 return;
             }
             return await getEnvDetailsForResponse(
@@ -99,6 +104,16 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
                 resource,
                 token,
             );
+        } catch (ex) {
+            if (!isCancellationError(ex)) {
+                traceError(
+                    `${
+                        CreateVirtualEnvTool.toolName
+                    } tool failed to create virtual environment for resource ${resource?.toString()}`,
+                    ex,
+                );
+            }
+            throw ex;
         } finally {
             disposables.dispose();
         }

@@ -36,6 +36,7 @@ import { SelectEnvironmentResult } from '../interpreter/configuration/interprete
 import { Common, InterpreterQuickPickList } from '../common/utils/localize';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
+import { traceError, traceVerbose, traceWarn } from '../logging';
 
 interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
@@ -71,14 +72,29 @@ export class SelectPythonEnvTool implements LanguageModelTool<ISelectPythonEnvTo
                 }),
             )) as SelectEnvironmentResult | undefined;
             if (result?.path) {
+                traceVerbose(`User selected a Python environment ${result.path} in Select Python Tool.`);
                 selected = true;
+            } else {
+                traceWarn(`User did not select a Python environment in Select Python Tool.`);
             }
         } else {
             selected = await showCreateAndSelectEnvironmentQuickPick(resource, this.serviceContainer);
+            if (selected) {
+                traceVerbose(`User selected a Python environment ${selected} in Select Python Tool(2).`);
+            } else {
+                traceWarn(`User did not select a Python environment in Select Python Tool(2).`);
+            }
         }
         const env = selected
             ? await this.api.resolveEnvironment(this.api.getActiveEnvironmentPath(resource))
             : undefined;
+        if (selected && !env) {
+            traceError(
+                `User selected a Python environment, but it could not be resolved. This is unexpected. Environment: ${this.api.getActiveEnvironmentPath(
+                    resource,
+                )}`,
+            );
+        }
         if (selected && env) {
             return await getEnvDetailsForResponse(
                 env,

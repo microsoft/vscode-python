@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 import {
-    CancellationError,
     CancellationToken,
     l10n,
     LanguageModelTextPart,
@@ -18,6 +17,7 @@ import {
     getEnvDisplayName,
     getToolResponseIfNotebook,
     IResourceReference,
+    isCancellationError,
     isCondaEnv,
     raceCancellationError,
 } from './utils';
@@ -74,7 +74,7 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
             return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
         } catch (error) {
-            if (error instanceof CancellationError) {
+            if (isCancellationError(error)) {
                 throw error;
             }
             const errorMessage = `An error occurred while installing ${packagePlurality}: ${error}`;
