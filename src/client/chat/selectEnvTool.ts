@@ -38,7 +38,7 @@ import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
 import { traceError, traceVerbose, traceWarn } from '../logging';
 
-interface ISelectPythonEnvToolArguments extends IResourceReference {
+export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
 }
 

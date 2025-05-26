@@ -27,7 +27,7 @@ import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { CreateVirtualEnvTool } from './createVirtualEnvTool';
-import { SelectPythonEnvTool } from './selectEnvTool';
+import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from './selectEnvTool';
 
 export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
@@ -37,7 +37,7 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
     constructor(
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
-        private readonly createVirtualEnvTool: CreateVirtualEnvTool,
+        private readonly createEnvTool: CreateVirtualEnvTool,
     ) {
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
@@ -75,22 +75,26 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
             );
         }
 
-        let reason: 'cancelled' | undefined;
-        if (
-            await this.createVirtualEnvTool.canCreateNewVirtualEnv(resolveFilePath(options.input.resourcePath), token)
-        ) {
-            reason = 'cancelled';
+        if (await this.createEnvTool.shouldCreateNewVirtualEnv(resource, token)) {
             try {
                 return await lm.invokeTool(CreateVirtualEnvTool.toolName, options, token);
             } catch (ex) {
-                // If the user cancelled the tool, then we should not invoke the select env tool.
-                if (!isCancellationError(ex)) {
-                    throw ex;
+                if (isCancellationError(ex)) {
+                    const input: ISelectPythonEnvToolArguments = {
+                        ...options.input,
+                        reason: 'cancelled',
+                    };
+                    // If the user cancelled the tool, then we should invoke the select env tool.
+                    return lm.invokeTool(SelectPythonEnvTool.toolName, { ...options, input }, token);
                 }
+                throw ex;
             }
+        } else {
+            const input: ISelectPythonEnvToolArguments = {
+                ...options.input,
+            };
+            return lm.invokeTool(SelectPythonEnvTool.toolName, { ...options, input }, token);
         }
-
-        return lm.invokeTool(SelectPythonEnvTool.toolName, { ...options, input: { ...options.input, reason } }, token);
     }
 
     async prepareInvocation?(

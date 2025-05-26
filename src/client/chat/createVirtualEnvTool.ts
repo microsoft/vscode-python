@@ -135,7 +135,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
         }
     }
 
-    public async canCreateNewVirtualEnv(resource: Uri | undefined, token: CancellationToken): Promise<boolean> {
+    public async shouldCreateNewVirtualEnv(resource: Uri | undefined, token: CancellationToken): Promise<boolean> {
         if (doesWorkspaceHaveVenvOrCondaEnv(resource, this.api)) {
             // If we already have a .venv or .conda in this workspace, then do not prompt to create a virtual environment.
             return false;
