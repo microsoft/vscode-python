@@ -44,19 +44,15 @@ export function registerTools(
             new InstallPackagesTool(environmentsApi, serviceContainer, discoverApi),
         ),
     );
-    ourTools.add(
-        lm.registerTool(
-            CreateVirtualEnvTool.toolName,
-            new CreateVirtualEnvTool(discoverApi, environmentsApi, serviceContainer),
-        ),
-    );
+    const createVirtualEnvTool = new CreateVirtualEnvTool(discoverApi, environmentsApi, serviceContainer);
+    ourTools.add(lm.registerTool(CreateVirtualEnvTool.toolName, createVirtualEnvTool));
     ourTools.add(
         lm.registerTool(SelectPythonEnvTool.toolName, new SelectPythonEnvTool(environmentsApi, serviceContainer)),
     );
     ourTools.add(
         lm.registerTool(
             ConfigurePythonEnvTool.toolName,
-            new ConfigurePythonEnvTool(discoverApi, environmentsApi, serviceContainer),
+            new ConfigurePythonEnvTool(environmentsApi, serviceContainer, createVirtualEnvTool),
         ),
     );
     ourTools.add(

@@ -26,7 +26,6 @@ import {
 import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
-import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 import { SelectPythonEnvTool } from './selectEnvTool';
 
@@ -36,9 +35,9 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
     public static readonly toolName = 'configure_python_environment';
     constructor(
-        private readonly discoveryApi: IDiscoveryAPI,
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
+        private readonly createVirtualEnvTool: CreateVirtualEnvTool,
     ) {
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
@@ -78,11 +77,7 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
 
         let reason: 'cancelled' | undefined;
         if (
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            await new CreateVirtualEnvTool(this.discoveryApi, this.api, this.serviceContainer).canCreateNewVirtualEnv(
-                resolveFilePath(options.input.resourcePath),
-                token,
-            )
+            await this.createVirtualEnvTool.canCreateNewVirtualEnv(resolveFilePath(options.input.resourcePath), token)
         ) {
             reason = 'cancelled';
             try {
