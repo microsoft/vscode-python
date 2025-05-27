@@ -1523,6 +1523,7 @@
                 "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "pythonInstallPackage",
                 "tags": [
+                    "install python package",
                     "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
