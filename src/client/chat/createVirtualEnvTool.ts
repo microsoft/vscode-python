@@ -161,6 +161,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReferenc
                 title: l10n.t('Create a Virtual Environment{0}?', version ? ` (${version})` : ''),
                 message: l10n.t(`Virtual Environments provide the benefit of package isolation and more.`),
             },
+            invocationMessage: l10n.t('Creating a Virtual Environment'),
         };
     }
     async hasAlreadyGotAWorkspaceSpecificEnvironment(resource: Uri | undefined) {
