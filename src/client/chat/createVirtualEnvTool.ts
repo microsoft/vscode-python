@@ -41,7 +41,7 @@ import { traceError, traceVerbose, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
-    packageList: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
+    packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
 }
 
 export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnvToolParams> {
