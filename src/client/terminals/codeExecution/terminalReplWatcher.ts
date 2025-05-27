@@ -5,11 +5,11 @@ import { EventName } from '../../telemetry/constants';
 
 function checkREPLCommand(command: string): undefined | 'manualTerminal' | `runningScript` | 'runningTest' {
     const lower = command.toLowerCase().trimStart();
-    
+
     // Check for test commands
     if (
-        lower.includes('pytest') || 
-        (lower.startsWith('python') && lower.includes(' -m pytest')) || 
+        lower.includes('pytest') ||
+        (lower.startsWith('python') && lower.includes(' -m pytest')) ||
         (lower.startsWith('py ') && lower.includes(' -m pytest')) ||
         (lower.startsWith('python') && lower.includes(' -m unittest')) ||
         (lower.startsWith('py ') && lower.includes(' -m unittest')) ||
@@ -17,7 +17,7 @@ function checkREPLCommand(command: string): undefined | 'manualTerminal' | `runn
     ) {
         return 'runningTest';
     }
-    
+
     // Regular Python commands
     if (lower.startsWith('python') || lower.startsWith('py ')) {
         const parts = lower.split(' ');
