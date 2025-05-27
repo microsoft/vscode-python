@@ -9,10 +9,8 @@ function checkREPLCommand(command: string): undefined | 'manualTerminal' | `runn
     // Check for test commands
     if (
         lower.includes('pytest') ||
-        (lower.startsWith('python') && lower.includes(' -m pytest')) ||
-        (lower.startsWith('py ') && lower.includes(' -m pytest')) ||
-        (lower.startsWith('python') && lower.includes(' -m unittest')) ||
-        (lower.startsWith('py ') && lower.includes(' -m unittest')) ||
+        (lower.startsWith('python') && (lower.includes(' -m pytest') || lower.includes(' -m unittest'))) ||
+        (lower.startsWith('py ') && (lower.includes(' -m pytest') || lower.includes(' -m unittest'))) ||
         lower.includes('py.test')
     ) {
         return 'runningTest';
