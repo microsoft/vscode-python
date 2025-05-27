@@ -18,7 +18,7 @@ suite('Terminal REPL Watcher', () => {
         windowApisStub = sinon.stub(windowApis, 'onDidStartTerminalShellExecution').returns({
             dispose: () => {
                 // Do nothing
-            }
+            },
         });
         telemetryStub = sinon.stub(telemetryModule, 'sendTelemetryEvent');
     });
@@ -33,14 +33,14 @@ suite('Terminal REPL Watcher', () => {
                 execution: {
                     commandLine: {
                         value: 'python script.py',
-                        isTrusted: true
-                    }
-                }
+                        isTrusted: true,
+                    },
+                },
             });
             return {
                 dispose: () => {
                     // Do nothing
-                }
+                },
             };
         });
 
@@ -57,14 +57,14 @@ suite('Terminal REPL Watcher', () => {
                 execution: {
                     commandLine: {
                         value: 'python -m pytest',
-                        isTrusted: true
-                    }
-                }
+                        isTrusted: true,
+                    },
+                },
             });
             return {
                 dispose: () => {
                     // Do nothing
-                }
+                },
             };
         });
 
@@ -80,14 +80,14 @@ suite('Terminal REPL Watcher', () => {
                 execution: {
                     commandLine: {
                         value: 'python -m unittest discover',
-                        isTrusted: true
-                    }
-                }
+                        isTrusted: true,
+                    },
+                },
             });
             return {
                 dispose: () => {
                     // Do nothing
-                }
+                },
             };
         });
 
@@ -103,14 +103,14 @@ suite('Terminal REPL Watcher', () => {
                 execution: {
                     commandLine: {
                         value: 'py.test',
-                        isTrusted: true
-                    }
-                }
+                        isTrusted: true,
+                    },
+                },
             });
             return {
                 dispose: () => {
                     // Do nothing
-                }
+                },
             };
         });
 
