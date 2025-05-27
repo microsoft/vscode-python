@@ -1583,6 +1583,13 @@
                 "inputSchema": {
                     "type": "object",
                     "properties": {
+                        "packageList": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "The list of packages to install."
+                        },
                         "resourcePath": {
                             "type": "string",
                             "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."

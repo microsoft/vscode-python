@@ -40,7 +40,11 @@ import { createVirtualEnvironment } from '../pythonEnvironments/creation/createE
 import { traceError, traceVerbose, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 
-export class CreateVirtualEnvTool implements LanguageModelTool<IResourceReference> {
+interface ICreateVirtualEnvToolParams extends IResourceReference {
+    packageList: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
+}
+
+export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnvToolParams> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
