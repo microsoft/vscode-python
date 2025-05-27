@@ -82,7 +82,8 @@
         "onLanguageModelTool:get_python_environment_details",
         "onLanguageModelTool:get_python_executable_details",
         "onLanguageModelTool:install_python_packages",
-        "onLanguageModelTool:configure_python_environment"
+        "onLanguageModelTool:configure_python_environment",
+        "onLanguageModelTool:create_virtual_environment"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
@@ -1523,6 +1524,7 @@
                 "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "pythonInstallPackage",
                 "tags": [
+                    "install python package",
                     "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
@@ -1576,9 +1578,7 @@
                 "name": "create_virtual_environment",
                 "displayName": "Create a Virtual Environment",
                 "modelDescription": "This tool will create a Virual Environment",
-                "tags": [
-                    "extension_installed_by_tool"
-                ],
+                "tags": [],
                 "canBeReferencedInPrompt": false,
                 "inputSchema": {
                     "type": "object",
@@ -1596,9 +1596,7 @@
                 "name": "selectEnvironment",
                 "displayName": "Select a Python Environment",
                 "modelDescription": "This tool will prompt the user to select an existing Python Environment",
-                "tags": [
-                    "extension_installed_by_tool"
-                ],
+                "tags": [],
                 "canBeReferencedInPrompt": false,
                 "inputSchema": {
                     "type": "object",
