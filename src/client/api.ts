@@ -27,6 +27,7 @@ import { ApiForPylance } from './pylanceApi';
 import { getTelemetryReporter } from './telemetry';
 import { TensorboardExtensionIntegration } from './tensorBoard/tensorboardIntegration';
 import { getDebugpyPath } from './debugger/pythonDebugger';
+import { registerApi } from './envExt/api.internal';
 
 export function buildApi(
     ready: Promise<void>,
@@ -60,6 +61,12 @@ export function buildApi(
          */
         jupyter: {
             registerHooks(): void;
+        };
+        /**
+         * Internal API just for Python Env Extension untill the API is stabilized.
+         */
+        pythonEnvironment: {
+            registerApi: typeof registerApi;
         };
         /**
          * Internal API just for Tensorboard, hence don't include in the official types.
@@ -116,6 +123,9 @@ export function buildApi(
         }),
         jupyter: {
             registerHooks: () => jupyterIntegration.integrateWithJupyterExtension(),
+        },
+        pythonEnvironment: {
+            registerApi: registerApi,
         },
         tensorboard: {
             registerHooks: () => tensorboardIntegration.integrateWithTensorboardExtension(),

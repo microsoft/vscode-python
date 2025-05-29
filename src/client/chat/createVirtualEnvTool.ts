@@ -4,6 +4,7 @@
 import {
     CancellationError,
     CancellationToken,
+    commands,
     l10n,
     LanguageModelTool,
     LanguageModelToolInvocationOptions,
@@ -39,6 +40,8 @@ import { isStableVersion } from '../pythonEnvironments/info/pythonVersion';
 import { createVirtualEnvironment } from '../pythonEnvironments/creation/createEnvApi';
 import { traceError, traceVerbose, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
+import { useEnvExtension } from '../envExt/api.internal';
+import { PythonEnvironment } from '../envExt/types';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
     packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
@@ -66,7 +69,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
     }
 
     async invoke(
-        options: LanguageModelToolInvocationOptions<IResourceReference>,
+        options: LanguageModelToolInvocationOptions<ICreateVirtualEnvToolParams>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
         const resource = resolveFilePath(options.input.resourcePath);
@@ -83,14 +86,26 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
                 disposables.add(interpreterPathService.onDidChange(() => resolve()));
             });
 
-            const created = await raceCancellationError(
-                createVirtualEnvironment({
-                    interpreter: preferredGlobalPythonEnv.id,
-                    workspaceFolder,
-                }),
-                token,
-            );
-            if (!created?.path) {
+            let createdEnvPath: string | undefined = undefined;
+            if (useEnvExtension()) {
+                const result: PythonEnvironment | undefined = await commands.executeCommand('python-envs.createAny', {
+                    quickCreate: true,
+                    additionalPackages: options.input.packageList || [],
+                    uri: workspaceFolder.uri,
+                    selectEnvironment: true,
+                });
+                createdEnvPath = result?.environmentPath.fsPath;
+            } else {
+                const created = await raceCancellationError(
+                    createVirtualEnvironment({
+                        interpreter: preferredGlobalPythonEnv.id,
+                        workspaceFolder,
+                    }),
+                    token,
+                );
+                createdEnvPath = created?.path;
+            }
+            if (!createdEnvPath) {
                 traceWarn(`${CreateVirtualEnvTool.toolName} tool not invoked, virtual env not created.`);
                 throw new CancellationError();
             }
@@ -102,7 +117,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
             const stopWatch = new StopWatch();
             let env: ResolvedEnvironment | undefined;
             while (stopWatch.elapsedTime < 5_000 || !env) {
-                env = await this.api.resolveEnvironment(created.path);
+                env = await this.api.resolveEnvironment(createdEnvPath);
                 if (env) {
                     break;
                 } else {
@@ -150,7 +165,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
     }
 
     async prepareInvocation?(
-        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        options: LanguageModelToolInvocationPrepareOptions<ICreateVirtualEnvToolParams>,
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
         const resource = resolveFilePath(options.input.resourcePath);

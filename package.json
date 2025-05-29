@@ -1491,8 +1491,7 @@
                         }
                     },
                     "required": []
-                },
-                "when": "!pythonEnvExtensionInstalled"
+                }
             },
             {
                 "name": "get_python_executable_details",
@@ -1516,8 +1515,7 @@
                         }
                     },
                     "required": []
-                },
-                "when": "!pythonEnvExtensionInstalled"
+                }
             },
             {
                 "name": "install_python_packages",
@@ -1551,8 +1549,7 @@
                     "required": [
                         "packageList"
                     ]
-                },
-                "when": "!pythonEnvExtensionInstalled"
+                }
             },
             {
                 "name": "configure_python_environment",
@@ -1575,8 +1572,7 @@
                         }
                     },
                     "required": []
-                },
-                "when": "!pythonEnvExtensionInstalled"
+                }
             },
             {
                 "name": "create_virtual_environment",

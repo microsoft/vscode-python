@@ -17,6 +17,7 @@ import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/termin
 import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 import { JUPYTER_EXTENSION_ID, NotebookCellScheme } from '../common/constants';
 import { dirname, join } from 'path';
+import { resolveEnvironment, useEnvExtension } from '../envExt/api.internal';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -76,18 +77,46 @@ export async function getEnvironmentDetails(
 ): Promise<string> {
     // environment
     const envPath = api.getActiveEnvironmentPath(resourcePath);
-    const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
-    if (!environment || !environment.version) {
-        throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+    let envType = '';
+    let envVersion = '';
+    let runCommand = '';
+    if (useEnvExtension()) {
+        const environment =
+            (await raceCancellationError(resolveEnvironment(envPath.id), token)) ||
+            (await raceCancellationError(resolveEnvironment(envPath.path), token));
+        if (!environment || !environment.version) {
+            throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+        }
+        envVersion = environment.version;
+        try {
+            const managerId = environment.envId.managerId;
+            envType =
+                (!managerId.endsWith(':') && managerId.includes(':') ? managerId.split(':').reverse()[0] : '') ||
+                'unknown';
+        } catch {
+            envType = 'unknown';
+        }
+
+        const execInfo = environment.execInfo;
+        const executable = execInfo?.activatedRun?.executable ?? execInfo?.run.executable ?? 'python';
+        const args = execInfo?.activatedRun?.args ?? execInfo?.run.args ?? [];
+        runCommand = terminalHelper.buildCommandForTerminal(TerminalShellType.other, executable, args);
+    } else {
+        const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
+        if (!environment || !environment.version) {
+            throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+        }
+        envType = environment.environment?.type || 'unknown';
+        envVersion = environment.version.sysVersion || 'unknown';
+        runCommand = await raceCancellationError(
+            getTerminalCommand(environment, resourcePath, terminalExecutionService, terminalHelper),
+            token,
+        );
     }
-    const runCommand = await raceCancellationError(
-        getTerminalCommand(environment, resourcePath, terminalExecutionService, terminalHelper),
-        token,
-    );
     const message = [
         `Following is the information about the Python environment:`,
-        `1. Environment Type: ${environment.environment?.type || 'unknown'}`,
-        `2. Version: ${environment.version.sysVersion || 'unknown'}`,
+        `1. Environment Type: ${envType}`,
+        `2. Version: ${envVersion}`,
         '',
         `3. Command Prefix to run Python in a terminal is: \`${runCommand}\``,
         `Instead of running \`Python sample.py\` in the terminal, you will now run: \`${runCommand} sample.py\``,
@@ -183,7 +212,8 @@ export function doesWorkspaceHaveVenvOrCondaEnv(resource: Uri | undefined, api: 
             env.environment?.folderUri &&
             env.executable.sysPrefix &&
             dirname(env.executable.sysPrefix) === workspaceFolder.uri.fsPath &&
-            env.environment.name === '.venv' &&
+            ((env.environment.name || '').startsWith('.venv') ||
+                env.executable.sysPrefix === join(workspaceFolder.uri.fsPath, '.venv')) &&
             env.environment.type === 'VirtualEnvironment'
         );
     };
@@ -192,7 +222,8 @@ export function doesWorkspaceHaveVenvOrCondaEnv(resource: Uri | undefined, api: 
             env.environment?.folderUri &&
             env.executable.sysPrefix &&
             dirname(env.executable.sysPrefix) === workspaceFolder.uri.fsPath &&
-            env.environment.folderUri.fsPath === join(workspaceFolder.uri.fsPath, '.conda') &&
+            (env.environment.folderUri.fsPath === join(workspaceFolder.uri.fsPath, '.conda') ||
+                env.executable.sysPrefix === join(workspaceFolder.uri.fsPath, '.conda')) &&
             env.environment.type === 'Conda'
         );
     };

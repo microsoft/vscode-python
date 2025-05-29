@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget } from 'vscode';
+import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget, CancellationToken } from 'vscode';
 import { getExtension } from '../common/vscodeApis/extensionsApi';
 import {
     GetEnvironmentScope,
@@ -11,6 +11,7 @@ import {
     PythonProcess,
     RefreshEnvironmentsScope,
     DidChangeEnvironmentEventArgs,
+    Package,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
 import { IInterpreterPathService } from '../common/types';
@@ -69,6 +70,11 @@ export async function runInBackground(
 export async function getEnvironment(scope: GetEnvironmentScope): Promise<PythonEnvironment | undefined> {
     const envExtApi = await getEnvExtApi();
     return envExtApi.getEnvironment(scope);
+}
+
+export async function resolveEnvironment(pythonPath: string): Promise<PythonEnvironment | undefined> {
+    const envExtApi = await getEnvExtApi();
+    return envExtApi.resolveEnvironment(Uri.file(pythonPath));
 }
 
 export async function refreshEnvironments(scope: RefreshEnvironmentsScope): Promise<void> {
@@ -148,4 +154,38 @@ export function registerEnvExtFeatures(
             }),
         );
     }
+}
+
+type PrivateApi = {
+    listPackages: (resource: Uri | undefined, token: CancellationToken) => Promise<Package[] | undefined>;
+    installPackages: (resource: Uri | undefined, packages: string[], token: CancellationToken) => Promise<void>;
+};
+
+let privateApi: PrivateApi | undefined;
+export function registerApi(api: {
+    listPackages: (resource: Uri | undefined, token: CancellationToken) => Promise<Package[] | undefined>;
+    installPackages: (resource: Uri | undefined, packages: string[], token: CancellationToken) => Promise<void>;
+}): void {
+    privateApi = api;
+}
+
+export function isPrivateApiRegistered(): boolean {
+    return !!privateApi;
+}
+
+export function listPackages(resource: Uri | undefined, token: CancellationToken): Promise<Package[] | undefined> {
+    if (privateApi) {
+        return privateApi.listPackages(resource, token);
+    }
+    return Promise.resolve(undefined);
+}
+export function installPackages(
+    resource: Uri | undefined,
+    packages: string[],
+    token: CancellationToken,
+): Promise<void> {
+    if (privateApi) {
+        return privateApi.installPackages(resource, packages, token);
+    }
+    return Promise.resolve();
 }
