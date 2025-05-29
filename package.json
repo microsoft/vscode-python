@@ -1477,6 +1477,7 @@
                 "toolReferenceName": "getPythonEnvironmentInfo",
                 "tags": [
                     "python",
+                    "python environment",
                     "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
@@ -1501,6 +1502,7 @@
                 "toolReferenceName": "getPythonExecutableCommand",
                 "tags": [
                     "python",
+                    "python environment",
                     "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
                 ],
@@ -1525,6 +1527,7 @@
                 "toolReferenceName": "installPythonPackage",
                 "tags": [
                     "python",
+                    "python environment",
                     "install python package",
                     "extension_installed_by_tool",
                     "enable_other_tool_configure_python_environment"
@@ -1559,6 +1562,7 @@
                 "toolReferenceName": "configurePythonEnvironment",
                 "tags": [
                     "python",
+                    "python environment",
                     "extension_installed_by_tool"
                 ],
                 "icon": "$(gear)",
