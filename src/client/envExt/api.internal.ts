@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget, CancellationToken } from 'vscode';
+import { EventEmitter, Terminal, Uri, Disposable, ConfigurationTarget } from 'vscode';
 import { getExtension } from '../common/vscodeApis/extensionsApi';
 import {
     GetEnvironmentScope,
@@ -11,7 +11,6 @@ import {
     PythonProcess,
     RefreshEnvironmentsScope,
     DidChangeEnvironmentEventArgs,
-    Package,
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
 import { IInterpreterPathService } from '../common/types';
