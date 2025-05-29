@@ -26,6 +26,7 @@ import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
+import { traceError } from '../logging';
 
 export interface IInstallPackageArgs extends IResourceReference {
     packageList: string[];
@@ -54,11 +55,16 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
         if (useEnvExtension()) {
             const api = await getEnvExtApi();
             const env = await api.getEnvironment(resourcePath);
-            if (env) {
+            if (env && (api as Partial<typeof api>).installPackages) {
                 await raceCancellationError(api.installPackages(env, options.input.packageList), token);
+                const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(
+                    ', ',
+                )}`;
+                return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
             }
-            const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
-            return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
+            if (env && !(api as Partial<typeof api>).installPackages) {
+                traceError(`API does not expose installPackages method for environment: ${env.displayName}`);
+            }
         }
 
         try {
