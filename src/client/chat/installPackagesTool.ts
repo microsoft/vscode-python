@@ -25,7 +25,7 @@ import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
-import { installPackages, isPrivateApiRegistered, useEnvExtension } from '../envExt/api.internal';
+import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
 
 export interface IInstallPackageArgs extends IResourceReference {
     packageList: string[];
@@ -51,8 +51,12 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             return notebookResponse;
         }
 
-        if (useEnvExtension() && isPrivateApiRegistered()) {
-            await installPackages(resourcePath, options.input.packageList, token);
+        if (useEnvExtension()) {
+            const api = await getEnvExtApi();
+            const env = await api.getEnvironment(resourcePath);
+            if (env) {
+                await raceCancellationError(api.installPackages(env, options.input.packageList), token);
+            }
             const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
             return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
         }

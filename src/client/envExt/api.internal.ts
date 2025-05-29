@@ -155,37 +155,3 @@ export function registerEnvExtFeatures(
         );
     }
 }
-
-type PrivateApi = {
-    listPackages: (resource: Uri | undefined, token: CancellationToken) => Promise<Package[] | undefined>;
-    installPackages: (resource: Uri | undefined, packages: string[], token: CancellationToken) => Promise<void>;
-};
-
-let privateApi: PrivateApi | undefined;
-export function registerApi(api: {
-    listPackages: (resource: Uri | undefined, token: CancellationToken) => Promise<Package[] | undefined>;
-    installPackages: (resource: Uri | undefined, packages: string[], token: CancellationToken) => Promise<void>;
-}): void {
-    privateApi = api;
-}
-
-export function isPrivateApiRegistered(): boolean {
-    return !!privateApi;
-}
-
-export function listPackages(resource: Uri | undefined, token: CancellationToken): Promise<Package[] | undefined> {
-    if (privateApi) {
-        return privateApi.listPackages(resource, token);
-    }
-    return Promise.resolve(undefined);
-}
-export function installPackages(
-    resource: Uri | undefined,
-    packages: string[],
-    token: CancellationToken,
-): Promise<void> {
-    if (privateApi) {
-        return privateApi.installPackages(resource, packages, token);
-    }
-    return Promise.resolve();
-}

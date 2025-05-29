@@ -20,8 +20,7 @@ import { getEnvironmentDetails, getToolResponseIfNotebook, IResourceReference, r
 import { resolveFilePath } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
-import { isPrivateApiRegistered, listPackages, useEnvExtension } from '../envExt/api.internal';
-import { traceError } from '../logging';
+import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
 
 export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
@@ -60,22 +59,20 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         }
 
         let packages = '';
-        if (useEnvExtension() && isPrivateApiRegistered()) {
-            try {
-                const pkgs = await listPackages(resourcePath, token);
-                if (pkgs && pkgs.length > 0) {
-                    // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
-                    const response = [
-                        'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
-                    ];
-                    pkgs.forEach((pkg) => {
-                        const version = pkg.version;
-                        response.push(version ? `- ${pkg.name} (${version})` : `- ${pkg.name}`);
-                    });
-                    packages = response.join('\n');
-                }
-            } catch (ex) {
-                traceError(`Error invoking list_install_python_package_ex tool: ${ex}`);
+        if (useEnvExtension()) {
+            const api = await getEnvExtApi();
+            const env = await api.getEnvironment(resourcePath);
+            const pkgs = env ? await api.getPackages(env) : [];
+            if (pkgs && pkgs.length > 0) {
+                // Installed Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown. Returns an empty array if no packages are installed.
+                const response = [
+                    'Below is a list of the Python packages, each in the format <name> or <name> (<version>). The version may be omitted if unknown: ',
+                ];
+                pkgs.forEach((pkg) => {
+                    const version = pkg.version;
+                    response.push(version ? `- ${pkg.name} (${version})` : `- ${pkg.name}`);
+                });
+                packages = response.join('\n');
             }
         }
         if (!packages) {
