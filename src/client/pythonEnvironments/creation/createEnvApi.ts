@@ -8,7 +8,7 @@ import { executeCommand, registerCommand } from '../../common/vscodeApis/command
 import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
-import { VenvCreationProvider } from './provider/venvCreationProvider';
+import { VenvCreationProvider, VenvCreationProviderId } from './provider/venvCreationProvider';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
 import {
@@ -132,4 +132,12 @@ export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
         registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>
             registerCreateEnvironmentProvider(provider),
     };
+}
+
+export async function createVirtualEnvironment(options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal) {
+    const provider = _createEnvironmentProviders.getAll().find((p) => p.id === VenvCreationProviderId);
+    if (!provider) {
+        return;
+    }
+    return handleCreateEnvironmentCommand([provider], { ...options, providerId: provider.id });
 }

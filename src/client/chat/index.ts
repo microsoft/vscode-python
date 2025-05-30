@@ -1,17 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { commands, extensions, lm } from 'vscode';
+import { lm } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { InstallPackagesTool } from './installPackagesTool';
 import { IExtensionContext } from '../common/types';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
-import { ENVS_EXTENSION_ID } from '../envExt/api.internal';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { GetExecutableTool } from './getExecutableTool';
 import { GetEnvironmentInfoTool } from './getPythonEnvTool';
 import { ConfigurePythonEnvTool } from './configurePythonEnvTool';
+import { SelectPythonEnvTool } from './selectEnvTool';
+import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 
 export function registerTools(
     context: IExtensionContext,
@@ -19,11 +20,6 @@ export function registerTools(
     environmentsApi: PythonExtension['environments'],
     serviceContainer: IServiceContainer,
 ) {
-    if (extensions.getExtension(ENVS_EXTENSION_ID)) {
-        return;
-    }
-    const contextKey = 'pythonEnvExtensionInstalled';
-    commands.executeCommand('setContext', contextKey, false);
     const ourTools = new DisposableStore();
     context.subscriptions.push(ourTools);
 
@@ -42,17 +38,15 @@ export function registerTools(
             new InstallPackagesTool(environmentsApi, serviceContainer, discoverApi),
         ),
     );
+    const createVirtualEnvTool = new CreateVirtualEnvTool(discoverApi, environmentsApi, serviceContainer);
+    ourTools.add(lm.registerTool(CreateVirtualEnvTool.toolName, createVirtualEnvTool));
     ourTools.add(
-        lm.registerTool(ConfigurePythonEnvTool.toolName, new ConfigurePythonEnvTool(environmentsApi, serviceContainer)),
+        lm.registerTool(SelectPythonEnvTool.toolName, new SelectPythonEnvTool(environmentsApi, serviceContainer)),
     );
     ourTools.add(
-        extensions.onDidChange(() => {
-            const envExtension = extensions.getExtension(ENVS_EXTENSION_ID);
-            if (envExtension) {
-                envExtension.activate();
-                commands.executeCommand('setContext', contextKey, true);
-                ourTools.dispose();
-            }
-        }),
+        lm.registerTool(
+            ConfigurePythonEnvTool.toolName,
+            new ConfigurePythonEnvTool(environmentsApi, serviceContainer, createVirtualEnvTool),
+        ),
     );
 }

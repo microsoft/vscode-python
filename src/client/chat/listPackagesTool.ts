@@ -47,7 +47,7 @@ async function listPipPackages(
     resource: Uri | undefined,
 ): Promise<[string, string][]> {
     // Add option --format to subcommand list of pip  cache, with abspath choice to output the full path of a wheel file. (#8355)
-    // Added in 202. Thats almost 5 years ago. When Python 3.8 was released.
+    // Added in 2020. Thats almost 5 years ago. When Python 3.8 was released.
     const exec = await execFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, resource });
     const output = await exec.execModule('pip', ['list'], { throwOnStdErr: false, encoding: 'utf8' });
     return parsePipList(output.stdout).map((pkg) => [pkg.name, pkg.version]);

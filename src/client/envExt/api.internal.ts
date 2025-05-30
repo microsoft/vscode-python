@@ -71,6 +71,11 @@ export async function getEnvironment(scope: GetEnvironmentScope): Promise<Python
     return envExtApi.getEnvironment(scope);
 }
 
+export async function resolveEnvironment(pythonPath: string): Promise<PythonEnvironment | undefined> {
+    const envExtApi = await getEnvExtApi();
+    return envExtApi.resolveEnvironment(Uri.file(pythonPath));
+}
+
 export async function refreshEnvironments(scope: RefreshEnvironmentsScope): Promise<void> {
     const envExtApi = await getEnvExtApi();
     return envExtApi.refreshEnvironments(scope);

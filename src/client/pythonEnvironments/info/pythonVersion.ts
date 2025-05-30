@@ -25,3 +25,11 @@ export type PythonVersion = {
     build: string[];
     prerelease: string[];
 };
+
+export function isStableVersion(version: PythonVersion): boolean {
+    // A stable version is one that has no prerelease tags.
+    return (
+        version.prerelease.length === 0 &&
+        (version.build.length === 0 || (version.build.length === 1 && version.build[0] === 'final'))
+    );
+}

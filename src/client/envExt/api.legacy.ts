@@ -4,7 +4,7 @@
 import { Terminal, Uri } from 'vscode';
 import { getEnvExtApi, getEnvironment } from './api.internal';
 import { EnvironmentType, PythonEnvironment as PythonEnvironmentLegacy } from '../pythonEnvironments/info';
-import { PythonEnvironment, PythonTerminalOptions } from './types';
+import { PythonEnvironment, PythonTerminalCreateOptions } from './types';
 import { Architecture } from '../common/utils/platform';
 import { parseVersion } from '../pythonEnvironments/base/info/pythonVersion';
 import { PythonEnvType } from '../pythonEnvironments/base/info';
@@ -137,7 +137,7 @@ export async function resetInterpreterLegacy(uri: Uri | undefined): Promise<void
 
 export async function ensureTerminalLegacy(
     resource: Uri | undefined,
-    options?: PythonTerminalOptions,
+    options?: PythonTerminalCreateOptions,
 ): Promise<Terminal> {
     const api = await getEnvExtApi();
     const pythonEnv = await api.getEnvironment(resource);
