@@ -2174,6 +2174,13 @@ export interface IEventNamePropertyMapping {
        "unittest.disabled" : { "owner": "eleanorjboyd" }
      */
     [EventName.UNITTEST_DISABLED]: never | undefined;
+    /**
+     * Telemetry event sent when a user runs tests via the CLI in terminal.
+     */
+    /* __GDPR__
+       "unittest.run.cli" : { "owner": "eleanorjboyd" }
+     */
+    [EventName.UNITTEST_RUN_CLI]: never | undefined;
     /*
     Telemetry event sent to provide information on whether we have successfully identify the type of shell used.
     This information is useful in determining how well we identify shells on users machines.
