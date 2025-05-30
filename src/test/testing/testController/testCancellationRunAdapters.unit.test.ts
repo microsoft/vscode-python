@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the MIT License.
-import { CancellationTokenSource, TestRun, Uri } from 'vscode';
+import { CancellationTokenSource, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as sinon from 'sinon';
 import * as path from 'path';
 import { Observable } from 'rxjs';
 import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../../client/common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { Deferred, createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { ITestDebugLauncher } from '../../../client/testing/common/types';
@@ -15,6 +15,8 @@ import { PytestTestExecutionAdapter } from '../../../client/testing/testControll
 import { UnittestTestExecutionAdapter } from '../../../client/testing/testController/unittest/testExecutionAdapter';
 import { MockChildProcess } from '../../mocks/mockChildProcess';
 import * as util from '../../../client/testing/testController/common/utils';
+import * as extapi from '../../../client/envExt/api.internal';
+import { noop } from '../../core';
 
 const adapters: Array<string> = ['pytest', 'unittest'];
 
@@ -28,11 +30,20 @@ suite('Execution Flow Run Adapters', () => {
     (global as any).EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR;
     let myTestPath: string;
     let mockProc: MockChildProcess;
-    let utilsStartTestIdsNamedPipe: sinon.SinonStub;
+    let utilsWriteTestIdsFileStub: sinon.SinonStub;
     let utilsStartRunResultNamedPipe: sinon.SinonStub;
     let serverDisposeStub: sinon.SinonStub;
 
+    let useEnvExtensionStub: sinon.SinonStub;
+
     setup(() => {
+        const proc = typeMoq.Mock.ofType<MockChildProcess>();
+        proc.setup((p) => p.on).returns(() => noop as any);
+        proc.setup((p) => p.stdout).returns(() => null);
+        proc.setup((p) => p.stderr).returns(() => null);
+        mockProc = proc.object;
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
         // general vars
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
         configService = ({
@@ -47,7 +58,7 @@ suite('Execution Flow Run Adapters', () => {
         execFactoryStub = typeMoq.Mock.ofType<IPythonExecutionFactory>();
 
         // mocked utility functions that handle pipe related functions
-        utilsStartTestIdsNamedPipe = sinon.stub(util, 'startTestIdsNamedPipe');
+        utilsWriteTestIdsFileStub = sinon.stub(util, 'writeTestIdsFile');
         utilsStartRunResultNamedPipe = sinon.stub(util, 'startRunResultNamedPipe');
         serverDisposeStub = sinon.stub();
 
@@ -66,13 +77,16 @@ suite('Execution Flow Run Adapters', () => {
             const { token } = cancellationToken;
             testRunMock.setup((t) => t.token).returns(() => token);
 
+            // run result pipe mocking and the related server close dispose
+            let deferredTillServerCloseTester: Deferred<void> | undefined;
+
             // // mock exec service and exec factory
             execServiceStub
                 .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
                 .returns(() => {
                     cancellationToken.cancel();
                     return {
-                        proc: mockProc,
+                        proc: mockProc as any,
                         out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
                         dispose: () => {
                             /* no-body */
@@ -87,16 +101,18 @@ suite('Execution Flow Run Adapters', () => {
 
             // test ids named pipe mocking
             const deferredStartTestIdsNamedPipe = createDeferred();
-            utilsStartTestIdsNamedPipe.callsFake(() => {
+            utilsWriteTestIdsFileStub.callsFake(() => {
                 deferredStartTestIdsNamedPipe.resolve();
                 return Promise.resolve('named-pipe');
             });
 
-            // run result pipe mocking and the related server close dispose
-            let deferredTillServerCloseTester: Deferred<void> | undefined;
-            utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, _token) => {
+            utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, token) => {
                 deferredTillServerCloseTester = deferredTillServerClose;
-                return Promise.resolve({ name: 'named-pipes-socket-name', dispose: serverDisposeStub });
+                token?.onCancellationRequested(() => {
+                    deferredTillServerCloseTester?.resolve();
+                });
+
+                return Promise.resolve('named-pipes-socket-name');
             });
             serverDisposeStub.callsFake(() => {
                 console.log('server disposed');
@@ -110,32 +126,18 @@ suite('Execution Flow Run Adapters', () => {
                 }
             });
 
-            // mock EOT token & ExecClose token
-            const deferredEOT = createDeferred();
-            const deferredExecClose = createDeferred();
-            const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
-            utilsCreateEOTStub.callsFake(() => {
-                if (utilsCreateEOTStub.callCount === 1) {
-                    return deferredEOT;
-                }
-                return deferredExecClose;
-            });
-
             // define adapter and run tests
-            const testAdapter = createAdapter(adapter, configService, typeMoq.Mock.ofType<ITestOutputChannel>().object);
+            const testAdapter = createAdapter(adapter, configService);
             await testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
-                false,
+                TestRunProfileKind.Run,
                 testRunMock.object,
                 execFactoryStub.object,
                 debugLauncher.object,
             );
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
-
-            // assert the server dispose function was called correctly
-            sinon.assert.calledOnce(serverDisposeStub);
         });
         test(`Adapter ${adapter}: token called mid-debug resolves correctly`, async () => {
             // mock test run and cancelation token
@@ -144,13 +146,16 @@ suite('Execution Flow Run Adapters', () => {
             const { token } = cancellationToken;
             testRunMock.setup((t) => t.token).returns(() => token);
 
+            // run result pipe mocking and the related server close dispose
+            let deferredTillServerCloseTester: Deferred<void> | undefined;
+
             // // mock exec service and exec factory
             execServiceStub
                 .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
                 .returns(() => {
                     cancellationToken.cancel();
                     return {
-                        proc: mockProc,
+                        proc: mockProc as any,
                         out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
                         dispose: () => {
                             /* no-body */
@@ -165,19 +170,17 @@ suite('Execution Flow Run Adapters', () => {
 
             // test ids named pipe mocking
             const deferredStartTestIdsNamedPipe = createDeferred();
-            utilsStartTestIdsNamedPipe.callsFake(() => {
+            utilsWriteTestIdsFileStub.callsFake(() => {
                 deferredStartTestIdsNamedPipe.resolve();
                 return Promise.resolve('named-pipe');
             });
 
-            // run result pipe mocking and the related server close dispose
-            let deferredTillServerCloseTester: Deferred<void> | undefined;
             utilsStartRunResultNamedPipe.callsFake((_callback, deferredTillServerClose, _token) => {
                 deferredTillServerCloseTester = deferredTillServerClose;
-                return Promise.resolve({
-                    name: 'named-pipes-socket-name',
-                    dispose: serverDisposeStub,
+                token?.onCancellationRequested(() => {
+                    deferredTillServerCloseTester?.resolve();
                 });
+                return Promise.resolve('named-pipes-socket-name');
             });
             serverDisposeStub.callsFake(() => {
                 console.log('server disposed');
@@ -191,20 +194,9 @@ suite('Execution Flow Run Adapters', () => {
                 }
             });
 
-            // mock EOT token & ExecClose token
-            const deferredEOT = createDeferred();
-            const deferredExecClose = createDeferred();
-            const utilsCreateEOTStub: sinon.SinonStub = sinon.stub(util, 'createTestingDeferred');
-            utilsCreateEOTStub.callsFake(() => {
-                if (utilsCreateEOTStub.callCount === 1) {
-                    return deferredEOT;
-                }
-                return deferredExecClose;
-            });
-
             // debugLauncher mocked
             debugLauncher
-                .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny()))
+                .setup((dl) => dl.launchDebugger(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
                 .callback((_options, callback) => {
                     if (callback) {
                         callback();
@@ -216,21 +208,17 @@ suite('Execution Flow Run Adapters', () => {
                 });
 
             // define adapter and run tests
-            const testAdapter = createAdapter(adapter, configService, typeMoq.Mock.ofType<ITestOutputChannel>().object);
+            const testAdapter = createAdapter(adapter, configService);
             await testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
-                true,
+                TestRunProfileKind.Debug,
                 testRunMock.object,
                 execFactoryStub.object,
                 debugLauncher.object,
             );
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
-
-            // TODO: fix the server disposal so it is called once not twice,
-            // currently not a problem but would be useful to improve clarity
-            sinon.assert.called(serverDisposeStub);
         });
     });
 });
@@ -239,9 +227,8 @@ suite('Execution Flow Run Adapters', () => {
 function createAdapter(
     adapterType: string,
     configService: IConfigurationService,
-    outputChannel: ITestOutputChannel,
 ): PytestTestExecutionAdapter | UnittestTestExecutionAdapter {
-    if (adapterType === 'pytest') return new PytestTestExecutionAdapter(configService, outputChannel);
-    if (adapterType === 'unittest') return new UnittestTestExecutionAdapter(configService, outputChannel);
+    if (adapterType === 'pytest') return new PytestTestExecutionAdapter(configService);
+    if (adapterType === 'unittest') return new UnittestTestExecutionAdapter(configService);
     throw Error('un-compatible adapter type');
 }

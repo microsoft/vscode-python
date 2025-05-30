@@ -13,7 +13,7 @@ import { EnvironmentVariables } from '../../../../common/variables/types';
 import { IEnvironmentActivationService } from '../../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../../interpreter/contracts';
 import { DebuggerTypeName } from '../../../constants';
-import { DebugOptions, DebugPurpose, LaunchRequestArguments } from '../../../types';
+import { DebugOptions, LaunchRequestArguments } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 import { getProgram, IDebugEnvironmentVariablesService } from './helper';
 import {
@@ -145,14 +145,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
-        if (debugConfiguration.justMyCode === undefined) {
-            // Populate justMyCode using debugStdLib
-            debugConfiguration.justMyCode = !debugConfiguration.debugStdLib;
-        }
         const debugOptions = debugConfiguration.debugOptions!;
-        if (!debugConfiguration.justMyCode) {
-            LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.DebugStdLib);
-        }
         if (debugConfiguration.stopOnEntry) {
             LaunchConfigurationResolver.debugOption(debugOptions, DebugOptions.StopOnEntry);
         }
@@ -201,11 +194,6 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             }
             debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
         }
-        const trigger =
-            debugConfiguration.purpose?.includes(DebugPurpose.DebugTest) || debugConfiguration.request === 'test'
-                ? 'test'
-                : 'launch';
-        LaunchConfigurationResolver.sendTelemetry(trigger, debugConfiguration);
     }
 
     protected async validateLaunchConfiguration(

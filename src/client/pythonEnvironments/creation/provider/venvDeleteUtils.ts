@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { WorkspaceFolder } from 'vscode';
+import * as fs from '../../../common/platform/fs-paths';
 import { traceError, traceInfo } from '../../../logging';
 import { getVenvPath, showErrorMessageWithLogs } from '../common/commonUtils';
 import { CreateEnv } from '../../../common/utils/localize';

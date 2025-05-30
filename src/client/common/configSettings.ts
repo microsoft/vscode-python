@@ -21,25 +21,23 @@ import { sendSettingTelemetry } from '../telemetry/envFileTelemetry';
 import { ITestingSettings } from '../testing/configuration/types';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
-import { DEFAULT_INTERPRETER_SETTING, isTestExecution } from './constants';
+import { DEFAULT_INTERPRETER_SETTING, isTestExecution, PYREFLY_EXTENSION_ID } from './constants';
 import {
     IAutoCompleteSettings,
     IDefaultLanguageServer,
     IExperiments,
+    IExtensions,
     IInterpreterPathService,
     IInterpreterSettings,
     IPythonSettings,
     IREPLSettings,
-    ITensorBoardSettings,
     ITerminalSettings,
     Resource,
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
-import { getOSType, OSType } from './utils/platform';
-import { isWindows } from './platform/platformService';
-
-const untildify = require('untildify');
+import { getOSType, OSType, isWindows } from './utils/platform';
+import { untildify } from './helpers';
 
 export class PythonSettings implements IPythonSettings {
     private get onDidChange(): Event<ConfigurationChangeEvent | undefined> {
@@ -103,11 +101,11 @@ export class PythonSettings implements IPythonSettings {
 
     public poetryPath = '';
 
+    public pixiToolPath = '';
+
     public devOptions: string[] = [];
 
     public autoComplete!: IAutoCompleteSettings;
-
-    public tensorBoard: ITensorBoardSettings | undefined;
 
     public testing!: ITestingSettings;
 
@@ -143,6 +141,7 @@ export class PythonSettings implements IPythonSettings {
         workspace: IWorkspaceService,
         private readonly interpreterPathService: IInterpreterPathService,
         private readonly defaultLS: IDefaultLanguageServer | undefined,
+        private readonly extensions: IExtensions,
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder;
@@ -155,6 +154,7 @@ export class PythonSettings implements IPythonSettings {
         workspace: IWorkspaceService,
         interpreterPathService: IInterpreterPathService,
         defaultLS: IDefaultLanguageServer | undefined,
+        extensions: IExtensions,
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -167,6 +167,7 @@ export class PythonSettings implements IPythonSettings {
                 workspace,
                 interpreterPathService,
                 defaultLS,
+                extensions,
             );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
             settings.onDidChange((event) => PythonSettings.debounceConfigChangeNotification(event));
@@ -260,6 +261,9 @@ export class PythonSettings implements IPythonSettings {
         this.pipenvPath = pipenvPath && pipenvPath.length > 0 ? getAbsolutePath(pipenvPath, workspaceRoot) : pipenvPath;
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
+        const pixiToolPath = systemVariables.resolveAny(pythonSettings.get<string>('pixiToolPath'))!;
+        this.pixiToolPath =
+            pixiToolPath && pixiToolPath.length > 0 ? getAbsolutePath(pixiToolPath, workspaceRoot) : pixiToolPath;
 
         this.interpreter = pythonSettings.get<IInterpreterSettings>('interpreter') ?? {
             infoVisibility: 'onPythonRelated',
@@ -275,7 +279,14 @@ export class PythonSettings implements IPythonSettings {
             userLS === 'Microsoft' ||
             !Object.values(LanguageServerType).includes(userLS as LanguageServerType)
         ) {
-            this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
+            if (
+                this.extensions.getExtension(PYREFLY_EXTENSION_ID) &&
+                pythonSettings.get<boolean>('pyrefly.disableLanguageServices') !== true
+            ) {
+                this.languageServer = LanguageServerType.None;
+            } else {
+                this.languageServer = this.defaultLS?.defaultLSType ?? LanguageServerType.None;
+            }
             this.languageServerIsDefault = true;
         } else if (userLS === 'JediLSP') {
             // Switch JediLSP option to Jedi.
@@ -320,6 +331,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     pytestPath: 'pytest',
                     autoTestDiscoverOnSaveEnabled: true,
+                    autoTestDiscoverOnSavePattern: '**/*.py',
                 } as ITestingSettings;
             }
         }
@@ -336,6 +348,7 @@ export class PythonSettings implements IPythonSettings {
                   unittestArgs: [],
                   unittestEnabled: false,
                   autoTestDiscoverOnSaveEnabled: true,
+                  autoTestDiscoverOnSavePattern: '**/*.py',
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         if (this.testing.cwd) {
@@ -364,6 +377,7 @@ export class PythonSettings implements IPythonSettings {
                   launchArgs: [],
                   activateEnvironment: true,
                   activateEnvInCurrentTerminal: false,
+                  enableShellIntegration: false,
               };
 
         this.REPL = pythonSettings.get<IREPLSettings>('REPL')!;
@@ -382,14 +396,6 @@ export class PythonSettings implements IPythonSettings {
                   optInto: [],
                   optOutFrom: [],
               };
-
-        const tensorBoardSettings = systemVariables.resolveAny(
-            pythonSettings.get<ITensorBoardSettings>('tensorBoard'),
-        )!;
-        this.tensorBoard = tensorBoardSettings || { logDirectory: '' };
-        if (this.tensorBoard.logDirectory) {
-            this.tensorBoard.logDirectory = getAbsolutePath(this.tensorBoard.logDirectory, workspaceRoot);
-        }
     }
 
     // eslint-disable-next-line class-methods-use-this

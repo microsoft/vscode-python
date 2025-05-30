@@ -94,7 +94,7 @@ export class InstallPythonViaTerminal implements IExtensionSingleActivationServi
 async function isPackageAvailable(packageManager: PackageManagers) {
     try {
         const which = require('which') as typeof whichTypes;
-        const resolvedPath = await which(packageManager);
+        const resolvedPath = await which.default(packageManager);
         traceVerbose(`Resolved path to ${packageManager} module:`, resolvedPath);
         return resolvedPath.trim().length > 0;
     } catch (ex) {

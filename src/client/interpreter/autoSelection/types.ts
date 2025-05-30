@@ -14,9 +14,6 @@ export const IInterpreterAutoSelectionProxyService = Symbol('IInterpreterAutoSel
  * However, the class that reads python Path, must first give preference to selected interpreter.
  * But all classes everywhere make use of python settings!
  * Solution - Use a proxy that does nothing first, but later the real instance is injected.
- *
- * @export
- * @interface IInterpreterAutoSelectionProxyService
  */
 export interface IInterpreterAutoSelectionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;

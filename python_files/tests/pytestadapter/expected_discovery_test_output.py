@@ -1,6 +1,5 @@
 import os
 
-
 from .helpers import TEST_DATA_PATH, find_test_line_number, get_absolute_test_id
 
 # This file contains the expected output dictionaries for tests discovery and is used in test_discovery.py.
@@ -850,10 +849,10 @@ root_with_config_expected_output = {
             "children": [
                 {
                     "name": "test_a_function",
-                    "path": os.fspath(os.path.join(tests_path, "test_a.py")),
+                    "path": os.fspath(os.path.join(tests_path, "test_a.py")),  # noqa: PTH118
                     "lineno": find_test_line_number(
                         "test_a_function",
-                        os.path.join(tests_path, "test_a.py"),
+                        os.path.join(tests_path, "test_a.py"),  # noqa: PTH118
                     ),
                     "type_": "test",
                     "id_": get_absolute_test_id("tests/test_a.py::test_a_function", tests_a_path),
@@ -869,10 +868,10 @@ root_with_config_expected_output = {
             "children": [
                 {
                     "name": "test_b_function",
-                    "path": os.fspath(os.path.join(tests_path, "test_b.py")),
+                    "path": os.fspath(os.path.join(tests_path, "test_b.py")),  # noqa: PTH118
                     "lineno": find_test_line_number(
                         "test_b_function",
-                        os.path.join(tests_path, "test_b.py"),
+                        os.path.join(tests_path, "test_b.py"),  # noqa: PTH118
                     ),
                     "type_": "test",
                     "id_": get_absolute_test_id("tests/test_b.py::test_b_function", tests_b_path),
@@ -1033,7 +1032,7 @@ symlink_expected_discovery_output = {
                             "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_A),
                             "lineno": find_test_line_number(
                                 "test_a_function",
-                                os.path.join(tests_path, "test_a.py"),
+                                os.path.join(tests_path, "test_a.py"),  # noqa: PTH118
                             ),
                             "type_": "test",
                             "id_": get_absolute_test_id(
@@ -1058,7 +1057,7 @@ symlink_expected_discovery_output = {
                             "path": str(SYMLINK_FOLDER_PATH_TESTS_TEST_B),
                             "lineno": find_test_line_number(
                                 "test_b_function",
-                                os.path.join(tests_path, "test_b.py"),
+                                os.path.join(tests_path, "test_b.py"),  # noqa: PTH118
                             ),
                             "type_": "test",
                             "id_": get_absolute_test_id(
@@ -1273,4 +1272,399 @@ same_function_new_class_param_expected_output = {
     "id_": TEST_DATA_PATH_STR,
 }
 
-print(param_same_name_expected_output)
+test_param_span_class_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "test_param_span_class.py",
+            "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+            "type_": "file",
+            "id_": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+            "children": [
+                {
+                    "name": "TestClass1",
+                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_method1",
+                            "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[1]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass1::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                                {
+                                    "name": "[2]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass1::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass1::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(
+                                TEST_DATA_PATH
+                                / "test_param_span_class.py::TestClass1::test_method1"
+                            ),
+                        }
+                    ],
+                    "id_": "test_param_span_class.py::TestClass1",
+                },
+                {
+                    "name": "TestClass2",
+                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                    "type_": "class",
+                    "children": [
+                        {
+                            "name": "test_method1",
+                            "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                            "type_": "function",
+                            "children": [
+                                {
+                                    "name": "[1]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass2::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[1]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                                {
+                                    "name": "[2]",
+                                    "path": os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    "lineno": find_test_line_number(
+                                        "TestClass2::test_method1",
+                                        os.fspath(TEST_DATA_PATH / "test_param_span_class.py"),
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "test_param_span_class.py::TestClass2::test_method1[2]",
+                                        TEST_DATA_PATH / "test_param_span_class.py",
+                                    ),
+                                },
+                            ],
+                            "id_": os.fspath(
+                                TEST_DATA_PATH
+                                / "test_param_span_class.py::TestClass2::test_method1"
+                            ),
+                        }
+                    ],
+                    "id_": "test_param_span_class.py::TestClass2",
+                },
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
+# This is the expected output for the describe_only.py tests.
+# └── describe_only.py
+#    └── describe_A
+#       └── test_1
+#       └── test_2
+
+describe_only_path = TEST_DATA_PATH / "pytest_describe_plugin" / "describe_only.py"
+pytest_describe_plugin_path = TEST_DATA_PATH / "pytest_describe_plugin"
+
+expected_describe_only_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "pytest_describe_plugin",
+            "path": os.fspath(pytest_describe_plugin_path),
+            "type_": "folder",
+            "id_": os.fspath(pytest_describe_plugin_path),
+            "children": [
+                {
+                    "name": "describe_only.py",
+                    "path": os.fspath(describe_only_path),
+                    "type_": "file",
+                    "id_": os.fspath(describe_only_path),
+                    "children": [
+                        {
+                            "name": "describe_A",
+                            "path": os.fspath(describe_only_path),
+                            "type_": "class",
+                            "children": [
+                                {
+                                    "name": "test_1",
+                                    "path": os.fspath(describe_only_path),
+                                    "lineno": find_test_line_number(
+                                        "test_1",
+                                        describe_only_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "pytest_describe_plugin/describe_only.py::describe_A::test_1",
+                                        describe_only_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "pytest_describe_plugin/describe_only.py::describe_A::test_1",
+                                        describe_only_path,
+                                    ),
+                                },
+                                {
+                                    "name": "test_2",
+                                    "path": os.fspath(describe_only_path),
+                                    "lineno": find_test_line_number(
+                                        "test_2",
+                                        describe_only_path,
+                                    ),
+                                    "type_": "test",
+                                    "id_": get_absolute_test_id(
+                                        "pytest_describe_plugin/describe_only.py::describe_A::test_2",
+                                        describe_only_path,
+                                    ),
+                                    "runID": get_absolute_test_id(
+                                        "pytest_describe_plugin/describe_only.py::describe_A::test_2",
+                                        describe_only_path,
+                                    ),
+                                },
+                            ],
+                            "id_": "pytest_describe_plugin/describe_only.py::describe_A",
+                        }
+                    ],
+                }
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
+# This is the expected output for the nested_describe.py tests.
+# └── nested_describe.py
+#    └── describe_list
+#       └── describe_append
+#          └── add_empty
+#          └── remove_empty
+#       └── describe_remove
+#          └── removes
+nested_describe_path = TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py"
+expected_nested_describe_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "pytest_describe_plugin",
+            "path": os.fspath(pytest_describe_plugin_path),
+            "type_": "folder",
+            "id_": os.fspath(pytest_describe_plugin_path),
+            "children": [
+                {
+                    "name": "nested_describe.py",
+                    "path": os.fspath(nested_describe_path),
+                    "type_": "file",
+                    "id_": os.fspath(nested_describe_path),
+                    "children": [
+                        {
+                            "name": "describe_list",
+                            "path": os.fspath(nested_describe_path),
+                            "type_": "class",
+                            "children": [
+                                {
+                                    "name": "describe_append",
+                                    "path": os.fspath(nested_describe_path),
+                                    "type_": "class",
+                                    "children": [
+                                        {
+                                            "name": "add_empty",
+                                            "path": os.fspath(nested_describe_path),
+                                            "lineno": find_test_line_number(
+                                                "add_empty",
+                                                nested_describe_path,
+                                            ),
+                                            "type_": "test",
+                                            "id_": get_absolute_test_id(
+                                                "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::add_empty",
+                                                nested_describe_path,
+                                            ),
+                                            "runID": get_absolute_test_id(
+                                                "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::add_empty",
+                                                nested_describe_path,
+                                            ),
+                                        },
+                                        {
+                                            "name": "remove_empty",
+                                            "path": os.fspath(nested_describe_path),
+                                            "lineno": find_test_line_number(
+                                                "remove_empty",
+                                                nested_describe_path,
+                                            ),
+                                            "type_": "test",
+                                            "id_": get_absolute_test_id(
+                                                "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::remove_empty",
+                                                nested_describe_path,
+                                            ),
+                                            "runID": get_absolute_test_id(
+                                                "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::remove_empty",
+                                                nested_describe_path,
+                                            ),
+                                        },
+                                    ],
+                                    "id_": "pytest_describe_plugin/nested_describe.py::describe_list::describe_append",
+                                },
+                                {
+                                    "name": "describe_remove",
+                                    "path": os.fspath(nested_describe_path),
+                                    "type_": "class",
+                                    "children": [
+                                        {
+                                            "name": "removes",
+                                            "path": os.fspath(nested_describe_path),
+                                            "lineno": find_test_line_number(
+                                                "removes",
+                                                nested_describe_path,
+                                            ),
+                                            "type_": "test",
+                                            "id_": get_absolute_test_id(
+                                                "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove::removes",
+                                                nested_describe_path,
+                                            ),
+                                            "runID": get_absolute_test_id(
+                                                "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove::removes",
+                                                nested_describe_path,
+                                            ),
+                                        }
+                                    ],
+                                    "id_": "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove",
+                                },
+                            ],
+                            "id_": "pytest_describe_plugin/nested_describe.py::describe_list",
+                        }
+                    ],
+                }
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}
+# This is the expected output for the folder_with_script folder when run with ruff
+# └── .data
+#    └── folder_with_script
+#       └── script_random.py
+#          └── ruff
+#       └── test_simple.py
+#          └── ruff
+#          └── test_function
+ruff_test_expected_output = {
+    "name": ".data",
+    "path": TEST_DATA_PATH_STR,
+    "type_": "folder",
+    "children": [
+        {
+            "name": "folder_with_script",
+            "path": os.fspath(TEST_DATA_PATH / "folder_with_script"),
+            "type_": "folder",
+            "id_": os.fspath(TEST_DATA_PATH / "folder_with_script"),
+            "children": [
+                {
+                    "name": "script_random.py",
+                    "path": os.fspath(TEST_DATA_PATH / "folder_with_script" / "script_random.py"),
+                    "type_": "file",
+                    "id_": os.fspath(TEST_DATA_PATH / "folder_with_script" / "script_random.py"),
+                    "children": [
+                        {
+                            "name": "ruff",
+                            "path": os.fspath(
+                                TEST_DATA_PATH / "folder_with_script" / "script_random.py"
+                            ),
+                            "lineno": "",
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "folder_with_script/script_random.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "script_random.py",
+                            ),
+                            "runID": get_absolute_test_id(
+                                "folder_with_script/script_random.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "script_random.py",
+                            ),
+                        }
+                    ],
+                },
+                {
+                    "name": "test_simple.py",
+                    "path": os.fspath(TEST_DATA_PATH / "folder_with_script" / "test_simple.py"),
+                    "type_": "file",
+                    "id_": os.fspath(TEST_DATA_PATH / "folder_with_script" / "test_simple.py"),
+                    "children": [
+                        {
+                            "name": "ruff",
+                            "path": os.fspath(
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py"
+                            ),
+                            "lineno": "",
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                            "runID": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::ruff",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                        },
+                        {
+                            "name": "test_function",
+                            "path": os.fspath(
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py"
+                            ),
+                            "lineno": find_test_line_number(
+                                "test_function",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                            "type_": "test",
+                            "id_": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::test_function",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                            "runID": get_absolute_test_id(
+                                "folder_with_script/test_simple.py::test_function",
+                                TEST_DATA_PATH / "folder_with_script" / "test_simple.py",
+                            ),
+                        },
+                    ],
+                },
+            ],
+        }
+    ],
+    "id_": TEST_DATA_PATH_STR,
+}

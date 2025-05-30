@@ -98,5 +98,6 @@ Spec.description = 'hierarchical & verbose [default]';
  * Expose `Spec`.
  */
 
+// eslint-disable-next-line no-global-assign
 exports = Spec;
 module.exports = exports;

@@ -13,7 +13,7 @@ import { isOs, isPythonVersion } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('ProcessService Observable', () => {
     let pythonPath: string;

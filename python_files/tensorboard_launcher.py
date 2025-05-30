@@ -1,7 +1,9 @@
-import time
-import sys
-import os
+import contextlib
 import mimetypes
+import os
+import sys
+import time
+
 from tensorboard import program
 
 
@@ -17,14 +19,12 @@ def main(logdir):
     tb = program.TensorBoard()
     tb.configure(bind_all=False, logdir=logdir)
     url = tb.launch()
-    sys.stdout.write("TensorBoard started at %s\n" % (url))
+    sys.stdout.write(f"TensorBoard started at {url}\n")
     sys.stdout.flush()
 
-    while True:
-        try:
+    with contextlib.suppress(KeyboardInterrupt):
+        while True:
             time.sleep(60)
-        except KeyboardInterrupt:
-            break
     sys.stdout.write("TensorBoard is shutting down")
     sys.stdout.flush()
 
@@ -32,5 +32,5 @@ def main(logdir):
 if __name__ == "__main__":
     if len(sys.argv) == 2:
         logdir = str(sys.argv[1])
-        sys.stdout.write("Starting TensorBoard with logdir %s" % (logdir))
+        sys.stdout.write(f"Starting TensorBoard with logdir {logdir}")
         main(logdir)

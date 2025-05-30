@@ -16,8 +16,10 @@ import { isOs, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { normCase } from '../../client/common/platform/fs-paths';
+import { IRecommendedEnvironmentService } from '../../client/interpreter/configuration/types';
+import { RecommendedEnvironmentService } from '../../client/interpreter/configuration/recommededEnvironmentService';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Resolving Environment Variables when Debugging', () => {
     let ioc: UnitTestIocContainer;
@@ -53,6 +55,10 @@ suite('Resolving Environment Variables when Debugging', () => {
         ioc.registerFileSystemTypes();
         ioc.registerVariableTypes();
         ioc.registerMockProcess();
+        ioc.serviceManager.addSingleton<IRecommendedEnvironmentService>(
+            IRecommendedEnvironmentService,
+            RecommendedEnvironmentService,
+        );
     }
 
     async function testBasicProperties(console: ConsoleType, expectedNumberOfVariables: number) {

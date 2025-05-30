@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Uri } from 'vscode';
+import * as fs from '../../../../client/common/platform/fs-paths';
 import { hasVenv } from '../../../../client/pythonEnvironments/creation/common/commonUtils';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 

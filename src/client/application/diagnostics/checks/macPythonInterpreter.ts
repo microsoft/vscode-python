@@ -40,7 +40,7 @@ export const InvalidMacPythonInterpreterServiceId = 'InvalidMacPythonInterpreter
 export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     protected changeThrottleTimeout = 1000;
 
-    private timeOut?: NodeJS.Timer | number;
+    private timeOut?: NodeJS.Timeout | number;
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,

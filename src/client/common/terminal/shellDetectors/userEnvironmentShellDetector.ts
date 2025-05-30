@@ -13,10 +13,6 @@ import { BaseShellDetector } from './baseShellDetector';
 
 /**
  * Identifies the shell based on the users environment (env variables).
- *
- * @export
- * @class UserEnvironmentShellDetector
- * @extends {BaseShellDetector}
  */
 @injectable()
 export class UserEnvironmentShellDetector extends BaseShellDetector {

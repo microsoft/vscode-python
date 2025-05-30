@@ -12,7 +12,7 @@ import { pickWorkspaceFolder } from '../../../../client/pythonEnvironments/creat
 import * as windowApis from '../../../../client/common/vscodeApis/windowApis';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 suite('Create environment workspace selection tests', () => {
     let showQuickPickWithBackStub: sinon.SinonStub;

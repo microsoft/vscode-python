@@ -1,5 +1,5 @@
 import * as path from 'path';
-import * as fs from 'fs-extra';
+import * as fs from '../../client/common/platform/fs-paths';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 
 const insidersVersion = /^\^(\d+\.\d+\.\d+)-(insider|\d{8})$/;

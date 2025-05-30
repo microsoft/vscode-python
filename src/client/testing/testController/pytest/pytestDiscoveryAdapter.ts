@@ -1,22 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as path from 'path';
-import { Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Uri } from 'vscode';
 import * as fs from 'fs';
+import { ChildProcess } from 'child_process';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../common/types';
-import { Deferred, createDeferred } from '../../../common/utils/async';
+import { IConfigurationService } from '../../../common/types';
+import { createDeferred, Deferred } from '../../../common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
-import { DiscoveredTestPayload, EOTTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
+import { DiscoveredTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
 import {
-    MESSAGE_ON_TESTING_OUTPUT_MOVE,
     createDiscoveryErrorPayload,
-    createEOTPayload,
     createTestingDeferred,
     fixLogLinesNoTrailing,
     startDiscoveryNamedPipe,
@@ -24,6 +23,8 @@ import {
     hasSymlinkParent,
 } from '../common/utils';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
+import { PythonEnvironment } from '../../../pythonEnvironments/info';
+import { useEnvExtension, getEnvironment, runInBackground } from '../../../envExt/api.internal';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -31,35 +32,46 @@ import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
         public configSettings: IConfigurationService,
-        private readonly outputChannel: ITestOutputChannel,
         private readonly resultResolver?: ITestResultResolver,
         private readonly envVarsService?: IEnvironmentVariablesProvider,
     ) {}
 
-    async discoverTests(uri: Uri, executionFactory?: IPythonExecutionFactory): Promise<DiscoveredTestPayload> {
-        const deferredTillEOT: Deferred<void> = createDeferred<void>();
+    async discoverTests(
+        uri: Uri,
+        executionFactory?: IPythonExecutionFactory,
+        token?: CancellationToken,
+        interpreter?: PythonEnvironment,
+    ): Promise<void> {
+        const cSource = new CancellationTokenSource();
+        const deferredReturn = createDeferred<void>();
 
-        const { name, dispose } = await startDiscoveryNamedPipe((data: DiscoveredTestPayload | EOTTestPayload) => {
-            this.resultResolver?.resolveDiscovery(data, deferredTillEOT);
+        token?.onCancellationRequested(() => {
+            traceInfo(`Test discovery cancelled.`);
+            cSource.cancel();
+            deferredReturn.resolve();
         });
 
-        try {
-            await this.runPytestDiscovery(uri, name, deferredTillEOT, executionFactory);
-        } finally {
-            await deferredTillEOT.promise;
-            traceVerbose('deferredTill EOT resolved');
-            dispose();
-        }
-        // this is only a placeholder to handle function overloading until rewrite is finished
-        const discoveryPayload: DiscoveredTestPayload = { cwd: uri.fsPath, status: 'success' };
-        return discoveryPayload;
+        const name = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+            // if the token is cancelled, we don't want process the data
+            if (!token?.isCancellationRequested) {
+                this.resultResolver?.resolveDiscovery(data);
+            }
+        }, cSource.token);
+
+        this.runPytestDiscovery(uri, name, cSource, executionFactory, interpreter, token).then(() => {
+            deferredReturn.resolve();
+        });
+
+        return deferredReturn.promise;
     }
 
     async runPytestDiscovery(
         uri: Uri,
         discoveryPipeName: string,
-        deferredTillEOT: Deferred<void>,
+        cSource: CancellationTokenSource,
         executionFactory?: IPythonExecutionFactory,
+        interpreter?: PythonEnvironment,
+        token?: CancellationToken,
     ): Promise<void> {
         const relativePathToPytest = 'python_files';
         const fullPluginPath = path.join(EXTENSION_ROOT_DIR, relativePathToPytest);
@@ -84,6 +96,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             traceWarn("Symlink found, adding '--rootdir' to pytestArgs only if it doesn't already exist. cwd: ", cwd);
             pytestArgs = addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
         }
+        // if user has provided `--rootdir` then use that, otherwise add `cwd`
+        // root dir is required so pytest can find the relative paths and for symlinks
+        addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
 
         // get and edit env vars
         const mutableEnv = {
@@ -94,43 +109,101 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         const pythonPathCommand = [fullPluginPath, ...pythonPathParts].join(path.delimiter);
         mutableEnv.PYTHONPATH = pythonPathCommand;
         mutableEnv.TEST_RUN_PIPE = discoveryPipeName;
-        traceInfo(`All environment variables set for pytest discovery: ${JSON.stringify(mutableEnv)}`);
+        traceInfo(
+            `Environment variables set for pytest discovery: PYTHONPATH=${mutableEnv.PYTHONPATH}, TEST_RUN_PIPE=${mutableEnv.TEST_RUN_PIPE}`,
+        );
+
+        // delete UUID following entire discovery finishing.
+        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
+
+        if (useEnvExtension()) {
+            const pythonEnv = await getEnvironment(uri);
+            if (pythonEnv) {
+                const deferredTillExecClose: Deferred<void> = createTestingDeferred();
+
+                const proc = await runInBackground(pythonEnv, {
+                    cwd,
+                    args: execArgs,
+                    env: (mutableEnv as unknown) as { [key: string]: string },
+                });
+                token?.onCancellationRequested(() => {
+                    traceInfo(`Test discovery cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
+                    proc.kill();
+                    deferredTillExecClose.resolve();
+                    cSource.cancel();
+                });
+                proc.stdout.on('data', (data) => {
+                    const out = fixLogLinesNoTrailing(data.toString());
+                    traceInfo(out);
+                });
+                proc.stderr.on('data', (data) => {
+                    const out = fixLogLinesNoTrailing(data.toString());
+                    traceError(out);
+                });
+                proc.onExit((code, signal) => {
+                    if (code !== 0) {
+                        traceError(
+                            `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}`,
+                        );
+                        this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
+                    }
+                    deferredTillExecClose.resolve();
+                });
+                await deferredTillExecClose.promise;
+            } else {
+                traceError(`Python Environment not found for: ${uri.fsPath}`);
+            }
+            return;
+        }
+
         const spawnOptions: SpawnOptions = {
             cwd,
             throwOnStdErr: true,
-            outputChannel: this.outputChannel,
             env: mutableEnv,
+            token,
         };
 
         // Create the Python environment in which to execute the command.
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
             resource: uri,
+            interpreter,
         };
         const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
-        // delete UUID following entire discovery finishing.
-        const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
-        traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
+
+        const execInfo = await execService?.getExecutablePath();
+        traceVerbose(`Executable path for pytest discovery: ${execInfo}.`);
 
         const deferredTillExecClose: Deferred<void> = createTestingDeferred();
+
+        let resultProc: ChildProcess | undefined;
+
+        token?.onCancellationRequested(() => {
+            traceInfo(`Test discovery cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
+            // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
+            if (resultProc) {
+                resultProc?.kill();
+            } else {
+                deferredTillExecClose.resolve();
+                cSource.cancel();
+            }
+        });
         const result = execService?.execObservable(execArgs, spawnOptions);
+        resultProc = result?.proc;
 
         // Take all output from the subprocess and add it to the test output channel. This will be the pytest output.
         // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
-        // TODO: after a release, remove discovery output from the "Python Test Log" channel and send it to the "Python" channel instead.
 
         result?.proc?.stdout?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());
             traceInfo(out);
-            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.stderr?.on('data', (data) => {
             const out = fixLogLinesNoTrailing(data.toString());
             traceError(out);
-            spawnOptions?.outputChannel?.append(`${out}`);
         });
         result?.proc?.on('exit', (code, signal) => {
-            this.outputChannel?.append(MESSAGE_ON_TESTING_OUTPUT_MOVE);
             if (code !== 0) {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}.`,
@@ -143,10 +216,8 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceError(
                     `Subprocess exited unsuccessfully with exit code ${code} and signal ${signal} on workspace ${uri.fsPath}. Creating and sending error discovery payload`,
                 );
-                this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd), deferredTillEOT);
-                this.resultResolver?.resolveDiscovery(createEOTPayload(false), deferredTillEOT);
+                this.resultResolver?.resolveDiscovery(createDiscoveryErrorPayload(code, signal, cwd));
             }
-            // deferredTillEOT is resolved when all data sent on stdout and stderr is received, close event is only called when this occurs
             // due to the sync reading of the output.
             deferredTillExecClose?.resolve();
         });

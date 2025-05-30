@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { traceError } from '../logging';
@@ -19,6 +19,8 @@ import {
 } from './types';
 import { cache } from './utils/decorators';
 import { noop } from './utils/misc';
+import { clearCacheDirectory } from '../pythonEnvironments/base/locators/common/nativePythonFinder';
+import { clearCache, useEnvExtension } from '../envExt/api.internal';
 
 let _workspaceState: Memento | undefined;
 const _workspaceKeys: string[] = [];
@@ -126,12 +128,16 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento,
         @inject(ICommandManager) private cmdManager?: ICommandManager,
+        @inject(IExtensionContext) @optional() private context?: IExtensionContext,
     ) {}
 
     public async activate(): Promise<void> {
         this.cmdManager?.registerCommand(Commands.ClearStorage, async () => {
             await clearWorkspaceState();
             await this.cleanAllPersistentStates();
+            if (useEnvExtension()) {
+                await clearCache();
+            }
         });
         const globalKeysStorageDeprecated = this.createGlobalPersistentState(GLOBAL_PERSISTENT_KEYS_DEPRECATED, []);
         const workspaceKeysStorageDeprecated = this.createWorkspacePersistentState(
@@ -180,6 +186,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
     }
 
     private async cleanAllPersistentStates(): Promise<void> {
+        const clearCacheDirPromise = this.context ? clearCacheDirectory(this.context).catch() : Promise.resolve();
         await Promise.all(
             this._globalKeysStorage.value.map(async (keyContent) => {
                 const storage = this.createGlobalPersistentState(keyContent.key);
@@ -194,6 +201,7 @@ export class PersistentStateFactory implements IPersistentStateFactory, IExtensi
         );
         await this._globalKeysStorage.updateValue([]);
         await this._workspaceKeysStorage.updateValue([]);
+        await clearCacheDirPromise;
         this.cmdManager?.executeCommand('workbench.action.reloadWindow').then(noop);
     }
 }

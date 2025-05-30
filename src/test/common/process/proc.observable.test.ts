@@ -10,7 +10,7 @@ import { isOs, OSType } from '../../common';
 import { getExtensionSettings } from '../../extensionSettings';
 import { initialize } from './../../initialize';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('ProcessService', () => {
     let pythonPath: string;

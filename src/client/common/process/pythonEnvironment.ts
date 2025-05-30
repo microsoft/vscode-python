@@ -12,6 +12,7 @@ import { isTestExecution } from '../constants';
 import { IFileSystem } from '../platform/types';
 import * as internalPython from './internal/python';
 import { ExecutionResult, IProcessService, IPythonEnvironment, ShellOptions, SpawnOptions } from './types';
+import { PixiEnvironmentInfo } from '../../pythonEnvironments/common/environmentManagers/pixi';
 
 const cachedExecutablePath: Map<string, Promise<string | undefined>> = new Map<string, Promise<string | undefined>>();
 
@@ -171,6 +172,23 @@ export async function createCondaEnv(
         return undefined;
     }
     return new PythonEnvironment(interpreterPath, deps);
+}
+
+export async function createPixiEnv(
+    pixiEnv: PixiEnvironmentInfo,
+    // These are used to generate the deps.
+    procs: IProcessService,
+    fs: IFileSystem,
+): Promise<PythonEnvironment | undefined> {
+    const pythonArgv = pixiEnv.pixi.getRunPythonArgs(pixiEnv.manifestPath, pixiEnv.envName);
+    const deps = createDeps(
+        async (filename) => fs.pathExists(filename),
+        pythonArgv,
+        pythonArgv,
+        (file, args, opts) => procs.exec(file, args, opts),
+        (command, opts) => procs.shellExec(command, opts),
+    );
+    return new PythonEnvironment(pixiEnv.interpreterPath, deps);
 }
 
 export function createMicrosoftStoreEnv(

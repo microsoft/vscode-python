@@ -3,16 +3,14 @@
 
 import atexit
 import enum
-import json
 import os
 import pathlib
-import socket
 import sys
-import traceback
 import sysconfig
+import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, Union
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -20,19 +18,19 @@ os.environ[path_var_name] = (
     sysconfig.get_paths()["scripts"] + os.pathsep + os.environ[path_var_name]
 )
 
-
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
-sys.path.insert(0, os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import process_json_util, socket_manager  # noqa: E402
+from django_handler import django_execution_runner  # noqa: E402
+
 from unittestadapter.pvsc_utils import (  # noqa: E402
+    CoveragePayloadDict,
+    ExecutionPayloadDict,
+    FileCoverageInfo,
+    TestExecutionStatus,
     VSCodeUnittestError,
     parse_unittest_args,
     send_post_request,
-    ExecutionPayloadDict,
-    EOTPayloadDict,
-    TestExecutionStatus,
 )
 
 ErrorType = Union[Tuple[Type[BaseException], BaseException, TracebackType], Tuple[None, None, None]]
@@ -53,51 +51,54 @@ class TestOutcomeEnum(str, enum.Enum):
 
 class UnittestTestResult(unittest.TextTestResult):
     def __init__(self, *args, **kwargs):
-        self.formatted: Dict[str, Dict[str, Union[str, None]]] = dict()
-        super(UnittestTestResult, self).__init__(*args, **kwargs)
+        self.formatted: Dict[str, Dict[str, Union[str, None]]] = {}
+        super().__init__(*args, **kwargs)
 
-    def startTest(self, test: unittest.TestCase):
-        super(UnittestTestResult, self).startTest(test)
+    def startTest(self, test: unittest.TestCase):  # noqa: N802
+        super().startTest(test)
 
-    def addError(
+    def stopTestRun(self):  # noqa: N802
+        super().stopTestRun()
+
+    def addError(  # noqa: N802
         self,
         test: unittest.TestCase,
         err: ErrorType,
     ):
-        super(UnittestTestResult, self).addError(test, err)
+        super().addError(test, err)
         self.formatResult(test, TestOutcomeEnum.error, err)
 
-    def addFailure(
+    def addFailure(  # noqa: N802
         self,
         test: unittest.TestCase,
         err: ErrorType,
     ):
-        super(UnittestTestResult, self).addFailure(test, err)
+        super().addFailure(test, err)
         self.formatResult(test, TestOutcomeEnum.failure, err)
 
-    def addSuccess(self, test: unittest.TestCase):
-        super(UnittestTestResult, self).addSuccess(test)
+    def addSuccess(self, test: unittest.TestCase):  # noqa: N802
+        super().addSuccess(test)
         self.formatResult(test, TestOutcomeEnum.success)
 
-    def addSkip(self, test: unittest.TestCase, reason: str):
-        super(UnittestTestResult, self).addSkip(test, reason)
+    def addSkip(self, test: unittest.TestCase, reason: str):  # noqa: N802
+        super().addSkip(test, reason)
         self.formatResult(test, TestOutcomeEnum.skipped)
 
-    def addExpectedFailure(self, test: unittest.TestCase, err: ErrorType):
-        super(UnittestTestResult, self).addExpectedFailure(test, err)
+    def addExpectedFailure(self, test: unittest.TestCase, err: ErrorType):  # noqa: N802
+        super().addExpectedFailure(test, err)
         self.formatResult(test, TestOutcomeEnum.expected_failure, err)
 
-    def addUnexpectedSuccess(self, test: unittest.TestCase):
-        super(UnittestTestResult, self).addUnexpectedSuccess(test)
+    def addUnexpectedSuccess(self, test: unittest.TestCase):  # noqa: N802
+        super().addUnexpectedSuccess(test)
         self.formatResult(test, TestOutcomeEnum.unexpected_success)
 
-    def addSubTest(
+    def addSubTest(  # noqa: N802
         self,
         test: unittest.TestCase,
         subtest: unittest.TestCase,
         err: Union[ErrorType, None],
     ):
-        super(UnittestTestResult, self).addSubTest(test, subtest, err)
+        super().addSubTest(test, subtest, err)
         self.formatResult(
             test,
             TestOutcomeEnum.subtest_failure if err else TestOutcomeEnum.subtest_success,
@@ -105,7 +106,7 @@ class UnittestTestResult(unittest.TextTestResult):
             subtest,
         )
 
-    def formatResult(
+    def formatResult(  # noqa: N802
         self,
         test: unittest.TestCase,
         outcome: str,
@@ -125,10 +126,7 @@ class UnittestTestResult(unittest.TextTestResult):
             tb = "".join(formatted)
             # Remove the 'Traceback (most recent call last)'
             formatted = formatted[1:]
-        if subtest:
-            test_id = subtest.id()
-        else:
-            test_id = test.id()
+        test_id = subtest.id() if subtest else test.id()
 
         result = {
             "test": test.id(),
@@ -192,9 +190,14 @@ def run_tests(
     top_level_dir: Optional[str],
     verbosity: int,
     failfast: Optional[bool],
-    locals: Optional[bool] = None,
+    locals_: Optional[bool] = None,
 ) -> ExecutionPayloadDict:
-    cwd = os.path.abspath(start_dir)
+    cwd = os.path.abspath(start_dir)  # noqa: PTH100
+    if "/" in start_dir:  #  is a subdir
+        parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
+        sys.path.insert(0, parent_dir)
+    else:
+        sys.path.insert(0, cwd)
     status = TestExecutionStatus.error
     error = None
     payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": None}
@@ -203,18 +206,18 @@ def run_tests(
         # If it's a file, split path and file name.
         start_dir = cwd
         if cwd.endswith(".py"):
-            start_dir = os.path.dirname(cwd)
-            pattern = os.path.basename(cwd)
+            start_dir = os.path.dirname(cwd)  # noqa: PTH120
+            pattern = os.path.basename(cwd)  # noqa: PTH119
 
         if failfast is None:
             failfast = False
-        if locals is None:
-            locals = False
+        if locals_ is None:
+            locals_ = False
         if verbosity is None:
             verbosity = 1
         runner = unittest.TextTestRunner(
             resultclass=UnittestTestResult,
-            tb_locals=locals,
+            tb_locals=locals_,
             failfast=failfast,
             verbosity=verbosity,
         )
@@ -256,11 +259,8 @@ atexit.register(lambda: __socket.close() if __socket else None)
 
 def send_run_data(raw_data, test_run_pipe):
     status = raw_data["outcome"]
-    cwd = os.path.abspath(START_DIR)
-    if raw_data["subtest"]:
-        test_id = raw_data["subtest"]
-    else:
-        test_id = raw_data["test"]
+    cwd = os.path.abspath(START_DIR)  # noqa: PTH100
+    test_id = raw_data["subtest"] or raw_data["test"]
     test_dict = {}
     test_dict[test_id] = raw_data
     payload: ExecutionPayloadDict = {"cwd": cwd, "status": status, "result": test_dict}
@@ -278,75 +278,128 @@ if __name__ == "__main__":
         top_level_dir,
         verbosity,
         failfast,
-        locals,
+        locals_,
     ) = parse_unittest_args(argv[index + 1 :])
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     test_run_pipe = os.getenv("TEST_RUN_PIPE")
-
     if not run_test_ids_pipe:
         print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
     if not test_run_pipe:
         print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
-    test_ids_from_buffer = []
-    raw_json = None
+    test_ids = []
+    cwd = pathlib.Path(start_dir).absolute()
     try:
-        with socket_manager.PipeManager(run_test_ids_pipe) as sock:
-            buffer: str = ""
-            while True:
-                # Receive the data from the client
-                data: str = sock.read()
-                if not data:
-                    break
+        # Read the test ids from the file, attempt to delete file afterwords.
+        ids_path = pathlib.Path(run_test_ids_pipe)
+        test_ids = ids_path.read_text(encoding="utf-8").splitlines()
+        print("Received test ids from temp file.")
+        try:
+            ids_path.unlink()
+        except Exception as e:
+            print("Error[vscode-pytest]: unable to delete temp file" + str(e))
 
-                # Append the received data to the buffer
-                buffer += data
+    except Exception as e:
+        # No test ids received from buffer, return error payload
+        status: TestExecutionStatus = TestExecutionStatus.error
+        payload: ExecutionPayloadDict = {
+            "cwd": str(cwd),
+            "status": status,
+            "result": None,
+            "error": "No test ids read from temp file," + str(e),
+        }
+        send_post_request(payload, test_run_pipe)
 
-                try:
-                    # Try to parse the buffer as JSON
-                    raw_json = process_json_util.process_rpc_json(buffer)
-                    # Clear the buffer as complete JSON object is received
-                    buffer = ""
-                    print("Received JSON data in run")
-                    break
-                except json.JSONDecodeError:
-                    # JSON decoding error, the complete JSON object is not yet received
-                    continue
-    except socket.error as e:
-        msg = f"Error: Could not connect to RUN_TEST_IDS_PIPE: {e}"
-        print(msg)
-        raise VSCodeUnittestError(msg)
+    workspace_root = os.environ.get("COVERAGE_ENABLED")
+    # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
+    cov = None
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
+    include_branches = False
+    if is_coverage_run:
+        print(
+            "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
+            workspace_root,
+        )
+        import coverage
 
-    try:
-        if raw_json and "params" in raw_json:
-            test_ids_from_buffer = raw_json["params"]
-            if test_ids_from_buffer:
-                # Perform test execution.
-                payload = run_tests(
-                    start_dir,
-                    test_ids_from_buffer,
-                    pattern,
-                    top_level_dir,
-                    verbosity,
-                    failfast,
-                    locals,
-                )
-        else:
-            # No test ids received from buffer
-            cwd = os.path.abspath(start_dir)
-            status = TestExecutionStatus.error
-            payload: ExecutionPayloadDict = {
-                "cwd": cwd,
-                "status": status,
-                "error": "No test ids received from buffer",
-                "result": None,
+        # insert "python_files/lib/python" into the path so packaging can be imported
+        python_files_dir = pathlib.Path(__file__).parent.parent
+        bundled_dir = pathlib.Path(python_files_dir / "lib" / "python")
+        sys.path.append(os.fspath(bundled_dir))
+
+        from packaging.version import Version
+
+        coverage_version = Version(coverage.__version__)
+        # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
+        if coverage_version >= Version("7.7.0"):
+            include_branches = True
+
+        source_ar: List[str] = []
+        if workspace_root:
+            source_ar.append(workspace_root)
+        if top_level_dir:
+            source_ar.append(top_level_dir)
+        if start_dir:
+            source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
+        cov = coverage.Coverage(
+            branch=include_branches, source=source_ar
+        )  # is at least 1 of these required??
+        cov.start()
+
+    # If no error occurred, we will have test ids to run.
+    if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
+        print("MANAGE_PY_PATH env var set, running Django test suite.")
+        args = argv[index + 1 :] or []
+        django_execution_runner(manage_py_path, test_ids, args)
+    else:
+        # Perform regular unittest execution.
+        payload = run_tests(
+            start_dir,
+            test_ids,
+            pattern,
+            top_level_dir,
+            verbosity,
+            failfast,
+            locals_,
+        )
+
+    if is_coverage_run:
+        import coverage
+
+        if not cov:
+            raise VSCodeUnittestError("Coverage is enabled but cov is not set")
+        cov.stop()
+        cov.save()
+        cov.load()
+        file_set: Set[str] = cov.get_data().measured_files()
+        file_coverage_map: Dict[str, FileCoverageInfo] = {}
+        for file in file_set:
+            analysis = cov.analysis2(file)
+            taken_file_branches = 0
+            total_file_branches = -1
+
+            if include_branches:
+                branch_stats: dict[int, tuple[int, int]] = cov.branch_stats(file)
+                total_file_branches = sum([total_exits for total_exits, _ in branch_stats.values()])
+                taken_file_branches = sum([taken_exits for _, taken_exits in branch_stats.values()])
+
+            lines_executable = {int(line_no) for line_no in analysis[1]}
+            lines_missed = {int(line_no) for line_no in analysis[3]}
+            lines_covered = lines_executable - lines_missed
+            file_info: FileCoverageInfo = {
+                "lines_covered": list(lines_covered),  # list of int
+                "lines_missed": list(lines_missed),  # list of int
+                "executed_branches": taken_file_branches,
+                "total_branches": total_file_branches,
             }
-            send_post_request(payload, test_run_pipe)
-    except json.JSONDecodeError:
-        msg = "Error: Could not parse test ids from stdin"
-        print(msg)
-        raise VSCodeUnittestError(msg)
-    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
+            file_coverage_map[file] = file_info
+
+        payload_cov: CoveragePayloadDict = CoveragePayloadDict(
+            coverage=True,
+            cwd=os.fspath(cwd),
+            result=file_coverage_map,
+            error=None,
+        )
+        send_post_request(payload_cov, test_run_pipe)

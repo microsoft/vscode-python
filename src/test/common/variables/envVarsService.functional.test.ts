@@ -13,7 +13,7 @@ import { EnvironmentVariablesService } from '../../../client/common/variables/en
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import { getOSType } from '../../common';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 // Functional tests that run code using the VS Code API are found
 // in envVarsService.test.ts.

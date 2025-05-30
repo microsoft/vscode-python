@@ -3,7 +3,8 @@
 
 #Adds the virtual environment's executable path to json file
 
-import json,sys
+import json
+import sys
 import os.path
 jsonPath = sys.argv[1]
 key = sys.argv[2]

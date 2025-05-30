@@ -1,18 +1,22 @@
 /* eslint-disable comma-dangle */
 
-/* eslint-disable implicit-arrow-linebreak */
+/* eslint-disable implicit-arrow-linebreak, max-classes-per-file */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
 import { inject, injectable, named } from 'inversify';
 import { dirname } from 'path';
-import { Extension, Memento, Uri } from 'vscode';
+import { EventEmitter, Extension, Memento, Uri, workspace, Event } from 'vscode';
 import type { SemVer } from 'semver';
 import { IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import { JUPYTER_EXTENSION_ID, PYLANCE_EXTENSION_ID } from '../common/constants';
 import { GLOBAL_MEMENTO, IExtensions, IMemento, Resource } from '../common/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
-import { IInterpreterQuickPickItem, IInterpreterSelector } from '../interpreter/configuration/types';
+import {
+    IInterpreterQuickPickItem,
+    IInterpreterSelector,
+    IRecommendedEnvironmentService,
+} from '../interpreter/configuration/types';
 import {
     ICondaService,
     IInterpreterDisplay,
@@ -22,7 +26,8 @@ import {
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { getDebugpyPath } from '../debugger/pythonDebugger';
-import type { Environment } from '../api/types';
+import type { Environment, EnvironmentPath, PythonExtension } from '../api/types';
+import { DisposableBase } from '../common/utils/resourceLifecycle';
 
 type PythonApiForJupyterExtension = {
     /**
@@ -62,6 +67,19 @@ type PythonApiForJupyterExtension = {
      * @param func : The function that Python should call when requesting the Python path.
      */
     registerJupyterPythonPathFunction(func: (uri: Uri) => Promise<string | undefined>): void;
+
+    /**
+     * Returns the preferred environment for the given URI.
+     */
+    getRecommededEnvironment(
+        uri: Uri | undefined,
+    ): Promise<
+        | {
+              environment: EnvironmentPath;
+              reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
+          }
+        | undefined
+    >;
 };
 
 type JupyterExtensionApi = {
@@ -77,6 +95,7 @@ export class JupyterExtensionIntegration {
     private jupyterExtension: Extension<JupyterExtensionApi> | undefined;
 
     private pylanceExtension: Extension<PylanceApi> | undefined;
+    private environmentApi: PythonExtension['environments'] | undefined;
 
     constructor(
         @inject(IExtensions) private readonly extensions: IExtensions,
@@ -88,7 +107,11 @@ export class JupyterExtensionIntegration {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IContextKeyManager) private readonly contextManager: IContextKeyManager,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(IRecommendedEnvironmentService) private preferredEnvironmentService: IRecommendedEnvironmentService,
     ) {}
+    public registerEnvApi(api: PythonExtension['environments']) {
+        this.environmentApi = api;
+    }
 
     public registerApi(jupyterExtensionApi: JupyterExtensionApi): JupyterExtensionApi | undefined {
         this.contextManager.setContext(ExtensionContextKey.IsJupyterInstalled, true);
@@ -120,6 +143,12 @@ export class JupyterExtensionIntegration {
             getCondaVersion: () => this.condaService.getCondaVersion(),
             registerJupyterPythonPathFunction: (func: (uri: Uri) => Promise<string | undefined>) =>
                 this.registerJupyterPythonPathFunction(func),
+            getRecommededEnvironment: async (uri) => {
+                if (!this.environmentApi) {
+                    return undefined;
+                }
+                return this.preferredEnvironmentService.getRecommededEnvironment(uri);
+            },
         });
         return undefined;
     }
@@ -169,4 +198,109 @@ export class JupyterExtensionIntegration {
             api.notebook!.registerJupyterPythonPathFunction(func);
         }
     }
+}
+
+export interface JupyterPythonEnvironmentApi {
+    /**
+     * This event is triggered when the environment associated with a Jupyter Notebook or Interactive Window changes.
+     * The Uri in the event is the Uri of the Notebook/IW.
+     */
+    onDidChangePythonEnvironment?: Event<Uri>;
+    /**
+     * Returns the EnvironmentPath to the Python environment associated with a Jupyter Notebook or Interactive Window.
+     * If the Uri is not associated with a Jupyter Notebook or Interactive Window, then this method returns undefined.
+     * @param uri
+     */
+    getPythonEnvironment?(
+        uri: Uri,
+    ):
+        | undefined
+        | {
+              /**
+               * The ID of the environment.
+               */
+              readonly id: string;
+              /**
+               * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
+               * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
+               * using python executable path.
+               */
+              readonly path: string;
+          };
+}
+
+@injectable()
+export class JupyterExtensionPythonEnvironments extends DisposableBase implements JupyterPythonEnvironmentApi {
+    private jupyterExtension?: JupyterPythonEnvironmentApi;
+
+    private readonly _onDidChangePythonEnvironment = this._register(new EventEmitter<Uri>());
+
+    public readonly onDidChangePythonEnvironment = this._onDidChangePythonEnvironment.event;
+
+    constructor(@inject(IExtensions) private readonly extensions: IExtensions) {
+        super();
+    }
+
+    public getPythonEnvironment(
+        uri: Uri,
+    ):
+        | undefined
+        | {
+              /**
+               * The ID of the environment.
+               */
+              readonly id: string;
+              /**
+               * Path to environment folder or path to python executable that uniquely identifies an environment. Environments
+               * lacking a python executable are identified by environment folder paths, whereas other envs can be identified
+               * using python executable path.
+               */
+              readonly path: string;
+          } {
+        if (!isJupyterResource(uri)) {
+            return undefined;
+        }
+        const api = this.getJupyterApi();
+        if (api?.getPythonEnvironment) {
+            return api.getPythonEnvironment(uri);
+        }
+        return undefined;
+    }
+
+    private getJupyterApi() {
+        if (!this.jupyterExtension) {
+            const ext = this.extensions.getExtension<JupyterPythonEnvironmentApi>(JUPYTER_EXTENSION_ID);
+            if (!ext) {
+                return undefined;
+            }
+            if (!ext.isActive) {
+                ext.activate().then(() => {
+                    this.hookupOnDidChangePythonEnvironment(ext.exports);
+                });
+                return undefined;
+            }
+            this.hookupOnDidChangePythonEnvironment(ext.exports);
+        }
+        return this.jupyterExtension;
+    }
+
+    private hookupOnDidChangePythonEnvironment(api: JupyterPythonEnvironmentApi) {
+        this.jupyterExtension = api;
+        if (api.onDidChangePythonEnvironment) {
+            this._register(
+                api.onDidChangePythonEnvironment(
+                    this._onDidChangePythonEnvironment.fire,
+                    this._onDidChangePythonEnvironment,
+                ),
+            );
+        }
+    }
+}
+
+function isJupyterResource(resource: Uri): boolean {
+    // Jupyter extension only deals with Notebooks and Interactive Windows.
+    return (
+        resource.fsPath.endsWith('.ipynb') ||
+        workspace.notebookDocuments.some((item) => item.uri.toString() === resource.toString())
+    );
 }

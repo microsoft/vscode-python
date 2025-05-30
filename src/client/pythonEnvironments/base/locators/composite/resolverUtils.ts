@@ -19,6 +19,7 @@ import {
     AnacondaCompanyName,
     Conda,
     getCondaInterpreterPath,
+    getPythonVersionFromConda,
     isCondaEnvironment,
 } from '../../../common/environmentManagers/conda';
 import { getPyenvVersionsDir, parsePyenvVersion } from '../../../common/environmentManagers/pyenv';
@@ -59,7 +60,11 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
     const resolvedEnv = await resolverForKind(env);
     resolvedEnv.searchLocation = getSearchLocation(resolvedEnv, searchLocation);
     resolvedEnv.source = uniq(resolvedEnv.source.concat(source ?? []));
-    if (getOSType() === OSType.Windows && resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)) {
+    if (
+        !env.identifiedUsingNativeLocator &&
+        getOSType() === OSType.Windows &&
+        resolvedEnv.source?.includes(PythonEnvSource.WindowsRegistry)
+    ) {
         // We can update env further using information we can get from the Windows registry.
         await updateEnvUsingRegistry(resolvedEnv);
     }
@@ -75,9 +80,11 @@ export async function resolveBasicEnv(env: BasicEnvInfo): Promise<PythonEnvInfo>
         resolvedEnv.executable.ctime = ctime;
         resolvedEnv.executable.mtime = mtime;
     }
-    const type = await getEnvType(resolvedEnv);
-    if (type) {
-        resolvedEnv.type = type;
+    if (!env.identifiedUsingNativeLocator) {
+        const type = await getEnvType(resolvedEnv);
+        if (type) {
+            resolvedEnv.type = type;
+        }
     }
     return resolvedEnv;
 }
@@ -147,7 +154,7 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
     const { executablePath } = env;
     let version;
     try {
-        version = env.version ?? parseVersionFromExecutable(executablePath);
+        version = env.identifiedUsingNativeLocator ? env.version : parseVersionFromExecutable(executablePath);
     } catch {
         version = UNKNOWN_PYTHON_VERSION;
     }
@@ -160,7 +167,6 @@ async function resolveGloballyInstalledEnv(env: BasicEnvInfo): Promise<PythonEnv
         searchLocation: env.searchLocation,
         version,
         executable: executablePath,
-        pythonRunCommand: env.pythonRunCommand,
         identifiedUsingNativeLocator: env.identifiedUsingNativeLocator,
     });
     return envInfo;
@@ -170,13 +176,12 @@ async function resolveSimpleEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     const { executablePath, kind } = env;
     const envInfo = buildEnvInfo({
         kind,
-        version: env.version ?? (await getPythonVersionFromPath(executablePath)),
+        version: env.identifiedUsingNativeLocator ? env.version : await getPythonVersionFromPath(executablePath),
         executable: executablePath,
         sysPrefix: env.envPath,
         location: env.envPath,
         display: env.displayName,
         searchLocation: env.searchLocation,
-        pythonRunCommand: env.pythonRunCommand,
         identifiedUsingNativeLocator: env.identifiedUsingNativeLocator,
         name: env.name,
         type: PythonEnvType.Virtual,
@@ -202,7 +207,6 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
             location: envPath,
             sysPrefix: envPath,
             display: env.displayName,
-            pythonRunCommand: env.pythonRunCommand,
             identifiedUsingNativeLocator: env.identifiedUsingNativeLocator,
             searchLocation: env.searchLocation,
             source: [],
@@ -243,7 +247,7 @@ async function resolveCondaEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
     } else {
         executable = await conda.getInterpreterPathForEnvironment({ prefix: envPath });
     }
-    const version = env.version ?? (executable ? await getPythonVersionFromPath(executable) : undefined);
+    const version = executable ? await getPythonVersionFromConda(executable) : undefined;
     const info = buildEnvInfo({
         executable,
         kind: PythonEnvKind.Conda,
@@ -285,7 +289,6 @@ async function resolvePyenvEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> {
         sysPrefix: env.envPath,
         display: env.displayName,
         name: env.name,
-        pythonRunCommand: env.pythonRunCommand,
         identifiedUsingNativeLocator: env.identifiedUsingNativeLocator,
         // Pyenv environments can fall in to these three categories:
         // 1. Global Installs : These are environments that are created when you install
@@ -329,7 +332,6 @@ async function resolveActiveStateEnv(env: BasicEnvInfo): Promise<PythonEnvInfo> 
         identifiedUsingNativeLocator: env.identifiedUsingNativeLocator,
         location: env.envPath,
         name: env.name,
-        pythonRunCommand: env.pythonRunCommand,
         searchLocation: env.searchLocation,
         sysPrefix: env.envPath,
     });
@@ -368,7 +370,6 @@ async function resolveMicrosoftStoreEnv(env: BasicEnvInfo): Promise<PythonEnvInf
         sysPrefix: env.envPath,
         searchLocation: env.searchLocation,
         name: env.name,
-        pythonRunCommand: env.pythonRunCommand,
         identifiedUsingNativeLocator: env.identifiedUsingNativeLocator,
         arch: Architecture.x64,
         source: [PythonEnvSource.PathEnvVar],

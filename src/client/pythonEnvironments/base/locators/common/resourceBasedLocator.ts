@@ -4,7 +4,7 @@
 import { IDisposable } from '../../../../common/types';
 import { createDeferred, Deferred } from '../../../../common/utils/async';
 import { Disposables } from '../../../../common/utils/resourceLifecycle';
-import { traceError } from '../../../../logging';
+import { traceError, traceWarn } from '../../../../logging';
 import { arePathsSame, isVirtualWorkspace } from '../../../common/externalDependencies';
 import { getEnvPath } from '../../info/env';
 import { BasicEnvInfo, IPythonEnvsIterator, Locator, PythonLocatorQuery } from '../../locator';
@@ -36,7 +36,11 @@ export abstract class LazyResourceBasedLocator extends Locator<BasicEnvInfo> imp
     protected async activate(): Promise<void> {
         await this.ensureResourcesReady();
         // There is not need to wait for the watchers to get started.
-        this.ensureWatchersReady().ignoreErrors();
+        try {
+            this.ensureWatchersReady();
+        } catch (ex) {
+            traceWarn(`Failed to ensure watchers are ready for locator ${this.constructor.name}`, ex);
+        }
     }
 
     public async dispose(): Promise<void> {

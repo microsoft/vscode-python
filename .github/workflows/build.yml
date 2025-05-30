@@ -8,8 +8,10 @@ on:
       - 'release/*'
       - 'release-*'
 
+permissions: {}
+
 env:
-  NODE_VERSION: 18.17.1
+  NODE_VERSION: 20.18.0
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   # Force a path with spaces and to test extension works in these scenarios
   # Unicode characters are causing 2.7 failures so skip that for now.
@@ -28,6 +30,7 @@ jobs:
       run:
         shell: python
     outputs:
+      vsix_basename: ${{ steps.vsix_names.outputs.vsix_basename }}
       vsix_name: ${{ steps.vsix_names.outputs.vsix_name }}
       vsix_artifact_name: ${{ steps.vsix_names.outputs.vsix_artifact_name }}
     steps:
@@ -40,23 +43,71 @@ jobs:
           else:
             vsix_type = "release"
           print(f"::set-output name=vsix_name::ms-python-{vsix_type}.vsix")
+          print(f"::set-output name=vsix_basename::ms-python-{vsix_type}")
           print(f"::set-output name=vsix_artifact_name::ms-python-{vsix_type}-vsix")
 
   build-vsix:
     name: Create VSIX
     if: github.repository == 'microsoft/vscode-python'
     needs: setup
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            vsix-target: win32-x64
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            vsix-target: win32-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            vsix-target: linux-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-gnu
+          #     vsix-target: linux-arm64
+          #   - os: ubuntu-latest
+          #     target: arm-unknown-linux-gnueabihf
+          #     vsix-target: linux-armhf
+          #   - os: macos-latest
+          #     target: x86_64-apple-darwin
+          #     vsix-target: darwin-x64
+          #   - os: macos-14
+          #     target: aarch64-apple-darwin
+          #     vsix-target: darwin-arm64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            vsix-target: alpine-x64
+          #   - os: ubuntu-latest
+          #     target: aarch64-unknown-linux-musl
+          #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: 'python-env-tools'
+          persist-credentials: false
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
 
       - name: Build VSIX
         uses: ./.github/actions/build-vsix
         with:
-          node_version: ${{ env.NODE_VERSION }}
-          vsix_name: ${{ needs.setup.outputs.vsix_name }}
-          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
+          node_version: ${{ env.NODE_VERSION}}
+          vsix_name: ${{ needs.setup.outputs.vsix_basename }}-${{ matrix.vsix-target }}.vsix
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}
+          cargo_target: ${{ matrix.target }}
+          vsix_target: ${{ matrix.vsix-target }}
 
   lint:
     name: Lint
@@ -65,6 +116,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Lint
         uses: ./.github/actions/lint
@@ -83,14 +136,16 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Install core Python requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           options: '-t ./python_files/lib/python --no-cache-dir --implementation py'
 
       - name: Install Jedi requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           requirements-file: './python_files/jedilsp_requirements/requirements.txt'
           options: '-t ./python_files/lib/jedilsp --no-cache-dir --implementation py'
@@ -100,7 +155,7 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
-        uses: jakebailey/pyright-action@v2
+        uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2.3.2
         with:
           version: 1.1.308
           working-directory: 'python_files'
@@ -119,13 +174,14 @@ jobs:
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: ['3.8', '3.x', '3.12-dev']
+        python: ['3.9', '3.x', '3.13']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           path: ${{ env.special-working-directory-relative }}
+          persist-credentials: false
 
       - name: Use Python ${{ matrix.python }}
         uses: actions/setup-python@v5
@@ -133,7 +189,7 @@ jobs:
           python-version: ${{ matrix.python }}
 
       - name: Install base Python requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
           options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/python" --no-cache-dir --implementation py'
@@ -165,6 +221,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.special-working-directory-relative }}
+          persist-credentials: false
+
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: ${{ env.special-working-directory-relative }}/python-env-tools
+          persist-credentials: false
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
 
       - name: Install Node
         uses: actions/setup-node@v4
@@ -199,6 +268,13 @@ jobs:
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
+
+      - name: Rust Tool Chain setup
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Native Binaries
+        run: nox --session native_build
+        shell: bash
 
       - name: Install functional test requirements
         run: python -m pip install --upgrade -r ./build/functional-test-requirements.txt
@@ -294,7 +370,7 @@ jobs:
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.6
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{ env.special-working-directory }}
@@ -303,7 +379,7 @@ jobs:
       - name: Run single-workspace tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.6
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{ env.special-working-directory }}
@@ -312,7 +388,7 @@ jobs:
       - name: Run multi-workspace tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.6
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testMultiWorkspace
           working-directory: ${{ env.special-working-directory }}
@@ -321,7 +397,7 @@ jobs:
       - name: Run debugger tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.6
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testDebugger
           working-directory: ${{ env.special-working-directory }}
@@ -342,13 +418,32 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        include:
+          - os: windows-latest
+            vsix-target: win32-x64
+          - os: ubuntu-latest
+            vsix-target: linux-x64
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Checkout Python Environment Tools
+        uses: actions/checkout@v4
+        with:
+          repository: 'microsoft/python-environment-tools'
+          path: ${{ env.special-working-directory-relative }}/python-env-tools
+          persist-credentials: false
+          sparse-checkout: |
+            crates
+            Cargo.toml
+            Cargo.lock
+          sparse-checkout-cone-mode: false
 
       - name: Smoke tests
         uses: ./.github/actions/smoke-tests
         with:
           node_version: ${{ env.NODE_VERSION }}
-          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}
+          artifact_name: ${{ needs.setup.outputs.vsix_artifact_name }}-${{ matrix.vsix-target }}

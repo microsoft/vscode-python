@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { assert, expect } from 'chai';
-import * as fs from 'fs';
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as util from 'util';
 import { eq } from 'semver';
+import * as fs from '../../../../client/common/platform/fs-paths';
 import * as platform from '../../../../client/common/utils/platform';
 import { PythonEnvKind } from '../../../../client/pythonEnvironments/base/info';
 import { getEnvs } from '../../../../client/pythonEnvironments/base/locatorUtils';
@@ -105,17 +105,17 @@ suite('Conda and its environments are located correctly', () => {
 
         sinon.stub(platform, 'getUserHomeDir').callsFake(() => homeDir);
 
-        sinon.stub(fsapi, 'lstat').callsFake(async (filePath: fs.PathLike) => {
+        sinon.stub(fs, 'lstat').callsFake(async (filePath: fs.PathLike) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
             const file = getFile(filePath, 'throwIfMissing');
             return {
                 isDirectory: () => typeof file !== 'string',
-            } as fsapi.Stats;
+            } as fs.Stats;
         });
 
-        sinon.stub(fsapi, 'pathExists').callsFake(async (filePath: string | Buffer) => {
+        sinon.stub(fs, 'pathExists').callsFake(async (filePath: string | Buffer) => {
             if (typeof filePath !== 'string') {
                 throw new Error(`expected filePath to be string, got ${typeof filePath}`);
             }
@@ -127,16 +127,9 @@ suite('Conda and its environments are located correctly', () => {
             return true;
         });
 
-        sinon.stub(fsapi, 'readdir').callsFake(async (filePath: fs.PathLike) => {
-            if (typeof filePath !== 'string') {
-                throw new Error(`expected filePath to be string, got ${typeof filePath}`);
-            }
-            return (Object.keys(getFile(filePath, 'throwIfMissing')) as unknown) as fs.Dirent[];
-        });
-
-        sinon
-            .stub(fs.promises, 'readdir' as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-            .callsFake(async (filePath: fs.PathLike, options?: { withFileTypes?: boolean }) => {
+        sinon.stub(fs, 'readdir').callsFake(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            async (filePath: fs.PathLike, options?: { withFileTypes?: boolean }): Promise<any> => {
                 if (typeof filePath !== 'string') {
                     throw new Error(`expected path to be string, got ${typeof path}`);
                 }
@@ -144,6 +137,10 @@ suite('Conda and its environments are located correctly', () => {
                 const dir = getFile(filePath, 'throwIfMissing');
                 if (typeof dir === 'string') {
                     throw new Error(`${path} is not a directory`);
+                }
+
+                if (options === undefined) {
+                    return (Object.keys(getFile(filePath, 'throwIfMissing')) as unknown) as fs.Dirent[];
                 }
 
                 const names = Object.keys(dir);
@@ -164,27 +161,34 @@ suite('Conda and its environments are located correctly', () => {
                             isSymbolicLink: () => false,
                             isFIFO: () => false,
                             isSocket: () => false,
+                            parentPath: '',
                         };
                     },
                 );
-            });
-
-        sinon
-            .stub(fsapi, 'readFile' as any) // eslint-disable-line @typescript-eslint/no-explicit-any
-            .callsFake(async (filePath: string | Buffer | number, encoding: string) => {
-                if (typeof filePath !== 'string') {
-                    throw new Error(`expected filePath to be string, got ${typeof filePath}`);
-                } else if (encoding !== 'utf8') {
-                    throw new Error(`Unsupported encoding ${encoding}`);
+            },
+        );
+        const readFileStub = async (
+            filePath: fs.PathOrFileDescriptor,
+            options: { encoding: BufferEncoding; flag?: string | undefined } | BufferEncoding,
+        ): Promise<string> => {
+            if (typeof filePath !== 'string') {
+                throw new Error(`expected filePath to be string, got ${typeof filePath}`);
+            } else if (typeof options === 'string') {
+                if (options !== 'utf8') {
+                    throw new Error(`Unsupported encoding ${options}`);
                 }
+            } else if ((options as any).encoding !== 'utf8') {
+                throw new Error(`Unsupported encoding ${(options as any).encoding}`);
+            }
 
-                const contents = getFile(filePath);
-                if (typeof contents !== 'string') {
-                    throw new Error(`${filePath} is not a file`);
-                }
+            const contents = getFile(filePath);
+            if (typeof contents !== 'string') {
+                throw new Error(`${filePath} is not a file`);
+            }
 
-                return contents;
-            });
+            return contents;
+        };
+        sinon.stub(fs, 'readFile' as any).callsFake(readFileStub as any);
 
         sinon.stub(externalDependencies, 'exec').callsFake(async (command: string, args: string[]) => {
             for (const prefix of ['', ...execPath]) {
@@ -532,7 +536,7 @@ suite('Conda and its environments are located correctly', () => {
         expect(args).to.not.equal(undefined);
         assert.deepStrictEqual(
             args,
-            ['conda', 'run', '-n', 'envName', '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
+            ['conda', 'run', '-p', 'envPrefix', '--no-capture-output', 'python', OUTPUT_MARKER_SCRIPT],
             'Incorrect args for case 1',
         );
 

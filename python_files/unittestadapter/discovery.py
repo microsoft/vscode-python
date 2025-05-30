@@ -8,17 +8,18 @@ import traceback
 import unittest
 from typing import List, Optional
 
-script_dir = pathlib.Path(__file__).parent.parent
+script_dir = pathlib.Path(__file__).parent
 sys.path.append(os.fspath(script_dir))
+
+from django_handler import django_discovery_runner  # noqa: E402
 
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402
+    DiscoveryPayloadDict,
     VSCodeUnittestError,
     build_test_tree,
     parse_unittest_args,
     send_post_request,
-    DiscoveryPayloadDict,
-    EOTPayloadDict,
 )
 
 
@@ -56,7 +57,12 @@ def discover_tests(
         "status": "error",
     }
     """
-    cwd = os.path.abspath(start_dir)
+    cwd = os.path.abspath(start_dir)  # noqa: PTH100
+    if "/" in start_dir:  #  is a subdir
+        parent_dir = os.path.dirname(start_dir)  # noqa: PTH120
+        sys.path.insert(0, parent_dir)
+    else:
+        sys.path.insert(0, cwd)
     payload: DiscoveryPayloadDict = {"cwd": cwd, "status": "success", "tests": None}
     tests = None
     error: List[str] = []
@@ -70,7 +76,7 @@ def discover_tests(
             top_level_dir = start_dir
 
         # Get abspath of top level directory for build_test_tree.
-        top_level_dir = os.path.abspath(top_level_dir)
+        top_level_dir = os.path.abspath(top_level_dir)  # noqa: PTH100
 
         tests, error = build_test_tree(suite, top_level_dir)  # test tree built successfully here.
 
@@ -113,10 +119,21 @@ if __name__ == "__main__":
         print(error_msg, file=sys.stderr)
         raise VSCodeUnittestError(error_msg)
 
-    # Perform test discovery.
-    payload = discover_tests(start_dir, pattern, top_level_dir)
-    # Post this discovery payload.
-    send_post_request(payload, test_run_pipe)
-    # Post EOT token.
-    eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
+    if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
+        # Django configuration requires manage.py path to enable.
+        print(
+            f"MANAGE_PY_PATH is set, running Django discovery with path to manage.py as: ${manage_py_path}"
+        )
+        try:
+            # collect args for Django discovery runner.
+            args = argv[index + 1 :] or []
+            django_discovery_runner(manage_py_path, args)
+        except Exception as e:
+            error_msg = f"Error configuring Django test runner: {e}"
+            print(error_msg, file=sys.stderr)
+            raise VSCodeUnittestError(error_msg)  # noqa: B904
+    else:
+        # Perform regular unittest test discovery.
+        payload = discover_tests(start_dir, pattern, top_level_dir)
+        # Post this discovery payload.
+        send_post_request(payload, test_run_pipe)

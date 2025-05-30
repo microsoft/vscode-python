@@ -11,7 +11,7 @@ import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis'
 import { IDisposableRegistry } from '../../../client/common/types';
 import { registerCreateEnvironmentButtonFeatures } from '../../../client/pythonEnvironments/creation/createEnvButtonContext';
 
-chaiUse(chaiAsPromised);
+chaiUse(chaiAsPromised.default);
 
 class FakeDisposable {
     public dispose() {

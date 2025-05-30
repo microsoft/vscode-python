@@ -3,7 +3,7 @@
 
 import { expect } from 'chai';
 import * as fs from 'fs';
-import * as fsextra from 'fs-extra';
+import * as fsextra from '../../../client/common/platform/fs-paths';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
 import { FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';

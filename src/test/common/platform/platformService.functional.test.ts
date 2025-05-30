@@ -10,7 +10,7 @@ import { parse } from 'semver';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { OSType } from '../../../client/common/utils/platform';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('PlatformService', () => {
     const osType = getOSType();

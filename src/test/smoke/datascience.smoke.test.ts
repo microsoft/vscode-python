@@ -4,9 +4,9 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as fs from '../../client/common/platform/fs-paths';
 import { openFile, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 import { sleep } from '../core';

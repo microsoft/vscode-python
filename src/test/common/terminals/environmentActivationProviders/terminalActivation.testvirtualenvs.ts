@@ -4,7 +4,7 @@
 'use strict';
 
 import { expect } from 'chai';
-import * as fs from 'fs-extra';
+import * as fs from '../../../../client/common/platform/fs-paths';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import * as vscode from 'vscode';

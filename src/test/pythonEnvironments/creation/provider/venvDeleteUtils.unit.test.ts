@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import * as fs from 'fs-extra';
 import * as sinon from 'sinon';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { assert } from 'chai';
 import * as path from 'path';
+import * as fs from '../../../../client/common/platform/fs-paths';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import * as commonUtils from '../../../../client/pythonEnvironments/creation/common/commonUtils';
 import {

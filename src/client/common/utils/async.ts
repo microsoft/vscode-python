@@ -233,13 +233,18 @@ export async function flattenIterator<T>(iterator: IAsyncIterator<T>): Promise<T
 }
 
 /**
+ * Get everything yielded by the iterable.
+ */
+export async function flattenIterable<T>(iterableItem: AsyncIterable<T>): Promise<T[]> {
+    const results: T[] = [];
+    for await (const item of iterableItem) {
+        results.push(item);
+    }
+    return results;
+}
+
+/**
  * Wait for a condition to be fulfilled within a timeout.
- *
- * @export
- * @param {() => Promise<boolean>} condition
- * @param {number} timeoutMs
- * @param {string} errorMessage
- * @returns {Promise<void>}
  */
 export async function waitForCondition(
     condition: () => Promise<boolean>,
@@ -262,4 +267,27 @@ export async function waitForCondition(
             resolve();
         }, 10);
     });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function isPromiseLike<T>(v: any): v is PromiseLike<T> {
+    return typeof v?.then === 'function';
+}
+
+export function raceTimeout<T>(timeout: number, ...promises: Promise<T>[]): Promise<T | undefined>;
+export function raceTimeout<T>(timeout: number, defaultValue: T, ...promises: Promise<T>[]): Promise<T>;
+export function raceTimeout<T>(timeout: number, defaultValue: T, ...promises: Promise<T>[]): Promise<T> {
+    const resolveValue = isPromiseLike(defaultValue) ? undefined : defaultValue;
+    if (isPromiseLike(defaultValue)) {
+        promises.push((defaultValue as unknown) as Promise<T>);
+    }
+
+    let promiseResolve: ((value: T) => void) | undefined = undefined;
+
+    const timer = setTimeout(() => promiseResolve?.((resolveValue as unknown) as T), timeout);
+
+    return Promise.race([
+        Promise.race(promises).finally(() => clearTimeout(timer)),
+        new Promise<T>((resolve) => (promiseResolve = resolve)),
+    ]);
 }

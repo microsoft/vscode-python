@@ -7,14 +7,14 @@ import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as typeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
-import { IInstaller, ITestOutputChannel, Product } from '../../client/common/types';
+import { IInstaller, ILogOutputChannel, Product } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ITestConfigSettingsService, ITestConfigurationManagerFactory } from '../../client/testing/common/types';
 import { TestConfigurationManagerFactory } from '../../client/testing/configurationFactory';
 import * as pytest from '../../client/testing/configuration/pytest/testConfigurationManager';
 import * as unittest from '../../client/testing/configuration/unittest/testConfigurationManager';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 suite('Unit Tests - ConfigurationManagerFactory', () => {
     let factory: ITestConfigurationManagerFactory;
@@ -24,9 +24,7 @@ suite('Unit Tests - ConfigurationManagerFactory', () => {
         const installer = typeMoq.Mock.ofType<IInstaller>();
         const testConfigService = typeMoq.Mock.ofType<ITestConfigSettingsService>();
 
-        serviceContainer
-            .setup((c) => c.get(typeMoq.It.isValue(ITestOutputChannel)))
-            .returns(() => outputChannel.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(ILogOutputChannel))).returns(() => outputChannel.object);
         serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IInstaller))).returns(() => installer.object);
         serviceContainer
             .setup((c) => c.get(typeMoq.It.isValue(ITestConfigSettingsService)))

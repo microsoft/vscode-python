@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+/* eslint-disable class-methods-use-this */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { assert, expect } from 'chai';
 import { cloneDeep } from 'lodash';
@@ -25,8 +26,37 @@ import { TEST_LAYOUT_ROOT } from '../../../common/commonTestConstants';
 import { SimpleLocator } from '../../common';
 import { assertEnvEqual, assertEnvsEqual, createFile, deleteFile } from '../envTestUtils';
 import { OSType, getOSType } from '../../../../common';
+import * as nativeFinder from '../../../../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
+
+class MockNativePythonFinder implements nativeFinder.NativePythonFinder {
+    find(_searchPath: string): Promise<nativeFinder.NativeEnvInfo[]> {
+        throw new Error('Method not implemented.');
+    }
+
+    getCondaInfo(): Promise<nativeFinder.NativeCondaInfo> {
+        throw new Error('Method not implemented.');
+    }
+
+    resolve(_executable: string): Promise<nativeFinder.NativeEnvInfo> {
+        throw new Error('Method not implemented.');
+    }
+
+    refresh(): AsyncIterable<nativeFinder.NativeEnvInfo> {
+        const envs: nativeFinder.NativeEnvInfo[] = [];
+        return (async function* () {
+            for (const env of envs) {
+                yield env;
+            }
+        })();
+    }
+
+    dispose() {
+        /** noop */
+    }
+}
 
 suite('Python envs locator - Environments Collection', async () => {
+    let getNativePythonFinderStub: sinon.SinonStub;
     let collectionService: EnvsCollectionService;
     let storage: PythonEnvInfo[];
 
@@ -138,6 +168,8 @@ suite('Python envs locator - Environments Collection', async () => {
     }
 
     setup(async () => {
+        getNativePythonFinderStub = sinon.stub(nativeFinder, 'getNativePythonFinder');
+        getNativePythonFinderStub.returns(new MockNativePythonFinder());
         storage = [];
         const parentLocator = new SimpleLocator(getLocatorEnvs());
         const cache = await createCollectionCache({

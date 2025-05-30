@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 
 import { Container } from 'inversify';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento } from 'vscode';
 import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
-import { PlatformService, isWindows } from '../client/common/platform/platformService';
+import { PlatformService } from '../client/common/platform/platformService';
+import { isWindows } from '../client/common/utils/platform';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
 import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
@@ -26,11 +27,10 @@ import {
     ICurrentProcess,
     IDisposableRegistry,
     IMemento,
-    ILogOutputChannel,
     IPathUtils,
     IsWindows,
     WORKSPACE_MEMENTO,
-    ITestOutputChannel,
+    ILogOutputChannel,
 } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
@@ -53,6 +53,7 @@ import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
 import { registerForIOC } from './pythonEnvironments/legacyIOC';
+import { createTypeMoq } from './mocks/helper';
 
 export class IocContainer {
     // This may be set (before any registration happens) to indicate
@@ -82,7 +83,7 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, stdOutputChannel);
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
-        this.serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, testOutputChannel);
+        this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, testOutputChannel);
 
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,
@@ -125,12 +126,10 @@ export class IocContainer {
 
     public registerProcessTypes(): void {
         processRegisterTypes(this.serviceManager);
-        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
-        this.serviceManager.addSingletonInstance<IEnvironmentActivationService>(
-            IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService),
-        );
+        const mockEnvironmentActivationService = createTypeMoq<IEnvironmentActivationService>();
+        mockEnvironmentActivationService
+            .setup((f) => f.getActivatedEnvironmentVariables(anything()))
+            .returns(() => Promise.resolve(undefined));
     }
 
     public registerVariableTypes(): void {
@@ -151,7 +150,7 @@ export class IocContainer {
     }
 
     public registerMockProcessTypes(): void {
-        const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        const processServiceFactory = createTypeMoq<IProcessServiceFactory>();
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const processService = new MockProcessService(new ProcessService(process.env as any));
@@ -169,11 +168,13 @@ export class IocContainer {
             IEnvironmentActivationService,
             EnvironmentActivationService,
         );
-        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
+        const mockEnvironmentActivationService = createTypeMoq<IEnvironmentActivationService>();
+        mockEnvironmentActivationService
+            .setup((m) => m.getActivatedEnvironmentVariables(anything()))
+            .returns(() => Promise.resolve(undefined));
         this.serviceManager.rebindInstance<IEnvironmentActivationService>(
             IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService),
+            mockEnvironmentActivationService.object,
         );
     }
 

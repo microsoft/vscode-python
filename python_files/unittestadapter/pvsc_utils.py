@@ -10,15 +10,13 @@ import os
 import pathlib
 import sys
 import unittest
-from typing import List, Optional, Tuple, Union, Dict
-
+from typing import Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
 script_dir = pathlib.Path(__file__).parent.parent
 sys.path.append(os.fspath(script_dir))
 sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
-from testing_tools import socket_manager  # noqa: E402
-from typing_extensions import Literal, NotRequired, TypeAlias, TypedDict  # noqa: E402
+from typing_extensions import NotRequired  # noqa: E402
 
 # Types
 
@@ -52,9 +50,6 @@ class TestExecutionStatus(str, enum.Enum):
     success = "success"
 
 
-TestResultTypeAlias: TypeAlias = Dict[str, Dict[str, Union[str, None]]]
-
-
 class VSCodeUnittestError(Exception):
     """A custom exception class for unittest errors."""
 
@@ -72,16 +67,25 @@ class DiscoveryPayloadDict(TypedDict):
 class ExecutionPayloadDict(TypedDict):
     cwd: str
     status: TestExecutionStatus
-    result: Optional[TestResultTypeAlias]
+    result: Optional[Dict[str, Dict[str, Optional[str]]]]
     not_found: NotRequired[List[str]]
     error: NotRequired[str]
 
 
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
+class FileCoverageInfo(TypedDict):
+    lines_covered: List[int]
+    lines_missed: List[int]
+    executed_branches: int
+    total_branches: int
 
-    command_type: Union[Literal["discovery"], Literal["execution"]]
-    eot: bool
+
+class CoveragePayloadDict(Dict):
+    """A dictionary that is used to send a execution post request to the server."""
+
+    coverage: bool
+    cwd: str
+    result: Optional[Dict[str, FileCoverageInfo]]
+    error: Optional[str]  # Currently unused need to check
 
 
 # Helper functions for data retrieval.
@@ -93,8 +97,7 @@ def get_test_case(suite):
         if isinstance(test, unittest.TestCase):
             yield test
         else:
-            for test_case in get_test_case(test):
-                yield test_case
+            yield from get_test_case(test)
 
 
 def get_source_line(obj) -> str:
@@ -133,8 +136,11 @@ def build_test_node(path: str, name: str, type_: TestNodeTypeEnum) -> TestNode:
 
 
 def get_child_node(name: str, path: str, type_: TestNodeTypeEnum, root: TestNode) -> TestNode:
-    """Find a child node in a test tree given its name, type and path. If the node doesn't exist, create it.
-    Path is required to distinguish between nodes with the same name and type."""
+    """Find a child node in a test tree given its name, type and path.
+
+    If the node doesn't exist, create it.
+    Path is required to distinguish between nodes with the same name and type.
+    """
     try:
         result = next(
             node
@@ -198,12 +204,12 @@ def build_test_tree(
     for test_case in get_test_case(suite):
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
-            error.append(str(test_case._exception))  # type: ignore
+            error.append(str(test_case._exception))  # type: ignore  # noqa: SLF001
         elif test_id.startswith("unittest.loader.ModuleSkipped"):
             components = test_id.split(".")
             class_name = f"{components[-1]}.py"
             # Find/build class node.
-            file_path = os.fsdecode(os.path.join(directory_path, class_name))
+            file_path = os.fsdecode(directory_path / class_name)
             current_node = get_child_node(class_name, file_path, TestNodeTypeEnum.file, root)
         else:
             # Get the static test path components: filename, class name and function name.
@@ -223,7 +229,7 @@ def build_test_tree(
                 )
 
             # Find/build file node.
-            path_components = [top_level_directory] + folders + [py_filename]
+            path_components = [top_level_directory, *folders, py_filename]
             file_path = os.fsdecode(pathlib.PurePath("/".join(path_components)))
             current_node = get_child_node(
                 py_filename, file_path, TestNodeTypeEnum.file, current_node
@@ -235,7 +241,7 @@ def build_test_tree(
             )
 
             # Get test line number.
-            test_method = getattr(test_case, test_case._testMethodName)
+            test_method = getattr(test_case, test_case._testMethodName)  # noqa: SLF001
             lineno = get_source_line(test_method)
 
             # Add test node.
@@ -269,7 +275,6 @@ def parse_unittest_args(
     - top_level_directory: The top-level directory of the project, defaults to None,
       and unittest will use start_directory behind the scenes.
     """
-
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--start-directory", "-s", default=".")
     arg_parser.add_argument("--pattern", "-p", default="test*.py")
@@ -302,8 +307,8 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def send_post_request(
-    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict],
-    test_run_pipe: str,
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, CoveragePayloadDict],
+    test_run_pipe: Optional[str],
 ):
     """
     Sends a post request to the server.
@@ -326,22 +331,30 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = socket_manager.PipeManager(test_run_pipe)
-            __writer.connect()
+            __writer = open(test_run_pipe, "wb")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
+            print(error_msg, file=sys.stderr)
             __writer = None
-            raise VSCodeUnittestError(error_msg)
+            raise VSCodeUnittestError(error_msg) from error
 
     rpc = {
         "jsonrpc": "2.0",
         "params": payload,
     }
     data = json.dumps(rpc)
-
     try:
         if __writer:
-            __writer.write(data)
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
+            size = 4096
+            encoded = request.encode("utf-8")
+            bytes_written = 0
+            while bytes_written < len(encoded):
+                segment = encoded[bytes_written : bytes_written + size]
+                bytes_written += __writer.write(segment)
+                __writer.flush()
         else:
             print(
                 f"Connection error[vscode-unittest], writer is None \n[vscode-unittest] data: \n{data} \n",

@@ -6,8 +6,7 @@ import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
 import { Executables, FileSystemPaths, FileSystemPathUtils } from './fs-paths';
-
-const untildify = require('untildify');
+import { untildify } from '../helpers';
 
 @injectable()
 export class PathUtils implements IPathUtils {

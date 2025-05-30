@@ -11,7 +11,6 @@ export enum DebugOptions {
     RedirectOutput = 'RedirectOutput',
     Django = 'Django',
     Jinja = 'Jinja',
-    DebugStdLib = 'DebugStdLib',
     Sudo = 'Sudo',
     Pyramid = 'Pyramid',
     FixFilePathCase = 'FixFilePathCase',

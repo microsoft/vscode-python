@@ -26,7 +26,7 @@ export class InputFlowAction {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type InputStep<T extends any> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
+export type InputStep<T> = (input: MultiStepInput<T>, state: T) => Promise<InputStep<T> | void>;
 
 type buttonCallbackType<T extends QuickPickItem> = (quickPick: QuickPick<T>) => void;
 

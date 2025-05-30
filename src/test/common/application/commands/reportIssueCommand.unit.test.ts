@@ -5,11 +5,11 @@
 'use strict';
 
 import * as sinon from 'sinon';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { expect } from 'chai';
 import { WorkspaceFolder } from 'vscode-languageserver-protocol';
+import * as fs from '../../../../client/common/platform/fs-paths';
 import * as Telemetry from '../../../../client/telemetry';
 import { LanguageServerType } from '../../../../client/activation/types';
 import { CommandManager } from '../../../../client/common/application/commandManager';
@@ -101,6 +101,8 @@ suite('Report Issue Command', () => {
                 packageJSON: {
                     displayName: 'Python',
                     version: '2020.2',
+                    name: 'python',
+                    publisher: 'ms-python',
                 },
             },
         ]);

@@ -4,7 +4,7 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PlatformService } from '../../../client/common/platform/platformService';
@@ -14,7 +14,6 @@ import { getSearchPathEnvVarNames } from '../../../client/common/utils/exec';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { EnvironmentVariables } from '../../../client/common/variables/types';
-import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService } from '../../../client/interpreter/autoSelection/types';
 import { clearPythonPathInWorkspaceFolder, isOs, OSType, updateSetting } from '../../common';
@@ -22,8 +21,9 @@ import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } fr
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockProcess } from '../../mocks/process';
 import { UnitTestIocContainer } from '../../testing/serviceRegistry';
+import { createTypeMoq } from '../../mocks/helper';
 
-use(chaiAsPromised);
+use(chaiAsPromised.default);
 
 const multirootPath = path.join(__dirname, '..', '..', '..', '..', 'src', 'testMultiRootWkspc');
 const workspace4Path = Uri.file(path.join(multirootPath, 'workspace4'));
@@ -47,12 +47,21 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.registerProcessTypes();
         ioc.registerInterpreterStorageTypes();
         await ioc.registerMockInterpreterTypes();
-        const mockEnvironmentActivationService = mock(EnvironmentActivationService);
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
-        ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
-            IEnvironmentActivationService,
-            instance(mockEnvironmentActivationService),
-        );
+        const mockEnvironmentActivationService = createTypeMoq<IEnvironmentActivationService>();
+        mockEnvironmentActivationService
+            .setup((m) => m.getActivatedEnvironmentVariables(anything()))
+            .returns(() => Promise.resolve({}));
+        if (ioc.serviceManager.tryGet<IEnvironmentActivationService>(IEnvironmentActivationService)) {
+            ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
+                IEnvironmentActivationService,
+                mockEnvironmentActivationService.object,
+            );
+        } else {
+            ioc.serviceManager.addSingletonInstance(
+                IEnvironmentActivationService,
+                mockEnvironmentActivationService.object,
+            );
+        }
         return initializeTest();
     });
     suiteTeardown(closeActiveWindows);

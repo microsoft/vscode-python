@@ -16,7 +16,6 @@ import {
     Memento,
     LogOutputChannel,
     Uri,
-    OutputChannel,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import type { InstallOptions, InterpreterUri, ModuleInstallFlags } from './installer/types';
@@ -24,14 +23,11 @@ import { EnvironmentVariables } from './variables/types';
 import { ITestingSettings } from '../testing/configuration/types';
 
 export interface IDisposable {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispose(): void | undefined | Promise<void>;
 }
 
 export const ILogOutputChannel = Symbol('ILogOutputChannel');
 export interface ILogOutputChannel extends LogOutputChannel {}
-export const ITestOutputChannel = Symbol('ITestOutputChannel');
-export interface ITestOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
@@ -167,6 +163,7 @@ export interface IPythonSettings {
     readonly condaPath: string;
     readonly pipenvPath: string;
     readonly poetryPath: string;
+    readonly pixiToolPath: string;
     readonly devOptions: string[];
     readonly testing: ITestingSettings;
     readonly autoComplete: IAutoCompleteSettings;
@@ -177,13 +174,8 @@ export interface IPythonSettings {
     readonly languageServer: LanguageServerType;
     readonly languageServerIsDefault: boolean;
     readonly defaultInterpreterPath: string;
-    readonly tensorBoard: ITensorBoardSettings | undefined;
     readonly REPL: IREPLSettings;
     register(): void;
-}
-
-export interface ITensorBoardSettings {
-    logDirectory: string | undefined;
 }
 
 export interface IInterpreterSettings {
@@ -196,6 +188,7 @@ export interface ITerminalSettings {
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
     readonly activateEnvInCurrentTerminal: boolean;
+    readonly enableShellIntegration: boolean;
 }
 
 export interface IREPLSettings {

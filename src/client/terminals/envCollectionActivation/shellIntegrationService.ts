@@ -14,7 +14,8 @@ import { TerminalShellType } from '../../common/terminal/types';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
 import { traceError, traceVerbose } from '../../logging';
-import { IShellIntegrationService } from '../types';
+import { IShellIntegrationDetectionService } from '../types';
+import { isTrusted } from '../../common/vscodeApis/workspaceApis';
 
 /**
  * This is a list of shells which support shell integration:
@@ -33,7 +34,7 @@ export enum isShellIntegrationWorking {
 }
 
 @injectable()
-export class ShellIntegrationService implements IShellIntegrationService {
+export class ShellIntegrationDetectionService implements IShellIntegrationDetectionService {
     private isWorkingForShell = new Set<TerminalShellType>();
 
     private readonly didChange = new EventEmitter<void>();
@@ -151,10 +152,12 @@ export class ShellIntegrationService implements IShellIntegrationService {
      * Creates a dummy terminal so that we are guaranteed a data write event for this shell type.
      */
     private createDummyHiddenTerminal(shell: string) {
-        this.terminalManager.createTerminal({
-            shellPath: shell,
-            hideFromUser: true,
-        });
+        if (isTrusted()) {
+            this.terminalManager.createTerminal({
+                shellPath: shell,
+                hideFromUser: true,
+            });
+        }
     }
 }
 

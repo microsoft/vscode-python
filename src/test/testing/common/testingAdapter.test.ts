@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { TestController, TestRun, Uri } from 'vscode';
+import { TestController, TestRun, TestRunProfileKind, Uri } from 'vscode';
 import * as typeMoq from 'typemoq';
 import * as path from 'path';
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as os from 'os';
+import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
 import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
-import { IConfigurationService, ITestOutputChannel } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, initialize } from '../../initialize';
 import { traceError, traceLog } from '../../../client/logging';
@@ -21,6 +22,7 @@ import { PythonResultResolver } from '../../../client/testing/testController/com
 import { TestProvider } from '../../../client/testing/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import * as pixi from '../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 suite('End to End Tests: test adapters', () => {
     let resultResolver: ITestResultResolver;
@@ -29,8 +31,8 @@ suite('End to End Tests: test adapters', () => {
     let serviceContainer: IServiceContainer;
     let envVarsService: IEnvironmentVariablesProvider;
     let workspaceUri: Uri;
-    let testOutputChannel: typeMoq.IMock<ITestOutputChannel>;
     let testController: TestController;
+    let getPixiStub: sinon.SinonStub;
     const unittestProvider: TestProvider = UNITTEST_PROVIDER;
     const pytestProvider: TestProvider = PYTEST_PROVIDER;
     const rootPathSmallWorkspace = path.join(
@@ -70,9 +72,13 @@ suite('End to End Tests: test adapters', () => {
         'testTestingRootWkspc',
         'symlink_parent-folder',
     );
+    const rootPathCoverageWorkspace = path.join(
+        EXTENSION_ROOT_DIR_FOR_TESTS,
+        'src',
+        'testTestingRootWkspc',
+        'coverageWorkspace',
+    );
     suiteSetup(async () => {
-        serviceContainer = (await initialize()).serviceContainer;
-
         // create symlink for specific symlink test
         const target = rootPathSmallWorkspace;
         const dest = rootPathDiscoverySymlink;
@@ -97,6 +103,10 @@ suite('End to End Tests: test adapters', () => {
     });
 
     setup(async () => {
+        serviceContainer = (await initialize()).serviceContainer;
+        getPixiStub = sinon.stub(pixi, 'getPixi');
+        getPixiStub.resolves(undefined);
+
         // create objects that were injected
         configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -104,24 +114,9 @@ suite('End to End Tests: test adapters', () => {
         envVarsService = serviceContainer.get<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider);
 
         // create objects that were not injected
-
-        testOutputChannel = typeMoq.Mock.ofType<ITestOutputChannel>();
-        testOutputChannel
-            .setup((x) => x.append(typeMoq.It.isAny()))
-            .callback((appendVal: any) => {
-                traceLog('output channel - ', appendVal.toString());
-            })
-            .returns(() => {
-                // Whatever you need to return
-            });
-        testOutputChannel
-            .setup((x) => x.appendLine(typeMoq.It.isAny()))
-            .callback((appendVal: any) => {
-                traceLog('output channel ', appendVal.toString());
-            })
-            .returns(() => {
-                // Whatever you need to return
-            });
+    });
+    teardown(() => {
+        sinon.restore();
     });
     suiteTeardown(async () => {
         // remove symlink
@@ -174,12 +169,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest discovery
-        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
@@ -198,7 +188,6 @@ suite('End to End Tests: test adapters', () => {
             assert.strictEqual(callCount, 1, 'Expected _resolveDiscovery to be called once');
         });
     });
-
     test('unittest discovery adapter large workspace', async () => {
         // result resolver and saved data for assertions
         let actualData: {
@@ -220,12 +209,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run discovery
-        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // 1. Check the status is "success"
@@ -260,12 +244,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
             // verification after discovery is complete
@@ -315,12 +294,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
@@ -404,12 +378,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         await discoveryAdapter.discoverTests(workspaceUri, pythonExecFactory).finally(() => {
@@ -480,12 +449,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathLargeWorkspace);
@@ -534,12 +498,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
         // run execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -561,7 +520,7 @@ suite('End to End Tests: test adapters', () => {
             .runTests(
                 workspaceUri,
                 ['test_simple.SimpleClass.test_simple_unit'],
-                false,
+                TestRunProfileKind.Run,
                 testRun.object,
                 pythonExecFactory,
             )
@@ -614,12 +573,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
         // run unittest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -641,7 +595,7 @@ suite('End to End Tests: test adapters', () => {
             .runTests(
                 workspaceUri,
                 ['test_parameterized_subtest.NumbersTest.test_even'],
-                false,
+                TestRunProfileKind.Run,
                 testRun.object,
                 pythonExecFactory,
             )
@@ -663,7 +617,7 @@ suite('End to End Tests: test adapters', () => {
     });
     test('pytest execution adapter small workspace with correct output', async () => {
         // result resolver and saved data for assertions
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
@@ -689,12 +643,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -716,7 +665,7 @@ suite('End to End Tests: test adapters', () => {
             .runTests(
                 workspaceUri,
                 [`${rootPathSmallWorkspace}/test_simple.py::test_a`],
-                false,
+                TestRunProfileKind.Run,
                 testRun.object,
                 pythonExecFactory,
             )
@@ -750,9 +699,111 @@ suite('End to End Tests: test adapters', () => {
                 }
             });
     });
-    test('pytest execution adapter large workspace', async () => {
+
+    test('Unittest execution with coverage, small workspace', async () => {
         // result resolver and saved data for assertions
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
+        resultResolver._resolveCoverage = async (payload, _token?) => {
+            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+            assert.ok(payload.result, 'Expected results to be present');
+            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+            // since only one test was run, the other test in the same file will have missed coverage lines
+            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
+            assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
+            return Promise.resolve();
+        };
+
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
+        // run execution
+        const executionAdapter = new UnittestTestExecutionAdapter(configService, resultResolver, envVarsService);
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        let collectedOutput = '';
+        testRun
+            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+            .callback((output: string) => {
+                collectedOutput += output;
+                traceLog('appendOutput was called with:', output);
+            })
+            .returns(() => false);
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                ['test_even.TestNumbers.test_odd'],
+                TestRunProfileKind.Coverage,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .finally(() => {
+                assert.ok(collectedOutput, 'expect output to be collected');
+            });
+    });
+    test('pytest coverage execution, small workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+        resultResolver._resolveCoverage = async (payload, _runInstance?) => {
+            assert.strictEqual(payload.cwd, rootPathCoverageWorkspace, 'Expected cwd to be the workspace folder');
+            assert.ok(payload.result, 'Expected results to be present');
+            const simpleFileCov = payload.result[`${rootPathCoverageWorkspace}/even.py`];
+            assert.ok(simpleFileCov, 'Expected test_simple.py coverage to be present');
+            // since only one test was run, the other test in the same file will have missed coverage lines
+            assert.strictEqual(simpleFileCov.lines_covered.length, 3, 'Expected 1 line to be covered in even.py');
+            assert.strictEqual(simpleFileCov.lines_missed.length, 1, 'Expected 3 lines to be missed in even.py');
+            assert.strictEqual(simpleFileCov.executed_branches, 1, 'Expected 1 branch to be executed in even.py');
+            assert.strictEqual(simpleFileCov.total_branches, 2, 'Expected 2 branches in even.py');
+
+            return Promise.resolve();
+        };
+        // set workspace to test workspace folder
+        workspaceUri = Uri.parse(rootPathCoverageWorkspace);
+        configService.getSettings(workspaceUri).testing.pytestArgs = [];
+
+        // run pytest execution
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
+        const testRun = typeMoq.Mock.ofType<TestRun>();
+        testRun
+            .setup((t) => t.token)
+            .returns(
+                () =>
+                    ({
+                        onCancellationRequested: () => undefined,
+                    } as any),
+            );
+        let collectedOutput = '';
+        testRun
+            .setup((t) => t.appendOutput(typeMoq.It.isAny()))
+            .callback((output: string) => {
+                collectedOutput += output;
+                traceLog('appendOutput was called with:', output);
+            })
+            .returns(() => false);
+        await executionAdapter
+            .runTests(
+                workspaceUri,
+                [`${rootPathCoverageWorkspace}/test_even.py::TestNumbers::test_odd`],
+                TestRunProfileKind.Coverage,
+                testRun.object,
+                pythonExecFactory,
+            )
+            .then(() => {
+                assert.ok(collectedOutput, 'expect output to be collected');
+            });
+    });
+    test('pytest execution adapter large workspace', async () => {
+        // result resolver and saved data for assertions
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
@@ -786,12 +837,7 @@ suite('End to End Tests: test adapters', () => {
         }
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -809,17 +855,19 @@ suite('End to End Tests: test adapters', () => {
                 traceLog('appendOutput was called with:', output);
             })
             .returns(() => false);
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).then(() => {
-            // verify that the _resolveExecution was called once per test
-            assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
-            assert.strictEqual(failureOccurred, false, failureMsg);
+        await executionAdapter
+            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+            .then(() => {
+                // verify that the _resolveExecution was called once per test
+                assert.strictEqual(callCount, 2000, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
 
-            // verify output works for large repo
-            assert.ok(
-                collectedOutput.includes('test session starts'),
-                'The test string does not contain the expected stdout output from pytest.',
-            );
-        });
+                // verify output works for large repo
+                assert.ok(
+                    collectedOutput.includes('test session starts'),
+                    'The test string does not contain the expected stdout output from pytest.',
+                );
+            });
     });
     test('unittest discovery adapter seg fault error handling', async () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
@@ -858,12 +906,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
         configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
 
-        const discoveryAdapter = new UnittestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new UnittestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -917,12 +960,7 @@ suite('End to End Tests: test adapters', () => {
             return Promise.resolve();
         };
         // run pytest discovery
-        const discoveryAdapter = new PytestTestDiscoveryAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const discoveryAdapter = new PytestTestDiscoveryAdapter(configService, resultResolver, envVarsService);
 
         // set workspace to test workspace folder
         workspaceUri = Uri.parse(rootPathDiscoveryErrorWorkspace);
@@ -934,81 +972,6 @@ suite('End to End Tests: test adapters', () => {
                 callCount >= 1,
                 `Expected _resolveDiscovery to be called at least once, call count was instead ${callCount}`,
             );
-            assert.strictEqual(failureOccurred, false, failureMsg);
-        });
-    });
-    test('unittest execution adapter seg fault error handling', async () => {
-        resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
-        let callCount = 0;
-        let failureOccurred = false;
-        let failureMsg = '';
-        resultResolver._resolveExecution = async (data, _token?) => {
-            // do the following asserts for each time resolveExecution is called, should be called once per test.
-            callCount = callCount + 1;
-            traceLog(`unittest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
-            try {
-                if (data.status === 'error') {
-                    if (data.error === undefined) {
-                        // Dereference a NULL pointer
-                        const indexOfTest = JSON.stringify(data).search('Dereference a NULL pointer');
-                        if (indexOfTest === -1) {
-                            failureOccurred = true;
-                            failureMsg = 'Expected test to have a null pointer';
-                        }
-                    } else if (data.error.length === 0) {
-                        failureOccurred = true;
-                        failureMsg = "Expected errors in 'error' field";
-                    }
-                } else {
-                    const indexOfTest = JSON.stringify(data.result).search('error');
-                    if (indexOfTest === -1) {
-                        failureOccurred = true;
-                        failureMsg =
-                            'If payload status is not error then the individual tests should be marked as errors. This should occur on windows machines.';
-                    }
-                }
-                if (data.result === undefined) {
-                    failureOccurred = true;
-                    failureMsg = 'Expected results to be present';
-                }
-                // make sure the testID is found in the results
-                const indexOfTest = JSON.stringify(data).search('test_seg_fault.TestSegmentationFault.test_segfault');
-                if (indexOfTest === -1) {
-                    failureOccurred = true;
-                    failureMsg = 'Expected testId to be present';
-                }
-            } catch (err) {
-                failureMsg = err ? (err as Error).toString() : '';
-                failureOccurred = true;
-            }
-            return Promise.resolve();
-        };
-
-        const testId = `test_seg_fault.TestSegmentationFault.test_segfault`;
-        const testIds: string[] = [testId];
-
-        // set workspace to test workspace folder
-        workspaceUri = Uri.parse(rootPathErrorWorkspace);
-        configService.getSettings(workspaceUri).testing.unittestArgs = ['-s', '.', '-p', '*test*.py'];
-
-        // run pytest execution
-        const executionAdapter = new UnittestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
-        const testRun = typeMoq.Mock.ofType<TestRun>();
-        testRun
-            .setup((t) => t.token)
-            .returns(
-                () =>
-                    ({
-                        onCancellationRequested: () => undefined,
-                    } as any),
-            );
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
             assert.strictEqual(failureOccurred, false, failureMsg);
         });
     });
@@ -1042,7 +1005,7 @@ suite('End to End Tests: test adapters', () => {
                 failureMsg = err ? (err as Error).toString() : '';
                 failureOccurred = true;
             }
-            // return Promise.resolve();
+            return Promise.resolve();
         };
 
         const testId = `${rootPathErrorWorkspace}/test_seg_fault.py::TestSegmentationFault::test_segfault`;
@@ -1053,12 +1016,7 @@ suite('End to End Tests: test adapters', () => {
         configService.getSettings(workspaceUri).testing.pytestArgs = [];
 
         // run pytest execution
-        const executionAdapter = new PytestTestExecutionAdapter(
-            configService,
-            testOutputChannel.object,
-            resultResolver,
-            envVarsService,
-        );
+        const executionAdapter = new PytestTestExecutionAdapter(configService, resultResolver, envVarsService);
         const testRun = typeMoq.Mock.ofType<TestRun>();
         testRun
             .setup((t) => t.token)
@@ -1068,9 +1026,11 @@ suite('End to End Tests: test adapters', () => {
                         onCancellationRequested: () => undefined,
                     } as any),
             );
-        await executionAdapter.runTests(workspaceUri, testIds, false, testRun.object, pythonExecFactory).finally(() => {
-            assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
-            assert.strictEqual(failureOccurred, false, failureMsg);
-        });
+        await executionAdapter
+            .runTests(workspaceUri, testIds, TestRunProfileKind.Run, testRun.object, pythonExecFactory)
+            .finally(() => {
+                assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+                assert.strictEqual(failureOccurred, false, failureMsg);
+            });
     });
 });

@@ -17,14 +17,12 @@ import * as triggerUtils from '../../../client/pythonEnvironments/creation/commo
 import * as windowApis from '../../../client/common/vscodeApis/windowApis';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
 import * as commandApis from '../../../client/common/vscodeApis/commandApis';
-import * as extDepApi from '../../../client/pythonEnvironments/common/externalDependencies';
 import { registerTriggerForPipInTerminal } from '../../../client/pythonEnvironments/creation/globalPipInTerminalTrigger';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../constants';
 import { Common, CreateEnv } from '../../../client/common/utils/localize';
 
 suite('Global Pip in Terminal Trigger', () => {
     let shouldPromptToCreateEnvStub: sinon.SinonStub;
-    let inExperimentStub: sinon.SinonStub;
     let getWorkspaceFoldersStub: sinon.SinonStub;
     let getWorkspaceFolderStub: sinon.SinonStub;
     let isGlobalPythonSelectedStub: sinon.SinonStub;
@@ -48,7 +46,6 @@ suite('Global Pip in Terminal Trigger', () => {
 
     setup(() => {
         shouldPromptToCreateEnvStub = sinon.stub(triggerUtils, 'shouldPromptToCreateEnv');
-        inExperimentStub = sinon.stub(extDepApi, 'inExperiment');
 
         getWorkspaceFoldersStub = sinon.stub(workspaceApis, 'getWorkspaceFolders');
         getWorkspaceFoldersStub.returns([workspace1]);
@@ -88,30 +85,16 @@ suite('Global Pip in Terminal Trigger', () => {
 
     test('Should not prompt to create environment if setting is off', async () => {
         shouldPromptToCreateEnvStub.returns(false);
-        inExperimentStub.returns(true);
 
         const disposables: Disposable[] = [];
         registerTriggerForPipInTerminal(disposables);
 
         assert.strictEqual(disposables.length, 0);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-    });
-
-    test('Should not prompt to create environment if experiment is off', async () => {
-        shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(false);
-
-        const disposables: Disposable[] = [];
-        registerTriggerForPipInTerminal(disposables);
-
-        assert.strictEqual(disposables.length, 0);
-        sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
     });
 
     test('Should not prompt to create environment if no workspace folders', async () => {
         shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
         getWorkspaceFoldersStub.returns([]);
 
         const disposables: Disposable[] = [];
@@ -119,13 +102,11 @@ suite('Global Pip in Terminal Trigger', () => {
 
         assert.strictEqual(disposables.length, 0);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
         sinon.assert.calledOnce(getWorkspaceFoldersStub);
     });
 
     test('Should not prompt to create environment if workspace folder is not found', async () => {
         shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
         getWorkspaceFolderStub.returns(undefined);
 
         const disposables: Disposable[] = [];
@@ -136,16 +117,13 @@ suite('Global Pip in Terminal Trigger', () => {
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
         sinon.assert.calledOnce(getWorkspaceFolderStub);
-
         sinon.assert.notCalled(isGlobalPythonSelectedStub);
         sinon.assert.notCalled(showWarningMessageStub);
     });
 
     test('Should not prompt to create environment if global python is not selected', async () => {
         shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
         isGlobalPythonSelectedStub.returns(false);
 
         const disposables: Disposable[] = [];
@@ -155,7 +133,6 @@ suite('Global Pip in Terminal Trigger', () => {
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
         sinon.assert.calledOnce(getWorkspaceFolderStub);
         sinon.assert.calledOnce(isGlobalPythonSelectedStub);
 
@@ -164,7 +141,6 @@ suite('Global Pip in Terminal Trigger', () => {
 
     test('Should not prompt to create environment if command is not trusted', async () => {
         shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
         isGlobalPythonSelectedStub.returns(true);
 
         const disposables: Disposable[] = [];
@@ -189,7 +165,6 @@ suite('Global Pip in Terminal Trigger', () => {
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
         sinon.assert.calledOnce(getWorkspaceFolderStub);
         sinon.assert.calledOnce(isGlobalPythonSelectedStub);
 
@@ -198,7 +173,6 @@ suite('Global Pip in Terminal Trigger', () => {
 
     test('Should not prompt to create environment if command does not start with pip install', async () => {
         shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
         isGlobalPythonSelectedStub.returns(true);
 
         const disposables: Disposable[] = [];
@@ -223,7 +197,6 @@ suite('Global Pip in Terminal Trigger', () => {
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
         sinon.assert.calledOnce(getWorkspaceFolderStub);
         sinon.assert.calledOnce(isGlobalPythonSelectedStub);
 
@@ -233,7 +206,6 @@ suite('Global Pip in Terminal Trigger', () => {
     ['pip install', 'pip3 install', 'python -m pip install', 'python3 -m pip install'].forEach((command) => {
         test(`Should prompt to create environment if all conditions are met: ${command}`, async () => {
             shouldPromptToCreateEnvStub.returns(true);
-            inExperimentStub.returns(true);
             isGlobalPythonSelectedStub.returns(true);
             showWarningMessageStub.resolves(CreateEnv.Trigger.createEnvironment);
 
@@ -259,11 +231,9 @@ suite('Global Pip in Terminal Trigger', () => {
 
             assert.strictEqual(disposables.length, 1);
             sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-            sinon.assert.calledOnce(inExperimentStub);
             sinon.assert.calledOnce(getWorkspaceFolderStub);
             sinon.assert.calledOnce(isGlobalPythonSelectedStub);
             sinon.assert.calledOnce(showWarningMessageStub);
-
             sinon.assert.calledOnce(executeCommandStub);
             sinon.assert.notCalled(disableCreateEnvironmentTriggerStub);
 
@@ -273,7 +243,7 @@ suite('Global Pip in Terminal Trigger', () => {
 
     test("Should disable create environment trigger if user selects don't show again", async () => {
         shouldPromptToCreateEnvStub.returns(true);
-        inExperimentStub.returns(true);
+
         isGlobalPythonSelectedStub.returns(true);
         showWarningMessageStub.resolves(Common.doNotShowAgain);
 
@@ -299,11 +269,9 @@ suite('Global Pip in Terminal Trigger', () => {
 
         assert.strictEqual(disposables.length, 1);
         sinon.assert.calledOnce(shouldPromptToCreateEnvStub);
-        sinon.assert.calledOnce(inExperimentStub);
         sinon.assert.calledOnce(getWorkspaceFolderStub);
         sinon.assert.calledOnce(isGlobalPythonSelectedStub);
         sinon.assert.calledOnce(showWarningMessageStub);
-
         sinon.assert.notCalled(executeCommandStub);
         sinon.assert.calledOnce(disableCreateEnvironmentTriggerStub);
     });

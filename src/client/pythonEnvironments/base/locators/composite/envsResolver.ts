@@ -137,10 +137,10 @@ export class PythonEnvsResolver implements IResolvingLocator {
         state.pending += 1;
         // It's essential we increment the pending call count before any asynchronus calls in this method.
         // We want this to be run even when `resolveInBackground` is called in background.
-        const info = await this.environmentInfoService.getMandatoryEnvironmentInfo(seen[envIndex]);
+        const info = await this.environmentInfoService.getEnvironmentInfo(seen[envIndex]);
         const old = seen[envIndex];
         if (info) {
-            const resolvedEnv = getResolvedEnv(info, seen[envIndex]);
+            const resolvedEnv = getResolvedEnv(info, seen[envIndex], old.identifiedUsingNativeLocator);
             seen[envIndex] = resolvedEnv;
             didUpdate.fire({ old, index: envIndex, update: resolvedEnv });
         } else {
@@ -188,7 +188,11 @@ function checkIfFinishedAndNotify(
     }
 }
 
-function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: PythonEnvInfo) {
+function getResolvedEnv(
+    interpreterInfo: InterpreterInformation,
+    environment: PythonEnvInfo,
+    identifiedUsingNativeLocator = false,
+) {
     // Deep copy into a new object
     const resolvedEnv = cloneDeep(environment);
     resolvedEnv.executable.sysPrefix = interpreterInfo.executable.sysPrefix;
@@ -196,7 +200,10 @@ function getResolvedEnv(interpreterInfo: InterpreterInformation, environment: Py
         getEnvPath(resolvedEnv.executable.filename, resolvedEnv.location).pathType === 'envFolderPath';
     // TODO: Shouldn't this only apply to conda, how else can we have an environment and not have Python in it?
     // If thats the case, then this should be gated on environment.kind === PythonEnvKind.Conda
-    if (isEnvLackingPython && environment.kind !== PythonEnvKind.MicrosoftStore) {
+    // For non-native do not blow away the versions returned by native locator.
+    // Windows Store and Home brew have exe and sysprefix in different locations,
+    // Thus above check is not valid for these envs.
+    if (isEnvLackingPython && environment.kind !== PythonEnvKind.MicrosoftStore && !identifiedUsingNativeLocator) {
         // Install python later into these envs might change the version, which can be confusing for users.
         // So avoid displaying any version until it is installed.
         resolvedEnv.version = getEmptyVersion();

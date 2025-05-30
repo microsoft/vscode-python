@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fsapi from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import * as fsapi from '../../../../../client/common/platform/fs-paths';
 import { PythonReleaseLevel, PythonVersion } from '../../../../../client/pythonEnvironments/base/info';
 import * as externalDeps from '../../../../../client/pythonEnvironments/common/externalDependencies';
 import { getPythonVersionFromConda } from '../../../../../client/pythonEnvironments/common/environmentManagers/conda';

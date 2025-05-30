@@ -4,10 +4,10 @@
 'use strict';
 
 import * as assert from 'assert';
-import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import * as fs from '../../client/common/platform/fs-paths';
 import { JUPYTER_EXTENSION_ID } from '../../client/common/constants';
 import { SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop, sleep } from '../core';
@@ -25,7 +25,7 @@ export async function removeLanguageServerFiles(): Promise<void> {
 }
 async function getLanguageServerFolders(): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
-        glob('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
+        glob.default('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
             if (ex) {
                 reject(ex);
             } else {
@@ -51,7 +51,7 @@ export async function openNotebook(file: string): Promise<vscode.NotebookDocumen
     await vscode.commands.executeCommand('vscode.openWith', vscode.Uri.file(file), 'jupyter-notebook');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const notebook = (vscode.window.activeTextEditor!.document as any | undefined)?.notebook as vscode.NotebookDocument;
-    assert(notebook, 'Notebook did not open');
+    assert.ok(notebook, 'Notebook did not open');
     return notebook;
 }
 
@@ -80,7 +80,7 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
     await vscode.window.showTextDocument(textDocument).then(undefined, (err) => {
         assert.fail(`Something went wrong showing the text document: ${err}`);
     });
-    assert(vscode.window.activeTextEditor, 'No active editor');
+    assert.ok(vscode.window.activeTextEditor, 'No active editor');
     // Make sure LS completes file loading and analysis.
     // In test mode it awaits for the completion before trying
     // to fetch data for completion, hover.etc.

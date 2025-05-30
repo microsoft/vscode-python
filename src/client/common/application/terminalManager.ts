@@ -2,7 +2,16 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { Event, EventEmitter, Terminal, TerminalOptions, window } from 'vscode';
+import {
+    Disposable,
+    Event,
+    EventEmitter,
+    Terminal,
+    TerminalOptions,
+    TerminalShellExecutionEndEvent,
+    TerminalShellIntegrationChangeEvent,
+    window,
+} from 'vscode';
 import { traceLog } from '../../logging';
 import { ITerminalManager } from './types';
 
@@ -22,6 +31,12 @@ export class TerminalManager implements ITerminalManager {
     }
     public createTerminal(options: TerminalOptions): Terminal {
         return monkeyPatchTerminal(window.createTerminal(options));
+    }
+    public onDidChangeTerminalShellIntegration(handler: (e: TerminalShellIntegrationChangeEvent) => void): Disposable {
+        return window.onDidChangeTerminalShellIntegration(handler);
+    }
+    public onDidEndTerminalShellExecution(handler: (e: TerminalShellExecutionEndEvent) => void): Disposable {
+        return window.onDidEndTerminalShellExecution(handler);
     }
 }
 

@@ -13,13 +13,13 @@ runs:
   using: 'composite'
   steps:
     - name: Install Node
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
         cache: 'npm'
 
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.x'
         cache: 'pip'
@@ -32,7 +32,7 @@ runs:
       shell: bash
 
     - name: Install Python requirements
-      uses: brettcannon/pip-secure-install@v1
+      uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
       with:
         options: '-t ./python_files/lib/python --implementation py'
 
@@ -43,7 +43,7 @@ runs:
 
     # Bits from the VSIX are reused by smokeTest.ts to speed things up.
     - name: Download VSIX
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: ${{ inputs.artifact_name }}
 
@@ -61,6 +61,6 @@ runs:
       env:
         DISPLAY: 10
         INSTALL_JUPYTER_EXTENSION: true
-      uses: GabrielBB/xvfb-action@v1.5
+      uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
       with:
         run: node --no-force-async-hooks-checks ./out/test/smokeTest.js

@@ -36,7 +36,7 @@ suite('REPL Provider', () => {
         serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspace.object);
         serviceContainer
-            .setup((c) => c.get(ICodeExecutionService, TypeMoq.It.isValue('repl')))
+            .setup((s) => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
             .returns(() => codeExecutionService.object);
         serviceContainer.setup((c) => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup((c) => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
@@ -80,6 +80,7 @@ suite('REPL Provider', () => {
         const resource = Uri.parse('a');
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => Promise<void>);
+
         commandManager
             .setup((c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
@@ -98,7 +99,7 @@ suite('REPL Provider', () => {
         await commandHandler!.call(replProvider);
 
         serviceContainer.verify(
-            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('repl')),
+            (c) => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')),
             TypeMoq.Times.once(),
         );
         codeExecutionService.verify((c) => c.initializeRepl(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());

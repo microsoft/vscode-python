@@ -222,12 +222,6 @@ function getAllowedWarningsForWebPack(buildConfig) {
             throw new Error('Unknown WebPack Configuration');
     }
 }
-gulp.task('renameSourceMaps', async () => {
-    // By default source maps will be disabled in the extension.
-    // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
-    const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
-    await fsExtra.rename(extensionSourceMap, `${extensionSourceMap}.disabled`);
-});
 
 gulp.task('verifyBundle', async () => {
     const matches = await glob.sync(path.join(__dirname, '*.vsix'));
@@ -238,7 +232,7 @@ gulp.task('verifyBundle', async () => {
     }
 });
 
-gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
+gulp.task('prePublishBundle', gulp.series('webpack'));
 gulp.task('checkDependencies', gulp.series('checkNativeDependencies'));
 gulp.task('prePublishNonBundle', gulp.series('compile'));
 

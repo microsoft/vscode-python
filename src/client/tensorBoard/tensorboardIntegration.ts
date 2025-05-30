@@ -5,10 +5,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Extension, Uri, commands } from 'vscode';
+import { Extension, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { TENSORBOARD_EXTENSION_ID } from '../common/constants';
-import { IDisposableRegistry, IExtensions, Resource } from '../common/types';
+import { IExtensions, Resource } from '../common/types';
 import { IEnvironmentActivationService } from '../interpreter/activation/types';
 import { TensorBoardPrompt } from './tensorBoardPrompt';
 import { TensorboardDependencyChecker } from './tensorboardDependencyChecker';
@@ -45,14 +45,9 @@ export class TensorboardExtensionIntegration {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(TensorboardDependencyChecker) private readonly dependencyChcker: TensorboardDependencyChecker,
         @inject(TensorBoardPrompt) private readonly tensorBoardPrompt: TensorBoardPrompt,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
-    ) {
-        this.hideCommands();
-        extensions.onDidChange(this.hideCommands, this, disposables);
-    }
+    ) {}
 
     public registerApi(tensorboardExtensionApi: TensorboardExtensionApi): TensorboardExtensionApi | undefined {
-        this.hideCommands();
         if (!this.workspaceService.isTrusted) {
             this.workspaceService.onDidGrantWorkspaceTrust(() => this.registerApi(tensorboardExtensionApi));
             return undefined;
@@ -65,12 +60,6 @@ export class TensorboardExtensionIntegration {
             isPromptEnabled: () => this.tensorBoardPrompt.isPromptEnabled(),
         });
         return undefined;
-    }
-
-    public hideCommands(): void {
-        if (this.extensions.getExtension(TENSORBOARD_EXTENSION_ID)) {
-            void commands.executeCommand('setContext', 'python.tensorboardExtInstalled', true);
-        }
     }
 
     public async integrateWithTensorboardExtension(): Promise<void> {

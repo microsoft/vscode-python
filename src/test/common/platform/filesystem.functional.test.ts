@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 import { expect, use } from 'chai';
-import * as fs from 'fs-extra';
 import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';
-import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
+import * as fs from '../../../client/common/platform/fs-paths';
 import { FileType } from '../../../client/common/platform/types';
 import { createDeferred, sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
@@ -137,7 +136,7 @@ suite('FileSystem - raw', () => {
 
             await fileSystem.appendText(filename, dataToAppend);
 
-            const actual = await fs.readFile(filename, 'utf8');
+            const actual = await fs.readFile(filename, { encoding: 'utf8' });
             expect(actual).to.be.equal(expected);
         });
 
@@ -148,14 +147,14 @@ suite('FileSystem - raw', () => {
 
             await fileSystem.appendText(filename, dataToAppend);
 
-            const actual = await fs.readFile(filename, 'utf8');
+            const actual = await fs.readFile(filename, { encoding: 'utf8' });
             expect(actual).to.be.equal(expected);
         });
 
         test('creates the file if it does not already exist', async () => {
             await fileSystem.appendText(DOES_NOT_EXIST, 'spam');
 
-            const actual = await fs.readFile(DOES_NOT_EXIST, 'utf8');
+            const actual = await fs.readFile(DOES_NOT_EXIST, { encoding: 'utf8' });
             expect(actual).to.be.equal('spam');
         });
 
@@ -497,8 +496,8 @@ suite('FileSystem', () => {
     });
 
     suite('path-related', () => {
-        const paths = FileSystemPaths.withDefaults();
-        const pathUtils = FileSystemPathUtils.withDefaults(paths);
+        const paths = fs.FileSystemPaths.withDefaults();
+        const pathUtils = fs.FileSystemPathUtils.withDefaults(paths);
 
         suite('directorySeparatorChar', () => {
             // tested fully in the FileSystemPaths tests.
@@ -536,7 +535,7 @@ suite('FileSystem', () => {
 
                 await fileSystem.appendFile(filename, dataToAppend);
 
-                const actual = await fs.readFile(filename, 'utf8');
+                const actual = await fs.readFile(filename, { encoding: 'utf8' });
                 expect(actual).to.be.equal(expected);
             });
         });

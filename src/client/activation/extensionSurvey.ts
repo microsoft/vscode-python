@@ -3,10 +3,10 @@
 
 'use strict';
 
-import { inject, injectable, optional } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as querystring from 'querystring';
 import { env, UIKind } from 'vscode';
-import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
+import { IApplicationEnvironment, IApplicationShell, IWorkspaceService } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experiments/groups';
 import '../common/extensions';
 import { IPlatformService } from '../common/platform/types';
@@ -37,8 +37,9 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IExperimentService) private experiments: IExperimentService,
         @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
         @inject(IPlatformService) private platformService: IPlatformService,
-        @optional() private sampleSizePerOneHundredUsers: number = 10,
-        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY,
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        private sampleSizePerOneHundredUsers: number = 10,
+        private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY,
     ) {}
 
     public async activate(): Promise<void> {
@@ -57,6 +58,18 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         if (env.uiKind === UIKind?.Web) {
             return false;
         }
+
+        let feedbackEnabled = true;
+
+        const telemetryConfig = this.workspace.getConfiguration('telemetry');
+        if (telemetryConfig) {
+            feedbackEnabled = telemetryConfig.get<boolean>('feedback.enabled', true);
+        }
+
+        if (!feedbackEnabled) {
+            return false;
+        }
+
         const doNotShowSurveyAgain = this.persistentState.createGlobalPersistentState(
             extensionSurveyStateKeys.doNotShowAgain,
             false,

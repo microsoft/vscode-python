@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject } from 'inversify';
-import { CancellationToken, Disposable, Event } from 'vscode';
+import { CancellationToken, Disposable, Event, TerminalShellExecution } from 'vscode';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { traceVerbose } from '../../logging';
 import { PythonEnvironment } from '../../pythonEnvironments/info';
@@ -92,11 +92,6 @@ class ExecutionState implements Disposable {
  * - Send text to a terminal that executes our python file, passing in the original text as args
  * - The pthon file will execute the commands as a subprocess
  * - At the end of the execution a file is created to singal completion.
- *
- * @export
- * @class SynchronousTerminalService
- * @implements {ITerminalService}
- * @implements {Disposable}
  */
 export class SynchronousTerminalService implements ITerminalService, Disposable {
     private readonly disposables: Disposable[] = [];
@@ -146,8 +141,12 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
             lockFile.dispose();
         }
     }
+    /** @deprecated */
     public sendText(text: string): Promise<void> {
         return this.terminalService.sendText(text);
+    }
+    public executeCommand(commandLine: string, isPythonShell: boolean): Promise<TerminalShellExecution | undefined> {
+        return this.terminalService.executeCommand(commandLine, isPythonShell);
     }
     public show(preserveFocus?: boolean | undefined): Promise<void> {
         return this.terminalService.show(preserveFocus);

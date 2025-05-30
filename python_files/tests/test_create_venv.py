@@ -51,13 +51,14 @@ def test_venv_not_installed_windows():
 
 
 @pytest.mark.parametrize("env_exists", ["hasEnv", "noEnv"])
-@pytest.mark.parametrize("git_ignore", ["useGitIgnore", "skipGitIgnore"])
+@pytest.mark.parametrize("git_ignore", ["useGitIgnore", "skipGitIgnore", "gitIgnoreExists"])
 @pytest.mark.parametrize("install", ["requirements", "toml", "skipInstall"])
 def test_create_env(env_exists, git_ignore, install):
     importlib.reload(create_venv)
     create_venv.is_installed = lambda _x: True
     create_venv.venv_exists = lambda _n: env_exists == "hasEnv"
     create_venv.upgrade_pip = lambda _x: None
+    create_venv.is_file = lambda _x: git_ignore == "gitIgnoreExists"
 
     install_packages_called = False
 
@@ -84,8 +85,18 @@ def test_create_env(env_exists, git_ignore, install):
     def add_gitignore(_name):
         nonlocal add_gitignore_called
         add_gitignore_called = True
+        if not create_venv.is_file(_name):
+            create_venv.create_gitignore(_name)
 
     create_venv.add_gitignore = add_gitignore
+
+    create_gitignore_called = False
+
+    def create_gitignore(_p):
+        nonlocal create_gitignore_called
+        create_gitignore_called = True
+
+    create_venv.create_gitignore = create_gitignore
 
     args = []
     if git_ignore == "useGitIgnore":
@@ -104,12 +115,14 @@ def test_create_env(env_exists, git_ignore, install):
     # add_gitignore is called when new venv is created and git_ignore is True
     assert add_gitignore_called == ((env_exists == "noEnv") and (git_ignore == "useGitIgnore"))
 
+    assert create_gitignore_called == (add_gitignore_called and (git_ignore != "gitIgnoreExists"))
+
 
 @pytest.mark.parametrize("install_type", ["requirements", "pyproject", "both"])
 def test_install_packages(install_type):
     importlib.reload(create_venv)
     create_venv.is_installed = lambda _x: True
-    create_venv.file_exists = lambda x: install_type in x
+    create_venv.file_exists = lambda x: install_type in str(x)
 
     pip_upgraded = False
     installing = None
@@ -168,7 +181,7 @@ def test_toml_args(extras, expected):
 
     actual = []
 
-    def run_process(args, error_message):
+    def run_process(args, error_message):  # noqa: ARG001
         nonlocal actual
         actual = args[1:]
 
@@ -201,7 +214,7 @@ def test_requirements_args(extras, expected):
 
     actual = []
 
-    def run_process(args, error_message):
+    def run_process(args, error_message):  # noqa: ARG001
         nonlocal actual
         actual.append(args)
 

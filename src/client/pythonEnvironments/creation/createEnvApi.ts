@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { ConfigurationTarget, Disposable } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickInputButtons } from 'vscode';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
+import { IDisposableRegistry, IPathUtils } from '../../common/types';
 import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
-import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
+import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
-import { VenvCreationProvider } from './provider/venvCreationProvider';
+import { VenvCreationProvider, VenvCreationProviderId } from './provider/venvCreationProvider';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
 import {
@@ -21,6 +21,8 @@ import {
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { CreateEnvironmentOptionsInternal } from './types';
+import { useEnvExtension } from '../../envExt/api.internal';
+import { PythonEnvironment } from '../../envExt/types';
 
 class CreateEnvironmentProviders {
     private _createEnvProviders: CreateEnvironmentProvider[] = [];
@@ -59,17 +61,35 @@ export const { onCreateEnvironmentStarted, onCreateEnvironmentExited, isCreating
 export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
     interpreterQuickPick: IInterpreterQuickPick,
-    interpreterPathService: IInterpreterPathService,
+    pythonPathUpdater: IPythonPathUpdaterServiceManager,
     pathUtils: IPathUtils,
 ): void {
     disposables.push(
         registerCommand(
             Commands.Create_Environment,
-            (
+            async (
                 options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
             ): Promise<CreateEnvironmentResult | undefined> => {
-                const providers = _createEnvironmentProviders.getAll();
-                return handleCreateEnvironmentCommand(providers, options);
+                if (useEnvExtension()) {
+                    try {
+                        const result = await executeCommand<PythonEnvironment | undefined>(
+                            'python-envs.createAny',
+                            options,
+                        );
+                        if (result) {
+                            return { path: result.environmentPath.path };
+                        }
+                    } catch (err) {
+                        if (err === QuickInputButtons.Back) {
+                            return { workspaceFolder: undefined, action: 'Back' };
+                        }
+                        throw err;
+                    }
+                } else {
+                    const providers = _createEnvironmentProviders.getAll();
+                    return handleCreateEnvironmentCommand(providers, options);
+                }
+                return undefined;
             },
         ),
         registerCommand(
@@ -83,10 +103,11 @@ export function registerCreateEnvironmentFeatures(
         registerCreateEnvironmentProvider(condaCreationProvider()),
         onCreateEnvironmentExited(async (e: EnvironmentDidCreateEvent) => {
             if (e.path && e.options?.selectEnvironment) {
-                await interpreterPathService.update(
-                    e.workspaceFolder?.uri,
-                    ConfigurationTarget.WorkspaceFolder,
+                await pythonPathUpdater.updatePythonPath(
                     e.path,
+                    ConfigurationTarget.WorkspaceFolder,
+                    'ui',
+                    e.workspaceFolder?.uri,
                 );
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
@@ -111,4 +132,12 @@ export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
         registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>
             registerCreateEnvironmentProvider(provider),
     };
+}
+
+export async function createVirtualEnvironment(options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal) {
+    const provider = _createEnvironmentProviders.getAll().find((p) => p.id === VenvCreationProviderId);
+    if (!provider) {
+        return;
+    }
+    return handleCreateEnvironmentCommand([provider], { ...options, providerId: provider.id });
 }

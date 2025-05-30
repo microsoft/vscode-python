@@ -9,12 +9,7 @@ import { PythonEnvKind } from '../../info';
 import { BasicEnvInfo, IPythonEnvsIterator } from '../../locator';
 import { FSWatchingLocator } from './fsWatchingLocator';
 import { findInterpretersInDir, looksLikeBasicVirtualPython } from '../../../common/commonUtils';
-import {
-    getPythonSetting,
-    onDidChangePythonSetting,
-    pathExists,
-    untildify,
-} from '../../../common/externalDependencies';
+import { getPythonSetting, onDidChangePythonSetting, pathExists } from '../../../common/externalDependencies';
 import { isPipenvEnvironment } from '../../../common/environmentManagers/pipenv';
 import {
     isVenvEnvironment,
@@ -25,6 +20,7 @@ import '../../../../common/extensions';
 import { asyncFilter } from '../../../../common/utils/arrayUtils';
 import { traceError, traceInfo, traceVerbose } from '../../../../logging';
 import { StopWatch } from '../../../../common/utils/stopWatch';
+import { untildify } from '../../../../common/helpers';
 /**
  * Default number of levels of sub-directories to recurse when looking for interpreters.
  */
@@ -45,7 +41,10 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
-        venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
+        venvFolders
+            .map((item) => (item.startsWith(homeDir) ? item : path.join(homeDir, item)))
+            .forEach((d) => venvDirs.push(d));
+        venvFolders.forEach((item) => venvDirs.push(untildify(item)));
     }
     return asyncFilter(uniq(venvDirs), pathExists);
 }

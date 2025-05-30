@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { CancellationToken, CancellationTokenSource, CancellationError as VSCCancellationError } from 'vscode';
 import { createDeferred } from './utils/async';
 import * as localize from './utils/localize';
 
@@ -13,14 +13,13 @@ export class CancellationError extends Error {
     constructor() {
         super(localize.Common.canceled);
     }
+
+    static isCancellationError(error: unknown): error is CancellationError {
+        return error instanceof CancellationError || error instanceof VSCCancellationError;
+    }
 }
 /**
  * Create a promise that will either resolve with a default value or reject when the token is cancelled.
- *
- * @export
- * @template T
- * @param {({ defaultValue: T; token: CancellationToken; cancelAction: 'reject' | 'resolve' })} options
- * @returns {Promise<T>}
  */
 export function createPromiseFromCancellation<T>(options: {
     defaultValue: T;
@@ -50,10 +49,6 @@ export function createPromiseFromCancellation<T>(options: {
 
 /**
  * Create a single unified cancellation token that wraps multiple cancellation tokens.
- *
- * @export
- * @param {(...(CancellationToken | undefined)[])} tokens
- * @returns {CancellationToken}
  */
 export function wrapCancellationTokens(...tokens: (CancellationToken | undefined)[]): CancellationToken {
     const wrappedCancellantionToken = new CancellationTokenSource();
@@ -117,7 +112,6 @@ export namespace Cancellation {
 
     /**
      * isCanceled returns a boolean indicating if the cancel token has been canceled.
-     * @param cancelToken
      */
     export function isCanceled(cancelToken?: CancellationToken): boolean {
         return cancelToken ? cancelToken.isCancellationRequested : false;
@@ -125,7 +119,6 @@ export namespace Cancellation {
 
     /**
      * throws a CancellationError if the token is canceled.
-     * @param cancelToken
      */
     export function throwIfCanceled(cancelToken?: CancellationToken): void {
         if (isCanceled(cancelToken)) {

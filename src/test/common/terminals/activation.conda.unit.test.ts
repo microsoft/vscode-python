@@ -31,6 +31,7 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IComponentAdapter, ICondaService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { PixiActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pixiActivationProvider';
 
 suite('Terminal Environment Activation conda', () => {
     let terminalHelper: TerminalHelper;
@@ -114,6 +115,7 @@ suite('Terminal Environment Activation conda', () => {
             mock(Nushell),
             mock(PyEnvActivationCommandProvider),
             mock(PipEnvActivationCommandProvider),
+            mock(PixiActivationCommandProvider),
             [],
         );
     });

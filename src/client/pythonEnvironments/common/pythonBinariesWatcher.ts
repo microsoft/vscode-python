@@ -28,7 +28,7 @@ export function watchLocationForPythonBinaries(
     const [baseGlob] = resolvedGlob.split('/').slice(-1);
     function callbackClosure(type: FileChangeType, e: string) {
         traceVerbose('Received event', type, JSON.stringify(e), 'for baseglob', baseGlob);
-        const isMatch = minimatch(path.basename(e), baseGlob, { nocase: getOSType() === OSType.Windows });
+        const isMatch = minimatch.default(path.basename(e), baseGlob, { nocase: getOSType() === OSType.Windows });
         if (!isMatch) {
             // When deleting the file for some reason path to all directories leading up to python are reported
             // Skip those events
@@ -39,6 +39,7 @@ export function watchLocationForPythonBinaries(
     return watchLocationForPattern(baseDir, resolvedGlob, callbackClosure);
 }
 
+// eslint-disable-next-line no-shadow
 export enum PythonEnvStructure {
     Standard = 'standard',
     Flat = 'flat',

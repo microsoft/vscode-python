@@ -646,3 +646,104 @@ symlink_run_expected_execution_output = {
         "subtest": None,
     }
 }
+
+
+# This is the expected output for the pytest_describe_plugin/describe_only.py file.
+# └── pytest_describe_plugin
+#    └── describe_only.py
+#       └── describe_A
+#          └── test_1: success
+#          └── test_2: success
+
+describe_only_expected_execution_output = {
+    get_absolute_test_id(
+        "pytest_describe_plugin/describe_only.py::describe_A::test_1",
+        TEST_DATA_PATH / "pytest_describe_plugin" / "describe_only.py",
+    ): {
+        "test": get_absolute_test_id(
+            "pytest_describe_plugin/describe_only.py::describe_A::test_1",
+            TEST_DATA_PATH / "pytest_describe_plugin" / "describe_only.py",
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "pytest_describe_plugin/describe_only.py::describe_A::test_2",
+        TEST_DATA_PATH / "pytest_describe_plugin" / "describe_only.py",
+    ): {
+        "test": get_absolute_test_id(
+            "pytest_describe_plugin/describe_only.py::describe_A::test_2",
+            TEST_DATA_PATH / "pytest_describe_plugin" / "describe_only.py",
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+# This is the expected output for the pytest_describe_plugin/nested_describe.py file.
+# └── pytest_describe_plugin
+#    └── nested_describe.py
+#       └── describe_list
+#          └── describe_append
+#             └── add_empty: success
+#             └── remove_empty: success
+#          └── describe_remove
+#             └── removes: success
+nested_describe_expected_execution_output = {
+    get_absolute_test_id(
+        "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::add_empty",
+        TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py",
+    ): {
+        "test": get_absolute_test_id(
+            "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::add_empty",
+            TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py",
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::remove_empty",
+        TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py",
+    ): {
+        "test": get_absolute_test_id(
+            "pytest_describe_plugin/nested_describe.py::describe_list::describe_append::remove_empty",
+            TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py",
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+    get_absolute_test_id(
+        "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove::removes",
+        TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py",
+    ): {
+        "test": get_absolute_test_id(
+            "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove::removes",
+            TEST_DATA_PATH / "pytest_describe_plugin" / "nested_describe.py",
+        ),
+        "outcome": "success",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    },
+}
+
+skip_test_fixture_path = TEST_DATA_PATH / "skip_test_fixture.py"
+skip_test_fixture_execution_expected_output = {
+    get_absolute_test_id("skip_test_fixture.py::test_docker_client", skip_test_fixture_path): {
+        "test": get_absolute_test_id(
+            "skip_test_fixture.py::test_docker_client", skip_test_fixture_path
+        ),
+        "outcome": "skipped",
+        "message": None,
+        "traceback": None,
+        "subtest": None,
+    }
+}

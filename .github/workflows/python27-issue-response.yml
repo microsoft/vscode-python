@@ -5,6 +5,8 @@ on:
 jobs:
   python27-issue-response:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     if: "contains(github.event.issue.body, 'Python version (& distribution if applicable, e.g. Anaconda): 2.7')"
     steps:
       - name: Check for Python 2.7 string

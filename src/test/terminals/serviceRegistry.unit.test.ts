@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -13,17 +14,17 @@ import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecut
 import { TerminalDeactivateService } from '../../client/terminals/envCollectionActivation/deactivateService';
 import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
-import { ShellIntegrationService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
 import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    IShellIntegrationService,
+    IShellIntegrationDetectionService,
     ITerminalAutoActivation,
     ITerminalDeactivateService,
     ITerminalEnvVarCollectionService,
 } from '../../client/terminals/types';
+import { ShellIntegrationDetectionService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
 
 suite('Terminal - Service Registry', () => {
     test('Ensure all services get registered', () => {
@@ -38,14 +39,14 @@ suite('Terminal - Service Registry', () => {
             [ITerminalEnvVarCollectionService, TerminalEnvVarCollectionService],
             [IExtensionSingleActivationService, TerminalIndicatorPrompt],
             [ITerminalDeactivateService, TerminalDeactivateService],
-            [IShellIntegrationService, ShellIntegrationService],
+            [IShellIntegrationDetectionService, ShellIntegrationDetectionService],
         ].forEach((args) => {
             if (args.length === 2) {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            typemoq.It.is((v) => args[0] === v),
-                            typemoq.It.is((value) => args[1] === value),
+                            typemoq.It.is((v: any) => args[0] === v),
+                            typemoq.It.is((value: any) => args[1] === value),
                         ),
                     )
                     .verifiable(typemoq.Times.once());
@@ -53,8 +54,8 @@ suite('Terminal - Service Registry', () => {
                 services
                     .setup((s) =>
                         s.addSingleton(
-                            typemoq.It.is((v) => args[0] === v),
-                            typemoq.It.is((value) => args[1] === value),
+                            typemoq.It.is((v: any) => args[0] === v),
+                            typemoq.It.is((value: any) => args[1] === value),
 
                             typemoq.It.isValue((args[2] as unknown) as string),
                         ),
@@ -65,8 +66,8 @@ suite('Terminal - Service Registry', () => {
         services
             .setup((s) =>
                 s.addBinding(
-                    typemoq.It.is((v) => ITerminalEnvVarCollectionService === v),
-                    typemoq.It.is((value) => IExtensionActivationService === value),
+                    typemoq.It.is((v: any) => ITerminalEnvVarCollectionService === v),
+                    typemoq.It.is((value: any) => IExtensionActivationService === value),
                 ),
             )
             .verifiable(typemoq.Times.once());

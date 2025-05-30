@@ -21,6 +21,7 @@ import { ITerminalEnvVarCollectionService } from '../types';
 import { sleep } from '../../common/utils/async';
 import { isTestExecution } from '../../common/constants';
 import { PythonEnvType } from '../../pythonEnvironments/base/info';
+import { useEnvExtension } from '../../envExt/api.internal';
 
 export const terminalEnvCollectionPromptKey = 'TERMINAL_ENV_COLLECTION_PROMPT_KEY';
 
@@ -42,7 +43,7 @@ export class TerminalIndicatorPrompt implements IExtensionSingleActivationServic
     ) {}
 
     public async activate(): Promise<void> {
-        if (!inTerminalEnvVarExperiment(this.experimentService)) {
+        if (!inTerminalEnvVarExperiment(this.experimentService) || useEnvExtension()) {
             return;
         }
         if (!isTestExecution()) {
