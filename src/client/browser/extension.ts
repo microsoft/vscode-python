@@ -139,7 +139,7 @@ async function runPylance(
 
         await client.start();
     } catch (e) {
-        console.log(e);
+        console.log(e); // necessary to use console.log for browser
     }
 }
 
@@ -200,7 +200,7 @@ function sendTelemetryEventBrowser(
                         break;
                 }
             } catch (exception) {
-                console.error(`Failed to serialize ${prop} for ${eventName}`, exception);
+                console.error(`Failed to serialize ${prop} for ${eventName}`, exception); // necessary to use console.log for browser
             }
         });
     }

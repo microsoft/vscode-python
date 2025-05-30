@@ -7,7 +7,11 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreterTelemetry } from '../../telemetry/types';
 import { IComponentAdapter } from '../contracts';
-import { IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './types';
+import {
+    IRecommendedEnvironmentService,
+    IPythonPathUpdaterServiceFactory,
+    IPythonPathUpdaterServiceManager,
+} from './types';
 
 @injectable()
 export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManager {
@@ -15,6 +19,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         @inject(IPythonPathUpdaterServiceFactory)
         private readonly pythonPathSettingsUpdaterFactory: IPythonPathUpdaterServiceFactory,
         @inject(IComponentAdapter) private readonly pyenvs: IComponentAdapter,
+        @inject(IRecommendedEnvironmentService) private readonly preferredEnvService: IRecommendedEnvironmentService,
     ) {}
 
     public async updatePythonPath(
@@ -28,6 +33,9 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         let failed = false;
         try {
             await pythonPathUpdater.updatePythonPath(pythonPath);
+            if (trigger === 'ui') {
+                this.preferredEnvService.trackUserSelectedEnvironment(pythonPath, wkspace);
+            }
         } catch (err) {
             failed = true;
             const reason = err as Error;

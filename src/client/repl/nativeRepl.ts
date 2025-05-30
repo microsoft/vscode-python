@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 // Native Repl class that holds instance of pythonServer and replController
 
 import {
@@ -6,21 +9,26 @@ import {
     NotebookDocument,
     QuickPickItem,
     TextEditor,
-    workspace,
+    Uri,
     WorkspaceFolder,
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
-import { getWorkspaceFolders } from '../common/vscodeApis/workspaceApis';
+import { getWorkspaceFolders, onDidCloseNotebookDocument } from '../common/vscodeApis/workspaceApis';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { createPythonServer, PythonServer } from './pythonServer';
 import { executeNotebookCell, openInteractiveREPL, selectNotebookKernel } from './replCommandHandler';
 import { createReplController } from './replController';
 import { EventName } from '../telemetry/constants';
 import { sendTelemetryEvent } from '../telemetry';
+import { VariablesProvider } from './variables/variablesProvider';
+import { VariableRequester } from './variables/variableRequester';
+import { getTabNameForUri } from './replUtils';
+import { getWorkspaceStateValue, updateWorkspaceStateValue } from '../common/persistentState';
 
-let nativeRepl: NativeRepl | undefined; // In multi REPL scenario, hashmap of URI to Repl.
+export const NATIVE_REPL_URI_MEMENTO = 'nativeReplUri';
+let nativeRepl: NativeRepl | undefined;
 export class NativeRepl implements Disposable {
     // Adding ! since it will get initialized in create method, not the constructor.
     private pythonServer!: PythonServer;
@@ -48,7 +56,7 @@ export class NativeRepl implements Disposable {
         nativeRepl.interpreter = interpreter;
         await nativeRepl.setReplDirectory();
         nativeRepl.pythonServer = createPythonServer([interpreter.path as string], nativeRepl.cwd);
-        nativeRepl.replController = nativeRepl.setReplController();
+        nativeRepl.setReplController();
 
         return nativeRepl;
     }
@@ -63,10 +71,18 @@ export class NativeRepl implements Disposable {
      */
     private watchNotebookClosed(): void {
         this.disposables.push(
-            workspace.onDidCloseNotebookDocument((nb) => {
+            onDidCloseNotebookDocument(async (nb) => {
                 if (this.notebookDocument && nb.uri.toString() === this.notebookDocument.uri.toString()) {
                     this.notebookDocument = undefined;
                     this.newReplSession = true;
+                    await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
+                    this.pythonServer.dispose();
+                    this.pythonServer = createPythonServer([this.interpreter.path as string], this.cwd);
+                    this.disposables.push(this.pythonServer);
+                    if (this.replController) {
+                        this.replController.dispose();
+                    }
+                    nativeRepl = undefined;
                 }
             }),
         );
@@ -107,19 +123,21 @@ export class NativeRepl implements Disposable {
 
     /**
      * Function that check if NotebookController for REPL exists, and returns it in Singleton manner.
-     * @returns NotebookController
      */
     public setReplController(): NotebookController {
         if (!this.replController) {
-            return createReplController(this.interpreter!.path, this.disposables, this.cwd);
+            this.replController = createReplController(this.interpreter!.path, this.disposables, this.cwd);
+            this.replController.variableProvider = new VariablesProvider(
+                new VariableRequester(this.pythonServer),
+                () => this.notebookDocument,
+                this.pythonServer.onCodeExecuted,
+            );
         }
         return this.replController;
     }
 
     /**
      * Function that checks if native REPL's text input box contains complete code.
-     * @param activeEditor
-     * @param pythonServer
      * @returns Promise<boolean> - True if complete/Valid code is present, False otherwise.
      */
     public async checkUserInputCompleteCode(activeEditor: TextEditor | undefined): Promise<boolean> {
@@ -140,17 +158,38 @@ export class NativeRepl implements Disposable {
 
     /**
      * Function that opens interactive repl, selects kernel, and send/execute code to the native repl.
-     * @param code
      */
-    public async sendToNativeRepl(code?: string): Promise<void> {
-        const notebookEditor = await openInteractiveREPL(this.replController, this.notebookDocument);
-        this.notebookDocument = notebookEditor.notebook;
+    public async sendToNativeRepl(code?: string | undefined, preserveFocus: boolean = true): Promise<void> {
+        let wsMementoUri: Uri | undefined;
 
-        if (this.notebookDocument) {
-            this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
-            await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
-            if (code) {
-                await executeNotebookCell(this.notebookDocument, code);
+        if (!this.notebookDocument) {
+            const wsMemento = getWorkspaceStateValue<string>(NATIVE_REPL_URI_MEMENTO);
+            wsMementoUri = wsMemento ? Uri.parse(wsMemento) : undefined;
+
+            if (!wsMementoUri || getTabNameForUri(wsMementoUri) !== 'Python REPL') {
+                await updateWorkspaceStateValue<string | undefined>(NATIVE_REPL_URI_MEMENTO, undefined);
+                wsMementoUri = undefined;
+            }
+        }
+
+        const notebookEditor = await openInteractiveREPL(
+            this.replController,
+            this.notebookDocument ?? wsMementoUri,
+            preserveFocus,
+        );
+        if (notebookEditor) {
+            this.notebookDocument = notebookEditor.notebook;
+            await updateWorkspaceStateValue<string | undefined>(
+                NATIVE_REPL_URI_MEMENTO,
+                this.notebookDocument.uri.toString(),
+            );
+
+            if (this.notebookDocument) {
+                this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
+                await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
+                if (code) {
+                    await executeNotebookCell(notebookEditor, code);
+                }
             }
         }
     }

@@ -101,6 +101,8 @@ suite('Report Issue Command', () => {
                 packageJSON: {
                     displayName: 'Python',
                     version: '2020.2',
+                    name: 'python',
+                    publisher: 'ms-python',
                 },
             },
         ]);

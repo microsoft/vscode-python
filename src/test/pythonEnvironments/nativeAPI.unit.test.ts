@@ -13,9 +13,8 @@ import {
     NativeEnvManagerInfo,
     NativePythonFinder,
 } from '../../client/pythonEnvironments/base/locators/common/nativePythonFinder';
-import { Architecture } from '../../client/common/utils/platform';
+import { Architecture, getPathEnvVariable, isWindows } from '../../client/common/utils/platform';
 import { PythonEnvInfo, PythonEnvKind, PythonEnvType } from '../../client/pythonEnvironments/base/info';
-import { isWindows } from '../../client/common/platform/platformService';
 import { NativePythonEnvironmentKind } from '../../client/pythonEnvironments/base/locators/common/nativePythonUtils';
 import * as condaApi from '../../client/pythonEnvironments/common/environmentManagers/conda';
 import * as pyenvApi from '../../client/pythonEnvironments/common/environmentManagers/pyenv';
@@ -26,6 +25,8 @@ suite('Native Python API', () => {
     let api: IDiscoveryAPI;
     let mockFinder: typemoq.IMock<NativePythonFinder>;
     let setCondaBinaryStub: sinon.SinonStub;
+    let getCondaPathSettingStub: sinon.SinonStub;
+    let getCondaEnvDirsStub: sinon.SinonStub;
     let setPyEnvBinaryStub: sinon.SinonStub;
     let createPythonWatcherStub: sinon.SinonStub;
     let mockWatcher: typemoq.IMock<pw.PythonWatcher>;
@@ -52,8 +53,8 @@ suite('Native Python API', () => {
     const expectedBasicEnv: PythonEnvInfo = {
         arch: Architecture.Unknown,
         id: '/usr/bin/python',
-        detailedDisplayName: "Python 3.12.0 ('basic_python')",
-        display: "Python 3.12.0 ('basic_python')",
+        detailedDisplayName: 'Python 3.12.0 (basic_python)',
+        display: 'Python 3.12.0 (basic_python)',
         distro: { org: '' },
         executable: { filename: '/usr/bin/python', sysPrefix: '/usr/bin', ctime: -1, mtime: -1 },
         kind: PythonEnvKind.System,
@@ -97,8 +98,8 @@ suite('Native Python API', () => {
 
     const expectedConda1: PythonEnvInfo = {
         arch: Architecture.Unknown,
-        detailedDisplayName: "Python 3.12.0 ('conda_python')",
-        display: "Python 3.12.0 ('conda_python')",
+        detailedDisplayName: 'Python 3.12.0 (conda_python)',
+        display: 'Python 3.12.0 (conda_python)',
         distro: { org: '' },
         id: '/home/user/.conda/envs/conda_python/python',
         executable: {
@@ -108,7 +109,7 @@ suite('Native Python API', () => {
             mtime: -1,
         },
         kind: PythonEnvKind.Conda,
-        location: '/home/user/.conda/envs/conda_python/python',
+        location: '/home/user/.conda/envs/conda_python',
         source: [],
         name: 'conda_python',
         type: PythonEnvType.Conda,
@@ -137,6 +138,8 @@ suite('Native Python API', () => {
 
     setup(() => {
         setCondaBinaryStub = sinon.stub(condaApi, 'setCondaBinary');
+        getCondaEnvDirsStub = sinon.stub(condaApi, 'getCondaEnvDirs');
+        getCondaPathSettingStub = sinon.stub(condaApi, 'getCondaPathSetting');
         setPyEnvBinaryStub = sinon.stub(pyenvApi, 'setPyEnvBinary');
         getWorkspaceFoldersStub = sinon.stub(ws, 'getWorkspaceFolders');
         getWorkspaceFoldersStub.returns([]);
@@ -239,6 +242,27 @@ suite('Native Python API', () => {
         assert.deepEqual(actual, [expectedConda1]);
     });
 
+    test('Ensure no duplication on resolve', async () => {
+        mockFinder
+            .setup((f) => f.refresh())
+            .returns(() => {
+                async function* generator() {
+                    yield* [conda1];
+                }
+                return generator();
+            })
+            .verifiable(typemoq.Times.once());
+        mockFinder
+            .setup((f) => f.resolve(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(conda))
+            .verifiable(typemoq.Times.once());
+
+        await api.triggerRefresh();
+        await api.resolveEnv('/home/user/.conda/envs/conda_python/python');
+        const actual = api.getEnvs();
+        assert.deepEqual(actual, [expectedConda1]);
+    });
+
     test('Conda environment with no python', async () => {
         mockFinder
             .setup((f) => f.refresh())
@@ -274,9 +298,12 @@ suite('Native Python API', () => {
     });
 
     test('Setting conda binary', async () => {
+        getCondaPathSettingStub.returns(undefined);
+        getCondaEnvDirsStub.resolves(undefined);
+        const condaFakeDir = getPathEnvVariable()[0];
         const condaMgr: NativeEnvManagerInfo = {
             tool: 'Conda',
-            executable: '/usr/bin/conda',
+            executable: path.join(condaFakeDir, 'conda'),
         };
         mockFinder
             .setup((f) => f.refresh())

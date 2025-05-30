@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { SystemVariables } from '../../client/common/variables/systemVariables';
 import { getExtensionSettings } from '../extensionSettings';
 import { initialize } from './../initialize';
-import { isWindows } from '../../client/common/platform/platformService';
+import { isWindows } from '../../client/common/utils/platform';
 
 const workspaceRoot = path.join(__dirname, '..', '..', '..', 'src', 'test');
 

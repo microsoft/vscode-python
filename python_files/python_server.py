@@ -14,7 +14,8 @@ USER_GLOBALS = {}
 
 
 def _send_message(msg: str):
-    length_msg = len(msg)
+    # Content-Length is the data size in bytes.
+    length_msg = len(msg.encode())
     STDOUT.buffer.write(f"Content-Length: {length_msg}\r\n\r\n{msg}".encode())
     STDOUT.buffer.flush()
 
@@ -55,10 +56,11 @@ def custom_input(prompt=""):
     try:
         send_request({"prompt": prompt})
         headers = get_headers()
+        # Content-Length is the data size in bytes.
         content_length = int(headers.get("Content-Length", 0))
 
         if content_length:
-            message_text = STDIN.read(content_length)
+            message_text = STDIN.buffer.read(content_length).decode()
             message_json = json.loads(message_text)
             return message_json["result"]["userInput"]
     except Exception:
@@ -74,10 +76,11 @@ def handle_response(request_id):
     while not STDIN.closed:
         try:
             headers = get_headers()
+            # Content-Length is the data size in bytes.
             content_length = int(headers.get("Content-Length", 0))
 
             if content_length:
-                message_text = STDIN.read(content_length)
+                message_text = STDIN.buffer.read(content_length).decode()
                 message_json = json.loads(message_text)
                 our_user_input = message_json["result"]["userInput"]
                 if message_json["id"] == request_id:
@@ -159,7 +162,10 @@ class CustomIO(io.TextIOWrapper):
 
 def get_headers():
     headers = {}
-    while line := STDIN.readline().strip():
+    while True:
+        line = STDIN.buffer.readline().decode().strip()
+        if not line:
+            break
         name, value = line.split(":", 1)
         headers[name] = value.strip()
     return headers
@@ -169,10 +175,11 @@ if __name__ == "__main__":
     while not STDIN.closed:
         try:
             headers = get_headers()
+            # Content-Length is the data size in bytes.
             content_length = int(headers.get("Content-Length", 0))
 
             if content_length:
-                request_text = STDIN.read(content_length)
+                request_text = STDIN.buffer.read(content_length).decode()
                 request_json = json.loads(request_text)
                 if request_json["method"] == "execute":
                     execute(request_json, USER_GLOBALS)

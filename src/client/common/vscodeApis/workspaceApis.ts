@@ -60,6 +60,10 @@ export function onDidChangeConfiguration(handler: (e: vscode.ConfigurationChange
     return vscode.workspace.onDidChangeConfiguration(handler);
 }
 
+export function onDidCloseNotebookDocument(handler: (e: vscode.NotebookDocument) => void): vscode.Disposable {
+    return vscode.workspace.onDidCloseNotebookDocument(handler);
+}
+
 export function createFileSystemWatcher(
     globPattern: vscode.GlobPattern,
     ignoreCreateEvents?: boolean,
@@ -92,4 +96,21 @@ export function isTrusted(): boolean {
 
 export function onDidGrantWorkspaceTrust(handler: () => void): vscode.Disposable {
     return vscode.workspace.onDidGrantWorkspaceTrust(handler);
+}
+
+export function createDirectory(uri: vscode.Uri): Thenable<void> {
+    return vscode.workspace.fs.createDirectory(uri);
+}
+
+export function openNotebookDocument(uri: vscode.Uri): Thenable<vscode.NotebookDocument>;
+export function openNotebookDocument(
+    notebookType: string,
+    content?: vscode.NotebookData,
+): Thenable<vscode.NotebookDocument>;
+export function openNotebookDocument(notebook: any, content?: vscode.NotebookData): Thenable<vscode.NotebookDocument> {
+    return vscode.workspace.openNotebookDocument(notebook, content);
+}
+
+export function copy(source: vscode.Uri, dest: vscode.Uri, options?: { overwrite?: boolean }): Thenable<void> {
+    return vscode.workspace.fs.copy(source, dest, options);
 }

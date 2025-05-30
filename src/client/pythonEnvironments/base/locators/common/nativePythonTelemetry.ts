@@ -67,6 +67,7 @@ export type RefreshPerformance = {
                 MacPythonOrg?: number;
                 MacXCode?: number;
                 PipEnv?: number;
+                PixiEnv?: number;
                 Poetry?: number;
                 PyEnv?: number;
                 Venv?: number;
@@ -125,6 +126,7 @@ export function sendNativeTelemetry(
                 locatorMacPythonOrg: data.data.refreshPerformance.locators.MacPythonOrg || 0,
                 locatorMacXCode: data.data.refreshPerformance.locators.MacXCode || 0,
                 locatorPipEnv: data.data.refreshPerformance.locators.PipEnv || 0,
+                locatorPixiEnv: data.data.refreshPerformance.locators.PixiEnv || 0,
                 locatorPoetry: data.data.refreshPerformance.locators.Poetry || 0,
                 locatorPyEnv: data.data.refreshPerformance.locators.PyEnv || 0,
                 locatorVenv: data.data.refreshPerformance.locators.Venv || 0,

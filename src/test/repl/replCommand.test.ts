@@ -24,6 +24,7 @@ suite('REPL - register native repl command', () => {
     let getNativeReplStub: sinon.SinonStub;
     let disposable: TypeMoq.IMock<Disposable>;
     let disposableArray: Disposable[] = [];
+
     setup(() => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();

@@ -18,8 +18,6 @@ sys.path.append(os.fspath(script_dir / "lib" / "python"))
 
 from typing_extensions import NotRequired  # noqa: E402
 
-from testing_tools import socket_manager  # noqa: E402
-
 # Types
 
 
@@ -74,11 +72,20 @@ class ExecutionPayloadDict(TypedDict):
     error: NotRequired[str]
 
 
-class EOTPayloadDict(TypedDict):
-    """A dictionary that is used to send a end of transmission post request to the server."""
+class FileCoverageInfo(TypedDict):
+    lines_covered: List[int]
+    lines_missed: List[int]
+    executed_branches: int
+    total_branches: int
 
-    command_type: Literal["discovery", "execution"]
-    eot: bool
+
+class CoveragePayloadDict(Dict):
+    """A dictionary that is used to send a execution post request to the server."""
+
+    coverage: bool
+    cwd: str
+    result: Optional[Dict[str, FileCoverageInfo]]
+    error: Optional[str]  # Currently unused need to check
 
 
 # Helper functions for data retrieval.
@@ -300,7 +307,7 @@ atexit.register(lambda: __writer.close() if __writer else None)
 
 
 def send_post_request(
-    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, EOTPayloadDict],
+    payload: Union[ExecutionPayloadDict, DiscoveryPayloadDict, CoveragePayloadDict],
     test_run_pipe: Optional[str],
 ):
     """
@@ -324,10 +331,10 @@ def send_post_request(
 
     if __writer is None:
         try:
-            __writer = socket_manager.PipeManager(test_run_pipe)
-            __writer.connect()
+            __writer = open(test_run_pipe, "wb")  # noqa: SIM115, PTH123
         except Exception as error:
             error_msg = f"Error attempting to connect to extension named pipe {test_run_pipe}[vscode-unittest]: {error}"
+            print(error_msg, file=sys.stderr)
             __writer = None
             raise VSCodeUnittestError(error_msg) from error
 
@@ -336,10 +343,18 @@ def send_post_request(
         "params": payload,
     }
     data = json.dumps(rpc)
-
     try:
         if __writer:
-            __writer.write(data)
+            request = (
+                f"""content-length: {len(data)}\r\ncontent-type: application/json\r\n\r\n{data}"""
+            )
+            size = 4096
+            encoded = request.encode("utf-8")
+            bytes_written = 0
+            while bytes_written < len(encoded):
+                segment = encoded[bytes_written : bytes_written + size]
+                bytes_written += __writer.write(segment)
+                __writer.flush()
         else:
             print(
                 f"Connection error[vscode-unittest], writer is None \n[vscode-unittest] data: \n{data} \n",

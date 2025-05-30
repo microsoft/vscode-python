@@ -498,13 +498,6 @@ export async function updateTestItemFromRawData(
     item.busy = false;
 }
 
-export function getUri(node: TestItem): Uri | undefined {
-    if (!node.uri && node.parent) {
-        return getUri(node.parent);
-    }
-    return node.uri;
-}
-
 export function getTestCaseNodes(testNode: TestItem, collection: TestItem[] = []): TestItem[] {
     if (!testNode.canResolveChildren && testNode.tags.length > 0) {
         collection.push(testNode);

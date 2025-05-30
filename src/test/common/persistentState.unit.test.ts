@@ -5,6 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
+import * as sinon from 'sinon';
 import { Memento } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
@@ -17,17 +18,25 @@ import {
 import { IDisposable } from '../../client/common/types';
 import { sleep } from '../core';
 import { MockMemento } from '../mocks/mementos';
+import * as apiInt from '../../client/envExt/api.internal';
 
 suite('Persistent State', () => {
     let cmdManager: TypeMoq.IMock<ICommandManager>;
     let persistentStateFactory: PersistentStateFactory;
     let workspaceMemento: Memento;
     let globalMemento: Memento;
+    let useEnvExtensionStub: sinon.SinonStub;
     setup(() => {
         cmdManager = TypeMoq.Mock.ofType<ICommandManager>();
         workspaceMemento = new MockMemento();
         globalMemento = new MockMemento();
         persistentStateFactory = new PersistentStateFactory(globalMemento, workspaceMemento, cmdManager.object);
+
+        useEnvExtensionStub = sinon.stub(apiInt, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+    });
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Global states created are restored on invoking clean storage command', async () => {

@@ -9,14 +9,8 @@ import { AppinsightsKey, isTestExecution, isUnitTestExecution, PVSC_EXTENSION_ID
 import type { TerminalShellType } from '../common/terminal/types';
 import { isPromise } from '../common/utils/async';
 import { StopWatch } from '../common/utils/stopWatch';
-import { ConsoleType, TriggerType } from '../debugger/types';
 import { EnvironmentType, PythonEnvironment } from '../pythonEnvironments/info';
-import {
-    TensorBoardEntrypoint,
-    TensorBoardEntrypointTrigger,
-    TensorBoardPromptSelection,
-    TensorBoardSessionStartResult,
-} from '../tensorBoard/constants';
+import { TensorBoardPromptSelection } from '../tensorBoard/constants';
 import { EventName } from './constants';
 import type { TestTool } from './types';
 
@@ -24,7 +18,6 @@ import type { TestTool } from './types';
  * Checks whether telemetry is supported.
  * Its possible this function gets called within Debug Adapter, vscode isn't available in there.
  * Within DA, there's a completely different way to send telemetry.
- * @returns {boolean}
  */
 function isTelemetrySupported(): boolean {
     try {
@@ -42,7 +35,6 @@ let packageJSON: any;
 
 /**
  * Checks if the telemetry is disabled
- * @returns {boolean}
  */
 export function isTelemetryDisabled(): boolean {
     if (!packageJSON) {
@@ -138,7 +130,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                         break;
                 }
             } catch (exception) {
-                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception);
+                console.error(`Failed to serialize ${prop} for ${String(eventName)}`, exception); // use console due to circular dependencies with trace calls
             }
         });
     }
@@ -162,7 +154,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             `Telemetry Event : ${eventNameSent} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
                 customProperties,
             )} `,
-        );
+        ); // use console due to circular dependencies with trace calls
     }
 }
 
@@ -307,327 +299,6 @@ type FailedEventType = { failed: true };
 
 // Map all events to their properties
 export interface IEventNamePropertyMapping {
-    /**
-     * Telemetry event sent when debug in terminal button was used to debug current file.
-     */
-    /* __GDPR__
-        "debug_in_terminal_button" : { "owner": "paulacamargo25" }
-    */
-    [EventName.DEBUG_IN_TERMINAL_BUTTON]: never | undefined;
-    /**
-     * Telemetry event captured when debug adapter executable is created
-     */
-    /* __GDPR__
-       "debug_adapter.using_wheels_path" : {
-          "usingwheels" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
-       }
-     */
-
-    [EventName.DEBUG_ADAPTER_USING_WHEELS_PATH]: {
-        /**
-         * Carries boolean
-         * - `true` if path used for the adapter is the debugger with wheels.
-         * - `false` if path used for the adapter is the source only version of the debugger.
-         */
-        usingWheels: boolean;
-    };
-    /**
-     * Telemetry captured before starting debug session.
-     */
-    /* __GDPR__
-       "debug_session.start" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
-       }
-     */
-    [EventName.DEBUG_SESSION_START]: {
-        /**
-         * Trigger for starting the debugger.
-         * - `launch`: Launch/start new code and debug it.
-         * - `attach`: Attach to an exiting python process (remote debugging).
-         * - `test`: Debugging python tests.
-         *
-         * @type {TriggerType}
-         */
-        trigger: TriggerType;
-        /**
-         * Type of console used.
-         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
-         * - `integratedTerminal`: Use VS Code terminal.
-         * - `externalTerminal`: Use an External terminal.
-         *
-         * @type {ConsoleType}
-         */
-        console?: ConsoleType;
-    };
-    /**
-     * Telemetry captured when debug session runs into an error.
-     */
-    /* __GDPR__
-       "debug_session.error" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
-       }
-     */
-    [EventName.DEBUG_SESSION_ERROR]: {
-        /**
-         * Trigger for starting the debugger.
-         * - `launch`: Launch/start new code and debug it.
-         * - `attach`: Attach to an exiting python process (remote debugging).
-         * - `test`: Debugging python tests.
-         *
-         * @type {TriggerType}
-         */
-        trigger: TriggerType;
-        /**
-         * Type of console used.
-         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
-         * - `integratedTerminal`: Use VS Code terminal.
-         * - `externalTerminal`: Use an External terminal.
-         *
-         * @type {ConsoleType}
-         */
-        console?: ConsoleType;
-    };
-    /**
-     * Telemetry captured after stopping debug session.
-     */
-    /* __GDPR__
-       "debug_session.stop" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
-       }
-     */
-    [EventName.DEBUG_SESSION_STOP]: {
-        /**
-         * Trigger for starting the debugger.
-         * - `launch`: Launch/start new code and debug it.
-         * - `attach`: Attach to an exiting python process (remote debugging).
-         * - `test`: Debugging python tests.
-         *
-         * @type {TriggerType}
-         */
-        trigger: TriggerType;
-        /**
-         * Type of console used.
-         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
-         * - `integratedTerminal`: Use VS Code terminal.
-         * - `externalTerminal`: Use an External terminal.
-         *
-         * @type {ConsoleType}
-         */
-        console?: ConsoleType;
-    };
-    /**
-     * Telemetry captured when user code starts running after loading the debugger.
-     */
-    /* __GDPR__
-       "debug_session.user_code_running" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "trigger" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" },
-          "console" : { "classification": "SystemMetaData", "purpose": "PerformanceAndHealth", "owner": "paulacamargo25" }
-       }
-     */
-    [EventName.DEBUG_SESSION_USER_CODE_RUNNING]: {
-        /**
-         * Trigger for starting the debugger.
-         * - `launch`: Launch/start new code and debug it.
-         * - `attach`: Attach to an exiting python process (remote debugging).
-         * - `test`: Debugging python tests.
-         *
-         * @type {TriggerType}
-         */
-        trigger: TriggerType;
-        /**
-         * Type of console used.
-         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
-         * - `integratedTerminal`: Use VS Code terminal.
-         * - `externalTerminal`: Use an External terminal.
-         *
-         * @type {ConsoleType}
-         */
-        console?: ConsoleType;
-    };
-    /**
-     * Telemetry captured when starting the debugger.
-     */
-    /* __GDPR__
-       "debugger" : {
-          "trigger" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "console" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "hasenvvars": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "hasargs": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "django": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "fastapi": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "flask": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "jinja": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "islocalhost": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "ismodule": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "issudo": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "stoponentry": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "showreturnvalue": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "pyramid": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "subprocess": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "watson": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "pyspark": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "gevent": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" },
-          "scrapy": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "paulacamargo25" }
-       }
-     */
-    [EventName.DEBUGGER]: {
-        /**
-         * Trigger for starting the debugger.
-         * - `launch`: Launch/start new code and debug it.
-         * - `attach`: Attach to an exiting python process (remote debugging).
-         * - `test`: Debugging python tests.
-         *
-         * @type {TriggerType}
-         */
-        trigger: TriggerType;
-        /**
-         * Type of console used.
-         *  -`internalConsole`: Use VS Code debug console (no shells/terminals).
-         * - `integratedTerminal`: Use VS Code terminal.
-         * - `externalTerminal`: Use an External terminal.
-         *
-         * @type {ConsoleType}
-         */
-        console?: ConsoleType;
-        /**
-         * Whether user has defined environment variables.
-         * Could have been defined in launch.json or the env file (defined in `settings.json`).
-         * Default `env file` is `.env` in the workspace folder.
-         *
-         * @type {boolean}
-         */
-        hasEnvVars: boolean;
-        /**
-         * Whether there are any CLI arguments that need to be passed into the program being debugged.
-         *
-         * @type {boolean}
-         */
-        hasArgs: boolean;
-        /**
-         * Whether the user is debugging `django`.
-         *
-         * @type {boolean}
-         */
-        django: boolean;
-        /**
-         * Whether the user is debugging `fastapi`.
-         *
-         * @type {boolean}
-         */
-        fastapi: boolean;
-        /**
-         * Whether the user is debugging `flask`.
-         *
-         * @type {boolean}
-         */
-        flask: boolean;
-        /**
-         * Whether the user is debugging `jinja` templates.
-         *
-         * @type {boolean}
-         */
-        jinja: boolean;
-        /**
-         * Whether user is attaching to a local python program (attach scenario).
-         *
-         * @type {boolean}
-         */
-        isLocalhost: boolean;
-        /**
-         * Whether debugging a module.
-         *
-         * @type {boolean}
-         */
-        isModule: boolean;
-        /**
-         * Whether debugging with `sudo`.
-         *
-         * @type {boolean}
-         */
-        isSudo: boolean;
-        /**
-         * Whether required to stop upon entry.
-         *
-         * @type {boolean}
-         */
-        stopOnEntry: boolean;
-        /**
-         * Whether required to display return types in debugger.
-         *
-         * @type {boolean}
-         */
-        showReturnValue: boolean;
-        /**
-         * Whether debugging `pyramid`.
-         *
-         * @type {boolean}
-         */
-        pyramid: boolean;
-        /**
-         * Whether debugging a subprocess.
-         *
-         * @type {boolean}
-         */
-        subProcess: boolean;
-        /**
-         * Whether debugging `watson`.
-         *
-         * @type {boolean}
-         */
-        watson: boolean;
-        /**
-         * Whether degbugging `pyspark`.
-         *
-         * @type {boolean}
-         */
-        pyspark: boolean;
-        /**
-         * Whether using `gevent` when debugging.
-         *
-         * @type {boolean}
-         */
-        gevent: boolean;
-        /**
-         * Whether debugging `scrapy`.
-         *
-         * @type {boolean}
-         */
-        scrapy: boolean;
-    };
-    /**
-     * Telemetry event sent when attaching to child process
-     */
-    /* __GDPR__
-       "debugger.attach_to_child_process" : {
-           "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "paulacamargo25" }
-       }
-     */
-    [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
-    /**
-     * Telemetry event sent when attaching to a local process.
-     */
-    /* __GDPR__
-       "debugger.attach_to_local_process" : { "owner": "paulacamargo25" }
-     */
-    [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
-    /**
-     * Telemetry event sent with details of actions when invoking a diagnostic command
-     */
-    /* __GDPR__
-       "diagnostics.action" : {
-          "commandname" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "ignorecode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "url" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" },
-          "action" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
     [EventName.DIAGNOSTICS_ACTION]: {
         /**
          * Diagnostics command executed.
@@ -1751,6 +1422,7 @@ export interface IEventNamePropertyMapping {
         "locatorMacXCode" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorPipEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorPoetry" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
+        "locatorPixi" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorPyEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorVenv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
         "locatorVirtualEnv" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "isMeasurement": true, "owner": "donjayamanne" },
@@ -1814,6 +1486,10 @@ export interface IEventNamePropertyMapping {
          * Time taken to find all Pipenv environments.
          */
         locatorPipEnv?: number;
+        /**
+         * Time taken to find all Pixi environments.
+         */
+        locatorPixi?: number;
         /**
          * Time taken to find all Poetry environments.
          */
@@ -2023,23 +1699,7 @@ export interface IEventNamePropertyMapping {
          */
         selection: 'Allow' | 'Close' | undefined;
     };
-    /**
-     * Telemetry event sent with details when user clicks the prompt with the following message:
-     *
-     * 'We noticed you're using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the "terminal.integrated.inheritEnv" setting to be changed to false. Would you like to update this setting?'
-     */
-    /* __GDPR__
-       "conda_inherit_env_prompt" : {
-          "selection" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "karthiknadig" }
-       }
-     */
-    [EventName.TERMINAL_DEACTIVATE_PROMPT]: {
-        /**
-         * `Yes` When 'Allow' option is selected
-         * `Close` When 'Close' option is selected
-         */
-        selection: 'Edit script' | "Don't show again" | undefined;
-    };
+
     /**
      * Telemetry event sent with details when user attempts to run in interactive window when Jupyter is not installed.
      */
@@ -2312,8 +1972,13 @@ export interface IEventNamePropertyMapping {
     [EventName.REPL]: {
         /**
          * Whether the user launched the Terminal REPL or Native REPL
+         *
+         * Terminal - Terminal REPL user ran `Python: Start Terminal REPL` command.
+         * Native - Native REPL user ran `Python: Start Native Python REPL` command.
+         * manualTerminal - User started REPL in terminal using `python`, `python3` or `py` etc without arguments in terminal.
+         * runningScript - User ran a script in terminal like `python myscript.py`.
          */
-        replType: 'Terminal' | 'Native';
+        replType: 'Terminal' | 'Native' | 'manualTerminal' | `runningScript`;
     };
     /**
      * Telemetry event sent if and when user configure tests command. This command can be trigerred from multiple places in the extension. (Command palette, prompt etc.)
@@ -2575,101 +2240,6 @@ export interface IEventNamePropertyMapping {
 
     // TensorBoard integration events
     /**
-     * Telemetry event sent after the user has clicked on an option in the prompt we display
-     * asking them if they want to launch an integrated TensorBoard session.
-     * `selection` is one of 'yes', 'no', or 'do not ask again'.
-     */
-    /* __GDPR__
-       "tensorboard.launch_prompt_selection" : { "owner": "donjayamanne" }
-     */
-
-    [EventName.TENSORBOARD_LAUNCH_PROMPT_SELECTION]: {
-        selection: TensorBoardPromptSelection;
-    };
-    /**
-     * Telemetry event sent after the python.launchTensorBoard command has been executed.
-     * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or from a codelens or the user clicking 'yes'
-     * on the launch prompt we display.
-     * The `trigger` property indicates whether the entrypoint was triggered by the user
-     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
-     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
-     */
-    /* __GDPR__
-       "tensorboard.session_launch" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_LAUNCH]: {
-        entrypoint: TensorBoardEntrypoint;
-        trigger: TensorBoardEntrypointTrigger;
-    };
-    /**
-     * Telemetry event sent after we have attempted to create a tensorboard program instance
-     * by spawning a daemon to run the tensorboard_launcher.py script. The event is sent with
-     * `duration` which should never exceed 60_000ms. Depending on the value of `result`, `duration` means:
-     * 1. 'success' --> the total amount of time taken for the execObservable daemon to report successful TB session launch
-     * 2. 'canceled' --> the total amount of time that the user waited for the daemon to start before canceling launch
-     * 3. 'error' --> 60_000ms, i.e. we timed out waiting for the daemon to launch
-     * In the first two cases, `duration` should not be more than 60_000ms.
-     */
-    /* __GDPR__
-       "tensorboard.session_daemon_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-          "result" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_DAEMON_STARTUP_DURATION]: {
-        result: TensorBoardSessionStartResult;
-    };
-    /**
-     * Telemetry event sent after the webview framing the TensorBoard website has been successfully shown.
-     * This event is sent with `duration` which represents the total time to create a TensorBoardSession.
-     * Note that this event is only sent if an integrated TensorBoard session is successfully created in full.
-     * This includes checking whether the tensorboard package is installed and installing it if it's not already
-     * installed, requesting the user to select a log directory, starting the tensorboard
-     * program instance in a daemon, and showing the TensorBoard UI in a webpanel, in that order.
-     */
-    /* __GDPR__
-       "tensorboard.session_e2e_startup_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_E2E_STARTUP_DURATION]: never | undefined;
-    /**
-     * Telemetry event sent after the user has closed a TensorBoard webview panel. This event is
-     * sent with `duration` specifying the total duration of time that the TensorBoard session
-     * ran for before the user terminated the session.
-     */
-    /* __GDPR__
-       "tensorboard.session_duration" : {
-          "duration" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_SESSION_DURATION]: never | undefined;
-    /**
-     * Telemetry event sent when an entrypoint is displayed to the user. This event is sent once
-     * per entrypoint per session to minimize redundant events since codelenses
-     * can be displayed multiple times per file.
-     * The `entrypoint` property indicates whether the command was executed directly by the
-     * user from the command palette or from a codelens or the user clicking 'yes'
-     * on the launch prompt we display.
-     * The `trigger` property indicates whether the entrypoint was triggered by the user
-     * importing tensorboard, using tensorboard in a notebook, detected tfevent files in
-     * the workspace. For the palette entrypoint, the trigger is also 'palette'.
-     */
-    /* __GDPR__
-       "tensorboard.entrypoint_shown" : {
-          "entrypoint" : { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" },
-          "trigger": { "classification": "SystemMetaData", "purpose": "FeatureInsight", "owner": "donjayamanne" }
-       }
-     */
-    [EventName.TENSORBOARD_ENTRYPOINT_SHOWN]: {
-        entrypoint: TensorBoardEntrypoint;
-        trigger: TensorBoardEntrypointTrigger;
-    };
-    /**
      * Telemetry event sent when the user is prompted to install Python packages that are
      * dependencies for launching an integrated TensorBoard session.
      */
@@ -2729,25 +2299,6 @@ export interface IEventNamePropertyMapping {
        "tensorboard.torch_profiler_import" : { "owner": "donjayamanne" }
      */
     [EventName.TENSORBOARD_TORCH_PROFILER_IMPORT]: never | undefined;
-    /**
-     * Telemetry event sent when the extension host receives a message from the
-     * TensorBoard webview containing a valid jump to source payload from the
-     * PyTorch profiler TensorBoard plugin.
-     */
-    /* __GDPR__
-       "tensorboard_jump_to_source_request" : { "owner": "donjayamanne" }
-     */
-    [EventName.TENSORBOARD_JUMP_TO_SOURCE_REQUEST]: never | undefined;
-    /**
-     * Telemetry event sent when the extension host receives a message from the
-     * TensorBoard webview containing a valid jump to source payload from the
-     * PyTorch profiler TensorBoard plugin, but the source file does not exist
-     * on the machine currently running TensorBoard.
-     */
-    /* __GDPR__
-       "tensorboard_jump_to_source_file_not_found" : { "owner": "donjayamanne" }
-     */
-    [EventName.TENSORBOARD_JUMP_TO_SOURCE_FILE_NOT_FOUND]: never | undefined;
     [EventName.TENSORBOARD_DETECTED_IN_INTEGRATED_TERMINAL]: never | undefined;
     /**
      * Telemetry event sent before creating an environment.

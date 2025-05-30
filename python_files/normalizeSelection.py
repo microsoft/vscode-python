@@ -8,6 +8,8 @@ import sys
 import textwrap
 from typing import Iterable
 
+attach_bracket_paste = sys.version_info >= (3, 13)
+
 
 def split_lines(source):
     """
@@ -26,10 +28,6 @@ def _get_statements(selection):
     This will remove empty newlines around and within the selection, dedent it,
     and split it using the result of `ast.parse()`.
     """
-    if '"""' in selection or "'''" in selection:
-        yield selection
-        return
-
     # Remove blank lines within the selection to prevent the REPL from thinking the block is finished.
     lines = (line for line in split_lines(selection) if line.strip() != "")
 
@@ -122,8 +120,12 @@ def normalize_lines(selection):
 
         # Insert a newline between each top-level statement, and append a newline to the selection.
         source = "\n".join(statements) + "\n"
+        # If selection ends with trailing dictionary or list, remove last unnecessary newline.
         if selection[-2] == "}" or selection[-2] == "]":
             source = source[:-1]
+        # If the selection contains trailing return dictionary, insert newline to trigger execute.
+        if check_end_with_return_dict(selection):
+            source = source + "\n"
     except Exception:
         # If there's a problem when parsing statements,
         # append a blank line to end the block and send it as-is.
@@ -134,6 +136,11 @@ def normalize_lines(selection):
 
 top_level_nodes = []
 min_key = None
+
+
+def check_end_with_return_dict(code):
+    stripped_code = code.strip()
+    return stripped_code.endswith("}") and "return {" in stripped_code.strip()
 
 
 def check_exact_exist(top_level_nodes, start_line, end_line):
@@ -283,14 +290,20 @@ if __name__ == "__main__":
         normalized = result["normalized_smart_result"]
         which_line_next = result["which_line_next"]
         if normalized == "deprecated":
-            data = json.dumps({"normalized": normalized})
+            data = json.dumps(
+                {"normalized": normalized, "attach_bracket_paste": attach_bracket_paste}
+            )
         else:
             data = json.dumps(
-                {"normalized": normalized, "nextBlockLineno": result["which_line_next"]}
+                {
+                    "normalized": normalized,
+                    "nextBlockLineno": result["which_line_next"],
+                    "attach_bracket_paste": attach_bracket_paste,
+                }
             )
     else:
         normalized = normalize_lines(contents["code"])
-        data = json.dumps({"normalized": normalized})
+        data = json.dumps({"normalized": normalized, "attach_bracket_paste": attach_bracket_paste})
 
     stdout = sys.stdout if sys.version_info < (3,) else sys.stdout.buffer
     stdout.write(data.encode("utf-8"))

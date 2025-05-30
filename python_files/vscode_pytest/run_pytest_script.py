@@ -34,6 +34,21 @@ if __name__ == "__main__":
     sys.path.insert(0, os.getcwd())  # noqa: PTH109
     # Get the rest of the args to run with pytest.
     args = sys.argv[1:]
+
+    # Check if coverage is enabled and adjust the args accordingly.
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED")
+    coverage_enabled = False
+    if is_coverage_run == "True":
+        # If coverage is enabled, check if the coverage plugin is already in the args, if so keep user args.
+        for arg in args:
+            # if '--cov' is an arg or if '--cov=' is in an arg (check to see if this arg is set to not override user intent)
+            if arg == "--cov" or "--cov=" in arg:
+                print("coverage already enabled with specific args")
+                coverage_enabled = True
+                break
+        if not coverage_enabled:
+            args = [*args, "--cov=.", "--cov-branch"]
+
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     if run_test_ids_pipe:
         try:

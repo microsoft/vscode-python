@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2024.15.0-dev",
+    "version": "2025.7.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -24,7 +24,9 @@
         "quickPickItemTooltip",
         "terminalDataWriteEvent",
         "terminalExecuteCommandEvent",
-        "contribIssueReporter"
+        "codeActionAI",
+        "notebookReplDocument",
+        "notebookVariableProvider"
     ],
     "author": {
         "name": "Microsoft Corporation"
@@ -45,7 +47,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.89.0-20240415"
+        "vscode": "^1.95.0"
     },
     "enableTelemetry": false,
     "keywords": [
@@ -65,20 +67,50 @@
         "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
+        "onCommand:python.copilotSetupTests",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
         "workspaceContains:Pipfile",
         "workspaceContains:setup.py",
         "workspaceContains:requirements.txt",
+        "workspaceContains:pylock.toml",
+        "workspaceContains:**/pylock.*.toml",
         "workspaceContains:manage.py",
         "workspaceContains:app.py",
         "workspaceContains:.venv",
-        "workspaceContains:.conda"
+        "workspaceContains:.conda",
+        "onLanguageModelTool:get_python_environment_details",
+        "onLanguageModelTool:get_python_executable_details",
+        "onLanguageModelTool:install_python_packages",
+        "onLanguageModelTool:configure_python_environment",
+        "onLanguageModelTool:create_virtual_environment"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
     "l10n": "./l10n",
     "contributes": {
+        "problemMatchers": [
+            {
+                "name": "python",
+                "owner": "python",
+                "source": "python",
+                "fileLocation": "autoDetect",
+                "pattern": [
+                    {
+                        "regexp": "^.*File \\\"([^\\\"]|.*)\\\", line (\\d+).*",
+                        "file": 1,
+                        "line": 2
+                    },
+                    {
+                        "regexp": "^\\s*(.*)\\s*$"
+                    },
+                    {
+                        "regexp": "^\\s*(.*Error.*)$",
+                        "message": 1
+                    }
+                ]
+            }
+        ],
         "walkthroughs": [
             {
                 "id": "pythonWelcome",
@@ -277,11 +309,6 @@
             },
             {
                 "category": "Python",
-                "command": "python.enableSourceMapSupport",
-                "title": "%python.command.python.enableSourceMapSupport.title%"
-            },
-            {
-                "category": "Python",
                 "command": "python.execInTerminal",
                 "title": "%python.command.python.execInTerminal.title%"
             },
@@ -305,24 +332,13 @@
             {
                 "category": "Python",
                 "command": "python.execSelectionInTerminal",
-                "title": "%python.command.python.execSelectionInTerminal.title%"
+                "title": "%python.command.python.execSelectionInTerminal.title%",
+                "shortTitle": "%python.command.python.execSelectionInTerminal.shortTitle%"
             },
             {
                 "category": "Python",
                 "command": "python.execInREPL",
                 "title": "%python.command.python.execInREPL.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.launchTensorBoard",
-                "title": "%python.command.python.launchTensorBoard.title%"
-            },
-            {
-                "category": "Python",
-                "command": "python.refreshTensorBoard",
-                "enablement": "python.hasActiveTensorBoardSession",
-                "icon": "$(refresh)",
-                "title": "%python.command.python.refreshTensorBoard.title%"
             },
             {
                 "category": "Python",
@@ -418,12 +434,6 @@
                     "scope": "machine-overridable",
                     "type": "string"
                 },
-                "python.diagnostics.sourceMapsEnabled": {
-                    "default": false,
-                    "description": "%python.diagnostics.sourceMapsEnabled.description%",
-                    "scope": "application",
-                    "type": "boolean"
-                },
                 "python.envFile": {
                     "default": "${workspaceFolder}/.env",
                     "description": "%python.envFile.description%",
@@ -446,9 +456,7 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
-                            "pythonTestAdapter",
-                            "pythonREPLSmartSend",
-                            "pythonRecommendTensorboardExt"
+                            "pythonTestAdapter"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -456,9 +464,7 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
-                            "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%",
-                            "%python.experiments.pythonRecommendTensorboardExt.description%"
+                            "%python.experiments.pythonTestAdapter.description%"
                         ]
                     },
                     "scope": "window",
@@ -475,8 +481,7 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
-                            "pythonTestAdapter",
-                            "pythonREPLSmartSend"
+                            "pythonTestAdapter"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -484,8 +489,7 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
-                            "%python.experiments.pythonTestAdapter.description%",
-                            "%python.experiments.pythonREPLSmartSend.description%"
+                            "%python.experiments.pythonTestAdapter.description%"
                         ]
                     },
                     "scope": "window",
@@ -556,10 +560,7 @@
                         "Warning"
                     ],
                     "scope": "resource",
-                    "type": "string",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "type": "string"
                 },
                 "python.locator": {
                     "default": "js",
@@ -569,7 +570,8 @@
                         "native"
                     ],
                     "tags": [
-                        "experimental"
+                        "onExP",
+                        "preview"
                     ],
                     "scope": "machine",
                     "type": "string"
@@ -591,14 +593,6 @@
                     "description": "%python.pixiToolPath.description%",
                     "scope": "machine-overridable",
                     "type": "string"
-                },
-                "python.tensorBoard.logDirectory": {
-                    "default": "",
-                    "description": "%python.tensorBoard.logDirectory.description%",
-                    "scope": "resource",
-                    "type": "string",
-                    "markdownDeprecationMessage": "%python.tensorBoard.logDirectory.markdownDeprecationMessage%",
-                    "deprecationMessage": "%python.tensorBoard.logDirectory.deprecationMessage%"
                 },
                 "python.terminal.activateEnvInCurrentTerminal": {
                     "default": false,
@@ -630,6 +624,15 @@
                     "scope": "resource",
                     "type": "array"
                 },
+                "python.terminal.shellIntegration.enabled": {
+                    "default": false,
+                    "markdownDescription": "%python.terminal.shellIntegration.enabled.description%",
+                    "scope": "resource",
+                    "type": "boolean",
+                    "tags": [
+                        "preview"
+                    ]
+                },
                 "python.REPL.enableREPLSmartSend": {
                     "default": true,
                     "description": "%python.EnableREPLSmartSend.description%",
@@ -640,16 +643,25 @@
                     "default": false,
                     "description": "%python.REPL.sendToNativeREPL.description%",
                     "scope": "resource",
-                    "type": "boolean",
-                    "tags": [
-                        "experimental"
-                    ]
+                    "type": "boolean"
+                },
+                "python.REPL.provideVariables": {
+                    "default": true,
+                    "description": "%python.REPL.provideVariables.description%",
+                    "scope": "resource",
+                    "type": "boolean"
                 },
                 "python.testing.autoTestDiscoverOnSaveEnabled": {
                     "default": true,
                     "description": "%python.testing.autoTestDiscoverOnSaveEnabled.description%",
                     "scope": "resource",
                     "type": "boolean"
+                },
+                "python.testing.autoTestDiscoverOnSavePattern": {
+                    "default": "**/*.py",
+                    "description": "%python.testing.autoTestDiscoverOnSavePattern.description%",
+                    "scope": "resource",
+                    "type": "string"
                 },
                 "python.testing.cwd": {
                     "default": null,
@@ -1125,23 +1137,22 @@
             {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
-                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && activeEditor != 'workbench.editor.interactive'"
+                "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "python.execInREPL",
                 "key": "shift+enter",
-                "when": "!accessibilityModeEnabled && config.python.REPL.sendToNativeREPL && activeEditor != 'workbench.editor.interactive'&& editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused"
+                "when": "config.python.REPL.sendToNativeREPL && editorLangId == python && editorTextFocus && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
             },
             {
                 "command": "python.execInREPLEnter",
                 "key": "enter",
-                "when": "!config.interactiveWindow.executeWithShiftEnter && activeEditor == 'workbench.editor.interactive'"
+                "when": "!config.interactiveWindow.executeWithShiftEnter && isCompositeNotebook && activeEditor == 'workbench.editor.repl' && !inlineChatFocused && !notebookCellListFocused"
             },
             {
-                "command": "python.refreshTensorBoard",
-                "key": "ctrl+r",
-                "mac": "cmd+r",
-                "when": "python.hasActiveTensorBoardSession"
+                "command": "python.execInInteractiveWindowEnter",
+                "key": "enter",
+                "when": "!config.interactiveWindow.executeWithShiftEnter && isCompositeNotebook && activeEditor == 'workbench.editor.interactive' && !inlineChatFocused && !notebookCellListFocused"
             }
         ],
         "languages": [
@@ -1192,7 +1203,8 @@
             {
                 "filenames": [
                     "Pipfile",
-                    "poetry.lock"
+                    "poetry.lock",
+                    "uv.lock"
                 ],
                 "id": "toml"
             },
@@ -1254,12 +1266,6 @@
                 },
                 {
                     "category": "Python",
-                    "command": "python.enableSourceMapSupport",
-                    "title": "%python.command.python.enableSourceMapSupport.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported"
-                },
-                {
-                    "category": "Python",
                     "command": "python.execInTerminal",
                     "title": "%python.command.python.execInTerminal.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
@@ -1295,20 +1301,6 @@
                     "command": "python.execInREPL",
                     "title": "%python.command.python.execInREPL.title%",
                     "when": "false"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.launchTensorBoard",
-                    "title": "%python.command.python.launchTensorBoard.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
-                },
-                {
-                    "category": "Python",
-                    "command": "python.refreshTensorBoard",
-                    "enablement": "python.hasActiveTensorBoardSession",
-                    "icon": "$(refresh)",
-                    "title": "%python.command.python.refreshTensorBoard.title%",
-                    "when": "!virtualWorkspace && shellExecutionSupported && !python.tensorboardExtInstalled"
                 },
                 {
                     "category": "Python",
@@ -1408,13 +1400,6 @@
                     "when": "editorFocus && editorLangId == python && !virtualWorkspace && shellExecutionSupported && config.python.REPL.sendToNativeREPL"
                 }
             ],
-            "editor/title": [
-                {
-                    "command": "python.refreshTensorBoard",
-                    "group": "navigation@0",
-                    "when": "python.hasActiveTensorBoardSession && !virtualWorkspace && shellExecutionSupported"
-                }
-            ],
             "editor/title/run": [
                 {
                     "command": "python.execInTerminal-icon",
@@ -1482,7 +1467,166 @@
                 "fileMatch": "meta.yaml",
                 "url": "./schemas/conda-meta.json"
             }
+        ],
+        "languageModelTools": [
+            {
+                "name": "get_python_environment_details",
+                "displayName": "Get Python Environment Info",
+                "userDescription": "%python.languageModelTools.get_python_environment_details.userDescription%",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Environment (conda, venv, etec), 2. Version of Python, 3. List of all installed packages with their versions. ALWAYS call configure_python_environment before using this tool.",
+                "toolReferenceName": "getPythonEnvironmentInfo",
+                "tags": [
+                    "python",
+                    "python environment",
+                    "extension_installed_by_tool",
+                    "enable_other_tool_configure_python_environment"
+                ],
+                "icon": "$(snake)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace to get the environment information for."
+                        }
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "get_python_executable_details",
+                "displayName": "Get Python Executable",
+                "userDescription": "%python.languageModelTools.get_python_executable_details.userDescription%",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. ALWAYS use this tool before executing any Python command in the terminal. This tool returns the details of how to construct the fully qualified path and or command including details such as arguments required to run Python in a terminal. Note: Instead of executing `python --version` or `python -c 'import sys; print(sys.executable)'`, use this tool to get the Python executable path to replace the `python` command. E.g. instead of using `python -c 'import sys; print(sys.executable)'`, use this tool to build the command `conda run -n <env_name> -c 'import sys; print(sys.executable)'`. ALWAYS call configure_python_environment before using this tool.",
+                "toolReferenceName": "getPythonExecutableCommand",
+                "tags": [
+                    "python",
+                    "python environment",
+                    "extension_installed_by_tool",
+                    "enable_other_tool_configure_python_environment"
+                ],
+                "icon": "$(terminal)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace to get the executable information for. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
+                        }
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "install_python_packages",
+                "displayName": "Install Python Package",
+                "userDescription": "%python.languageModelTools.install_python_packages.userDescription%",
+                "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment. ALWAYS call configure_python_environment before using this tool.",
+                "toolReferenceName": "installPythonPackage",
+                "tags": [
+                    "python",
+                    "python environment",
+                    "install python package",
+                    "extension_installed_by_tool",
+                    "enable_other_tool_configure_python_environment"
+                ],
+                "icon": "$(package)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "packageList": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "The list of packages to install."
+                        },
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace into which the packages are installed. If not provided, the current workspace will be used. Where possible pass the path to the file or workspace."
+                        }
+                    },
+                    "required": [
+                        "packageList"
+                    ]
+                }
+            },
+            {
+                "name": "configure_python_environment",
+                "displayName": "Configure Python Environment",
+                "modelDescription": "This tool configures a Python environment in the given workspace. ALWAYS Use this tool to set up the user's chosen environment and ALWAYS call this tool before using any other Python related tools.",
+                "userDescription": "%python.languageModelTools.configure_python_environment.userDescription%",
+                "toolReferenceName": "configurePythonEnvironment",
+                "tags": [
+                    "python",
+                    "python environment",
+                    "extension_installed_by_tool"
+                ],
+                "icon": "$(gear)",
+                "canBeReferencedInPrompt": true,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        }
+                    },
+                    "required": []
+                }
+            },
+            {
+                "name": "create_virtual_environment",
+                "displayName": "Create a Virtual Environment",
+                "modelDescription": "This tool will create a Virual Environment",
+                "tags": [],
+                "canBeReferencedInPrompt": false,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "packageList": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "The list of packages to install."
+                        },
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        }
+                    },
+                    "required": []
+                },
+                "when": "false"
+            },
+            {
+                "name": "selectEnvironment",
+                "displayName": "Select a Python Environment",
+                "modelDescription": "This tool will prompt the user to select an existing Python Environment",
+                "tags": [],
+                "canBeReferencedInPrompt": false,
+                "inputSchema": {
+                    "type": "object",
+                    "properties": {
+                        "resourcePath": {
+                            "type": "string",
+                            "description": "The path to the Python file or workspace for which a Python Environment needs to be configured."
+                        }
+                    },
+                    "required": []
+                },
+                "when": "false"
+            }
         ]
+    },
+    "copilot": {
+        "tests": {
+            "getSetupConfirmation": "python.copilotSetupTests"
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
@@ -1511,8 +1655,8 @@
         "testSmoke": "cross-env INSTALL_JUPYTER_EXTENSION=true \"node ./out/test/smokeTest.js\"",
         "testInsiders": "cross-env VSC_PYTHON_CI_TEST_VSC_CHANNEL=insiders INSTALL_PYLANCE_EXTENSION=true TEST_FILES_SUFFIX=insiders.test CODE_TESTS_WORKSPACE=src/testMultiRootWkspc/smokeTests \"node ./out/test/standardTest.js\"",
         "lint-staged": "node gulpfile.js",
-        "lint": "eslint --ext .ts,.js src build pythonExtensionApi",
-        "lint-fix": "eslint --fix --ext .ts,.js src build pythonExtensionApi gulpfile.js",
+        "lint": "eslint  src build pythonExtensionApi",
+        "lint-fix": "eslint --fix src build pythonExtensionApi gulpfile.js",
         "format-check": "prettier --check 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "clean": "gulp clean",
@@ -1527,7 +1671,6 @@
         "arch": "^2.1.0",
         "fs-extra": "^11.2.0",
         "glob": "^7.2.0",
-        "hash.js": "^1.1.7",
         "iconv-lite": "^0.6.3",
         "inversify": "^6.0.2",
         "jsonc-parser": "^3.0.0",
@@ -1535,7 +1678,7 @@
         "minimatch": "^5.0.1",
         "named-js-regexp": "^1.3.3",
         "node-stream-zip": "^1.6.0",
-        "reflect-metadata": "^0.1.12",
+        "reflect-metadata": "^0.2.2",
         "rxjs": "^6.5.4",
         "rxjs-compat": "^6.5.4",
         "semver": "^7.5.2",
@@ -1570,7 +1713,7 @@
         "@types/sinon": "^17.0.3",
         "@types/stack-trace": "0.0.29",
         "@types/tmp": "^0.0.33",
-        "@types/vscode": "^1.81.0",
+        "@types/vscode": "^1.95.0",
         "@types/which": "^2.0.1",
         "@types/winreg": "^1.2.30",
         "@types/xml2js": "^0.4.2",
@@ -1587,11 +1730,11 @@
         "cross-spawn": "^6.0.5",
         "del": "^6.0.0",
         "download": "^8.0.0",
-        "eslint": "^7.2.0",
-        "eslint-config-airbnb": "^18.2.0",
+        "eslint": "^8.57.1",
         "eslint-config-prettier": "^8.3.0",
-        "eslint-plugin-import": "^2.29.1",
+        "eslint-plugin-import": "^2.31.0",
         "eslint-plugin-jsx-a11y": "^6.3.1",
+        "eslint-plugin-no-only-tests": "^3.3.0",
         "eslint-plugin-react": "^7.20.3",
         "eslint-plugin-react-hooks": "^4.0.0",
         "expose-loader": "^3.1.0",
@@ -1599,7 +1742,7 @@
         "get-port": "^5.1.1",
         "gulp": "^5.0.0",
         "gulp-typescript": "^5.0.0",
-        "mocha": "^9.2.2",
+        "mocha": "^11.1.0",
         "mocha-junit-reporter": "^2.0.2",
         "mocha-multi-reporters": "^1.1.7",
         "node-has-native-dependencies": "^1.0.2",

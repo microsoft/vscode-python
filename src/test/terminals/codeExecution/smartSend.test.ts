@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
 import * as TypeMoq from 'typemoq';
 import * as path from 'path';
 import { TextEditor, Selection, Position, TextDocument, Uri } from 'vscode';
@@ -18,14 +21,15 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { EnvironmentType, PythonEnvironment } from '../../../client/pythonEnvironments/info';
-import { PYTHON_PATH } from '../../common';
+import { PYTHON_PATH, getPythonSemVer } from '../../common';
 import { Architecture } from '../../../client/common/utils/platform';
 import { ProcessService } from '../../../client/common/process/proc';
 import { l10n } from '../../mocks/vsc';
+import { ReplType } from '../../../client/repl/types';
 
 const TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'python_files', 'terminalExec');
 
-suite('REPL - Smart Send', () => {
+suite('REPL - Smart Send', async () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let applicationShell: TypeMoq.IMock<IApplicationShell>;
 
@@ -109,7 +113,11 @@ suite('REPL - Smart Send', () => {
 
         pythonSettings
             .setup((s) => s.REPL)
-            .returns(() => ({ enableREPLSmartSend: true, REPLSmartSend: true, sendToNativeREPL: false }));
+            .returns(() => ({
+                enableREPLSmartSend: true,
+                REPLSmartSend: true,
+                sendToNativeREPL: false,
+            }));
 
         configurationService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
@@ -138,7 +146,7 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        await codeExecutionHelper.normalizeLines('my_dict = {', ReplType.terminal, wholeFileContent);
 
         commandManager
             .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
@@ -160,63 +168,71 @@ suite('REPL - Smart Send', () => {
         commandManager.verifyAll();
     });
 
-    test('Smart send should perform smart selection and move cursor', async () => {
-        configurationService
-            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
-            .returns({
-                REPL: {
-                    REPLSmartSend: true,
-                },
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any);
+    const pythonTestVersion = await getPythonSemVer();
 
-        const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
-        const firstIndexPosition = new Position(0, 0);
-        const selection = TypeMoq.Mock.ofType<Selection>();
-        const wholeFileContent = await fs.readFile(path.join(TEST_FILES_PATH, `sample_smart_selection.py`), 'utf8');
+    if (pythonTestVersion && pythonTestVersion.minor < 13) {
+        test('Smart send should perform smart selection and move cursor - Python < 3.13', async () => {
+            configurationService
+                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                .returns({
+                    REPL: {
+                        REPLSmartSend: true,
+                    },
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                } as any);
 
-        selection.setup((s) => s.anchor).returns(() => firstIndexPosition);
-        selection.setup((s) => s.active).returns(() => firstIndexPosition);
-        selection.setup((s) => s.isEmpty).returns(() => true);
-        activeEditor.setup((e) => e.selection).returns(() => selection.object);
+            const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
+            const firstIndexPosition = new Position(0, 0);
+            const selection = TypeMoq.Mock.ofType<Selection>();
+            const wholeFileContent = await fs.readFile(path.join(TEST_FILES_PATH, `sample_smart_selection.py`), 'utf8');
 
-        documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
-        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => wholeFileContent);
-        const actualProcessService = new ProcessService();
+            selection.setup((s) => s.anchor).returns(() => firstIndexPosition);
+            selection.setup((s) => s.active).returns(() => firstIndexPosition);
+            selection.setup((s) => s.isEmpty).returns(() => true);
+            activeEditor.setup((e) => e.selection).returns(() => selection.object);
 
-        const { execObservable } = actualProcessService;
+            documentManager.setup((d) => d.activeTextEditor).returns(() => activeEditor.object);
+            document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => wholeFileContent);
+            const actualProcessService = new ProcessService();
 
-        processService
-            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
+            const { execObservable } = actualProcessService;
 
-        const actualSmartOutput = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+            processService
+                .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        // my_dict = {  <----- smart shift+enter here
-        //     "key1": "value1",
-        //     "key2": "value2"
-        // } <---- cursor should be here afterwards, hence offset 3
-        commandManager
-            .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
-            .callback((_, arg2) => {
-                assert.deepEqual(arg2, {
-                    to: 'down',
-                    by: 'line',
-                    value: 3,
-                });
-                return Promise.resolve();
-            })
-            .verifiable(TypeMoq.Times.once());
+            const actualSmartOutput = await codeExecutionHelper.normalizeLines(
+                'my_dict = {',
+                ReplType.terminal,
+                wholeFileContent,
+            );
 
-        commandManager
-            .setup((c) => c.executeCommand('cursorEnd'))
-            .returns(() => Promise.resolve())
-            .verifiable(TypeMoq.Times.once());
+            // my_dict = {  <----- smart shift+enter here
+            //     "key1": "value1",
+            //     "key2": "value2"
+            // } <---- cursor should be here afterwards, hence offset 3
+            commandManager
+                .setup((c) => c.executeCommand('cursorMove', TypeMoq.It.isAny()))
+                .callback((_, arg2) => {
+                    assert.deepEqual(arg2, {
+                        to: 'down',
+                        by: 'line',
+                        value: 3,
+                    });
+                    return Promise.resolve();
+                })
+                .verifiable(TypeMoq.Times.once());
 
-        const expectedSmartOutput = 'my_dict = {\n    "key1": "value1",\n    "key2": "value2"\n}\n';
-        expect(actualSmartOutput).to.be.equal(expectedSmartOutput);
-        commandManager.verifyAll();
-    });
+            commandManager
+                .setup((c) => c.executeCommand('cursorEnd'))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+
+            const expectedSmartOutput = 'my_dict = {\n    "key1": "value1",\n    "key2": "value2"\n}\n';
+            expect(actualSmartOutput).to.be.equal(expectedSmartOutput);
+            commandManager.verifyAll();
+        });
+    }
 
     // Do not perform smart selection when there is explicit selection
     test('Smart send should not perform smart selection when there is explicit selection', async () => {
@@ -240,7 +256,11 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        const actualNonSmartResult = await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        const actualNonSmartResult = await codeExecutionHelper.normalizeLines(
+            'my_dict = {',
+            ReplType.terminal,
+            wholeFileContent,
+        );
         const expectedNonSmartResult = 'my_dict = {\n\n'; // Standard for previous normalization logic
         expect(actualNonSmartResult).to.be.equal(expectedNonSmartResult);
     });
@@ -278,7 +298,7 @@ suite('REPL - Smart Send', () => {
             .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((file, args, options) => execObservable.apply(actualProcessService, [file, args, options]));
 
-        await codeExecutionHelper.normalizeLines('my_dict = {', wholeFileContent);
+        await codeExecutionHelper.normalizeLines('my_dict = {', ReplType.terminal, wholeFileContent);
 
         applicationShell
             .setup((a) =>

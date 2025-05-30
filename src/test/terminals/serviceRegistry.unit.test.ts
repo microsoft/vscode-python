@@ -14,17 +14,17 @@ import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecut
 import { TerminalDeactivateService } from '../../client/terminals/envCollectionActivation/deactivateService';
 import { TerminalIndicatorPrompt } from '../../client/terminals/envCollectionActivation/indicatorPrompt';
 import { TerminalEnvVarCollectionService } from '../../client/terminals/envCollectionActivation/service';
-import { ShellIntegrationService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
 import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    IShellIntegrationService,
+    IShellIntegrationDetectionService,
     ITerminalAutoActivation,
     ITerminalDeactivateService,
     ITerminalEnvVarCollectionService,
 } from '../../client/terminals/types';
+import { ShellIntegrationDetectionService } from '../../client/terminals/envCollectionActivation/shellIntegrationService';
 
 suite('Terminal - Service Registry', () => {
     test('Ensure all services get registered', () => {
@@ -39,7 +39,7 @@ suite('Terminal - Service Registry', () => {
             [ITerminalEnvVarCollectionService, TerminalEnvVarCollectionService],
             [IExtensionSingleActivationService, TerminalIndicatorPrompt],
             [ITerminalDeactivateService, TerminalDeactivateService],
-            [IShellIntegrationService, ShellIntegrationService],
+            [IShellIntegrationDetectionService, ShellIntegrationDetectionService],
         ].forEach((args) => {
             if (args.length === 2) {
                 services

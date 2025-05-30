@@ -78,6 +78,10 @@ def file_exists(path: Union[str, pathlib.PurePath]) -> bool:
     return pathlib.Path(path).exists()
 
 
+def is_file(path: Union[str, pathlib.PurePath]) -> bool:
+    return pathlib.Path(path).is_file()
+
+
 def venv_exists(name: str) -> bool:
     return (
         (CWD / name).exists()
@@ -94,11 +98,20 @@ def run_process(args: Sequence[str], error_message: str) -> None:
         raise VenvError(error_message) from exc
 
 
+def get_win_venv_path(name: str) -> str:
+    venv_dir = CWD / name
+    # If using MSYS2 Python, the Python executable is located in the 'bin' directory.
+    if file_exists(venv_dir / "bin" / "python.exe"):
+        return os.fspath(venv_dir / "bin" / "python.exe")
+    else:
+        return os.fspath(venv_dir / "Scripts" / "python.exe")
+
+
 def get_venv_path(name: str) -> str:
     # See `venv` doc here for more details on binary location:
     # https://docs.python.org/3/library/venv.html#creating-virtual-environments
     if sys.platform == "win32":
-        return os.fspath(CWD / name / "Scripts" / "python.exe")
+        return get_win_venv_path(name)
     else:
         return os.fspath(CWD / name / "bin" / "python")
 
@@ -134,11 +147,15 @@ def upgrade_pip(venv_path: str) -> None:
     print("CREATE_VENV.UPGRADED_PIP")
 
 
+def create_gitignore(git_ignore: Union[str, pathlib.PurePath]):
+    print("Creating:", os.fspath(git_ignore))
+    pathlib.Path(git_ignore).write_text("*")
+
+
 def add_gitignore(name: str) -> None:
     git_ignore = CWD / name / ".gitignore"
-    if git_ignore.is_file():
-        print("Creating:", os.fspath(git_ignore))
-        git_ignore.write_text("*")
+    if not is_file(git_ignore):
+        create_gitignore(git_ignore)
 
 
 def download_pip_pyz(name: str):

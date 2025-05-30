@@ -19,8 +19,3 @@ export enum DiscoveryUsingWorkers {
 export enum EnableTestAdapterRewrite {
     experiment = 'pythonTestAdapter',
 }
-
-// Experiment to recommend installing the tensorboard extension.
-export enum RecommendTensobardExtension {
-    experiment = 'pythonRecommendTensorboardExt',
-}

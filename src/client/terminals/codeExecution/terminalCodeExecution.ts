@@ -59,7 +59,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 this.configurationService.updateSetting('REPL.enableREPLSmartSend', false, resource);
             }
         } else {
-            await this.getTerminalService(resource).sendText(code);
+            await this.getTerminalService(resource).executeCommand(code, true);
         }
     }
 

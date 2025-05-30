@@ -27,6 +27,7 @@ import {
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
+    IRecommendedEnvironmentService,
 } from '../../client/interpreter/configuration/types';
 import {
     IActivatedEnvironmentLaunch,
@@ -35,7 +36,7 @@ import {
     IInterpreterService,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
-import { InterpreterLocatorProgressStatubarHandler } from '../../client/interpreter/display/progressDisplay';
+import { InterpreterLocatorProgressStatusBarHandler } from '../../client/interpreter/display/progressDisplay';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { registerTypes } from '../../client/interpreter/serviceRegistry';
@@ -44,6 +45,7 @@ import { CondaInheritEnvPrompt } from '../../client/interpreter/virtualEnvs/cond
 import { VirtualEnvironmentPrompt } from '../../client/interpreter/virtualEnvs/virtualEnvPrompt';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { InterpreterPathCommand } from '../../client/interpreter/interpreterPathCommand';
+import { RecommendedEnvironmentService } from '../../client/interpreter/configuration/recommededEnvironmentService';
 
 suite('Interpreters - Service Registry', () => {
     test('Registrations', () => {
@@ -64,11 +66,12 @@ suite('Interpreters - Service Registry', () => {
 
             [IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory],
             [IPythonPathUpdaterServiceManager, PythonPathUpdaterService],
+            [IRecommendedEnvironmentService, RecommendedEnvironmentService],
             [IInterpreterSelector, InterpreterSelector],
             [IInterpreterHelper, InterpreterHelper],
             [IInterpreterComparer, EnvironmentTypeComparer],
 
-            [IExtensionSingleActivationService, InterpreterLocatorProgressStatubarHandler],
+            [IExtensionSingleActivationService, InterpreterLocatorProgressStatusBarHandler],
 
             [IInterpreterAutoSelectionProxyService, InterpreterAutoSelectionProxyService],
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],

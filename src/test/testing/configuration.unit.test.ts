@@ -10,7 +10,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../cli
 import {
     IConfigurationService,
     IInstaller,
-    ITestOutputChannel,
+    ILogOutputChannel,
     IPythonSettings,
     Product,
 } from '../../client/common/types';
@@ -61,7 +61,7 @@ suite('Unit Tests - ConfigurationService', () => {
                 configurationService.setup((c) => c.getSettings(workspaceUri)).returns(() => pythonSettings.object);
 
                 serviceContainer
-                    .setup((c) => c.get(typeMoq.It.isValue(ITestOutputChannel)))
+                    .setup((c) => c.get(typeMoq.It.isValue(ILogOutputChannel)))
                     .returns(() => outputChannel.object);
                 serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IInstaller))).returns(() => installer.object);
                 serviceContainer
@@ -249,6 +249,15 @@ suite('Unit Tests - ConfigurationService', () => {
                 const selectedItem = await testConfigService.target.selectTestRunner(placeHolder);
                 expect(selectedItem).to.be.equal(undefined, 'invalid value');
                 appShell.verifyAll();
+            });
+            test('Correctly returns hasConfiguredTests', () => {
+                let enabled = false;
+                unitTestSettings.setup((u) => u.unittestEnabled).returns(() => false);
+                unitTestSettings.setup((u) => u.pytestEnabled).returns(() => enabled);
+
+                expect(testConfigService.target.hasConfiguredTests(workspaceUri)).to.equal(false);
+                enabled = true;
+                expect(testConfigService.target.hasConfiguredTests(workspaceUri)).to.equal(true);
             });
             test('Prompt to enable a test if a test framework is not enabled', async () => {
                 unitTestSettings.setup((u) => u.pytestEnabled).returns(() => false);

@@ -15,7 +15,11 @@ import { IConfigurationService, Resource } from './common/types';
 import { getDebugpyLauncherArgs } from './debugger/extension/adapter/remoteLaunchers';
 import { IInterpreterService } from './interpreter/contracts';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { JupyterExtensionIntegration } from './jupyter/jupyterIntegration';
+import {
+    JupyterExtensionIntegration,
+    JupyterExtensionPythonEnvironments,
+    JupyterPythonEnvironmentApi,
+} from './jupyter/jupyterIntegration';
 import { traceError } from './logging';
 import { IDiscoveryAPI } from './pythonEnvironments/base/locator';
 import { buildEnvironmentApi } from './environmentApi';
@@ -33,11 +37,18 @@ export function buildApi(
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     serviceManager.addSingleton<JupyterExtensionIntegration>(JupyterExtensionIntegration, JupyterExtensionIntegration);
+    serviceManager.addSingleton<JupyterExtensionPythonEnvironments>(
+        JupyterExtensionPythonEnvironments,
+        JupyterExtensionPythonEnvironments,
+    );
     serviceManager.addSingleton<TensorboardExtensionIntegration>(
         TensorboardExtensionIntegration,
         TensorboardExtensionIntegration,
     );
+    const jupyterPythonEnvApi = serviceContainer.get<JupyterPythonEnvironmentApi>(JupyterExtensionPythonEnvironments);
+    const environments = buildEnvironmentApi(discoveryApi, serviceContainer, jupyterPythonEnvApi);
     const jupyterIntegration = serviceContainer.get<JupyterExtensionIntegration>(JupyterExtensionIntegration);
+    jupyterIntegration.registerEnvApi(environments);
     const tensorboardIntegration = serviceContainer.get<TensorboardExtensionIntegration>(
         TensorboardExtensionIntegration,
     );
@@ -80,7 +91,6 @@ export function buildApi(
              * @param {Resource} [resource] A resource for which the setting is asked for.
              * * When no resource is provided, the setting scoped to the first workspace folder is returned.
              * * If no folder is present, it returns the global setting.
-             * @returns {({ execCommand: string[] | undefined })}
              */
             getExecutionDetails(
                 resource?: Resource,
@@ -147,7 +157,7 @@ export function buildApi(
             stop: (client: BaseLanguageClient): Promise<void> => client.stop(),
             getTelemetryReporter: () => getTelemetryReporter(),
         },
-        environments: buildEnvironmentApi(discoveryApi, serviceContainer),
+        environments,
     };
 
     // In test environment return the DI Container.

@@ -161,6 +161,14 @@ def test_parameterized_error_collect():
             "text_docstring.txt",
             expected_discovery_test_output.doctest_pytest_expected_output,
         ),
+        (
+            "pytest_describe_plugin" + os.path.sep + "describe_only.py",
+            expected_discovery_test_output.expected_describe_only_output,
+        ),
+        (
+            "pytest_describe_plugin" + os.path.sep + "nested_describe.py",
+            expected_discovery_test_output.expected_nested_describe_output,
+        ),
     ],
 )
 def test_pytest_collect(file, expected_const):
@@ -187,15 +195,17 @@ def test_pytest_collect(file, expected_const):
     if actual_list is not None:
         actual_item = actual_list.pop(0)
         assert all(item in actual_item for item in ("status", "cwd", "error"))
-        assert (
-            actual_item.get("status") == "success"
-        ), f"Status is not 'success', error is: {actual_item.get('error')}"
+        assert actual_item.get("status") == "success", (
+            f"Status is not 'success', error is: {actual_item.get('error')}"
+        )
         assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
         assert is_same_tree(
             actual_item.get("tests"),
             expected_const,
             ["id_", "lineno", "name", "runID"],
-        ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        ), (
+            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_const, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        )
 
 
 @pytest.mark.skipif(
@@ -224,13 +234,13 @@ def test_symlink_root_dir():
             actual_item = actual_list.pop(0)
             try:
                 # Check if all requirements
-                assert all(
-                    item in actual_item for item in ("status", "cwd", "error")
-                ), "Required keys are missing"
+                assert all(item in actual_item for item in ("status", "cwd", "error")), (
+                    "Required keys are missing"
+                )
                 assert actual_item.get("status") == "success", "Status is not 'success'"
-                assert actual_item.get("cwd") == os.fspath(
-                    destination
-                ), f"CWD does not match: {os.fspath(destination)}"
+                assert actual_item.get("cwd") == os.fspath(destination), (
+                    f"CWD does not match: {os.fspath(destination)}"
+                )
                 assert actual_item.get("tests") == expected, "Tests do not match expected value"
             except AssertionError as e:
                 # Print the actual_item in JSON format if an assertion fails
@@ -263,7 +273,9 @@ def test_pytest_root_dir():
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
             ["id_", "lineno", "name", "runID"],
-        ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        ), (
+            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        )
 
 
 def test_pytest_config_file():
@@ -290,7 +302,9 @@ def test_pytest_config_file():
             actual_item.get("tests"),
             expected_discovery_test_output.root_with_config_expected_output,
             ["id_", "lineno", "name", "runID"],
-        ), f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        ), (
+            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.root_with_config_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        )
 
 
 def test_config_sub_folder():
@@ -321,3 +335,32 @@ def test_config_sub_folder():
         if actual_item.get("tests") is not None:
             tests: Any = actual_item.get("tests")
             assert tests.get("name") == "config_sub_folder"
+
+
+def test_ruff_plugin():
+    """Here the session node will be a subfolder of the workspace root and the test are in another subfolder.
+
+    This tests checks to see if test node path are under the session node and if so the
+    session node is correctly updated to the common path.
+    """
+    file_path = helpers.TEST_DATA_PATH / "folder_with_script"
+    actual = helpers.runner(
+        [os.fspath(file_path), "--collect-only", "--ruff"],
+    )
+
+    assert actual
+    actual_list: List[Dict[str, Any]] = actual
+    if actual_list is not None:
+        actual_item = actual_list.pop(0)
+        assert all(item in actual_item for item in ("status", "cwd", "error"))
+        assert actual_item.get("status") == "success", (
+            f"Status is not 'success', error is: {actual_item.get('error')}"
+        )
+        assert actual_item.get("cwd") == os.fspath(helpers.TEST_DATA_PATH)
+        assert is_same_tree(
+            actual_item.get("tests"),
+            expected_discovery_test_output.ruff_test_expected_output,
+            ["id_", "lineno", "name", "runID"],
+        ), (
+            f"Tests tree does not match expected value. \n Expected: {json.dumps(expected_discovery_test_output.ruff_test_expected_output, indent=4)}. \n Actual: {json.dumps(actual_item.get('tests'), indent=4)}"
+        )

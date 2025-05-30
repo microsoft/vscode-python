@@ -130,7 +130,7 @@ class _IpcChannel:
             body = {"type": "event", "seq": self.seq, "event": name, "body": args}
             self.seq += 1
             content = json.dumps(body).encode("utf8")
-            headers = ("Content-Length: %d\n\n" % (len(content),)).encode("utf8")
+            headers = f"Content-Length: {len(content)}\n\n".encode()
             self.socket.send(headers)
             self.socket.send(content)
 

@@ -41,7 +41,10 @@ async function getCustomVirtualEnvDirs(): Promise<string[]> {
     const venvFolders = getPythonSetting<string[]>(VENVFOLDERS_SETTING_KEY) ?? [];
     const homeDir = getUserHomeDir();
     if (homeDir && (await pathExists(homeDir))) {
-        venvFolders.map((item) => path.join(homeDir, item)).forEach((d) => venvDirs.push(d));
+        venvFolders
+            .map((item) => (item.startsWith(homeDir) ? item : path.join(homeDir, item)))
+            .forEach((d) => venvDirs.push(d));
+        venvFolders.forEach((item) => venvDirs.push(untildify(item)));
     }
     return asyncFilter(uniq(venvDirs), pathExists);
 }

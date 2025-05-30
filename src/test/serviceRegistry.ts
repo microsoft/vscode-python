@@ -7,7 +7,8 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Memento } from 'vscode';
 import { FileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
-import { PlatformService, isWindows } from '../client/common/platform/platformService';
+import { PlatformService } from '../client/common/platform/platformService';
+import { isWindows } from '../client/common/utils/platform';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
 import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
@@ -26,11 +27,10 @@ import {
     ICurrentProcess,
     IDisposableRegistry,
     IMemento,
-    ILogOutputChannel,
     IPathUtils,
     IsWindows,
     WORKSPACE_MEMENTO,
-    ITestOutputChannel,
+    ILogOutputChannel,
 } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
@@ -83,7 +83,7 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, stdOutputChannel);
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
-        this.serviceManager.addSingletonInstance<ITestOutputChannel>(ITestOutputChannel, testOutputChannel);
+        this.serviceManager.addSingletonInstance<ILogOutputChannel>(ILogOutputChannel, testOutputChannel);
 
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(
             IInterpreterAutoSelectionService,

@@ -4,7 +4,7 @@ import * as sinon from 'sinon';
 import { ExecutionResult, ShellOptions } from '../../../../client/common/process/types';
 import * as externalDependencies from '../../../../client/pythonEnvironments/common/externalDependencies';
 import { TEST_LAYOUT_ROOT } from '../commonTestConstants';
-import { Pixi } from '../../../../client/pythonEnvironments/common/environmentManagers/pixi';
+import { getPixi } from '../../../../client/pythonEnvironments/common/environmentManagers/pixi';
 
 export type PixiCommand = { cmd: 'info --json' } | { cmd: '--version' } | { cmd: null };
 
@@ -105,10 +105,12 @@ export function makeExecHandler(verify: VerifyOptions = {}) {
 suite('Pixi binary is located correctly', async () => {
     let exec: sinon.SinonStub;
     let getPythonSetting: sinon.SinonStub;
+    let pathExists: sinon.SinonStub;
 
     setup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
         exec = sinon.stub(externalDependencies, 'exec');
+        pathExists = sinon.stub(externalDependencies, 'pathExists');
     });
 
     teardown(() => {
@@ -117,10 +119,16 @@ suite('Pixi binary is located correctly', async () => {
 
     const testPath = async (pixiPath: string, verify = true) => {
         getPythonSetting.returns(pixiPath);
+        pathExists.returns(pixiPath !== 'pixi');
         // If `verify` is false, don’t verify that the command has been called with that path
         exec.callsFake(makeExecHandler(verify ? { pixiPath } : undefined));
-        const pixi = await Pixi.getPixi();
-        expect(pixi?.command).to.equal(pixiPath);
+        const pixi = await getPixi();
+
+        if (pixiPath === 'pixi') {
+            expect(pixi).to.equal(undefined);
+        } else {
+            expect(pixi?.command).to.equal(pixiPath);
+        }
     };
 
     test('Return a Pixi instance in an empty directory', () => testPath('pixiPath', false));
@@ -133,7 +141,7 @@ suite('Pixi binary is located correctly', async () => {
         exec.callsFake((_file: string, _args: string[], _options: ShellOptions) =>
             Promise.reject(new Error('Command failed')),
         );
-        const pixi = await Pixi.getPixi();
+        const pixi = await getPixi();
         expect(pixi?.command).to.equal(undefined);
     });
 });

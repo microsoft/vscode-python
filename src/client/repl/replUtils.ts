@@ -9,7 +9,6 @@ import { getMultiLineSelectionText, getSingleLineSelectionText } from '../termin
 
 /**
  * Function that executes selected code in the terminal.
- * @returns Promise<void>
  */
 export async function executeInTerminal(): Promise<void> {
     await commands.executeCommand(Commands.Exec_Selection_In_Terminal);
@@ -45,12 +44,7 @@ export function getSendToNativeREPLSetting(): boolean {
     return configuration.get<boolean>('REPL.sendToNativeREPL', false);
 }
 
-/**
- * Function that inserts new line in the given (input) text editor
- * @param activeEditor
- * @returns void
- */
-
+// Function that inserts new line in the given (input) text editor
 export function insertNewLineToREPLInput(activeEditor: TextEditor | undefined): void {
     if (activeEditor) {
         const position = activeEditor.selection.active;
@@ -70,9 +64,6 @@ export function isMultiLineText(textEditor: TextEditor): boolean {
 /**
  * Function that trigger interpreter warning if invalid interpreter.
  * Function will also return undefined or active interpreter
- * @parm uri
- * @param interpreterService
- * @returns Promise<PythonEnvironment | undefined>
  */
 export async function getActiveInterpreter(
     uri: Uri,
@@ -88,7 +79,6 @@ export async function getActiveInterpreter(
 
 /**
  * Function that will return ViewColumn for existing Native REPL that belongs to given  NotebookDocument.
- * @returns ViewColumn | undefined
  */
 export function getExistingReplViewColumn(notebookDocument: NotebookDocument): ViewColumn | undefined {
     const ourNotebookUri = notebookDocument.uri.toString();
@@ -106,6 +96,39 @@ export function getExistingReplViewColumn(notebookDocument: NotebookDocument): V
                 }
             }
         }
+    }
+    return undefined;
+}
+
+/**
+ * Function that will return tab name for before reloading VS Code
+ * This is so we can make sure tab name is still 'Python REPL' after reloading VS Code,
+ * and make sure Python REPL does not get 'merged' into unaware untitled.ipynb tab.
+ */
+export function getTabNameForUri(uri: Uri): string | undefined {
+    const tabGroups = window.tabGroups.all;
+
+    for (const tabGroup of tabGroups) {
+        for (const tab of tabGroup.tabs) {
+            if (tab.input instanceof TabInputNotebook && tab.input.uri.toString() === uri.toString()) {
+                return tab.label;
+            }
+        }
+    }
+
+    return undefined;
+}
+
+/**
+ * Function that will return the minor version of current active Python interpreter.
+ */
+export async function getPythonMinorVersion(
+    uri: Uri | undefined,
+    interpreterService: IInterpreterService,
+): Promise<number | undefined> {
+    if (uri) {
+        const pythonVersion = await getActiveInterpreter(uri, interpreterService);
+        return pythonVersion?.version?.minor;
     }
     return undefined;
 }

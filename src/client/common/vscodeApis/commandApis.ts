@@ -3,13 +3,16 @@
 
 import { commands, Disposable } from 'vscode';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
-export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
-    return commands.registerCommand(command, callback, thisArg);
+/**
+ * Wrapper for vscode.commands.executeCommand to make it easier to mock in tests
+ */
+export function executeCommand<T>(command: string, ...rest: any[]): Thenable<T> {
+    return commands.executeCommand<T>(command, ...rest);
 }
 
-export function executeCommand<T = unknown>(command: string, ...rest: any[]): Thenable<T> {
-    return commands.executeCommand(command, ...rest);
+/**
+ * Wrapper for vscode.commands.registerCommand to make it easier to mock in tests
+ */
+export function registerCommand(command: string, callback: (...args: any[]) => any, thisArg?: any): Disposable {
+    return commands.registerCommand(command, callback, thisArg);
 }

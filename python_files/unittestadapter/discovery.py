@@ -16,7 +16,6 @@ from django_handler import django_discovery_runner  # noqa: E402
 # If I use from utils then there will be an import error in test_discovery.py.
 from unittestadapter.pvsc_utils import (  # noqa: E402
     DiscoveryPayloadDict,
-    EOTPayloadDict,
     VSCodeUnittestError,
     build_test_tree,
     parse_unittest_args,
@@ -129,7 +128,6 @@ if __name__ == "__main__":
             # collect args for Django discovery runner.
             args = argv[index + 1 :] or []
             django_discovery_runner(manage_py_path, args)
-            # eot payload sent within Django runner.
         except Exception as e:
             error_msg = f"Error configuring Django test runner: {e}"
             print(error_msg, file=sys.stderr)
@@ -139,6 +137,3 @@ if __name__ == "__main__":
         payload = discover_tests(start_dir, pattern, top_level_dir)
         # Post this discovery payload.
         send_post_request(payload, test_run_pipe)
-        # Post EOT token.
-        eot_payload: EOTPayloadDict = {"command_type": "discovery", "eot": True}
-        send_post_request(eot_payload, test_run_pipe)

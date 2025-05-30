@@ -268,3 +268,50 @@ class TestNormalizationScript:
         result = normalizeSelection.normalize_lines(src)
 
         assert result == expected
+
+    def test_return_dict(self):
+        importlib.reload(normalizeSelection)
+        src = textwrap.dedent(
+            """\
+            def get_dog(name, breed):
+                return {'name': name, 'breed': breed}
+            """
+        )
+
+        expected = textwrap.dedent(
+            """\
+            def get_dog(name, breed):
+                return {'name': name, 'breed': breed}
+
+            """
+        )
+
+        result = normalizeSelection.normalize_lines(src)
+
+        assert result == expected
+
+    def test_return_dict2(self):
+        importlib.reload(normalizeSelection)
+        src = textwrap.dedent(
+            """\
+            def get_dog(name, breed):
+                return {'name': name, 'breed': breed}
+
+            dog = get_dog('Ahri', 'Pomeranian')
+            print(dog)
+            """
+        )
+
+        expected = textwrap.dedent(
+            """\
+            def get_dog(name, breed):
+                return {'name': name, 'breed': breed}
+
+            dog = get_dog('Ahri', 'Pomeranian')
+            print(dog)
+            """
+        )
+
+        result = normalizeSelection.normalize_lines(src)
+
+        assert result == expected

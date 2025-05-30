@@ -25,7 +25,6 @@ extends:
   parameters:
     publishExtension: ${{ parameters.publishExtension }}
     l10nSourcePaths: ./src/client
-    needsTools: true
 
     buildPlatforms:
       - name: Linux
@@ -61,12 +60,12 @@ extends:
     buildSteps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '18.17.1'
+          versionSpec: '20.18.0'
         displayName: Select Node version
 
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '3.8'
+          versionSpec: '3.9'
           addToPath: true
           architecture: 'x64'
         displayName: Select Python version
@@ -97,15 +96,41 @@ extends:
             chmod +x $(Build.SourcesDirectory)/python-env-tools/bin
         displayName: Make Directory for python-env-tool binary
 
+      - bash: |
+          if [ "$(vsceTarget)" == "win32-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-pc-windows-msvc"
+          elif [ "$(vsceTarget)" == "win32-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-pc-windows-msvc"
+          elif [ "$(vsceTarget)" == "linux-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          elif [ "$(vsceTarget)" == "linux-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-unknown-linux-gnu"
+          elif [ "$(vsceTarget)" == "linux-armhf" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]armv7-unknown-linux-gnueabihf"
+          elif [ "$(vsceTarget)" == "darwin-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-apple-darwin"
+          elif [ "$(vsceTarget)" == "darwin-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-apple-darwin"
+          elif [ "$(vsceTarget)" == "alpine-x64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          elif [ "$(vsceTarget)" == "alpine-arm64" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]aarch64-unknown-linux-gnu"
+          elif [ "$(vsceTarget)" == "web" ]; then
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          else
+            echo "##vso[task.setvariable variable=buildTarget]x86_64-unknown-linux-musl"
+          fi
+        displayName: Set buildTarget variable
+
       - task: DownloadPipelineArtifact@2
         inputs:
             buildType: 'specific'
             project: 'Monaco'
             definition: 593
             buildVersionToDownload: 'latestFromBranch'
-            branchName: 'refs/heads/release/2024.14'
+            branchName: 'refs/heads/release/2025.4'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
-            artifactName: 'bin-$(vsceTarget)'
+            artifactName: 'bin-$(buildTarget)'
             itemPattern: |
               pet.exe
               pet
@@ -124,4 +149,5 @@ extends:
             areaPath: 'Visual Studio Code Python Extensions'
             serviceTreeID: '6e6194bc-7baa-4486-86d0-9f5419626d46'
         enabled: true
+    apiScanDependentPipelineId: '593' # python-environment-tools
     apiScanSoftwareVersion: '2024'

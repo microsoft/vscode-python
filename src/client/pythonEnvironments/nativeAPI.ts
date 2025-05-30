@@ -20,14 +20,14 @@ import {
     NativePythonFinder,
 } from './base/locators/common/nativePythonFinder';
 import { createDeferred, Deferred } from '../common/utils/async';
-import { Architecture, getUserHomeDir } from '../common/utils/platform';
+import { Architecture, getPathEnvVariable, getUserHomeDir } from '../common/utils/platform';
 import { parseVersion } from './base/info/pythonVersion';
 import { cache } from '../common/utils/decorators';
-import { traceError, traceLog, traceWarn } from '../logging';
+import { traceError, traceInfo, traceLog, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { FileChangeType } from '../common/platform/fileSystemWatcher';
 import { categoryToKind, NativePythonEnvironmentKind } from './base/locators/common/nativePythonUtils';
-import { setCondaBinary } from './common/environmentManagers/conda';
+import { getCondaEnvDirs, getCondaPathSetting, setCondaBinary } from './common/environmentManagers/conda';
 import { setPyEnvBinary } from './common/environmentManagers/pyenv';
 import {
     createPythonWatcher,
@@ -55,6 +55,10 @@ function toArch(a: string | undefined): Architecture {
 }
 
 function getLocation(nativeEnv: NativeEnvInfo, executable: string): string {
+    if (nativeEnv.kind === NativePythonEnvironmentKind.Conda) {
+        return nativeEnv.prefix ?? path.dirname(executable);
+    }
+
     if (nativeEnv.executable) {
         return nativeEnv.executable;
     }
@@ -108,14 +112,14 @@ function getDisplayName(version: PythonVersion, kind: PythonEnvKind, arch: Archi
     const kindStr = kindToShortString(kind);
     if (arch === Architecture.x86) {
         if (kindStr) {
-            return name ? `Python ${versionStr} 32-bit ('${name}')` : `Python ${versionStr} 32-bit (${kindStr})`;
+            return name ? `Python ${versionStr} 32-bit (${name})` : `Python ${versionStr} 32-bit (${kindStr})`;
         }
-        return name ? `Python ${versionStr} 32-bit ('${name}')` : `Python ${versionStr} 32-bit`;
+        return name ? `Python ${versionStr} 32-bit (${name})` : `Python ${versionStr} 32-bit`;
     }
     if (kindStr) {
-        return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr} (${kindStr})`;
+        return name ? `Python ${versionStr} (${name})` : `Python ${versionStr} (${kindStr})`;
     }
-    return name ? `Python ${versionStr} ('${name}')` : `Python ${versionStr}`;
+    return name ? `Python ${versionStr} (${name})` : `Python ${versionStr}`;
 }
 
 function validEnv(nativeEnv: NativeEnvInfo): boolean {
@@ -153,26 +157,59 @@ function getEnvType(kind: PythonEnvKind): PythonEnvType | undefined {
     }
 }
 
-function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind): string {
+function isSubDir(pathToCheck: string | undefined, parents: string[]): boolean {
+    return parents.some((prefix) => {
+        if (pathToCheck) {
+            return path.normalize(pathToCheck).startsWith(path.normalize(prefix));
+        }
+        return false;
+    });
+}
+
+function foundOnPath(fsPath: string): boolean {
+    const paths = getPathEnvVariable().map((p) => path.normalize(p).toLowerCase());
+    const normalized = path.normalize(fsPath).toLowerCase();
+    return paths.some((p) => normalized.includes(p));
+}
+
+function getName(nativeEnv: NativeEnvInfo, kind: PythonEnvKind, condaEnvDirs: string[]): string {
     if (nativeEnv.name) {
         return nativeEnv.name;
     }
 
     const envType = getEnvType(kind);
-    if (nativeEnv.prefix && (envType === PythonEnvType.Conda || envType === PythonEnvType.Virtual)) {
+    if (nativeEnv.prefix && envType === PythonEnvType.Virtual) {
         return path.basename(nativeEnv.prefix);
     }
+
+    if (nativeEnv.prefix && envType === PythonEnvType.Conda) {
+        if (nativeEnv.name === 'base') {
+            return 'base';
+        }
+
+        const workspaces = (getWorkspaceFolders() ?? []).map((wf) => wf.uri.fsPath);
+        if (isSubDir(nativeEnv.prefix, workspaces)) {
+            traceInfo(`Conda env is --prefix environment: ${nativeEnv.prefix}`);
+            return '';
+        }
+
+        if (condaEnvDirs.length > 0 && isSubDir(nativeEnv.prefix, condaEnvDirs)) {
+            traceInfo(`Conda env is --named environment: ${nativeEnv.prefix}`);
+            return path.basename(nativeEnv.prefix);
+        }
+    }
+
     return '';
 }
 
-function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
+function toPythonEnvInfo(nativeEnv: NativeEnvInfo, condaEnvDirs: string[]): PythonEnvInfo | undefined {
     if (!validEnv(nativeEnv)) {
         return undefined;
     }
     const kind = categoryToKind(nativeEnv.kind);
     const arch = toArch(nativeEnv.arch);
     const version: PythonVersion = parseVersion(nativeEnv.version ?? '');
-    const name = getName(nativeEnv, kind);
+    const name = getName(nativeEnv, kind, condaEnvDirs);
     const displayName = nativeEnv.version
         ? getDisplayName(version, kind, arch, name)
         : nativeEnv.displayName ?? 'Python';
@@ -206,6 +243,35 @@ function toPythonEnvInfo(nativeEnv: NativeEnvInfo): PythonEnvInfo | undefined {
     };
 }
 
+function hasChanged(old: PythonEnvInfo, newEnv: PythonEnvInfo): boolean {
+    if (old.name !== newEnv.name) {
+        return true;
+    }
+    if (old.executable.filename !== newEnv.executable.filename) {
+        return true;
+    }
+    if (old.version.major !== newEnv.version.major) {
+        return true;
+    }
+    if (old.version.minor !== newEnv.version.minor) {
+        return true;
+    }
+    if (old.version.micro !== newEnv.version.micro) {
+        return true;
+    }
+    if (old.location !== newEnv.location) {
+        return true;
+    }
+    if (old.kind !== newEnv.kind) {
+        return true;
+    }
+    if (old.arch !== newEnv.arch) {
+        return true;
+    }
+
+    return false;
+}
+
 class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     private _onProgress: EventEmitter<ProgressNotificationEvent>;
 
@@ -216,6 +282,8 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     private _envs: PythonEnvInfo[] = [];
 
     private _disposables: Disposable[] = [];
+
+    private _condaEnvDirs: string[] = [];
 
     constructor(private readonly finder: NativePythonFinder) {
         this._onProgress = new EventEmitter<ProgressNotificationEvent>();
@@ -325,13 +393,36 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         return undefined;
     }
 
+    private condaPathAlreadySet: string | undefined;
+
     // eslint-disable-next-line class-methods-use-this
     private processEnvManager(native: NativeEnvManagerInfo) {
         const tool = native.tool.toLowerCase();
         switch (tool) {
             case 'conda':
-                traceLog(`Conda environment manager found at: ${native.executable}`);
-                setCondaBinary(native.executable);
+                {
+                    traceLog(`Conda environment manager found at: ${native.executable}`);
+                    const settingPath = getCondaPathSetting();
+                    if (!this.condaPathAlreadySet) {
+                        if (settingPath === '' || settingPath === undefined) {
+                            if (foundOnPath(native.executable)) {
+                                setCondaBinary(native.executable);
+                                this.condaPathAlreadySet = native.executable;
+                                traceInfo(`Using conda: ${native.executable}`);
+                            } else {
+                                traceInfo(`Conda not found on PATH, skipping: ${native.executable}`);
+                                traceInfo(
+                                    'You can set the path to conda using the setting: `python.condaPath` if you want to use a different conda binary',
+                                );
+                            }
+                        } else {
+                            traceInfo(`Using conda from setting: ${settingPath}`);
+                            this.condaPathAlreadySet = settingPath;
+                        }
+                    } else {
+                        traceInfo(`Conda set to: ${this.condaPathAlreadySet}`);
+                    }
+                }
                 break;
             case 'pyenv':
                 traceLog(`Pyenv environment manager found at: ${native.executable}`);
@@ -351,13 +442,15 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
     }
 
     private addEnv(native: NativeEnvInfo, searchLocation?: Uri): PythonEnvInfo | undefined {
-        const info = toPythonEnvInfo(native);
+        const info = toPythonEnvInfo(native, this._condaEnvDirs);
         if (info) {
             const old = this._envs.find((item) => item.executable.filename === info.executable.filename);
             if (old) {
                 this._envs = this._envs.filter((item) => item.executable.filename !== info.executable.filename);
                 this._envs.push(info);
-                this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
+                if (hasChanged(old, info)) {
+                    this._onChanged.fire({ type: FileChangeType.Changed, old, new: info, searchLocation });
+                }
             } else {
                 this._envs.push(info);
                 this._onChanged.fire({ type: FileChangeType.Created, new: info, searchLocation });
@@ -383,11 +476,18 @@ class NativePythonEnvironments implements IDiscoveryAPI, Disposable {
         if (envPath === undefined) {
             return undefined;
         }
-        const native = await this.finder.resolve(envPath);
-        if (native) {
-            return this.addEnv(native);
+        try {
+            const native = await this.finder.resolve(envPath);
+            if (native) {
+                if (native.kind === NativePythonEnvironmentKind.Conda && this._condaEnvDirs.length === 0) {
+                    this._condaEnvDirs = (await getCondaEnvDirs()) ?? [];
+                }
+                return this.addEnv(native);
+            }
+            return undefined;
+        } catch {
+            return undefined;
         }
-        return undefined;
     }
 
     private initializeWatcher(): void {

@@ -16,18 +16,20 @@ import { InstallPythonViaTerminal } from './configuration/interpreterSelector/co
 import { ResetInterpreterCommand } from './configuration/interpreterSelector/commands/resetInterpreter';
 import { SetInterpreterCommand } from './configuration/interpreterSelector/commands/setInterpreter';
 import { InterpreterSelector } from './configuration/interpreterSelector/interpreterSelector';
+import { RecommendedEnvironmentService } from './configuration/recommededEnvironmentService';
 import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
 import {
     IInterpreterComparer,
     IInterpreterQuickPick,
     IInterpreterSelector,
+    IRecommendedEnvironmentService,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager,
 } from './configuration/types';
 import { IActivatedEnvironmentLaunch, IInterpreterDisplay, IInterpreterHelper, IInterpreterService } from './contracts';
 import { InterpreterDisplay } from './display';
-import { InterpreterLocatorProgressStatubarHandler } from './display/progressDisplay';
+import { InterpreterLocatorProgressStatusBarHandler } from './display/progressDisplay';
 import { InterpreterHelper } from './helpers';
 import { InterpreterPathCommand } from './interpreterPathCommand';
 import { InterpreterService } from './interpreterService';
@@ -59,6 +61,11 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
         IExtensionSingleActivationService,
         ResetInterpreterCommand,
     );
+    serviceManager.addSingleton<IRecommendedEnvironmentService>(
+        IRecommendedEnvironmentService,
+        RecommendedEnvironmentService,
+    );
+    serviceManager.addBinding(IRecommendedEnvironmentService, IExtensionActivationService);
     serviceManager.addSingleton(IInterpreterQuickPick, SetInterpreterCommand);
 
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
@@ -83,7 +90,7 @@ export function registerInterpreterTypes(serviceManager: IServiceManager): void 
 
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
-        InterpreterLocatorProgressStatubarHandler,
+        InterpreterLocatorProgressStatusBarHandler,
     );
 
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(

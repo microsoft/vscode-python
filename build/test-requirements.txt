@@ -27,3 +27,15 @@ namedpipe; platform_system == "Windows"
 
 # typing for Django files
 django-stubs
+
+coverage
+pytest-cov
+pytest-json
+pytest-timeout
+
+
+# for pytest-describe related tests
+pytest-describe
+
+# for pytest-ruff related tests
+pytest-ruff

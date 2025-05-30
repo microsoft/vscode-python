@@ -3,6 +3,7 @@
 
 import { Event, Terminal, TextEditor, Uri } from 'vscode';
 import { IDisposable, Resource } from '../common/types';
+import { ReplType } from '../repl/types';
 
 export const ICodeExecutionService = Symbol('ICodeExecutionService');
 
@@ -15,7 +16,7 @@ export interface ICodeExecutionService {
 export const ICodeExecutionHelper = Symbol('ICodeExecutionHelper');
 
 export interface ICodeExecutionHelper {
-    normalizeLines(code: string, wholeFileContent?: string): Promise<string>;
+    normalizeLines(code: string, replType: ReplType, wholeFileContent?: string, resource?: Uri): Promise<string>;
     getFileToExecute(): Promise<Uri | undefined>;
     saveFileIfDirty(file: Uri): Promise<Resource>;
     getSelectedTextToExecute(textEditor: TextEditor): Promise<string | undefined>;
@@ -24,7 +25,6 @@ export interface ICodeExecutionHelper {
 export const ICodeExecutionManager = Symbol('ICodeExecutionManager');
 
 export interface ICodeExecutionManager {
-    onExecutedCode: Event<string>;
     registerCommands(): void;
 }
 
@@ -42,8 +42,8 @@ export interface ITerminalEnvVarCollectionService {
     isTerminalPromptSetCorrectly(resource?: Resource): boolean;
 }
 
-export const IShellIntegrationService = Symbol('IShellIntegrationService');
-export interface IShellIntegrationService {
+export const IShellIntegrationDetectionService = Symbol('IShellIntegrationDetectionService');
+export interface IShellIntegrationDetectionService {
     onDidChangeStatus: Event<void>;
     isWorking(): Promise<boolean>;
 }
@@ -52,4 +52,9 @@ export const ITerminalDeactivateService = Symbol('ITerminalDeactivateService');
 export interface ITerminalDeactivateService {
     initializeScriptParams(shell: string): Promise<void>;
     getScriptLocation(shell: string, resource: Resource): Promise<string | undefined>;
+}
+
+export const IPythonStartupEnvVarService = Symbol('IPythonStartupEnvVarService');
+export interface IPythonStartupEnvVarService {
+    register(): void;
 }

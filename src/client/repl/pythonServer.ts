@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as ch from 'child_process';
 import * as rpc from 'vscode-jsonrpc/node';
-import { Disposable, window } from 'vscode';
+import { Disposable, Event, EventEmitter, window } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { traceError, traceLog } from '../logging';
 import { captureTelemetry } from '../telemetry';
@@ -15,14 +15,20 @@ export interface ExecutionResult {
 }
 
 export interface PythonServer extends Disposable {
+    onCodeExecuted: Event<void>;
     execute(code: string): Promise<ExecutionResult | undefined>;
+    executeSilently(code: string): Promise<ExecutionResult | undefined>;
     interrupt(): void;
     input(): void;
     checkValidCommand(code: string): Promise<boolean>;
 }
 
-class PythonServerImpl implements Disposable {
+class PythonServerImpl implements PythonServer, Disposable {
     private readonly disposables: Disposable[] = [];
+
+    private readonly _onCodeExecuted = new EventEmitter<void>();
+
+    onCodeExecuted = this._onCodeExecuted.event;
 
     constructor(private connection: rpc.MessageConnection, private pythonServer: ch.ChildProcess) {
         this.initialize();
@@ -32,7 +38,7 @@ class PythonServerImpl implements Disposable {
     private initialize(): void {
         this.disposables.push(
             this.connection.onNotification('log', (message: string) => {
-                console.log('Log:', message);
+                traceLog('Log:', message);
             }),
         );
         this.connection.listen();
@@ -57,6 +63,18 @@ class PythonServerImpl implements Disposable {
 
     @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'selection' }, false)
     public async execute(code: string): Promise<ExecutionResult | undefined> {
+        const result = await this.executeCode(code);
+        if (result?.status) {
+            this._onCodeExecuted.fire();
+        }
+        return result;
+    }
+
+    public executeSilently(code: string): Promise<ExecutionResult | undefined> {
+        return this.executeCode(code);
+    }
+
+    private async executeCode(code: string): Promise<ExecutionResult | undefined> {
         try {
             const result = await this.connection.sendRequest('execute', code);
             return result as ExecutionResult;
@@ -86,6 +104,7 @@ class PythonServerImpl implements Disposable {
         this.connection.sendNotification('exit');
         this.disposables.forEach((d) => d.dispose());
         this.connection.dispose();
+        serverInstance = undefined;
     }
 }
 

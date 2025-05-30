@@ -62,7 +62,7 @@ export async function updateSetting(
     configTarget: ConfigurationTarget,
 ) {
     const vscode = require('vscode') as typeof import('vscode');
-    const settings = vscode.workspace.getConfiguration('python', { uri: resource, languageId: 'python' } || null);
+    const settings = vscode.workspace.getConfiguration('python', { uri: resource, languageId: 'python' });
     const currentValue = settings.inspect(setting);
     if (
         currentValue !== undefined &&
@@ -452,12 +452,6 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
 }
 /**
  * Wait for a condition to be fulfilled within a timeout.
- *
- * @export
- * @param {() => Promise<boolean>} condition
- * @param {number} timeoutMs
- * @param {string} errorMessage
- * @returns {Promise<void>}
  */
 export async function waitForCondition(
     condition: () => Promise<boolean>,
@@ -468,6 +462,7 @@ export async function waitForCondition(
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
 
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
             clearTimeout(timer);
             reject(new Error(errorMessage));
         }, timeoutMs);

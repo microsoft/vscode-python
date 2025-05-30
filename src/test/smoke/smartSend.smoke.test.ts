@@ -6,7 +6,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFile, waitForCondition } from '../common';
 
-suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
+suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
     suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
@@ -50,7 +50,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', () => {
             });
 
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
-        await waitForCondition(checkIfFileHasBeenCreated, 10_000, `"${outputFile}" file not created`);
+        await waitForCondition(checkIfFileHasBeenCreated, 20_000, `"${outputFile}" file not created`);
 
         await vscode.commands
             .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)

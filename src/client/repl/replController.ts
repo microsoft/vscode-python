@@ -9,9 +9,8 @@ export function createReplController(
     const server = createPythonServer([interpreterPath], cwd);
     disposables.push(server);
 
-    const controller = vscode.notebooks.createNotebookController('pythonREPL', 'interactive', 'Python REPL');
+    const controller = vscode.notebooks.createNotebookController('pythonREPL', 'jupyter-notebook', 'Python REPL');
     controller.supportedLanguages = ['python'];
-    controller.supportsExecutionOrder = true;
 
     controller.description = 'Python REPL';
 

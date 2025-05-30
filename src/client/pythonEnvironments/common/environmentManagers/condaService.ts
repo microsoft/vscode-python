@@ -55,6 +55,7 @@ export class CondaService implements ICondaService {
     /**
      * Return the path to the "conda file".
      */
+
     // eslint-disable-next-line class-methods-use-this
     public async getCondaFile(forShellExecution?: boolean): Promise<string> {
         return Conda.getConda().then((conda) => {
@@ -142,8 +143,9 @@ export class CondaService implements ICondaService {
      * Return the info reported by the conda install.
      * The result is cached for 30s.
      */
-    @cache(60_000)
+
     // eslint-disable-next-line class-methods-use-this
+    @cache(60_000)
     public async getCondaInfo(): Promise<CondaInfo | undefined> {
         const conda = await Conda.getConda();
         return conda?.getInfo();

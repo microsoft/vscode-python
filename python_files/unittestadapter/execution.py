@@ -10,7 +10,7 @@ import sysconfig
 import traceback
 import unittest
 from types import TracebackType
-from typing import Dict, List, Optional, Tuple, Type, Union
+from typing import Dict, List, Optional, Set, Tuple, Type, Union
 
 # Adds the scripts directory to the PATH as a workaround for enabling shell for test execution.
 path_var_name = "PATH" if "PATH" in os.environ else "Path"
@@ -24,8 +24,9 @@ sys.path.append(os.fspath(script_dir))
 from django_handler import django_execution_runner  # noqa: E402
 
 from unittestadapter.pvsc_utils import (  # noqa: E402
-    EOTPayloadDict,
+    CoveragePayloadDict,
     ExecutionPayloadDict,
+    FileCoverageInfo,
     TestExecutionStatus,
     VSCodeUnittestError,
     parse_unittest_args,
@@ -58,21 +59,6 @@ class UnittestTestResult(unittest.TextTestResult):
 
     def stopTestRun(self):  # noqa: N802
         super().stopTestRun()
-        # After stopping the test run, send EOT
-        test_run_pipe = os.getenv("TEST_RUN_PIPE")
-        if os.getenv("MANAGE_PY_PATH"):
-            # only send this if it is a Django run
-            if not test_run_pipe:
-                print(
-                    "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
-                    f"TEST_RUN_PIPE = {test_run_pipe}\n",
-                    file=sys.stderr,
-                )
-                raise VSCodeUnittestError(
-                    "UNITTEST ERROR: TEST_RUN_PIPE is not set at the time of unittest trying to send data. "
-                )
-            eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-            send_post_request(eot_payload, test_run_pipe)
 
     def addError(  # noqa: N802
         self,
@@ -267,15 +253,8 @@ def run_tests(
     return payload
 
 
-def execute_eot_and_cleanup():
-    eot_payload: EOTPayloadDict = {"command_type": "execution", "eot": True}
-    send_post_request(eot_payload, test_run_pipe)
-    if __socket:
-        __socket.close()
-
-
 __socket = None
-atexit.register(execute_eot_and_cleanup)
+atexit.register(lambda: __socket.close() if __socket else None)
 
 
 def send_run_data(raw_data, test_run_pipe):
@@ -304,7 +283,6 @@ if __name__ == "__main__":
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     test_run_pipe = os.getenv("TEST_RUN_PIPE")
-
     if not run_test_ids_pipe:
         print("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: RUN_TEST_IDS_PIPE env var is not set.")
@@ -312,6 +290,7 @@ if __name__ == "__main__":
         print("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
         raise VSCodeUnittestError("Error[vscode-unittest]: TEST_RUN_PIPE env var is not set.")
     test_ids = []
+    cwd = pathlib.Path(start_dir).absolute()
     try:
         # Read the test ids from the file, attempt to delete file afterwords.
         ids_path = pathlib.Path(run_test_ids_pipe)
@@ -324,7 +303,6 @@ if __name__ == "__main__":
 
     except Exception as e:
         # No test ids received from buffer, return error payload
-        cwd = pathlib.Path(start_dir).absolute()
         status: TestExecutionStatus = TestExecutionStatus.error
         payload: ExecutionPayloadDict = {
             "cwd": str(cwd),
@@ -334,12 +312,47 @@ if __name__ == "__main__":
         }
         send_post_request(payload, test_run_pipe)
 
+    workspace_root = os.environ.get("COVERAGE_ENABLED")
+    # For unittest COVERAGE_ENABLED is to the root of the workspace so correct data is collected
+    cov = None
+    is_coverage_run = os.environ.get("COVERAGE_ENABLED") is not None
+    include_branches = False
+    if is_coverage_run:
+        print(
+            "COVERAGE_ENABLED env var set, starting coverage. workspace_root used as parent dir:",
+            workspace_root,
+        )
+        import coverage
+
+        # insert "python_files/lib/python" into the path so packaging can be imported
+        python_files_dir = pathlib.Path(__file__).parent.parent
+        bundled_dir = pathlib.Path(python_files_dir / "lib" / "python")
+        sys.path.append(os.fspath(bundled_dir))
+
+        from packaging.version import Version
+
+        coverage_version = Version(coverage.__version__)
+        # only include branches if coverage version is 7.7.0 or greater (as this was when the api saves)
+        if coverage_version >= Version("7.7.0"):
+            include_branches = True
+
+        source_ar: List[str] = []
+        if workspace_root:
+            source_ar.append(workspace_root)
+        if top_level_dir:
+            source_ar.append(top_level_dir)
+        if start_dir:
+            source_ar.append(os.path.abspath(start_dir))  # noqa: PTH100
+        cov = coverage.Coverage(
+            branch=include_branches, source=source_ar
+        )  # is at least 1 of these required??
+        cov.start()
+
     # If no error occurred, we will have test ids to run.
     if manage_py_path := os.environ.get("MANAGE_PY_PATH"):
         print("MANAGE_PY_PATH env var set, running Django test suite.")
         args = argv[index + 1 :] or []
         django_execution_runner(manage_py_path, test_ids, args)
-        # the django run subprocesses sends the eot payload.
     else:
         # Perform regular unittest execution.
         payload = run_tests(
@@ -351,3 +364,42 @@ if __name__ == "__main__":
             failfast,
             locals_,
         )
+
+    if is_coverage_run:
+        import coverage
+
+        if not cov:
+            raise VSCodeUnittestError("Coverage is enabled but cov is not set")
+        cov.stop()
+        cov.save()
+        cov.load()
+        file_set: Set[str] = cov.get_data().measured_files()
+        file_coverage_map: Dict[str, FileCoverageInfo] = {}
+        for file in file_set:
+            analysis = cov.analysis2(file)
+            taken_file_branches = 0
+            total_file_branches = -1
+
+            if include_branches:
+                branch_stats: dict[int, tuple[int, int]] = cov.branch_stats(file)
+                total_file_branches = sum([total_exits for total_exits, _ in branch_stats.values()])
+                taken_file_branches = sum([taken_exits for _, taken_exits in branch_stats.values()])
+
+            lines_executable = {int(line_no) for line_no in analysis[1]}
+            lines_missed = {int(line_no) for line_no in analysis[3]}
+            lines_covered = lines_executable - lines_missed
+            file_info: FileCoverageInfo = {
+                "lines_covered": list(lines_covered),  # list of int
+                "lines_missed": list(lines_missed),  # list of int
+                "executed_branches": taken_file_branches,
+                "total_branches": total_file_branches,
+            }
+            file_coverage_map[file] = file_info
+
+        payload_cov: CoveragePayloadDict = CoveragePayloadDict(
+            coverage=True,
+            cwd=os.fspath(cwd),
+            result=file_coverage_map,
+            error=None,
+        )
+        send_post_request(payload_cov, test_run_pipe)

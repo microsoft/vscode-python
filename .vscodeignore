@@ -1,5 +1,6 @@
 **/*.map
 **/*.analyzer.html
+**/.env
 *.vsix
 .editorconfig
 .env
@@ -63,6 +64,7 @@ out/testMultiRootWkspc/**
 precommit.hook
 python_files/**/*.pyc
 python_files/lib/**/*.egg-info/**
+python_files/lib/jedilsp/bin/**
 python_files/lib/python/bin/**
 python_files/tests/**
 scripts/**

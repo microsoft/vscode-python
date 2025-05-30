@@ -21,6 +21,10 @@ import {
     TerminalShellExecutionStartEvent,
     LogOutputChannel,
     OutputChannel,
+    TerminalLinkProvider,
+    NotebookDocument,
+    NotebookEditor,
+    NotebookDocumentShowOptions,
 } from 'vscode';
 import { createDeferred, Deferred } from '../utils/async';
 import { Resource } from '../types';
@@ -28,6 +32,13 @@ import { getWorkspaceFolders } from './workspaceApis';
 
 export function showTextDocument(uri: Uri): Thenable<TextEditor> {
     return window.showTextDocument(uri);
+}
+
+export function showNotebookDocument(
+    document: NotebookDocument,
+    options?: NotebookDocumentShowOptions,
+): Thenable<NotebookEditor> {
+    return window.showNotebookDocument(document, options);
 }
 
 export function showQuickPick<T extends QuickPickItem>(
@@ -257,4 +268,8 @@ export function createOutputChannel(name: string, languageId?: string): OutputCh
 }
 export function createLogOutputChannel(name: string, options: { log: true }): LogOutputChannel {
     return window.createOutputChannel(name, options);
+}
+
+export function registerTerminalLinkProvider(provider: TerminalLinkProvider): Disposable {
+    return window.registerTerminalLinkProvider(provider);
 }

@@ -369,6 +369,8 @@ export class CodeActionKind {
 
     public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
 
+    public static readonly Notebook: CodeActionKind = new CodeActionKind('notebook');
+
     private constructor(private _value: string) {}
 
     public append(parts: string): CodeActionKind {
@@ -573,4 +575,22 @@ export class Location {
         this.uri = uri;
         this.range = rangeOrPosition;
     }
+}
+
+/**
+ * The kind of executions that {@link TestRunProfile TestRunProfiles} control.
+ */
+export enum TestRunProfileKind {
+    /**
+     * The `Run` test profile kind.
+     */
+    Run = 1,
+    /**
+     * The `Debug` test profile kind.
+     */
+    Debug = 2,
+    /**
+     * The `Coverage` test profile kind.
+     */
+    Coverage = 3,
 }

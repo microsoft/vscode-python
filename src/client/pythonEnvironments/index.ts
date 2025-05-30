@@ -43,6 +43,8 @@ import { PixiLocator } from './base/locators/lowLevel/pixiLocator';
 import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 import { getNativePythonFinder } from './base/locators/common/nativePythonFinder';
 import { createNativeEnvironmentsApi } from './nativeAPI';
+import { useEnvExtension } from '../envExt/api.internal';
+import { createEnvExtApi } from '../envExt/envExtApi';
 
 const PYTHON_ENV_INFO_CACHE_KEY = 'PYTHON_ENV_INFO_CACHEv2';
 
@@ -58,9 +60,18 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
     // Set up the legacy IOC container before api is created.
     initializeLegacyExternalDependencies(ext.legacyIOC.serviceContainer);
 
+    if (useEnvExtension()) {
+        const api = await createEnvExtApi(ext.disposables);
+        registerNewDiscoveryForIOC(
+            // These are what get wrapped in the legacy adapter.
+            ext.legacyIOC.serviceManager,
+            api,
+        );
+        return api;
+    }
+
     if (shouldUseNativeLocator()) {
         const finder = getNativePythonFinder(ext.context);
-        ext.disposables.push(finder);
         const api = createNativeEnvironmentsApi(finder);
         ext.disposables.push(api);
         registerNewDiscoveryForIOC(
@@ -70,6 +81,7 @@ export async function initialize(ext: ExtensionState): Promise<IDiscoveryAPI> {
         );
         return api;
     }
+
     const api = await createPythonEnvironments(() => createLocator(ext));
     registerNewDiscoveryForIOC(
         // These are what get wrapped in the legacy adapter.
@@ -153,7 +165,7 @@ async function createLocator(
         await createCollectionCache(ext),
         // This is shared.
         resolvingLocator,
-        ext.context,
+        shouldUseNativeLocator(),
     );
     return caching;
 }

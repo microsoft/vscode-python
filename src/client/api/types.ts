@@ -25,7 +25,6 @@ export interface PythonExtension {
 
         /**
          * Gets the path to the debugger package used by the extension.
-         * @returns {Promise<string>}
          */
         getDebuggerPackagePath(): Promise<string | undefined>;
     };
@@ -228,9 +227,9 @@ export type EnvironmentsChangeEvent = {
 
 export type ActiveEnvironmentPathChangeEvent = EnvironmentPath & {
     /**
-     * Workspace folder the environment changed for.
+     * Resource the environment changed for.
      */
-    readonly resource: WorkspaceFolder | undefined;
+    readonly resource: Resource | undefined;
 };
 
 /**

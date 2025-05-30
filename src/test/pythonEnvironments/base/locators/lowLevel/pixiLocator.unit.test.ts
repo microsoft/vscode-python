@@ -17,12 +17,15 @@ suite('Pixi Locator', () => {
     let getPythonSetting: sinon.SinonStub;
     let getOSType: sinon.SinonStub;
     let locator: PixiLocator;
+    let pathExistsStub: sinon.SinonStub;
 
     suiteSetup(() => {
         getPythonSetting = sinon.stub(externalDependencies, 'getPythonSetting');
         getPythonSetting.returns('pixi');
         getOSType = sinon.stub(platformUtils, 'getOSType');
         exec = sinon.stub(externalDependencies, 'exec');
+        pathExistsStub = sinon.stub(externalDependencies, 'pathExists');
+        pathExistsStub.resolves(true);
     });
 
     suiteTeardown(() => sinon.restore());
@@ -38,7 +41,7 @@ suite('Pixi Locator', () => {
             getOSType.returns(osType);
 
             locator = new PixiLocator(projectDir);
-            exec.callsFake(makeExecHandler({ pixiPath: 'pixi', cwd: projectDir }));
+            exec.callsFake(makeExecHandler({ cwd: projectDir }));
 
             const iterator = locator.iterEnvs();
             const actualEnvs = await getEnvs(iterator);
@@ -66,26 +69,15 @@ suite('Pixi Locator', () => {
         test('project with multiple environments', async () => {
             getOSType.returns(platformUtils.OSType.Linux);
 
-            exec.callsFake(makeExecHandler({ pixiPath: 'pixi', cwd: projectDirs.multiEnv.path }));
+            exec.callsFake(makeExecHandler({ cwd: projectDirs.multiEnv.path }));
 
             locator = new PixiLocator(projectDirs.multiEnv.path);
             const iterator = locator.iterEnvs();
             const actualEnvs = await getEnvs(iterator);
 
-            const expectedEnvs = [
-                createBasicEnv(
-                    PythonEnvKind.Pixi,
-                    path.join(projectDirs.multiEnv.info.environments_info[1].prefix, 'bin/python'),
-                    undefined,
-                    projectDirs.multiEnv.info.environments_info[1].prefix,
-                ),
-                createBasicEnv(
-                    PythonEnvKind.Pixi,
-                    path.join(projectDirs.multiEnv.info.environments_info[2].prefix, 'bin/python'),
-                    undefined,
-                    projectDirs.multiEnv.info.environments_info[2].prefix,
-                ),
-            ];
+            const expectedEnvs = projectDirs.multiEnv.info.environments_info.map((info) =>
+                createBasicEnv(PythonEnvKind.Pixi, path.join(info.prefix, 'bin/python'), undefined, info.prefix),
+            );
             assertBasicEnvsEqual(actualEnvs, expectedEnvs);
         });
     });

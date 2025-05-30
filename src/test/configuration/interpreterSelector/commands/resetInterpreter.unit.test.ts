@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -10,6 +11,7 @@ import { IConfigurationService } from '../../../../client/common/types';
 import { Common, Interpreters } from '../../../../client/common/utils/localize';
 import { ResetInterpreterCommand } from '../../../../client/interpreter/configuration/interpreterSelector/commands/resetInterpreter';
 import { IPythonPathUpdaterServiceManager } from '../../../../client/interpreter/configuration/types';
+import * as extapi from '../../../../client/envExt/api.internal';
 
 suite('Reset Interpreter Command', () => {
     let workspace: TypeMoq.IMock<IWorkspaceService>;
@@ -21,8 +23,12 @@ suite('Reset Interpreter Command', () => {
     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
 
     let resetInterpreterCommand: ResetInterpreterCommand;
+    let useEnvExtensionStub: sinon.SinonStub;
 
     setup(() => {
+        useEnvExtensionStub = sinon.stub(extapi, 'useEnvExtension');
+        useEnvExtensionStub.returns(false);
+
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         configurationService
             .setup((c) => c.getSettings(TypeMoq.It.isAny()))
@@ -41,6 +47,9 @@ suite('Reset Interpreter Command', () => {
             new PathUtils(false),
             configurationService.object,
         );
+    });
+    teardown(() => {
+        sinon.restore();
     });
 
     suite('Test method resetInterpreter()', async () => {

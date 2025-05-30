@@ -13,9 +13,6 @@ import {
     getWorkspaceFolders,
 } from '../../../../common/vscodeApis/workspaceApis';
 import { IInterpreterService } from '../../../../interpreter/contracts';
-import { sendTelemetryEvent } from '../../../../telemetry';
-import { EventName } from '../../../../telemetry/constants';
-import { DebuggerTelemetry } from '../../../../telemetry/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMapping } from '../../../types';
 import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
@@ -227,35 +224,5 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
         debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>,
     ): boolean {
         return !!(debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK');
-    }
-
-    protected static sendTelemetry(
-        trigger: 'launch' | 'attach' | 'test',
-        debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>,
-    ): void {
-        const name = debugConfiguration.name || '';
-        const moduleName = debugConfiguration.module || '';
-        const telemetryProps: DebuggerTelemetry = {
-            trigger,
-            console: debugConfiguration.console,
-            hasEnvVars: typeof debugConfiguration.env === 'object' && Object.keys(debugConfiguration.env).length > 0,
-            django: !!debugConfiguration.django,
-            fastapi: BaseConfigurationResolver.isDebuggingFastAPI(debugConfiguration),
-            flask: BaseConfigurationResolver.isDebuggingFlask(debugConfiguration),
-            hasArgs: Array.isArray(debugConfiguration.args) && debugConfiguration.args.length > 0,
-            isLocalhost: BaseConfigurationResolver.isLocalHost(debugConfiguration.host),
-            isModule: moduleName.length > 0,
-            isSudo: !!debugConfiguration.sudo,
-            jinja: !!debugConfiguration.jinja,
-            pyramid: !!debugConfiguration.pyramid,
-            stopOnEntry: !!debugConfiguration.stopOnEntry,
-            showReturnValue: !!debugConfiguration.showReturnValue,
-            subProcess: !!debugConfiguration.subProcess,
-            watson: name.toLowerCase().indexOf('watson') >= 0,
-            pyspark: name.toLowerCase().indexOf('pyspark') >= 0,
-            gevent: name.toLowerCase().indexOf('gevent') >= 0,
-            scrapy: moduleName.toLowerCase() === 'scrapy',
-        };
-        sendTelemetryEvent(EventName.DEBUGGER, undefined, telemetryProps);
     }
 }
