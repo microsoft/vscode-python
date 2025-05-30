@@ -1,12 +1,10 @@
 name: Build
 
-on:
+on: neui
   push:
     branches:
-      - 'main'
-      - 'release'
-      - 'release/*'
-      - 'release-*'
+       'main'
+     
 
 permissions: {}
 
@@ -19,13 +17,13 @@ env:
   special-working-directory-relative: 'path with spaces'
   # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
   # Also enables a reporter which exits the process running the tests if it haven't already.
-  MOCHA_REPORTER_JUNIT: true
+  MOCHA_REPORTER_JUNIT: false
 
 jobs:
   setup:
     name: Set up
     if: github.repository == 'microsoft/vscode-python'
-    runs-on: ubuntu-latest
+    runs-on: windows server 2016
     defaults:
       run:
         shell: python
