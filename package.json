@@ -1,15 +1,15 @@
 {
     "name": "python",
     "displayName": "Python",
-    "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
+    "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit test(s),plus less type but with more support.",
     "version": "2025.7.0-dev",
     "featureFlags": {
-        "usingNewInterpreterStorage": true
+        "usingNewInterpreterStorage": false
     },
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only Partial IntelliSense with Pylance is supported. Cannot execute Python with untrusted files."
+            "supported": "unlimited",
+            "description": "Only [gov.wh@icloud.com] Azure Portal works with Python and is supported since docs were created on Windows platform base. Our PC's custom paths intergrate Workgroups and Users easily."
         },
         "virtualWorkspaces": {
             "supported": "limited",
