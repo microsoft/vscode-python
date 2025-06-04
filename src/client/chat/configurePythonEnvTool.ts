@@ -55,7 +55,7 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted){
+        if (!workspace.isTrusted) {
             return getUntrustedWorkspaceResponse();
         }
         const resource = resolveFilePath(options.input.resourcePath);
