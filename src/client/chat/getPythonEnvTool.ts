@@ -10,13 +10,20 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
+    workspace,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { getEnvironmentDetails, getToolResponseIfNotebook, IResourceReference, raceCancellationError } from './utils';
+import {
+    getEnvironmentDetails,
+    getToolResponseIfNotebook,
+    getUntrustedWorkspaceResponse,
+    IResourceReference,
+    raceCancellationError,
+} from './utils';
 import { resolveFilePath } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
@@ -44,6 +51,10 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
+
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {

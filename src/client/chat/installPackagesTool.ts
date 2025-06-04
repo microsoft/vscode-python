@@ -10,12 +10,14 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
+    workspace,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     getEnvDisplayName,
     getToolResponseIfNotebook,
+    getUntrustedWorkspaceResponse,
     IResourceReference,
     isCancellationError,
     isCondaEnv,
@@ -42,6 +44,10 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
         options: LanguageModelToolInvocationOptions<IInstallPackageArgs>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
+
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
         const packagePlurality = packageCount === 1 ? 'package' : 'packages';

@@ -97,6 +97,10 @@ export async function getEnvironmentDetails(
     return message.join('\n');
 }
 
+export function getUntrustedWorkspaceResponse() {
+    return new LanguageModelToolResult([new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')]);
+}
+
 export async function getTerminalCommand(
     environment: ResolvedEnvironment,
     resource: Uri | undefined,
@@ -208,6 +212,9 @@ export async function getEnvDetailsForResponse(
     resource: Uri | undefined,
     token: CancellationToken,
 ): Promise<LanguageModelToolResult> {
+    if (!workspace.isTrusted) {
+        throw new Error('Cannot use this tool in an untrusted workspace.');
+    }
     const envPath = api.getActiveEnvironmentPath(resource);
     environment = environment || (await raceCancellationError(api.resolveEnvironment(envPath), token));
     if (!environment || !environment.version) {
