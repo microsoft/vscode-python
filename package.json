@@ -633,6 +633,12 @@
                         "preview"
                     ]
                 },
+                "python.terminal.reuseActiveTerminal": {
+                    "default": true,
+                    "description": "%python.terminal.reuseActiveTerminal.description%",
+                    "scope": "resource",
+                    "type": "boolean"
+                },
                 "python.REPL.enableREPLSmartSend": {
                     "default": true,
                     "description": "%python.EnableREPLSmartSend.description%",
