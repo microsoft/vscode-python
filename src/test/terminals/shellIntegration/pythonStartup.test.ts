@@ -385,6 +385,40 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         });
     }
 
+    test('Verify provideTerminalLinks adapts to configuration changes', () => {
+        const provider = new CustomTerminalLinkProvider();
+        
+        // Test with default setting (alt)
+        const context1: TerminalLinkContext = {
+            line: 'Some random string with Ctrl click to launch VS Code Native REPL',
+            terminal: {} as Terminal,
+        };
+        const token: CancellationToken = {
+            isCancellationRequested: false,
+            onCancellationRequested: new EventEmitter<unknown>().event,
+        };
+
+        let links = provider.provideTerminalLinks(context1, token);
+        assert.isNotEmpty(links, 'Expected links with Ctrl modifier when setting is alt');
+
+        // Change configuration to ctrlCmd
+        editorConfig.reset();
+        editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'ctrlCmd');
+
+        // Test with changed setting (ctrlCmd) - should now look for Alt
+        const context2: TerminalLinkContext = {
+            line: 'Some random string with Alt click to launch VS Code Native REPL',
+            terminal: {} as Terminal,
+        };
+
+        links = provider.provideTerminalLinks(context2, token);
+        assert.isNotEmpty(links, 'Expected links with Alt modifier when setting is ctrlCmd');
+
+        // Verify the old Ctrl link no longer works
+        links = provider.provideTerminalLinks(context1, token);
+        assert.isEmpty(links, 'Expected no links with Ctrl modifier when setting is ctrlCmd');
+    });
+
     test('Verify provideTerminalLinks returns no links when context.line does not contain expectedNativeLink', () => {
         const provider = new CustomTerminalLinkProvider();
         const context: TerminalLinkContext = {
