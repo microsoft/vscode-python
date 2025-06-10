@@ -50,6 +50,10 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
         pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         editorConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+        
+        // Set up default behavior for editor config
+        editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'alt');
+        
         getConfigurationStub.callsFake((section: string) => {
             if (section === 'python') {
                 return pythonConfig.object;
@@ -63,6 +67,9 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
     teardown(() => {
         sinon.restore();
+        // Reset editorConfig mock to default behavior for next test
+        editorConfig.reset();
+        editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'alt');
     });
 
     test('Verify createDirectory is called when shell integration is enabled', async () => {
@@ -200,6 +207,73 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
                 );
             }
         });
+
+        test('Mac - Verify provideTerminalLinks returns links with Option modifier when multiCursorModifier is ctrlCmd', () => {
+            // Mock the editor configuration to return ctrlCmd
+            editorConfig.reset();
+            editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'ctrlCmd');
+            
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Option click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
+
+            const links = provider.provideTerminalLinks(context, token);
+
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
+
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Option click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Option click to launch VS Code Native REPL'.length,
+                    'Match expected length',
+                );
+            }
+        });
+
+        test('Mac - Verify provideTerminalLinks returns links with Cmd modifier when multiCursorModifier is default (alt)', () => {
+            // This test verifies the default behavior when multiCursorModifier is 'alt'
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Cmd click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
+
+            const links = provider.provideTerminalLinks(context, token);
+
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
+
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Cmd click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Cmd click to launch VS Code Native REPL'.length,
+                    'Match expected length',
+                );
+            }
+        });
     }
     if (process.platform !== 'darwin') {
         test('Windows/Linux - Verify provideTerminalLinks returns links when context.line contains expectedNativeLink', () => {
@@ -239,6 +313,73 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
                     links[0].tooltip,
                     Repl.launchNativeRepl,
                     'Expected tooltip to be Launch VS Code Native REPL',
+                );
+            }
+        });
+
+        test('Windows/Linux - Verify provideTerminalLinks returns links with Alt modifier when multiCursorModifier is ctrlCmd', () => {
+            // Mock the editor configuration to return ctrlCmd
+            editorConfig.reset();
+            editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'ctrlCmd');
+            
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Alt click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
+
+            const links = provider.provideTerminalLinks(context, token);
+
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
+
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Alt click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Alt click to launch VS Code Native REPL'.length,
+                    'Match expected length',
+                );
+            }
+        });
+
+        test('Windows/Linux - Verify provideTerminalLinks returns links with Ctrl modifier when multiCursorModifier is default (alt)', () => {
+            // This test verifies the default behavior when multiCursorModifier is 'alt'
+            const provider = new CustomTerminalLinkProvider();
+            const context: TerminalLinkContext = {
+                line: 'Some random string with Ctrl click to launch VS Code Native REPL',
+                terminal: {} as Terminal,
+            };
+            const token: CancellationToken = {
+                isCancellationRequested: false,
+                onCancellationRequested: new EventEmitter<unknown>().event,
+            };
+
+            const links = provider.provideTerminalLinks(context, token);
+
+            assert.isNotNull(links, 'Expected links to be not undefined');
+            assert.isArray(links, 'Expected links to be an array');
+            assert.isNotEmpty(links, 'Expected links to be not empty');
+
+            if (Array.isArray(links)) {
+                assert.equal(
+                    links[0].startIndex,
+                    context.line.indexOf('Ctrl click to launch VS Code Native REPL'),
+                    'start index should match',
+                );
+                assert.equal(
+                    links[0].length,
+                    'Ctrl click to launch VS Code Native REPL'.length,
+                    'Match expected length',
                 );
             }
         });
