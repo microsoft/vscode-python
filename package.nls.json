@@ -77,6 +77,7 @@
     "python.terminal.executeInFileDir.description": "When executing a file in the terminal, whether to use execute in the file's directory, instead of the current open folder.",
     "python.terminal.focusAfterLaunch.description": "When launching a python terminal, whether to focus the cursor on the terminal.",
     "python.terminal.launchArgs.description": "Python launch arguments to use when executing a file in the terminal.",
+    "python.terminal.reuseActiveTerminal.description": "When running code selections or lines, try to reuse an existing active Python terminal instead of creating a new one.",
     "python.testing.autoTestDiscoverOnSaveEnabled.description": "Enable auto run test discovery when saving a test file.",
     "python.testing.autoTestDiscoverOnSavePattern.description": "Glob pattern used to determine which files are used by autoTestDiscoverOnSaveEnabled.",
     "python.testing.cwd.description": "Optional working directory for tests.",

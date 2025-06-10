@@ -675,4 +675,151 @@ suite('Terminal - Code Execution', () => {
             });
         });
     });
+
+    suite('Terminal Reuse', () => {
+        let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
+        let terminalService: TypeMoq.IMock<ITerminalService>;
+        let workspace: TypeMoq.IMock<IWorkspaceService>;
+        let platform: TypeMoq.IMock<IPlatformService>;
+        let workspaceFolder: TypeMoq.IMock<WorkspaceFolder>;
+        let settings: TypeMoq.IMock<IPythonSettings>;
+        let disposables: Disposable[] = [];
+        let executor: ReplProvider;
+        let terminalFactory: TypeMoq.IMock<ITerminalServiceFactory>;
+        let commandManager: TypeMoq.IMock<ICommandManager>;
+        let applicationShell: TypeMoq.IMock<IApplicationShell>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
+        let windowStub: sinon.SinonStub;
+        let mockTerminals: any[];
+
+        setup(() => {
+            terminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
+            terminalService = TypeMoq.Mock.ofType<ITerminalService>();
+            const configService = TypeMoq.Mock.ofType<IConfigurationService>();
+            workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
+            commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+            applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            platform = TypeMoq.Mock.ofType<IPlatformService>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+
+            workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
+            workspaceFolder.setup((w) => w.uri).returns(() => Uri.file(__dirname));
+
+            terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
+            terminalSettings.setup((t) => t.reuseActiveTerminal).returns(() => true);
+            terminalSettings.setup((t) => t.activateEnvironment).returns(() => false);
+            terminalSettings.setup((t) => t.activateEnvInCurrentTerminal).returns(() => false);
+
+            settings = TypeMoq.Mock.ofType<IPythonSettings>();
+            settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
+
+            configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+
+            terminalFactory
+                .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
+                .returns(() => terminalService.object);
+
+            // Mock window.terminals using a stub
+            mockTerminals = [];
+            const vscode = require('vscode');
+            windowStub = sinon.stub(vscode, 'window').value({ 
+                terminals: mockTerminals,
+                onDidCloseTerminal: () => ({ dispose: () => {} })
+            });
+
+            executor = new ReplProvider(
+                terminalFactory.object,
+                configService.object,
+                workspace.object,
+                disposables,
+                platform.object,
+                interpreterService.object,
+                commandManager.object,
+                applicationShell.object,
+            );
+        });
+
+        teardown(() => {
+            disposables.forEach((d) => d.dispose());
+            disposables = [];
+            windowStub.restore();
+        });
+
+        test('Should reuse existing Python terminal when reuseActiveTerminal is enabled', async () => {
+            // Arrange
+            const mockTerminal = {
+                name: 'Python',
+                exitStatus: undefined,
+                show: sinon.stub(),
+                sendText: sinon.stub(),
+                state: { shell: 'python' }
+            };
+            mockTerminals.push(mockTerminal);
+
+            terminalSettings.setup((t) => t.reuseActiveTerminal).returns(() => true);
+
+            // Act
+            await executor.execute('print("hello")', Uri.file('test.py'));
+
+            // Assert
+            sinon.assert.calledOnce(mockTerminal.show);
+            sinon.assert.calledWith(mockTerminal.sendText, 'print("hello")');
+            terminalService.verify(async (t) => t.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        });
+
+        test('Should not reuse existing terminal when reuseActiveTerminal is disabled', async () => {
+            // Arrange
+            const mockTerminal = {
+                name: 'Python',
+                exitStatus: undefined,
+                show: sinon.stub(),
+                sendText: sinon.stub(),
+                state: { shell: 'python' }
+            };
+            mockTerminals.push(mockTerminal);
+
+            terminalSettings.setup((t) => t.reuseActiveTerminal).returns(() => false);
+
+            // Mock required dependencies for creating new terminal
+            interpreterService
+                .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(({ path: '/usr/bin/python' } as unknown) as PythonEnvironment));
+            terminalSettings.setup((t) => t.launchArgs).returns(() => []);
+            platform.setup((p) => p.isWindows).returns(() => false);
+
+            // Act
+            await executor.execute('print("hello")', Uri.file('test.py'));
+
+            // Assert
+            sinon.assert.notCalled(mockTerminal.show);
+            sinon.assert.notCalled(mockTerminal.sendText);
+        });
+
+        test('Should skip closed terminals when looking for reusable terminal', async () => {
+            // Arrange
+            const closedTerminal = {
+                name: 'Python',
+                exitStatus: { code: 0 },
+                show: sinon.stub(),
+                sendText: sinon.stub()
+            };
+            const activeTerminal = {
+                name: 'Python REPL',
+                exitStatus: undefined,
+                show: sinon.stub(),
+                sendText: sinon.stub()
+            };
+            mockTerminals.push(closedTerminal, activeTerminal);
+
+            terminalSettings.setup((t) => t.reuseActiveTerminal).returns(() => true);
+
+            // Act
+            await executor.execute('print("hello")', Uri.file('test.py'));
+
+            // Assert
+            sinon.assert.notCalled(closedTerminal.show);
+            sinon.assert.calledOnce(activeTerminal.show);
+            sinon.assert.calledWith(activeTerminal.sendText, 'print("hello")');
+        });
+    });
 });
