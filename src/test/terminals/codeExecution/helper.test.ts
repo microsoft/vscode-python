@@ -167,6 +167,37 @@ suite('Terminal - Code Execution Helper', async () => {
         jsonParseStub.restore();
     });
 
+    test('normalizeLines should preserve trailing newlines for multiline code blocks in Python >= 3.13', async () => {
+        configurationService
+            .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+            .returns({
+                REPL: {
+                    EnableREPLSmartSend: false,
+                    REPLSmartSend: false,
+                },
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any);
+        const actualProcessService = new ProcessService();
+        processService
+            .setup((p) => p.execObservable(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) =>
+                actualProcessService.execObservable.apply(actualProcessService, [file, args, options]),
+            );
+
+        jsonParseStub = sinon.stub(JSON, 'parse');
+        const mockResult = {
+            normalized: 'def hello():\n    print("Hello")\n\n', // Double newlines from normalizeSelection.py
+            attach_bracket_paste: true,
+        };
+        jsonParseStub.returns(mockResult);
+
+        const result = await helper.normalizeLines('def hello():\n    print("Hello")', ReplType.terminal);
+
+        // For Python >= 3.13 multiline blocks, we should preserve trailing newlines for proper execution
+        expect(result).to.equal(`\u001b[200~def hello():\n    print("Hello")\n\n\u001b[201~`);
+        jsonParseStub.restore();
+    });
+
     test('normalizeLines should not attach bracketed paste for < 3.13', async () => {
         jsonParseStub = sinon.stub(JSON, 'parse');
         const mockResult = {
