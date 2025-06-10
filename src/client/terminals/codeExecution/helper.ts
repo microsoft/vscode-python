@@ -126,12 +126,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             }
             // For new _pyrepl for Python3.13 and above, we need to send code via bracketed paste mode.
             if (object.attach_bracket_paste && replType === ReplType.terminal) {
-                let trimmedNormalized = object.normalized.replace(/\n$/, '');
-                if (trimmedNormalized.endsWith(':\n')) {
-                    // In case where statement is unfinished via :, truncate so auto-indentation lands nicely.
-                    trimmedNormalized = trimmedNormalized.replace(/\n$/, '');
-                }
-                return `\u001b[200~${trimmedNormalized}\u001b[201~`;
+                // For Python >= 3.13, preserve trailing newlines to ensure proper execution
+                // of multi-line code blocks without requiring manual Enter keypresses
+                return `\u001b[200~${object.normalized}\u001b[201~`;
             }
 
             return parse(object.normalized);
