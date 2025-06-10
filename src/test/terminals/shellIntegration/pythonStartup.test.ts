@@ -50,10 +50,10 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
         pythonConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         editorConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        
+
         // Set up default behavior for editor config
         editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'alt');
-        
+
         getConfigurationStub.callsFake((section: string) => {
             if (section === 'python') {
                 return pythonConfig.object;
@@ -212,7 +212,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             // Mock the editor configuration to return ctrlCmd
             editorConfig.reset();
             editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'ctrlCmd');
-            
+
             const provider = new CustomTerminalLinkProvider();
             const context: TerminalLinkContext = {
                 line: 'Some random string with Option click to launch VS Code Native REPL',
@@ -321,7 +321,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
             // Mock the editor configuration to return ctrlCmd
             editorConfig.reset();
             editorConfig.setup((p) => p.get('multiCursorModifier', 'alt')).returns(() => 'ctrlCmd');
-            
+
             const provider = new CustomTerminalLinkProvider();
             const context: TerminalLinkContext = {
                 line: 'Some random string with Alt click to launch VS Code Native REPL',
@@ -387,7 +387,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
     test('Verify provideTerminalLinks adapts to configuration changes', () => {
         const provider = new CustomTerminalLinkProvider();
-        
+
         // Test with default setting (alt)
         const context1: TerminalLinkContext = {
             line: 'Some random string with Ctrl click to launch VS Code Native REPL',

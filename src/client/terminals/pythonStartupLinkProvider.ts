@@ -17,13 +17,13 @@ interface CustomTerminalLink extends TerminalLink {
 }
 
 /**
- * Gets the appropriate modifier key text for the Native REPL link based on the 
+ * Gets the appropriate modifier key text for the Native REPL link based on the
  * editor.multiCursorModifier setting and platform.
  */
 function getModifierKeyText(): string {
     const editorConfig = getConfiguration('editor');
     const multiCursorModifier = editorConfig.get<string>('multiCursorModifier', 'alt');
-    
+
     if (multiCursorModifier === 'ctrlCmd') {
         // When multiCursorModifier is ctrlCmd, links use Alt/Option
         return process.platform === 'darwin' ? 'Option' : 'Alt';
