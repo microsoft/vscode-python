@@ -649,6 +649,43 @@ suite('Terminal - Code Execution', () => {
                 terminalService.verify(async (t) => t.executeCommand('cmd2', true), TypeMoq.Times.once());
             });
 
+            test('Ensure new terminal is created when REPL is active and executeFile is called', async () => {
+                // Setup a file to execute
+                const file = Uri.file(path.join('c:', 'path', 'to', 'file', 'test.py'));
+                
+                // Setup mocks for interpreter and settings
+                const pythonPath = 'usr/bin/python1234';
+                const terminalArgs = ['-a', 'b', 'c'];
+                platform.setup((p) => p.isWindows).returns(() => false);
+                interpreterService
+                    .setup((s) => s.getActiveInterpreter(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
+                terminalSettings.setup((t) => t.executeInFileDir).returns(() => false);
+
+                // First, initialize REPL to make replActive = true
+                await executor.initializeRepl(file);
+                
+                // Reset terminal factory to track calls for file execution
+                terminalFactory.reset();
+                terminalFactory
+                    .setup((f) => f.getTerminalService(TypeMoq.It.isAny()))
+                    .callback((options: TerminalCreationOptions & { newTerminalPerFile?: boolean }) => {
+                        // When REPL is active, executeFile should force newTerminalPerFile = true
+                        assert.equal(options.newTerminalPerFile, true, 'Should force new terminal when REPL is active');
+                    })
+                    .returns(() => terminalService.object);
+
+                // Execute file - this should force creation of a new terminal
+                await executor.executeFile(file);
+
+                // Verify that getTerminalService was called with newTerminalPerFile: true
+                terminalFactory.verify(
+                    (f) => f.getTerminalService(TypeMoq.It.isAny()),
+                    TypeMoq.Times.once()
+                );
+            });
+
             test('Ensure code is sent to the same terminal for a particular resource', async () => {
                 const resource = Uri.file('a');
                 terminalFactory.reset();
