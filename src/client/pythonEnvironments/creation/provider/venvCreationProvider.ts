@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as os from 'os';
-import { CancellationToken, ProgressLocation, WorkspaceFolder } from 'vscode';
+import { CancellationToken, CancellationTokenSource, ProgressLocation, WorkspaceFolder } from 'vscode';
 import { Commands, PVSC_EXTENSION_ID } from '../../../common/constants';
 import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
@@ -31,6 +31,8 @@ import {
     CreateEnvironmentOptions,
     CreateEnvironmentResult,
 } from '../proposed.createEnvApis';
+import { shouldDisplayEnvCreationProgress } from './hideEnvCreation';
+import { noop } from '../../../common/utils/misc';
 
 interface IVenvCommandArgs {
     argv: string[];
@@ -333,6 +335,36 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         }
 
         const args = generateCommandArgs(installInfo, addGitIgnore);
+        const createEnvInternal = async (progress: CreateEnvironmentProgress, token: CancellationToken) => {
+            progress.report({
+                message: CreateEnv.statusStarting,
+            });
+
+            let envPath: string | undefined;
+            try {
+                if (interpreter && workspace) {
+                    envPath = await createVenv(workspace, interpreter, args, progress, token);
+                    if (envPath) {
+                        return { path: envPath, workspaceFolder: workspace };
+                    }
+                    throw new Error('Failed to create virtual environment. See Output > Python for more info.');
+                }
+                throw new Error('Failed to create virtual environment. Either interpreter or workspace is undefined.');
+            } catch (ex) {
+                traceError(ex);
+                showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
+                return { error: ex as Error };
+            }
+        };
+
+        if (!shouldDisplayEnvCreationProgress()) {
+            const token = new CancellationTokenSource();
+            try {
+                return await createEnvInternal({ report: noop }, token.token);
+            } finally {
+                token.dispose();
+            }
+        }
 
         return withProgress(
             {
@@ -343,29 +375,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             async (
                 progress: CreateEnvironmentProgress,
                 token: CancellationToken,
-            ): Promise<CreateEnvironmentResult | undefined> => {
-                progress.report({
-                    message: CreateEnv.statusStarting,
-                });
-
-                let envPath: string | undefined;
-                try {
-                    if (interpreter && workspace) {
-                        envPath = await createVenv(workspace, interpreter, args, progress, token);
-                        if (envPath) {
-                            return { path: envPath, workspaceFolder: workspace };
-                        }
-                        throw new Error('Failed to create virtual environment. See Output > Python for more info.');
-                    }
-                    throw new Error(
-                        'Failed to create virtual environment. Either interpreter or workspace is undefined.',
-                    );
-                } catch (ex) {
-                    traceError(ex);
-                    showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
-                    return { error: ex as Error };
-                }
-            },
+            ): Promise<CreateEnvironmentResult | undefined> => createEnvInternal(progress, token),
         );
     }
 

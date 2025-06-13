@@ -93,7 +93,10 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
                 throw new Error(`Installer ${installerType} not supported for the environment type: ${installerType}`);
             }
             for (const packageName of options.input.packageList) {
-                await installer.installModule(packageName, resourcePath, token, undefined, { installAsProcess: true });
+                await installer.installModule(packageName, resourcePath, token, undefined, {
+                    installAsProcess: true,
+                    hideProgress: true,
+                });
             }
             // format and return
             const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;
