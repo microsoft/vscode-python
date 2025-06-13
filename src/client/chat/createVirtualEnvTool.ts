@@ -43,6 +43,7 @@ import { traceError, traceVerbose, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { useEnvExtension } from '../envExt/api.internal';
 import { PythonEnvironment } from '../envExt/types';
+import { hideEnvCreation } from '../pythonEnvironments/creation/provider/hideEnvCreation';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
     packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
@@ -86,6 +87,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const disposables = new DisposableStore();
         try {
+            disposables.add(hideEnvCreation());
             const interpreterChanged = new Promise<void>((resolve) => {
                 disposables.add(interpreterPathService.onDidChange(() => resolve()));
             });
