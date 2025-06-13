@@ -17,5 +17,5 @@ export function hideEnvCreation(): Disposable {
 }
 
 export function shouldDisplayEnvCreationProgress(): boolean {
-    return envCreationTracker.length > 0;
+    return envCreationTracker.length === 0;
 }
