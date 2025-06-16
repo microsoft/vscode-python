@@ -93,7 +93,7 @@ PYTHONPATH=../workspace5
 
             const vars = await variablesService.parseFile(filename);
 
-            expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is is undefined');
             expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
             expect(vars).to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
             expect(vars).to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
@@ -119,7 +119,7 @@ Path=/usr/x:/usr/y
 
             const vars = await variablesService.parseFile(filename);
 
-            expect(vars).to.not.equal(undefined, 'Variables is is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is is undefined');
             expect(Object.keys(vars!)).lengthOf(5, 'Incorrect number of variables');
             expect(vars).to.have.property('X', '1', 'X value is invalid');
             expect(vars).to.have.property('Y', '2', 'Y value is invalid');
@@ -142,7 +142,7 @@ PYTHON=${BINDIR}/python3\n\
 
             const vars = await variablesService.parseFile(filename, { BINDIR: '/usr/bin' });
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
             expect(vars).to.have.property('REPO', '/home/user/git/foobar', 'value is invalid');
             expect(vars).to.have.property(
@@ -366,7 +366,7 @@ X1234PYEXTUNITTESTVAR=1234
 PYTHONPATH=../workspace5
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
             expect(vars).to.have.property('X1234PYEXTUNITTESTVAR', '1234', 'X1234PYEXTUNITTESTVAR value is invalid');
             expect(vars).to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
@@ -385,7 +385,7 @@ Path=/usr/x:/usr/y
 
             const expectedPythonPath = '/usr/one/three:/usr/one/four';
             const expectedPath = '/usr/x:/usr/y';
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(5, 'Incorrect number of variables');
             expect(vars).to.have.property('X', '1', 'X value is invalid');
             expect(vars).to.have.property('Y', '2', 'Y value is invalid');
@@ -408,7 +408,7 @@ VAR_2=7890
 _VAR_3=1234
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(6, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
             expect(vars).to.have.property('ham', '5678', 'value is invalid');
@@ -423,7 +423,7 @@ _VAR_3=1234
 SPAM=
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '', 'value is invalid');
         });
@@ -442,7 +442,7 @@ VAR3='MN'OP'
 VAR4="QR"ST"
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(10, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '12\\n34', 'value is invalid');
             expect(vars).to.have.property('HAM', '56\n78', 'value is invalid');
@@ -471,7 +471,7 @@ VAR2=IJKL
 VAR3='  MNOP  '
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(9, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
             expect(vars).to.have.property('HAM', '5678', 'value is invalid');
@@ -494,10 +494,20 @@ HAM=5678
 
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
             expect(vars).to.have.property('HAM', '5678', 'value is invalid');
+        });
+
+        test('Newlines can be escaped', () => {
+            const vars = parseEnvFile(`
+# Literal '\n'
+SPAM=12\\n34
+            `);
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
+            expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');
+            expect(vars).to.have.property('SPAM', '12\n34', 'value is invalid');
         });
 
         test('Comments are ignored', () => {
@@ -511,7 +521,7 @@ EGGS=9012  # ...
 #  done
             `);
 
-            expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+            expect(vars).to.not.equal(undefined, 'Variables is undefined');
             expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
             expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
             expect(vars).to.have.property('HAM', '5678', 'value is invalid');
@@ -527,7 +537,7 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 ',
                 );
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('REPO', '/home/user/git/foobar', 'value is invalid');
                 expect(vars).to.have.property(
@@ -559,7 +569,7 @@ SPAM=1234 \n\
 EGGS=$SPAM \n\
                 ');
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
                 expect(vars).to.have.property('EGGS', '$SPAM', 'value is invalid');
@@ -578,7 +588,7 @@ HAM4="-- ${${SPAM}} ${EGGS} --"\n\
                     ',
                 );
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(7, 'Incorrect number of variables');
                 expect(vars).to.have.property('SPAM', 'EGGS', 'value is invalid');
                 expect(vars).to.have.property('EGGS', '???', 'value is invalid');
@@ -601,7 +611,7 @@ HAM4=$SPAM \n\
                 ',
                 );
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(6, 'Incorrect number of variables');
                 expect(vars).to.have.property('SPAM', 'EGGS', 'value is invalid');
                 expect(vars).to.have.property('EGGS', '???', 'value is invalid');
@@ -620,7 +630,7 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
                 ',
                 );
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(2, 'Incorrect number of variables');
                 expect(vars).to.have.property('REPO', '/home/user/git/foobar', 'value is invalid');
                 expect(vars).to.have.property(
@@ -640,7 +650,7 @@ FOO=foo\\$bar \n\
                 ',
                 );
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(4, 'Incorrect number of variables');
                 expect(vars).to.have.property('SPAM', '1234', 'value is invalid');
                 expect(vars).to.have.property('EGGS', '${SPAM}/foo:${SPAM}/bar', 'value is invalid');
@@ -655,7 +665,7 @@ PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                     REPO: '/home/user/git/foobar',
                 });
 
-                expect(vars).to.not.equal(undefined, 'Variables is undefiend');
+                expect(vars).to.not.equal(undefined, 'Variables is undefined');
                 expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');
                 expect(vars).to.have.property(
                     'PYTHONPATH',
