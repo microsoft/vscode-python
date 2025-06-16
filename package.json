@@ -435,7 +435,7 @@
                     "type": "string"
                 },
                 "python.envFile": {
-                    "default": "${workspaceFolder}/.env",
+                    "default": "",
                     "description": "%python.envFile.description%",
                     "scope": "resource",
                     "type": "string"
@@ -964,7 +964,7 @@
                                 "type": "object"
                             },
                             "envFile": {
-                                "default": "${workspaceFolder}/.env",
+                                "default": "",
                                 "description": "Absolute path to a file containing environment variable definitions.",
                                 "type": "string"
                             },
