@@ -85,12 +85,9 @@ export class ActivatedEnvironmentLaunch implements IActivatedEnvironmentLaunch {
 
     @cache(-1, true)
     private async _selectIfLaunchedViaActivatedEnv(doNotBlockOnSelection = false): Promise<string | undefined> {
-        if (this.workspaceService.workspaceFile) {
-            // Assuming multiroot workspaces cannot be directly launched via `code .` command.
-            return undefined;
-        }
         if (process.env.VSCODE_CLI !== '1') {
             // We only want to select the interpreter if VS Code was launched from the command line.
+            traceLog("Skipping ActivatedEnv Detection:  process.env.VSCODE_CLI !== '1'");
             return undefined;
         }
         traceVerbose('VS Code was not launched from the command line');

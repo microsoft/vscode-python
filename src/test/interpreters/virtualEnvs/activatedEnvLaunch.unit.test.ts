@@ -263,37 +263,6 @@ suite('Activated Env Launch', async () => {
             expect(_promptIfApplicable.notCalled).to.equal(true, 'Prompt should not be displayed');
         });
 
-        test('Does not update interpreter path if a multiroot workspace is opened', async () => {
-            process.env.VIRTUAL_ENV = virtualEnvPrefix;
-            interpreterService
-                .setup((i) => i.getInterpreterDetails(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(({ envName: 'base' } as unknown) as PythonEnvironment));
-            workspaceService.setup((w) => w.workspaceFile).returns(() => uri);
-            const workspaceFolder: WorkspaceFolder = { name: 'one', uri, index: 0 };
-            workspaceService.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
-            pythonPathUpdaterService
-                .setup((p) =>
-                    p.updatePythonPath(
-                        TypeMoq.It.isValue(virtualEnvPrefix),
-                        TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
-                        TypeMoq.It.isValue('load'),
-                        TypeMoq.It.isValue(uri),
-                    ),
-                )
-                .returns(() => Promise.resolve())
-                .verifiable(TypeMoq.Times.never());
-            activatedEnvLaunch = new ActivatedEnvironmentLaunch(
-                workspaceService.object,
-                appShell.object,
-                pythonPathUpdaterService.object,
-                interpreterService.object,
-                processServiceFactory.object,
-            );
-            const result = await activatedEnvLaunch.selectIfLaunchedViaActivatedEnv();
-            expect(result).to.be.equal(undefined, 'Incorrect value');
-            pythonPathUpdaterService.verifyAll();
-        });
-
         test('Returns `undefined` if env was already selected', async () => {
             activatedEnvLaunch = new ActivatedEnvironmentLaunch(
                 workspaceService.object,
