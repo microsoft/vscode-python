@@ -24,6 +24,7 @@ import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
+    getUntrustedWorkspaceResponse,
     IResourceReference,
 } from './utils';
 import { resolveFilePath } from './utils';
@@ -61,6 +62,10 @@ export class SelectPythonEnvTool implements LanguageModelTool<ISelectPythonEnvTo
         options: LanguageModelToolInvocationOptions<ISelectPythonEnvToolArguments>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
+
         const resource = resolveFilePath(options.input.resourcePath);
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);

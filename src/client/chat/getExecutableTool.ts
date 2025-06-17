@@ -10,6 +10,7 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
+    workspace,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
@@ -19,6 +20,7 @@ import {
     getEnvDisplayName,
     getEnvironmentDetails,
     getToolResponseIfNotebook,
+    getUntrustedWorkspaceResponse,
     IResourceReference,
     raceCancellationError,
 } from './utils';
@@ -45,6 +47,10 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
+
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {

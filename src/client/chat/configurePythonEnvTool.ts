@@ -19,6 +19,7 @@ import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/termin
 import {
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
+    getUntrustedWorkspaceResponse,
     IResourceReference,
     isCancellationError,
     raceCancellationError,
@@ -28,7 +29,6 @@ import { ITerminalHelper } from '../common/terminal/types';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from './selectEnvTool';
-import { useEnvExtension } from '../envExt/api.internal';
 
 export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
@@ -54,6 +54,9 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         options: LanguageModelToolInvocationOptions<IResourceReference>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
         const resource = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resource);
         if (notebookResponse) {
@@ -78,10 +81,7 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
 
         if (await this.createEnvTool.shouldCreateNewVirtualEnv(resource, token)) {
             try {
-                // If the Python Env extension is available, then use that.
-                // create_quick_virtual_environment
-                const toolName = useEnvExtension() ? 'create_quick_virtual_environment' : CreateVirtualEnvTool.toolName;
-                return await lm.invokeTool(toolName, options, token);
+                return await lm.invokeTool(CreateVirtualEnvTool.toolName, options, token);
             } catch (ex) {
                 if (isCancellationError(ex)) {
                     const input: ISelectPythonEnvToolArguments = {

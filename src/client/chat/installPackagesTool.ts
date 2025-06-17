@@ -10,12 +10,14 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
+    workspace,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     getEnvDisplayName,
     getToolResponseIfNotebook,
+    getUntrustedWorkspaceResponse,
     IResourceReference,
     isCancellationError,
     isCondaEnv,
@@ -25,6 +27,7 @@ import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
+import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
 
 export interface IInstallPackageArgs extends IResourceReference {
     packageList: string[];
@@ -42,12 +45,34 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
         options: LanguageModelToolInvocationOptions<IInstallPackageArgs>,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
+        if (!workspace.isTrusted) {
+            return getUntrustedWorkspaceResponse();
+        }
+
         const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
         const packagePlurality = packageCount === 1 ? 'package' : 'packages';
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {
             return notebookResponse;
+        }
+
+        if (useEnvExtension()) {
+            const api = await getEnvExtApi();
+            const env = await api.getEnvironment(resourcePath);
+            if (env) {
+                await raceCancellationError(api.managePackages(env, { install: options.input.packageList }), token);
+                const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(
+                    ', ',
+                )}`;
+                return new LanguageModelToolResult([new LanguageModelTextPart(resultMessage)]);
+            } else {
+                return new LanguageModelToolResult([
+                    new LanguageModelTextPart(
+                        `Packages not installed. No environment found for: ${resourcePath?.fsPath}`,
+                    ),
+                ]);
+            }
         }
 
         try {
@@ -68,7 +93,10 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
                 throw new Error(`Installer ${installerType} not supported for the environment type: ${installerType}`);
             }
             for (const packageName of options.input.packageList) {
-                await installer.installModule(packageName, resourcePath, token, undefined, { installAsProcess: true });
+                await installer.installModule(packageName, resourcePath, token, undefined, {
+                    installAsProcess: true,
+                    hideProgress: true,
+                });
             }
             // format and return
             const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(', ')}`;

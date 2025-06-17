@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, ProgressLocation, WorkspaceFolder } from 'vscode';
+import { CancellationToken, CancellationTokenSource, ProgressLocation, WorkspaceFolder } from 'vscode';
 import * as path from 'path';
 import { Commands, PVSC_EXTENSION_ID } from '../../../common/constants';
 import { traceError, traceInfo, traceLog } from '../../../logging';
@@ -35,6 +35,8 @@ import {
     CreateEnvironmentResult,
     CreateEnvironmentProvider,
 } from '../proposed.createEnvApis';
+import { shouldDisplayEnvCreationProgress } from './hideEnvCreation';
+import { noop } from '../../../common/utils/misc';
 
 function generateCommandArgs(version?: string, options?: CreateEnvironmentOptions): string[] {
     let addGitIgnore = true;
@@ -261,6 +263,50 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
         }
     }
 
+    const createEnvInternal = async (progress: CreateEnvironmentProgress, token: CancellationToken) => {
+        progress.report({
+            message: CreateEnv.statusStarting,
+        });
+
+        let envPath: string | undefined;
+        try {
+            sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
+                environmentType: 'conda',
+                pythonVersion: version,
+            });
+            if (workspace) {
+                envPath = await createCondaEnv(
+                    workspace,
+                    getExecutableCommand(conda),
+                    generateCommandArgs(version, options),
+                    progress,
+                    token,
+                );
+
+                if (envPath) {
+                    return { path: envPath, workspaceFolder: workspace };
+                }
+
+                throw new Error('Failed to create conda environment. See Output > Python for more info.');
+            } else {
+                throw new Error('A workspace is needed to create conda environment');
+            }
+        } catch (ex) {
+            traceError(ex);
+            showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
+            return { error: ex as Error };
+        }
+    };
+
+    if (!shouldDisplayEnvCreationProgress()) {
+        const token = new CancellationTokenSource();
+        try {
+            return await createEnvInternal({ report: noop }, token.token);
+        } finally {
+            token.dispose();
+        }
+    }
+
     return withProgress(
         {
             location: ProgressLocation.Notification,
@@ -270,40 +316,7 @@ async function createEnvironment(options?: CreateEnvironmentOptions): Promise<Cr
         async (
             progress: CreateEnvironmentProgress,
             token: CancellationToken,
-        ): Promise<CreateEnvironmentResult | undefined> => {
-            progress.report({
-                message: CreateEnv.statusStarting,
-            });
-
-            let envPath: string | undefined;
-            try {
-                sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
-                    environmentType: 'conda',
-                    pythonVersion: version,
-                });
-                if (workspace) {
-                    envPath = await createCondaEnv(
-                        workspace,
-                        getExecutableCommand(conda),
-                        generateCommandArgs(version, options),
-                        progress,
-                        token,
-                    );
-
-                    if (envPath) {
-                        return { path: envPath, workspaceFolder: workspace };
-                    }
-
-                    throw new Error('Failed to create conda environment. See Output > Python for more info.');
-                } else {
-                    throw new Error('A workspace is needed to create conda environment');
-                }
-            } catch (ex) {
-                traceError(ex);
-                showErrorMessageWithLogs(CreateEnv.Conda.errorCreatingEnvironment);
-                return { error: ex as Error };
-            }
-        },
+        ): Promise<CreateEnvironmentResult | undefined> => createEnvInternal(progress, token),
     );
 }
 
