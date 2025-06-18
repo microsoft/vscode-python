@@ -456,7 +456,8 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
-                            "pythonTestAdapter"
+                            "pythonTestAdapter",
+                            "pythonEnvExtEnabled"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -464,7 +465,8 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
-                            "%python.experiments.pythonTestAdapter.description%"
+                            "%python.experiments.pythonTestAdapter.description%",
+                            "%python.experiments.pythonEnvExtEnabled.description%"
                         ]
                     },
                     "scope": "window",
@@ -481,7 +483,8 @@
                             "pythonPromptNewToolsExt",
                             "pythonTerminalEnvVarActivation",
                             "pythonDiscoveryUsingWorkers",
-                            "pythonTestAdapter"
+                            "pythonTestAdapter",
+                            "pythonEnvExtEnabled"
                         ],
                         "enumDescriptions": [
                             "%python.experiments.All.description%",
@@ -489,7 +492,8 @@
                             "%python.experiments.pythonPromptNewToolsExt.description%",
                             "%python.experiments.pythonTerminalEnvVarActivation.description%",
                             "%python.experiments.pythonDiscoveryUsingWorkers.description%",
-                            "%python.experiments.pythonTestAdapter.description%"
+                            "%python.experiments.pythonTestAdapter.description%",
+                            "%python.experiments.pythonEnvExtEnabled.description%"
                         ]
                     },
                     "scope": "window",

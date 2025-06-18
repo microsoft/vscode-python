@@ -5,9 +5,10 @@
 
 import { env, workspace } from 'vscode';
 import { IExperimentService } from '../types';
-import { TerminalEnvVarActivation } from './groups';
+import { EnvExtEnabled, TerminalEnvVarActivation } from './groups';
 import { isTestExecution } from '../constants';
 import { traceInfo } from '../../logging';
+import { inExperiment } from '../../pythonEnvironments/common/externalDependencies';
 
 export function inTerminalEnvVarExperiment(experimentService: IExperimentService): boolean {
     if (!isTestExecution() && env.remoteName && workspace.workspaceFolders && workspace.workspaceFolders.length > 1) {
@@ -19,4 +20,8 @@ export function inTerminalEnvVarExperiment(experimentService: IExperimentService
         return false;
     }
     return true;
+}
+
+export function inEnvExtEnabledExperiment(): boolean {
+    return inExperiment(EnvExtEnabled.experiment);
 }

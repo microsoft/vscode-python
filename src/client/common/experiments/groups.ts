@@ -11,6 +11,10 @@ export enum TerminalEnvVarActivation {
     experiment = 'pythonTerminalEnvVarActivation',
 }
 
+export enum EnvExtEnabled {
+    experiment = 'pythonEnvExtEnabled',
+}
+
 export enum DiscoveryUsingWorkers {
     experiment = 'pythonDiscoveryUsingWorkers',
 }
