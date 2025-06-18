@@ -107,6 +107,7 @@ class PythonServerImpl implements PythonServer, Disposable {
         serverInstance = undefined;
     }
 }
+const hello = 'this is dummy PR to test CI';
 
 export function createPythonServer(interpreter: string[], cwd?: string): PythonServer {
     if (serverInstance) {
