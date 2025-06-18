@@ -189,6 +189,7 @@ export interface ITerminalSettings {
     readonly activateEnvironment: boolean;
     readonly activateEnvInCurrentTerminal: boolean;
     readonly enableShellIntegration: boolean;
+    readonly reuseActiveTerminal: boolean;
 }
 
 export interface IREPLSettings {
