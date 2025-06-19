@@ -189,8 +189,8 @@ def run_tests(
     pattern: str,
     top_level_dir: Optional[str],
     verbosity: int,
-    failfast: Optional[bool],
-    locals_: Optional[bool] = None,
+    failfast: Optional[bool],  # noqa: FBT001
+    locals_: Optional[bool] = None,  # noqa: FBT001
 ) -> ExecutionPayloadDict:
     cwd = os.path.abspath(start_dir)  # noqa: PTH100
     if "/" in start_dir:  #  is a subdir
