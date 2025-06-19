@@ -440,6 +440,16 @@
                     "scope": "resource",
                     "type": "string"
                 },
+                "python.useEnvironmentsExtension": {
+                    "default": false,
+                    "description": "%python.useEnvironmentsExtension.description%",
+                    "scope": "machine-overridable",
+                    "type": "boolean",
+                    "tags": [
+                        "onExP",
+                        "preview"
+                    ]
+                },
                 "python.experiments.enabled": {
                     "default": true,
                     "description": "%python.experiments.enabled.description%",
