@@ -14,6 +14,7 @@ import {
 } from './types';
 import { executeCommand } from '../common/vscodeApis/commandApis';
 import { IInterpreterPathService } from '../common/types';
+import { getConfiguration } from '../common/vscodeApis/workspaceApis';
 
 export const ENVS_EXTENSION_ID = 'ms-python.vscode-python-envs';
 
@@ -22,7 +23,9 @@ export function useEnvExtension(): boolean {
     if (_useExt !== undefined) {
         return _useExt;
     }
-    _useExt = !!getExtension(ENVS_EXTENSION_ID);
+    const inExpSetting = getConfiguration('python').get<boolean>('useEnvironmentsExtension', false);
+    // If extension is installed and in experiment, then use it.
+    _useExt = !!getExtension(ENVS_EXTENSION_ID) && inExpSetting;
     return _useExt;
 }
 
