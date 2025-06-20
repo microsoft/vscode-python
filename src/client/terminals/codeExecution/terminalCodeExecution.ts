@@ -38,12 +38,15 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     ) {}
 
     public async executeFile(file: Uri, options?: { newTerminalPerFile: boolean }) {
-        await this.setCwdForFileExecution(file, options);
+        // If we're currently in a REPL, force creation of a new terminal for file execution
+        const finalOptions = await this.shouldForceNewTerminalForFileExecution(options);
+        
+        await this.setCwdForFileExecution(file, finalOptions);
         const { command, args } = await this.getExecuteFileArgs(file, [
             file.fsPath.fileToCommandArgumentForPythonExt(),
         ]);
 
-        await this.getTerminalService(file, options).sendCommand(command, args);
+        await this.getTerminalService(file, finalOptions).sendCommand(command, args);
     }
 
     public async execute(code: string, resource?: Uri): Promise<void> {
@@ -123,6 +126,28 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     // Overridden in subclasses, see djangoShellCodeExecution.ts
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         return this.getExecutableInfo(resource, executeArgs);
+    }
+
+    /**
+     * Check if we should force creation of a new terminal for file execution.
+     * This is needed when the current terminal is in Python REPL mode to avoid
+     * sending the file execution command to the Python interpreter instead of the shell.
+     */
+    private async shouldForceNewTerminalForFileExecution(
+        options?: { newTerminalPerFile: boolean }
+    ): Promise<{ newTerminalPerFile: boolean }> {
+        // If already set to create new terminal, respect that
+        if (options?.newTerminalPerFile) {
+            return { newTerminalPerFile: true };
+        }
+
+        // If we have an active REPL, force creation of a new terminal
+        if (this.replActive && (await this.replActive)) {
+            return { newTerminalPerFile: true };
+        }
+
+        // Otherwise, use original options or default to false
+        return options || { newTerminalPerFile: false };
     }
     private getTerminalService(resource: Resource, options?: { newTerminalPerFile: boolean }): ITerminalService {
         return this.terminalServiceFactory.getTerminalService({
