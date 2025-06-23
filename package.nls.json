@@ -38,6 +38,7 @@
     "python.debugger.deprecatedMessage": "This configuration will be deprecated soon. Please replace `python` with `debugpy` to use the new Python Debugger extension.",
     "python.defaultInterpreterPath.description": "Path to default Python to use when extension loads up for the first time, no longer used once an interpreter is selected for the workspace. See [here](https://aka.ms/AAfekmf) to understand when this is used",
     "python.envFile.description": "Absolute path to a file containing environment variable definitions.",
+    "python.useEnvironmentsExtension.description": "Enables the Python Environments extension.",
     "python.experiments.enabled.description": "Enables A/B tests experiments in the Python extension. If enabled, you may get included in proposed enhancements and/or features.",
     "python.experiments.optInto.description": "List of experiments to opt into. If empty, user is assigned the default experiment groups. See [here](https://github.com/microsoft/vscode-python/wiki/AB-Experiments) for more details.",
     "python.experiments.optOutFrom.description": "List of experiments to opt out of. If empty, user is assigned the default experiment groups. See [here](https://github.com/microsoft/vscode-python/wiki/AB-Experiments) for more details.",
