@@ -55,7 +55,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
 
     public async normalizeLines(
         code: string,
-        replType: ReplType,
+        _replType: ReplType,
         wholeFileContent?: string,
         resource?: Uri,
     ): Promise<string> {
