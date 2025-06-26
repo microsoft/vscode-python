@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { EOL } from 'os';
-
 export class ErrorUtils {
     public static outputHasModuleNotInstalledError(moduleName: string, content?: string): boolean {
         return content &&
@@ -14,13 +12,10 @@ export class ErrorUtils {
 }
 
 /**
- * Wraps an error with a custom error message, retaining the call stack information.
+ * An error class that contains a telemetry safe reason.
  */
-export class WrappedError extends Error {
-    constructor(message: string, originalException: Error) {
+export class ErrorWithTelemetrySafeReason extends Error {
+    constructor(message: string, public readonly telemetrySafeReason: string) {
         super(message);
-        // Retain call stack that trapped the error and rethrows this error.
-        // Also retain the call stack of the original error.
-        this.stack = `${new Error('').stack}${EOL}${EOL}${originalException.stack}`;
     }
 }

@@ -18,6 +18,7 @@ import { Conda } from '../pythonEnvironments/common/environmentManagers/conda';
 import { JUPYTER_EXTENSION_ID, NotebookCellScheme } from '../common/constants';
 import { dirname, join } from 'path';
 import { resolveEnvironment, useEnvExtension } from '../envExt/api.internal';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 
 export interface IResourceReference {
     resourcePath?: string;
@@ -85,7 +86,10 @@ export async function getEnvironmentDetails(
             (await raceCancellationError(resolveEnvironment(envPath.id), token)) ||
             (await raceCancellationError(resolveEnvironment(envPath.path), token));
         if (!environment || !environment.version) {
-            throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+            throw new ErrorWithTelemetrySafeReason(
+                'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                'noEnvFound',
+            );
         }
         envVersion = environment.version;
         try {
@@ -104,7 +108,10 @@ export async function getEnvironmentDetails(
     } else {
         const environment = await raceCancellationError(api.resolveEnvironment(envPath), token);
         if (!environment || !environment.version) {
-            throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+            throw new ErrorWithTelemetrySafeReason(
+                'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                'noEnvFound',
+            );
         }
         envType = environment.environment?.type || 'unknown';
         envVersion = environment.version.sysVersion || 'unknown';
@@ -124,10 +131,6 @@ export async function getEnvironmentDetails(
         packages ? `4. ${packages}` : '',
     ];
     return message.join('\n');
-}
-
-export function getUntrustedWorkspaceResponse() {
-    return new LanguageModelToolResult([new LanguageModelTextPart('Cannot use this tool in an untrusted workspace.')]);
 }
 
 export async function getTerminalCommand(
@@ -244,12 +247,15 @@ export async function getEnvDetailsForResponse(
     token: CancellationToken,
 ): Promise<LanguageModelToolResult> {
     if (!workspace.isTrusted) {
-        throw new Error('Cannot use this tool in an untrusted workspace.');
+        throw new ErrorWithTelemetrySafeReason('Cannot use this tool in an untrusted workspace.', 'untrustedWorkspace');
     }
     const envPath = api.getActiveEnvironmentPath(resource);
     environment = environment || (await raceCancellationError(api.resolveEnvironment(envPath), token));
     if (!environment || !environment.version) {
-        throw new Error('No environment found for the provided resource path: ' + resource?.fsPath);
+        throw new ErrorWithTelemetrySafeReason(
+            'No environment found for the provided resource path: ' + resource?.fsPath,
+            'noEnvFound',
+        );
     }
     const message = await getEnvironmentDetails(
         resource,

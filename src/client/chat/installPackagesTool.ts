@@ -10,46 +10,45 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
-    workspace,
+    Uri,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import {
     getEnvDisplayName,
     getToolResponseIfNotebook,
-    getUntrustedWorkspaceResponse,
     IResourceReference,
     isCancellationError,
     isCondaEnv,
     raceCancellationError,
 } from './utils';
-import { resolveFilePath } from './utils';
 import { IModuleInstaller } from '../common/installer/types';
 import { ModuleInstallerType } from '../pythonEnvironments/info';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
 import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
+import { BaseTool } from './baseTool';
 
 export interface IInstallPackageArgs extends IResourceReference {
     packageList: string[];
 }
 
-export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArgs> {
+export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
+    implements LanguageModelTool<IInstallPackageArgs> {
     public static readonly toolName = 'install_python_packages';
     constructor(
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
         private readonly discovery: IDiscoveryAPI,
-    ) {}
+    ) {
+        super(InstallPackagesTool.toolName);
+    }
 
-    async invoke(
+    async invokeImpl(
         options: LanguageModelToolInvocationOptions<IInstallPackageArgs>,
+        resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
         const packagePlurality = packageCount === 1 ? 'package' : 'packages';
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
@@ -80,17 +79,26 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
             const envPath = this.api.getActiveEnvironmentPath(resourcePath);
             const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
             if (!environment || !environment.version) {
-                throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+                throw new ErrorWithTelemetrySafeReason(
+                    'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                    'noEnvFound',
+                );
             }
             const isConda = isCondaEnv(environment);
             const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
             const installerType = isConda ? ModuleInstallerType.Conda : ModuleInstallerType.Pip;
             const installer = installers.find((i) => i.type === installerType);
             if (!installer) {
-                throw new Error(`No installer found for the environment type: ${installerType}`);
+                throw new ErrorWithTelemetrySafeReason(
+                    `No installer found for the environment type: ${installerType}`,
+                    'noInstallerFound',
+                );
             }
             if (!installer.isSupported(resourcePath)) {
-                throw new Error(`Installer ${installerType} not supported for the environment type: ${installerType}`);
+                throw new ErrorWithTelemetrySafeReason(
+                    `Installer ${installerType} not supported for the environment type: ${installerType}`,
+                    'installerNotSupported',
+                );
             }
             for (const packageName of options.input.packageList) {
                 await installer.installModule(packageName, resourcePath, token, undefined, {
@@ -110,11 +118,11 @@ export class InstallPackagesTool implements LanguageModelTool<IInstallPackageArg
         }
     }
 
-    async prepareInvocation?(
+    async prepareInvocationImpl(
         options: LanguageModelToolInvocationPrepareOptions<IInstallPackageArgs>,
+        resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         const packageCount = options.input.packageList.length;
         if (getToolResponseIfNotebook(resourcePath)) {
             return {};
