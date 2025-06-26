@@ -17,12 +17,7 @@ import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import {
-    getEnvironmentDetails,
-    getToolResponseIfNotebook,
-    IResourceReference,
-    raceCancellationError,
-} from './utils';
+import { getEnvironmentDetails, getToolResponseIfNotebook, IResourceReference, raceCancellationError } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
 import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
