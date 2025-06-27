@@ -98,9 +98,11 @@ async function addExtensionPackDependencies() {
     // extension dependencies need not be installed during development
     const packageJsonContents = await fsExtra.readFile('package.json', 'utf-8');
     const packageJson = JSON.parse(packageJsonContents);
-    packageJson.extensionPack = ['ms-python.vscode-pylance', 'ms-python.debugpy'].concat(
-        packageJson.extensionPack ? packageJson.extensionPack : [],
-    );
+    packageJson.extensionPack = [
+        'ms-python.vscode-pylance',
+        'ms-python.debugpy',
+        'ms-python.vscode-python-envs',
+    ].concat(packageJson.extensionPack ? packageJson.extensionPack : []);
     // Remove potential duplicates.
     packageJson.extensionPack = packageJson.extensionPack.filter(
         (item, index) => packageJson.extensionPack.indexOf(item) === index,
