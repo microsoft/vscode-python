@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Uri, window, Terminal } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
@@ -25,6 +25,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private hasRanOutsideCurrentDrive = false;
     protected terminalTitle!: string;
     private replActive?: Promise<boolean>;
+    private existingReplTerminal?: Terminal;
 
     constructor(
         @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
@@ -59,11 +60,39 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 this.configurationService.updateSetting('REPL.enableREPLSmartSend', false, resource);
             }
         } else {
-            await this.getTerminalService(resource).executeCommand(code, true);
+            // If we're using an existing terminal, send code directly to it
+            if (this.existingReplTerminal) {
+                this.existingReplTerminal.sendText(code);
+            } else {
+                await this.getTerminalService(resource).executeCommand(code, true);
+            }
         }
     }
 
     public async initializeRepl(resource: Resource) {
+        // First, try to find and reuse an existing Python terminal
+        const existingTerminal = await this.findExistingPythonTerminal(resource);
+        if (existingTerminal) {
+            // Store the existing terminal reference and show it
+            this.existingReplTerminal = existingTerminal;
+            existingTerminal.show();
+            this.replActive = Promise.resolve(true);
+            
+            // Listen for terminal close events to clear our reference
+            const terminalCloseListener = window.onDidCloseTerminal((closedTerminal) => {
+                if (closedTerminal === this.existingReplTerminal) {
+                    this.existingReplTerminal = undefined;
+                    this.replActive = undefined;
+                }
+            });
+            this.disposables.push(terminalCloseListener);
+            
+            return;
+        }
+
+        // Clear any existing terminal reference since we're creating a new one
+        this.existingReplTerminal = undefined;
+
         const terminalService = this.getTerminalService(resource);
         if (this.replActive && (await this.replActive)) {
             await terminalService.show();
@@ -123,6 +152,41 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     // Overridden in subclasses, see djangoShellCodeExecution.ts
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecInfo> {
         return this.getExecutableInfo(resource, executeArgs);
+    }
+
+    /**
+     * Find an existing terminal that has a Python REPL running
+     */
+    private async findExistingPythonTerminal(resource?: Uri): Promise<Terminal | undefined> {
+        const pythonSettings = this.configurationService.getSettings(resource);
+        
+        // Check if the feature is enabled
+        if (!pythonSettings.terminal.reuseActiveTerminal) {
+            return undefined;
+        }
+
+        // Look through all existing terminals
+        for (const terminal of window.terminals) {
+            // Skip terminals that are closed or hidden
+            if (terminal.exitStatus) {
+                continue;
+            }
+
+            // Check if this looks like a Python terminal based on name
+            const terminalName = terminal.name.toLowerCase();
+            if (terminalName.includes('python') || terminalName.includes('repl')) {
+                // For now, we'll consider any Python-named terminal as potentially reusable
+                // In the future, we could add more sophisticated detection
+                return terminal;
+            }
+
+            // Check if the terminal's detected shell is Python
+            if (terminal.state?.shell === 'python') {
+                return terminal;
+            }
+        }
+
+        return undefined;
     }
     private getTerminalService(resource: Resource, options?: { newTerminalPerFile: boolean }): ITerminalService {
         return this.terminalServiceFactory.getTerminalService({
