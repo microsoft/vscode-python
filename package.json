@@ -1671,6 +1671,7 @@
         "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "clean": "gulp clean",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
+        "addExtensionPackDependenciesPreRelease": "gulp addExtensionPackDependenciesPreRelease",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
         "webpack": "webpack"
