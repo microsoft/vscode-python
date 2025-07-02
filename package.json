@@ -385,6 +385,11 @@
                 "category": "Python",
                 "command": "python.installJupyter",
                 "title": "%python.command.python.installJupyter.title%"
+            },
+            {
+                "category": "Python",
+                "command": "python.copyImportPath",
+                "title": "%python.command.python.copyImportPath.title%"
             }
         ],
         "configuration": {
@@ -1145,6 +1150,11 @@
         ],
         "keybindings": [
             {
+                "command": "python.copyImportPath",
+                "key": "ctrl+alt+shift+i",
+                "when": "editorTextFocus && resourceLangId == python"
+            },
+            {
                 "command": "python.execSelectionInTerminal",
                 "key": "shift+enter",
                 "when": "editorTextFocus && editorLangId == python && !findInputFocussed && !replaceInputFocussed && !jupyter.ownsSelection && !notebookEditorFocused && !isCompositeNotebook"
@@ -1422,6 +1432,13 @@
                     "group": "navigation@0",
                     "title": "%python.command.python.execInDedicatedTerminal.title%",
                     "when": "resourceLangId == python && !isInDiffEditor && !virtualWorkspace && shellExecutionSupported"
+                }
+            ],
+            "editor/title/context": [
+                {
+                    "command": "python.copyImportPath",
+                    "group": "1_cutcopypaste@1060",
+                    "when": "resourceLangId == python"
                 }
             ],
             "explorer/context": [
