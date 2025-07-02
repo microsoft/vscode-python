@@ -106,7 +106,7 @@ async function getActivationTelemetryProps(
     // it is slow.
     await interpreterService.refreshPromise;
     const interpreter = await interpreterService
-        .getActiveInterpreter()
+        .getActiveInterpreter(mainWorkspaceUri)
         .catch<PythonEnvironment | undefined>(() => undefined);
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
