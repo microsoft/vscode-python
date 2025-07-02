@@ -8,8 +8,8 @@
     },
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only Partial IntelliSense with Pylance is supported. Cannot execute Python with untrusted files."
+            "supported": false,
+            "description": "Python extension is not supported in untrusted workspaces. Use Pylance extension to explore."
         },
         "virtualWorkspaces": {
             "supported": "limited",
