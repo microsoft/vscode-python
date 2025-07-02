@@ -16,6 +16,7 @@ import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
 import { IStartupDurations } from './types';
+import { useEnvExtension } from './envExt/api.internal';
 
 export async function sendStartupTelemetry(
     activatedPromise: Promise<any>,
@@ -105,9 +106,19 @@ async function getActivationTelemetryProps(
     // finish. API getActiveInterpreter() does not block on windows registry by default as
     // it is slow.
     await interpreterService.refreshPromise;
-    const interpreter = await interpreterService
-        .getActiveInterpreter(mainWorkspaceUri)
-        .catch<PythonEnvironment | undefined>(() => undefined);
+    let interpreter: PythonEnvironment | undefined;
+
+    // include main workspace uri if using env extension
+    if (useEnvExtension()) {
+        interpreter = await interpreterService
+            .getActiveInterpreter(mainWorkspaceUri)
+            .catch<PythonEnvironment | undefined>(() => undefined);
+    } else {
+        interpreter = await interpreterService
+            .getActiveInterpreter()
+            .catch<PythonEnvironment | undefined>(() => undefined);
+    }
+
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.envType : undefined;
     if (interpreterType === EnvironmentType.Unknown) {
