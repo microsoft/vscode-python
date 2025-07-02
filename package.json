@@ -9,7 +9,7 @@
     "capabilities": {
         "untrustedWorkspaces": {
             "supported": false,
-            "description": "Python extension is not supported in untrusted workspaces. Use Pylance extension to explore."
+            "description": "The Python extension is not available in untrusted workspaces. Use Pylance to get partial IntelliSense support for Python files."
         },
         "virtualWorkspaces": {
             "supported": "limited",
