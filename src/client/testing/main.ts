@@ -11,7 +11,6 @@ import {
     Command,
     TestItem,
 } from 'vscode';
-import { env } from 'vscode';
 import { IApplicationShell, ICommandManager, IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
