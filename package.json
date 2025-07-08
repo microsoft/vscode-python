@@ -67,6 +67,7 @@
         "onDebugInitialConfigurations",
         "onLanguage:python",
         "onDebugResolve:python",
+        "onCommand:python.configureTests",
         "onCommand:python.copilotSetupTests",
         "workspaceContains:mspythonconfig.json",
         "workspaceContains:pyproject.toml",
