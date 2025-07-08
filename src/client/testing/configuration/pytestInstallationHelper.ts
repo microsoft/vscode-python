@@ -44,7 +44,9 @@ export class PytestInstallationHelper {
                 return this.installPytestWithEnvExtension(workspaceUri);
             } else {
                 // Fall back to traditional installer if environments extension is not available
-                traceInfo('Python Environments extension not available, installation cannot proceed via environment extension');
+                traceInfo(
+                    'Python Environments extension not available, installation cannot proceed via environment extension',
+                );
                 return false;
             }
         } catch (error) {
@@ -66,7 +68,7 @@ export class PytestInstallationHelper {
             if (!environment) {
                 traceError('No Python environment found for workspace:', workspaceUri.fsPath);
                 await this.appShell.showErrorMessage(
-                    l10n.t('No Python environment found. Please set up a Python environment first.')
+                    l10n.t('No Python environment found. Please set up a Python environment first.'),
                 );
                 return false;
             }
@@ -77,13 +79,9 @@ export class PytestInstallationHelper {
             });
 
             traceInfo('pytest installation completed successfully');
-            await this.appShell.showInformationMessage(l10n.t('pytest has been installed successfully.'));
             return true;
         } catch (error) {
             traceError('Failed to install pytest using Python Environments extension:', error);
-            await this.appShell.showErrorMessage(
-                l10n.t('Failed to install pytest. Please install it manually or check your Python environment.')
-            );
             return false;
         }
     }

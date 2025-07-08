@@ -49,6 +49,7 @@ export class ConfigurationManager extends TestConfigurationManager {
             args.push(testDir);
         }
         const installed = await this.installer.isInstalled(Product.pytest);
+        await this.testConfigSettingsService.updateTestArgs(wkspace.fsPath, Product.pytest, args);
         if (!installed) {
             // Check if Python Environments extension is available for enhanced installation flow
             if (this.pytestInstallationHelper.isEnvExtensionAvailable()) {
@@ -64,7 +65,6 @@ export class ConfigurationManager extends TestConfigurationManager {
                 await this.installer.install(Product.pytest);
             }
         }
-        await this.testConfigSettingsService.updateTestArgs(wkspace.fsPath, Product.pytest, args);
     }
 
     private async getConfigFiles(rootDir: string): Promise<string[]> {
