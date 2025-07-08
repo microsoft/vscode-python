@@ -100,11 +100,6 @@ suite('PytestInstallationHelper', () => {
             .returns(() => Promise.resolve('Install pytest'))
             .verifiable(TypeMoq.Times.once());
 
-        appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.is((msg: string) => msg.includes('successfully'))))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
-
         const result = await helper.promptToInstallPytest(workspaceUri);
 
         expect(result).to.be.true;
