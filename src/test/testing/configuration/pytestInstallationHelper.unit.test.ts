@@ -21,7 +21,7 @@ suite('PytestInstallationHelper', () => {
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         helper = new PytestInstallationHelper(appShell.object);
-        
+
         useEnvExtensionStub = sinon.stub(envExtApi, 'useEnvExtension');
         getEnvExtApiStub = sinon.stub(envExtApi, 'getEnvExtApi');
         getEnvironmentStub = sinon.stub(envExtApi, 'getEnvironment');
@@ -57,16 +57,16 @@ suite('PytestInstallationHelper', () => {
 
     test('isEnvExtensionAvailable should return result from useEnvExtension', () => {
         useEnvExtensionStub.returns(true);
-        
+
         const result = helper.isEnvExtensionAvailable();
-        
+
         expect(result).to.be.true;
         expect(useEnvExtensionStub.calledOnce).to.be.true;
     });
 
     test('promptToInstallPytest should return false if env extension not available', async () => {
         useEnvExtensionStub.returns(false);
-        
+
         appShell
             .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve('Install pytest'))
@@ -80,24 +80,26 @@ suite('PytestInstallationHelper', () => {
 
     test('promptToInstallPytest should attempt installation when env extension is available', async () => {
         useEnvExtensionStub.returns(true);
-        
+
         const mockEnvironment = { envId: { id: 'test-env', managerId: 'test-manager' } };
         const mockEnvExtApi = {
-            managePackages: sinon.stub().resolves()
+            managePackages: sinon.stub().resolves(),
         };
-        
+
         getEnvExtApiStub.resolves(mockEnvExtApi);
         getEnvironmentStub.resolves(mockEnvironment);
-        
+
         appShell
-            .setup((a) => a.showInformationMessage(
-                TypeMoq.It.is((msg: string) => msg.includes('pytest selected but not installed')),
-                TypeMoq.It.isAny(),
-                TypeMoq.It.isAny()
-            ))
+            .setup((a) =>
+                a.showInformationMessage(
+                    TypeMoq.It.is((msg: string) => msg.includes('pytest selected but not installed')),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                ),
+            )
             .returns(() => Promise.resolve('Install pytest'))
             .verifiable(TypeMoq.Times.once());
-            
+
         appShell
             .setup((a) => a.showInformationMessage(TypeMoq.It.is((msg: string) => msg.includes('successfully'))))
             .returns(() => Promise.resolve(undefined))
