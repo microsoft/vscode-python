@@ -54,8 +54,10 @@ runs:
       shell: bash
 
     - name: Add Rustup target
-      run: rustup target add ${{ inputs.cargo_target }}
+      run: rustup target add "${CARGO_TARGET}"
       shell: bash
+      env:
+        CARGO_TARGET: ${{ inputs.cargo_target }}
 
     - name: Build Native Binaries
       run: nox --session native_build
@@ -68,8 +70,15 @@ runs:
       shell: bash
 
     - name: Update optional extension dependencies
-      run: npm run addExtensionPackDependencies
+      run: |
+        if [[ "${VSIX_NAME}" == *"insiders"* ]]; then
+        npm run addExtensionPackDependenciesPreRelease
+        else
+        npm run addExtensionPackDependencies
+        fi
       shell: bash
+      env:
+        VSIX_NAME: ${{ inputs.vsix_name }}
 
     - name: Build Webpack
       run: |
@@ -78,13 +87,17 @@ runs:
       shell: bash
 
     - name: Build VSIX
-      run: npx vsce package --target ${{ inputs.vsix_target }} --out ms-python-insiders.vsix --pre-release
+      run: npx vsce package --target "${VSIX_TARGET}" --out ms-python-insiders.vsix --pre-release
       shell: bash
+      env:
+        VSIX_TARGET: ${{ inputs.vsix_target }}
 
     - name: Rename VSIX
       # Move to a temp name in case the specified name happens to match the default name.
-      run: mv ms-python-insiders.vsix ms-python-temp.vsix && mv ms-python-temp.vsix ${{ inputs.vsix_name }}
+      run: mv ms-python-insiders.vsix ms-python-temp.vsix && mv ms-python-temp.vsix "${VSIX_NAME}"
       shell: bash
+      env:
+        VSIX_NAME: ${{ inputs.vsix_name }}
 
     - name: Upload VSIX
       uses: actions/upload-artifact@v4

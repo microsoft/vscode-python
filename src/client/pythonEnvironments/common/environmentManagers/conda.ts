@@ -579,6 +579,15 @@ export class Conda {
         return [...python, OUTPUT_MARKER_SCRIPT];
     }
 
+    public async getListPythonPackagesArgs(
+        env: CondaEnvInfo,
+        forShellExecution?: boolean,
+    ): Promise<string[] | undefined> {
+        const args = ['-p', env.prefix];
+
+        return [forShellExecution ? this.shellCommand : this.command, 'list', ...args];
+    }
+
     /**
      * Return the conda version. The version info is cached.
      */

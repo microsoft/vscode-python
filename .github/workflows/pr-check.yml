@@ -7,8 +7,10 @@ on:
       - main
       - release*
 
+permissions: {}
+
 env:
-  NODE_VERSION: 20.18.0
+  NODE_VERSION: 20.18.1
   PYTHON_VERSION: '3.10' # YML treats 3.10 the number as 3.1, so quotes around 3.10
   MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter). Also enables a reporter which exits the process running the tests if it haven't already.
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
@@ -56,12 +58,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v4
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
+          persist-credentials: false
           sparse-checkout: |
             crates
             Cargo.toml
@@ -83,6 +88,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Lint
         uses: ./.github/actions/lint
@@ -100,12 +107,15 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v4
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
+          persist-credentials: false
           sparse-checkout: |
             crates
             Cargo.toml
@@ -113,12 +123,12 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install base Python requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           options: '-t ./python_files/lib/python --no-cache-dir --implementation py'
 
       - name: Install Jedi requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           requirements-file: './python_files/jedilsp_requirements/requirements.txt'
           options: '-t ./python_files/lib/jedilsp --no-cache-dir --implementation py'
@@ -128,7 +138,7 @@ jobs:
           python -m pip install --upgrade -r build/test-requirements.txt
 
       - name: Run Pyright
-        uses: jakebailey/pyright-action@v2
+        uses: jakebailey/pyright-action@b5d50e5cde6547546a5c4ac92e416a8c2c1a1dfe # v2.3.2
         with:
           version: 1.1.308
           working-directory: 'python_files'
@@ -155,6 +165,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.special-working-directory-relative }}
+          persist-credentials: false
 
       - name: Use Python ${{ matrix.python }}
         uses: actions/setup-python@v5
@@ -174,7 +185,7 @@ jobs:
       - name: Install specific pytest version
         run: python -m pytest --version
       - name: Install base Python requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           requirements-file: '"${{ env.special-working-directory-relative }}/requirements.txt"'
           options: '-t "${{ env.special-working-directory-relative }}/python_files/lib/python" --no-cache-dir --implementation py'
@@ -207,12 +218,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.special-working-directory-relative }}
+          persist-credentials: false
 
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v4
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
+          persist-credentials: false
           sparse-checkout: |
             crates
             Cargo.toml
@@ -354,7 +367,7 @@ jobs:
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{ env.special-working-directory }}
@@ -363,7 +376,7 @@ jobs:
       - name: Run single-workspace tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace
           working-directory: ${{ env.special-working-directory }}
@@ -372,7 +385,7 @@ jobs:
       - name: Run debugger tests
         env:
           CI_PYTHON_VERSION: ${{ matrix.python }}
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testDebugger
           working-directory: ${{ env.special-working-directory }}
@@ -402,12 +415,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: ${{ env.special-working-directory-relative }}
+          persist-credentials: false
 
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v4
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
+          persist-credentials: false
           sparse-checkout: |
             crates
             Cargo.toml
@@ -438,12 +453,15 @@ jobs:
       # Need the source to have the tests available.
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v4
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
+          persist-credentials: false
           sparse-checkout: |
             crates
             Cargo.toml
@@ -471,12 +489,15 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Checkout Python Environment Tools
         uses: actions/checkout@v4
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
+          persist-credentials: false
           sparse-checkout: |
             crates
             Cargo.toml
@@ -510,12 +531,12 @@ jobs:
             build/functional-test-requirements.txt
 
       - name: Install base Python requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           options: '-t ./python_files/lib/python --implementation py'
 
       - name: Install Jedi requirements
-        uses: brettcannon/pip-secure-install@v1
+        uses: brettcannon/pip-secure-install@92f400e3191171c1858cc0e0d9ac6320173fdb0c # v1.0.0
         with:
           requirements-file: './python_files/jedilsp_requirements/requirements.txt'
           options: '-t ./python_files/lib/jedilsp --implementation py'
@@ -618,7 +639,7 @@ jobs:
           TEST_FILES_SUFFIX: testvirtualenvs
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace:cover
 
@@ -626,7 +647,7 @@ jobs:
         env:
           CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
           CI_DISABLE_AUTO_SELECTION: 1
-        uses: GabrielBB/xvfb-action@v1.7
+        uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
         with:
           run: npm run testSingleWorkspace:cover
 
@@ -635,7 +656,7 @@ jobs:
       #   env:
       #     CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
       #     CI_DISABLE_AUTO_SELECTION: 1
-      #   uses: GabrielBB/xvfb-action@v1.7
+      #   uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
       #   with:
       #     run: npm run testMultiWorkspace:cover
 
@@ -644,7 +665,7 @@ jobs:
       #   env:
       #     CI_PYTHON_VERSION: ${{ env.PYTHON_VERSION }}
       #     CI_DISABLE_AUTO_SELECTION: 1
-      #   uses: GabrielBB/xvfb-action@v1.7
+      #   uses: GabrielBB/xvfb-action@b706e4e27b14669b486812790492dc50ca16b465 # v1.7
       #   with:
       #     run: npm run testDebugger:cover
 

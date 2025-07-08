@@ -60,7 +60,7 @@ extends:
     buildSteps:
       - task: NodeTool@0
         inputs:
-          versionSpec: '20.18.0'
+          versionSpec: '20.18.1'
         displayName: Select Node version
 
       - task: UsePythonVersion@0
@@ -128,7 +128,7 @@ extends:
             project: 'Monaco'
             definition: 593
             buildVersionToDownload: 'latestFromBranch'
-            branchName: 'refs/heads/release/2025.4'
+            branchName: 'refs/heads/release/2025.8'
             targetPath: '$(Build.SourcesDirectory)/python-env-tools/bin'
             artifactName: 'bin-$(buildTarget)'
             itemPattern: |

@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as os from 'os';
-import { CancellationToken, ProgressLocation, WorkspaceFolder } from 'vscode';
+import { CancellationToken, CancellationTokenSource, ProgressLocation, WorkspaceFolder } from 'vscode';
 import { Commands, PVSC_EXTENSION_ID } from '../../../common/constants';
 import { createVenvScript } from '../../../common/process/internal/scripts';
 import { execObservable } from '../../../common/process/rawProcessApis';
@@ -31,6 +31,8 @@ import {
     CreateEnvironmentOptions,
     CreateEnvironmentResult,
 } from '../proposed.createEnvApis';
+import { shouldDisplayEnvCreationProgress } from './hideEnvCreation';
+import { noop } from '../../../common/utils/misc';
 
 interface IVenvCommandArgs {
     argv: string[];
@@ -149,21 +151,26 @@ async function createVenv(
     return deferred.promise;
 }
 
+export const VenvCreationProviderId = `${PVSC_EXTENSION_ID}:venv`;
 export class VenvCreationProvider implements CreateEnvironmentProvider {
     constructor(private readonly interpreterQuickPick: IInterpreterQuickPick) {}
 
     public async createEnvironment(
         options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal,
     ): Promise<CreateEnvironmentResult | undefined> {
-        let workspace: WorkspaceFolder | undefined;
+        let workspace = options?.workspaceFolder;
+        const bypassQuickPicks = options?.workspaceFolder && options.interpreter && options.providerId ? true : false;
         const workspaceStep = new MultiStepNode(
             undefined,
             async (context?: MultiStepAction) => {
                 try {
-                    workspace = (await pickWorkspaceFolder(
-                        { preSelectedWorkspace: options?.workspaceFolder },
-                        context,
-                    )) as WorkspaceFolder | undefined;
+                    workspace =
+                        workspace && bypassQuickPicks
+                            ? workspace
+                            : ((await pickWorkspaceFolder(
+                                  { preSelectedWorkspace: options?.workspaceFolder },
+                                  context,
+                              )) as WorkspaceFolder | undefined);
                 } catch (ex) {
                     if (ex === MultiStepAction.Back || ex === MultiStepAction.Cancel) {
                         return ex;
@@ -182,6 +189,9 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         );
 
         let existingVenvAction: ExistingVenvAction | undefined;
+        if (bypassQuickPicks) {
+            existingVenvAction = ExistingVenvAction.Create;
+        }
         const existingEnvStep = new MultiStepNode(
             workspaceStep,
             async (context?: MultiStepAction) => {
@@ -204,7 +214,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         );
         workspaceStep.next = existingEnvStep;
 
-        let interpreter: string | undefined;
+        let interpreter = options?.interpreter;
         const interpreterStep = new MultiStepNode(
             existingEnvStep,
             async (context?: MultiStepAction) => {
@@ -214,22 +224,25 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
                         existingVenvAction === ExistingVenvAction.Create
                     ) {
                         try {
-                            interpreter = await this.interpreterQuickPick.getInterpreterViaQuickPick(
-                                workspace.uri,
-                                (i: PythonEnvironment) =>
-                                    [
-                                        EnvironmentType.System,
-                                        EnvironmentType.MicrosoftStore,
-                                        EnvironmentType.Global,
-                                        EnvironmentType.Pyenv,
-                                    ].includes(i.envType) && i.type === undefined, // only global intepreters
-                                {
-                                    skipRecommended: true,
-                                    showBackButton: true,
-                                    placeholder: CreateEnv.Venv.selectPythonPlaceHolder,
-                                    title: null,
-                                },
-                            );
+                            interpreter =
+                                interpreter && bypassQuickPicks
+                                    ? interpreter
+                                    : await this.interpreterQuickPick.getInterpreterViaQuickPick(
+                                          workspace.uri,
+                                          (i: PythonEnvironment) =>
+                                              [
+                                                  EnvironmentType.System,
+                                                  EnvironmentType.MicrosoftStore,
+                                                  EnvironmentType.Global,
+                                                  EnvironmentType.Pyenv,
+                                              ].includes(i.envType) && i.type === undefined, // only global intepreters
+                                          {
+                                              skipRecommended: true,
+                                              showBackButton: true,
+                                              placeholder: CreateEnv.Venv.selectPythonPlaceHolder,
+                                              title: null,
+                                          },
+                                      );
                         } catch (ex) {
                             if (ex === InputFlowAction.back) {
                                 return MultiStepAction.Back;
@@ -322,6 +335,36 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
         }
 
         const args = generateCommandArgs(installInfo, addGitIgnore);
+        const createEnvInternal = async (progress: CreateEnvironmentProgress, token: CancellationToken) => {
+            progress.report({
+                message: CreateEnv.statusStarting,
+            });
+
+            let envPath: string | undefined;
+            try {
+                if (interpreter && workspace) {
+                    envPath = await createVenv(workspace, interpreter, args, progress, token);
+                    if (envPath) {
+                        return { path: envPath, workspaceFolder: workspace };
+                    }
+                    throw new Error('Failed to create virtual environment. See Output > Python for more info.');
+                }
+                throw new Error('Failed to create virtual environment. Either interpreter or workspace is undefined.');
+            } catch (ex) {
+                traceError(ex);
+                showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
+                return { error: ex as Error };
+            }
+        };
+
+        if (!shouldDisplayEnvCreationProgress()) {
+            const token = new CancellationTokenSource();
+            try {
+                return await createEnvInternal({ report: noop }, token.token);
+            } finally {
+                token.dispose();
+            }
+        }
 
         return withProgress(
             {
@@ -332,29 +375,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
             async (
                 progress: CreateEnvironmentProgress,
                 token: CancellationToken,
-            ): Promise<CreateEnvironmentResult | undefined> => {
-                progress.report({
-                    message: CreateEnv.statusStarting,
-                });
-
-                let envPath: string | undefined;
-                try {
-                    if (interpreter && workspace) {
-                        envPath = await createVenv(workspace, interpreter, args, progress, token);
-                        if (envPath) {
-                            return { path: envPath, workspaceFolder: workspace };
-                        }
-                        throw new Error('Failed to create virtual environment. See Output > Python for more info.');
-                    }
-                    throw new Error(
-                        'Failed to create virtual environment. Either interpreter or workspace is undefined.',
-                    );
-                } catch (ex) {
-                    traceError(ex);
-                    showErrorMessageWithLogs(CreateEnv.Venv.errorCreatingEnvironment);
-                    return { error: ex as Error };
-                }
-            },
+            ): Promise<CreateEnvironmentResult | undefined> => createEnvInternal(progress, token),
         );
     }
 
@@ -362,7 +383,7 @@ export class VenvCreationProvider implements CreateEnvironmentProvider {
 
     description: string = CreateEnv.Venv.providerDescription;
 
-    id = `${PVSC_EXTENSION_ID}:venv`;
+    id = VenvCreationProviderId;
 
     tools = ['Venv'];
 }

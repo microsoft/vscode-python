@@ -3,12 +3,12 @@
 
 import { ConfigurationTarget, Disposable, QuickInputButtons } from 'vscode';
 import { Commands } from '../../common/constants';
-import { IDisposableRegistry, IInterpreterPathService, IPathUtils } from '../../common/types';
+import { IDisposableRegistry, IPathUtils } from '../../common/types';
 import { executeCommand, registerCommand } from '../../common/vscodeApis/commandApis';
-import { IInterpreterQuickPick } from '../../interpreter/configuration/types';
+import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from '../../interpreter/configuration/types';
 import { getCreationEvents, handleCreateEnvironmentCommand } from './createEnvironment';
 import { condaCreationProvider } from './provider/condaCreationProvider';
-import { VenvCreationProvider } from './provider/venvCreationProvider';
+import { VenvCreationProvider, VenvCreationProviderId } from './provider/venvCreationProvider';
 import { showInformationMessage } from '../../common/vscodeApis/windowApis';
 import { CreateEnv } from '../../common/utils/localize';
 import {
@@ -61,7 +61,7 @@ export const { onCreateEnvironmentStarted, onCreateEnvironmentExited, isCreating
 export function registerCreateEnvironmentFeatures(
     disposables: IDisposableRegistry,
     interpreterQuickPick: IInterpreterQuickPick,
-    interpreterPathService: IInterpreterPathService,
+    pythonPathUpdater: IPythonPathUpdaterServiceManager,
     pathUtils: IPathUtils,
 ): void {
     disposables.push(
@@ -103,10 +103,11 @@ export function registerCreateEnvironmentFeatures(
         registerCreateEnvironmentProvider(condaCreationProvider()),
         onCreateEnvironmentExited(async (e: EnvironmentDidCreateEvent) => {
             if (e.path && e.options?.selectEnvironment) {
-                await interpreterPathService.update(
-                    e.workspaceFolder?.uri,
-                    ConfigurationTarget.WorkspaceFolder,
+                await pythonPathUpdater.updatePythonPath(
                     e.path,
+                    ConfigurationTarget.WorkspaceFolder,
+                    'ui',
+                    e.workspaceFolder?.uri,
                 );
                 showInformationMessage(`${CreateEnv.informEnvCreation} ${pathUtils.getDisplayName(e.path)}`);
             }
@@ -131,4 +132,12 @@ export function buildEnvironmentCreationApi(): ProposedCreateEnvironmentAPI {
         registerCreateEnvironmentProvider: (provider: CreateEnvironmentProvider) =>
             registerCreateEnvironmentProvider(provider),
     };
+}
+
+export async function createVirtualEnvironment(options?: CreateEnvironmentOptions & CreateEnvironmentOptionsInternal) {
+    const provider = _createEnvironmentProviders.getAll().find((p) => p.id === VenvCreationProviderId);
+    if (!provider) {
+        return;
+    }
+    return handleCreateEnvironmentCommand([provider], { ...options, providerId: provider.id });
 }

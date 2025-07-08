@@ -40,7 +40,7 @@ NOTE: the number of this release is in the issue title and can be substituted in
 -   [ ] Update `pet`:
     -  [ ] Go to the [pet](https://github.com/microsoft/python-environment-tools) repo and check `main` and latest `release/*` branch. If there are new changes in `main` then create a branch called `release/YYYY.minor` (matching python extension release `major.minor`).
     -  [ ] Update `build\azure-pipeline.stable.yml` to point to the latest `release/YYYY.minor` for `python-environment-tools`.
--   [ ] Change the version in `package.json` to the next **even** number and switch the `-dev` to `-rc`. (🤖)
+-   [ ] Change the version in `package.json` to the next **even** number. (🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` at this point which update the version number **only**)_. (🤖)
 -   [ ] Update `ThirdPartyNotices-Repository.txt` as appropriate. You can check by looking at the [commit history](https://github.com/microsoft/vscode-python/commits/main) and scrolling through to see if there's anything listed there which might have pulled in some code directly into the repository from somewhere else. If you are still unsure you can check with the team.
 -   [ ] Create a PR from your branch  **`bump-release-[YYYY.minor]`** to `main`. Add the `"no change-log"` tag to the PR so it does not show up on the release notes before merging it.
@@ -64,7 +64,7 @@ NOTE: If there are release branches that are two versions old you can delete the
 ### Step 4: Return `main` to dev and unfreeze (❄️ ➡ 💧)
 NOTE: The purpose of this step is ensuring that main always is on a dev version number for every night's 🌃 pre-release. Therefore it is imperative that you do this directly after the previous steps to reset the version in main to a dev version **before** a pre-release goes out.
 -   [ ] Create a branch called **`bump-dev-version-YYYY.[minor+1]`**.
--   [ ] Bump the minor version number in the `package.json` to the next `YYYY.[minor+1]` which will be an odd number, and switch the `-rc` to `-dev`.(🤖)
+-   [ ] Bump the minor version number in the `package.json` to the next `YYYY.[minor+1]` which will be an odd number, and add `-dev`.(🤖)
 -   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(you should now see changes to the `package.json` and `package-lock.json` only relating to the new version number)_ . (🤖)
 -   [ ] Create a PR from this branch against `main` and merge it.
 
@@ -83,12 +83,6 @@ NOTE: this PR should make all CI relating to `main` be passing again (such as th
 ### Step 6: Take the release branch from a candidate to the finalized release
 -   [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready.
 -   [ ] Check to make sure any final updates to the **`release/YYYY.minor`** branch have been merged.
--   [ ] Create a branch against  **`release/YYYY.minor`** called **`finalized-release-[YYYY.minor]`**.
--   [ ] Update the version in `package.json` to remove the `-rc` (🤖) from the version.
--   [ ] Run `npm install` to make sure `package-lock.json` is up-to-date _(the only update should be the version number if `package-lock.json` has been kept up-to-date)_. (🤖)
--   [ ] Update `ThirdPartyNotices-Repository.txt` manually if necessary.
--   [ ] Create a PR from **`finalized-release-[YYYY.minor]`** against `release/YYYY.minor` and merge it.
-
 
 ### Step 7: Execute the Release
 -   [ ] Make sure CI is passing for **`release/YYYY.minor`** release branch (🤖).

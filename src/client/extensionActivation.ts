@@ -45,7 +45,7 @@ import { DebugService } from './common/application/debugService';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { WorkspaceService } from './common/application/workspace';
-import { IInterpreterQuickPick } from './interpreter/configuration/types';
+import { IInterpreterQuickPick, IPythonPathUpdaterServiceManager } from './interpreter/configuration/types';
 import { registerAllCreateEnvironmentFeatures } from './pythonEnvironments/creation/registrations';
 import { registerCreateEnvironmentTriggers } from './pythonEnvironments/creation/createEnvironmentTrigger';
 import { initializePersistentStateForTriggers } from './common/persistentState';
@@ -53,7 +53,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
-import { registerPythonStartup } from './terminals/pythonStartup';
+import { registerBasicRepl, registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
 import { registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
 import { registerEnvExtFeatures } from './envExt/api.internal';
@@ -108,7 +108,7 @@ export function activateFeatures(ext: ExtensionState, _components: Components): 
     registerAllCreateEnvironmentFeatures(
         ext.disposables,
         interpreterQuickPick,
-        interpreterPathService,
+        ext.legacyIOC.serviceContainer.get<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager),
         interpreterService,
         pathUtils,
     );
@@ -184,6 +184,7 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
 
             await registerPythonStartup(ext.context);
+            await registerBasicRepl(ext.context);
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
