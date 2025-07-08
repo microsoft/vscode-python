@@ -30,7 +30,8 @@ import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 import { Testing } from '../common/utils/localize';
-import { traceLog, traceVerbose } from '../logging';
+import { traceVerbose } from '../logging';
+import { writeTestIdToClipboard } from './utils';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -205,10 +206,7 @@ export class UnitTestManagementService implements IExtensionActivationService {
                 };
             }),
             commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
-                if (testItem && typeof testItem.id === 'string') {
-                    await env.clipboard.writeText(testItem.id);
-                    traceLog('Testing: Copied test id to clipboard, id: ' + testItem.id);
-                }
+                writeTestIdToClipboard(testItem);
             }),
         );
     }

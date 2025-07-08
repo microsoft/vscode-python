@@ -1240,7 +1240,7 @@
                 {
                     "command": "python.copyTestId",
                     "group": "navigation",
-                    "when": "resourceLangId == 'python'"
+                    "when": "controllerId == 'python-tests'"
                 }
             ],
             "commandPalette": [
