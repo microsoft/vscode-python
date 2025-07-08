@@ -183,6 +183,28 @@ export function buildErrorNodeOptions(uri: Uri, message: string, testType: strin
     };
 }
 
+/**
+ * Clears existing test items for a specific workspace from the test controller.
+ * This prevents stale test nodes from remaining when switching between different test configurations.
+ * 
+ * @param testController The VS Code test controller
+ * @param workspaceUri The workspace URI to clear test items for
+ */
+export function clearTestItemsForWorkspace(testController: TestController, workspaceUri: Uri): void {
+    const itemsToDelete: string[] = [];
+    testController.items.forEach((item) => {
+        // Check if the test item belongs to this workspace
+        if (item.uri && item.uri.fsPath.startsWith(workspaceUri.fsPath)) {
+            itemsToDelete.push(item.id);
+        }
+    });
+    
+    // Delete the identified items
+    itemsToDelete.forEach((itemId) => {
+        testController.items.delete(itemId);
+    });
+}
+
 export function populateTestTree(
     testController: TestController,
     testTreeData: DiscoveredTestNode,

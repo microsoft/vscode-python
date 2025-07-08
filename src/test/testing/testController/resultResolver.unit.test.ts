@@ -42,6 +42,10 @@ suite('Result Resolver tests', () => {
                     delete: () => {
                         log.push('delete');
                     },
+                    forEach: () => {
+                        log.push('forEach');
+                        // empty implementation for existing tests
+                    },
                 },
 
                 dispose: () => {
@@ -102,6 +106,52 @@ suite('Result Resolver tests', () => {
                 cancelationToken, // token
             );
         });
+        
+        test('resolveDiscovery should clear existing workspace test items before populating new ones', async () => {
+            // test specific constants used expected values
+            testProvider = 'pytest';
+            workspaceUri = Uri.file('/foo/bar');
+            resultResolver = new ResultResolver.PythonResultResolver(testController, testProvider, workspaceUri);
+            const tests: DiscoveredTestNode = {
+                path: 'path',
+                name: 'name',
+                type_: 'folder',
+                id_: 'id',
+                children: [],
+            };
+            const payload: DiscoveredTestPayload = {
+                cwd: workspaceUri.fsPath,
+                status: 'success',
+                tests,
+            };
+
+            // stub out functionality
+            const clearTestItemsForWorkspaceStub = sinon.stub(util, 'clearTestItemsForWorkspace').returns();
+            const populateTestTreeStub = sinon.stub(util, 'populateTestTree').returns();
+
+            // call resolve discovery
+            resultResolver.resolveDiscovery(payload, cancelationToken);
+
+            // assert that clearTestItemsForWorkspace was called before populateTestTree
+            sinon.assert.calledWithMatch(
+                clearTestItemsForWorkspaceStub,
+                testController, // testController
+                workspaceUri, // workspaceUri
+            );
+            
+            sinon.assert.calledWithMatch(
+                populateTestTreeStub,
+                testController, // testController
+                tests, // testTreeData
+                undefined, // testRoot
+                resultResolver, // resultResolver
+                cancelationToken, // token
+            );
+
+            // Ensure clearTestItemsForWorkspace was called before populateTestTree
+            sinon.assert.callOrder(clearTestItemsForWorkspaceStub, populateTestTreeStub);
+        });
+        
         test('resolveDiscovery should create error node on error with correct params and no root node with tests in payload', async () => {
             // test specific constants used expected values
             testProvider = 'pytest';

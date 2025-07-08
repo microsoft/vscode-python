@@ -31,7 +31,7 @@ import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testI
 import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { splitLines } from '../../../common/stringUtils';
-import { buildErrorNodeOptions, populateTestTree, splitTestNameWithRegex } from './utils';
+import { buildErrorNodeOptions, clearTestItemsForWorkspace, populateTestTree, splitTestNameWithRegex } from './utils';
 
 export class PythonResultResolver implements ITestResultResolver {
     testController: TestController;
@@ -98,6 +98,9 @@ export class PythonResultResolver implements ITestResultResolver {
         if (rawTestData.tests || rawTestData.tests === null) {
             // if any tests exist, they should be populated in the test tree, regardless of whether there were errors or not.
             // parse and insert test data.
+
+            // Clear existing test items for this workspace before adding new ones to prevent stale nodes
+            clearTestItemsForWorkspace(this.testController, this.workspaceUri);
 
             // If the test root for this folder exists: Workspace refresh, update its children.
             // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
