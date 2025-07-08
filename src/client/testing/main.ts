@@ -1,7 +1,17 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, Disposable, Uri, tests, TestResultState, WorkspaceFolder, Command } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    Disposable,
+    Uri,
+    tests,
+    TestResultState,
+    WorkspaceFolder,
+    Command,
+    TestItem,
+} from 'vscode';
+import { env } from 'vscode';
 import { IApplicationShell, ICommandManager, IContextKeyManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
 import '../common/extensions';
@@ -20,7 +30,7 @@ import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 import { Testing } from '../common/utils/localize';
-import { traceVerbose } from '../logging';
+import { traceLog, traceVerbose } from '../logging';
 
 @injectable()
 export class TestingService implements ITestingService {
@@ -158,7 +168,6 @@ export class UnitTestManagementService implements IExtensionActivationService {
 
     private registerCommands(): void {
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
-
         this.disposableRegistry.push(
             commandManager.registerCommand(
                 constants.Commands.Tests_Configure,
@@ -194,6 +203,12 @@ export class UnitTestManagementService implements IExtensionActivationService {
                         arguments: [undefined, constants.CommandSource.ui, resource],
                     },
                 };
+            }),
+            commandManager.registerCommand(constants.Commands.CopyTestId, async (testItem: TestItem) => {
+                if (testItem && typeof testItem.id === 'string') {
+                    await env.clipboard.writeText(testItem.id);
+                    traceLog('Testing: Copied test id to clipboard, id: ' + testItem.id);
+                }
             }),
         );
     }

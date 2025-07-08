@@ -274,6 +274,11 @@
             },
             {
                 "category": "Python",
+                "command": "python.copyTestId",
+                "title": "%python.command.python.testing.copyTestId.title%"
+            },
+            {
+                "category": "Python",
                 "command": "python.analysis.restartLanguageServer",
                 "title": "%python.command.python.analysis.restartLanguageServer.title%"
             },
@@ -1231,6 +1236,13 @@
                     "command": "python.reportIssue"
                 }
             ],
+            "testing/item/context": [
+                {
+                    "command": "python.copyTestId",
+                    "group": "navigation",
+                    "when": "resourceLangId == 'python'"
+                }
+            ],
             "commandPalette": [
                 {
                     "category": "Python",
@@ -1305,6 +1317,12 @@
                     "command": "python.execSelectionInTerminal",
                     "title": "%python.command.python.execSelectionInTerminal.title%",
                     "when": "!virtualWorkspace && shellExecutionSupported && editorLangId == python"
+                },
+                {
+                    "category": "Python",
+                    "command": "python.copyTestId",
+                    "title": "%python.command.python.testing.copyTestId.title%",
+                    "when": "false"
                 },
                 {
                     "category": "Python",

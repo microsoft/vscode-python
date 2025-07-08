@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { CancellationToken, Position, TestItem, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/commands';
 import { Channel, Commands, CommandSource } from '../constants';
 import { CreateEnvironmentOptions } from '../../pythonEnvironments/creation/proposed.createEnvApis';
@@ -50,6 +50,7 @@ export type AllCommands = keyof ICommandNameArgumentTypeMapping;
  * Used to provide strong typing for command & args.
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
+    [Commands.CopyTestId]: [TestItem];
     [Commands.Create_Environment]: [CreateEnvironmentOptions];
     ['vscode.openWith']: [Uri, string];
     ['workbench.action.quickOpen']: [string];
