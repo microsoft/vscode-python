@@ -1,5 +1,4 @@
 import {
-    NotebookController,
     NotebookEditor,
     ViewColumn,
     NotebookDocument,
@@ -10,7 +9,6 @@ import {
     Uri,
 } from 'vscode';
 import { getExistingReplViewColumn, getTabNameForUri } from './replUtils';
-import { PVSC_EXTENSION_ID } from '../common/constants';
 import { showNotebookDocument } from '../common/vscodeApis/windowApis';
 import { openNotebookDocument, applyEdit } from '../common/vscodeApis/workspaceApis';
 import { executeCommand } from '../common/vscodeApis/commandApis';
@@ -19,11 +17,11 @@ import { executeCommand } from '../common/vscodeApis/commandApis';
  * Function that opens/show REPL using IW UI.
  */
 export async function openInteractiveREPL(
-    notebookController: NotebookController,
     notebookDocument: NotebookDocument | Uri | undefined,
     preserveFocus: boolean = true,
-): Promise<NotebookEditor | undefined> {
+): Promise<{ notebookEditor: NotebookEditor; documentCreated: boolean } | undefined> {
     let viewColumn = ViewColumn.Beside;
+    let alreadyExists = false;
     if (notebookDocument instanceof Uri) {
         // Case where NotebookDocument is undefined, but workspace mementoURI exists.
         notebookDocument = await openNotebookDocument(notebookDocument);
@@ -31,12 +29,14 @@ export async function openInteractiveREPL(
         // Case where NotebookDocument (REPL document already exists in the tab)
         const existingReplViewColumn = getExistingReplViewColumn(notebookDocument);
         viewColumn = existingReplViewColumn ?? viewColumn;
+        alreadyExists = true;
     } else if (!notebookDocument) {
         // Case where NotebookDocument doesnt exist, or
         // became outdated (untitled.ipynb created without Python extension knowing, effectively taking over original Python REPL's URI)
         notebookDocument = await openNotebookDocument('jupyter-notebook');
     }
-    const editor = await showNotebookDocument(notebookDocument!, {
+
+    const notebookEditor = await showNotebookDocument(notebookDocument!, {
         viewColumn,
         asRepl: 'Python REPL',
         preserveFocus,
@@ -44,21 +44,15 @@ export async function openInteractiveREPL(
 
     // Sanity check that we opened a Native REPL from showNotebookDocument.
     if (
-        !editor ||
-        !editor.notebook ||
-        !editor.notebook.uri ||
-        getTabNameForUri(editor.notebook.uri) !== 'Python REPL'
+        !notebookEditor ||
+        !notebookEditor.notebook ||
+        !notebookEditor.notebook.uri ||
+        getTabNameForUri(notebookEditor.notebook.uri) !== 'Python REPL'
     ) {
         return undefined;
     }
 
-    await executeCommand('notebook.selectKernel', {
-        editor,
-        id: notebookController.id,
-        extension: PVSC_EXTENSION_ID,
-    });
-
-    return editor;
+    return { notebookEditor, documentCreated: !alreadyExists };
 }
 
 /**
