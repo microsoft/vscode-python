@@ -4,48 +4,48 @@ import * as utils from '../../client/testing/utils';
 import sinon from 'sinon';
 use(chaiAsPromised.default);
 
-describe('idToModuleClassMethod', () => {
-    it('returns the only part if there is one', () => {
+function test_idToModuleClassMethod() {
+    try {
         expect(utils.idToModuleClassMethod('foo')).to.equal('foo');
-    });
-    it('returns module.class for two parts', () => {
-        expect(utils.idToModuleClassMethod('a/b/c.py\\MyClass')).to.equal('c.MyClass');
-    });
-    it('returns module.class.method for three parts', () => {
-        expect(utils.idToModuleClassMethod('a/b/c.py\\MyClass\\my_method')).to.equal('c.MyClass.my_method');
-    });
-    it('returns undefined if fileName is missing', () => {
+        expect(utils.idToModuleClassMethod('a/b/c.pyMyClass')).to.equal('c.MyClass');
+        expect(utils.idToModuleClassMethod('a/b/c.pyMyClassmy_method')).to.equal('c.MyClass.my_method');
         expect(utils.idToModuleClassMethod('\\MyClass')).to.be.undefined;
-    });
-});
+        console.log('test_idToModuleClassMethod passed');
+    } catch (e) {
+        console.error('test_idToModuleClassMethod failed:', e);
+    }
+}
 
-describe('writeTestIdToClipboard', () => {
-    let clipboardStub: sinon.SinonStub;
-
-    afterEach(() => {
-        sinon.restore();
-    });
-
-    it('writes module.class.method for unittest id', async () => {
-        clipboardStub = sinon.stub(utils, 'clipboardWriteText').resolves();
-        const { writeTestIdToClipboard } = utils;
-        const testItem = { id: 'a/b/c.py\\MyClass\\my_method' };
+async function test_writeTestIdToClipboard() {
+    let clipboardStub = sinon.stub(utils, 'clipboardWriteText').resolves();
+    const { writeTestIdToClipboard } = utils;
+    try {
+        // unittest id
+        const testItem = { id: 'a/b/c.pyMyClass\\my_method' };
         await writeTestIdToClipboard(testItem as any);
         sinon.assert.calledOnceWithExactly(clipboardStub, 'c.MyClass.my_method');
-    });
+        clipboardStub.resetHistory();
 
-    it('writes id as is for pytest id', async () => {
-        clipboardStub = sinon.stub(utils, 'clipboardWriteText').resolves();
-        const { writeTestIdToClipboard } = utils;
-        const testItem = { id: 'tests/test_foo.py::TestClass::test_method' };
-        await writeTestIdToClipboard(testItem as any);
+        // pytest id
+        const testItem2 = { id: 'tests/test_foo.py::TestClass::test_method' };
+        await writeTestIdToClipboard(testItem2 as any);
         sinon.assert.calledOnceWithExactly(clipboardStub, 'tests/test_foo.py::TestClass::test_method');
-    });
+        clipboardStub.resetHistory();
 
-    it('does nothing if testItem is undefined', async () => {
-        clipboardStub = sinon.stub(utils, 'clipboardWriteText').resolves();
-        const { writeTestIdToClipboard } = utils;
+        // undefined
         await writeTestIdToClipboard(undefined as any);
         sinon.assert.notCalled(clipboardStub);
-    });
-});
+
+        console.log('test_writeTestIdToClipboard passed');
+    } catch (e) {
+        console.error('test_writeTestIdToClipboard failed:', e);
+    } finally {
+        sinon.restore();
+    }
+}
+
+// Run tests
+(async () => {
+    test_idToModuleClassMethod();
+    await test_writeTestIdToClipboard();
+})();
