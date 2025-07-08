@@ -51,7 +51,8 @@ jobs:
             if (!labels.includes('skip-issue-check')) {
               const prBody = context.payload.pull_request.body || '';
               const issueLink = prBody.match(/https:\/\/github\.com\/\S+\/issues\/\d+/);
-              if (!issueLink) {
+              const issueReference = prBody.match(/#\d+/);
+              if (!issueLink && !issueReference) {
                 core.setFailed('No associated issue found in the PR description.');
               }
             }
