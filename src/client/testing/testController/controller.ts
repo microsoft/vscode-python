@@ -549,7 +549,10 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
         this.disposables.push(
             onDidSaveTextDocument(async (doc: TextDocument) => {
                 const settings = this.configSettings.getSettings(doc.uri);
-                if (minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)) {
+                if (
+                    settings.testing.autoTestDiscoverOnSaveEnabled &&
+                    minimatch.default(doc.uri.fsPath, settings.testing.autoTestDiscoverOnSavePattern)
+                ) {
                     traceVerbose(`Testing: Trigger refresh after saving ${doc.uri.fsPath}`);
                     this.sendTriggerTelemetry('watching');
                     this.refreshData.trigger(doc.uri, false);
