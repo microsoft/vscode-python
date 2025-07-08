@@ -174,12 +174,31 @@ export async function startDiscoveryNamedPipe(
     return pipeName;
 }
 
+/**
+ * Detects if an error message indicates that pytest is not installed.
+ * @param message The error message to check
+ * @returns True if the error indicates pytest is not installed
+ */
+function isPytestNotInstalledError(message: string): boolean {
+    return message.includes('ModuleNotFoundError') && message.includes('pytest') ||
+           message.includes('No module named') && message.includes('pytest') ||
+           message.includes('ImportError') && message.includes('pytest');
+}
+
 export function buildErrorNodeOptions(uri: Uri, message: string, testType: string): ErrorTestItemOptions {
-    const labelText = testType === 'pytest' ? 'pytest Discovery Error' : 'Unittest Discovery Error';
+    let labelText = testType === 'pytest' ? 'pytest Discovery Error' : 'Unittest Discovery Error';
+    let errorMessage = message;
+    
+    // Provide more specific error message if pytest is not installed
+    if (testType === 'pytest' && isPytestNotInstalledError(message)) {
+        labelText = 'pytest Not Installed';
+        errorMessage = 'pytest is not installed in the selected Python environment. Please install pytest to enable test discovery and execution.';
+    }
+    
     return {
         id: `DiscoveryError:${uri.fsPath}`,
         label: `${labelText} [${path.basename(uri.fsPath)}]`,
-        error: message,
+        error: errorMessage,
     };
 }
 
