@@ -764,7 +764,6 @@ def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
     Keyword arguments:
     class_module -- the pytest object representing a class module.
     """
-
     return {
         "name": class_module.name,
         "path": get_node_path(class_module),

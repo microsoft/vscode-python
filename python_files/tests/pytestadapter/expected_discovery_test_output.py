@@ -93,7 +93,7 @@ unit_pytest_same_file_discovery_expected_output = {
                     ],
                     "id_": get_absolute_test_id(
                         "unittest_pytest_same_file.py::TestExample",
-                        os.fspath(unit_pytest_same_file_path),
+                        unit_pytest_same_file_path,
                     ),
                 },
                 {
@@ -205,7 +205,7 @@ unittest_folder_discovery_expected_output = {
                             ],
                             "id_": get_absolute_test_id(
                                 "unittest_folder/test_add.py::TestAddFunction",
-                                os.fspath(test_add_path),
+                                test_add_path,
                             ),
                         },
                         {
@@ -233,7 +233,7 @@ unittest_folder_discovery_expected_output = {
                             ],
                             "id_": get_absolute_test_id(
                                 "unittest_folder/test_add.py::TestDuplicateFunction",
-                                os.fspath(test_add_path),
+                                test_add_path,
                             ),
                         },
                     ],
@@ -286,7 +286,7 @@ unittest_folder_discovery_expected_output = {
                             ],
                             "id_": get_absolute_test_id(
                                 "unittest_folder/test_subtract.py::TestSubtractFunction",
-                                os.fspath(test_subtract_path),
+                                test_subtract_path,
                             ),
                         },
                         {
