@@ -24,7 +24,12 @@ export class PytestInstallationHelper {
         const installOption = l10n.t('Install pytest');
         const ignoreOption = l10n.t('Ignore');
 
-        const selection = await this.appShell.showInformationMessage(message, installOption, ignoreOption);
+        const selection = await this.appShell.showInformationMessage(
+            message,
+            { modal: true },
+            installOption,
+            ignoreOption,
+        );
 
         if (selection === installOption) {
             return this.installPytest(workspaceUri);
