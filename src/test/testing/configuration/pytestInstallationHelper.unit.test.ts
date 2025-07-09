@@ -33,7 +33,14 @@ suite('PytestInstallationHelper', () => {
 
     test('promptToInstallPytest should return false if user selects ignore', async () => {
         appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) =>
+                a.showInformationMessage(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                ),
+            )
             .returns(() => Promise.resolve('Ignore'))
             .verifiable(TypeMoq.Times.once());
 
@@ -45,7 +52,14 @@ suite('PytestInstallationHelper', () => {
 
     test('promptToInstallPytest should return false if user cancels', async () => {
         appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) =>
+                a.showInformationMessage(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                ),
+            )
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -68,7 +82,14 @@ suite('PytestInstallationHelper', () => {
         useEnvExtensionStub.returns(false);
 
         appShell
-            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) =>
+                a.showInformationMessage(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                ),
+            )
             .returns(() => Promise.resolve('Install pytest'))
             .verifiable(TypeMoq.Times.once());
 
