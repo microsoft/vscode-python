@@ -22,14 +22,8 @@ export class PytestInstallationHelper {
     async promptToInstallPytest(workspaceUri: Uri): Promise<boolean> {
         const message = l10n.t('pytest selected but not installed. Would you like to install pytest?');
         const installOption = l10n.t('Install pytest');
-        const ignoreOption = l10n.t('Ignore');
 
-        const selection = await this.appShell.showInformationMessage(
-            message,
-            { modal: true },
-            installOption,
-            ignoreOption,
-        );
+        const selection = await this.appShell.showInformationMessage(message, { modal: true }, installOption);
 
         if (selection === installOption) {
             return this.installPytest(workspaceUri);
