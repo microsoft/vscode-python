@@ -40,6 +40,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.ClearStorage]: [];
     [Commands.CreateNewFile]: [];
     [Commands.ReportIssue]: [];
+    [Commands.CopyImportPath]: [];
     [LSCommands.RestartLS]: [];
 }
 
