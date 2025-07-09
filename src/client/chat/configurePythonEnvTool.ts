@@ -19,18 +19,18 @@ import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/termin
 import {
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
-    getUntrustedWorkspaceResponse,
     IResourceReference,
     isCancellationError,
     raceCancellationError,
 } from './utils';
-import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IRecommendedEnvironmentService } from '../interpreter/configuration/types';
 import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from './selectEnvTool';
+import { BaseTool } from './baseTool';
 
-export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceReference> {
+export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
+    implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
@@ -40,6 +40,7 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         private readonly serviceContainer: IServiceContainer,
         private readonly createEnvTool: CreateVirtualEnvTool,
     ) {
+        super(ConfigurePythonEnvTool.toolName);
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
             'standard',
@@ -50,14 +51,11 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         );
     }
 
-    async invoke(
+    async invokeImpl(
         options: LanguageModelToolInvocationOptions<IResourceReference>,
+        resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-        const resource = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resource);
         if (notebookResponse) {
             return notebookResponse;
@@ -101,8 +99,9 @@ export class ConfigurePythonEnvTool implements LanguageModelTool<IResourceRefere
         }
     }
 
-    async prepareInvocation?(
+    async prepareInvocationImpl(
         _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        _resource: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
         return {

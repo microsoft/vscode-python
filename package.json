@@ -2,14 +2,14 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2025.9.0-dev",
+    "version": "2025.11.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
     "capabilities": {
         "untrustedWorkspaces": {
-            "supported": "limited",
-            "description": "Only Partial IntelliSense with Pylance is supported. Cannot execute Python with untrusted files."
+            "supported": false,
+            "description": "The Python extension is not available in untrusted workspaces. Use Pylance to get partial IntelliSense support for Python files."
         },
         "virtualWorkspaces": {
             "supported": "limited",
@@ -439,6 +439,16 @@
                     "description": "%python.envFile.description%",
                     "scope": "resource",
                     "type": "string"
+                },
+                "python.useEnvironmentsExtension": {
+                    "default": false,
+                    "description": "%python.useEnvironmentsExtension.description%",
+                    "scope": "machine-overridable",
+                    "type": "boolean",
+                    "tags": [
+                        "onExP",
+                        "preview"
+                    ]
                 },
                 "python.experiments.enabled": {
                     "default": true,
@@ -1661,6 +1671,7 @@
         "format-fix": "prettier --write 'src/**/*.ts' 'build/**/*.js' '.github/**/*.yml' gulpfile.js",
         "clean": "gulp clean",
         "addExtensionPackDependencies": "gulp addExtensionPackDependencies",
+        "addExtensionPackDependenciesPreRelease": "gulp addExtensionPackDependenciesPreRelease",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
         "webpack": "webpack"

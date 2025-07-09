@@ -10,26 +10,22 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
-    workspace,
+    Uri,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
 import { ICodeExecutionService } from '../terminals/types';
 import { TerminalCodeExecutionProvider } from '../terminals/codeExecution/terminalCodeExecution';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import {
-    getEnvironmentDetails,
-    getToolResponseIfNotebook,
-    getUntrustedWorkspaceResponse,
-    IResourceReference,
-    raceCancellationError,
-} from './utils';
-import { resolveFilePath } from './utils';
+import { getEnvironmentDetails, getToolResponseIfNotebook, IResourceReference, raceCancellationError } from './utils';
 import { getPythonPackagesResponse } from './listPackagesTool';
 import { ITerminalHelper } from '../common/terminal/types';
 import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
+import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
+import { BaseTool } from './baseTool';
 
-export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceReference> {
+export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
+    implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly pythonExecFactory: IPythonExecutionFactory;
     private readonly processServiceFactory: IProcessServiceFactory;
@@ -39,6 +35,7 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
     ) {
+        super(GetEnvironmentInfoTool.toolName);
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
             'standard',
@@ -48,15 +45,11 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
 
-    async invoke(
-        options: LanguageModelToolInvocationOptions<IResourceReference>,
+    async invokeImpl(
+        _options: LanguageModelToolInvocationOptions<IResourceReference>,
+        resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {
             return notebookResponse;
@@ -66,7 +59,10 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         const envPath = this.api.getActiveEnvironmentPath(resourcePath);
         const environment = await raceCancellationError(this.api.resolveEnvironment(envPath), token);
         if (!environment || !environment.version) {
-            throw new Error('No environment found for the provided resource path: ' + resourcePath?.fsPath);
+            throw new ErrorWithTelemetrySafeReason(
+                'No environment found for the provided resource path: ' + resourcePath?.fsPath,
+                'noEnvFound',
+            );
         }
 
         let packages = '';
@@ -107,11 +103,11 @@ export class GetEnvironmentInfoTool implements LanguageModelTool<IResourceRefere
         return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
     }
 
-    async prepareInvocation?(
-        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+    async prepareInvocationImpl(
+        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        resourcePath: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         if (getToolResponseIfNotebook(resourcePath)) {
             return {};
         }

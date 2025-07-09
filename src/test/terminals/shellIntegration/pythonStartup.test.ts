@@ -16,7 +16,7 @@ import {
 } from 'vscode';
 import { assert } from 'chai';
 import * as workspaceApis from '../../../client/common/vscodeApis/workspaceApis';
-import { registerPythonStartup } from '../../../client/terminals/pythonStartup';
+import { registerBasicRepl, registerPythonStartup } from '../../../client/terminals/pythonStartup';
 import { IExtensionContext } from '../../../client/common/types';
 import * as pythonStartupLinkProvider from '../../../client/terminals/pythonStartupLinkProvider';
 import { CustomTerminalLinkProvider } from '../../../client/terminals/pythonStartupLinkProvider';
@@ -133,6 +133,14 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
         await registerPythonStartup(context.object);
 
         globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHONSTARTUP'), TypeMoq.Times.once());
+    });
+
+    test('PYTHON_BASIC_REPL is set when registerBasicRepl is called', async () => {
+        await registerBasicRepl(context.object);
+        globalEnvironmentVariableCollection.verify(
+            (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
+            TypeMoq.Times.once(),
+        );
     });
 
     test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {

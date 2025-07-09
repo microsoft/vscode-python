@@ -48,6 +48,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                             } catch (ex) {
                                 traceError('Failed to execute file in terminal', ex);
                             }
+                            sendTelemetryEvent(EventName.ENVIRONMENT_CHECK_TRIGGER, undefined, {
+                                trigger: 'run-in-terminal',
+                            });
                             return;
                         }
 

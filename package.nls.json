@@ -38,6 +38,7 @@
     "python.debugger.deprecatedMessage": "This configuration will be deprecated soon. Please replace `python` with `debugpy` to use the new Python Debugger extension.",
     "python.defaultInterpreterPath.description": "Path to default Python to use when extension loads up for the first time, no longer used once an interpreter is selected for the workspace. See [here](https://aka.ms/AAfekmf) to understand when this is used",
     "python.envFile.description": "Absolute path to a file containing environment variable definitions.",
+    "python.useEnvironmentsExtension.description": "Enables the Python Environments extension. Requires window reload on change.",
     "python.experiments.enabled.description": "Enables A/B tests experiments in the Python extension. If enabled, you may get included in proposed enhancements and/or features.",
     "python.experiments.optInto.description": "List of experiments to opt into. If empty, user is assigned the default experiment groups. See [here](https://github.com/microsoft/vscode-python/wiki/AB-Experiments) for more details.",
     "python.experiments.optOutFrom.description": "List of experiments to opt out of. If empty, user is assigned the default experiment groups. See [here](https://github.com/microsoft/vscode-python/wiki/AB-Experiments) for more details.",
@@ -91,7 +92,7 @@
     "python.venvPath.description": "Path to folder with a list of Virtual Environments (e.g. ~/.pyenv, ~/Envs, ~/.virtualenvs).",
     "walkthrough.pythonWelcome.title": "Get Started with Python Development",
     "walkthrough.pythonWelcome.description": "Your first steps to set up a Python project with all the powerful tools and features that the Python extension has to offer!",
-     "walkthrough.step.python.createPythonFile.title": "Create a Python file",
+    "walkthrough.step.python.createPythonFile.title": "Create a Python file",
     "walkthrough.step.python.createPythonFolder.title": "Open a Python project folder",
     "walkthrough.step.python.createPythonFile.description": {
         "message": "[Open](command:toSide:workbench.action.files.openFile) or [create](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D) a Python file - make sure to save it as \".py\".\n[Create Python File](command:toSide:workbench.action.files.newUntitledFile?%7B%22languageId%22%3A%22python%22%7D)",
@@ -103,7 +104,7 @@
     },
     "walkthrough.step.python.createPythonFolder.description": {
         "message": "[Open](command:workbench.action.files.openFolder) or create a project folder.\n[Open Project Folder](command:workbench.action.files.openFolder)",
-        "comment":  [
+        "comment": [
             "{Locked='](command:workbench.action.files.openFolder'}",
             "Do not translate the 'command:*' part inside of the '(..)'. It is an internal command syntax for VS Code",
             "Please make sure there is no space between the right bracket and left parenthesis:  ]( this is an internal syntax for links"
@@ -133,7 +134,7 @@
     "walkthrough.step.python.createEnvironment.title": "Select or create a Python environment",
     "walkthrough.step.python.createEnvironment.description": {
         "message": "Create an environment for your Python project or use [Select Python Interpreter](command:python.setInterpreter) to select an existing one.\n[Create Environment](command:python.createEnvironment)\n**Tip**: Run the ``Python: Create Environment`` command in the [Command Palette](command:workbench.action.showCommands).",
-        "comment":  [
+        "comment": [
             "{Locked='](command:python.createEnvironment'}",
             "{Locked='](command:workbench.action.showCommands'}",
             "{Locked='](command:python.setInterpreter'}",
@@ -145,8 +146,8 @@
     "walkthrough.step.python.runAndDebug.description": "Open your Python file  and click on the play button on the top right of the editor, or press F5 when on the file and select \"Python File\" to run with the debugger. \n  \n[Learn more](https://code.visualstudio.com/docs/python/python-tutorial#_run-hello-world)",
     "walkthrough.step.python.learnMoreWithDS.title": "Keep exploring!",
     "walkthrough.step.python.learnMoreWithDS.description": {
-        "message":"🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with [data science](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) in Python. \n ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. \n \n[Follow along with the Python Tutorial](https://aka.ms/AA8dqti)",
-        "comment":[
+        "message": "🎨 Explore all the features the Python extension has to offer by looking for \"Python\" in the [Command Palette](command:workbench.action.showCommands). \n 📈 Learn more about getting started with [data science](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D) in Python. \n ✨ Take a look at our [Release Notes](https://aka.ms/AA8dxtb) to learn more about the latest features. \n \n[Follow along with the Python Tutorial](https://aka.ms/AA8dqti)",
+        "comment": [
             "{Locked='](command:workbench.action.showCommands'}",
             "{Locked='](command:workbench.action.openWalkthrough?%7B%22category%22%3A%22ms-python.python%23pythonDataScienceWelcome%22%2C%22step%22%3A%22ms-python.python%23python.createNewNotebook%22%7D'}",
             "Do not translate the 'command:*' part inside of the '(..)'. It is an internal command syntax for VS Code",
