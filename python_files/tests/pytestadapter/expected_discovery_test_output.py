@@ -91,7 +91,10 @@ unit_pytest_same_file_discovery_expected_output = {
                             ),
                         }
                     ],
-                    "id_": "unittest_pytest_same_file.py::TestExample",
+                    "id_": get_absolute_test_id(
+                        "unittest_pytest_same_file.py::TestExample",
+                        os.fspath(unit_pytest_same_file_path),
+                    ),
                 },
                 {
                     "name": "test_true_pytest",
@@ -200,7 +203,10 @@ unittest_folder_discovery_expected_output = {
                                     ),
                                 },
                             ],
-                            "id_": "unittest_folder/test_add.py::TestAddFunction",
+                            "id_": get_absolute_test_id(
+                                "unittest_folder/test_add.py::TestAddFunction",
+                                os.fspath(test_add_path),
+                            ),
                         },
                         {
                             "name": "TestDuplicateFunction",
@@ -225,7 +231,10 @@ unittest_folder_discovery_expected_output = {
                                     ),
                                 },
                             ],
-                            "id_": "unittest_folder/test_add.py::TestDuplicateFunction",
+                            "id_": get_absolute_test_id(
+                                "unittest_folder/test_add.py::TestDuplicateFunction",
+                                os.fspath(test_add_path),
+                            ),
                         },
                     ],
                 },
@@ -275,7 +284,10 @@ unittest_folder_discovery_expected_output = {
                                     ),
                                 },
                             ],
-                            "id_": "unittest_folder/test_subtract.py::TestSubtractFunction",
+                            "id_": get_absolute_test_id(
+                                "unittest_folder/test_subtract.py::TestSubtractFunction",
+                                os.fspath(test_subtract_path),
+                            ),
                         },
                         {
                             "name": "TestDuplicateFunction",
@@ -300,7 +312,10 @@ unittest_folder_discovery_expected_output = {
                                     ),
                                 },
                             ],
-                            "id_": "unittest_folder/test_subtract.py::TestDuplicateFunction",
+                            "id_": get_absolute_test_id(
+                                "unittest_folder/test_subtract.py::TestDuplicateFunction",
+                                test_subtract_path,
+                            ),
                         },
                     ],
                 },
@@ -534,7 +549,10 @@ parametrize_tests_expected_output = {
                     "name": "TestClass",
                     "path": os.fspath(parameterize_tests_path),
                     "type_": "class",
-                    "id_": "parametrize_tests.py::TestClass",
+                    "id_": get_absolute_test_id(
+                        "parametrize_tests.py::TestClass",
+                        parameterize_tests_path,
+                    ),
                     "children": [
                         {
                             "name": "test_adding",
@@ -907,13 +925,19 @@ nested_classes_expected_test_output = {
                     "name": "TestFirstClass",
                     "path": str(TEST_MULTI_CLASS_NEST_PATH),
                     "type_": "class",
-                    "id_": "test_multi_class_nest.py::TestFirstClass",
+                    "id_": get_absolute_test_id(
+                        "test_multi_class_nest.py::TestFirstClass",
+                        TEST_MULTI_CLASS_NEST_PATH,
+                    ),
                     "children": [
                         {
                             "name": "TestSecondClass",
                             "path": str(TEST_MULTI_CLASS_NEST_PATH),
                             "type_": "class",
-                            "id_": "test_multi_class_nest.py::TestFirstClass::TestSecondClass",
+                            "id_": get_absolute_test_id(
+                                "test_multi_class_nest.py::TestFirstClass::TestSecondClass",
+                                TEST_MULTI_CLASS_NEST_PATH,
+                            ),
                             "children": [
                                 {
                                     "name": "test_second",
@@ -954,7 +978,10 @@ nested_classes_expected_test_output = {
                             "name": "TestSecondClass2",
                             "path": str(TEST_MULTI_CLASS_NEST_PATH),
                             "type_": "class",
-                            "id_": "test_multi_class_nest.py::TestFirstClass::TestSecondClass2",
+                            "id_": get_absolute_test_id(
+                                "test_multi_class_nest.py::TestFirstClass::TestSecondClass2",
+                                TEST_MULTI_CLASS_NEST_PATH,
+                            ),
                             "children": [
                                 {
                                     "name": "test_second2",
@@ -1196,7 +1223,10 @@ same_function_new_class_param_expected_output = {
                             + "::TestNotEmpty::test_string",
                         },
                     ],
-                    "id_": "same_function_new_class_param.py::TestNotEmpty",
+                    "id_": get_absolute_test_id(
+                        "same_function_new_class_param.py::TestNotEmpty",
+                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                    ),
                 },
                 {
                     "name": "TestEmpty",
@@ -1264,7 +1294,10 @@ same_function_new_class_param_expected_output = {
                             + "::TestEmpty::test_string",
                         },
                     ],
-                    "id_": "same_function_new_class_param.py::TestEmpty",
+                    "id_": get_absolute_test_id(
+                        "same_function_new_class_param.py::TestEmpty",
+                        TEST_DATA_PATH / "same_function_new_class_param.py",
+                    ),
                 },
             ],
         }
@@ -1334,7 +1367,10 @@ test_param_span_class_expected_output = {
                             ),
                         }
                     ],
-                    "id_": "test_param_span_class.py::TestClass1",
+                    "id_": get_absolute_test_id(
+                        "test_param_span_class.py::TestClass1",
+                        TEST_DATA_PATH / "test_param_span_class.py",
+                    ),
                 },
                 {
                     "name": "TestClass2",
@@ -1387,7 +1423,10 @@ test_param_span_class_expected_output = {
                             ),
                         }
                     ],
-                    "id_": "test_param_span_class.py::TestClass2",
+                    "id_": get_absolute_test_id(
+                        "test_param_span_class.py::TestClass2",
+                        TEST_DATA_PATH / "test_param_span_class.py",
+                    ),
                 },
             ],
         }
@@ -1460,7 +1499,10 @@ expected_describe_only_output = {
                                     ),
                                 },
                             ],
-                            "id_": "pytest_describe_plugin/describe_only.py::describe_A",
+                            "id_": get_absolute_test_id(
+                                "pytest_describe_plugin/describe_only.py::describe_A",
+                                describe_only_path,
+                            ),
                         }
                     ],
                 }
@@ -1540,7 +1582,10 @@ expected_nested_describe_output = {
                                             ),
                                         },
                                     ],
-                                    "id_": "pytest_describe_plugin/nested_describe.py::describe_list::describe_append",
+                                    "id_": get_absolute_test_id(
+                                        "pytest_describe_plugin/nested_describe.py::describe_list::describe_append",
+                                        nested_describe_path,
+                                    ),
                                 },
                                 {
                                     "name": "describe_remove",
@@ -1565,10 +1610,16 @@ expected_nested_describe_output = {
                                             ),
                                         }
                                     ],
-                                    "id_": "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove",
+                                    "id_": get_absolute_test_id(
+                                        "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove",
+                                        nested_describe_path,
+                                    ),
                                 },
                             ],
-                            "id_": "pytest_describe_plugin/nested_describe.py::describe_list",
+                            "id_": get_absolute_test_id(
+                                "pytest_describe_plugin/nested_describe.py::describe_list",
+                                nested_describe_path,
+                            ),
                         }
                     ],
                 }
