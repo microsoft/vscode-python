@@ -7,20 +7,16 @@ import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
 import { ITestFrameworkController, ITestsRunner, ITestController } from './common/types';
 import { PythonTestController } from './controller';
 import { PytestController } from './pytest/pytestController';
-import { PytestRunner } from './pytest/runner';
-import { UnittestRunner } from './unittest/runner';
 import { UnittestController } from './unittest/unittestController';
 
 export function registerTestControllerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<ITestFrameworkController>(ITestFrameworkController, PytestController, PYTEST_PROVIDER);
-    serviceManager.addSingleton<ITestsRunner>(ITestsRunner, PytestRunner, PYTEST_PROVIDER);
 
     serviceManager.addSingleton<ITestFrameworkController>(
         ITestFrameworkController,
         UnittestController,
         UNITTEST_PROVIDER,
     );
-    serviceManager.addSingleton<ITestsRunner>(ITestsRunner, UnittestRunner, UNITTEST_PROVIDER);
     serviceManager.addSingleton<ITestController>(ITestController, PythonTestController);
     serviceManager.addBinding(ITestController, IExtensionSingleActivationService);
 }
