@@ -4,7 +4,7 @@
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { IServiceManager } from '../../ioc/types';
 import { PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../common/constants';
-import { ITestFrameworkController, ITestsRunner, ITestController } from './common/types';
+import { ITestFrameworkController, ITestController } from './common/types';
 import { PythonTestController } from './controller';
 import { PytestController } from './pytest/pytestController';
 import { UnittestController } from './unittest/unittestController';
