@@ -209,7 +209,15 @@ export function populateTestTree(
 
                 let range: Range | undefined;
                 if (child.lineno) {
-                    range = new Range(new Position(Number(child.lineno) - 1, 0), new Position(Number(child.lineno), 0));
+                    // if lineno is '0'
+                    if (Number(child.lineno) === 0) {
+                        range = new Range(new Position(0, 0), new Position(0, 0));
+                    } else {
+                        range = new Range(
+                            new Position(Number(child.lineno) - 1, 0),
+                            new Position(Number(child.lineno), 0),
+                        );
+                    }
                 }
                 testItem.canResolveChildren = false;
                 testItem.range = range;

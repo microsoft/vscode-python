@@ -169,6 +169,7 @@ def test_parameterized_error_collect():
             "pytest_describe_plugin" + os.path.sep + "nested_describe.py",
             expected_discovery_test_output.expected_nested_describe_output,
         ),
+        ("2496-black-formatter", expected_discovery_test_output.black_formatter_expected_output),
     ],
 )
 def test_pytest_collect(file, expected_const):

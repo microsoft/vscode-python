@@ -1719,3 +1719,102 @@ ruff_test_expected_output = {
     ],
     "id_": TEST_DATA_PATH_STR,
 }
+
+# This is the expected output for the 2496-black-formatter folder when run with black plugin
+# └── .data
+#    └── 2496-black-formatter
+#       └── app.py
+#          └── black
+#       └── test_app.py
+#          └── black
+#          └── test_add
+#          └── test_subtract
+black_formatter_folder_path = TEST_DATA_PATH / "2496-black-formatter"
+black_app_path = black_formatter_folder_path / "app.py"
+black_test_app_path = black_formatter_folder_path / "test_app.py"
+black_formatter_expected_output = {
+    "name": "2496-black-formatter",
+    "path": os.fspath(black_formatter_folder_path),
+    "type_": "folder",
+    "id_": os.fspath(black_formatter_folder_path),
+    "children": [
+        {
+            "name": "app.py",
+            "path": os.fspath(black_app_path),
+            "type_": "file",
+            "id_": os.fspath(black_app_path),
+            "children": [
+                {
+                    "name": "black",
+                    "path": os.fspath(black_app_path),
+                    "lineno": "0",
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "2496-black-formatter/app.py::black",
+                        black_app_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "2496-black-formatter/app.py::black",
+                        black_app_path,
+                    ),
+                }
+            ],
+        },
+        {
+            "name": "test_app.py",
+            "path": os.fspath(black_test_app_path),
+            "type_": "file",
+            "id_": os.fspath(black_test_app_path),
+            "children": [
+                {
+                    "name": "black",
+                    "path": os.fspath(black_test_app_path),
+                    "lineno": "0",
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "2496-black-formatter/test_app.py::black",
+                        black_test_app_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "2496-black-formatter/test_app.py::black",
+                        black_test_app_path,
+                    ),
+                },
+                {
+                    "name": "test_add",
+                    "path": os.fspath(black_test_app_path),
+                    "lineno": find_test_line_number(
+                        "test_add",
+                        black_test_app_path,
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "2496-black-formatter/test_app.py::test_add",
+                        black_test_app_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "2496-black-formatter/test_app.py::test_add",
+                        black_test_app_path,
+                    ),
+                },
+                {
+                    "name": "test_subtract",
+                    "path": os.fspath(black_test_app_path),
+                    "lineno": find_test_line_number(
+                        "test_subtract",
+                        black_test_app_path,
+                    ),
+                    "type_": "test",
+                    "id_": get_absolute_test_id(
+                        "2496-black-formatter/test_app.py::test_subtract",
+                        black_test_app_path,
+                    ),
+                    "runID": get_absolute_test_id(
+                        "2496-black-formatter/test_app.py::test_subtract",
+                        black_test_app_path,
+                    ),
+                },
+            ],
+        },
+    ],
+}
