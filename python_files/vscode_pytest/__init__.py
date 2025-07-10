@@ -17,6 +17,7 @@ import pytest
 if TYPE_CHECKING:
     from pluggy import Result
 
+USES_PYTEST_DESCRIBE = False
 
 with contextlib.suppress(ImportError):
     from pytest_describe.plugin import DescribeBlock
