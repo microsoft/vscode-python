@@ -209,7 +209,6 @@ export function populateTestTree(
 
                 let range: Range | undefined;
                 if (child.lineno) {
-                    // if lineno is '0'
                     if (Number(child.lineno) === 0) {
                         range = new Range(new Position(0, 0), new Position(0, 0));
                     } else {
