@@ -70,8 +70,15 @@ runs:
       shell: bash
 
     - name: Update optional extension dependencies
-      run: npm run addExtensionPackDependencies
+      run: |
+        if [[ "${VSIX_NAME}" == *"insiders"* ]]; then
+        npm run addExtensionPackDependenciesPreRelease
+        else
+        npm run addExtensionPackDependencies
+        fi
       shell: bash
+      env:
+        VSIX_NAME: ${{ inputs.vsix_name }}
 
     - name: Build Webpack
       run: |

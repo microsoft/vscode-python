@@ -10,7 +10,7 @@ import {
     LanguageModelToolInvocationPrepareOptions,
     LanguageModelToolResult,
     PreparedToolInvocation,
-    workspace,
+    Uri,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
@@ -20,15 +20,14 @@ import {
     getEnvDisplayName,
     getEnvironmentDetails,
     getToolResponseIfNotebook,
-    getUntrustedWorkspaceResponse,
     IResourceReference,
     raceCancellationError,
 } from './utils';
-import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { IDiscoveryAPI } from '../pythonEnvironments/base/locator';
+import { BaseTool } from './baseTool';
 
-export class GetExecutableTool implements LanguageModelTool<IResourceReference> {
+export class GetExecutableTool extends BaseTool<IResourceReference> implements LanguageModelTool<IResourceReference> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     public static readonly toolName = 'get_python_executable_details';
@@ -37,21 +36,18 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         private readonly serviceContainer: IServiceContainer,
         private readonly discovery: IDiscoveryAPI,
     ) {
+        super(GetExecutableTool.toolName);
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
             'standard',
         );
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
-    async invoke(
-        options: LanguageModelToolInvocationOptions<IResourceReference>,
+    async invokeImpl(
+        _options: LanguageModelToolInvocationOptions<IResourceReference>,
+        resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         const notebookResponse = getToolResponseIfNotebook(resourcePath);
         if (notebookResponse) {
             return notebookResponse;
@@ -68,11 +64,11 @@ export class GetExecutableTool implements LanguageModelTool<IResourceReference> 
         return new LanguageModelToolResult([new LanguageModelTextPart(message)]);
     }
 
-    async prepareInvocation?(
-        options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+    async prepareInvocationImpl(
+        _options: LanguageModelToolInvocationPrepareOptions<IResourceReference>,
+        resourcePath: Uri | undefined,
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        const resourcePath = resolveFilePath(options.input.resourcePath);
         if (getToolResponseIfNotebook(resourcePath)) {
             return {};
         }

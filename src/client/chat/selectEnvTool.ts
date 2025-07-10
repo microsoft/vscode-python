@@ -24,10 +24,8 @@ import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getEnvDetailsForResponse,
     getToolResponseIfNotebook,
-    getUntrustedWorkspaceResponse,
     IResourceReference,
 } from './utils';
-import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout } from '../common/utils/async';
 import { Commands, Octicons } from '../common/constants';
@@ -38,12 +36,14 @@ import { Common, InterpreterQuickPickList } from '../common/utils/localize';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
 import { DisposableStore } from '../common/utils/resourceLifecycle';
 import { traceError, traceVerbose, traceWarn } from '../logging';
+import { BaseTool } from './baseTool';
 
 export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
 }
 
-export class SelectPythonEnvTool implements LanguageModelTool<ISelectPythonEnvToolArguments> {
+export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
+    implements LanguageModelTool<ISelectPythonEnvToolArguments> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     public static readonly toolName = 'selectEnvironment';
@@ -51,6 +51,7 @@ export class SelectPythonEnvTool implements LanguageModelTool<ISelectPythonEnvTo
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
     ) {
+        super(SelectPythonEnvTool.toolName);
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
             'standard',
@@ -58,15 +59,11 @@ export class SelectPythonEnvTool implements LanguageModelTool<ISelectPythonEnvTo
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
     }
 
-    async invoke(
+    async invokeImpl(
         options: LanguageModelToolInvocationOptions<ISelectPythonEnvToolArguments>,
+        resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-
-        const resource = resolveFilePath(options.input.resourcePath);
         let selected: boolean | undefined = false;
         const hasVenvOrCondaEnvInWorkspaceFolder = doesWorkspaceHaveVenvOrCondaEnv(resource, this.api);
         if (options.input.reason === 'cancelled' || hasVenvOrCondaEnvInWorkspaceFolder) {
@@ -115,11 +112,11 @@ export class SelectPythonEnvTool implements LanguageModelTool<ISelectPythonEnvTo
         ]);
     }
 
-    async prepareInvocation?(
+    async prepareInvocationImpl(
         options: LanguageModelToolInvocationPrepareOptions<ISelectPythonEnvToolArguments>,
+        resource: Uri | undefined,
         _token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        const resource = resolveFilePath(options.input.resourcePath);
         if (getToolResponseIfNotebook(resource)) {
             return {};
         }

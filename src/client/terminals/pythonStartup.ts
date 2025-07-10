@@ -36,3 +36,8 @@ export async function registerPythonStartup(context: ExtensionContext): Promise<
         }),
     );
 }
+
+export async function registerBasicRepl(context: ExtensionContext): Promise<void> {
+    // TODO: Configurable by setting
+    context.environmentVariableCollection.replace('PYTHON_BASIC_REPL', '1');
+}

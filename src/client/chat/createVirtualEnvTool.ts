@@ -22,12 +22,10 @@ import {
     doesWorkspaceHaveVenvOrCondaEnv,
     getDisplayVersion,
     getEnvDetailsForResponse,
-    getUntrustedWorkspaceResponse,
     IResourceReference,
     isCancellationError,
     raceCancellationError,
 } from './utils';
-import { resolveFilePath } from './utils';
 import { ITerminalHelper } from '../common/terminal/types';
 import { raceTimeout, sleep } from '../common/utils/async';
 import { IInterpreterPathService } from '../common/types';
@@ -43,12 +41,15 @@ import { traceError, traceVerbose, traceWarn } from '../logging';
 import { StopWatch } from '../common/utils/stopWatch';
 import { useEnvExtension } from '../envExt/api.internal';
 import { PythonEnvironment } from '../envExt/types';
+import { hideEnvCreation } from '../pythonEnvironments/creation/provider/hideEnvCreation';
+import { BaseTool } from './baseTool';
 
 interface ICreateVirtualEnvToolParams extends IResourceReference {
     packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
 }
 
-export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnvToolParams> {
+export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
+    implements LanguageModelTool<ICreateVirtualEnvToolParams> {
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
@@ -59,6 +60,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
         private readonly api: PythonExtension['environments'],
         private readonly serviceContainer: IServiceContainer,
     ) {
+        super(CreateVirtualEnvTool.toolName);
         this.terminalExecutionService = this.serviceContainer.get<TerminalCodeExecutionProvider>(
             ICodeExecutionService,
             'standard',
@@ -69,14 +71,11 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
         );
     }
 
-    async invoke(
+    async invokeImpl(
         options: LanguageModelToolInvocationOptions<ICreateVirtualEnvToolParams>,
+        resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<LanguageModelToolResult> {
-        if (!workspace.isTrusted) {
-            return getUntrustedWorkspaceResponse();
-        }
-        const resource = resolveFilePath(options.input.resourcePath);
         let info = await this.getPreferredEnvForCreation(resource);
         if (!info) {
             traceWarn(`Called ${CreateVirtualEnvTool.toolName} tool not invoked, no preferred environment found.`);
@@ -86,6 +85,7 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const disposables = new DisposableStore();
         try {
+            disposables.add(hideEnvCreation());
             const interpreterChanged = new Promise<void>((resolve) => {
                 disposables.add(interpreterPathService.onDidChange(() => resolve()));
             });
@@ -168,11 +168,11 @@ export class CreateVirtualEnvTool implements LanguageModelTool<ICreateVirtualEnv
         return info ? true : false;
     }
 
-    async prepareInvocation?(
-        options: LanguageModelToolInvocationPrepareOptions<ICreateVirtualEnvToolParams>,
+    async prepareInvocationImpl(
+        _options: LanguageModelToolInvocationPrepareOptions<ICreateVirtualEnvToolParams>,
+        resource: Uri | undefined,
         token: CancellationToken,
     ): Promise<PreparedToolInvocation> {
-        const resource = resolveFilePath(options.input.resourcePath);
         const info = await raceCancellationError(this.getPreferredEnvForCreation(resource), token);
         if (!info) {
             return {};
