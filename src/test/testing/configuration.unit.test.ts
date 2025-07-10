@@ -25,7 +25,7 @@ import {
     ITestsHelper,
 } from '../../client/testing/common/types';
 import { ITestingSettings } from '../../client/testing/configuration/types';
-import { NONE_SELECTED, UnitTestConfigurationService } from '../../client/testing/configuration';
+import { UnitTestConfigurationService } from '../../client/testing/configuration';
 
 suite('Unit Tests - ConfigurationService', () => {
     UNIT_TEST_PRODUCTS.forEach((product) => {
