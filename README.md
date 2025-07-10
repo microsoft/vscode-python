@@ -27,7 +27,7 @@ If you encounter issues with any of the listed extensions, please file an issue 
 
 ## Quick start
 
--   **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: that the system install of Python on macOS is not supported).
+-   **Step 1.** [Install a supported version of Python on your system](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) (note: the system install of Python on macOS is not supported).
 -   **Step 2.** [Install the Python extension for Visual Studio Code](https://code.visualstudio.com/docs/editor/extension-gallery).
 -   **Step 3.** Open or create a Python file and start coding!
 

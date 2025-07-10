@@ -3,15 +3,7 @@
 
 // Native Repl class that holds instance of pythonServer and replController
 
-import {
-    NotebookController,
-    NotebookControllerAffinity,
-    NotebookDocument,
-    QuickPickItem,
-    TextEditor,
-    Uri,
-    WorkspaceFolder,
-} from 'vscode';
+import { NotebookController, NotebookDocument, QuickPickItem, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { PVSC_EXTENSION_ID } from '../common/constants';
 import { showQuickPick } from '../common/vscodeApis/windowApis';
@@ -172,24 +164,19 @@ export class NativeRepl implements Disposable {
             }
         }
 
-        const notebookEditor = await openInteractiveREPL(
-            this.replController,
-            this.notebookDocument ?? wsMementoUri,
-            preserveFocus,
-        );
-        if (notebookEditor) {
-            this.notebookDocument = notebookEditor.notebook;
+        const result = await openInteractiveREPL(this.notebookDocument ?? wsMementoUri, preserveFocus);
+        if (result) {
+            this.notebookDocument = result.notebookEditor.notebook;
             await updateWorkspaceStateValue<string | undefined>(
                 NATIVE_REPL_URI_MEMENTO,
                 this.notebookDocument.uri.toString(),
             );
 
-            if (this.notebookDocument) {
-                this.replController.updateNotebookAffinity(this.notebookDocument, NotebookControllerAffinity.Default);
-                await selectNotebookKernel(notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
-                if (code) {
-                    await executeNotebookCell(notebookEditor, code);
-                }
+            if (result.documentCreated) {
+                await selectNotebookKernel(result.notebookEditor, this.replController.id, PVSC_EXTENSION_ID);
+            }
+            if (code) {
+                await executeNotebookCell(result.notebookEditor, code);
             }
         }
     }

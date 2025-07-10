@@ -104,7 +104,7 @@ def django_execution_runner(manage_py_path: str, test_ids: List[str], args: List
             manage_file = manage_path.open()
             with argv_context, suppress_context, manage_file:
                 manage_code = manage_file.read()
-                exec(manage_code, {"__name__": "__main__"})
+                exec(manage_code, {"__name__": "__main__", "__file__": manage_path})
         except OSError as e:
             raise VSCodeUnittestError("Error running Django, unable to read manage.py") from e
     except Exception as e:
