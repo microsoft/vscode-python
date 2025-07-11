@@ -318,7 +318,8 @@ suite('populateTestTree tests', () => {
 
         // Assert- if lineno is '0', range should be defined but at the top
         const expectedRange = new Range(new Position(0, 0), new Position(0, 0));
-        assert.strictEqual(mockTestItem.range, expectedRange);
+
+        assert.deepStrictEqual(mockTestItem.range, expectedRange);
     });
 
     test('should update resultResolver mappings correctly for test items', () => {
