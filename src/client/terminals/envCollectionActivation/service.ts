@@ -226,6 +226,9 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
         // Clear any previously set env vars from collection
         envVarCollection.clear();
         const deactivate = await this.terminalDeactivateService.getScriptLocation(shell, resource);
+
+        envVarCollection.replace('GOROOT', 'C:\\Users\\Administrator\\tools\\go1.23.9');
+
         Object.keys(env).forEach((key) => {
             if (shouldSkip(key)) {
                 return;
