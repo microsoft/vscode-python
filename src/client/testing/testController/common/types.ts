@@ -192,7 +192,7 @@ export type DiscoveredTestCommon = {
 };
 
 export type DiscoveredTestItem = DiscoveredTestCommon & {
-    lineno: number;
+    lineno: number | string;
     runID: string;
 };
 
