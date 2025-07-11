@@ -41,6 +41,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                 this.disposableRegistry.push(
                     this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
                         traceVerbose(`Attempting to run Python file`, file?.fsPath);
+                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+                        const newTerminalPerFile = cmd === Commands.Exec_In_Separate_Terminal;
 
                         if (useEnvExtension()) {
                             try {
@@ -50,6 +52,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                             }
                             sendTelemetryEvent(EventName.ENVIRONMENT_CHECK_TRIGGER, undefined, {
                                 trigger: 'run-in-terminal',
+                            });
+                            sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, {
+                                scope: 'file',
+                                trigger,
+                                newTerminalPerFile,
                             });
                             return;
                         }
@@ -66,9 +73,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                             trigger: 'run-in-terminal',
                         });
                         triggerCreateEnvironmentCheckNonBlocking(CreateEnvironmentCheckKind.File, file);
-                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+
                         await this.executeFileInTerminal(file, trigger, {
-                            newTerminalPerFile: cmd === Commands.Exec_In_Separate_Terminal,
+                            newTerminalPerFile,
                         })
                             .then(() => {
                                 if (this.shouldTerminalFocusOnStart(file))

@@ -2336,7 +2336,7 @@ export interface IEventNamePropertyMapping {
        }
      */
     [EventName.ENVIRONMENT_CREATING]: {
-        environmentType: 'venv' | 'conda' | 'microvenv';
+        environmentType: 'venv' | 'conda' | 'microvenv' | undefined;
         pythonVersion: string | undefined;
     };
     /**
