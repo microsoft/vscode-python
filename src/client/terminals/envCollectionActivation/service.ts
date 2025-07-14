@@ -98,7 +98,7 @@ export class TerminalEnvVarCollectionService implements IExtensionActivationServ
     public async activate(resource: Resource): Promise<void> {
         try {
             if (useEnvExtension()) {
-                traceVerbose('Return early of activate since env extension is being used');
+                traceVerbose('Ignoring environment variable experiment since env extension is being used');
                 this.context.environmentVariableCollection.clear();
                 // Needed for shell integration
                 await registerPythonStartup(this.context);
