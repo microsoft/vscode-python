@@ -137,17 +137,19 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
     test('PYTHON_BASIC_REPL is set when shell integration is enabled and Python >= 3.13', async () => {
         pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
-        
+
         // Mock service container with interpreter service
         const serviceContainer = TypeMoq.Mock.ofType<any>();
         const interpreterService = TypeMoq.Mock.ofType<any>();
         const mockInterpreter = { version: { minor: 13 } };
-        
+
         serviceContainer.setup((sc) => sc.get(TypeMoq.It.isAny())).returns(() => interpreterService.object);
-        interpreterService.setup((is) => is.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(mockInterpreter));
-        
+        interpreterService
+            .setup((is) => is.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(mockInterpreter));
+
         await registerBasicRepl(context.object, serviceContainer.object);
-        
+
         globalEnvironmentVariableCollection.verify(
             (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
             TypeMoq.Times.once(),
@@ -156,40 +158,36 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
 
     test('PYTHON_BASIC_REPL is not set when shell integration is disabled', async () => {
         pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => false);
-        
+
         await registerBasicRepl(context.object);
-        
+
         globalEnvironmentVariableCollection.verify(
             (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
-        globalEnvironmentVariableCollection.verify(
-            (c) => c.delete('PYTHON_BASIC_REPL'),
-            TypeMoq.Times.once(),
-        );
+        globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHON_BASIC_REPL'), TypeMoq.Times.once());
     });
 
     test('PYTHON_BASIC_REPL is not set when Python < 3.13 even with shell integration enabled', async () => {
         pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
-        
+
         // Mock service container with interpreter service for Python 3.12
         const serviceContainer = TypeMoq.Mock.ofType<any>();
         const interpreterService = TypeMoq.Mock.ofType<any>();
         const mockInterpreter = { version: { minor: 12 } };
-        
+
         serviceContainer.setup((sc) => sc.get(TypeMoq.It.isAny())).returns(() => interpreterService.object);
-        interpreterService.setup((is) => is.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(mockInterpreter));
-        
+        interpreterService
+            .setup((is) => is.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(mockInterpreter));
+
         await registerBasicRepl(context.object, serviceContainer.object);
-        
+
         globalEnvironmentVariableCollection.verify(
             (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
             TypeMoq.Times.never(),
         );
-        globalEnvironmentVariableCollection.verify(
-            (c) => c.delete('PYTHON_BASIC_REPL'),
-            TypeMoq.Times.once(),
-        );
+        globalEnvironmentVariableCollection.verify((c) => c.delete('PYTHON_BASIC_REPL'), TypeMoq.Times.once());
     });
 
     test('Ensure registering terminal link calls registerTerminalLinkProvider', async () => {
