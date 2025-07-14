@@ -45,7 +45,6 @@ import {
 import { ProgressService } from '../../common/application/progressService';
 import { useEnvExtension } from '../../envExt/api.internal';
 import { registerPythonStartup } from '../pythonStartup';
-import { trace } from 'console';
 
 @injectable()
 export class TerminalEnvVarCollectionService implements IExtensionActivationService, ITerminalEnvVarCollectionService {
