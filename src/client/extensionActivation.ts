@@ -184,7 +184,7 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
 
             await registerPythonStartup(ext.context);
-            await registerBasicRepl(ext.context);
+            await registerBasicRepl(ext.context, serviceContainer);
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
