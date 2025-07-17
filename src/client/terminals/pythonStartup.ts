@@ -21,8 +21,11 @@ async function applyPythonStartupSetting(context: ExtensionContext): Promise<voi
         const sourcePath = path.join(EXTENSION_ROOT_DIR, 'python_files', 'pythonrc.py');
         await copy(Uri.file(sourcePath), destPath, { overwrite: true });
         context.environmentVariableCollection.replace('PYTHONSTARTUP', destPath.fsPath);
+        // When shell integration is  enabled, we disable PyREPL from cpython.
+        context.environmentVariableCollection.replace('PYTHON_BASIC_REPL', '1');
     } else {
         context.environmentVariableCollection.delete('PYTHONSTARTUP');
+        context.environmentVariableCollection.delete('PYTHON_BASIC_REPL');
     }
 }
 
@@ -35,9 +38,4 @@ export async function registerPythonStartup(context: ExtensionContext): Promise<
             }
         }),
     );
-}
-
-export async function registerBasicRepl(context: ExtensionContext): Promise<void> {
-    // TODO: Configurable by setting
-    context.environmentVariableCollection.replace('PYTHON_BASIC_REPL', '1');
 }
