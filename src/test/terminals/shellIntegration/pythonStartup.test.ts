@@ -136,6 +136,7 @@ suite('Terminal - Shell Integration with PYTHONSTARTUP', () => {
     });
 
     test('PYTHON_BASIC_REPL is set when shell integration is enabled', async () => {
+        pythonConfig.setup((p) => p.get('terminal.shellIntegration.enabled')).returns(() => true);
         await registerPythonStartup(context.object);
         globalEnvironmentVariableCollection.verify(
             (c) => c.replace('PYTHON_BASIC_REPL', '1', TypeMoq.It.isAny()),
