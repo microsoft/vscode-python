@@ -5,7 +5,6 @@ if sys.platform != "win32":
     import readline
 
 original_ps1 = ">>> "
-use_shell_integration = sys.version_info < (3, 13)
 is_wsl = "microsoft-standard-WSL" in platform.release()
 
 
@@ -75,7 +74,7 @@ class PS1:
         return result
 
 
-if sys.platform != "win32" and (not is_wsl) and use_shell_integration:
+if sys.platform != "win32" and (not is_wsl):
     sys.ps1 = PS1()
 
 if sys.platform == "darwin":
