@@ -91,7 +91,7 @@ extends:
       - script: python ./build/update_package_file.py
         displayName: Update telemetry in package.json
 
-      - script: npm run addExtensionPackDependenciesPreRelease
+      - script: npm run addExtensionPackDependencies
         displayName: Update optional extension dependencies
 
       - script: npx gulp prePublishBundle
