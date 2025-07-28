@@ -43,7 +43,7 @@ suite('Interpreter Path Command', () => {
     });
 
     test('If `workspaceFolder` property exists in `args`, it is used to retrieve setting from config', async () => {
-        const args = { workspaceFolder: 'folderPath' };
+        const args = { workspaceFolder: 'folderPath', type: 'debugpy' };
         when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.file('folderPath'));
 
