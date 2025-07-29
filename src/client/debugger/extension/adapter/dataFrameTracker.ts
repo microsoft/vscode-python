@@ -61,7 +61,10 @@ class DataFrameVariableTracker implements DebugAdapterTracker {
         // Check if any variable is a dataframe-like object
         const hasDataFrame = variables.some((variable) =>
             this.dataFrameTypes.some((dfType) =>
-                variable.type?.includes(dfType) || variable.value?.includes(dfType)
+                variable.type?.includes(dfType) || 
+                variable.value?.includes(dfType) ||
+                // Also check if the variable name suggests it's a dataframe
+                (variable.name?.match(/^(df|data|dataframe)/i) && variable.type?.includes('pandas'))
             )
         );
 
