@@ -64,6 +64,8 @@ export function registerTypes(serviceManager: IServiceManager): void {
         IOutdatedDebuggerPromptFactory,
         OutdatedDebuggerPromptFactory,
     );
+    // Register DataFrameTrackerFactory to monitor debug sessions for dataframe variables
+    // and suggest Jupyter extension installation when needed
     serviceManager.addSingleton<IDataFrameTrackerFactory>(
         IDataFrameTrackerFactory,
         DataFrameTrackerFactory,

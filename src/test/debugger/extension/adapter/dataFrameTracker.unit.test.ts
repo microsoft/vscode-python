@@ -12,6 +12,11 @@ import { IExtensions } from '../../../../client/common/types';
 import { JUPYTER_EXTENSION_ID } from '../../../../client/common/constants';
 import { DataFrameTrackerFactory } from '../../../../client/debugger/extension/adapter/dataFrameTracker';
 
+/**
+ * Test suite for DataFrame Tracker functionality.
+ * Tests the detection of dataframe variables in debug sessions and 
+ * Jupyter extension installation suggestions.
+ */
 suite('DataFrame Tracker', () => {
     let extensions: IExtensions;
     let mockExtensions: IExtensions;
@@ -29,6 +34,10 @@ suite('DataFrame Tracker', () => {
         expect(tracker).to.not.be.undefined;
     });
 
+    /**
+     * Test that pandas DataFrame variables are correctly detected
+     * from debug protocol variable responses.
+     */
     test('Should detect pandas DataFrame variable', () => {
         const mockSession = {} as any;
         const tracker = trackerFactory.createDebugAdapterTracker(mockSession) as any;
@@ -67,6 +76,10 @@ suite('DataFrame Tracker', () => {
         verify(mockExtensions.getExtension(JUPYTER_EXTENSION_ID)).once();
     });
 
+    /**
+     * Test that the tracker doesn't show notifications when Jupyter extension is already installed.
+     * This prevents unnecessary notifications for users who already have the data viewer available.
+     */
     test('Should not show notification if Jupyter extension is installed', () => {
         const mockSession = {} as any;
         const tracker = trackerFactory.createDebugAdapterTracker(mockSession) as any;
@@ -99,6 +112,10 @@ suite('DataFrame Tracker', () => {
         verify(mockExtensions.getExtension(JUPYTER_EXTENSION_ID)).once();
     });
 
+    /**
+     * Test that the tracker recognizes all supported dataframe types from various libraries.
+     * This ensures comprehensive coverage of popular dataframe implementations.
+     */
     test('Should detect various dataframe types', () => {
         // This test verifies that the dataFrameTypes array contains the expected types
         const expectedTypes = [
@@ -119,10 +136,14 @@ suite('DataFrame Tracker', () => {
         });
     });
 
+    /**
+     * Test that the tracker correctly rejects non-dataframe variables.
+     * This prevents false positives on regular variables like strings, numbers, etc.
+     */
     test('Should not detect non-dataframe variables', () => {
         const nonDataFrameTypes = [
             'str',
-            'int',
+            'int', 
             'list',
             'dict',
             'numpy.ndarray',

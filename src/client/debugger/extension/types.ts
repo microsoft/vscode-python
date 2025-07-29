@@ -19,8 +19,13 @@ export const IOutdatedDebuggerPromptFactory = Symbol('IOutdatedDebuggerPromptFac
 
 export interface IOutdatedDebuggerPromptFactory extends DebugAdapterTrackerFactory {}
 
+/** Symbol identifier for the DataFrameTrackerFactory service */
 export const IDataFrameTrackerFactory = Symbol('IDataFrameTrackerFactory');
 
+/** 
+ * Interface for debug adapter tracker factory that monitors dataframe variables
+ * and suggests Jupyter extension installation when dataframes are detected.
+ */
 export interface IDataFrameTrackerFactory extends DebugAdapterTrackerFactory {}
 
 export enum PythonPathSource {

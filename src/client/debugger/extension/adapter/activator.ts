@@ -36,6 +36,7 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         this.disposables.push(
             this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debuggerPromptFactory),
         );
+        // Register DataFrame tracker to monitor for dataframe variables and suggest Jupyter extension
         this.disposables.push(
             this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.dataFrameTrackerFactory),
         );
