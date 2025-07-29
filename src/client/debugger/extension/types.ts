@@ -19,6 +19,10 @@ export const IOutdatedDebuggerPromptFactory = Symbol('IOutdatedDebuggerPromptFac
 
 export interface IOutdatedDebuggerPromptFactory extends DebugAdapterTrackerFactory {}
 
+export const IDataFrameTrackerFactory = Symbol('IDataFrameTrackerFactory');
+
+export interface IDataFrameTrackerFactory extends DebugAdapterTrackerFactory {}
+
 export enum PythonPathSource {
     launchJson = 'launch.json',
     settingsJson = 'settings.json',
