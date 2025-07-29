@@ -22,7 +22,7 @@ export function buildApi(reporter: TelemetryReporter, outputChannel: LogOutputCh
         pylance: {
             getOutputChannel: () => outputChannel,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            // deprecated
+            //deprecated: Pyance now creates client
             createClient: (...args: any[]): BaseLanguageClient =>
                 new LanguageClient(PYTHON_LANGUAGE, 'Python Language Server', args[0], args[1]),
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
