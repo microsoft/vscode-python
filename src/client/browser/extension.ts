@@ -12,6 +12,7 @@ import { EventName } from '../telemetry/constants';
 import { createStatusItem } from './intellisenseStatus';
 import { PylanceApi } from '../activation/node/pylanceApi';
 import { buildApi, IBrowserExtensionApi } from './api';
+import { OutputChannelNames } from '../common/utils/localize';
 
 interface BrowserConfig {
     distUrl: string; // URL to Pylance's dist folder.
@@ -23,7 +24,8 @@ let pylanceApi: PylanceApi | undefined;
 export function activate(context: vscode.ExtensionContext): Promise<IBrowserExtensionApi> {
     const reporter = getTelemetryReporter();
 
-    const activationPromise = Promise.resolve(buildApi(reporter));
+    const outputChannel = vscode.window.createOutputChannel(OutputChannelNames.python, { log: true });
+    const activationPromise = Promise.resolve(buildApi(reporter, outputChannel));
     const pylanceExtension = vscode.extensions.getExtension<PylanceApi>(PYLANCE_EXTENSION_ID);
     if (pylanceExtension) {
         // Make sure we run pylance once we activated core extension.

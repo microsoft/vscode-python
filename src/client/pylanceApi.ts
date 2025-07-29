@@ -3,6 +3,7 @@
 
 import { TelemetryEventMeasurements, TelemetryEventProperties } from '@vscode/extension-telemetry';
 import { BaseLanguageClient } from 'vscode-languageclient';
+import { LogOutputChannel } from 'vscode';
 
 export interface TelemetryReporter {
     sendTelemetryEvent(
@@ -18,7 +19,9 @@ export interface TelemetryReporter {
 }
 
 export interface ApiForPylance {
+    getOutputChannel(): LogOutputChannel;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // deprecated
     createClient(...args: any[]): BaseLanguageClient;
     start(client: BaseLanguageClient): Promise<void>;
     stop(client: BaseLanguageClient): Promise<void>;

@@ -145,7 +145,9 @@ export function buildApi(
             },
         },
         pylance: {
+            getOutputChannel: () => outputChannel.channel,
             createClient: (...args: any[]): BaseLanguageClient => {
+                //deprecated
                 // Make sure we share output channel so that we can share one with
                 // Jedi as well.
                 const clientOptions = args[1] as LanguageClientOptions;

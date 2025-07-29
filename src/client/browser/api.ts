@@ -7,6 +7,7 @@ import { BaseLanguageClient } from 'vscode-languageclient';
 import { LanguageClient } from 'vscode-languageclient/browser';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { ApiForPylance, TelemetryReporter } from '../pylanceApi';
+import { LogOutputChannel } from 'vscode';
 
 export interface IBrowserExtensionApi {
     /**
@@ -16,10 +17,12 @@ export interface IBrowserExtensionApi {
     pylance: ApiForPylance;
 }
 
-export function buildApi(reporter: TelemetryReporter): IBrowserExtensionApi {
+export function buildApi(reporter: TelemetryReporter, outputChannel: LogOutputChannel): IBrowserExtensionApi {
     const api: IBrowserExtensionApi = {
         pylance: {
+            getOutputChannel: () => outputChannel,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // deprecated
             createClient: (...args: any[]): BaseLanguageClient =>
                 new LanguageClient(PYTHON_LANGUAGE, 'Python Language Server', args[0], args[1]),
             start: (client: BaseLanguageClient): Promise<void> => client.start(),
