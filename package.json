@@ -1712,7 +1712,7 @@
         "semver": "^7.5.2",
         "stack-trace": "0.0.10",
         "sudo-prompt": "^9.2.1",
-        "tmp": "^0.0.33",
+        "tmp": "^0.2.4",
         "uint64be": "^3.0.0",
         "unicode": "^14.0.0",
         "vscode-debugprotocol": "^1.28.0",
