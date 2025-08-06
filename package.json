@@ -640,7 +640,7 @@
                     "type": "array"
                 },
                 "python.terminal.shellIntegration.enabled": {
-                    "default": false,
+                    "default": true,
                     "markdownDescription": "%python.terminal.shellIntegration.enabled.description%",
                     "scope": "resource",
                     "type": "boolean",
