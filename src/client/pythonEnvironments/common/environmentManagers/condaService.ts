@@ -2,6 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
+import { traceVerbose } from '../../../logging';
 import { cache } from '../../../common/utils/decorators';
 import { ICondaService } from '../../../interpreter/contracts';
 import { traceDecoratorVerbose } from '../../../logging';
@@ -23,12 +24,15 @@ export class CondaService implements ICondaService {
         interpreterPath?: string,
         envName?: string,
     ): Promise<{ path: string | undefined; type: 'local' | 'global' } | undefined> {
+        traceVerbose(`Getting activation script for interpreter ${interpreterPath}, env ${envName}`);
         const condaPath = await this.getCondaFileFromInterpreter(interpreterPath, envName);
+        traceVerbose(`Found conda path: ${condaPath}`);
 
         const activatePath = (condaPath
             ? path.join(path.dirname(condaPath), 'activate')
             : 'activate'
         ).fileToCommandArgumentForPythonExt(); // maybe global activate?
+        traceVerbose(`Using activate path: ${activatePath}`);
 
         // try to find the activate script in the global conda root prefix.
         if (this.platform.isLinux || this.platform.isMac) {
@@ -41,6 +45,7 @@ export class CondaService implements ICondaService {
                     .fileToCommandArgumentForPythonExt();
 
                 if (activatePath === globalActivatePath || !(await this.fileSystem.fileExists(activatePath))) {
+                    traceVerbose(`Using global activate path: ${globalActivatePath}`);
                     return {
                         path: globalActivatePath,
                         type: 'global',
