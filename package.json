@@ -83,7 +83,8 @@
         "onLanguageModelTool:get_python_executable_details",
         "onLanguageModelTool:install_python_packages",
         "onLanguageModelTool:configure_python_environment",
-        "onLanguageModelTool:create_virtual_environment"
+        "onLanguageModelTool:create_virtual_environment",
+        "onTerminalShellIntegration:python"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
