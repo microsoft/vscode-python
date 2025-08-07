@@ -8,7 +8,7 @@ import '../../extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { traceError, traceInfo, traceVerbose, traceWarn } from '../../../logging';
+import { traceInfo, traceVerbose, traceWarn } from '../../../logging';
 
 import { IComponentAdapter, ICondaService } from '../../../interpreter/contracts';
 import { IPlatformService } from '../../platform/types';
