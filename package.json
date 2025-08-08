@@ -2,7 +2,7 @@
     "name": "python",
     "displayName": "Python",
     "description": "Python language support with extension access points for IntelliSense (Pylance), Debugging (Python Debugger), linting, formatting, refactoring, unit tests, and more.",
-    "version": "2025.11.0-dev",
+    "version": "2025.13.0-dev",
     "featureFlags": {
         "usingNewInterpreterStorage": true
     },
@@ -83,7 +83,8 @@
         "onLanguageModelTool:get_python_executable_details",
         "onLanguageModelTool:install_python_packages",
         "onLanguageModelTool:configure_python_environment",
-        "onLanguageModelTool:create_virtual_environment"
+        "onLanguageModelTool:create_virtual_environment",
+        "onTerminalShellIntegration:python"
     ],
     "main": "./out/client/extension",
     "browser": "./dist/extension.browser.js",
@@ -640,7 +641,7 @@
                     "type": "array"
                 },
                 "python.terminal.shellIntegration.enabled": {
-                    "default": false,
+                    "default": true,
                     "markdownDescription": "%python.terminal.shellIntegration.enabled.description%",
                     "scope": "resource",
                     "type": "boolean",
