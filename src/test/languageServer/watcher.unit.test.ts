@@ -36,7 +36,11 @@ suite('Language server watcher', () => {
     setup(() => {
         disposables = [];
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -108,7 +112,11 @@ suite('Language server watcher', () => {
 
     test('The constructor should add a listener to onDidChange to the list of disposables if it is a trusted workspace', () => {
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -171,7 +179,11 @@ suite('Language server watcher', () => {
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -255,7 +267,11 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -348,7 +364,11 @@ suite('Language server watcher', () => {
         });
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -453,7 +473,11 @@ suite('Language server watcher', () => {
         } as unknown) as IWorkspaceService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -542,7 +566,11 @@ suite('Language server watcher', () => {
         } as unknown) as IConfigurationService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -613,7 +641,11 @@ suite('Language server watcher', () => {
         startLanguageServerStub.returns(Promise.resolve());
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -687,7 +719,11 @@ suite('Language server watcher', () => {
         startLanguageServerStub.returns(Promise.resolve());
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -792,7 +828,11 @@ suite('Language server watcher', () => {
             sandbox.stub(extensionLSCls.prototype, 'canStartLanguageServer').returns(true);
 
             // Create a mock ILogOutputChannel
-            const mockOutputChannel = {} as ILogOutputChannel;
+            const mockOutputChannel = {
+                dispose: () => {
+                    /* do nothing */
+                },
+            } as ILogOutputChannel;
 
             // Create a mock IApplicationShell with createOutputChannel method
             const mockApplicationShell = ({
@@ -897,7 +937,11 @@ suite('Language server watcher', () => {
             } as unknown) as IWorkspaceService;
 
             // Create a mock ILogOutputChannel
-            const mockOutputChannel = {} as ILogOutputChannel;
+            const mockOutputChannel = {
+                dispose: () => {
+                    /* do nothing */
+                },
+            } as ILogOutputChannel;
 
             // Create a mock IApplicationShell with createOutputChannel method
             const mockApplicationShell = ({
@@ -993,7 +1037,11 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -1087,7 +1135,11 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -1183,7 +1235,11 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
@@ -1280,7 +1336,11 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         // Create a mock ILogOutputChannel
-        const mockOutputChannel = {} as ILogOutputChannel;
+        const mockOutputChannel = {
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel;
 
         // Create a mock IApplicationShell with createOutputChannel method
         const mockApplicationShell = ({
