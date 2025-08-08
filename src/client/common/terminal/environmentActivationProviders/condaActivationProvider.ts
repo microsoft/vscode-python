@@ -8,6 +8,7 @@ import '../../extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { traceInfo, traceVerbose, traceWarn } from '../../../logging';
 
 import { IComponentAdapter, ICondaService } from '../../../interpreter/contracts';
 import { IPlatformService } from '../../platform/types';
@@ -53,16 +54,21 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         pythonPath: string,
         targetShell: TerminalShellType,
     ): Promise<string[] | undefined> {
+        traceVerbose(`Getting conda activation commands for interpreter ${pythonPath} with shell ${targetShell}`);
         const envInfo = await this.pyenvs.getCondaEnvironment(pythonPath);
         if (!envInfo) {
+            traceWarn(`No conda environment found for interpreter ${pythonPath}`);
             return undefined;
         }
+        traceVerbose(`Found conda environment: ${JSON.stringify(envInfo)}`);
 
         const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
 
         // New version.
         const interpreterPath = await this.condaService.getInterpreterPathForEnvironment(envInfo);
+        traceInfo(`Using interpreter path: ${interpreterPath}`);
         const activatePath = await this.condaService.getActivationScriptFromInterpreter(interpreterPath, envInfo.name);
+        traceVerbose(`Got activation script: ${activatePath?.path}} with type: ${activatePath?.type}`);
         // eslint-disable-next-line camelcase
         if (activatePath?.path) {
             if (
@@ -70,11 +76,14 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 targetShell !== TerminalShellType.bash &&
                 targetShell !== TerminalShellType.gitbash
             ) {
-                return [activatePath.path, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+                const commands = [activatePath.path, `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+                traceInfo(`Using Windows-specific commands: ${commands.join(', ')}`);
+                return commands;
             }
 
             const condaInfo = await this.condaService.getCondaInfo();
 
+            traceVerbose(`Conda shell level: ${condaInfo?.conda_shlvl}`);
             if (
                 activatePath.type !== 'global' ||
                 // eslint-disable-next-line camelcase
@@ -84,27 +93,36 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 // activatePath is not the global activate path, or we don't have a shlvl, or it's -1（conda never sourced）.
                 // and we need to source the activate path.
                 if (activatePath.path === 'activate') {
-                    return [
+                    const commands = [
                         `source ${activatePath.path}`,
                         `conda activate ${condaEnv.toCommandArgumentForPythonExt()}`,
                     ];
+                    traceInfo(`Using source activate commands: ${commands.join(', ')}`);
+                    return commands;
                 }
-                return [`source ${activatePath.path} ${condaEnv.toCommandArgumentForPythonExt()}`];
+                const command = [`source ${activatePath.path} ${condaEnv.toCommandArgumentForPythonExt()}`];
+                traceInfo(`Using single source command: ${command}`);
+                return command;
             }
-            return [`conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+            const command = [`conda activate ${condaEnv.toCommandArgumentForPythonExt()}`];
+            traceInfo(`Using direct conda activate command: ${command}`);
+            return command;
         }
 
         switch (targetShell) {
             case TerminalShellType.powershell:
             case TerminalShellType.powershellCore:
+                traceVerbose('Using PowerShell-specific activation');
                 return _getPowershellCommands(condaEnv);
 
             // TODO: Do we really special-case fish on Windows?
             case TerminalShellType.fish:
+                traceVerbose('Using Fish shell-specific activation');
                 return getFishCommands(condaEnv, await this.condaService.getCondaFile());
 
             default:
                 if (this.platform.isWindows) {
+                    traceVerbose('Using Windows shell-specific activation fallback option.');
                     return this.getWindowsCommands(condaEnv);
                 }
                 return getUnixCommands(condaEnv, await this.condaService.getCondaFile());
