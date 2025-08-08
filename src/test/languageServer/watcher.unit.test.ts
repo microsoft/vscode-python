@@ -1111,16 +1111,6 @@ suite('Language server watcher', () => {
             } as IConfigurationService,
             {} as IExperimentService,
             ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
-
-            {
-                getSettings: () => ({ languageServer: LanguageServerType.None }),
-            } as IConfigurationService,
-            {} as IExperimentService,
-            ({
                 getActiveWorkspaceUri: () => undefined,
             } as unknown) as IInterpreterHelper,
             ({
