@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
-import { ILanguageServerOutputChannel } from '../../client/activation/types';
+
 import { IWorkspaceService, ICommandManager } from '../../client/common/application/types';
 import { IExperimentService, IConfigurationService, IInterpreterPathService } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
@@ -17,7 +17,6 @@ suite('Language Server - Jedi LS extension manager', () => {
     setup(() => {
         manager = new JediLSExtensionManager(
             {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
             {} as IExperimentService,
             {} as IWorkspaceService,
             {} as IConfigurationService,

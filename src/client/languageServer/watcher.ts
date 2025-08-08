@@ -5,9 +5,9 @@ import * as path from 'path';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, l10n, Uri, WorkspaceFoldersChangeEvent } from 'vscode';
 import { LanguageServerChangeHandler } from '../activation/common/languageServerChangeHandler';
-import { IExtensionActivationService, ILanguageServerOutputChannel, LanguageServerType } from '../activation/types';
+import { IExtensionActivationService, LanguageServerType } from '../activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
+
 import {
     IConfigurationService,
     IDisposableRegistry,
@@ -25,7 +25,6 @@ import { traceLog } from '../logging';
 import { PythonEnvironment } from '../pythonEnvironments/info';
 import { JediLSExtensionManager } from './jediLSExtensionManager';
 import { NoneLSExtensionManager } from './noneLSExtensionManager';
-import { PylanceLSExtensionManager } from './pylanceLSExtensionManager';
 import { ILanguageServerExtensionManager, ILanguageServerWatcher } from './types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -53,7 +52,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
 
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IExperimentService) private readonly experimentService: IExperimentService,
         @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper,
@@ -62,7 +60,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
         @inject(IEnvironmentVariablesProvider) private readonly environmentService: IEnvironmentVariablesProvider,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IExtensions) private readonly extensions: IExtensions,
         @inject(IApplicationShell) readonly applicationShell: IApplicationShell,
         @inject(IDisposableRegistry) readonly disposables: IDisposableRegistry,
@@ -233,7 +230,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
             case LanguageServerType.Jedi:
                 lsManager = new JediLSExtensionManager(
                     this.serviceContainer,
-                    this.lsOutputChannel,
                     this.experimentService,
                     this.workspaceService,
                     this.configurationService,
@@ -244,21 +240,6 @@ export class LanguageServerWatcher implements IExtensionActivationService, ILang
                 );
                 break;
             case LanguageServerType.Node:
-                lsManager = new PylanceLSExtensionManager(
-                    this.serviceContainer,
-                    this.lsOutputChannel,
-                    this.experimentService,
-                    this.workspaceService,
-                    this.configurationService,
-                    this.interpreterPathService,
-                    this.interpreterService,
-                    this.environmentService,
-                    this.commandManager,
-                    this.fileSystem,
-                    this.extensions,
-                    this.applicationShell,
-                );
-                break;
             case LanguageServerType.None:
             default:
                 lsManager = new NoneLSExtensionManager();

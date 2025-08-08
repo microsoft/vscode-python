@@ -255,7 +255,7 @@ export namespace InterpreterQuickPickList {
 }
 
 export namespace OutputChannelNames {
-    export const languageServer = l10n.t('Python Language Server');
+    export const JediLanguageServer = l10n.t('Jedi');
     export const python = l10n.t('Python');
 }
 
