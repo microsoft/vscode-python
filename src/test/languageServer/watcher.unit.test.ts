@@ -107,8 +107,26 @@ suite('Language server watcher', () => {
     });
 
     test('The constructor should add a listener to onDidChange to the list of disposables if it is a trusted workspace', () => {
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
@@ -152,8 +170,26 @@ suite('Language server watcher', () => {
     });
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
@@ -218,13 +254,26 @@ suite('Language server watcher', () => {
             },
         } as unknown) as IInterpreterService;
 
-        watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
 
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
+        watcher = new LanguageServerWatcher(
+            mockServiceContainer,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -298,8 +347,26 @@ suite('Language server watcher', () => {
             output = output.concat(...(args as string[]));
         });
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
@@ -385,8 +452,26 @@ suite('Language server watcher', () => {
             },
         } as unknown) as IWorkspaceService;
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
@@ -527,8 +612,26 @@ suite('Language server watcher', () => {
         const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
         startLanguageServerStub.returns(Promise.resolve());
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
@@ -583,8 +686,26 @@ suite('Language server watcher', () => {
         const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
         startLanguageServerStub.returns(Promise.resolve());
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
@@ -775,8 +896,26 @@ suite('Language server watcher', () => {
                 isTrusted: true,
             } as unknown) as IWorkspaceService;
 
+            // Create a mock ILogOutputChannel
+            const mockOutputChannel = {} as ILogOutputChannel;
+
+            // Create a mock IApplicationShell with createOutputChannel method
+            const mockApplicationShell = ({
+                createOutputChannel: () => mockOutputChannel,
+            } as unknown) as IApplicationShell;
+
+            // Create a mock service container with the required get method
+            const mockServiceContainer = {
+                get: (serviceIdentifier: any) => {
+                    if (serviceIdentifier === IApplicationShell) {
+                        return mockApplicationShell;
+                    }
+                    return undefined;
+                },
+            } as IServiceContainer;
+
             watcher = new LanguageServerWatcher(
-                {} as IServiceContainer,
+                mockServiceContainer,
 
                 {
                     getSettings: () => ({ languageServer }),
@@ -853,12 +992,26 @@ suite('Language server watcher', () => {
             }),
         } as unknown) as IInterpreterService;
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
@@ -933,7 +1086,30 @@ suite('Language server watcher', () => {
             getActiveInterpreter: () => info,
         } as unknown) as IInterpreterService;
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
+            mockServiceContainer,
+            {
+                getSettings: () => ({ languageServer: LanguageServerType.None }),
+            } as IConfigurationService,
+            {} as IExperimentService,
             ({
                 get: () => {
                     /* do nothing */
@@ -1016,12 +1192,26 @@ suite('Language server watcher', () => {
             }),
         } as unknown) as IInterpreterService;
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
@@ -1099,12 +1289,26 @@ suite('Language server watcher', () => {
             }),
         } as unknown) as IInterpreterService;
 
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
+
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
+            mockServiceContainer,
 
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
