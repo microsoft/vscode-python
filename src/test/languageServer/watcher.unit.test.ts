@@ -35,9 +35,26 @@ suite('Language server watcher', () => {
 
     setup(() => {
         disposables = [];
-        watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
+        // Create a mock ILogOutputChannel
+        const mockOutputChannel = {} as ILogOutputChannel;
 
+        // Create a mock IApplicationShell with createOutputChannel method
+        const mockApplicationShell = ({
+            createOutputChannel: () => mockOutputChannel,
+        } as unknown) as IApplicationShell;
+
+        // Create a mock service container with the required get method
+        const mockServiceContainer = {
+            get: (serviceIdentifier: any) => {
+                if (serviceIdentifier === IApplicationShell) {
+                    return mockApplicationShell;
+                }
+                return undefined;
+            },
+        } as IServiceContainer;
+
+        watcher = new LanguageServerWatcher(
+            mockServiceContainer,
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
