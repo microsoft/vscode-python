@@ -27,10 +27,10 @@ export class ProcessLogger implements IProcessLogger {
         let command = args
             ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
             : fileOrCommand;
-        const info = [`> ${this.getDisplayCommands(command)}`];
+        const info = [`> ${this.getDisplayCommands(command, false)}`];
         if (options?.cwd) {
             const cwd: string = typeof options?.cwd === 'string' ? options?.cwd : options?.cwd?.toString();
-            info.push(`cwd: ${this.getDisplayCommands(cwd)}`);
+            info.push(`cwd: ${this.getDisplayCommands(cwd, true)}`);
         }
         if (typeof options?.shell === 'string') {
             info.push(`shell: ${identifyShellFromShellPath(options?.shell)}`);
@@ -41,9 +41,16 @@ export class ProcessLogger implements IProcessLogger {
         });
     }
 
-    private getDisplayCommands(command: string): string {
+    private getDisplayCommands(command: string, isCwd: boolean = false): string {
         if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
-            command = replaceMatchesWithCharacter(command, this.workspaceService.workspaceFolders[0].uri.fsPath, '.');
+            const workspacePath = this.workspaceService.workspaceFolders[0].uri.fsPath;
+            if (isCwd) {
+                // For working directory paths, replace workspace path with '.'
+                command = replaceMatchesWithCharacter(command, workspacePath, '.');
+            } else if (command.includes(workspacePath)) {
+                // For command paths, make them relative to workspace by replacing workspace path with './'
+                command = command.replace(workspacePath, '.');
+            }
         }
         const home = getUserHomeDir();
         if (home) {
