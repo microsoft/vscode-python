@@ -146,15 +146,18 @@ suite('ProcessLogger suite', () => {
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 
-    test('Logger replaces the path to workspace with . if exactly one workspace folder is opened', async () => {
+    test('Logger only replaces the workspace path with . in the working directory', async () => {
         const options = { cwd: path.join('path', 'to', 'workspace', 'debug', 'path') };
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(
+            traceLogStub,
+            `> "${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`,
+        );
         sinon.assert.calledWithExactly(traceLogStub, `cwd: .${path.sep + path.join('debug', 'path')}`);
     });
 
-    test('On Windows, logger replaces both backwards and forward slash version of path to workspace with . if exactly one workspace folder is opened', async function () {
+    test('On Windows, logger handles both forward and backward slashes in workspace paths for cwd', async function () {
         if (getOSType() !== OSType.Windows) {
             return this.skip();
         }
@@ -162,14 +165,20 @@ suite('ProcessLogger suite', () => {
 
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(
+            traceLogStub,
+            `> "${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`,
+        );
         sinon.assert.calledWithExactly(traceLogStub, `cwd: .${path.sep + path.join('debug', 'path')}`);
         traceLogStub.resetHistory();
 
         options = { cwd: path.join('path\\to\\workspace', 'debug', 'path') };
         logger.logProcess(`"${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`, undefined, options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> ".${path.sep}test" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(
+            traceLogStub,
+            `> "${path.join('path', 'to', 'workspace', 'test')}" "--foo" "--bar"`,
+        );
         sinon.assert.calledWithExactly(traceLogStub, `cwd: .${path.sep + path.join('debug', 'path')}`);
     });
 
