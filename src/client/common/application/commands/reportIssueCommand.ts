@@ -47,8 +47,6 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
 
     private argSettingsPath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_user_settings.json');
 
-    private templatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_template.md');
-
     private userDataTemplatePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'report_issue_user_data_template.md');
 
     public async openReportIssue(): Promise<void> {
@@ -88,7 +86,6 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
                 }
             }
         });
-        const template = await fs.readFile(this.templatePath, 'utf8');
         const userTemplate = await fs.readFile(this.userDataTemplatePath, 'utf8');
         const interpreter = await this.interpreterService.getActiveInterpreter();
         const pythonVersion = interpreter?.version?.raw ?? '';
@@ -120,8 +117,7 @@ export class ReportIssueCommandHandler implements IExtensionSingleActivationServ
 
         await this.commandManager.executeCommand('workbench.action.openIssueReporter', {
             extensionId: 'ms-python.python',
-            issueBody: template,
-            data: userTemplate.format(
+            issueBody: userTemplate.format(
                 pythonVersion,
                 virtualEnvKind,
                 languageServer,
