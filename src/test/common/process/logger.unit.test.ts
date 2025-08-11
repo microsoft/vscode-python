@@ -111,7 +111,7 @@ suite('ProcessLogger suite', () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(path.join('net', untildify('~'), 'test'), ['--foo', '--bar'], options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('net', '~', 'test')} --foo --bar`);
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('.', 'net', '~', 'test')} --foo --bar`);
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 
@@ -125,7 +125,7 @@ suite('ProcessLogger suite', () => {
 
         sinon.assert.calledWithExactly(
             traceLogStub,
-            `> ${path.join('net', '~', 'test')} --foo ${path.join('~', 'boo')}`,
+            `> ${path.join('.', 'net', '~', 'test')} --foo ${path.join('~', 'boo')}`,
         );
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
@@ -134,7 +134,7 @@ suite('ProcessLogger suite', () => {
         const options = { cwd: path.join('debug', 'path') };
         logger.logProcess(`"${path.join('net', untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('net', '~', 'test')}" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('.', 'net', '~', 'test')}" "--foo" "--bar"`);
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 
