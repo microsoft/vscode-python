@@ -27,10 +27,10 @@ export class ProcessLogger implements IProcessLogger {
         let command = args
             ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
             : fileOrCommand;
-        const info = [`> ${this.getDisplayCommands(command, false)}`];
+        const info = [`> ${this.getDisplayCommands(command)}`];
         if (options?.cwd) {
             const cwd: string = typeof options?.cwd === 'string' ? options?.cwd : options?.cwd?.toString();
-            info.push(`cwd: ${this.getDisplayCommands(cwd, true)}`);
+            info.push(`cwd: ${this.getDisplayCommands(cwd)}`);
         }
         if (typeof options?.shell === 'string') {
             info.push(`shell: ${identifyShellFromShellPath(options?.shell)}`);
@@ -41,9 +41,8 @@ export class ProcessLogger implements IProcessLogger {
         });
     }
 
-    private getDisplayCommands(command: string, isCwd: boolean = false): string {
-        // Only replace workspace paths with '.' for cwd
-        if (isCwd && this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
+    private getDisplayCommands(command: string): string {
+        if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
             command = replaceMatchesWithCharacter(command, this.workspaceService.workspaceFolders[0].uri.fsPath, '.');
         }
         const home = getUserHomeDir();
