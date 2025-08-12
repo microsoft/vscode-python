@@ -149,8 +149,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep",
-                "ProcessLogger suite",
+                //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
