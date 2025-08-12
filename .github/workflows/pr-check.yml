@@ -57,12 +57,12 @@ jobs:
           #     vsix-target: alpine-arm64
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -87,7 +87,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
@@ -106,12 +106,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/python-environment-tools'
           path: 'python-env-tools'
@@ -162,7 +162,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
@@ -215,13 +215,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -412,13 +412,13 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           path: ${{ env.special-working-directory-relative }}
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/python-environment-tools'
           path: ${{ env.special-working-directory-relative }}/python-env-tools
@@ -452,12 +452,12 @@ jobs:
     steps:
       # Need the source to have the tests available.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
@@ -488,12 +488,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Checkout Python Environment Tools
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/python-environment-tools'
           path: python-env-tools
