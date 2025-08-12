@@ -27,10 +27,10 @@ export class ProcessLogger implements IProcessLogger {
         let command = args
             ? [fileOrCommand, ...args].map((e) => e.trimQuotes().toCommandArgumentForPythonExt()).join(' ')
             : fileOrCommand;
-        const info = [`> ${this.getDisplayCommands(command, false)}`];
+        const info = [`> ${this.getDisplayCommands(command)}`];
         if (options?.cwd) {
             const cwd: string = typeof options?.cwd === 'string' ? options?.cwd : options?.cwd?.toString();
-            info.push(`cwd: ${this.getDisplayCommands(cwd, true)}`);
+            info.push(`cwd: ${this.getDisplayCommands(cwd)}`);
         }
         if (typeof options?.shell === 'string') {
             info.push(`shell: ${identifyShellFromShellPath(options?.shell)}`);
@@ -41,16 +41,16 @@ export class ProcessLogger implements IProcessLogger {
         });
     }
 
-    private getDisplayCommands(command: string, isCwd: boolean = false): string {
+    /**
+     * Formats command strings for display by replacing common paths with symbols.
+     * - Replaces the workspace folder path with '.' if there's exactly one workspace folder
+     * - Replaces the user's home directory path with '~'
+     * @param command The command string to format
+     * @returns The formatted command string with paths replaced by symbols
+     */
+    private getDisplayCommands(command: string): string {
         if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
-            const workspacePath = this.workspaceService.workspaceFolders[0].uri.fsPath;
-            if (isCwd) {
-                // For working directory paths, replace workspace path with '.'
-                command = replaceMatchesWithCharacter(command, workspacePath, '.');
-            } else if (command.includes(workspacePath)) {
-                // For command paths, make them relative to workspace by replacing workspace path with './'
-                command = command.replace(workspacePath, '.');
-            }
+            command = replaceMatchesWithCharacter(command, this.workspaceService.workspaceFolders[0].uri.fsPath, '.');
         }
         const home = getUserHomeDir();
         if (home) {
