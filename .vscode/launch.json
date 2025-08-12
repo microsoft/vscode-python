@@ -154,8 +154,7 @@
             ],
             "outFiles": ["${workspaceFolder}/out/**/*.js", "!${workspaceFolder}/**/node_modules**/*"],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
-            "runtimeExecutable": "/Users/eleanorboyd/.nvm/versions/node/v22.17.0/bin/node"
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Unit Tests (fast, without VS Code and without react/monaco, *.unit.test.ts)",
