@@ -207,6 +207,7 @@ def build_test_tree(
             print(
                 "Skipping doctest as it is not supported for the extension. Test case: ", test_case
             )
+            error = ["Skipping doctest as it is not supported for the extension."]
             continue
         print("post skip: test case", test_case)
         test_id = test_case.id()
