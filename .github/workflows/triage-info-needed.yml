@@ -15,7 +15,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout Actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
@@ -39,7 +39,7 @@ jobs:
       issues: write
     steps:
       - name: Checkout Actions
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: 'microsoft/vscode-github-triage-actions'
           ref: stable
