@@ -288,6 +288,6 @@ def test_build_empty_tree() -> None:
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert tests.get("children") == []
     assert tests is not None
+    assert tests.get("children") == []
     assert not errors
