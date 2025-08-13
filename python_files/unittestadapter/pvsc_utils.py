@@ -3,6 +3,7 @@
 
 import argparse
 import atexit
+import doctest
 import enum
 import inspect
 import json
@@ -202,6 +203,12 @@ def build_test_tree(
     root = build_test_node(top_level_directory, directory_path.name, TestNodeTypeEnum.folder)
 
     for test_case in get_test_case(suite):
+        if isinstance(test_case, doctest.DocTestCase):
+            print(
+                "Skipping doctest as it is not supported for the extension. Test case: ", test_case
+            )
+            continue
+        print("post skip: test case", test_case)
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
             error.append(str(test_case._exception))  # type: ignore  # noqa: SLF001
@@ -254,9 +261,6 @@ def build_test_tree(
                 "runID": test_id,
             }  # concatenate class name and function test name
             current_node["children"].append(test_node)
-
-    if not root["children"]:
-        root = None
 
     return root, error
 
