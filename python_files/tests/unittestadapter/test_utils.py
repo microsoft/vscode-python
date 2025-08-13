@@ -284,11 +284,10 @@ def test_build_empty_tree() -> None:
     start_dir = os.fsdecode(TEST_DATA_PATH)
     pattern = "does_not_exist*"
 
-    expected = None
-
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir, pattern)
     tests, errors = build_test_tree(suite, start_dir)
 
-    assert expected == tests
+    assert tests.get("children") == []
+    assert tests is not None
     assert not errors
