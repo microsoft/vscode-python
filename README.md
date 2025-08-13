@@ -11,10 +11,20 @@ The Python extension does offer [some support](https://github.com/microsoft/vsco
 
 The Python extension will automatically install the following extensions by default to provide the best Python development experience in VS Code:
 
-- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) - to provide performant Python language support
-- [Python Debugger](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy) - to provide a seamless debug experience with debugpy
+- [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) – performant Python language support
+- [Python Debugger](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy) – seamless debug experience with debugpy
+- [Python Environments](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs) – dedicated environment management (see below)
 
 These extensions are optional dependencies, meaning the Python extension will remain fully functional if they fail to be installed. Any or all of these extensions can be [disabled](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) or [uninstalled](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) at the expense of some features. Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf).
+
+### About the Python Environments Extension
+
+You may now see that the **Python Environments Extension** is installed for you, but it may or may not be "enabled" in your VS Code experience. Enablement is controlled by the setting `"python.useEnvironmentsExtension": true` (or `false`).
+
+- If you set this setting to `true`, you will manually opt in to using the Python Environments Extension for environment management.
+- If you do not have this setting specified, you may be randomly assigned to have it turned on as we roll it out until it becomes the default experience for all users.
+
+The Python Environments Extension is still under active development and experimentation. Its goal is to provide a dedicated view and improved workflows for creating, deleting, and switching between Python environments, as well as managing packages. If you have feedback, please let us know via [issues](https://github.com/microsoft/vscode-python/issues).
 
 ## Extensibility
 
