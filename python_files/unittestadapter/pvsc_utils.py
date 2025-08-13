@@ -209,7 +209,6 @@ def build_test_tree(
             )
             error = ["Skipping doctest as it is not supported for the extension."]
             continue
-        print("post skip: test case", test_case)
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
             error.append(str(test_case._exception))  # type: ignore  # noqa: SLF001
