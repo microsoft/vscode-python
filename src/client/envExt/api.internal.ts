@@ -89,9 +89,15 @@ export async function runInTerminal(
     args?: string[],
     cwd?: string | Uri,
     show?: boolean,
+    interpreterPath?: string,
 ): Promise<Terminal> {
     const envExtApi = await getEnvExtApi();
-    const env = await getEnvironment(resource);
+    let env;
+    if (interpreterPath) {
+        env = await envExtApi.resolveEnvironment(Uri.file(interpreterPath));
+    } else {
+        env = await getEnvironment(resource);
+    }
     const project = resource ? envExtApi.getPythonProject(resource) : undefined;
     if (env && resource) {
         return envExtApi.runInTerminal(env, {
@@ -108,9 +114,15 @@ export async function runInDedicatedTerminal(
     args?: string[],
     cwd?: string | Uri,
     show?: boolean,
+    interpreterPath?: string,
 ): Promise<Terminal> {
     const envExtApi = await getEnvExtApi();
-    const env = await getEnvironment(resource);
+    let env;
+    if (interpreterPath) {
+        env = await envExtApi.resolveEnvironment(Uri.file(interpreterPath));
+    } else {
+        env = await getEnvironment(resource);
+    }
     const project = resource ? envExtApi.getPythonProject(resource) : undefined;
     if (env) {
         return envExtApi.runInDedicatedTerminal(resource ?? 'global', env, {
