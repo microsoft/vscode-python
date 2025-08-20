@@ -130,6 +130,12 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         if (!fileToExecute) {
             return;
         }
+
+        const pythonSettings = this.configSettings.getSettings(file);
+
+        // Check on setting python.defaultInterpreterPath
+        const defaultInterpreterPath = pythonSettings.defaultInterpreterPath;
+
         const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
         if (fileAfterSave) {
             fileToExecute = fileAfterSave;
@@ -143,6 +149,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                 [fileToExecute.fsPath.fileToCommandArgumentForPythonExt()],
                 undefined,
                 show,
+                defaultInterpreterPath,
             );
         } else {
             terminal = await runInTerminal(
@@ -150,6 +157,7 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                 [fileToExecute.fsPath.fileToCommandArgumentForPythonExt()],
                 undefined,
                 show,
+                defaultInterpreterPath,
             );
         }
 
