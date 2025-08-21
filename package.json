@@ -1502,7 +1502,7 @@
                 "name": "get_python_environment_details",
                 "displayName": "Get Python Environment Info",
                 "userDescription": "%python.languageModelTools.get_python_environment_details.userDescription%",
-                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Environment (conda, venv, etec), 2. Version of Python, 3. List of all installed packages with their versions. ALWAYS call configure_python_environment before using this tool.",
+                "modelDescription": "This tool will retrieve the details of the Python Environment for the specified file or workspace. The details returned include the 1. Type of Python Environment (conda, venv, etec), 2. Version of Python, 3. List of all installed Python packages with their versions. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "getPythonEnvironmentInfo",
                 "tags": [
                     "python",
@@ -1552,7 +1552,7 @@
                 "name": "install_python_packages",
                 "displayName": "Install Python Package",
                 "userDescription": "%python.languageModelTools.install_python_packages.userDescription%",
-                "modelDescription": "Installs Python packages in the given workspace. Use this tool to install packages in the user's chosen environment. ALWAYS call configure_python_environment before using this tool.",
+                "modelDescription": "Installs Python packages in the given workspace. Use this tool to install Python packages in the user's chosen Python environment. ALWAYS call configure_python_environment before using this tool.",
                 "toolReferenceName": "installPythonPackage",
                 "tags": [
                     "python",
@@ -1571,7 +1571,7 @@
                             "items": {
                                 "type": "string"
                             },
-                            "description": "The list of packages to install."
+                            "description": "The list of Python packages to install."
                         },
                         "resourcePath": {
                             "type": "string",
