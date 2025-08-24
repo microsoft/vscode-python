@@ -10,6 +10,7 @@ import { DebugAdapterActivator } from './adapter/activator';
 import { DebugAdapterDescriptorFactory } from './adapter/factory';
 import { DebugSessionLoggingFactory } from './adapter/logging';
 import { OutdatedDebuggerPromptFactory } from './adapter/outdatedDebuggerPrompt';
+import { DataFrameTrackerFactory } from './adapter/dataFrameTracker';
 import { AttachProcessProviderFactory } from './attachQuickPick/factory';
 import { IAttachProcessProviderFactory } from './attachQuickPick/types';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
@@ -26,6 +27,7 @@ import {
     IDebugConfigurationService,
     IDebugSessionLoggingFactory,
     IOutdatedDebuggerPromptFactory,
+    IDataFrameTrackerFactory,
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager): void {
@@ -61,6 +63,12 @@ export function registerTypes(serviceManager: IServiceManager): void {
     serviceManager.addSingleton<IOutdatedDebuggerPromptFactory>(
         IOutdatedDebuggerPromptFactory,
         OutdatedDebuggerPromptFactory,
+    );
+    // Register DataFrameTrackerFactory to monitor debug sessions for dataframe variables
+    // and suggest Jupyter extension installation when needed
+    serviceManager.addSingleton<IDataFrameTrackerFactory>(
+        IDataFrameTrackerFactory,
+        DataFrameTrackerFactory,
     );
     serviceManager.addSingleton<IAttachProcessProviderFactory>(
         IAttachProcessProviderFactory,
