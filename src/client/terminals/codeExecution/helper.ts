@@ -122,7 +122,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             const result = await normalizeOutput.promise;
             const object = JSON.parse(result);
 
-            if (activeEditor?.selection && smartSendSettingsEnabledVal && object.normalized !== 'deprecated') {
+            if (activeEditor?.selection && smartSendSettingsEnabledVal && !object.normalized.includes('vscode-python error: ')) {
                 const lineOffset = object.nextBlockLineno - activeEditor!.selection.start.line - 1;
                 await this.moveToNextBlock(lineOffset, activeEditor);
             }
