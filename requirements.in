@@ -4,7 +4,7 @@
 # 2) uv pip compile --generate-hashes --upgrade requirements.in -o requirements.txt
 
 # Unittest test adapter
-typing-extensions==4.14.1
+typing-extensions==4.15.0
 
 # Fallback env creator for debian
 microvenv
