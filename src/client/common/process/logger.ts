@@ -41,6 +41,13 @@ export class ProcessLogger implements IProcessLogger {
         });
     }
 
+    /**
+     * Formats command strings for display by replacing common paths with symbols.
+     * - Replaces the workspace folder path with '.' if there's exactly one workspace folder
+     * - Replaces the user's home directory path with '~'
+     * @param command The command string to format
+     * @returns The formatted command string with paths replaced by symbols
+     */
     private getDisplayCommands(command: string): string {
         if (this.workspaceService.workspaceFolders && this.workspaceService.workspaceFolders.length === 1) {
             command = replaceMatchesWithCharacter(command, this.workspaceService.workspaceFolders[0].uri.fsPath, '.');

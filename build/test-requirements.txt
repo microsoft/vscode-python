@@ -39,3 +39,4 @@ pytest-describe
 
 # for pytest-ruff related tests
 pytest-ruff
+pytest-black

@@ -5,7 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, EventEmitter, Terminal, Uri } from 'vscode';
-
+import * as path from 'path';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
@@ -41,6 +41,8 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                 this.disposableRegistry.push(
                     this.commandManager.registerCommand(cmd as any, async (file: Resource) => {
                         traceVerbose(`Attempting to run Python file`, file?.fsPath);
+                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+                        const newTerminalPerFile = cmd === Commands.Exec_In_Separate_Terminal;
 
                         if (useEnvExtension()) {
                             try {
@@ -50,6 +52,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                             }
                             sendTelemetryEvent(EventName.ENVIRONMENT_CHECK_TRIGGER, undefined, {
                                 trigger: 'run-in-terminal',
+                            });
+                            sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, {
+                                scope: 'file',
+                                trigger,
+                                newTerminalPerFile,
                             });
                             return;
                         }
@@ -66,9 +73,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
                             trigger: 'run-in-terminal',
                         });
                         triggerCreateEnvironmentCheckNonBlocking(CreateEnvironmentCheckKind.File, file);
-                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+
                         await this.executeFileInTerminal(file, trigger, {
-                            newTerminalPerFile: cmd === Commands.Exec_In_Separate_Terminal,
+                            newTerminalPerFile,
                         })
                             .then(() => {
                                 if (this.shouldTerminalFocusOnStart(file))
@@ -123,6 +130,15 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         if (!fileToExecute) {
             return;
         }
+
+        // Check on setting terminal.executeInFileDir
+        const pythonSettings = this.configSettings.getSettings(file);
+        let cwd = pythonSettings.terminal.executeInFileDir ? path.dirname(fileToExecute.fsPath) : undefined;
+
+        // Check on setting terminal.launchArgs
+        const launchArgs = pythonSettings.terminal.launchArgs;
+        const totalArgs = [...launchArgs, fileToExecute.fsPath.fileToCommandArgumentForPythonExt()];
+
         const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
         if (fileAfterSave) {
             fileToExecute = fileAfterSave;
@@ -131,19 +147,9 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         const show = this.shouldTerminalFocusOnStart(fileToExecute);
         let terminal: Terminal | undefined;
         if (dedicated) {
-            terminal = await runInDedicatedTerminal(
-                fileToExecute,
-                [fileToExecute.fsPath.fileToCommandArgumentForPythonExt()],
-                undefined,
-                show,
-            );
+            terminal = await runInDedicatedTerminal(fileToExecute, totalArgs, cwd, show);
         } else {
-            terminal = await runInTerminal(
-                fileToExecute,
-                [fileToExecute.fsPath.fileToCommandArgumentForPythonExt()],
-                undefined,
-                show,
-            );
+            terminal = await runInTerminal(fileToExecute, totalArgs, cwd, show);
         }
 
         if (terminal) {

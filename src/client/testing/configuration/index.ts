@@ -40,28 +40,6 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         return settings.testing.pytestEnabled || settings.testing.unittestEnabled || false;
     }
 
-    public async displayTestFrameworkError(wkspace: Uri): Promise<void> {
-        const settings = this.configurationService.getSettings(wkspace);
-        let enabledCount = settings.testing.pytestEnabled ? 1 : 0;
-        enabledCount += settings.testing.unittestEnabled ? 1 : 0;
-        if (enabledCount > 1) {
-            return this._promptToEnableAndConfigureTestFramework(
-                wkspace,
-                'Enable only one of the test frameworks (unittest or pytest).',
-                true,
-            );
-        }
-        const option = 'Enable and configure a Test Framework';
-        const item = await this.appShell.showInformationMessage(
-            'No test framework configured (unittest, or pytest)',
-            option,
-        );
-        if (item !== option) {
-            throw NONE_SELECTED;
-        }
-        return this._promptToEnableAndConfigureTestFramework(wkspace);
-    }
-
     public async selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined> {
         const items = [
             {

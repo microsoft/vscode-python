@@ -109,32 +109,55 @@ suite('ProcessLogger suite', () => {
 
     test('Logger replaces the path/to/home with ~ in the command path where the home path IS NOT at the beginning of the path', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        logger.logProcess(path.join('net', untildify('~'), 'test'), ['--foo', '--bar'], options);
+        const untildifyStr = untildify('~');
 
-        sinon.assert.calledWithExactly(traceLogStub, `> ${path.join('net', '~', 'test')} --foo --bar`);
+        let p1 = path.join('net', untildifyStr, 'test');
+        if (p1.startsWith('.')) {
+            if (getOSType() === OSType.Windows) {
+                p1 = p1.replace(/^\.\\+/, '');
+            } else {
+                p1 = p1.replace(/^\.\\/, '');
+            }
+        }
+        logger.logProcess(p1, ['--foo', '--bar'], options);
+
+        const path1 = path.join('.', 'net', '~', 'test');
+        sinon.assert.calledWithExactly(traceLogStub, `> ${path1} --foo --bar`);
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 
     test('Logger replaces the path/to/home with ~ in the command path where the home path IS NOT at the beginning of the path but another arg contains other ref to home folder', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        logger.logProcess(
-            path.join('net', untildify('~'), 'test'),
-            ['--foo', path.join(untildify('~'), 'boo')],
-            options,
-        );
+        let p1 = path.join('net', untildify('~'), 'test');
+        if (p1.startsWith('.')) {
+            if (getOSType() === OSType.Windows) {
+                p1 = p1.replace(/^\.\\+/, '');
+            } else {
+                p1 = p1.replace(/^\.\\/, '');
+            }
+        }
+        logger.logProcess(p1, ['--foo', path.join(untildify('~'), 'boo')], options);
 
         sinon.assert.calledWithExactly(
             traceLogStub,
-            `> ${path.join('net', '~', 'test')} --foo ${path.join('~', 'boo')}`,
+            `> ${path.join('.', 'net', '~', 'test')} --foo ${path.join('~', 'boo')}`,
         );
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 
     test('Logger replaces the path/to/home with ~ in the command path where the home path IS NOT at the beginning of the path between doble quotes', async () => {
         const options = { cwd: path.join('debug', 'path') };
-        logger.logProcess(`"${path.join('net', untildify('~'), 'test')}" "--foo" "--bar"`, undefined, options);
+        let p1 = path.join('net', untildify('~'), 'test');
+        if (p1.startsWith('.')) {
+            if (getOSType() === OSType.Windows) {
+                p1 = p1.replace(/^\.\\+/, '');
+            } else {
+                p1 = p1.replace(/^\.\\/, '');
+            }
+        }
+        logger.logProcess(`"${p1}" "--foo" "--bar"`, undefined, options);
 
-        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('net', '~', 'test')}" "--foo" "--bar"`);
+        sinon.assert.calledWithExactly(traceLogStub, `> "${path.join('.', 'net', '~', 'test')}" "--foo" "--bar"`);
         sinon.assert.calledWithExactly(traceLogStub, `cwd: ${options.cwd}`);
     });
 

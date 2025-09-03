@@ -72,11 +72,28 @@ export function registerCreateEnvironmentFeatures(
             ): Promise<CreateEnvironmentResult | undefined> => {
                 if (useEnvExtension()) {
                     try {
+                        sendTelemetryEvent(EventName.ENVIRONMENT_CREATING, undefined, {
+                            environmentType: undefined,
+                            pythonVersion: undefined,
+                        });
                         const result = await executeCommand<PythonEnvironment | undefined>(
                             'python-envs.createAny',
                             options,
                         );
                         if (result) {
+                            const managerId = result.envId.managerId;
+                            if (managerId === 'ms-python.python:venv') {
+                                sendTelemetryEvent(EventName.ENVIRONMENT_CREATED, undefined, {
+                                    environmentType: 'venv',
+                                    reason: 'created',
+                                });
+                            }
+                            if (managerId === 'ms-python.python:conda') {
+                                sendTelemetryEvent(EventName.ENVIRONMENT_CREATED, undefined, {
+                                    environmentType: 'conda',
+                                    reason: 'created',
+                                });
+                            }
                             return { path: result.environmentPath.path };
                         }
                     } catch (err) {

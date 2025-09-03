@@ -17,7 +17,6 @@ import pytest
 if TYPE_CHECKING:
     from pluggy import Result
 
-
 USES_PYTEST_DESCRIBE = False
 
 with contextlib.suppress(ImportError):
@@ -769,7 +768,7 @@ def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
         "path": get_node_path(class_module),
         "type_": "class",
         "children": [],
-        "id_": class_module.nodeid,
+        "id_": get_absolute_test_id(class_module.nodeid, get_node_path(class_module)),
     }
 
 

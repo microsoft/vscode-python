@@ -3,12 +3,19 @@ import { QuickPickItem, Uri } from 'vscode';
 import { IFileSystem } from '../../../common/platform/types';
 import { Product } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
+import { IApplicationShell } from '../../../common/application/types';
 import { TestConfigurationManager } from '../../common/testConfigurationManager';
 import { ITestConfigSettingsService } from '../../common/types';
+import { PytestInstallationHelper } from '../pytestInstallationHelper';
+import { traceInfo } from '../../../logging';
 
 export class ConfigurationManager extends TestConfigurationManager {
+    private readonly pytestInstallationHelper: PytestInstallationHelper;
+
     constructor(workspace: Uri, serviceContainer: IServiceContainer, cfg?: ITestConfigSettingsService) {
         super(workspace, Product.pytest, serviceContainer, cfg);
+        const appShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
+        this.pytestInstallationHelper = new PytestInstallationHelper(appShell);
     }
 
     public async requiresUserToConfigure(wkspace: Uri): Promise<boolean> {
@@ -42,10 +49,22 @@ export class ConfigurationManager extends TestConfigurationManager {
             args.push(testDir);
         }
         const installed = await this.installer.isInstalled(Product.pytest);
-        if (!installed) {
-            await this.installer.install(Product.pytest);
-        }
         await this.testConfigSettingsService.updateTestArgs(wkspace.fsPath, Product.pytest, args);
+        if (!installed) {
+            // Check if Python Environments extension is available for enhanced installation flow
+            if (this.pytestInstallationHelper.isEnvExtensionAvailable()) {
+                traceInfo('pytest not installed, prompting user with environment extension integration');
+                const installAttempted = await this.pytestInstallationHelper.promptToInstallPytest(wkspace);
+                if (!installAttempted) {
+                    // User chose to ignore or installation failed
+                    return;
+                }
+            } else {
+                // Fall back to traditional installer
+                traceInfo('pytest not installed, falling back to traditional installer');
+                await this.installer.install(Product.pytest);
+            }
+        }
     }
 
     private async getConfigFiles(rootDir: string): Promise<string[]> {

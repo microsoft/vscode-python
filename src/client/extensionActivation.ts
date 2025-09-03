@@ -53,7 +53,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { StopWatch } from './common/utils/stopWatch';
 import { registerReplCommands, registerReplExecuteOnEnter, registerStartNativeReplCommand } from './repl/replCommands';
 import { registerTriggerForTerminalREPL } from './terminals/codeExecution/terminalReplWatcher';
-import { registerBasicRepl, registerPythonStartup } from './terminals/pythonStartup';
+import { registerPythonStartup } from './terminals/pythonStartup';
 import { registerPixiFeatures } from './pythonEnvironments/common/environmentManagers/pixi';
 import { registerCustomTerminalLinkProvider } from './terminals/pythonStartupLinkProvider';
 import { registerEnvExtFeatures } from './envExt/api.internal';
@@ -184,7 +184,6 @@ async function activateLegacy(ext: ExtensionState, startupStopWatch: StopWatch):
             serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
 
             await registerPythonStartup(ext.context);
-            await registerBasicRepl(ext.context);
 
             serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 

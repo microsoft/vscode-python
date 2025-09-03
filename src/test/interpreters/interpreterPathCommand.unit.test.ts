@@ -13,15 +13,19 @@ import * as commandApis from '../../client/common/vscodeApis/commandApis';
 import { InterpreterPathCommand } from '../../client/interpreter/interpreterPathCommand';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+import * as workspaceApis from '../../client/common/vscodeApis/workspaceApis';
 
 suite('Interpreter Path Command', () => {
     let interpreterService: IInterpreterService;
     let interpreterPathCommand: InterpreterPathCommand;
     let registerCommandStub: sinon.SinonStub;
+    let getConfigurationStub: sinon.SinonStub;
+
     setup(() => {
         interpreterService = mock<IInterpreterService>();
         registerCommandStub = sinon.stub(commandApis, 'registerCommand');
         interpreterPathCommand = new InterpreterPathCommand(instance(interpreterService), []);
+        getConfigurationStub = sinon.stub(workspaceApis, 'getConfiguration');
     });
 
     teardown(() => {
@@ -43,7 +47,7 @@ suite('Interpreter Path Command', () => {
     });
 
     test('If `workspaceFolder` property exists in `args`, it is used to retrieve setting from config', async () => {
-        const args = { workspaceFolder: 'folderPath' };
+        const args = { workspaceFolder: 'folderPath', type: 'debugpy' };
         when(interpreterService.getActiveInterpreter(anything())).thenCall((arg) => {
             assert.deepEqual(arg, Uri.file('folderPath'));
 
@@ -76,6 +80,10 @@ suite('Interpreter Path Command', () => {
     });
 
     test('If neither of these exists, value of workspace folder is `undefined`', async () => {
+        getConfigurationStub.withArgs('python').returns({
+            get: sinon.stub().returns(false),
+        });
+
         const args = ['command'];
 
         when(interpreterService.getActiveInterpreter(undefined)).thenReturn(

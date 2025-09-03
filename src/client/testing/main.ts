@@ -29,7 +29,7 @@ import { DelayedTrigger, IDelayedTrigger } from '../common/utils/delayTrigger';
 import { ExtensionContextKey } from '../common/application/contextKeys';
 import { checkForFailedTests, updateTestResultMap } from './testController/common/testItemUtilities';
 import { Testing } from '../common/utils/localize';
-import { traceVerbose } from '../logging';
+import { traceVerbose, traceWarn } from '../logging';
 import { writeTestIdToClipboard } from './utils';
 
 @injectable()
@@ -103,22 +103,9 @@ export class UnitTestManagementService implements IExtensionActivationService {
                 if (unconfigured.length === workspaces.length) {
                     const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
                     await commandManager.executeCommand('workbench.view.testing.focus');
-
-                    // TODO: this is a workaround for https://github.com/microsoft/vscode/issues/130696
-                    // Once that is fixed delete this notification and test should be configured from the test view.
-                    const app = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                    const response = await app.showInformationMessage(
-                        Testing.testNotConfigured,
-                        Testing.configureTests,
+                    traceWarn(
+                        'Testing: Run attempted but no test configurations found for any workspace, use command palette to configure tests for python if desired.',
                     );
-                    if (response === Testing.configureTests) {
-                        await commandManager.executeCommand(
-                            constants.Commands.Tests_Configure,
-                            undefined,
-                            constants.CommandSource.ui,
-                            unconfigured[0].uri,
-                        );
-                    }
                 }
             });
         }

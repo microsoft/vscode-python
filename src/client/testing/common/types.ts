@@ -50,7 +50,6 @@ export interface ITestsHelper {
 export const ITestConfigurationService = Symbol('ITestConfigurationService');
 export interface ITestConfigurationService {
     hasConfiguredTests(wkspace: Uri): boolean;
-    displayTestFrameworkError(wkspace: Uri): Promise<void>;
     selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined>;
     enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void>;
     promptToEnableAndConfigureTestFramework(wkspace: Uri): Promise<void>;

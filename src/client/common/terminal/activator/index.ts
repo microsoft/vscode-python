@@ -10,6 +10,8 @@ import { ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, Termin
 import { BaseTerminalActivator } from './base';
 import { inTerminalEnvVarExperiment } from '../../experiments/helpers';
 import { useEnvExtension } from '../../../envExt/api.internal';
+import { EventName } from '../../../telemetry/constants';
+import { sendTelemetryEvent } from '../../../telemetry';
 
 @injectable()
 export class TerminalActivator implements ITerminalActivator {
@@ -43,6 +45,9 @@ export class TerminalActivator implements ITerminalActivator {
         const activateEnvironment =
             settings.terminal.activateEnvironment && !inTerminalEnvVarExperiment(this.experimentService);
         if (!activateEnvironment || options?.hideFromUser || useEnvExtension()) {
+            if (useEnvExtension()) {
+                sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL);
+            }
             return false;
         }
 
