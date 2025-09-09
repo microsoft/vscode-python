@@ -5,6 +5,7 @@ import json
 import sys
 import traceback
 import uuid
+from pathlib import Path
 from typing import Dict, List, Optional, Union
 
 STDIN = sys.stdin
@@ -172,6 +173,16 @@ def get_headers():
 
 
 if __name__ == "__main__":
+    # https://docs.python.org/3/tutorial/modules.html#the-module-search-path
+    # The directory containing the input script (or the current directory when no file is specified).
+    # Here we emulate the same behavior like no file is specified.
+    input_script_dir = Path(__file__).parent
+    script_dir_str = str(input_script_dir)
+    if script_dir_str in sys.path:
+        sys.path.remove(script_dir_str)
+    while "" in sys.path:
+        sys.path.remove("")
+    sys.path.insert(0, "")
     while not STDIN.closed:
         try:
             headers = get_headers()
