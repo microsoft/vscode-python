@@ -1,6 +1,6 @@
 # Python extension for Visual Studio Code
 
-A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported Python versions](https://devguide.python.org/versions/#supported-versions)), providing access points for extensions to seamlessly integrate and offer support for IntelliSense (Pylance), debugging (Python Debugger), formatting, linting, code navigation, refactoring, variable explorer, test explorer, and more!
+A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marketplace.visualstudio.com/VSCode) with rich support for the [Python language](https://www.python.org/) (for all [actively supported Python versions](https://devguide.python.org/versions/#supported-versions)), providing access points for extensions to seamlessly integrate and offer support for IntelliSense (Pylance), debugging (Python Debugger), formatting, linting, code navigation, refactoring, variable explorer, test explorer, environment management (**NEW** Python Environments Extension).
 
 ## Support for [vscode.dev](https://vscode.dev/)
 
@@ -13,7 +13,7 @@ The Python extension will automatically install the following extensions by defa
 
 - [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance) – performant Python language support
 - [Python Debugger](https://marketplace.visualstudio.com/items?itemName=ms-python.debugpy) – seamless debug experience with debugpy
-- [Python Environments](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs) – dedicated environment management (see below)
+- **(NEW)** [Python Environments](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-python-envs) – dedicated environment management (see below)
 
 These extensions are optional dependencies, meaning the Python extension will remain fully functional if they fail to be installed. Any or all of these extensions can be [disabled](https://code.visualstudio.com/docs/editor/extension-marketplace#_disable-an-extension) or [uninstalled](https://code.visualstudio.com/docs/editor/extension-marketplace#_uninstall-an-extension) at the expense of some features. Extensions installed through the marketplace are subject to the [Marketplace Terms of Use](https://cdn.vsassets.io/v/M146_20190123.39/_content/Microsoft-Visual-Studio-Marketplace-Terms-of-Use.pdf).
 
