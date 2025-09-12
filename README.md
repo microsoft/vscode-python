@@ -121,6 +121,6 @@ The Microsoft Python Extension for Visual Studio Code collects usage
 data and sends it to Microsoft to help improve our products and
 services. Read our
 [privacy statement](https://privacy.microsoft.com/privacystatement) to
-learn more. This extension respects the `telemetry.enableTelemetry`
+learn more. This extension respects the `telemetry.telemetryLevel`
 setting which you can learn more about at
 https://code.visualstudio.com/docs/supporting/faq#_how-to-disable-telemetry-reporting.
