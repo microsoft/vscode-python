@@ -25,7 +25,7 @@ import {
     ITestResultResolver,
 } from './types';
 import { TestProvider } from '../../types';
-import { traceError, traceVerbose } from '../../../logging';
+import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testItemUtilities';
 import { sendTelemetryEvent } from '../../../telemetry';
@@ -241,7 +241,7 @@ export class PythonResultResolver implements ITestResultResolver {
         }
 
         // Last resort: full tree search
-        console.warn(`Falling back to tree search for test: ${keyTemp}`);
+        traceError(`Falling back to tree search for test: ${keyTemp}`);
         const testCases = this.collectAllTestCases();
         return testCases.find((item) => item.id === vsId);
     }
