@@ -99,7 +99,7 @@ export class PythonResultResolver implements ITestResultResolver {
             // if any tests exist, they should be populated in the test tree, regardless of whether there were errors or not.
             // parse and insert test data.
 
-            // CLEANUP: Clear existing maps to remove stale references before rebuilding
+            // Clear existing mappings before rebuilding test tree
             this.runIdToTestItem.clear();
             this.runIdToVSid.clear();
             this.vsIdToRunId.clear();
@@ -179,18 +179,13 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     /**
-     * PERFORMANCE CRITICAL: This method rebuilds the entire test case array
-     * Currently called for EVERY test result, causing O(n*m*k) complexity
-     * TODO: Replace with cached lookup or direct item access
+     * Collect all test case items from the test controller tree.
+     * Note: This performs full tree traversal - use cached lookups when possible.
      */
     private collectAllTestCases(): TestItem[] {
         const testCases: TestItem[] = [];
 
-        // PERFORMANCE PROBLEM: This rebuilds the ENTIRE test case array
-        // MIDDLE OPERATION: O(m) where m = number of top-level test items in controller
         this.testController.items.forEach((i) => {
-            // RECURSIVE TREE TRAVERSAL: getTestCaseNodes(i) is O(depth * children)
-            // For parameterized tests with subtests, this can be very deep
             const tempArr: TestItem[] = getTestCaseNodes(i);
             testCases.push(...tempArr);
         });
@@ -199,15 +194,14 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     /**
-     * Find a test item efficiently using the pre-built maps, with fallback to tree search only if needed.
-     * This avoids the O(k) search for 99% of cases while still handling edge cases.
+     * Find a test item efficiently using cached maps with fallback strategies.
+     * Uses a three-tier approach: direct lookup, ID mapping, then tree search.
      */
     private findTestItemByIdEfficient(keyTemp: string): TestItem | undefined {
-        // FAST PATH: Try the O(1) lookup first
+        // Try direct O(1) lookup first
         const directItem = this.runIdToTestItem.get(keyTemp);
         if (directItem) {
-            // VALIDATION: Check if the TestItem is still valid (hasn't been deleted from controller)
-            // This prevents using stale references
+            // Validate the item is still in the test tree
             if (this.isTestItemValid(directItem)) {
                 return directItem;
             } else {
@@ -216,18 +210,16 @@ export class PythonResultResolver implements ITestResultResolver {
             }
         }
 
-        // FALLBACK: Try vsId mapping
+        // Try vsId mapping as fallback
         const vsId = this.runIdToVSid.get(keyTemp);
         if (vsId) {
-            // Try to find by VS Code ID directly in the controller
-            // This is still much faster than full tree traversal
+            // Search by VS Code ID in the controller
             let foundItem: TestItem | undefined;
             this.testController.items.forEach((item) => {
                 if (item.id === vsId) {
                     foundItem = item;
                     return;
                 }
-                // Check children only if not found at top level
                 if (!foundItem) {
                     item.children.forEach((child) => {
                         if (child.id === vsId) {
@@ -238,19 +230,18 @@ export class PythonResultResolver implements ITestResultResolver {
             });
 
             if (foundItem) {
-                // Cache for next time to avoid this lookup
+                // Cache for future lookups
                 this.runIdToTestItem.set(keyTemp, foundItem);
                 return foundItem;
             } else {
-                // Clean up stale vsId mapping
+                // Clean up stale mapping
                 this.runIdToVSid.delete(keyTemp);
                 this.vsIdToRunId.delete(vsId);
             }
         }
 
-        // LAST RESORT: Only do expensive tree traversal if really needed
-        // This should rarely happen with proper discovery
-        console.warn(`Falling back to expensive tree search for test: ${keyTemp}`);
+        // Last resort: full tree search
+        console.warn(`Falling back to tree search for test: ${keyTemp}`);
         const testCases = this.collectAllTestCases();
         return testCases.find((item) => item.id === vsId);
     }
@@ -278,11 +269,8 @@ export class PythonResultResolver implements ITestResultResolver {
     }
 
     /**
-     * Clean up stale references from maps (optional method for external cleanup)
-     *
-     * Time Complexity: O(n * depth) where n is the number of cached test items and depth
-     * is the average tree depth. This is much more efficient than the original O(n*m*k)
-     * tree rebuilding approach, since it only validates existing cache entries.
+     * Clean up stale test item references from the cache maps.
+     * Validates cached items and removes any that are no longer in the test tree.
      */
     public cleanupStaleReferences(): void {
         const staleRunIds: string[] = [];
@@ -454,22 +442,11 @@ export class PythonResultResolver implements ITestResultResolver {
 
     /**
      * Process test execution results and update VS Code's Test Explorer with outcomes.
-     *
-     * CURRENT PERFORMANCE ISSUE: For each test result, this method rebuilds the entire test tree
-     * (O(m) traversal) and then searches through all test items (O(k) search). With parameterized
-     * tests producing many results, this becomes O(n*m*k) complexity, eventually causing stack overflow.
+     * Uses efficient lookup methods to handle large numbers of test results.
      */
     public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void {
-        // PERFORMANCE ISSUE: This method has O(n*m*k) complexity that causes stack overflow:
-        // - For each test result (n), we rebuild the entire test tree (m items)
-        // - Then search through all leaf nodes (k nodes) to find the matching test
-        // - With parameterized tests, n can be large, making this exponentially slow
         const rawTestExecData = payload as ExecutionTestPayload;
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
-            // Map which holds the subtest information for each test item.
-
-            // PERFORMANCE FIX: No longer need to rebuild test tree for every result!
-            // Use efficient lookup methods instead
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
                 const testItem = rawTestExecData.result[keyTemp];
 
