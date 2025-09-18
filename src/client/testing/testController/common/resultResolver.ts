@@ -293,7 +293,7 @@ export class PythonResultResolver implements ITestResultResolver {
         });
 
         if (staleRunIds.length > 0) {
-            console.log(`Cleaned up ${staleRunIds.length} stale test item references`);
+            traceVerbose(`Cleaned up ${staleRunIds.length} stale test item references`);
         }
     }
 
