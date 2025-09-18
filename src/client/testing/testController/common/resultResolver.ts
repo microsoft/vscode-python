@@ -25,7 +25,7 @@ import {
     ITestResultResolver,
 } from './types';
 import { TestProvider } from '../../types';
-import { traceError, traceInfo, traceVerbose } from '../../../logging';
+import { traceError, traceVerbose } from '../../../logging';
 import { Testing } from '../../../common/utils/localize';
 import { clearAllChildren, createErrorTestItem, getTestCaseNodes } from './testItemUtilities';
 import { sendTelemetryEvent } from '../../../telemetry';
