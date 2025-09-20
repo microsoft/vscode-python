@@ -1244,6 +1244,13 @@
                     "when": "controllerId == 'python-tests'"
                 }
             ],
+            "testing/item/gutter": [
+                {
+                    "command": "python.copyTestId",
+                    "group": "navigation",
+                    "when": "controllerId == 'python-tests'"
+                }
+            ],
             "commandPalette": [
                 {
                     "category": "Python",
