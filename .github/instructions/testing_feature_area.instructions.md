@@ -173,9 +173,15 @@ The adapters in the extension don't implement test discovery/run logic themselve
     -   Debug adapter/resolver code in the extension's debugger modules may also be used when attaching to Django or test subprocesses.
 -   Commands and configuration
     -   The Test Controller wires commands that appear in the Test Explorer and editor context menus (see `package.json` contributes `commands`) and listens to configuration changes filtered by `python.testing` in `src/client/testing/main.ts`.
+-   The "Copy Test ID" command (`python.copyTestId`) can be accessed from both the Test Explorer context menu (`testing/item/context`) and the editor gutter icon context menu (`testing/item/gutter`). This command copies test identifiers to the clipboard in the appropriate format for the active test framework (pytest path format or unittest module.class.method format).
 -   Execution factory & activated environments
     -   Adapters use the extension `ExecutionFactory` to spawn subprocesses in an activated interpreter (so the user's venv/conda is used). This involves the extension's internal environment execution APIs and sometimes `envExt` helpers when the external environment extension is present.
 
 ## Learnings
 
 -   Never await `showErrorMessage()` calls in test execution adapters as it blocks the test UI thread and freezes the Test Explorer (1)
+-   VS Code test-related context menus are contributed to using both `testing/item/context` and `testing/item/gutter` menu locations in package.json for full coverage (1)
+
+```
+
+```
