@@ -9,7 +9,11 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as sinon from 'sinon';
 import { PytestTestDiscoveryAdapter } from '../../../client/testing/testController/pytest/pytestDiscoveryAdapter';
-import { ITestController, ITestResultResolver } from '../../../client/testing/testController/common/types';
+import {
+    ITestController,
+    ITestResultResolver,
+    ExecutionTestPayload,
+} from '../../../client/testing/testController/common/types';
 import { IPythonExecutionFactory } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -1032,5 +1036,207 @@ suite('End to End Tests: test adapters', () => {
                 assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
                 assert.strictEqual(failureOccurred, false, failureMsg);
             });
+    });
+
+    test('_resolveExecution performance test: validates efficient test result processing', async () => {
+        // This test validates that _resolveExecution processes test results efficiently
+        // without expensive tree rebuilding or linear searching operations.
+        //
+        // The test ensures that processing many test results (like parameterized tests)
+        // remains fast and doesn't cause performance issues or stack overflow.
+
+        // ================================================================
+        // SETUP: Initialize test environment and tracking variables
+        // ================================================================
+        resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
+
+        // Performance tracking variables
+        let totalCallTime = 0;
+        let callCount = 0;
+        const callTimes: number[] = [];
+        let treeRebuildCount = 0;
+        let totalSearchOperations = 0;
+
+        // Test configuration - Moderate scale to validate efficiency
+        const numTestFiles = 5; // Multiple test files
+        const testFunctionsPerFile = 10; // Test functions per file
+        const totalTestItems = numTestFiles * testFunctionsPerFile; // Total test items in mock tree
+        const numParameterizedResults = 15; // Number of parameterized test results to process
+
+        // ================================================================
+        // MOCK: Set up spies and function wrapping to track performance
+        // ================================================================
+
+        // Mock getTestCaseNodes to track expensive tree operations
+        const originalGetTestCaseNodes = require('../../../client/testing/testController/common/testItemUtilities')
+            .getTestCaseNodes;
+        const getTestCaseNodesSpy = sinon.stub().callsFake((item) => {
+            treeRebuildCount++;
+            const result = originalGetTestCaseNodes(item);
+            // Track search operations through tree items
+            // Safely handle undefined results
+            if (result && Array.isArray(result)) {
+                totalSearchOperations += result.length;
+            }
+            return result || []; // Return empty array if undefined
+        });
+
+        // Replace the real function with our spy
+        const testItemUtilities = require('../../../client/testing/testController/common/testItemUtilities');
+        testItemUtilities.getTestCaseNodes = getTestCaseNodesSpy;
+
+        // Wrap the _resolveExecution function to measure performance
+        const original_resolveExecution = resultResolver._resolveExecution.bind(resultResolver);
+        resultResolver._resolveExecution = async (payload, runInstance) => {
+            const startTime = performance.now();
+            callCount++;
+
+            // Call the actual implementation
+            await original_resolveExecution(payload, runInstance);
+
+            const endTime = performance.now();
+            const callTime = endTime - startTime;
+            callTimes.push(callTime);
+            totalCallTime += callTime;
+
+            return Promise.resolve();
+        };
+
+        // ================================================================
+        // SETUP: Create test data that simulates realistic test scenarios
+        // ================================================================
+
+        // Create a mock TestController with the methods we need
+        const mockTestController = {
+            items: new Map(),
+            createTestItem: (id: string, label: string, uri?: Uri) => {
+                const childrenMap = new Map();
+                // Add forEach method to children map to simulate TestItemCollection
+                (childrenMap as any).forEach = function (callback: (item: any) => void) {
+                    Map.prototype.forEach.call(this, callback);
+                };
+
+                const mockTestItem = {
+                    id,
+                    label,
+                    uri,
+                    children: childrenMap,
+                    parent: undefined,
+                    canResolveChildren: false,
+                    tags: [{ id: 'python-run' }, { id: 'python-debug' }],
+                };
+                return mockTestItem;
+            },
+            // Add a forEach method to simulate the problematic iteration
+            forEach: function (callback: (item: any) => void) {
+                this.items.forEach(callback);
+            },
+        }; // Replace the testController in our resolver
+        (resultResolver as any).testController = mockTestController;
+
+        // Create test controller with many test items (simulates real workspace)
+        for (let i = 0; i < numTestFiles; i++) {
+            const testItem = mockTestController.createTestItem(
+                `test_file_${i}`,
+                `Test File ${i}`,
+                Uri.file(`/test_${i}.py`),
+            );
+            mockTestController.items.set(`test_file_${i}`, testItem);
+
+            // Add child test items to each file
+            for (let j = 0; j < testFunctionsPerFile; j++) {
+                const childItem = mockTestController.createTestItem(
+                    `test_${i}_${j}`,
+                    `test_method_${j}`,
+                    Uri.file(`/test_${i}.py`),
+                );
+                testItem.children.set(`test_${i}_${j}`, childItem);
+
+                // Set up the ID mappings that the resolver uses
+                resultResolver.runIdToTestItem.set(`test_${i}_${j}`, childItem as any);
+                resultResolver.runIdToVSid.set(`test_${i}_${j}`, `test_${i}_${j}`);
+                resultResolver.vsIdToRunId.set(`test_${i}_${j}`, `test_${i}_${j}`);
+            }
+        } // Create payload with multiple test results (simulates real test execution)
+        const testResults: Record<string, any> = {};
+        for (let i = 0; i < numParameterizedResults; i++) {
+            testResults[`test_0_${i % 20}`] = {
+                test: `test_method[${i}]`,
+                outcome: 'success',
+                message: null,
+                traceback: null,
+                subtest: null,
+            };
+        }
+
+        const payload: ExecutionTestPayload = {
+            cwd: '/test',
+            status: 'success' as const,
+            error: '',
+            result: testResults,
+        };
+
+        const mockRunInstance = {
+            passed: sinon.stub(),
+            failed: sinon.stub(),
+            errored: sinon.stub(),
+            skipped: sinon.stub(),
+        };
+
+        // ================================================================
+        // EXECUTION: Run the performance test
+        // ================================================================
+
+        const overallStartTime = performance.now();
+
+        // Run the _resolveExecution function with test data
+        await resultResolver._resolveExecution(payload, mockRunInstance as any);
+
+        const overallEndTime = performance.now();
+        const totalTime = overallEndTime - overallStartTime;
+
+        // ================================================================
+        // CLEANUP: Restore original functions
+        // ================================================================
+        testItemUtilities.getTestCaseNodes = originalGetTestCaseNodes;
+
+        // ================================================================
+        // ASSERT: Verify efficient performance characteristics
+        // ================================================================
+        console.log(`\n=== PERFORMANCE RESULTS ===`);
+        console.log(
+            `Test setup: ${numTestFiles} files × ${testFunctionsPerFile} test functions = ${totalTestItems} total items`,
+        );
+        console.log(`Total execution time: ${totalTime.toFixed(2)}ms`);
+        console.log(`Tree operations performed: ${treeRebuildCount}`);
+        console.log(`Search operations: ${totalSearchOperations}`);
+        console.log(`Average time per call: ${(totalCallTime / callCount).toFixed(2)}ms`);
+        console.log(`Results processed: ${numParameterizedResults}`);
+
+        // Basic function call verification
+        assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+
+        // EFFICIENCY VERIFICATION: Ensure minimal expensive operations
+        assert.strictEqual(
+            treeRebuildCount,
+            0,
+            'Expected ZERO tree rebuilds - efficient implementation should use cached lookups',
+        );
+
+        assert.strictEqual(
+            totalSearchOperations,
+            0,
+            'Expected ZERO linear search operations - efficient implementation should use direct lookups',
+        );
+
+        // Performance threshold verification - should be fast
+        assert.ok(totalTime < 100, `Function should complete quickly, took ${totalTime}ms (should be under 100ms)`);
+
+        // Scalability check - time should not grow significantly with more results
+        const timePerResult = totalTime / numParameterizedResults;
+        assert.ok(
+            timePerResult < 10,
+            `Time per result should be minimal: ${timePerResult.toFixed(2)}ms per result (should be under 10ms)`,
+        );
     });
 });
