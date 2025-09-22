@@ -4,6 +4,10 @@ import sys
 if sys.platform != "win32":
     import readline
 
+# Avoid caching this file by linecache and incorrectly report tracebacks.
+__spec__ = __loader__ = None
+
+
 original_ps1 = ">>> "
 is_wsl = "microsoft-standard-WSL" in platform.release()
 
