@@ -5,16 +5,16 @@ import * as assert from 'assert';
 import * as sinon from 'sinon';
 import { ConfigurationChangeEvent, Uri, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
 import { JediLanguageServerManager } from '../../client/activation/jedi/manager';
-import { NodeLanguageServerManager } from '../../client/activation/node/manager';
-import { ILanguageServerOutputChannel, LanguageServerType } from '../../client/activation/types';
+
+import { LanguageServerType } from '../../client/activation/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
-import { IFileSystem } from '../../client/common/platform/types';
 import {
     IConfigurationService,
     IDisposable,
     IExperimentService,
     IExtensions,
     IInterpreterPathService,
+    ILogOutputChannel,
 } from '../../client/common/types';
 import { LanguageService } from '../../client/common/utils/localize';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
@@ -22,11 +22,37 @@ import { IInterpreterHelper, IInterpreterService } from '../../client/interprete
 import { IServiceContainer } from '../../client/ioc/types';
 import { JediLSExtensionManager } from '../../client/languageServer/jediLSExtensionManager';
 import { NoneLSExtensionManager } from '../../client/languageServer/noneLSExtensionManager';
-import { PylanceLSExtensionManager } from '../../client/languageServer/pylanceLSExtensionManager';
+
 import { ILanguageServerExtensionManager } from '../../client/languageServer/types';
 import { LanguageServerWatcher } from '../../client/languageServer/watcher';
 import * as Logging from '../../client/logging';
 import { PythonEnvironment } from '../../client/pythonEnvironments/info';
+
+function makeMockServiceContainer(outputChannel?: ILogOutputChannel): IServiceContainer {
+    const mockOutputChannel =
+        outputChannel ||
+        ({
+            dispose: () => {
+                /* do nothing */
+            },
+        } as ILogOutputChannel);
+
+    const mockApplicationShell = ({
+        createOutputChannel: () => mockOutputChannel,
+    } as unknown) as IApplicationShell;
+
+    // Only handles IApplicationShell for these tests; extend if needed.
+    const mockServiceContainer = ({
+        get: (serviceIdentifier: unknown) => {
+            if (serviceIdentifier === IApplicationShell) {
+                return mockApplicationShell;
+            }
+            return undefined;
+        },
+    } as unknown) as IServiceContainer;
+
+    return mockServiceContainer;
+}
 
 suite('Language server watcher', () => {
     let watcher: LanguageServerWatcher;
@@ -35,9 +61,9 @@ suite('Language server watcher', () => {
 
     setup(() => {
         disposables = [];
+
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -71,7 +97,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -91,8 +117,8 @@ suite('Language server watcher', () => {
 
     test('The constructor should add a listener to onDidChange to the list of disposables if it is a trusted workspace', () => {
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
+
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -120,7 +146,7 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IWorkspaceService,
             {} as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -136,8 +162,7 @@ suite('Language server watcher', () => {
 
     test('The constructor should not add a listener to onDidChange to the list of disposables if it is not a trusted workspace', () => {
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -165,7 +190,7 @@ suite('Language server watcher', () => {
                 },
             } as unknown) as IWorkspaceService,
             {} as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -202,12 +227,7 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -241,7 +261,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -282,8 +302,8 @@ suite('Language server watcher', () => {
         });
 
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
+
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -317,7 +337,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -369,8 +389,8 @@ suite('Language server watcher', () => {
         } as unknown) as IWorkspaceService;
 
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
+
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -396,7 +416,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -440,8 +460,8 @@ suite('Language server watcher', () => {
         } as unknown) as IConfigurationService;
 
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
+
             configService,
             {} as IExperimentService,
             ({
@@ -465,7 +485,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -493,8 +513,8 @@ suite('Language server watcher', () => {
         startLanguageServerStub.returns(Promise.resolve());
 
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
+
             {
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
             } as IConfigurationService,
@@ -528,7 +548,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -544,77 +564,13 @@ suite('Language server watcher', () => {
         assert.ok(startLanguageServerStub.calledOnce);
     });
 
-    test('When starting a language server with a Python 2.7 interpreter and the python.languageServer setting is default, use Pylance', async () => {
-        const startLanguageServerStub = sandbox.stub(PylanceLSExtensionManager.prototype, 'startLanguageServer');
-        startLanguageServerStub.returns(Promise.resolve());
-
-        sandbox.stub(PylanceLSExtensionManager.prototype, 'canStartLanguageServer').returns(true);
-
-        watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
-            {
-                getSettings: () => ({
-                    languageServer: LanguageServerType.Jedi,
-                    languageServerIsDefault: true,
-                }),
-            } as IConfigurationService,
-            {} as IExperimentService,
-            ({
-                getActiveWorkspaceUri: () => undefined,
-            } as unknown) as IInterpreterHelper,
-            ({
-                onDidChange: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IInterpreterPathService,
-            ({
-                getActiveInterpreter: () => ({ version: { major: 2, minor: 7 } }),
-                onDidChangeInterpreterInformation: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IInterpreterService,
-            {} as IEnvironmentVariablesProvider,
-            ({
-                getWorkspaceFolder: (uri: Uri) => ({ uri }),
-                onDidChangeConfiguration: () => {
-                    /* do nothing */
-                },
-                onDidChangeWorkspaceFolders: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IWorkspaceService,
-            ({
-                registerCommand: () => {
-                    /* do nothing */
-                },
-            } as unknown) as ICommandManager,
-            {} as IFileSystem,
-            ({
-                getExtension: () => undefined,
-                onDidChange: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IExtensions,
-            ({
-                showWarningMessage: () => Promise.resolve(undefined),
-            } as unknown) as IApplicationShell,
-            disposables,
-        );
-        watcher.register();
-
-        await watcher.startLanguageServer(LanguageServerType.Node);
-
-        assert.ok(startLanguageServerStub.calledOnce);
-    });
-
     test('When starting a language server in an untrusted workspace with Jedi, do not instantiate a language server', async () => {
         const startLanguageServerStub = sandbox.stub(NoneLSExtensionManager.prototype, 'startLanguageServer');
         startLanguageServerStub.returns(Promise.resolve());
 
         watcher = new LanguageServerWatcher(
-            {} as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
+
             {
                 getSettings: () => ({ languageServer: LanguageServerType.Jedi }),
             } as IConfigurationService,
@@ -649,7 +605,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -676,8 +632,8 @@ suite('Language server watcher', () => {
         {
             languageServer: LanguageServerType.Node,
             multiLS: false,
-            extensionLSCls: PylanceLSExtensionManager,
-            lsManagerCls: NodeLanguageServerManager,
+            extensionLSCls: NoneLSExtensionManager,
+            lsManagerCls: undefined,
         },
         {
             languageServer: LanguageServerType.None,
@@ -700,8 +656,7 @@ suite('Language server watcher', () => {
             sandbox.stub(extensionLSCls.prototype, 'canStartLanguageServer').returns(true);
 
             watcher = new LanguageServerWatcher(
-                {} as IServiceContainer,
-                {} as ILanguageServerOutputChannel,
+                makeMockServiceContainer(),
                 {
                     getSettings: () => ({ languageServer }),
                 } as IConfigurationService,
@@ -736,7 +691,7 @@ suite('Language server watcher', () => {
                         /* do nothing */
                     },
                 } as unknown) as ICommandManager,
-                {} as IFileSystem,
+
                 ({
                     getExtension: () => undefined,
                     onDidChange: () => {
@@ -788,8 +743,7 @@ suite('Language server watcher', () => {
             } as unknown) as IWorkspaceService;
 
             watcher = new LanguageServerWatcher(
-                {} as IServiceContainer,
-                {} as ILanguageServerOutputChannel,
+                makeMockServiceContainer(),
                 {
                     getSettings: () => ({ languageServer }),
                 } as IConfigurationService,
@@ -815,7 +769,7 @@ suite('Language server watcher', () => {
                         /* do nothing */
                     },
                 } as unknown) as ICommandManager,
-                {} as IFileSystem,
+
                 ({
                     getExtension: () => undefined,
                     onDidChange: () => {
@@ -866,12 +820,7 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -905,7 +854,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -946,12 +895,7 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -985,7 +929,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -1029,12 +973,7 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -1068,7 +1007,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
@@ -1112,12 +1051,7 @@ suite('Language server watcher', () => {
         } as unknown) as IInterpreterService;
 
         watcher = new LanguageServerWatcher(
-            ({
-                get: () => {
-                    /* do nothing */
-                },
-            } as unknown) as IServiceContainer,
-            {} as ILanguageServerOutputChannel,
+            makeMockServiceContainer(),
             {
                 getSettings: () => ({ languageServer: LanguageServerType.None }),
             } as IConfigurationService,
@@ -1151,7 +1085,7 @@ suite('Language server watcher', () => {
                     /* do nothing */
                 },
             } as unknown) as ICommandManager,
-            {} as IFileSystem,
+
             ({
                 getExtension: () => undefined,
                 onDidChange: () => {
