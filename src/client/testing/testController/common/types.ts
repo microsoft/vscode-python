@@ -167,14 +167,12 @@ export interface ITestDiscoveryAdapter {
 
 // interface for execution/runner adapter
 export interface ITestExecutionAdapter {
-    // ** first line old method signature, second line new method signature
-    runTests(uri: Uri, testIds: string[], profileKind?: boolean | TestRunProfileKind): Promise<void>;
     runTests(
         uri: Uri,
         testIds: string[],
-        profileKind?: boolean | TestRunProfileKind,
-        runInstance?: TestRun,
-        executionFactory?: IPythonExecutionFactory,
+        profileKind: boolean | TestRunProfileKind | undefined,
+        runInstance: TestRun,
+        executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<void>;

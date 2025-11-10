@@ -42,9 +42,9 @@ export class WorkspaceTestAdapter {
         testController: TestController,
         runInstance: TestRun,
         includes: TestItem[],
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         profileKind?: boolean | TestRunProfileKind,
-        executionFactory?: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
@@ -73,20 +73,18 @@ export class WorkspaceTestAdapter {
                 }
             });
             const testCaseIds = Array.from(testCaseIdsSet);
-            // ** execution factory only defined for new rewrite way
-            if (executionFactory !== undefined) {
-                await this.executionAdapter.runTests(
-                    this.workspaceUri,
-                    testCaseIds,
-                    profileKind,
-                    runInstance,
-                    executionFactory,
-                    debugLauncher,
-                    interpreter,
-                );
-            } else {
-                await this.executionAdapter.runTests(this.workspaceUri, testCaseIds, profileKind);
+            if (executionFactory === undefined) {
+                throw new Error('Execution factory is required for test execution');
             }
+            await this.executionAdapter.runTests(
+                this.workspaceUri,
+                testCaseIds,
+                profileKind,
+                runInstance,
+                executionFactory,
+                debugLauncher,
+                interpreter,
+            );
             deferred.resolve();
         } catch (ex) {
             // handle token and telemetry here

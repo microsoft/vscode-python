@@ -453,9 +453,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.testController,
                                 runInstance,
                                 testItems,
+                                this.pythonExecFactory,
                                 token,
                                 request.profile?.kind,
-                                this.pythonExecFactory,
                                 this.debugLauncher,
                                 await this.interpreterService.getActiveInterpreter(workspace.uri),
                             );
@@ -470,9 +470,9 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                                 this.testController,
                                 runInstance,
                                 testItems,
+                                this.pythonExecFactory,
                                 token,
                                 request.profile?.kind,
-                                this.pythonExecFactory,
                                 this.debugLauncher,
                                 await this.interpreterService.getActiveInterpreter(workspace.uri),
                             );
