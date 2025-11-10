@@ -10,7 +10,7 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, Protocol, TypedDict
+from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, Protocol, TypedDict, cast
 
 import pytest
 
@@ -560,7 +560,9 @@ def construct_nested_folders(
             # IMPORTANT: Use session_node["path"] directly as it's already a pathlib.Path object
             # Do NOT use get_node_path(session_node["path"]) as get_node_path expects pytest objects,
             # not Path objects directly.
-            common_parent = os.path.commonpath([os.fspath(file_node["path"]), os.fspath(session_node["path"])])
+            common_parent = os.path.commonpath(
+                [file_node["path"], session_node["path"]]
+            )
             common_parent_path = pathlib.Path(common_parent)
             print("[vscode-pytest]: Session node now set to: ", common_parent)
             session_node["path"] = common_parent_path  # pathlib.Path
@@ -715,7 +717,17 @@ def build_test_tree(session: pytest.Session) -> TestNode:
             if test_case.parent is None:
                 ERRORS.append(f"Test case {test_case.name} has no parent")
                 continue
-            parent_path = get_node_path(test_case.parent)
+            parent_path = get_node_path(
+                cast(
+                    pytest.Session
+                    | pytest.Item
+                    | pytest.File
+                    | pytest.Class
+                    | pytest.Module
+                    | HasPathOrFspath,
+                    test_case.parent,
+                )
+            )
             try:
                 parent_test_case = file_nodes_dict[os.fspath(parent_path)]
             except KeyError:
