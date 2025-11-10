@@ -93,7 +93,7 @@ runs:
         VSIX_NAME: ${{ inputs.vsix_name }}
 
     - name: Upload VSIX
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: ${{ inputs.artifact_name }}
         path: ${{ inputs.vsix_name }}
