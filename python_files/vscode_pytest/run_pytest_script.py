@@ -51,20 +51,22 @@ if __name__ == "__main__":
 
     run_test_ids_pipe = os.environ.get("RUN_TEST_IDS_PIPE")
     if run_test_ids_pipe:
+        ids_path = pathlib.Path(run_test_ids_pipe)
         try:
-            # Read the test ids from the file, delete file, and run pytest.
-            ids_path = pathlib.Path(run_test_ids_pipe)
+            # Read the test ids from the file and run pytest.
             ids = ids_path.read_text(encoding="utf-8").splitlines()
-            try:
-                ids_path.unlink()
-            except Exception as e:
-                print("Error[vscode-pytest]: unable to delete temp file" + str(e))
             arg_array = ["-p", "vscode_pytest", *args, *ids]
             print("Running pytest with args: " + str(arg_array))
             pytest.main(arg_array)
         except Exception as e:
             print("Error[vscode-pytest]: unable to read testIds from temp file" + str(e))
             run_pytest(args)
+        finally:
+            # Delete the test ids temp file.
+            try:
+                ids_path.unlink()
+            except Exception as e:
+                print("Error[vscode-pytest]: unable to delete temp file" + str(e))
     else:
         print("Error[vscode-pytest]: RUN_TEST_IDS_PIPE env var is not set.")
         run_pytest(args)
