@@ -131,6 +131,11 @@ export class CodeExecutionManager implements ICodeExecutionManager {
             return;
         }
 
+        const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
+        if (fileAfterSave) {
+            fileToExecute = fileAfterSave;
+        }
+
         // Check on setting terminal.executeInFileDir
         const pythonSettings = this.configSettings.getSettings(file);
         let cwd = pythonSettings.terminal.executeInFileDir ? path.dirname(fileToExecute.fsPath) : undefined;
@@ -138,11 +143,6 @@ export class CodeExecutionManager implements ICodeExecutionManager {
         // Check on setting terminal.launchArgs
         const launchArgs = pythonSettings.terminal.launchArgs;
         const totalArgs = [...launchArgs, fileToExecute.fsPath.fileToCommandArgumentForPythonExt()];
-
-        const fileAfterSave = await codeExecutionHelper.saveFileIfDirty(fileToExecute);
-        if (fileAfterSave) {
-            fileToExecute = fileAfterSave;
-        }
 
         const show = this.shouldTerminalFocusOnStart(fileToExecute);
         let terminal: Terminal | undefined;
