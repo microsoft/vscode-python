@@ -32,9 +32,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
     async runTests(
         uri: Uri,
         testIds: string[],
-        profileKind?: TestRunProfileKind,
-        runInstance?: TestRun,
-        executionFactory?: IPythonExecutionFactory,
+        profileKind: boolean | TestRunProfileKind | undefined,
+        runInstance: TestRun,
+        executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
@@ -49,14 +49,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             }
         };
         const cSource = new CancellationTokenSource();
-        runInstance?.token.onCancellationRequested(() => cSource.cancel());
+        runInstance.token.onCancellationRequested(() => cSource.cancel());
 
         const name = await utils.startRunResultNamedPipe(
             dataReceivedCallback, // callback to handle data received
             deferredTillServerClose, // deferred to resolve when server closes
             cSource.token, // token to cancel
         );
-        runInstance?.token.onCancellationRequested(() => {
+        runInstance.token.onCancellationRequested(() => {
             traceInfo(`Test run cancelled, resolving 'TillServerClose' deferred for ${uri.fsPath}.`);
         });
 
@@ -82,9 +82,9 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
         testIds: string[],
         resultNamedPipeName: string,
         serverCancel: CancellationTokenSource,
-        runInstance?: TestRun,
-        profileKind?: TestRunProfileKind,
-        executionFactory?: IPythonExecutionFactory,
+        runInstance: TestRun,
+        profileKind: boolean | TestRunProfileKind | undefined,
+        executionFactory: IPythonExecutionFactory,
         debugLauncher?: ITestDebugLauncher,
         interpreter?: PythonEnvironment,
     ): Promise<ExecutionTestPayload> {
@@ -114,7 +114,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
             interpreter,
         };
         // need to check what will happen in the exec service is NOT defined and is null
-        const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+        const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
         const execInfo = await execService?.getExecutablePath();
         traceVerbose(`Executable path for pytest execution: ${execInfo}.`);
@@ -144,14 +144,14 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 cwd,
                 throwOnStdErr: true,
                 env: mutableEnv,
-                token: runInstance?.token,
+                token: runInstance.token,
             };
 
             if (debugBool) {
                 const launchOptions: LaunchOptions = {
                     cwd,
                     args: testArgs,
-                    token: runInstance?.token,
+                    token: runInstance.token,
                     testProvider: PYTEST_PROVIDER,
                     runTestIdsPort: testIdsFileName,
                     pytestPort: resultNamedPipeName,
@@ -181,7 +181,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                         args: runArgs,
                         env: (mutableEnv as unknown) as { [key: string]: string },
                     });
-                    runInstance?.token.onCancellationRequested(() => {
+                    runInstance.token.onCancellationRequested(() => {
                         traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                         proc.kill();
                         deferredTillExecClose.resolve();
@@ -189,11 +189,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     });
                     proc.stdout.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
-                        runInstance?.appendOutput(out);
+                        runInstance.appendOutput(out);
                     });
                     proc.stderr.on('data', (data) => {
                         const out = utils.fixLogLinesNoTrailing(data.toString());
-                        runInstance?.appendOutput(out);
+                        runInstance.appendOutput(out);
                     });
                     proc.onExit((code, signal) => {
                         if (code !== 0) {
@@ -218,7 +218,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
 
                 let resultProc: ChildProcess | undefined;
 
-                runInstance?.token.onCancellationRequested(() => {
+                runInstance.token.onCancellationRequested(() => {
                     traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);
                     // if the resultProc exists just call kill on it which will handle resolving the ExecClose deferred, otherwise resolve the deferred here.
                     if (resultProc) {
@@ -235,11 +235,11 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                 // Displays output to user and ensure the subprocess doesn't run into buffer overflow.
                 result?.proc?.stdout?.on('data', (data) => {
                     const out = utils.fixLogLinesNoTrailing(data.toString());
-                    runInstance?.appendOutput(out);
+                    runInstance.appendOutput(out);
                 });
                 result?.proc?.stderr?.on('data', (data) => {
                     const out = utils.fixLogLinesNoTrailing(data.toString());
-                    runInstance?.appendOutput(out);
+                    runInstance.appendOutput(out);
                 });
                 result?.proc?.on('exit', (code, signal) => {
                     if (code !== 0) {
