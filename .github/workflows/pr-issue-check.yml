@@ -1,0 +1,31 @@
+name: PR issue check
+
+on:
+  pull_request:
+    types:
+      - 'opened'
+      - 'reopened'
+      - 'synchronize'
+      - 'labeled'
+      - 'unlabeled'
+
+permissions: {}
+
+jobs:
+  check-for-attached-issue:
+    name: 'Check for attached issue'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Ensure PR has an associated issue'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(label => label.name);
+            if (!labels.includes('skip-issue-check')) {
+              const prBody = context.payload.pull_request.body || '';
+              const issueLink = prBody.match(/https:\/\/github\.com\/\S+\/issues\/\d+/);
+              const issueReference = prBody.match(/#\d+/);
+              if (!issueLink && !issueReference) {
+                core.setFailed('No associated issue found in the PR description.');
+              }
+            }
