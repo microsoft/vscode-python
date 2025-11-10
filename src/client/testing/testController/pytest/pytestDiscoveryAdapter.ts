@@ -38,7 +38,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     async discoverTests(
         uri: Uri,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
@@ -69,7 +69,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         uri: Uri,
         discoveryPipeName: string,
         cSource: CancellationTokenSource,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
         interpreter?: PythonEnvironment,
         token?: CancellationToken,
     ): Promise<void> {
@@ -170,7 +170,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             resource: uri,
             interpreter,
         };
-        const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+        const execService = await executionFactory.createActivatedEnvironment(creationOptions);
 
         const execInfo = await execService?.getExecutablePath();
         traceVerbose(`Executable path for pytest discovery: ${execInfo}.`);
