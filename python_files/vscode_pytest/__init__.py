@@ -532,7 +532,7 @@ def pytest_sessionfinish(session, exitstatus):
 def construct_nested_folders(
     file_nodes_dict: dict[str, TestNode],
     session_node: TestNode,  # session_node['path'] is a pathlib.Path object
-    session_children_dict: dict[str, TestNode]
+    session_children_dict: dict[str, TestNode],
 ) -> dict[str, TestNode]:
     """Iterate through all files and construct them into nested folders.
 
@@ -582,7 +582,7 @@ def process_parameterized_test(
     test_case: pytest.Item,  # Must have callspec attribute (parameterized test)
     test_node: TestItem,
     function_nodes_dict: dict[str, TestNode],
-    file_nodes_dict: dict[str, TestNode]
+    file_nodes_dict: dict[str, TestNode],
 ) -> TestNode:
     """Process a parameterized test case and create appropriate function nodes.
 
@@ -670,7 +670,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
         test_node = create_test_node(test_case)
         if hasattr(test_case, "callspec"):  # This means it is a parameterized test.
             # Process parameterized test and get the function node to use for further processing
-            test_node = process_parameterized_test(test_case, test_node, function_nodes_dict, file_nodes_dict)
+            test_node = process_parameterized_test(
+                test_case, test_node, function_nodes_dict, file_nodes_dict
+            )
         if isinstance(test_case.parent, pytest.Class) or (
             USES_PYTEST_DESCRIBE and isinstance(test_case.parent, DescribeBlock)
         ):
@@ -718,7 +720,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 file_nodes_dict[os.fspath(parent_path)] = parent_test_case
             parent_test_case["children"].append(test_node)
     # Process all files and construct them into nested folders
-    session_children_dict = construct_nested_folders(file_nodes_dict, session_node, session_children_dict)
+    session_children_dict = construct_nested_folders(
+        file_nodes_dict, session_node, session_children_dict
+    )
     session_node["children"] = list(session_children_dict.values())
     return session_node
 
@@ -907,7 +911,14 @@ class CoveragePayloadDict(Dict):
     error: str | None  # Currently unused need to check
 
 
-def get_node_path(node: pytest.Session | pytest.Item | pytest.File | pytest.Class | pytest.Module | HasPathOrFspath) -> pathlib.Path:
+def get_node_path(
+    node: pytest.Session
+    | pytest.Item
+    | pytest.File
+    | pytest.Class
+    | pytest.Module
+    | HasPathOrFspath,
+) -> pathlib.Path:
     """A function that returns the path of a node given the switch to pathlib.Path.
 
     It also evaluates if the node is a symlink and returns the equivalent path.
