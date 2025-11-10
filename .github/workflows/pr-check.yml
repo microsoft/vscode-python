@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -168,7 +168,7 @@ jobs:
           persist-credentials: false
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -233,7 +233,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -249,7 +249,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -505,7 +505,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -520,7 +520,7 @@ jobs:
         run: npx @vscode/l10n-dev@latest export ./src
 
       - name: Use Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: 'pip'
@@ -680,7 +680,7 @@ jobs:
         run: npm run test:cover:report
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ runner.os }}-coverage-report-html
           path: ./coverage
