@@ -155,11 +155,9 @@ export interface ITestResultResolver {
     _resolveCoverage(payload: CoveragePayload, runInstance: TestRun): void;
 }
 export interface ITestDiscoveryAdapter {
-    // ** first line old method signature, second line new method signature
-    discoverTests(uri: Uri): Promise<void>;
     discoverTests(
         uri: Uri,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<void>;

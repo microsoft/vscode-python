@@ -276,8 +276,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         }
                         await testAdapter.discoverTests(
                             this.testController,
-                            this.refreshCancellation.token,
                             this.pythonExecFactory,
+                            this.refreshCancellation.token,
                             await this.interpreterService.getActiveInterpreter(workspace.uri),
                         );
                     } else {
@@ -302,8 +302,8 @@ export class PythonTestController implements ITestController, IExtensionSingleAc
                         }
                         await testAdapter.discoverTests(
                             this.testController,
-                            this.refreshCancellation.token,
                             this.pythonExecFactory,
+                            this.refreshCancellation.token,
                             await this.interpreterService.getActiveInterpreter(workspace.uri),
                         );
                     } else {

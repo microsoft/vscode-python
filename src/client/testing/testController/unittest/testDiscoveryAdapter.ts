@@ -38,7 +38,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
     public async discoverTests(
         uri: Uri,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
         token?: CancellationToken,
     ): Promise<void> {
         const settings = this.configSettings.getSettings(uri);
@@ -89,7 +89,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         testRunPipeName: string,
         cwd: string,
         cSource: CancellationTokenSource,
-        executionFactory?: IPythonExecutionFactory,
+        executionFactory: IPythonExecutionFactory,
     ): Promise<void> {
         // get and edit env vars
         const mutableEnv = {
@@ -157,7 +157,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 allowEnvironmentFetchExceptions: false,
                 resource: options.workspaceFolder,
             };
-            const execService = await executionFactory?.createActivatedEnvironment(creationOptions);
+            const execService = await executionFactory.createActivatedEnvironment(creationOptions);
             const execInfo = await execService?.getExecutablePath();
             traceVerbose(`Executable path for unittest discovery: ${execInfo}.`);
 

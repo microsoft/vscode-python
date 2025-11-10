@@ -147,7 +147,7 @@ suite('Workspace test adapter', () => {
             const testProvider = 'unittest';
 
             execFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
-            await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
+            await workspaceTestAdapter.discoverTests(testController, execFactory.object);
 
             sinon.assert.calledWithMatch(createErrorTestItemStub, sinon.match.any, sinon.match.any);
             sinon.assert.calledWithMatch(buildErrorNodeOptionsStub, uriFoo, sinon.match.any, testProvider);
@@ -166,7 +166,7 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
+            await workspaceTestAdapter.discoverTests(testController, execFactory.object);
 
             sinon.assert.calledOnce(discoverTestsStub);
         });
@@ -193,8 +193,8 @@ suite('Workspace test adapter', () => {
             );
 
             // Try running discovery twice
-            const one = workspaceTestAdapter.discoverTests(testController);
-            const two = workspaceTestAdapter.discoverTests(testController);
+            const one = workspaceTestAdapter.discoverTests(testController, execFactory.object);
+            const two = workspaceTestAdapter.discoverTests(testController, execFactory.object);
 
             Promise.all([one, two]);
 
@@ -215,7 +215,7 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            await workspaceTestAdapter.discoverTests(testController, undefined, execFactory.object);
+            await workspaceTestAdapter.discoverTests(testController, execFactory.object);
 
             sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE);
             assert.strictEqual(telemetryEvent.length, 2);
@@ -238,7 +238,7 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            await workspaceTestAdapter.discoverTests(testController);
+            await workspaceTestAdapter.discoverTests(testController, execFactory.object);
 
             sinon.assert.calledWith(sendTelemetryStub, EventName.UNITTEST_DISCOVERY_DONE);
             assert.strictEqual(telemetryEvent.length, 2);
