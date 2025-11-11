@@ -560,9 +560,7 @@ def construct_nested_folders(
             # IMPORTANT: Use session_node["path"] directly as it's already a pathlib.Path object
             # Do NOT use get_node_path(session_node["path"]) as get_node_path expects pytest objects,
             # not Path objects directly.
-            common_parent = os.path.commonpath(
-                [file_node["path"], session_node["path"]]
-            )
+            common_parent = os.path.commonpath([file_node["path"], session_node["path"]])
             common_parent_path = pathlib.Path(common_parent)
             print("[vscode-pytest]: Session node now set to: ", common_parent)
             session_node["path"] = common_parent_path  # pathlib.Path
@@ -719,12 +717,7 @@ def build_test_tree(session: pytest.Session) -> TestNode:
                 continue
             parent_path = get_node_path(
                 cast(
-                    pytest.Session
-                    | pytest.Item
-                    | pytest.File
-                    | pytest.Class
-                    | pytest.Module
-                    | HasPathOrFspath,
+                    "pytest.Session | pytest.Item | pytest.File | pytest.Class | pytest.Module | HasPathOrFspath",
                     test_case.parent,
                 )
             )
@@ -948,10 +941,7 @@ def get_node_path(
     node_path = getattr(node, "path", None)
     if node_path is None:
         fspath = getattr(node, "fspath", None)
-        if fspath is not None:
-            node_path = pathlib.Path(fspath)
-        else:
-            node_path = None
+        node_path = pathlib.Path(fspath) if fspath is not None else None
 
     if not node_path:
         raise VSCodePytestError(
