@@ -80,13 +80,17 @@ suite('Execution Flow Run Adapters', () => {
             // run result pipe mocking and the related server close dispose
             let deferredTillServerCloseTester: Deferred<void> | undefined;
 
+            // Create a real MockChildProcess so we can trigger events
+            const realMockProc = new MockChildProcess('', ['']);
+
             // // mock exec service and exec factory
             execServiceStub
                 .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
                 .returns(() => {
-                    cancellationToken.cancel();
+                    // Schedule cancellation to happen asynchronously
+                    setImmediate(() => cancellationToken.cancel());
                     return {
-                        proc: mockProc as any,
+                        proc: realMockProc as any,
                         out: typeMoq.Mock.ofType<Observable<Output<string>>>().object,
                         dispose: () => {
                             /* no-body */
@@ -128,7 +132,7 @@ suite('Execution Flow Run Adapters', () => {
 
             // define adapter and run tests
             const testAdapter = createAdapter(adapter, configService);
-            await testAdapter.runTests(
+            const runPromise = testAdapter.runTests(
                 Uri.file(myTestPath),
                 [],
                 TestRunProfileKind.Run,
@@ -136,8 +140,17 @@ suite('Execution Flow Run Adapters', () => {
                 execFactoryStub.object,
                 debugLauncher.object,
             );
+
             // wait for server to start to keep test from failing
             await deferredStartTestIdsNamedPipe.promise;
+
+            // Wait for cancellation to be processed
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            // Trigger process close event to allow promise to resolve
+            realMockProc.trigger('close');
+
+            await runPromise;
         });
         test(`Adapter ${adapter}: token called mid-debug resolves correctly`, async () => {
             // mock test run and cancelation token

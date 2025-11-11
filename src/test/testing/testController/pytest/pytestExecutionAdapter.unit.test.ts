@@ -390,8 +390,13 @@ suite('pytest test execution adapter', () => {
 
             await deferred2.promise;
             await deferred3.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Wait for runInBackground to be called
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Trigger process exit
+            sinon.assert.calledOnce(mockEnvProcess.onExit);
             const exitCallback = mockEnvProcess.onExit.firstCall.args[0];
             exitCallback(0, null);
 
@@ -459,11 +464,18 @@ suite('pytest test execution adapter', () => {
 
             await deferred2.promise;
             await deferred3.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Wait for runInBackground to be called
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Trigger cancellation
             if (cancellationHandler) {
                 cancellationHandler();
             }
+
+            // Wait for kill to be called
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Verify process.kill was called
             sinon.assert.calledOnce(mockEnvProcess.kill);
@@ -499,10 +511,19 @@ suite('pytest test execution adapter', () => {
             const uri = Uri.file(myTestPath);
             adapter = new PytestTestExecutionAdapter(configService);
 
-            await adapter.runTests(uri, ['test1'], TestRunProfileKind.Run, testRun.object, execFactory.object);
+            const runPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
 
             await deferred2.promise;
             await deferred3.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            await runPromise;
 
             // Verify runInBackground was NOT called
             sinon.assert.notCalled(runInBackgroundStub);
@@ -548,6 +569,10 @@ suite('pytest test execution adapter', () => {
 
             await deferred2.promise;
             await deferred3.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Wait for runInBackground to be called
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Trigger process exit
             const exitCallback = mockEnvProcess.onExit.firstCall.args[0];
@@ -605,6 +630,10 @@ suite('pytest test execution adapter', () => {
 
             await deferred2.promise;
             await deferred3.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Wait for runInBackground to be called
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Trigger process exit with error code
             const exitCallback = mockEnvProcess.onExit.firstCall.args[0];
@@ -665,11 +694,15 @@ suite('pytest test execution adapter', () => {
             await deferred2.promise;
             await deferred3.promise;
             await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
 
             // Trigger cancellation
             if (cancellationHandler) {
                 cancellationHandler();
             }
+
+            // Wait for kill to be processed
+            await new Promise((resolve) => setImmediate(resolve));
 
             // Verify process.kill was called
             sinon.assert.calledOnce(killStub);
@@ -714,10 +747,12 @@ suite('pytest test execution adapter', () => {
             await deferred2.promise;
             await deferred3.promise;
             await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
 
             // Access private activeInstances to verify cleanup
             const activeInstances = (adapter as any).activeInstances;
             const instanceCountBefore = activeInstances.size;
+            assert.strictEqual(instanceCountBefore, 1, 'Should have one active instance');
 
             // Trigger process close
             mockProc.trigger('close');
@@ -726,7 +761,7 @@ suite('pytest test execution adapter', () => {
 
             // Verify instance was cleaned up
             const instanceCountAfter = activeInstances.size;
-            assert.strictEqual(instanceCountAfter, instanceCountBefore, 'Instance should be removed after close');
+            assert.strictEqual(instanceCountAfter, 0, 'Instance should be removed after close');
         });
 
         test('Promise resolution happens correctly on success', async () => {
@@ -765,6 +800,7 @@ suite('pytest test execution adapter', () => {
             await deferred2.promise;
             await deferred3.promise;
             await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
 
             // Trigger successful close (exit code 0, no signal)
             mockProc.trigger('close');
@@ -811,6 +847,7 @@ suite('pytest test execution adapter', () => {
             await deferred2.promise;
             await deferred3.promise;
             await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
 
             // Trigger error close (exit code 1, SIGTERM signal)
             mockProc.trigger('close');
