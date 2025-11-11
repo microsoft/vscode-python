@@ -76,7 +76,7 @@ class PS1:
         return result
 
     def __repr__(self):
-        return "<Custom PS1 for VSCode Python Shell Integration>"
+        return "<Custom PS1 for VS Code Python Shell Integration>"
 
 
 if sys.platform != "win32" and (not is_wsl):
