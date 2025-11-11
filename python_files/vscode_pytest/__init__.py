@@ -560,7 +560,10 @@ def construct_nested_folders(
             # IMPORTANT: Use session_node["path"] directly as it's already a pathlib.Path object
             # Do NOT use get_node_path(session_node["path"]) as get_node_path expects pytest objects,
             # not Path objects directly.
-            common_parent = os.path.commonpath([file_node["path"], session_node["path"]])
+            # Convert Path objects to strings for os.path.commonpath
+            file_path_str: str = str(file_node["path"])
+            session_path_str: str = str(session_node["path"])
+            common_parent = os.path.commonpath([file_path_str, session_path_str])
             common_parent_path = pathlib.Path(common_parent)
             print("[vscode-pytest]: Session node now set to: ", common_parent)
             session_node["path"] = common_parent_path  # pathlib.Path
@@ -953,7 +956,10 @@ def get_node_path(
         # Get relative between the cwd (resolved path) and the node path.
         try:
             # Check to see if the node path contains the symlink root already
-            common_path = os.path.commonpath([SYMLINK_PATH, node_path])
+            # Convert Path objects to strings for os.path.commonpath
+            symlink_str: str = str(SYMLINK_PATH)
+            node_path_str: str = str(node_path)
+            common_path = os.path.commonpath([symlink_str, node_path_str])
             if common_path == os.fsdecode(SYMLINK_PATH):
                 # The node path is already relative to the SYMLINK_PATH root therefore return
                 return node_path
