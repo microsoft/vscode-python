@@ -52,8 +52,8 @@ npm run check-python:pyright
 
 ## Configuration
 
--   **Ruff**: Line length 100, Python 3.8+, 40+ rule families (flake8, isort, pyupgrade, etc.)
--   **Pyright**: Version 1.1.308 (pinned), ignores `lib/` and 15+ legacy files
+-   **Ruff**: Line length 100, Python 3.9+, 40+ rule families (flake8, isort, pyupgrade, etc.)
+-   **Pyright**: Version 1.1.308 (or whatever is found in the environment), ignores `lib/` and 15+ legacy files
 -   Config: `python_files/pyproject.toml` sections `[tool.ruff]` and `[tool.pyright]`
 
 ## Troubleshooting

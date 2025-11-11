@@ -531,7 +531,7 @@ def pytest_sessionfinish(session, exitstatus):
 
 def construct_nested_folders(
     file_nodes_dict: dict[str, TestNode],
-    session_node: TestNode,  # session_node['path'] is a pathlib.Path object
+    session_node: TestNode,
     session_children_dict: dict[str, TestNode],
 ) -> dict[str, TestNode]:
     """Iterate through all files and construct them into nested folders.
@@ -557,10 +557,6 @@ def construct_nested_folders(
             print(
                 "[vscode-pytest]: Session path not a parent of test paths, adjusting session node to common parent."
             )
-            # IMPORTANT: Use session_node["path"] directly as it's already a pathlib.Path object
-            # Do NOT use get_node_path(session_node["path"]) as get_node_path expects pytest objects,
-            # not Path objects directly.
-            # Convert Path objects to strings for os.path.commonpath
             file_path_str: str = str(file_node["path"])
             session_path_str: str = str(session_node["path"])
             common_parent = os.path.commonpath([file_path_str, session_path_str])
@@ -582,7 +578,7 @@ def construct_nested_folders(
 
 
 def process_parameterized_test(
-    test_case: pytest.Item,  # Must have callspec attribute (parameterized test)
+    test_case: pytest.Item,
     test_node: TestItem,
     function_nodes_dict: dict[str, TestNode],
     file_nodes_dict: dict[str, TestNode],
@@ -590,7 +586,7 @@ def process_parameterized_test(
     """Process a parameterized test case and create appropriate function nodes.
 
     Keyword arguments:
-    test_case -- the parameterized pytest test case
+    test_case -- the parameterized pytest test case; must have callspec attribute
     test_node -- the test node created from the test case
     function_nodes_dict -- dictionary of function nodes indexed by ID
     file_nodes_dict -- dictionary of file nodes indexed by path
@@ -739,9 +735,9 @@ def build_test_tree(session: pytest.Session) -> TestNode:
 
 
 def build_nested_folders(
-    file_node: TestNode,  # A file node to build folders for
-    created_files_folders_dict: dict[str, TestNode],  # Cache of created folders indexed by path
-    session_node: TestNode,  # The session node containing path information
+    file_node: TestNode,
+    created_files_folders_dict: dict[str, TestNode],
+    session_node: TestNode,
 ) -> TestNode:
     """Takes a file or folder and builds the nested folder structure for it.
 
