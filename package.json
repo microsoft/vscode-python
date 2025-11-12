@@ -1705,7 +1705,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
-        "@iarna/toml": "^2.2.5",
+        "@iarna/toml": "^3.0.0",
         "@vscode/extension-telemetry": "^0.8.4",
         "arch": "^2.1.0",
         "fs-extra": "^11.2.0",
