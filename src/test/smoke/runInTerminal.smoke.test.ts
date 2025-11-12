@@ -17,8 +17,13 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             return this.skip();
         }
         await initialize();
+        // Ensure the environments extension is not used for this test
+        await vscode.workspace
+            .getConfiguration('python')
+            .update('useEnvironmentsExtension', false, vscode.ConfigurationTarget.Global);
         return undefined;
     });
+
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
