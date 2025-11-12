@@ -125,7 +125,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 const proc = await runInBackground(pythonEnv, {
                     cwd,
                     args: execArgs,
-                    env: (mutableEnv as unknown) as { [key: string]: string },
+                    env: mutableEnv as unknown as { [key: string]: string },
                 });
                 token?.onCancellationRequested(() => {
                     traceInfo(`Test discovery cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);

@@ -179,7 +179,7 @@ export class PytestTestExecutionAdapter implements ITestExecutionAdapter {
                     const proc = await runInBackground(pythonEnv, {
                         cwd,
                         args: runArgs,
-                        env: (mutableEnv as unknown) as { [key: string]: string },
+                        env: mutableEnv as unknown as { [key: string]: string },
                     });
                     runInstance.token.onCancellationRequested(() => {
                         traceInfo(`Test run cancelled, killing pytest subprocess for workspace ${uri.fsPath}`);

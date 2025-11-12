@@ -149,8 +149,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 return config;
             }
 
-            const interpreterPath = configService.object.getSettings(workspaceFolder ? workspaceFolder.uri : undefined)
-                .pythonPath;
+            const interpreterPath = configService.object.getSettings(
+                workspaceFolder ? workspaceFolder.uri : undefined,
+            ).pythonPath;
             for (const key of Object.keys(config)) {
                 const value = config[key];
                 if (typeof value === 'string') {

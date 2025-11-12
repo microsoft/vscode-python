@@ -41,11 +41,11 @@ suite('Unittest test discovery adapter', () => {
         useEnvExtensionStub.returns(false);
 
         expectedPath = path.join('/', 'new', 'cwd');
-        configService = ({
+        configService = {
             getSettings: () => ({
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'] },
             }),
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
 
         // set up exec service with child process
         mockProc = new MockChildProcess('', ['']);
@@ -72,8 +72,8 @@ suite('Unittest test discovery adapter', () => {
         execFactory
             .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(execService.object));
-        execFactory.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
-        execService.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execFactory.setup((p) => (p as unknown as any).then).returns(() => undefined);
+        execService.setup((p) => (p as unknown as any).then).returns(() => undefined);
 
         // constants
         expectedPath = path.join('/', 'my', 'test', 'path');
@@ -130,11 +130,11 @@ suite('Unittest test discovery adapter', () => {
     });
     test('DiscoverTests should respect settings.testings.cwd when present', async () => {
         const expectedNewPath = path.join('/', 'new', 'cwd');
-        configService = ({
+        configService = {
             getSettings: () => ({
                 testing: { unittestArgs: ['-v', '-s', '.', '-p', 'test*'], cwd: expectedNewPath.toString() },
             }),
-        } as unknown) as IConfigurationService;
+        } as unknown as IConfigurationService;
         const adapter = new UnittestTestDiscoveryAdapter(configService);
         adapter.discoverTests(uri, execFactory.object);
         const script = path.join(EXTENSION_ROOT_DIR, 'python_files', 'unittestadapter', 'discovery.py');
@@ -204,7 +204,7 @@ suite('Unittest test discovery adapter', () => {
     test('Test discovery cancelled while exec observable is running and proc is closed', async () => {
         //
         const execService2 = typeMoq.Mock.ofType<IPythonExecutionService>();
-        execService2.setup((p) => ((p as unknown) as any).then).returns(() => undefined);
+        execService2.setup((p) => (p as unknown as any).then).returns(() => undefined);
         execService2
             .setup((x) => x.execObservable(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {

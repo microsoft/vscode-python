@@ -144,7 +144,7 @@ export class DisposableStore implements IDisposable {
         if (!o) {
             return o;
         }
-        if (((o as unknown) as DisposableStore) === this) {
+        if ((o as unknown as DisposableStore) === this) {
             throw new Error('Cannot register a disposable on itself!');
         }
 
@@ -191,7 +191,7 @@ export abstract class DisposableBase implements IDisposable {
      * Adds `o` to the collection of disposables managed by this object.
      */
     public _register<T extends IDisposable>(o: T): T {
-        if (((o as unknown) as DisposableBase) === this) {
+        if ((o as unknown as DisposableBase) === this) {
             throw new Error('Cannot register a disposable on itself!');
         }
         return this._store.add(o);

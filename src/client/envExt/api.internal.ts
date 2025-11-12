@@ -29,9 +29,8 @@ export function useEnvExtension(): boolean {
     return _useExt;
 }
 
-const onDidChangeEnvironmentEnvExtEmitter: EventEmitter<DidChangeEnvironmentEventArgs> = new EventEmitter<
-    DidChangeEnvironmentEventArgs
->();
+const onDidChangeEnvironmentEnvExtEmitter: EventEmitter<DidChangeEnvironmentEventArgs> =
+    new EventEmitter<DidChangeEnvironmentEventArgs>();
 export function onDidChangeEnvironmentEnvExt(
     listener: (e: DidChangeEnvironmentEventArgs) => unknown,
     thisArgs?: unknown,

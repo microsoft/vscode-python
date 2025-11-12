@@ -71,9 +71,7 @@ type PythonApiForJupyterExtension = {
     /**
      * Returns the preferred environment for the given URI.
      */
-    getRecommededEnvironment(
-        uri: Uri | undefined,
-    ): Promise<
+    getRecommededEnvironment(uri: Uri | undefined): Promise<
         | {
               environment: EnvironmentPath;
               reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';
@@ -211,9 +209,7 @@ export interface JupyterPythonEnvironmentApi {
      * If the Uri is not associated with a Jupyter Notebook or Interactive Window, then this method returns undefined.
      * @param uri
      */
-    getPythonEnvironment?(
-        uri: Uri,
-    ):
+    getPythonEnvironment?(uri: Uri):
         | undefined
         | {
               /**
@@ -241,9 +237,7 @@ export class JupyterExtensionPythonEnvironments extends DisposableBase implement
         super();
     }
 
-    public getPythonEnvironment(
-        uri: Uri,
-    ):
+    public getPythonEnvironment(uri: Uri):
         | undefined
         | {
               /**

@@ -23,7 +23,7 @@ suite('ProcessLogger suite', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspaceService
             .setup((w) => w.workspaceFolders)
-            .returns(() => [({ uri: { fsPath: path.join('path', 'to', 'workspace') } } as unknown) as WorkspaceFolder]);
+            .returns(() => [{ uri: { fsPath: path.join('path', 'to', 'workspace') } } as unknown as WorkspaceFolder]);
         logger = new ProcessLogger(workspaceService.object);
     });
 

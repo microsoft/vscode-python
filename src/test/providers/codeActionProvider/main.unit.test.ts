@@ -48,7 +48,7 @@ suite('Code Action Provider service', async () => {
             pattern: '**/launch.json',
         });
         assert.deepEqual(metadata!, {
-            providedCodeActionKinds: [('CodeAction' as unknown) as CodeActionKind],
+            providedCodeActionKinds: ['CodeAction' as unknown as CodeActionKind],
         });
         expect(provider!).instanceOf(LaunchJsonCodeActionProvider);
     });

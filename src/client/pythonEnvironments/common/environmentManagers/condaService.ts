@@ -28,9 +28,8 @@ export class CondaService implements ICondaService {
         const condaPath = await this.getCondaFileFromInterpreter(interpreterPath, envName);
         traceVerbose(`Found conda path: ${condaPath}`);
 
-        const activatePath = (condaPath
-            ? path.join(path.dirname(condaPath), 'activate')
-            : 'activate'
+        const activatePath = (
+            condaPath ? path.join(path.dirname(condaPath), 'activate') : 'activate'
         ).fileToCommandArgumentForPythonExt(); // maybe global activate?
         traceVerbose(`Using activate path: ${activatePath}`);
 

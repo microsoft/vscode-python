@@ -237,7 +237,7 @@ suite('Process - PythonExecutionFactory', () => {
                 factory.create = async () => {
                     createInvoked = true;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -256,7 +256,7 @@ suite('Process - PythonExecutionFactory', () => {
                 factory.create = async () => {
                     createInvoked = true;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -269,7 +269,7 @@ suite('Process - PythonExecutionFactory', () => {
                 factory.create = async () => {
                     createInvoked = true;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
                 };
 
                 const pythonSettings = mock(PythonSettings);
@@ -359,7 +359,7 @@ suite('Process - PythonExecutionFactory', () => {
                 factory.create = async () => {
                     createInvoked = true;
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
                 };
 
                 const pythonSettings = mock(PythonSettings);

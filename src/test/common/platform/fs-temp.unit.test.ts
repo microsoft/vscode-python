@@ -7,10 +7,7 @@ import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 
 interface IDeps {
     // tmp module
-    fileSync(config: {
-        postfix?: string;
-        mode?: number;
-    }): {
+    fileSync(config: { postfix?: string; mode?: number }): {
         name: string;
         fd: number;
         removeCallback(): void;

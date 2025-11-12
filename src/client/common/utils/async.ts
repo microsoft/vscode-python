@@ -115,9 +115,9 @@ export interface IAsyncIterableIterator<T> extends IAsyncIterator<T>, AsyncItera
  * An iterator that yields nothing.
  */
 export function iterEmpty<T>(): IAsyncIterableIterator<T> {
-    return ((async function* () {
+    return (async function* () {
         /** No body. */
-    })() as unknown) as IAsyncIterableIterator<T>;
+    })() as unknown as IAsyncIterableIterator<T>;
 }
 
 type NextResult<T> = { index: number } & (
@@ -279,12 +279,12 @@ export function raceTimeout<T>(timeout: number, defaultValue: T, ...promises: Pr
 export function raceTimeout<T>(timeout: number, defaultValue: T, ...promises: Promise<T>[]): Promise<T> {
     const resolveValue = isPromiseLike(defaultValue) ? undefined : defaultValue;
     if (isPromiseLike(defaultValue)) {
-        promises.push((defaultValue as unknown) as Promise<T>);
+        promises.push(defaultValue as unknown as Promise<T>);
     }
 
     let promiseResolve: ((value: T) => void) | undefined = undefined;
 
-    const timer = setTimeout(() => promiseResolve?.((resolveValue as unknown) as T), timeout);
+    const timer = setTimeout(() => promiseResolve?.(resolveValue as unknown as T), timeout);
 
     return Promise.race([
         Promise.race(promises).finally(() => clearTimeout(timer)),

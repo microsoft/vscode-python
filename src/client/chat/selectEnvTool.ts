@@ -42,8 +42,10 @@ export interface ISelectPythonEnvToolArguments extends IResourceReference {
     reason?: 'cancelled';
 }
 
-export class SelectPythonEnvTool extends BaseTool<ISelectPythonEnvToolArguments>
-    implements LanguageModelTool<ISelectPythonEnvToolArguments> {
+export class SelectPythonEnvTool
+    extends BaseTool<ISelectPythonEnvToolArguments>
+    implements LanguageModelTool<ISelectPythonEnvToolArguments>
+{
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     public static readonly toolName = 'selectEnvironment';

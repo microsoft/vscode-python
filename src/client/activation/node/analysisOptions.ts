@@ -19,9 +19,9 @@ export class NodeLanguageServerAnalysisOptions extends LanguageServerAnalysisOpt
 
     // eslint-disable-next-line class-methods-use-this
     protected async getInitializationOptions(): Promise<LanguageClientOptions> {
-        return ({
+        return {
             experimentationSupport: true,
             trustedWorkspaceSupport: true,
-        } as unknown) as LanguageClientOptions;
+        } as unknown as LanguageClientOptions;
     }
 }

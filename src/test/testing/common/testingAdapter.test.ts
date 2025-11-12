@@ -319,11 +319,13 @@ suite('End to End Tests: test adapters', () => {
                 traceLog('windows machine detected, converting path to lowercase for comparison');
                 const a = actualData.cwd.toLowerCase();
                 const b = filePath.toLowerCase();
-                const testSimpleActual = (actualData.tests as {
-                    children: {
-                        path: string;
-                    }[];
-                }).children[0].path.toLowerCase();
+                const testSimpleActual = (
+                    actualData.tests as {
+                        children: {
+                            path: string;
+                        }[];
+                    }
+                ).children[0].path.toLowerCase();
                 const testSimpleExpected = filePath.toLowerCase();
                 assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
                 assert.strictEqual(
@@ -338,11 +340,13 @@ suite('End to End Tests: test adapters', () => {
                     'Expected cwd to be the symlink path, check for non-windows machines',
                 );
                 assert.strictEqual(
-                    (actualData.tests as {
-                        children: {
-                            path: string;
-                        }[];
-                    }).children[0].path,
+                    (
+                        actualData.tests as {
+                            children: {
+                                path: string;
+                            }[];
+                        }
+                    ).children[0].path,
                     filePath,
                     'Expected test path to be the symlink path, check for non windows machines',
                 );
@@ -403,11 +407,13 @@ suite('End to End Tests: test adapters', () => {
                 traceLog('windows machine detected, converting path to lowercase for comparison');
                 const a = actualData.cwd.toLowerCase();
                 const b = rootPathDiscoverySymlink.toLowerCase();
-                const testSimpleActual = (actualData.tests as {
-                    children: {
-                        path: string;
-                    }[];
-                }).children[0].path.toLowerCase();
+                const testSimpleActual = (
+                    actualData.tests as {
+                        children: {
+                            path: string;
+                        }[];
+                    }
+                ).children[0].path.toLowerCase();
                 const testSimpleExpected = testSimpleSymlinkPath.toLowerCase();
                 assert.strictEqual(a, b, `Expected cwd to be the symlink path actual: ${a} expected: ${b}`);
                 assert.strictEqual(
@@ -422,11 +428,13 @@ suite('End to End Tests: test adapters', () => {
                     'Expected cwd to be the symlink path, check for non-windows machines',
                 );
                 assert.strictEqual(
-                    (actualData.tests as {
-                        children: {
-                            path: string;
-                        }[];
-                    }).children[0].path,
+                    (
+                        actualData.tests as {
+                            children: {
+                                path: string;
+                            }[];
+                        }
+                    ).children[0].path,
                     testSimpleSymlinkPath,
                     'Expected test path to be the symlink path, check for non windows machines',
                 );
@@ -1068,8 +1076,8 @@ suite('End to End Tests: test adapters', () => {
         // ================================================================
 
         // Mock getTestCaseNodes to track expensive tree operations
-        const originalGetTestCaseNodes = require('../../../client/testing/testController/common/testItemUtilities')
-            .getTestCaseNodes;
+        const originalGetTestCaseNodes =
+            require('../../../client/testing/testController/common/testItemUtilities').getTestCaseNodes;
         const getTestCaseNodesSpy = sinon.stub().callsFake((item) => {
             treeRebuildCount++;
             const result = originalGetTestCaseNodes(item);

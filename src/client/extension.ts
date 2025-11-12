@@ -194,9 +194,9 @@ interface IAppShell {
 
 function notifyUser(msg: string) {
     try {
-        let appShell: IAppShell = (window as any) as IAppShell;
+        let appShell: IAppShell = window as any as IAppShell;
         if (activatedServiceContainer) {
-            appShell = (activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any) as IAppShell;
+            appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any as IAppShell;
         }
         appShell.showErrorMessage(msg).ignoreErrors();
     } catch (ex) {

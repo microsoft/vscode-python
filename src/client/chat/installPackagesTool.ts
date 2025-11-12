@@ -33,8 +33,10 @@ export interface IInstallPackageArgs extends IResourceReference {
     packageList: string[];
 }
 
-export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
-    implements LanguageModelTool<IInstallPackageArgs> {
+export class InstallPackagesTool
+    extends BaseTool<IInstallPackageArgs>
+    implements LanguageModelTool<IInstallPackageArgs>
+{
     public static readonly toolName = 'install_python_packages';
     constructor(
         private readonly api: PythonExtension['environments'],

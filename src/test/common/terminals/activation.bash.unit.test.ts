@@ -45,7 +45,7 @@ suite('Terminal Environment Activation (bash)', () => {
                         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                         interpreterService
                             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-                            .returns(() => Promise.resolve(({ path: pythonPath } as unknown) as PythonEnvironment));
+                            .returns(() => Promise.resolve({ path: pythonPath } as unknown as PythonEnvironment));
                         serviceContainer
                             .setup((c) => c.get(IInterpreterService))
                             .returns(() => interpreterService.object);

@@ -24,8 +24,10 @@ import { getEnvExtApi, useEnvExtension } from '../envExt/api.internal';
 import { ErrorWithTelemetrySafeReason } from '../common/errors/errorUtils';
 import { BaseTool } from './baseTool';
 
-export class GetEnvironmentInfoTool extends BaseTool<IResourceReference>
-    implements LanguageModelTool<IResourceReference> {
+export class GetEnvironmentInfoTool
+    extends BaseTool<IResourceReference>
+    implements LanguageModelTool<IResourceReference>
+{
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly pythonExecFactory: IPythonExecutionFactory;
     private readonly processServiceFactory: IProcessServiceFactory;

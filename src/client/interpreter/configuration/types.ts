@@ -102,9 +102,7 @@ export const IRecommendedEnvironmentService = Symbol('IRecommendedEnvironmentSer
 export interface IRecommendedEnvironmentService {
     registerEnvApi(api: PythonExtension['environments']): void;
     trackUserSelectedEnvironment(environmentPath: string | undefined, uri: Uri | undefined): void;
-    getRecommededEnvironment(
-        resource: Resource,
-    ): Promise<
+    getRecommededEnvironment(resource: Resource): Promise<
         | {
               environment: ResolvedEnvironment;
               reason: 'globalUserSelected' | 'workspaceUserSelected' | 'defaultRecommended';

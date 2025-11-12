@@ -29,8 +29,10 @@ import { CreateVirtualEnvTool } from './createVirtualEnvTool';
 import { ISelectPythonEnvToolArguments, SelectPythonEnvTool } from './selectEnvTool';
 import { BaseTool } from './baseTool';
 
-export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
-    implements LanguageModelTool<IResourceReference> {
+export class ConfigurePythonEnvTool
+    extends BaseTool<IResourceReference>
+    implements LanguageModelTool<IResourceReference>
+{
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
@@ -46,9 +48,8 @@ export class ConfigurePythonEnvTool extends BaseTool<IResourceReference>
             'standard',
         );
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-        this.recommendedEnvService = this.serviceContainer.get<IRecommendedEnvironmentService>(
-            IRecommendedEnvironmentService,
-        );
+        this.recommendedEnvService =
+            this.serviceContainer.get<IRecommendedEnvironmentService>(IRecommendedEnvironmentService);
     }
 
     async invokeImpl(

@@ -43,7 +43,7 @@ suite('REPL - Native REPL', () => {
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
         disposable = TypeMoq.Mock.ofType<Disposable>();
         disposableArray = [disposable.object];
 
@@ -68,7 +68,7 @@ suite('REPL - Native REPL', () => {
         const createMethodStub = sinon.stub(NativeReplModule.NativeRepl, 'create');
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
         const interpreter = await interpreterService.object.getActiveInterpreter();
         await NativeReplModule.getNativeRepl(interpreter as PythonEnvironment, disposableArray);
 
@@ -79,7 +79,7 @@ suite('REPL - Native REPL', () => {
         getWorkspaceStateValueStub = sinon.stub(persistentState, 'getWorkspaceStateValue').returns(undefined);
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
         const interpreter = await interpreterService.object.getActiveInterpreter();
         const nativeRepl = await NativeReplModule.getNativeRepl(interpreter as PythonEnvironment, disposableArray);
 
@@ -92,7 +92,7 @@ suite('REPL - Native REPL', () => {
         getWorkspaceStateValueStub = sinon.stub(persistentState, 'getWorkspaceStateValue').returns('myNameIsMemento');
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
         const interpreter = await interpreterService.object.getActiveInterpreter();
         const nativeRepl = await NativeReplModule.getNativeRepl(interpreter as PythonEnvironment, disposableArray);
 
@@ -105,7 +105,7 @@ suite('REPL - Native REPL', () => {
         const interpreter = await interpreterService.object.getActiveInterpreter();
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(({ path: 'ps' } as unknown) as PythonEnvironment));
+            .returns(() => Promise.resolve({ path: 'ps' } as unknown as PythonEnvironment));
 
         await NativeReplModule.NativeRepl.create(interpreter as PythonEnvironment);
 
@@ -158,18 +158,18 @@ suite('REPL - Native REPL', () => {
 
         // Set notebookDocument to a mock document
         const mockReplUri = Uri.parse('untitled:Untitled-999.ipynb?jupyter-notebook');
-        const mockNotebookDocument = ({
+        const mockNotebookDocument = {
             uri: mockReplUri,
             toString: () => mockReplUri.toString(),
-        } as unknown) as NotebookDocument;
+        } as unknown as NotebookDocument;
 
         nativeRepl.notebookDocument = mockNotebookDocument;
 
         // Create a mock notebook document for closing event with same URI
-        const closingNotebookDocument = ({
+        const closingNotebookDocument = {
             uri: mockReplUri,
             toString: () => mockReplUri.toString(),
-        } as unknown) as NotebookDocument;
+        } as unknown as NotebookDocument;
 
         notebookCloseEmitter.fire(closingNotebookDocument);
         await new Promise((resolve) => setTimeout(resolve, 50));

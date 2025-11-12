@@ -34,20 +34,20 @@ suite('Workspace test adapter', () => {
         let log: string[] = [];
 
         setup(() => {
-            stubConfigSettings = ({
+            stubConfigSettings = {
                 getSettings: () => ({
                     testing: { unittestArgs: ['--foo'] },
                 }),
-            } as unknown) as IConfigurationService;
+            } as unknown as IConfigurationService;
 
-            stubResultResolver = ({
+            stubResultResolver = {
                 resolveDiscovery: () => {
                     // no body
                 },
                 resolveExecution: () => {
                     // no body
                 },
-            } as unknown) as ITestResultResolver;
+            } as unknown as ITestResultResolver;
 
             // const vsIdToRunIdGetStub = sinon.stub(stubResultResolver.vsIdToRunId, 'get');
             // const expectedRunId = 'expectedRunId';
@@ -56,7 +56,7 @@ suite('Workspace test adapter', () => {
             // For some reason the 'tests' namespace in vscode returns undefined.
             // While I figure out how to expose to the tests, they will run
             // against a stub test controller and stub test items.
-            const testItem = ({
+            const testItem = {
                 canResolveChildren: false,
                 tags: [],
                 children: {
@@ -64,9 +64,9 @@ suite('Workspace test adapter', () => {
                         // empty
                     },
                 },
-            } as unknown) as TestItem;
+            } as unknown as TestItem;
 
-            testController = ({
+            testController = {
                 items: {
                     get: () => {
                         log.push('get');
@@ -88,7 +88,7 @@ suite('Workspace test adapter', () => {
                 dispose: () => {
                     // empty
                 },
-            } as unknown) as TestController;
+            } as unknown as TestController;
 
             // testController = tests.createTestController('mock-python-tests', 'Mock Python Tests');
 
@@ -128,7 +128,7 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            const blankTestItem = ({
+            const blankTestItem = {
                 canResolveChildren: false,
                 tags: [],
                 children: {
@@ -136,7 +136,7 @@ suite('Workspace test adapter', () => {
                         // empty
                     },
                 },
-            } as unknown) as TestItem;
+            } as unknown as TestItem;
             const errorTestItemOptions: testItemUtilities.ErrorTestItemOptions = {
                 id: 'id',
                 label: 'label',
@@ -265,13 +265,13 @@ suite('Workspace test adapter', () => {
         const sandbox = sinon.createSandbox();
 
         setup(() => {
-            stubConfigSettings = ({
+            stubConfigSettings = {
                 getSettings: () => ({
                     testing: { unittestArgs: ['--foo'] },
                 }),
-            } as unknown) as IConfigurationService;
+            } as unknown as IConfigurationService;
 
-            stubResultResolver = ({
+            stubResultResolver = {
                 resolveDiscovery: () => {
                     // no body
                 },
@@ -281,8 +281,8 @@ suite('Workspace test adapter', () => {
                 vsIdToRunId: {
                     get: sinon.stub().returns('expectedRunId'),
                 },
-            } as unknown) as ITestResultResolver;
-            const testItem = ({
+            } as unknown as ITestResultResolver;
+            const testItem = {
                 canResolveChildren: false,
                 tags: [],
                 children: {
@@ -290,9 +290,9 @@ suite('Workspace test adapter', () => {
                         // empty
                     },
                 },
-            } as unknown) as TestItem;
+            } as unknown as TestItem;
 
-            testController = ({
+            testController = {
                 items: {
                     get: () => {
                         log.push('get');
@@ -314,7 +314,7 @@ suite('Workspace test adapter', () => {
                 dispose: () => {
                     // empty
                 },
-            } as unknown) as TestController;
+            } as unknown as TestController;
 
             const mockSendTelemetryEvent = (
                 eventName: EventName,
@@ -456,7 +456,7 @@ suite('Workspace test adapter', () => {
                 stubResultResolver,
             );
 
-            const blankTestItem = ({
+            const blankTestItem = {
                 canResolveChildren: false,
                 tags: [],
                 children: {
@@ -464,7 +464,7 @@ suite('Workspace test adapter', () => {
                         // empty
                     },
                 },
-            } as unknown) as TestItem;
+            } as unknown as TestItem;
             const errorTestItemOptions: testItemUtilities.ErrorTestItemOptions = {
                 id: 'id',
                 label: 'label',
@@ -504,7 +504,7 @@ suite('Workspace test adapter', () => {
 
 function createMockTestItem(id: string): TestItem {
     const range = typemoq.Mock.ofType<Range>();
-    const mockTestItem = ({
+    const mockTestItem = {
         id,
         canResolveChildren: false,
         tags: [],
@@ -515,7 +515,7 @@ function createMockTestItem(id: string): TestItem {
         },
         range,
         uri: Uri.file('/foo/bar'),
-    } as unknown) as TestItem;
+    } as unknown as TestItem;
 
     return mockTestItem;
 }

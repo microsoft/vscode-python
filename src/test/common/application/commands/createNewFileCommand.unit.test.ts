@@ -28,7 +28,7 @@ suite('Create New Python File Commmand', () => {
             [],
         );
         when(workspaceService.openTextDocument(deepEqual({ language: 'python' }))).thenReturn(
-            Promise.resolve(({} as unknown) as TextDocument),
+            Promise.resolve({} as unknown as TextDocument),
         );
         await createNewFileCommandHandler.activate();
     });

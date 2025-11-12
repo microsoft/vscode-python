@@ -42,7 +42,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
                 installer,
             };
         });
-        const selection = await appShell.showQuickPick<typeof options[0]>(options, {
+        const selection = await appShell.showQuickPick<(typeof options)[0]>(options, {
             matchOnDescription: true,
             matchOnDetail: true,
             placeHolder,

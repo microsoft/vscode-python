@@ -48,8 +48,10 @@ interface ICreateVirtualEnvToolParams extends IResourceReference {
     packageList?: string[]; // Added only becausewe have ability to create a virtual env with list of packages same tool within the in Python Env extension.
 }
 
-export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
-    implements LanguageModelTool<ICreateVirtualEnvToolParams> {
+export class CreateVirtualEnvTool
+    extends BaseTool<ICreateVirtualEnvToolParams>
+    implements LanguageModelTool<ICreateVirtualEnvToolParams>
+{
     private readonly terminalExecutionService: TerminalCodeExecutionProvider;
     private readonly terminalHelper: ITerminalHelper;
     private readonly recommendedEnvService: IRecommendedEnvironmentService;
@@ -66,9 +68,8 @@ export class CreateVirtualEnvTool extends BaseTool<ICreateVirtualEnvToolParams>
             'standard',
         );
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-        this.recommendedEnvService = this.serviceContainer.get<IRecommendedEnvironmentService>(
-            IRecommendedEnvironmentService,
-        );
+        this.recommendedEnvService =
+            this.serviceContainer.get<IRecommendedEnvironmentService>(IRecommendedEnvironmentService);
     }
 
     async invokeImpl(

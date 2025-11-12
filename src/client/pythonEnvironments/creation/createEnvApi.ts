@@ -109,13 +109,10 @@ export function registerCreateEnvironmentFeatures(
                 return undefined;
             },
         ),
-        registerCommand(
-            Commands.Create_Environment_Button,
-            async (): Promise<void> => {
-                sendTelemetryEvent(EventName.ENVIRONMENT_BUTTON, undefined, undefined);
-                await executeCommand(Commands.Create_Environment);
-            },
-        ),
+        registerCommand(Commands.Create_Environment_Button, async (): Promise<void> => {
+            sendTelemetryEvent(EventName.ENVIRONMENT_BUTTON, undefined, undefined);
+            await executeCommand(Commands.Create_Environment);
+        }),
         registerCreateEnvironmentProvider(new VenvCreationProvider(interpreterQuickPick)),
         registerCreateEnvironmentProvider(condaCreationProvider()),
         onCreateEnvironmentExited(async (e: EnvironmentDidCreateEvent) => {
