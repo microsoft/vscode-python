@@ -21,13 +21,9 @@ function getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T, de
     const defaultOptions = { ...options };
     const execOptions = defaultOptions as SpawnOptions;
     if (execOptions) {
-        execOptions.encoding =
-            typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0
-                ? execOptions.encoding
-                : DEFAULT_ENCODING;
-        const { encoding } = execOptions;
-        delete execOptions.encoding;
-        execOptions.encoding = encoding;
+        // Handle encoding which can be string, null, or undefined from ExecOptions
+        const encoding = execOptions.encoding;
+        execOptions.encoding = typeof encoding === 'string' && encoding.length > 0 ? encoding : DEFAULT_ENCODING;
     }
     if (!defaultOptions.env || Object.keys(defaultOptions.env).length === 0) {
         const env = defaultEnv || process.env;
@@ -58,7 +54,12 @@ export function shellExec(
     const shellOptions = getDefaultOptions(options, defaultEnv);
     if (!options.doNotLog) {
         const processLogger = new ProcessLogger(new WorkspaceService());
-        processLogger.logProcess(command, undefined, shellOptions);
+        // Create compatible options for logging by ensuring encoding is not null
+        const logOptions: SpawnOptions = {
+            ...shellOptions,
+            encoding: shellOptions.encoding || undefined,
+        };
+        processLogger.logProcess(command, undefined, logOptions);
     }
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
