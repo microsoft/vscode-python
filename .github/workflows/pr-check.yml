@@ -233,7 +233,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -505,7 +505,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Install Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -680,7 +680,7 @@ jobs:
         run: npm run test:cover:report
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{ runner.os }}-coverage-report-html
           path: ./coverage
