@@ -148,7 +148,7 @@ suite('Execution Flow Run Adapters', () => {
             await new Promise((resolve) => setTimeout(resolve, 50));
 
             // Trigger process close event to allow promise to resolve
-            realMockProc.trigger('close');
+            realMockProc.trigger('close', 0, null);
 
             await runPromise;
         });

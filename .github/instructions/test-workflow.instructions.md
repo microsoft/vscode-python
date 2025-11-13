@@ -610,3 +610,8 @@ Run pytest tests through VS Code's native testing integration:
 -   Environment: `VSC_PYTHON_CI_TEST_GREP` (filter extension tests)
 
 ## 🧠 Agent Learnings
+
+-   Always ensure all async resources (promises, deferreds, event listeners) are properly cleaned up and resolved, even in early-exit or error cases (1)
+-   When debugging, use detailed logging to trace async flow and quickly identify where tests hang (1)
+-   Make sure your mocks and stubs (e.g., event emitters) actually invoke registered listeners, so test code matches production event flow (1)
+-   Explicitly test both the "happy path" and all early-exit/error/cancellation paths to ensure no async resource is left unresolved (1)
