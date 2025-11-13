@@ -136,6 +136,7 @@ async function getActivationTelemetryProps(
     const usingGlobalInterpreter = interpreter
         ? isUsingGlobalInterpreterInWorkspace(interpreter.path, serviceContainer)
         : false;
+    const usingEnvironmentsExtension = useEnvExtension();
 
     return {
         condaVersion,
@@ -148,5 +149,6 @@ async function getActivationTelemetryProps(
         usingGlobalInterpreter,
         appName,
         isFirstSession,
+        usingEnvironmentsExtension,
     };
 }

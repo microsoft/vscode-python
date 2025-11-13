@@ -404,6 +404,10 @@ export interface IEventNamePropertyMapping {
          * to approximately guess if it's the first session.
          */
         isFirstSession?: boolean;
+        /**
+         * If user has enabled the Python Environments extension integration
+         */
+        usingEnvironmentsExtension?: boolean;
     };
     /**
      * Telemetry event sent when substituting Environment variables to calculate value of variables

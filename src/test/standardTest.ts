@@ -89,7 +89,7 @@ async function start() {
     console.log('VS Code executable', vscodeExecutablePath);
     const launchArgs = baseLaunchArgs
         .concat([workspacePath])
-        .concat(channel === 'insiders' ? ['--enable-proposed-api'] : [])
+        .concat(['--enable-proposed-api'])
         .concat(['--timeout', '5000']);
     console.log(`Starting vscode ${channel} with args ${launchArgs.join(' ')}`);
     const options: TestOptions = {

@@ -5,14 +5,7 @@ import * as tmp from 'tmp';
 import { ITempFileSystem, TemporaryFile } from './types';
 
 interface IRawTempFS {
-    // TODO (https://github.com/microsoft/vscode/issues/84517)
-    //   This functionality has been requested for the
-    //   VS Code FS API (vscode.workspace.fs.*).
-    file(
-        config: tmp.Options,
-
-        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void,
-    ): void;
+    fileSync(config?: tmp.Options): tmp.SynchrounousResult;
 }
 
 // Operations related to temporary files and directories.
@@ -35,14 +28,13 @@ export class TemporaryFileSystem implements ITempFileSystem {
             mode,
         };
         return new Promise<TemporaryFile>((resolve, reject) => {
-            this.raw.file(opts, (err, filename, _fd, cleanUp) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve({
-                    filePath: filename,
-                    dispose: cleanUp,
-                });
+            const { name, removeCallback } = this.raw.fileSync(opts);
+            if (!name) {
+                return reject(new Error('Failed to create temp file'));
+            }
+            resolve({
+                filePath: name,
+                dispose: removeCallback,
             });
         });
     }

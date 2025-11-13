@@ -77,13 +77,13 @@ function toLegacyType(env: PythonEnvironment): PythonEnvironmentLegacy {
     const ver = parseVersion(env.version);
     const envType = toEnvironmentType(env);
     return {
-        id: env.environmentPath.fsPath,
+        id: env.execInfo.run.executable,
         displayName: env.displayName,
         detailedDisplayName: env.name,
         envType,
         envPath: env.sysPrefix,
         type: getEnvType(envType),
-        path: env.environmentPath.fsPath,
+        path: env.execInfo.run.executable,
         version: {
             raw: env.version,
             major: ver.major,

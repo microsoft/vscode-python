@@ -7,11 +7,14 @@ import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 
 interface IDeps {
     // tmp module
-    file(
-        config: { postfix?: string; mode?: number },
-
-        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void,
-    ): void;
+    fileSync(config: {
+        postfix?: string;
+        mode?: number;
+    }): {
+        name: string;
+        fd: number;
+        removeCallback(): void;
+    };
 }
 
 suite('FileSystem - temp files', () => {
@@ -28,7 +31,7 @@ suite('FileSystem - temp files', () => {
     suite('createFile', () => {
         test(`fails if the raw call fails`, async () => {
             const failure = new Error('oops');
-            deps.setup((d) => d.file({ postfix: '.tmp', mode: undefined }, TypeMoq.It.isAny()))
+            deps.setup((d) => d.fileSync({ postfix: '.tmp', mode: undefined }))
                 // fail with an arbitrary error
                 .throws(failure);
 
@@ -40,7 +43,7 @@ suite('FileSystem - temp files', () => {
 
         test(`fails if the raw call "returns" an error`, async () => {
             const failure = new Error('oops');
-            deps.setup((d) => d.file({ postfix: '.tmp', mode: undefined }, TypeMoq.It.isAny())).callback((_cfg, cb) =>
+            deps.setup((d) => d.fileSync({ postfix: '.tmp', mode: undefined })).callback((_cfg, cb) =>
                 cb(failure, '...', -1, () => {}),
             );
 

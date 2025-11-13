@@ -99,6 +99,11 @@ export class PythonResultResolver implements ITestResultResolver {
             // if any tests exist, they should be populated in the test tree, regardless of whether there were errors or not.
             // parse and insert test data.
 
+            // Clear existing mappings before rebuilding test tree
+            this.runIdToTestItem.clear();
+            this.runIdToVSid.clear();
+            this.vsIdToRunId.clear();
+
             // If the test root for this folder exists: Workspace refresh, update its children.
             // Otherwise, it is a freshly discovered workspace, and we need to create a new test root and populate the test tree.
             populateTestTree(this.testController, rawTestData.tests, undefined, this, token);
@@ -173,165 +178,291 @@ export class PythonResultResolver implements ITestResultResolver {
         }
     }
 
+    /**
+     * Collect all test case items from the test controller tree.
+     * Note: This performs full tree traversal - use cached lookups when possible.
+     */
+    private collectAllTestCases(): TestItem[] {
+        const testCases: TestItem[] = [];
+
+        this.testController.items.forEach((i) => {
+            const tempArr: TestItem[] = getTestCaseNodes(i);
+            testCases.push(...tempArr);
+        });
+
+        return testCases;
+    }
+
+    /**
+     * Find a test item efficiently using cached maps with fallback strategies.
+     * Uses a three-tier approach: direct lookup, ID mapping, then tree search.
+     */
+    private findTestItemByIdEfficient(keyTemp: string): TestItem | undefined {
+        // Try direct O(1) lookup first
+        const directItem = this.runIdToTestItem.get(keyTemp);
+        if (directItem) {
+            // Validate the item is still in the test tree
+            if (this.isTestItemValid(directItem)) {
+                return directItem;
+            } else {
+                // Clean up stale reference
+                this.runIdToTestItem.delete(keyTemp);
+            }
+        }
+
+        // Try vsId mapping as fallback
+        const vsId = this.runIdToVSid.get(keyTemp);
+        if (vsId) {
+            // Search by VS Code ID in the controller
+            let foundItem: TestItem | undefined;
+            this.testController.items.forEach((item) => {
+                if (item.id === vsId) {
+                    foundItem = item;
+                    return;
+                }
+                if (!foundItem) {
+                    item.children.forEach((child) => {
+                        if (child.id === vsId) {
+                            foundItem = child;
+                        }
+                    });
+                }
+            });
+
+            if (foundItem) {
+                // Cache for future lookups
+                this.runIdToTestItem.set(keyTemp, foundItem);
+                return foundItem;
+            } else {
+                // Clean up stale mapping
+                this.runIdToVSid.delete(keyTemp);
+                this.vsIdToRunId.delete(vsId);
+            }
+        }
+
+        // Last resort: full tree search
+        traceError(`Falling back to tree search for test: ${keyTemp}`);
+        const testCases = this.collectAllTestCases();
+        return testCases.find((item) => item.id === vsId);
+    }
+
+    /**
+     * Check if a TestItem is still valid (exists in the TestController tree)
+     *
+     * Time Complexity: O(depth) where depth is the maximum nesting level of the test tree.
+     * In most cases this is O(1) to O(3) since test trees are typically shallow.
+     */
+    private isTestItemValid(testItem: TestItem): boolean {
+        // Simple validation: check if the item's parent chain leads back to the controller
+        let current: TestItem | undefined = testItem;
+        while (current?.parent) {
+            current = current.parent;
+        }
+
+        // If we reached a root item, check if it's in the controller
+        if (current) {
+            return this.testController.items.get(current.id) === current;
+        }
+
+        // If no parent chain, check if it's directly in the controller
+        return this.testController.items.get(testItem.id) === testItem;
+    }
+
+    /**
+     * Clean up stale test item references from the cache maps.
+     * Validates cached items and removes any that are no longer in the test tree.
+     */
+    public cleanupStaleReferences(): void {
+        const staleRunIds: string[] = [];
+
+        // Check all runId->TestItem mappings
+        this.runIdToTestItem.forEach((testItem, runId) => {
+            if (!this.isTestItemValid(testItem)) {
+                staleRunIds.push(runId);
+            }
+        });
+
+        // Remove stale entries
+        staleRunIds.forEach((runId) => {
+            const vsId = this.runIdToVSid.get(runId);
+            this.runIdToTestItem.delete(runId);
+            this.runIdToVSid.delete(runId);
+            if (vsId) {
+                this.vsIdToRunId.delete(vsId);
+            }
+        });
+
+        if (staleRunIds.length > 0) {
+            traceVerbose(`Cleaned up ${staleRunIds.length} stale test item references`);
+        }
+    }
+
+    /**
+     * Handle test items that errored during execution.
+     * Extracts error details, finds the corresponding TestItem, and reports the error to VS Code's Test Explorer.
+     */
+    private handleTestError(keyTemp: string, testItem: any, runInstance: TestRun): void {
+        const rawTraceback = testItem.traceback ?? '';
+        const traceback = splitLines(rawTraceback, {
+            trim: false,
+            removeEmptyEntries: true,
+        }).join('\r\n');
+        const text = `${testItem.test} failed with error: ${testItem.message ?? testItem.outcome}\r\n${traceback}`;
+        const message = new TestMessage(text);
+
+        const foundItem = this.findTestItemByIdEfficient(keyTemp);
+
+        if (foundItem?.uri) {
+            if (foundItem.range) {
+                message.location = new Location(foundItem.uri, foundItem.range);
+            }
+            runInstance.errored(foundItem, message);
+        }
+    }
+
+    /**
+     * Handle test items that failed during execution
+     */
+    private handleTestFailure(keyTemp: string, testItem: any, runInstance: TestRun): void {
+        const rawTraceback = testItem.traceback ?? '';
+        const traceback = splitLines(rawTraceback, {
+            trim: false,
+            removeEmptyEntries: true,
+        }).join('\r\n');
+
+        const text = `${testItem.test} failed: ${testItem.message ?? testItem.outcome}\r\n${traceback}`;
+        const message = new TestMessage(text);
+
+        const foundItem = this.findTestItemByIdEfficient(keyTemp);
+
+        if (foundItem?.uri) {
+            if (foundItem.range) {
+                message.location = new Location(foundItem.uri, foundItem.range);
+            }
+            runInstance.failed(foundItem, message);
+        }
+    }
+
+    /**
+     * Handle test items that passed during execution
+     */
+    private handleTestSuccess(keyTemp: string, runInstance: TestRun): void {
+        const grabTestItem = this.runIdToTestItem.get(keyTemp);
+
+        if (grabTestItem !== undefined) {
+            const foundItem = this.findTestItemByIdEfficient(keyTemp);
+            if (foundItem?.uri) {
+                runInstance.passed(grabTestItem);
+            }
+        }
+    }
+
+    /**
+     * Handle test items that were skipped during execution
+     */
+    private handleTestSkipped(keyTemp: string, runInstance: TestRun): void {
+        const grabTestItem = this.runIdToTestItem.get(keyTemp);
+
+        if (grabTestItem !== undefined) {
+            const foundItem = this.findTestItemByIdEfficient(keyTemp);
+            if (foundItem?.uri) {
+                runInstance.skipped(grabTestItem);
+            }
+        }
+    }
+
+    /**
+     * Handle subtest failures
+     */
+    private handleSubtestFailure(keyTemp: string, testItem: any, runInstance: TestRun): void {
+        const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
+        const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
+
+        if (parentTestItem) {
+            const subtestStats = this.subTestStats.get(parentTestCaseId);
+            if (subtestStats) {
+                subtestStats.failed += 1;
+            } else {
+                this.subTestStats.set(parentTestCaseId, {
+                    failed: 1,
+                    passed: 0,
+                });
+                clearAllChildren(parentTestItem);
+            }
+
+            const subTestItem = this.testController?.createTestItem(subtestId, subtestId, parentTestItem.uri);
+
+            if (subTestItem) {
+                const traceback = testItem.traceback ?? '';
+                const text = `${testItem.subtest} failed: ${testItem.message ?? testItem.outcome}\r\n${traceback}`;
+                parentTestItem.children.add(subTestItem);
+                runInstance.started(subTestItem);
+                const message = new TestMessage(text);
+                if (parentTestItem.uri && parentTestItem.range) {
+                    message.location = new Location(parentTestItem.uri, parentTestItem.range);
+                }
+                runInstance.failed(subTestItem, message);
+            } else {
+                throw new Error('Unable to create new child node for subtest');
+            }
+        } else {
+            throw new Error('Parent test item not found');
+        }
+    }
+
+    /**
+     * Handle subtest successes
+     */
+    private handleSubtestSuccess(keyTemp: string, runInstance: TestRun): void {
+        const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
+        const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
+
+        if (parentTestItem) {
+            const subtestStats = this.subTestStats.get(parentTestCaseId);
+            if (subtestStats) {
+                subtestStats.passed += 1;
+            } else {
+                this.subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
+                clearAllChildren(parentTestItem);
+            }
+
+            const subTestItem = this.testController?.createTestItem(subtestId, subtestId, parentTestItem.uri);
+
+            if (subTestItem) {
+                parentTestItem.children.add(subTestItem);
+                runInstance.started(subTestItem);
+                runInstance.passed(subTestItem);
+            } else {
+                throw new Error('Unable to create new child node for subtest');
+            }
+        } else {
+            throw new Error('Parent test item not found');
+        }
+    }
+
+    /**
+     * Process test execution results and update VS Code's Test Explorer with outcomes.
+     * Uses efficient lookup methods to handle large numbers of test results.
+     */
     public _resolveExecution(payload: ExecutionTestPayload, runInstance: TestRun): void {
         const rawTestExecData = payload as ExecutionTestPayload;
         if (rawTestExecData !== undefined && rawTestExecData.result !== undefined) {
-            // Map which holds the subtest information for each test item.
-
-            // iterate through payload and update the UI accordingly.
             for (const keyTemp of Object.keys(rawTestExecData.result)) {
-                const testCases: TestItem[] = [];
-
-                // grab leaf level test items
-                this.testController.items.forEach((i) => {
-                    const tempArr: TestItem[] = getTestCaseNodes(i);
-                    testCases.push(...tempArr);
-                });
                 const testItem = rawTestExecData.result[keyTemp];
 
+                // Delegate to specific outcome handlers using efficient lookups
                 if (testItem.outcome === 'error') {
-                    const rawTraceback = testItem.traceback ?? '';
-                    const traceback = splitLines(rawTraceback, {
-                        trim: false,
-                        removeEmptyEntries: true,
-                    }).join('\r\n');
-                    const text = `${testItem.test} failed with error: ${
-                        testItem.message ?? testItem.outcome
-                    }\r\n${traceback}`;
-                    const message = new TestMessage(text);
-
-                    const grabVSid = this.runIdToVSid.get(keyTemp);
-                    // search through freshly built array of testItem to find the failed test and update UI.
-                    testCases.forEach((indiItem) => {
-                        if (indiItem.id === grabVSid) {
-                            if (indiItem.uri) {
-                                if (indiItem.range) {
-                                    message.location = new Location(indiItem.uri, indiItem.range);
-                                }
-                                runInstance.errored(indiItem, message);
-                            }
-                        }
-                    });
+                    this.handleTestError(keyTemp, testItem, runInstance);
                 } else if (testItem.outcome === 'failure' || testItem.outcome === 'passed-unexpected') {
-                    const rawTraceback = testItem.traceback ?? '';
-                    const traceback = splitLines(rawTraceback, {
-                        trim: false,
-                        removeEmptyEntries: true,
-                    }).join('\r\n');
-
-                    const text = `${testItem.test} failed: ${testItem.message ?? testItem.outcome}\r\n${traceback}`;
-                    const message = new TestMessage(text);
-
-                    // note that keyTemp is a runId for unittest library...
-                    const grabVSid = this.runIdToVSid.get(keyTemp);
-                    // search through freshly built array of testItem to find the failed test and update UI.
-                    testCases.forEach((indiItem) => {
-                        if (indiItem.id === grabVSid) {
-                            if (indiItem.uri) {
-                                if (indiItem.range) {
-                                    message.location = new Location(indiItem.uri, indiItem.range);
-                                }
-                                runInstance.failed(indiItem, message);
-                            }
-                        }
-                    });
+                    this.handleTestFailure(keyTemp, testItem, runInstance);
                 } else if (testItem.outcome === 'success' || testItem.outcome === 'expected-failure') {
-                    const grabTestItem = this.runIdToTestItem.get(keyTemp);
-                    const grabVSid = this.runIdToVSid.get(keyTemp);
-                    if (grabTestItem !== undefined) {
-                        testCases.forEach((indiItem) => {
-                            if (indiItem.id === grabVSid) {
-                                if (indiItem.uri) {
-                                    runInstance.passed(grabTestItem);
-                                }
-                            }
-                        });
-                    }
+                    this.handleTestSuccess(keyTemp, runInstance);
                 } else if (testItem.outcome === 'skipped') {
-                    const grabTestItem = this.runIdToTestItem.get(keyTemp);
-                    const grabVSid = this.runIdToVSid.get(keyTemp);
-                    if (grabTestItem !== undefined) {
-                        testCases.forEach((indiItem) => {
-                            if (indiItem.id === grabVSid) {
-                                if (indiItem.uri) {
-                                    runInstance.skipped(grabTestItem);
-                                }
-                            }
-                        });
-                    }
+                    this.handleTestSkipped(keyTemp, runInstance);
                 } else if (testItem.outcome === 'subtest-failure') {
-                    // split on [] or () based on how the subtest is setup.
-                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
-                    const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
-                    const data = testItem;
-                    // find the subtest's parent test item
-                    if (parentTestItem) {
-                        const subtestStats = this.subTestStats.get(parentTestCaseId);
-                        if (subtestStats) {
-                            subtestStats.failed += 1;
-                        } else {
-                            this.subTestStats.set(parentTestCaseId, {
-                                failed: 1,
-                                passed: 0,
-                            });
-                            // clear since subtest items don't persist between runs
-                            clearAllChildren(parentTestItem);
-                        }
-                        const subTestItem = this.testController?.createTestItem(
-                            subtestId,
-                            subtestId,
-                            parentTestItem.uri,
-                        );
-                        // create a new test item for the subtest
-                        if (subTestItem) {
-                            const traceback = data.traceback ?? '';
-                            const text = `${data.subtest} failed: ${
-                                testItem.message ?? testItem.outcome
-                            }\r\n${traceback}`;
-                            parentTestItem.children.add(subTestItem);
-                            runInstance.started(subTestItem);
-                            const message = new TestMessage(text);
-                            if (parentTestItem.uri && parentTestItem.range) {
-                                message.location = new Location(parentTestItem.uri, parentTestItem.range);
-                            }
-                            runInstance.failed(subTestItem, message);
-                        } else {
-                            throw new Error('Unable to create new child node for subtest');
-                        }
-                    } else {
-                        throw new Error('Parent test item not found');
-                    }
+                    this.handleSubtestFailure(keyTemp, testItem, runInstance);
                 } else if (testItem.outcome === 'subtest-success') {
-                    // split on [] or () based on how the subtest is setup.
-                    const [parentTestCaseId, subtestId] = splitTestNameWithRegex(keyTemp);
-                    const parentTestItem = this.runIdToTestItem.get(parentTestCaseId);
-
-                    // find the subtest's parent test item
-                    if (parentTestItem) {
-                        const subtestStats = this.subTestStats.get(parentTestCaseId);
-                        if (subtestStats) {
-                            subtestStats.passed += 1;
-                        } else {
-                            this.subTestStats.set(parentTestCaseId, { failed: 0, passed: 1 });
-                            // clear since subtest items don't persist between runs
-                            clearAllChildren(parentTestItem);
-                        }
-                        const subTestItem = this.testController?.createTestItem(
-                            subtestId,
-                            subtestId,
-                            parentTestItem.uri,
-                        );
-                        // create a new test item for the subtest
-                        if (subTestItem) {
-                            parentTestItem.children.add(subTestItem);
-                            runInstance.started(subTestItem);
-                            runInstance.passed(subTestItem);
-                        } else {
-                            throw new Error('Unable to create new child node for subtest');
-                        }
-                    } else {
-                        throw new Error('Parent test item not found');
-                    }
+                    this.handleSubtestSuccess(keyTemp, runInstance);
                 }
             }
         }
