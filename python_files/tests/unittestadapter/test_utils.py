@@ -320,6 +320,7 @@ def test_doctest_patched_works() -> None:
 
     # Should successfully build a tree with the patched doctest
     assert tests is not None
+
     # The patched doctests should have proper IDs and be included
     # We should find at least one test child (the doctests that were patched)
     def count_tests(node):

@@ -218,7 +218,8 @@ def build_test_tree(
             # Check if this is a doctest with insufficient components that would cause unpacking to fail
             if len(components) < 3 and isinstance(test_case, doctest.DocTestCase):
                 print(
-                    "Skipping doctest as it is not supported for the extension. Test case: ", test_case
+                    "Skipping doctest as it is not supported for the extension. Test case: ",
+                    test_case,
                 )
                 error = ["Skipping doctest as it is not supported for the extension."]
                 continue
