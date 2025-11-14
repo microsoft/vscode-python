@@ -109,7 +109,7 @@ def get_class_line(test_case: unittest.TestCase) -> str:
         _sourcelines, lineno = inspect.getsourcelines(test_class)
         return str(lineno)
     except Exception:
-        return "*"
+        return ""
 
 
 def get_source_line(obj) -> str:
