@@ -1,6 +1,11 @@
 import os
 
-from .helpers import TEST_DATA_PATH, find_test_line_number, get_absolute_test_id
+from .helpers import (
+    TEST_DATA_PATH,
+    find_class_line_number,
+    find_test_line_number,
+    get_absolute_test_id,
+)
 
 # This file contains the expected output dictionaries for tests discovery and is used in test_discovery.py.
 
@@ -94,6 +99,9 @@ unit_pytest_same_file_discovery_expected_output = {
                     "id_": get_absolute_test_id(
                         "unittest_pytest_same_file.py::TestExample",
                         unit_pytest_same_file_path,
+                    ),
+                    "lineno": find_class_line_number(
+                        "TestExample", unit_pytest_same_file_path
                     ),
                 },
                 {
@@ -207,6 +215,9 @@ unittest_folder_discovery_expected_output = {
                                 "unittest_folder/test_add.py::TestAddFunction",
                                 test_add_path,
                             ),
+                            "lineno": find_class_line_number(
+                                "TestAddFunction", test_add_path
+                            ),
                         },
                         {
                             "name": "TestDuplicateFunction",
@@ -234,6 +245,9 @@ unittest_folder_discovery_expected_output = {
                             "id_": get_absolute_test_id(
                                 "unittest_folder/test_add.py::TestDuplicateFunction",
                                 test_add_path,
+                            ),
+                            "lineno": find_class_line_number(
+                                "TestDuplicateFunction", test_add_path
                             ),
                         },
                     ],
@@ -288,6 +302,9 @@ unittest_folder_discovery_expected_output = {
                                 "unittest_folder/test_subtract.py::TestSubtractFunction",
                                 test_subtract_path,
                             ),
+                            "lineno": find_class_line_number(
+                                "TestSubtractFunction", test_subtract_path
+                            ),
                         },
                         {
                             "name": "TestDuplicateFunction",
@@ -315,6 +332,9 @@ unittest_folder_discovery_expected_output = {
                             "id_": get_absolute_test_id(
                                 "unittest_folder/test_subtract.py::TestDuplicateFunction",
                                 test_subtract_path,
+                            ),
+                            "lineno": find_class_line_number(
+                                "TestDuplicateFunction", test_subtract_path
                             ),
                         },
                     ],
@@ -552,6 +572,9 @@ parametrize_tests_expected_output = {
                     "id_": get_absolute_test_id(
                         "parametrize_tests.py::TestClass",
                         parameterize_tests_path,
+                    ),
+                    "lineno": find_class_line_number(
+                        "TestClass", parameterize_tests_path
                     ),
                     "children": [
                         {
@@ -929,6 +952,9 @@ nested_classes_expected_test_output = {
                         "test_multi_class_nest.py::TestFirstClass",
                         TEST_MULTI_CLASS_NEST_PATH,
                     ),
+                    "lineno": find_class_line_number(
+                        "TestFirstClass", TEST_MULTI_CLASS_NEST_PATH
+                    ),
                     "children": [
                         {
                             "name": "TestSecondClass",
@@ -937,6 +963,9 @@ nested_classes_expected_test_output = {
                             "id_": get_absolute_test_id(
                                 "test_multi_class_nest.py::TestFirstClass::TestSecondClass",
                                 TEST_MULTI_CLASS_NEST_PATH,
+                            ),
+                            "lineno": find_class_line_number(
+                                "TestSecondClass", TEST_MULTI_CLASS_NEST_PATH
                             ),
                             "children": [
                                 {
@@ -981,6 +1010,9 @@ nested_classes_expected_test_output = {
                             "id_": get_absolute_test_id(
                                 "test_multi_class_nest.py::TestFirstClass::TestSecondClass2",
                                 TEST_MULTI_CLASS_NEST_PATH,
+                            ),
+                            "lineno": find_class_line_number(
+                                "TestSecondClass2", TEST_MULTI_CLASS_NEST_PATH
                             ),
                             "children": [
                                 {
@@ -1227,6 +1259,9 @@ same_function_new_class_param_expected_output = {
                         "same_function_new_class_param.py::TestNotEmpty",
                         TEST_DATA_PATH / "same_function_new_class_param.py",
                     ),
+                    "lineno": find_class_line_number(
+                        "TestNotEmpty", TEST_DATA_PATH / "same_function_new_class_param.py"
+                    ),
                 },
                 {
                     "name": "TestEmpty",
@@ -1297,6 +1332,9 @@ same_function_new_class_param_expected_output = {
                     "id_": get_absolute_test_id(
                         "same_function_new_class_param.py::TestEmpty",
                         TEST_DATA_PATH / "same_function_new_class_param.py",
+                    ),
+                    "lineno": find_class_line_number(
+                        "TestEmpty", TEST_DATA_PATH / "same_function_new_class_param.py"
                     ),
                 },
             ],
@@ -1371,6 +1409,9 @@ test_param_span_class_expected_output = {
                         "test_param_span_class.py::TestClass1",
                         TEST_DATA_PATH / "test_param_span_class.py",
                     ),
+                    "lineno": find_class_line_number(
+                        "TestClass1", TEST_DATA_PATH / "test_param_span_class.py"
+                    ),
                 },
                 {
                     "name": "TestClass2",
@@ -1426,6 +1467,9 @@ test_param_span_class_expected_output = {
                     "id_": get_absolute_test_id(
                         "test_param_span_class.py::TestClass2",
                         TEST_DATA_PATH / "test_param_span_class.py",
+                    ),
+                    "lineno": find_class_line_number(
+                        "TestClass2", TEST_DATA_PATH / "test_param_span_class.py"
                     ),
                 },
             ],
@@ -1502,6 +1546,9 @@ expected_describe_only_output = {
                             "id_": get_absolute_test_id(
                                 "pytest_describe_plugin/describe_only.py::describe_A",
                                 describe_only_path,
+                            ),
+                            "lineno": find_class_line_number(
+                                "describe_A", describe_only_path
                             ),
                         }
                     ],
@@ -1586,6 +1633,9 @@ expected_nested_describe_output = {
                                         "pytest_describe_plugin/nested_describe.py::describe_list::describe_append",
                                         nested_describe_path,
                                     ),
+                                    "lineno": find_class_line_number(
+                                        "describe_append", nested_describe_path
+                                    ),
                                 },
                                 {
                                     "name": "describe_remove",
@@ -1614,11 +1664,17 @@ expected_nested_describe_output = {
                                         "pytest_describe_plugin/nested_describe.py::describe_list::describe_remove",
                                         nested_describe_path,
                                     ),
+                                    "lineno": find_class_line_number(
+                                        "describe_remove", nested_describe_path
+                                    ),
                                 },
                             ],
                             "id_": get_absolute_test_id(
                                 "pytest_describe_plugin/nested_describe.py::describe_list",
                                 nested_describe_path,
+                            ),
+                            "lineno": find_class_line_number(
+                                "describe_list", nested_describe_path
                             ),
                         }
                     ],

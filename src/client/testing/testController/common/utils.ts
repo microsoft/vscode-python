@@ -257,6 +257,21 @@ export function populateTestTree(
 
                     node.canResolveChildren = true;
                     node.tags = [RunTestTag, DebugTestTag];
+
+                    // Set range for class nodes (and other nodes) if lineno is available
+                    let range: Range | undefined;
+                    if ('lineno' in child && child.lineno) {
+                        if (Number(child.lineno) === 0) {
+                            range = new Range(new Position(0, 0), new Position(0, 0));
+                        } else {
+                            range = new Range(
+                                new Position(Number(child.lineno) - 1, 0),
+                                new Position(Number(child.lineno), 0),
+                            );
+                        }
+                        node.range = range;
+                    }
+
                     testRoot!.children.add(node);
                 }
                 populateTestTree(testController, child, node, resultResolver, token);
