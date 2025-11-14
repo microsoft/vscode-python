@@ -100,9 +100,7 @@ unit_pytest_same_file_discovery_expected_output = {
                         "unittest_pytest_same_file.py::TestExample",
                         unit_pytest_same_file_path,
                     ),
-                    "lineno": find_class_line_number(
-                        "TestExample", unit_pytest_same_file_path
-                    ),
+                    "lineno": find_class_line_number("TestExample", unit_pytest_same_file_path),
                 },
                 {
                     "name": "test_true_pytest",
@@ -215,9 +213,7 @@ unittest_folder_discovery_expected_output = {
                                 "unittest_folder/test_add.py::TestAddFunction",
                                 test_add_path,
                             ),
-                            "lineno": find_class_line_number(
-                                "TestAddFunction", test_add_path
-                            ),
+                            "lineno": find_class_line_number("TestAddFunction", test_add_path),
                         },
                         {
                             "name": "TestDuplicateFunction",
@@ -573,9 +569,7 @@ parametrize_tests_expected_output = {
                         "parametrize_tests.py::TestClass",
                         parameterize_tests_path,
                     ),
-                    "lineno": find_class_line_number(
-                        "TestClass", parameterize_tests_path
-                    ),
+                    "lineno": find_class_line_number("TestClass", parameterize_tests_path),
                     "children": [
                         {
                             "name": "test_adding",
@@ -952,9 +946,7 @@ nested_classes_expected_test_output = {
                         "test_multi_class_nest.py::TestFirstClass",
                         TEST_MULTI_CLASS_NEST_PATH,
                     ),
-                    "lineno": find_class_line_number(
-                        "TestFirstClass", TEST_MULTI_CLASS_NEST_PATH
-                    ),
+                    "lineno": find_class_line_number("TestFirstClass", TEST_MULTI_CLASS_NEST_PATH),
                     "children": [
                         {
                             "name": "TestSecondClass",
@@ -1547,9 +1539,7 @@ expected_describe_only_output = {
                                 "pytest_describe_plugin/describe_only.py::describe_A",
                                 describe_only_path,
                             ),
-                            "lineno": find_class_line_number(
-                                "describe_A", describe_only_path
-                            ),
+                            "lineno": find_class_line_number("describe_A", describe_only_path),
                         }
                     ],
                 }
@@ -1673,9 +1663,7 @@ expected_nested_describe_output = {
                                 "pytest_describe_plugin/nested_describe.py::describe_list",
                                 nested_describe_path,
                             ),
-                            "lineno": find_class_line_number(
-                                "describe_list", nested_describe_path
-                            ),
+                            "lineno": find_class_line_number("describe_list", nested_describe_path),
                         }
                     ],
                 }

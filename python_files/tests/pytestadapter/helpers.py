@@ -382,9 +382,11 @@ def find_class_line_number(class_name: str, test_file_path) -> str:
         for i, line in enumerate(f):
             # Match "class ClassName" or "class ClassName(" or "class ClassName:"
             # Also match "def ClassName(" for pytest-describe blocks
-            if line.strip().startswith(f"class {class_name}") or line.strip().startswith(
-                f"class {class_name}("
-            ) or line.strip().startswith(f"def {class_name}("):
+            if (
+                line.strip().startswith(f"class {class_name}")
+                or line.strip().startswith(f"class {class_name}(")
+                or line.strip().startswith(f"def {class_name}(")
+            ):
                 return str(i + 1)
     error_str: str = f"Class {class_name!r} not found on any line in {test_file_path}"
     raise ValueError(error_str)

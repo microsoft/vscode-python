@@ -10,7 +10,17 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, Protocol, TypedDict, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    Literal,
+    NotRequired,
+    Protocol,
+    TypedDict,
+    cast,
+)
 
 import pytest
 
@@ -52,6 +62,7 @@ class TestNode(TestData):
     """A general class that handles all test data which contains children."""
 
     children: list[TestNode | TestItem | None]
+    lineno: NotRequired[str]  # Optional field for class/function nodes
 
 
 class VSCodePytestError(Exception):
