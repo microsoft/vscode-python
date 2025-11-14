@@ -102,14 +102,14 @@ def get_test_case(suite):
             yield from get_test_case(test)
 
 
-def get_class_line(test_case: unittest.TestCase) -> str:
+def get_class_line(test_case: unittest.TestCase) -> str | None:
     """Get the line number where a test class is defined."""
     try:
         test_class = test_case.__class__
         _sourcelines, lineno = inspect.getsourcelines(test_class)
         return str(lineno)
     except Exception:
-        return ""
+        return None
 
 
 def get_source_line(obj) -> str:
