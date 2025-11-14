@@ -203,12 +203,6 @@ def build_test_tree(
     root = build_test_node(top_level_directory, directory_path.name, TestNodeTypeEnum.folder)
 
     for test_case in get_test_case(suite):
-        if isinstance(test_case, doctest.DocTestCase):
-            print(
-                "Skipping doctest as it is not supported for the extension. Test case: ", test_case
-            )
-            error = ["Skipping doctest as it is not supported for the extension."]
-            continue
         test_id = test_case.id()
         if test_id.startswith("unittest.loader._FailedTest"):
             error.append(str(test_case._exception))  # type: ignore  # noqa: SLF001
@@ -221,6 +215,14 @@ def build_test_tree(
         else:
             # Get the static test path components: filename, class name and function name.
             components = test_id.split(".")
+            # Check if this is a doctest with insufficient components that would cause unpacking to fail
+            if len(components) < 3 and isinstance(test_case, doctest.DocTestCase):
+                print(
+                    "Skipping doctest as it is not supported for the extension. Test case: ",
+                    test_case,
+                )
+                error = ["Skipping doctest as it is not supported for the extension."]
+                continue
             *folders, filename, class_name, function_name = components
             py_filename = f"{filename}.py"
 
