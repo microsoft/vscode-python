@@ -262,7 +262,9 @@ def build_test_tree(
 
             # Add line number to class node if not already present.
             if "lineno" not in current_node:
-                current_node["lineno"] = get_class_line(test_case)
+                class_lineno = get_class_line(test_case)
+                if class_lineno is not None:
+                    current_node["lineno"] = class_lineno
 
             # Get test line number.
             test_method = getattr(test_case, test_case._testMethodName)  # noqa: SLF001
