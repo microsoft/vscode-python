@@ -16,11 +16,11 @@ from typing import (
     Dict,
     Generator,
     Literal,
-    NotRequired,
     Protocol,
     TypedDict,
     cast,
 )
+from typing_extensions import NotRequired
 
 import pytest
 
