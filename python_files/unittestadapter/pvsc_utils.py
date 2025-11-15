@@ -102,7 +102,7 @@ def get_test_case(suite):
             yield from get_test_case(test)
 
 
-def get_class_line(test_case: unittest.TestCase) -> str | None:
+def get_class_line(test_case: unittest.TestCase) -> Optional[str]:
     """Get the line number where a test class is defined."""
     try:
         test_class = test_case.__class__

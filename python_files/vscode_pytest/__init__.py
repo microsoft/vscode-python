@@ -20,9 +20,9 @@ from typing import (
     TypedDict,
     cast,
 )
-from typing_extensions import NotRequired
 
 import pytest
+from typing_extensions import NotRequired
 
 if TYPE_CHECKING:
     from pluggy import Result
