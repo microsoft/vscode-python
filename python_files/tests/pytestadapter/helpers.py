@@ -370,6 +370,28 @@ def find_test_line_number(test_name: str, test_file_path) -> str:
     raise ValueError(error_str)
 
 
+def find_class_line_number(class_name: str, test_file_path) -> str:
+    """Function which finds the correct line number for a class definition.
+
+    Args:
+    class_name: The name of the class to find the line number for.
+    test_file_path: The path to the test file where the class is located.
+    """
+    # Look for the class definition line (or function for pytest-describe)
+    with open(test_file_path) as f:  # noqa: PTH123
+        for i, line in enumerate(f):
+            # Match "class ClassName" or "class ClassName(" or "class ClassName:"
+            # Also match "def ClassName(" for pytest-describe blocks
+            if (
+                line.strip().startswith(f"class {class_name}")
+                or line.strip().startswith(f"class {class_name}(")
+                or line.strip().startswith(f"def {class_name}(")
+            ):
+                return str(i + 1)
+    error_str: str = f"Class {class_name!r} not found on any line in {test_file_path}"
+    raise ValueError(error_str)
+
+
 def get_absolute_test_id(test_id: str, test_path: pathlib.Path) -> str:
     """Get the absolute test id by joining the testPath with the test_id."""
     split_id = test_id.split("::")[1:]

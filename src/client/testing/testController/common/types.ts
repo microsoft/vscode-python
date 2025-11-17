@@ -177,7 +177,7 @@ export interface ITestExecutionAdapter {
 }
 
 // Same types as in python_files/unittestadapter/utils.py
-export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'test';
+export type DiscoveredTestType = 'folder' | 'file' | 'class' | 'function' | 'test';
 
 export type DiscoveredTestCommon = {
     path: string;
@@ -194,6 +194,7 @@ export type DiscoveredTestItem = DiscoveredTestCommon & {
 
 export type DiscoveredTestNode = DiscoveredTestCommon & {
     children: (DiscoveredTestNode | DiscoveredTestItem)[];
+    lineno?: number | string;
 };
 
 export type DiscoveredTestPayload = {

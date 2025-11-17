@@ -10,9 +10,19 @@ import os
 import pathlib
 import sys
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, Generator, Literal, Protocol, TypedDict, cast
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Generator,
+    Literal,
+    Protocol,
+    TypedDict,
+    cast,
+)
 
 import pytest
+from typing_extensions import NotRequired
 
 if TYPE_CHECKING:
     from pluggy import Result
@@ -52,6 +62,7 @@ class TestNode(TestData):
     """A general class that handles all test data which contains children."""
 
     children: list[TestNode | TestItem | None]
+    lineno: NotRequired[str]  # Optional field for class/function nodes
 
 
 class VSCodePytestError(Exception):
@@ -830,12 +841,25 @@ def create_class_node(class_module: pytest.Class | DescribeBlock) -> TestNode:
     Keyword arguments:
     class_module -- the pytest object representing a class module.
     """
+    # Get line number for the class definition
+    class_line = ""
+    try:
+        if hasattr(class_module, "obj"):
+            import inspect
+
+            _, lineno = inspect.getsourcelines(class_module.obj)
+            class_line = str(lineno)
+    except (OSError, TypeError):
+        # If we can't get the source lines, leave lineno empty
+        pass
+
     return {
         "name": class_module.name,
         "path": get_node_path(class_module),
         "type_": "class",
         "children": [],
         "id_": get_absolute_test_id(class_module.nodeid, get_node_path(class_module)),
+        "lineno": class_line,
     }
 
 

@@ -44,6 +44,7 @@ class TestItem(TestData):
 
 class TestNode(TestData):
     children: "List[TestNode | TestItem]"
+    lineno: NotRequired[str]  # Optional field for class nodes
 
 
 class TestExecutionStatus(str, enum.Enum):
@@ -99,6 +100,16 @@ def get_test_case(suite):
             yield test
         else:
             yield from get_test_case(test)
+
+
+def get_class_line(test_case: unittest.TestCase) -> Optional[str]:
+    """Get the line number where a test class is defined."""
+    try:
+        test_class = test_case.__class__
+        _sourcelines, lineno = inspect.getsourcelines(test_class)
+        return str(lineno)
+    except Exception:
+        return None
 
 
 def get_source_line(obj) -> str:
@@ -248,6 +259,12 @@ def build_test_tree(
             current_node = get_child_node(
                 class_name, file_path, TestNodeTypeEnum.class_, current_node
             )
+
+            # Add line number to class node if not already present.
+            if "lineno" not in current_node:
+                class_lineno = get_class_line(test_case)
+                if class_lineno is not None:
+                    current_node["lineno"] = class_lineno
 
             # Get test line number.
             test_method = getattr(test_case, test_case._testMethodName)  # noqa: SLF001
