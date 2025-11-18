@@ -69,8 +69,29 @@ nox --session install_python_libs
 
 **Type errors in ignored files**: Legacy files in `pyproject.toml` ignore list—fix if working on them
 
+## When Writing Tests
+
+**Always format your test files before committing:**
+
+```bash
+cd python_files
+ruff format tests/  # Format all test files
+# or format specific files:
+ruff format tests/unittestadapter/test_utils.py
+```
+
+**Best practice workflow:**
+
+1. Write your test code
+2. Run `ruff format` on the test files
+3. Run the tests to verify they pass
+4. Run `npm run check-python` to catch any remaining issues
+
+This ensures your tests pass both functional checks and quality checks in CI.
+
 ## Learnings
 
 -   Always run `npm run check-python` before pushing to catch CI failures early (1)
 -   Use `ruff check . --fix` to auto-fix most linting issues before manual review (1)
 -   Pyright version must match CI (1.1.308) to avoid inconsistent results between local and CI runs (1)
+-   Always run `ruff format` on test files after writing them to avoid formatting CI failures (1)
