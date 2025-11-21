@@ -459,20 +459,39 @@ export async function waitForCondition(
     errorMessage: string,
 ): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
+        const startTime = Date.now();
+        let checkCount = 0;
         const timeout = setTimeout(() => {
             clearTimeout(timeout);
 
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            clearTimeout(timer);
-            reject(new Error(errorMessage));
+            clearInterval(timer);
+            const elapsed = Date.now() - startTime;
+            const detailedError = `${errorMessage} (waited ${elapsed}ms, checked ${checkCount} times)`;
+            console.error(`[waitForCondition] Timeout: ${detailedError}`);
+            reject(new Error(detailedError));
         }, timeoutMs);
         const timer = setInterval(async () => {
-            if (!(await condition().catch(() => false))) {
-                return;
+            checkCount++;
+            try {
+                const result = await condition();
+                if (!result) {
+                    return;
+                }
+                clearTimeout(timeout);
+                clearInterval(timer);
+                const elapsed = Date.now() - startTime;
+                if (IS_SMOKE_TEST) {
+                    console.log(`[waitForCondition] Condition met after ${elapsed}ms (${checkCount} checks)`);
+                }
+                resolve();
+            } catch (error) {
+                // Condition check threw an error, log it but continue checking
+                if (checkCount % 100 === 0) {
+                    // Log every 100 checks
+                    console.error(`[waitForCondition] Error checking condition (check #${checkCount}): ${error}`);
+                }
             }
-            clearTimeout(timeout);
-            clearTimeout(timer);
-            resolve();
         }, 10);
     });
 }
