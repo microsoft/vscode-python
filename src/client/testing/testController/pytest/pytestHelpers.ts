@@ -38,11 +38,11 @@ export async function handleSymlinkAndRootDir(cwd: string, pytestArgs: string[])
  * Builds the environment variables required for pytest discovery.
  * Sets PYTHONPATH to include the plugin path and TEST_RUN_PIPE for communication.
  */
-export async function buildPytestEnv(
+export function buildPytestEnv(
     envVars: { [key: string]: string | undefined } | undefined,
     fullPluginPath: string,
     discoveryPipeName: string,
-): Promise<{ [key: string]: string | undefined }> {
+): { [key: string]: string | undefined } {
     const mutableEnv = {
         ...envVars,
     };
