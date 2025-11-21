@@ -12,6 +12,12 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
             return this.skip();
         }
         await initialize();
+        // Ensure the environments extension is not used for this test
+        // execSelectionInTerminal was not updated to use the envs extension API
+        // when execInTerminal was updated in commit e78934859
+        await vscode.workspace
+            .getConfiguration('python')
+            .update('useEnvironmentsExtension', false, vscode.ConfigurationTarget.Global);
         return undefined;
     });
 
@@ -68,7 +74,7 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
                 vscode.window.activeTextEditor.selection,
             );
             console.log(
-                `[smartSend.smoke] Selected entire file (${selectedText.split('\\n').length} lines, ${
+                `[smartSend.smoke] Selected entire file (${selectedText.split('\n').length} lines, ${
                     selectedText.length
                 } chars)`,
             );
@@ -80,6 +86,15 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
 
         const terminalsBefore = vscode.window.terminals.length;
         console.log(`[smartSend.smoke] Number of terminals before execution: ${terminalsBefore}`);
+
+        // On Windows, if terminals exist from previous tests, they may not be ready for new commands
+        // Give them time to fully initialize before sending commands
+        if (terminalsBefore > 0 && process.platform === 'win32') {
+            console.log(
+                `[smartSend.smoke] Windows detected with ${terminalsBefore} existing terminals, waiting 3s for terminal readiness...`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
 
         // Verify the active editor is correct before executing command
         if (vscode.window.activeTextEditor) {
@@ -97,12 +112,14 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         console.log(
             `[smartSend.smoke] Executing first 'python.execSelectionInTerminal' command at ${new Date().toISOString()}`,
         );
-        console.log(`[smartSend.smoke] NOTE: Passing no arguments to allow smart selection to work on active editor`);
+        console.log(`[smartSend.smoke] Passing document URI to execSelectionInTerminal: ${textDocument.uri.fsPath}`);
 
-        await vscode.commands.executeCommand<void>('python.execSelectionInTerminal').then(undefined, (err) => {
-            console.error(`[smartSend.smoke] First command failed: ${err}`);
-            assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
-        });
+        await vscode.commands
+            .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
+            .then(undefined, (err) => {
+                console.error(`[smartSend.smoke] First command failed: ${err}`);
+                assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
+            });
         const firstCmdTime = Date.now();
         console.log(`[smartSend.smoke] First command completed in ${firstCmdTime - startTime}ms`);
 
@@ -192,17 +209,21 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         }
 
         console.log(`[smartSend.smoke] Executing second 'python.execSelectionInTerminal' command`);
-        await vscode.commands.executeCommand<void>('python.execSelectionInTerminal').then(undefined, (err) => {
-            console.error(`[smartSend.smoke] Second command failed: ${err}`);
-            assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
-        });
+        await vscode.commands
+            .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
+            .then(undefined, (err) => {
+                console.error(`[smartSend.smoke] Second command failed: ${err}`);
+                assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
+            });
         console.log(`[smartSend.smoke] Second command completed`);
 
         console.log(`[smartSend.smoke] Executing third 'python.execSelectionInTerminal' command`);
-        await vscode.commands.executeCommand<void>('python.execSelectionInTerminal').then(undefined, (err) => {
-            console.error(`[smartSend.smoke] Third command failed: ${err}`);
-            assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
-        });
+        await vscode.commands
+            .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
+            .then(undefined, (err) => {
+                console.error(`[smartSend.smoke] Third command failed: ${err}`);
+                assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
+            });
         console.log(`[smartSend.smoke] Third command completed`);
 
         async function wait() {
