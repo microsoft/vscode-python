@@ -84,17 +84,10 @@ export function createProcessHandlers(
             const out = fixLogLinesNoTrailing(data.toString());
             traceError(out);
         },
-        onExit: (code: number | null, signal: NodeJS.Signals | null) => {
+        onExit: (code: number | null, _signal: NodeJS.Signals | null) => {
             // The 'exit' event fires when the process terminates, but streams may still be open.
-            if (!isSuccessCode(code)) {
-                const exitCodeNote =
-                    allowedSuccessCodes.length > 0
-                        ? ` Note: Exit codes ${allowedSuccessCodes.join(', ')} are also treated as success.`
-                        : '';
-                traceError(
-                    `${testProvider} discovery subprocess exited with code ${code} and signal ${signal} for workspace ${uri.fsPath}.${exitCodeNote}`,
-                );
-            } else if (code === 0) {
+            // Only log verbose success message here; error handling happens in onClose.
+            if (isSuccessCode(code)) {
                 traceVerbose(`${testProvider} discovery subprocess exited successfully for workspace ${uri.fsPath}`);
             }
         },

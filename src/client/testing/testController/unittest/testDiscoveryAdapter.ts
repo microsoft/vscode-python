@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, Uri } from 'vscode';
+import { CancellationToken, Disposable, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -62,6 +62,11 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         // Setup process handlers deferred (used by both execution paths)
         const deferredTillExecClose = createTestingDeferred();
 
+        // Collect all disposables for cleanup in finally block
+        const disposables: Disposable[] = [];
+        if (tokenDisposable) {
+            disposables.push(tokenDisposable);
+        }
         try {
             // Build unittest command and arguments
             const settings = this.configSettings.getSettings(uri);
@@ -100,6 +105,9 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 const envExtCancellationHandler = token?.onCancellationRequested(() => {
                     cleanupOnCancellation('unittest', proc, deferredTillExecClose, discoveryPipeCancellation, uri);
                 });
+                if (envExtCancellationHandler) {
+                    disposables.push(envExtCancellationHandler);
+                }
                 proc.stdout.on('data', handlers.onStdout);
                 proc.stderr.on('data', handlers.onStderr);
                 proc.onExit((code, signal) => {
@@ -108,7 +116,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 });
 
                 await deferredTillExecClose.promise;
-                envExtCancellationHandler?.dispose();
                 traceInfo(`Unittest discovery completed for workspace ${uri.fsPath}`);
                 return;
             }
@@ -146,13 +153,15 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
 
             let resultProc: ChildProcess | undefined;
-            let cancellationHandler: import('vscode').Disposable | undefined;
 
             // Set up cancellation handler after all early return checks
-            cancellationHandler = token?.onCancellationRequested(() => {
+            const cancellationHandler = token?.onCancellationRequested(() => {
                 traceInfo(`Cancellation requested during unittest discovery for workspace ${uri.fsPath}`);
                 cleanupOnCancellation('unittest', resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
             });
+            if (cancellationHandler) {
+                disposables.push(cancellationHandler);
+            }
 
             try {
                 const result = execService.execObservable(execArgs, spawnOptions);
@@ -161,28 +170,18 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 if (!resultProc) {
                     traceError(`Failed to spawn unittest discovery subprocess for workspace ${uri.fsPath}`);
                     deferredTillExecClose.resolve();
-                    cancellationHandler?.dispose();
                     return;
                 }
                 traceInfo(`Started unittest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
             } catch (error) {
                 traceError(`Error spawning unittest discovery subprocess for workspace ${uri.fsPath}: ${error}`);
                 deferredTillExecClose.resolve();
-                cancellationHandler?.dispose();
                 throw error;
             }
             resultProc.stdout?.on('data', handlers.onStdout);
             resultProc.stderr?.on('data', handlers.onStderr);
             resultProc.on('exit', handlers.onExit);
             resultProc.on('close', handlers.onClose);
-
-            cancellationHandler?.dispose();
-
-            // Check for early cancellation before awaiting
-            if (token?.isCancellationRequested) {
-                traceInfo(`Unittest discovery was cancelled before process completion for workspace ${uri.fsPath}`);
-                deferredTillExecClose.resolve();
-            }
 
             traceVerbose(`Waiting for unittest discovery subprocess to complete for workspace ${uri.fsPath}`);
             await deferredTillExecClose.promise;
@@ -193,7 +192,9 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             throw error;
         } finally {
             traceVerbose(`Cleaning up unittest discovery resources for workspace ${uri.fsPath}`);
-            tokenDisposable?.dispose();
+            // Dispose all cancellation handlers and event subscriptions
+            disposables.forEach((d) => d.dispose());
+            // Dispose the discovery pipe cancellation token
             discoveryPipeCancellation.dispose();
         }
     }
