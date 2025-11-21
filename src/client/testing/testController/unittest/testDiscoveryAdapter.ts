@@ -211,7 +211,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             cancellationHandler?.dispose();
 
-            // Check for early cancellation before awaitingre awaiting
+            // Check for early cancellation before awaiting
             if (token?.isCancellationRequested) {
                 traceInfo(`Unittest discovery was cancelled before process completion for workspace ${uri.fsPath}`);
                 deferredTillExecClose.resolve();
