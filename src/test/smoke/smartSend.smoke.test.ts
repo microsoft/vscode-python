@@ -64,8 +64,14 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
             );
             vscode.window.activeTextEditor.selection = new vscode.Selection(fullRange.start, fullRange.end);
 
-            const selectedText = vscode.window.activeTextEditor.document.getText(vscode.window.activeTextEditor.selection);
-            console.log(`[smartSend.smoke] Selected entire file (${selectedText.split('\\n').length} lines, ${selectedText.length} chars)`);
+            const selectedText = vscode.window.activeTextEditor.document.getText(
+                vscode.window.activeTextEditor.selection,
+            );
+            console.log(
+                `[smartSend.smoke] Selected entire file (${selectedText.split('\\n').length} lines, ${
+                    selectedText.length
+                } chars)`,
+            );
 
             // Wait a bit for the editor state to settle
             console.log(`[smartSend.smoke] Waiting 500ms for editor state to settle...`);
@@ -77,8 +83,12 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
 
         // Verify the active editor is correct before executing command
         if (vscode.window.activeTextEditor) {
-            console.log(`[smartSend.smoke] Active editor before command: ${vscode.window.activeTextEditor.document.uri.fsPath}`);
-            console.log(`[smartSend.smoke] Active editor language: ${vscode.window.activeTextEditor.document.languageId}`);
+            console.log(
+                `[smartSend.smoke] Active editor before command: ${vscode.window.activeTextEditor.document.uri.fsPath}`,
+            );
+            console.log(
+                `[smartSend.smoke] Active editor language: ${vscode.window.activeTextEditor.document.languageId}`,
+            );
         } else {
             console.error(`[smartSend.smoke] ERROR: No active text editor before command!`);
         }
@@ -100,9 +110,17 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         if (vscode.window.activeTextEditor) {
             const selectionAfterCmd = vscode.window.activeTextEditor.selection;
             const selectedText = vscode.window.activeTextEditor.document.getText(selectionAfterCmd);
-            console.log(`[smartSend.smoke] Selection after command - start: (${selectionAfterCmd.start.line}, ${selectionAfterCmd.start.character}), end: (${selectionAfterCmd.end.line}, ${selectionAfterCmd.end.character})`);
-            console.log(`[smartSend.smoke] Selected text after command (first 100 chars): "${selectedText.substring(0, 100).replace(/\n/g, '\\n')}"`);
-            console.log(`[smartSend.smoke] Active editor document URI: ${vscode.window.activeTextEditor.document.uri.fsPath}`);
+            console.log(
+                `[smartSend.smoke] Selection after command - start: (${selectionAfterCmd.start.line}, ${selectionAfterCmd.start.character}), end: (${selectionAfterCmd.end.line}, ${selectionAfterCmd.end.character})`,
+            );
+            console.log(
+                `[smartSend.smoke] Selected text after command (first 100 chars): "${selectedText
+                    .substring(0, 100)
+                    .replace(/\n/g, '\\n')}"`,
+            );
+            console.log(
+                `[smartSend.smoke] Active editor document URI: ${vscode.window.activeTextEditor.document.uri.fsPath}`,
+            );
         } else {
             console.error(`[smartSend.smoke] WARNING: No active text editor after command execution!`);
         }
@@ -151,9 +169,13 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
 
             // Check final editor state
             if (vscode.window.activeTextEditor) {
-                console.error(`[smartSend.smoke] Final active editor: ${vscode.window.activeTextEditor.document.uri.fsPath}`);
+                console.error(
+                    `[smartSend.smoke] Final active editor: ${vscode.window.activeTextEditor.document.uri.fsPath}`,
+                );
                 const finalSelection = vscode.window.activeTextEditor.selection;
-                console.error(`[smartSend.smoke] Final selection - start: (${finalSelection.start.line}, ${finalSelection.start.character}), end: (${finalSelection.end.line}, ${finalSelection.end.character})`);
+                console.error(
+                    `[smartSend.smoke] Final selection - start: (${finalSelection.start.line}, ${finalSelection.start.character}), end: (${finalSelection.end.line}, ${finalSelection.end.character})`,
+                );
             }
 
             // List directory contents
