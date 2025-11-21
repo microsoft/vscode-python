@@ -17,12 +17,8 @@ import { createTestingDeferred, startDiscoveryNamedPipe } from '../common/utils'
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { useEnvExtension, getEnvironment, runInBackground } from '../../../envExt/api.internal';
-import {
-    cleanupOnCancellation,
-    buildPytestEnv as configureSubprocessEnv,
-    createProcessHandlers,
-    handleSymlinkAndRootDir,
-} from './pytestHelpers';
+import { buildPytestEnv as configureSubprocessEnv, handleSymlinkAndRootDir } from './pytestHelpers';
+import { cleanupOnCancellation, createProcessHandlers } from '../common/discoveryHelpers';
 
 /**
  * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
@@ -70,7 +66,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             // Setup process handlers (shared by both execution paths)
             const deferredTillExecClose: Deferred<void> = createTestingDeferred();
-            const handlers = createProcessHandlers(uri, cwd, this.resultResolver, deferredTillExecClose);
+            const handlers = createProcessHandlers('pytest', uri, cwd, this.resultResolver, deferredTillExecClose, [5]);
 
             // Execute using environment extension if available
             if (useEnvExtension()) {
@@ -93,7 +89,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
                 // Wire up cancellation and process events
                 token?.onCancellationRequested(() => {
-                    cleanupOnCancellation(proc, deferredTillExecClose, discoveryPipeCancellation, uri);
+                    cleanupOnCancellation('pytest', proc, deferredTillExecClose, discoveryPipeCancellation, uri);
                 });
                 proc.stdout.on('data', handlers.onStdout);
                 proc.stderr.on('data', handlers.onStderr);
@@ -143,7 +139,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
             // Wire up cancellation and process events
             token?.onCancellationRequested(() => {
-                cleanupOnCancellation(resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
+                cleanupOnCancellation('pytest', resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
             });
             resultProc.stdout?.on('data', handlers.onStdout);
             resultProc.stderr?.on('data', handlers.onStderr);
