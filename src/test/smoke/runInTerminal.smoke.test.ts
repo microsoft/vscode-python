@@ -64,10 +64,13 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         const terminalsBefore = vscode.window.terminals.length;
         console.log(`[runInTerminal.smoke] Number of terminals before execution: ${terminalsBefore}`);
 
-        // On Windows, if there are existing terminals, wait a bit to ensure they're fully ready
+        // On Windows, if terminals exist from previous tests, they may not be ready for new commands
+        // Give them time to fully initialize before sending commands
         if (terminalsBefore > 0 && process.platform === 'win32') {
-            console.log(`[runInTerminal.smoke] Waiting 2s for existing terminals to be ready on Windows...`);
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            console.log(
+                `[runInTerminal.smoke] Windows detected with ${terminalsBefore} existing terminals, waiting 3s for terminal readiness...`,
+            );
+            await new Promise((resolve) => setTimeout(resolve, 3000));
         }
 
         const startTime = Date.now();
