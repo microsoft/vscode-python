@@ -30,7 +30,7 @@ export async function handleSymlinkAndRootDir(cwd: string, pytestArgs: string[])
     }
     // if user has provided `--rootdir` then use that, otherwise add `cwd`
     // root dir is required so pytest can find the relative paths and for symlinks
-    addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
+    pytestArgs = addValueIfKeyNotExist(pytestArgs, '--rootdir', cwd);
     return pytestArgs;
 }
 

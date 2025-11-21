@@ -1,59 +1,23 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, CancellationTokenSource, Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { IConfigurationService } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { DiscoveredTestPayload, ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
+import { ITestDiscoveryAdapter, ITestResultResolver } from '../common/types';
 import { IEnvironmentVariablesProvider } from '../../../common/variables/types';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
     SpawnOptions,
 } from '../../../common/process/types';
-import { startDiscoveryNamedPipe } from '../common/utils';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
 import { getEnvironment, runInBackground, useEnvExtension } from '../../../envExt/api.internal';
 import { PythonEnvironment } from '../../../pythonEnvironments/info';
 import { createTestingDeferred } from '../common/utils';
 import { buildDiscoveryCommand, buildUnittestEnv as configureSubprocessEnv } from './unittestHelpers';
-import { cleanupOnCancellation, createProcessHandlers } from '../common/discoveryHelpers';
-
-/**
- * Sets up the discovery named pipe and wires up cancellation.
- * @param resultResolver The resolver to handle discovered test data
- * @param token Optional cancellation token from the caller
- * @param uri Workspace URI for logging
- * @returns Object containing the pipe name and cancellation source
- */
-async function setupDiscoveryPipe(
-    resultResolver: ITestResultResolver | undefined,
-    token: CancellationToken | undefined,
-    uri: Uri,
-): Promise<{ pipeName: string; cancellation: CancellationTokenSource }> {
-    const discoveryPipeCancellation = new CancellationTokenSource();
-
-    // Wire up cancellation from external token
-    token?.onCancellationRequested(() => {
-        traceInfo(`Test discovery cancelled.`);
-        discoveryPipeCancellation.cancel();
-    });
-
-    // Start the named pipe with the discovery listener
-    const discoveryPipeName = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
-        if (!token?.isCancellationRequested) {
-            resultResolver?.resolveDiscovery(data);
-        }
-    }, discoveryPipeCancellation.token);
-
-    traceVerbose(`Created discovery pipe: ${discoveryPipeName} for workspace ${uri.fsPath}`);
-
-    return {
-        pipeName: discoveryPipeName,
-        cancellation: discoveryPipeCancellation,
-    };
-}
+import { cleanupOnCancellation, createProcessHandlers, setupDiscoveryPipe } from '../common/discoveryHelpers';
 
 /**
  * Configures the subprocess environment for unittest discovery.
@@ -68,7 +32,7 @@ async function configureDiscoveryEnv(
     discoveryPipeName: string,
 ): Promise<NodeJS.ProcessEnv> {
     const envVars = await envVarsService?.getEnvironmentVariables(uri);
-    const mutableEnv = await configureSubprocessEnv(envVars, discoveryPipeName);
+    const mutableEnv = configureSubprocessEnv(envVars, discoveryPipeName);
     return mutableEnv;
 }
 
@@ -89,11 +53,11 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         interpreter?: PythonEnvironment,
     ): Promise<void> {
         // Setup discovery pipe and cancellation
-        const { pipeName: discoveryPipeName, cancellation: discoveryPipeCancellation } = await setupDiscoveryPipe(
-            this.resultResolver,
-            token,
-            uri,
-        );
+        const {
+            pipeName: discoveryPipeName,
+            cancellation: discoveryPipeCancellation,
+            tokenDisposable,
+        } = await setupDiscoveryPipe(this.resultResolver, token, uri);
 
         // Setup process handlers deferred (used by both execution paths)
         const deferredTillExecClose = createTestingDeferred();
@@ -133,7 +97,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceInfo(`Started unittest discovery subprocess (environment extension) for workspace ${uri.fsPath}`);
 
                 // Wire up cancellation and process events
-                token?.onCancellationRequested(() => {
+                const envExtCancellationHandler = token?.onCancellationRequested(() => {
                     cleanupOnCancellation('unittest', proc, deferredTillExecClose, discoveryPipeCancellation, uri);
                 });
                 proc.stdout.on('data', handlers.onStdout);
@@ -144,6 +108,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 });
 
                 await deferredTillExecClose.promise;
+                envExtCancellationHandler?.dispose();
                 traceInfo(`Unittest discovery completed for workspace ${uri.fsPath}`);
                 return;
             }
@@ -181,9 +146,10 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
 
             let resultProc: ChildProcess | undefined;
+            let cancellationHandler: import('vscode').Disposable | undefined;
 
-            // Set up cancellation handler before execObservable to catch early cancellations
-            const cancellationHandler = token?.onCancellationRequested(() => {
+            // Set up cancellation handler after all early return checks
+            cancellationHandler = token?.onCancellationRequested(() => {
                 traceInfo(`Cancellation requested during unittest discovery for workspace ${uri.fsPath}`);
                 cleanupOnCancellation('unittest', resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
             });
@@ -195,6 +161,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 if (!resultProc) {
                     traceError(`Failed to spawn unittest discovery subprocess for workspace ${uri.fsPath}`);
                     deferredTillExecClose.resolve();
+                    cancellationHandler?.dispose();
                     return;
                 }
                 traceInfo(`Started unittest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
@@ -226,6 +193,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             throw error;
         } finally {
             traceVerbose(`Cleaning up unittest discovery resources for workspace ${uri.fsPath}`);
+            tokenDisposable?.dispose();
             discoveryPipeCancellation.dispose();
         }
     }

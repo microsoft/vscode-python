@@ -1,15 +1,51 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { CancellationTokenSource, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Disposable, Uri } from 'vscode';
 import { Deferred } from '../../../common/utils/async';
 import { traceError, traceInfo, traceVerbose } from '../../../logging';
-import { createDiscoveryErrorPayload, fixLogLinesNoTrailing } from './utils';
-import { ITestResultResolver } from './types';
+import { createDiscoveryErrorPayload, fixLogLinesNoTrailing, startDiscoveryNamedPipe } from './utils';
+import { DiscoveredTestPayload, ITestResultResolver } from './types';
 
 /**
  * Test provider type for logging purposes.
  */
 export type TestProvider = 'pytest' | 'unittest';
+
+/**
+ * Sets up the discovery named pipe and wires up cancellation.
+ * @param resultResolver The resolver to handle discovered test data
+ * @param token Optional cancellation token from the caller
+ * @param uri Workspace URI for logging
+ * @returns Object containing the pipe name, cancellation source, and disposable for the external token handler
+ */
+export async function setupDiscoveryPipe(
+    resultResolver: ITestResultResolver | undefined,
+    token: CancellationToken | undefined,
+    uri: Uri,
+): Promise<{ pipeName: string; cancellation: CancellationTokenSource; tokenDisposable: Disposable | undefined }> {
+    const discoveryPipeCancellation = new CancellationTokenSource();
+
+    // Wire up cancellation from external token and store the disposable
+    const tokenDisposable = token?.onCancellationRequested(() => {
+        traceInfo(`Test discovery cancelled.`);
+        discoveryPipeCancellation.cancel();
+    });
+
+    // Start the named pipe with the discovery listener
+    const discoveryPipeName = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+        if (!token?.isCancellationRequested) {
+            resultResolver?.resolveDiscovery(data);
+        }
+    }, discoveryPipeCancellation.token);
+
+    traceVerbose(`Created discovery pipe: ${discoveryPipeName} for workspace ${uri.fsPath}`);
+
+    return {
+        pipeName: discoveryPipeName,
+        cancellation: discoveryPipeCancellation,
+        tokenDisposable,
+    };
+}
 
 /**
  * Creates standard process event handlers for test discovery subprocess.

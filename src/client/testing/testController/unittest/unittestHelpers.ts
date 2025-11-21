@@ -7,10 +7,10 @@ import { traceInfo } from '../../../logging';
  * Builds the environment variables required for unittest discovery.
  * Sets TEST_RUN_PIPE for communication.
  */
-export async function buildUnittestEnv(
+export function buildUnittestEnv(
     envVars: { [key: string]: string | undefined } | undefined,
     discoveryPipeName: string,
-): Promise<{ [key: string]: string | undefined }> {
+): { [key: string]: string | undefined } {
     const mutableEnv = {
         ...envVars,
     };
