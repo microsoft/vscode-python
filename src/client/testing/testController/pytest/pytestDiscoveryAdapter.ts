@@ -21,7 +21,60 @@ import { buildPytestEnv as configureSubprocessEnv, handleSymlinkAndRootDir } fro
 import { cleanupOnCancellation, createProcessHandlers } from '../common/discoveryHelpers';
 
 /**
- * Wrapper class for unittest test discovery. This is where we call `runTestCommand`. #this seems incorrectly copied
+ * Sets up the discovery named pipe and wires up cancellation.
+ * @param resultResolver The resolver to handle discovered test data
+ * @param token Optional cancellation token from the caller
+ * @param uri Workspace URI for logging
+ * @returns Object containing the pipe name and cancellation source
+ */
+async function setupDiscoveryPipe(
+    resultResolver: ITestResultResolver | undefined,
+    token: CancellationToken | undefined,
+    uri: Uri,
+): Promise<{ pipeName: string; cancellation: CancellationTokenSource }> {
+    const discoveryPipeCancellation = new CancellationTokenSource();
+
+    // Wire up cancellation from external token
+    token?.onCancellationRequested(() => {
+        traceInfo(`Test discovery cancelled.`);
+        discoveryPipeCancellation.cancel();
+    });
+
+    // Start the named pipe with the discovery listener
+    const discoveryPipeName = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+        if (!token?.isCancellationRequested) {
+            resultResolver?.resolveDiscovery(data);
+        }
+    }, discoveryPipeCancellation.token);
+
+    traceVerbose(`Created discovery pipe: ${discoveryPipeName} for workspace ${uri.fsPath}`);
+
+    return {
+        pipeName: discoveryPipeName,
+        cancellation: discoveryPipeCancellation,
+    };
+}
+
+/**
+ * Configures the subprocess environment for pytest discovery.
+ * @param envVarsService Service to retrieve environment variables
+ * @param uri Workspace URI
+ * @param discoveryPipeName Name of the discovery pipe to pass to the subprocess
+ * @returns Configured environment variables for the subprocess
+ */
+async function configureDiscoveryEnv(
+    envVarsService: IEnvironmentVariablesProvider | undefined,
+    uri: Uri,
+    discoveryPipeName: string,
+): Promise<NodeJS.ProcessEnv> {
+    const fullPluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
+    const envVars = await envVarsService?.getEnvironmentVariables(uri);
+    const mutableEnv = await configureSubprocessEnv(envVars, fullPluginPath, discoveryPipeName);
+    return mutableEnv;
+}
+
+/**
+ * Wrapper class for pytest test discovery. This is where we call the pytest subprocess.
  */
 export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
     constructor(
@@ -36,33 +89,26 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
-        // Setup: cancellation and discovery pipe
-        const discoveryPipeCancellation = new CancellationTokenSource();
+        // Setup discovery pipe and cancellation
+        const { pipeName: discoveryPipeName, cancellation: discoveryPipeCancellation } = await setupDiscoveryPipe(
+            this.resultResolver,
+            token,
+            uri,
+        );
+
         try {
-            token?.onCancellationRequested(() => {
-                traceInfo(`Test discovery cancelled.`);
-                discoveryPipeCancellation.cancel();
-            });
-
-            const discoveryPipeName = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
-                if (!token?.isCancellationRequested) {
-                    this.resultResolver?.resolveDiscovery(data);
-                }
-            }, discoveryPipeCancellation.token);
-            traceVerbose(`Created discovery pipe: ${discoveryPipeName} for workspace ${uri.fsPath}`);
-
             // Build pytest command and arguments
             const settings = this.configSettings.getSettings(uri);
             let { pytestArgs } = settings.testing;
             const cwd = settings.testing.cwd && settings.testing.cwd.length > 0 ? settings.testing.cwd : uri.fsPath;
             pytestArgs = await handleSymlinkAndRootDir(cwd, pytestArgs);
-            const execArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
-            traceVerbose(`Running pytest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
+            const commandArgs = ['-m', 'pytest', '-p', 'vscode_pytest', '--collect-only'].concat(pytestArgs);
+            traceVerbose(
+                `Running pytest discovery with command: ${commandArgs.join(' ')} for workspace ${uri.fsPath}.`,
+            );
 
             // Configure subprocess environment
-            const fullPluginPath = path.join(EXTENSION_ROOT_DIR, 'python_files');
-            const envVars = await this.envVarsService?.getEnvironmentVariables(uri);
-            const mutableEnv = await configureSubprocessEnv(envVars, fullPluginPath, discoveryPipeName);
+            const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
             // Setup process handlers (shared by both execution paths)
             const deferredTillExecClose: Deferred<void> = createTestingDeferred();
@@ -82,7 +128,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
 
                 const proc = await runInBackground(pythonEnv, {
                     cwd,
-                    args: execArgs,
+                    args: commandArgs,
                     env: (mutableEnv as unknown) as { [key: string]: string },
                 });
                 traceInfo(`Started pytest discovery subprocess (environment extension) for workspace ${uri.fsPath}`);
@@ -128,7 +174,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
 
             let resultProc: ChildProcess | undefined;
-            const result = execService.execObservable(execArgs, spawnOptions);
+            const result = execService.execObservable(commandArgs, spawnOptions);
             resultProc = result?.proc;
 
             if (!resultProc) {

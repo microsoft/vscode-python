@@ -21,6 +21,58 @@ import { buildDiscoveryCommand, buildUnittestEnv as configureSubprocessEnv } fro
 import { cleanupOnCancellation, createProcessHandlers } from '../common/discoveryHelpers';
 
 /**
+ * Sets up the discovery named pipe and wires up cancellation.
+ * @param resultResolver The resolver to handle discovered test data
+ * @param token Optional cancellation token from the caller
+ * @param uri Workspace URI for logging
+ * @returns Object containing the pipe name and cancellation source
+ */
+async function setupDiscoveryPipe(
+    resultResolver: ITestResultResolver | undefined,
+    token: CancellationToken | undefined,
+    uri: Uri,
+): Promise<{ pipeName: string; cancellation: CancellationTokenSource }> {
+    const discoveryPipeCancellation = new CancellationTokenSource();
+
+    // Wire up cancellation from external token
+    token?.onCancellationRequested(() => {
+        traceInfo(`Test discovery cancelled.`);
+        discoveryPipeCancellation.cancel();
+    });
+
+    // Start the named pipe with the discovery listener
+    const discoveryPipeName = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
+        if (!token?.isCancellationRequested) {
+            resultResolver?.resolveDiscovery(data);
+        }
+    }, discoveryPipeCancellation.token);
+
+    traceVerbose(`Created discovery pipe: ${discoveryPipeName} for workspace ${uri.fsPath}`);
+
+    return {
+        pipeName: discoveryPipeName,
+        cancellation: discoveryPipeCancellation,
+    };
+}
+
+/**
+ * Configures the subprocess environment for unittest discovery.
+ * @param envVarsService Service to retrieve environment variables
+ * @param uri Workspace URI
+ * @param discoveryPipeName Name of the discovery pipe to pass to the subprocess
+ * @returns Configured environment variables for the subprocess
+ */
+async function configureDiscoveryEnv(
+    envVarsService: IEnvironmentVariablesProvider | undefined,
+    uri: Uri,
+    discoveryPipeName: string,
+): Promise<NodeJS.ProcessEnv> {
+    const envVars = await envVarsService?.getEnvironmentVariables(uri);
+    const mutableEnv = await configureSubprocessEnv(envVars, discoveryPipeName);
+    return mutableEnv;
+}
+
+/**
  * Wrapper class for unittest test discovery.
  */
 export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
@@ -36,21 +88,14 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
         token?: CancellationToken,
         interpreter?: PythonEnvironment,
     ): Promise<void> {
-        // Setup: cancellation and discovery pipe
-        const discoveryPipeCancellation = new CancellationTokenSource();
+        // Setup discovery pipe and cancellation
+        const { pipeName: discoveryPipeName, cancellation: discoveryPipeCancellation } = await setupDiscoveryPipe(
+            this.resultResolver,
+            token,
+            uri,
+        );
+
         try {
-            token?.onCancellationRequested(() => {
-                traceInfo(`Test discovery cancelled.`);
-                discoveryPipeCancellation.cancel();
-            });
-
-            const discoveryPipeName = await startDiscoveryNamedPipe((data: DiscoveredTestPayload) => {
-                if (!token?.isCancellationRequested) {
-                    this.resultResolver?.resolveDiscovery(data);
-                }
-            }, discoveryPipeCancellation.token);
-            traceVerbose(`Created discovery pipe: ${discoveryPipeName} for workspace ${uri.fsPath}`);
-
             // Build unittest command and arguments
             const settings = this.configSettings.getSettings(uri);
             const { unittestArgs } = settings.testing;
@@ -59,8 +104,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             traceVerbose(`Running unittest discovery with command: ${execArgs.join(' ')} for workspace ${uri.fsPath}.`);
 
             // Configure subprocess environment
-            const envVars = await this.envVarsService?.getEnvironmentVariables(uri);
-            const mutableEnv = await configureSubprocessEnv(envVars, discoveryPipeName);
+            const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
             // Setup process handlers (shared by both execution paths)
             const deferredTillExecClose = createTestingDeferred();
