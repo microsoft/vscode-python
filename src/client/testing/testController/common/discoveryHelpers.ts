@@ -96,8 +96,13 @@ export function cleanupOnCancellation(
 ): void {
     traceInfo(`Test discovery cancelled, killing ${testProvider} subprocess for workspace ${uri.fsPath}`);
     if (proc) {
+        traceVerbose(`Killing ${testProvider} subprocess for workspace ${uri.fsPath}`);
         proc.kill();
+    } else {
+        traceVerbose(`No ${testProvider} subprocess to kill for workspace ${uri.fsPath} (proc is undefined)`);
     }
+    traceVerbose(`Resolving process completion deferred for ${testProvider} discovery in workspace ${uri.fsPath}`);
     processCompletion.resolve();
+    traceVerbose(`Cancelling discovery pipe for ${testProvider} discovery in workspace ${uri.fsPath}`);
     pipeCancellation.cancel();
 }

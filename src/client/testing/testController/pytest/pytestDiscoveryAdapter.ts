@@ -96,6 +96,9 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             uri,
         );
 
+        // Setup process handlers deferred (used by both execution paths)
+        const deferredTillExecClose: Deferred<void> = createTestingDeferred();
+
         try {
             // Build pytest command and arguments
             const settings = this.configSettings.getSettings(uri);
@@ -111,7 +114,6 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
             // Setup process handlers (shared by both execution paths)
-            const deferredTillExecClose: Deferred<void> = createTestingDeferred();
             const handlers = createProcessHandlers('pytest', uri, cwd, this.resultResolver, deferredTillExecClose, [5]);
 
             // Execute using environment extension if available
@@ -122,6 +124,7 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                     traceError(
                         `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,
                     );
+                    deferredTillExecClose.resolve();
                     return;
                 }
                 traceVerbose(`Using Python environment: ${JSON.stringify(pythonEnv)}`);
@@ -161,10 +164,18 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceError(
                     `Failed to create execution service for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,
                 );
+                deferredTillExecClose.resolve();
                 return;
             }
             const execInfo = await execService.getExecutablePath();
             traceVerbose(`Using Python executable: ${execInfo} for workspace ${uri.fsPath}`);
+
+            // Check for cancellation before spawning process
+            if (token?.isCancellationRequested) {
+                traceInfo(`Pytest discovery cancelled before spawning process for workspace ${uri.fsPath}`);
+                deferredTillExecClose.resolve();
+                return;
+            }
 
             const spawnOptions: SpawnOptions = {
                 cwd,
@@ -174,30 +185,51 @@ export class PytestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
 
             let resultProc: ChildProcess | undefined;
-            const result = execService.execObservable(commandArgs, spawnOptions);
-            resultProc = result?.proc;
 
-            if (!resultProc) {
-                traceError(`Failed to spawn pytest discovery subprocess for workspace ${uri.fsPath}`);
-                return;
-            }
-            traceInfo(`Started pytest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
-
-            // Wire up cancellation and process events
-            token?.onCancellationRequested(() => {
+            // Set up cancellation handler before execObservable to catch early cancellations
+            const cancellationHandler = token?.onCancellationRequested(() => {
+                traceInfo(`Cancellation requested during pytest discovery for workspace ${uri.fsPath}`);
                 cleanupOnCancellation('pytest', resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
             });
+
+            try {
+                const result = execService.execObservable(commandArgs, spawnOptions);
+                resultProc = result?.proc;
+
+                if (!resultProc) {
+                    traceError(`Failed to spawn pytest discovery subprocess for workspace ${uri.fsPath}`);
+                    deferredTillExecClose.resolve();
+                    return;
+                }
+                traceInfo(`Started pytest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
+            } catch (error) {
+                traceError(`Error spawning pytest discovery subprocess for workspace ${uri.fsPath}: ${error}`);
+                deferredTillExecClose.resolve();
+                cancellationHandler?.dispose();
+                throw error;
+            }
             resultProc.stdout?.on('data', handlers.onStdout);
             resultProc.stderr?.on('data', handlers.onStderr);
             resultProc.on('exit', handlers.onExit);
             resultProc.on('close', handlers.onClose);
 
+            cancellationHandler?.dispose();
+
+            // Check for early cancellation before awaitingre awaiting
+            if (token?.isCancellationRequested) {
+                traceInfo(`Pytest discovery was cancelled before process completion for workspace ${uri.fsPath}`);
+                deferredTillExecClose.resolve();
+            }
+
+            traceVerbose(`Waiting for pytest discovery subprocess to complete for workspace ${uri.fsPath}`);
             await deferredTillExecClose.promise;
             traceInfo(`Pytest discovery completed for workspace ${uri.fsPath}`);
         } catch (error) {
             traceError(`Error during pytest discovery for workspace ${uri.fsPath}: ${error}`);
+            deferredTillExecClose.resolve();
             throw error;
         } finally {
+            traceVerbose(`Cleaning up pytest discovery resources for workspace ${uri.fsPath}`);
             discoveryPipeCancellation.dispose();
         }
     }

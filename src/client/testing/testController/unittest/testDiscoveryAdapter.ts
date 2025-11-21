@@ -95,6 +95,9 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             uri,
         );
 
+        // Setup process handlers deferred (used by both execution paths)
+        const deferredTillExecClose = createTestingDeferred();
+
         try {
             // Build unittest command and arguments
             const settings = this.configSettings.getSettings(uri);
@@ -107,7 +110,6 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             const mutableEnv = await configureDiscoveryEnv(this.envVarsService, uri, discoveryPipeName);
 
             // Setup process handlers (shared by both execution paths)
-            const deferredTillExecClose = createTestingDeferred();
             const handlers = createProcessHandlers('unittest', uri, cwd, this.resultResolver, deferredTillExecClose);
 
             // Execute using environment extension if available
@@ -118,6 +120,7 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                     traceError(
                         `Python environment not found for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,
                     );
+                    deferredTillExecClose.resolve();
                     return;
                 }
                 traceVerbose(`Using Python environment: ${JSON.stringify(pythonEnv)}`);
@@ -157,10 +160,18 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
                 traceError(
                     `Failed to create execution service for workspace ${uri.fsPath}. Cannot proceed with test discovery.`,
                 );
+                deferredTillExecClose.resolve();
                 return;
             }
             const execInfo = await execService.getExecutablePath();
             traceVerbose(`Using Python executable: ${execInfo} for workspace ${uri.fsPath}`);
+
+            // Check for cancellation before spawning process
+            if (token?.isCancellationRequested) {
+                traceInfo(`Unittest discovery cancelled before spawning process for workspace ${uri.fsPath}`);
+                deferredTillExecClose.resolve();
+                return;
+            }
 
             const spawnOptions: SpawnOptions = {
                 cwd,
@@ -170,30 +181,51 @@ export class UnittestTestDiscoveryAdapter implements ITestDiscoveryAdapter {
             };
 
             let resultProc: ChildProcess | undefined;
-            const result = execService.execObservable(execArgs, spawnOptions);
-            resultProc = result?.proc;
 
-            if (!resultProc) {
-                traceError(`Failed to spawn unittest discovery subprocess for workspace ${uri.fsPath}`);
-                return;
-            }
-            traceInfo(`Started unittest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
-
-            // Wire up cancellation and process events
-            token?.onCancellationRequested(() => {
+            // Set up cancellation handler before execObservable to catch early cancellations
+            const cancellationHandler = token?.onCancellationRequested(() => {
+                traceInfo(`Cancellation requested during unittest discovery for workspace ${uri.fsPath}`);
                 cleanupOnCancellation('unittest', resultProc, deferredTillExecClose, discoveryPipeCancellation, uri);
             });
+
+            try {
+                const result = execService.execObservable(execArgs, spawnOptions);
+                resultProc = result?.proc;
+
+                if (!resultProc) {
+                    traceError(`Failed to spawn unittest discovery subprocess for workspace ${uri.fsPath}`);
+                    deferredTillExecClose.resolve();
+                    return;
+                }
+                traceInfo(`Started unittest discovery subprocess (execution factory) for workspace ${uri.fsPath}`);
+            } catch (error) {
+                traceError(`Error spawning unittest discovery subprocess for workspace ${uri.fsPath}: ${error}`);
+                deferredTillExecClose.resolve();
+                cancellationHandler?.dispose();
+                throw error;
+            }
             resultProc.stdout?.on('data', handlers.onStdout);
             resultProc.stderr?.on('data', handlers.onStderr);
             resultProc.on('exit', handlers.onExit);
             resultProc.on('close', handlers.onClose);
 
+            cancellationHandler?.dispose();
+
+            // Check for early cancellation before awaitingre awaiting
+            if (token?.isCancellationRequested) {
+                traceInfo(`Unittest discovery was cancelled before process completion for workspace ${uri.fsPath}`);
+                deferredTillExecClose.resolve();
+            }
+
+            traceVerbose(`Waiting for unittest discovery subprocess to complete for workspace ${uri.fsPath}`);
             await deferredTillExecClose.promise;
             traceInfo(`Unittest discovery completed for workspace ${uri.fsPath}`);
         } catch (error) {
             traceError(`Error during unittest discovery for workspace ${uri.fsPath}: ${error}`);
+            deferredTillExecClose.resolve();
             throw error;
         } finally {
+            traceVerbose(`Cleaning up unittest discovery resources for workspace ${uri.fsPath}`);
             discoveryPipeCancellation.dispose();
         }
     }
