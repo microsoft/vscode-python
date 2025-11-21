@@ -64,6 +64,12 @@ suite('Smoke Test: Run Python File In Terminal', () => {
         const terminalsBefore = vscode.window.terminals.length;
         console.log(`[runInTerminal.smoke] Number of terminals before execution: ${terminalsBefore}`);
 
+        // On Windows, if there are existing terminals, wait a bit to ensure they're fully ready
+        if (terminalsBefore > 0 && process.platform === 'win32') {
+            console.log(`[runInTerminal.smoke] Waiting 2s for existing terminals to be ready on Windows...`);
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+
         const startTime = Date.now();
         console.log(`[runInTerminal.smoke] Executing 'python.execInTerminal' command at ${new Date().toISOString()}`);
 
@@ -71,7 +77,6 @@ suite('Smoke Test: Run Python File In Terminal', () => {
             console.error(`[runInTerminal.smoke] Command failed with error: ${err}`);
             assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
         });
-
         const commandCompleteTime = Date.now();
         console.log(`[runInTerminal.smoke] Command completed in ${commandCompleteTime - startTime}ms`);
 

@@ -47,18 +47,40 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
 
         const textDocument = await openFile(file);
         console.log(`[smartSend.smoke] File opened in editor`);
+        console.log(`[smartSend.smoke] Document has ${textDocument.lineCount} lines`);
+        console.log(`[smartSend.smoke] First 5 lines of file:`);
+        for (let i = 0; i < Math.min(5, textDocument.lineCount); i++) {
+            console.log(`[smartSend.smoke]   Line ${i}: ${textDocument.lineAt(i).text}`);
+        }
 
         if (vscode.window.activeTextEditor) {
             const myPos = new vscode.Position(0, 0);
             vscode.window.activeTextEditor!.selections = [new vscode.Selection(myPos, myPos)];
             console.log(`[smartSend.smoke] Cursor set to position (0, 0)`);
+            console.log(
+                `[smartSend.smoke] Current selection: "${vscode.window.activeTextEditor.document.getText(
+                    vscode.window.activeTextEditor.selection,
+                )}"`,
+            );
+
+            // Wait a bit for the editor state to settle
+            console.log(`[smartSend.smoke] Waiting 500ms for editor state to settle...`);
+            await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         const terminalsBefore = vscode.window.terminals.length;
         console.log(`[smartSend.smoke] Number of terminals before execution: ${terminalsBefore}`);
 
+        // On Windows, if there are existing terminals, wait a bit to ensure they're fully ready
+        if (terminalsBefore > 0 && process.platform === 'win32') {
+            console.log(`[smartSend.smoke] Waiting 3s for existing terminals to be ready on Windows...`);
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+        }
+
         const startTime = Date.now();
-        console.log(`[smartSend.smoke] Executing first 'python.execSelectionInTerminal' command at ${new Date().toISOString()}`);
+        console.log(
+            `[smartSend.smoke] Executing first 'python.execSelectionInTerminal' command at ${new Date().toISOString()}`,
+        );
 
         await vscode.commands
             .executeCommand<void>('python.execSelectionInTerminal', textDocument.uri)
@@ -66,7 +88,6 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
                 console.error(`[smartSend.smoke] First command failed: ${err}`);
                 assert.fail(`Something went wrong running the Python file in the terminal: ${err}`);
             });
-
         const firstCmdTime = Date.now();
         console.log(`[smartSend.smoke] First command completed in ${firstCmdTime - startTime}ms`);
 
@@ -80,8 +101,10 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         // Windows may need more time for terminal to initialize and start executing
         const isWindows = process.platform === 'win32';
         const initialWaitTime = isWindows ? 2000 : 1000;
-        console.log(`[smartSend.smoke] Waiting ${initialWaitTime}ms for terminal to start processing (isWindows: ${isWindows})...`);
-        await new Promise(resolve => setTimeout(resolve, initialWaitTime));
+        console.log(
+            `[smartSend.smoke] Waiting ${initialWaitTime}ms for terminal to start processing (isWindows: ${isWindows})...`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, initialWaitTime));
 
         // Verify the working directory matches expected
         const expectedDir = path.dirname(outputFile);
@@ -92,7 +115,8 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
         const checkIfFileHasBeenCreated = async () => {
             checkCount++;
             const exists = await fs.pathExists(outputFile);
-            if (checkCount % 100 === 0) { // Log every 100 checks (~1 second)
+            if (checkCount % 100 === 0) {
+                // Log every 100 checks (~1 second)
                 const elapsed = Date.now() - startTime;
                 console.log(`[smartSend.smoke] File creation check #${checkCount} at ${elapsed}ms: ${exists}`);
             }
