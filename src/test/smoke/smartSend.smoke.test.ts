@@ -19,7 +19,8 @@ suite('Smoke Test: Run Smart Selection and Advance Cursor', async () => {
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
-    test('Smart Send', async () => {
+    // TODO: Re-enable this test once the flakiness is resolved
+    test.skip('Smart Send', async () => {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',

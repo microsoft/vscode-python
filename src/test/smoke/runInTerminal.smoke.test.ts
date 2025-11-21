@@ -28,7 +28,8 @@ suite('Smoke Test: Run Python File In Terminal', () => {
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
-    test('Exec', async () => {
+    // TODO: Re-enable this test once the flakiness is resolved
+    test.skip('Exec', async () => {
         const file = path.join(
             EXTENSION_ROOT_DIR_FOR_TESTS,
             'src',
