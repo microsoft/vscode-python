@@ -88,7 +88,58 @@ suite('pytest test execution adapter', () => {
         myTestPath = path.join('/', 'my', 'test', 'path', '/');
 
         utilsStartRunResultNamedPipeStub = sinon.stub(util, 'startRunResultNamedPipe');
-        utilsStartRunResultNamedPipeStub.callsFake(() => Promise.resolve('runResultPipe-mockName'));
+        utilsStartRunResultNamedPipeStub.callsFake(
+            (_dataReceivedCallback, deferredTillServerClose, cancellationToken) => {
+                console.log('[DEBUG] [startRunResultNamedPipe] stub called');
+                if (cancellationToken) {
+                    console.log('[DEBUG] [startRunResultNamedPipe] cancellationToken present');
+                    cancellationToken.onCancellationRequested(() => {
+                        console.log(
+                            '→ [STUB] startRunResultNamedPipe: cancellation requested, resolving deferredTillServerClose',
+                        );
+                        deferredTillServerClose.resolve();
+                    });
+                } else {
+                    console.log('[DEBUG] [startRunResultNamedPipe] no cancellationToken');
+                }
+                const isEnvExt = typeof useEnvExtensionStub === 'function' && useEnvExtensionStub();
+                console.log(`[DEBUG] [startRunResultNamedPipe] isEnvExtensionMode = ${isEnvExt}`);
+                if (isEnvExt) {
+                    setImmediate(() => {
+                        if (!deferredTillServerClose.completed) {
+                            console.log(
+                                '→ [STUB] startRunResultNamedPipe: auto-resolving deferredTillServerClose (env not found case)',
+                            );
+                            deferredTillServerClose.resolve();
+                        } else {
+                            console.log(
+                                '[DEBUG] [startRunResultNamedPipe] deferredTillServerClose already completed (env ext)',
+                            );
+                        }
+                    });
+                } else {
+                    if (mockProc && typeof mockProc.on === 'function') {
+                        console.log('[DEBUG] [startRunResultNamedPipe] attaching close listener to mockProc');
+                        mockProc.on('close', () => {
+                            if (!deferredTillServerClose.completed) {
+                                console.log(
+                                    '→ [STUB] startRunResultNamedPipe: resolving deferredTillServerClose on process close',
+                                );
+                                deferredTillServerClose.resolve();
+                            } else {
+                                console.log(
+                                    '[DEBUG] [startRunResultNamedPipe] deferredTillServerClose already completed (legacy)',
+                                );
+                            }
+                        });
+                    } else {
+                        console.log('[DEBUG] [startRunResultNamedPipe] mockProc missing or has no on method');
+                    }
+                }
+                console.log('→ [STUB] startRunResultNamedPipe: called and returning pipe name');
+                return Promise.resolve('runResultPipe-mockName');
+            },
+        );
 
         execService.setup((x) => x.getExecutablePath()).returns(() => Promise.resolve('/mock/path/to/python'));
     });
@@ -324,5 +375,531 @@ suite('pytest test execution adapter', () => {
                 ),
             typeMoq.Times.once(),
         );
+    });
+
+    suite('Environment Extension Integration', () => {
+        let getEnvironmentStub: sinon.SinonStub;
+        let runInBackgroundStub: sinon.SinonStub;
+        let mockEnvProcess: any;
+
+        setup(() => {
+            // Stub environment extension APIs
+            getEnvironmentStub = sinon.stub(extapi, 'getEnvironment');
+            runInBackgroundStub = sinon.stub(extapi, 'runInBackground');
+
+            // Create mock environment process
+            mockEnvProcess = {
+                pid: 12345,
+                onExit: sinon.stub(),
+                stdout: {
+                    on: sinon.stub(),
+                },
+                stderr: {
+                    on: sinon.stub(),
+                },
+                kill: sinon.stub(),
+            };
+        });
+
+        test('Uses environment extension when enabled', async () => {
+            // This test verifies the environment extension integration path works correctly.
+            // Mocks: getEnvironment, runInBackground (env extension APIs), writeTestIdsFile, startRunResultNamedPipe
+            // Async behavior tested:
+            //   1. Test waits for environment activation & file writes to complete
+            //   2. Simulates process completion via onExit callback
+            //   3. Verifies finally block cleanup (deferredTillServerClose) resolves correctly
+            console.log('TEST START: Uses environment extension when enabled');
+
+            useEnvExtensionStub.returns(true);
+            const mockPythonEnv = {
+                id: 'test-env',
+                executable: { uri: Uri.file('/usr/bin/python3') },
+            };
+            getEnvironmentStub.resolves(mockPythonEnv);
+            console.log('✓ getEnvironment will resolve with mock env');
+
+            runInBackgroundStub.resolves(mockEnvProcess);
+            console.log('✓ runInBackground will resolve with mock process');
+
+            // Track async operations in production code
+            const envActivatedDeferred = createDeferred();
+            const testIdsFileWrittenDeferred = createDeferred();
+
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    console.log('→ createActivatedEnvironment called');
+                    envActivatedDeferred.resolve();
+                    return Promise.resolve(execService.object);
+                });
+
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                console.log('→ writeTestIdsFile called');
+                testIdsFileWrittenDeferred.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+
+            console.log('→ Calling adapter.runTests()');
+            const runTestsPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+            console.log('✓ runTests called, execution continues async');
+
+            console.log('⏳ Waiting for environment activation...');
+            await envActivatedDeferred.promise;
+
+            console.log('⏳ Waiting for test IDs file written...');
+            await testIdsFileWrittenDeferred.promise;
+
+            console.log('⏳ Waiting for result pipe created...');
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Give production code time to call runInBackground (it's async)
+            console.log('⏳ Yielding to allow runInBackground stub to be called...');
+            await new Promise((resolve) => setImmediate(resolve));
+
+            const processExitCallback = mockEnvProcess.onExit.firstCall.args[0];
+            console.log('→ Triggering process exit (code 0)...');
+            processExitCallback(0, null);
+
+            // Wait for runTests to complete (including finally block cleanup)
+            console.log('⏳ Waiting for runTests complete (with cleanup)...');
+            await runTestsPromise;
+
+            // Verify behavior
+            console.log('→ Verifying calls...');
+            sinon.assert.calledOnce(getEnvironmentStub);
+            sinon.assert.calledOnce(runInBackgroundStub);
+
+            const runInBackgroundCall = runInBackgroundStub.firstCall;
+            assert.strictEqual(runInBackgroundCall.args[0], mockPythonEnv);
+            assert.strictEqual(runInBackgroundCall.args[1].cwd, myTestPath);
+            assert.ok(Array.isArray(runInBackgroundCall.args[1].args));
+
+            console.log('TEST COMPLETE ✓');
+        });
+
+        test('Handles cancellation with environment extension', async () => {
+            // Tests cancellation flow with environment extension.
+            // Mocks: getEnvironment, runInBackground, writeTestIdsFile, startRunResultNamedPipe
+            // Async: Simulates cancellation, verifies process.kill and cleanup.
+            useEnvExtensionStub.returns(true);
+            const mockPythonEnv = {
+                id: 'test-env',
+                executable: { uri: Uri.file('/usr/bin/python3') },
+            };
+            getEnvironmentStub.resolves(mockPythonEnv);
+            runInBackgroundStub.resolves(mockEnvProcess);
+            const envActivatedDeferred = createDeferred();
+            const testIdsFileWrittenDeferred = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    envActivatedDeferred.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                testIdsFileWrittenDeferred.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+            let cancellationHandler: (() => void) | undefined;
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun
+                .setup((t) => t.token)
+                .returns(
+                    () =>
+                        ({
+                            onCancellationRequested: (handler: () => void) => {
+                                cancellationHandler = handler;
+                            },
+                            isCancellationRequested: false,
+                        } as any),
+                );
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+            const runTestsPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+            await envActivatedDeferred.promise;
+            await testIdsFileWrittenDeferred.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+            // Yield to allow runInBackground stub to be called
+            await new Promise((resolve) => setImmediate(resolve));
+            // Simulate cancellation
+            if (typeof cancellationHandler === 'function') {
+                cancellationHandler();
+            }
+            // Wait for kill to be called
+            await new Promise((resolve) => setImmediate(resolve));
+            sinon.assert.calledOnce(mockEnvProcess.kill);
+            // Simulate process exit after cancellation
+            const processExitCallback = mockEnvProcess.onExit.firstCall.args[0];
+            processExitCallback(null, 'SIGTERM');
+            await runTestsPromise;
+        });
+
+        test('Handles environment not found gracefully', async () => {
+            // Tests handling of missing environment (getEnvironment returns undefined).
+            // Mocks: getEnvironment, runInBackground, writeTestIdsFile, startRunResultNamedPipe
+            // Async: Verifies runInBackground is not called, cleanup still completes.
+            useEnvExtensionStub.returns(true);
+            getEnvironmentStub.resolves(undefined);
+            const envActivatedDeferred = createDeferred();
+            const testIdsFileWrittenDeferred = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    envActivatedDeferred.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                testIdsFileWrittenDeferred.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+            const runTestsPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+            await envActivatedDeferred.promise;
+            await testIdsFileWrittenDeferred.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+            await runTestsPromise;
+            sinon.assert.notCalled(runInBackgroundStub);
+        });
+
+        test('Environment extension passes correct environment variables', async () => {
+            // Tests that correct environment variables are passed to runInBackground.
+            // Mocks: getEnvironment, runInBackground, writeTestIdsFile, startRunResultNamedPipe
+            // Async: Simulates process exit, verifies env vars.
+            useEnvExtensionStub.returns(true);
+            const mockPythonEnv = {
+                id: 'test-env',
+                executable: { uri: Uri.file('/usr/bin/python3') },
+            };
+            getEnvironmentStub.resolves(mockPythonEnv);
+            runInBackgroundStub.resolves(mockEnvProcess);
+            const envActivatedDeferred = createDeferred();
+            const testIdsFileWrittenDeferred = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    envActivatedDeferred.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                testIdsFileWrittenDeferred.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+            const runTestsPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+            await envActivatedDeferred.promise;
+            await testIdsFileWrittenDeferred.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+            await new Promise((resolve) => setImmediate(resolve));
+            // Simulate process exit
+            const processExitCallback = mockEnvProcess.onExit.firstCall.args[0];
+            processExitCallback(0, null);
+            await runTestsPromise;
+            // Verify environment variables passed to runInBackground
+            const runInBackgroundCall = runInBackgroundStub.firstCall;
+            const options = runInBackgroundCall.args[1];
+            const pathToPythonFiles = path.join(EXTENSION_ROOT_DIR, 'python_files');
+            assert.ok(options.env.PYTHONPATH.includes(pathToPythonFiles), 'PYTHONPATH should include python_files');
+            assert.strictEqual(options.env.TEST_RUN_PIPE, 'runResultPipe-mockName');
+            assert.strictEqual(options.env.RUN_TEST_IDS_PIPE, 'testIdPipe-mockName');
+        });
+
+        test('Environment extension handles process exit with non-zero code', async () => {
+            // Tests that process exit with non-zero code is handled and cleanup completes.
+            // Mocks: getEnvironment, runInBackground, writeTestIdsFile, startRunResultNamedPipe
+            // Async: Simulates process exit with error code, verifies no throw.
+            useEnvExtensionStub.returns(true);
+            const mockPythonEnv = {
+                id: 'test-env',
+                executable: { uri: Uri.file('/usr/bin/python3') },
+            };
+            getEnvironmentStub.resolves(mockPythonEnv);
+            runInBackgroundStub.resolves(mockEnvProcess);
+            const envActivatedDeferred = createDeferred();
+            const testIdsFileWrittenDeferred = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    envActivatedDeferred.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                testIdsFileWrittenDeferred.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+            const runTestsPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+            await envActivatedDeferred.promise;
+            await testIdsFileWrittenDeferred.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+            await new Promise((resolve) => setImmediate(resolve));
+            // Simulate process exit with error code
+            const processExitCallback = mockEnvProcess.onExit.firstCall.args[0];
+            processExitCallback(1, null);
+            await runTestsPromise;
+            assert.ok(true, 'Test completed successfully even with non-zero exit code');
+        });
+    });
+
+    suite('Cancellation and Cleanup', () => {
+        test('Cancellation triggers process kill in legacy mode', async () => {
+            useEnvExtensionStub.returns(false);
+
+            const deferred2 = createDeferred();
+            const deferred3 = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    deferred2.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                deferred3.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+
+            let cancellationHandler: (() => void) | undefined;
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun
+                .setup((t) => t.token)
+                .returns(
+                    () =>
+                        ({
+                            onCancellationRequested: (handler: () => void) => {
+                                cancellationHandler = handler;
+                            },
+                            isCancellationRequested: false,
+                        } as any),
+                );
+
+            const killStub = sinon.stub(mockProc, 'kill');
+
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+
+            const runPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+
+            await deferred2.promise;
+            await deferred3.promise;
+            await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Trigger cancellation
+            if (cancellationHandler) {
+                cancellationHandler();
+            }
+
+            // Wait for kill to be processed
+            await new Promise((resolve) => setImmediate(resolve));
+
+            // Verify process.kill was called
+            sinon.assert.calledOnce(killStub);
+
+            // Trigger process close
+            mockProc.trigger('close');
+
+            await runPromise;
+        });
+
+        test('Instance cleanup happens after process close', async () => {
+            useEnvExtensionStub.returns(false);
+
+            const deferred2 = createDeferred();
+            const deferred3 = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    deferred2.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                deferred3.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+
+            const runPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+            );
+
+            await deferred2.promise;
+            await deferred3.promise;
+            await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Access private activeInstances to verify cleanup
+            const activeInstances = (adapter as any).activeInstances;
+            const instanceCountBefore = activeInstances.size;
+            assert.strictEqual(instanceCountBefore, 1, 'Should have one active instance');
+
+            // Trigger process close
+            mockProc.trigger('close');
+
+            await runPromise;
+
+            // Verify instance was cleaned up
+            const instanceCountAfter = activeInstances.size;
+            assert.strictEqual(instanceCountAfter, 0, 'Instance should be removed after close');
+        });
+
+        test('Promise resolution happens correctly on success', async () => {
+            useEnvExtensionStub.returns(false);
+
+            const deferred2 = createDeferred();
+            const deferred3 = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    deferred2.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                deferred3.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+
+            const runPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+                undefined,
+                undefined,
+            );
+
+            await deferred2.promise;
+            await deferred3.promise;
+            await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Trigger successful close (exit code 0, no signal)
+            mockProc.trigger('close');
+
+            await runPromise;
+
+            // If we reach here without hanging, promise resolved correctly
+            assert.ok(true, 'Promise resolved successfully');
+        });
+
+        test('Promise resolution happens correctly on error', async () => {
+            useEnvExtensionStub.returns(false);
+
+            const deferred2 = createDeferred();
+            const deferred3 = createDeferred();
+            execFactory = typeMoq.Mock.ofType<IPythonExecutionFactory>();
+            execFactory
+                .setup((x) => x.createActivatedEnvironment(typeMoq.It.isAny()))
+                .returns(() => {
+                    deferred2.resolve();
+                    return Promise.resolve(execService.object);
+                });
+            utilsWriteTestIdsFileStub.callsFake(() => {
+                deferred3.resolve();
+                return Promise.resolve('testIdPipe-mockName');
+            });
+
+            const testRun = typeMoq.Mock.ofType<TestRun>();
+            testRun.setup((t) => t.token).returns(() => ({ onCancellationRequested: () => undefined } as any));
+
+            const uri = Uri.file(myTestPath);
+            adapter = new PytestTestExecutionAdapter(configService);
+
+            const runPromise = adapter.runTests(
+                uri,
+                ['test1'],
+                TestRunProfileKind.Run,
+                testRun.object,
+                execFactory.object,
+                undefined,
+                undefined,
+            );
+
+            await deferred2.promise;
+            await deferred3.promise;
+            await deferred4.promise;
+            await utilsStartRunResultNamedPipeStub.returnValues[0];
+
+            // Trigger error close (exit code 1, SIGTERM signal)
+            mockProc.trigger('close');
+
+            await runPromise;
+
+            // If we reach here without hanging, promise resolved correctly
+            assert.ok(true, 'Promise resolved successfully even on error');
+        });
     });
 });

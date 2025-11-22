@@ -225,11 +225,12 @@ export class MockChildProcess extends EventEmitter {
         return this;
     }
 
-    trigger(event: string): Array<any> {
+    trigger(event: string, ...args: any[]): void {
         if (this.eventMap.has(event)) {
-            return this.eventMap.get(event);
+            this.eventMap.get(event).forEach((listener: (...arg0: unknown[]) => void) => {
+                listener(...args);
+            });
         }
-        return [];
     }
 
     kill(_signal?: NodeJS.Signals | number): boolean {
