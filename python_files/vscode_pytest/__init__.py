@@ -22,10 +22,10 @@ from typing import (
 )
 
 import pytest
-from typing_extensions import NotRequired
 
 if TYPE_CHECKING:
     from pluggy import Result
+    from typing_extensions import NotRequired
 
 USES_PYTEST_DESCRIBE = False
 
