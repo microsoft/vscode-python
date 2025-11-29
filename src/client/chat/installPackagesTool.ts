@@ -11,6 +11,7 @@ import {
     LanguageModelToolResult,
     PreparedToolInvocation,
     Uri,
+    workspace,
 } from 'vscode';
 import { PythonExtension } from '../api/types';
 import { IServiceContainer } from '../ioc/types';
@@ -58,7 +59,14 @@ export class InstallPackagesTool extends BaseTool<IInstallPackageArgs>
 
         if (useEnvExtension()) {
             const api = await getEnvExtApi();
-            const env = await api.getEnvironment(resourcePath);
+            // Normalize resourcePath to workspace folder for environment lookup.
+            // This ensures consistency with CreateVirtualEnvTool which creates environments
+            // for workspace folders, not individual files.
+            const workspaceFolder = resourcePath
+                ? workspace.getWorkspaceFolder(resourcePath)
+                : workspace.workspaceFolders?.[0];
+            const envScope = workspaceFolder?.uri ?? resourcePath;
+            const env = await api.getEnvironment(envScope);
             if (env) {
                 await raceCancellationError(api.managePackages(env, { install: options.input.packageList }), token);
                 const resultMessage = `Successfully installed ${packagePlurality}: ${options.input.packageList.join(
