@@ -23,7 +23,6 @@ from typing import (
 
 import pytest
 
-
 if TYPE_CHECKING:
     from pluggy import Result
     from typing_extensions import NotRequired
