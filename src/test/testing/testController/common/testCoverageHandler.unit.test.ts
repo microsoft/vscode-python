@@ -82,7 +82,7 @@ suite('TestCoverageHandler', () => {
             coverageHandler.processCoverage(payload, runInstanceMock.object);
 
             assert.ok(capturedCoverage);
-            assert.strictEqual(capturedCoverage!.uri.fsPath, '/path/to/file.py');
+            assert.strictEqual(capturedCoverage!.uri.fsPath, Uri.file('/path/to/file.py').fsPath);
         });
 
         test('should return detailed coverage map with correct keys', () => {

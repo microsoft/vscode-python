@@ -161,7 +161,7 @@ suite('End to End Tests: test adapters', () => {
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
         // const deferredTillEOT = createTestingDeferred();
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
@@ -202,7 +202,7 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver = new PythonResultResolver(testController, unittestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
@@ -242,7 +242,7 @@ suite('End to End Tests: test adapters', () => {
         workspaceUri = Uri.parse(rootPathSmallWorkspace);
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = async (payload, _token?) => {
             callCount = callCount + 1;
             actualData = payload;
             return Promise.resolve();
@@ -291,7 +291,7 @@ suite('End to End Tests: test adapters', () => {
 
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
@@ -375,7 +375,7 @@ suite('End to End Tests: test adapters', () => {
 
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
@@ -446,7 +446,7 @@ suite('End to End Tests: test adapters', () => {
         };
         resultResolver = new PythonResultResolver(testController, pytestProvider, workspaceUri);
         let callCount = 0;
-        resultResolver._resolveDiscovery = async (payload, _token?) => {
+        resultResolver.resolveDiscovery = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             actualData = payload;
@@ -480,7 +480,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
@@ -554,7 +554,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
@@ -625,7 +625,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
@@ -811,7 +811,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (payload, _token?) => {
+        resultResolver.resolveExecution = async (payload, _token?) => {
             traceLog(`resolveDiscovery ${payload}`);
             callCount = callCount + 1;
             // the payloads that get to the _resolveExecution are all data and should be successful.
@@ -878,7 +878,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveDiscovery = async (data, _token?) => {
+        resultResolver.resolveDiscovery = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
             traceLog(`unittest discovery adapter seg fault error handling \n  ${JSON.stringify(data)}`);
@@ -931,7 +931,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveDiscovery = async (data, _token?) => {
+        resultResolver.resolveDiscovery = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             callCount = callCount + 1;
             traceLog(`add one to call count, is now ${callCount}`);
@@ -984,7 +984,7 @@ suite('End to End Tests: test adapters', () => {
         let callCount = 0;
         let failureOccurred = false;
         let failureMsg = '';
-        resultResolver._resolveExecution = async (data, _token?) => {
+        resultResolver.resolveExecution = async (data, _token?) => {
             // do the following asserts for each time resolveExecution is called, should be called once per test.
             console.log(`pytest execution adapter seg fault error handling \n  ${JSON.stringify(data)}`);
             callCount = callCount + 1;
@@ -1038,8 +1038,8 @@ suite('End to End Tests: test adapters', () => {
             });
     });
 
-    test('_resolveExecution performance test: validates efficient test result processing', async () => {
-        // This test validates that _resolveExecution processes test results efficiently
+    test('resolveExecution performance test: validates efficient test result processing', async () => {
+        // This test validates that resolveExecution processes test results efficiently
         // without expensive tree rebuilding or linear searching operations.
         //
         // The test ensures that processing many test results (like parameterized tests)
@@ -1085,9 +1085,13 @@ suite('End to End Tests: test adapters', () => {
         const testItemUtilities = require('../../../client/testing/testController/common/testItemUtilities');
         testItemUtilities.getTestCaseNodes = getTestCaseNodesSpy;
 
+        // Stub isTestItemValid to always return true for performance test
+        // This prevents expensive tree searches during validation
+        const testItemIndexStub = sinon.stub((resultResolver as any).testItemIndex, 'isTestItemValid').returns(true);
+
         // Wrap the _resolveExecution function to measure performance
-        const original_resolveExecution = resultResolver._resolveExecution.bind(resultResolver);
-        resultResolver._resolveExecution = async (payload, runInstance) => {
+        const original_resolveExecution = resultResolver.resolveExecution.bind(resultResolver);
+        resultResolver.resolveExecution = async (payload, runInstance) => {
             const startTime = performance.now();
             callCount++;
 
@@ -1189,8 +1193,8 @@ suite('End to End Tests: test adapters', () => {
 
         const overallStartTime = performance.now();
 
-        // Run the _resolveExecution function with test data
-        await resultResolver._resolveExecution(payload, mockRunInstance as any);
+        // Run the resolveExecution function with test data
+        await resultResolver.resolveExecution(payload, mockRunInstance as any);
 
         const overallEndTime = performance.now();
         const totalTime = overallEndTime - overallStartTime;
@@ -1199,6 +1203,7 @@ suite('End to End Tests: test adapters', () => {
         // CLEANUP: Restore original functions
         // ================================================================
         testItemUtilities.getTestCaseNodes = originalGetTestCaseNodes;
+        testItemIndexStub.restore();
 
         // ================================================================
         // ASSERT: Verify efficient performance characteristics
@@ -1214,7 +1219,7 @@ suite('End to End Tests: test adapters', () => {
         console.log(`Results processed: ${numParameterizedResults}`);
 
         // Basic function call verification
-        assert.strictEqual(callCount, 1, 'Expected _resolveExecution to be called once');
+        assert.strictEqual(callCount, 1, 'Expected resolveExecution to be called once');
 
         // EFFICIENCY VERIFICATION: Ensure minimal expensive operations
         assert.strictEqual(
