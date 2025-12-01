@@ -31,6 +31,7 @@ export class PythonResultResolver implements ITestResultResolver {
     constructor(testController: TestController, testProvider: TestProvider, private workspaceUri: Uri) {
         this.testController = testController;
         this.testProvider = testProvider;
+        // Initialize a new TestItemIndex which will be used to track test items in this workspace
         this.testItemIndex = new TestItemIndex();
     }
 
