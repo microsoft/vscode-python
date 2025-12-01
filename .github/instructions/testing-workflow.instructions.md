@@ -575,5 +575,6 @@ envConfig.inspect
 
 ## 🧠 Agent Learnings
 
--   When mocking `testController.createTestItem()` in unit tests, use `typemoq.It.isAny()` for parameters when testing handler behavior (not ID/label generation logic), but consider using specific matchers (e.g., `It.is((id: string) => id.startsWith('_error_'))`) when the actual values being passed are important for correctness - this balances test precision with maintainability (1)
+-   When mocking `testController.createTestItem()` in unit tests, use `typemoq.It.isAny()` for parameters when testing handler behavior (not ID/label generation logic), but consider using specific matchers (e.g., `It.is((id: string) => id.startsWith('_error_'))`) when the actual values being passed are important for correctness - this balances test precision with maintainability (2)
 -   Remove unused variables from test code immediately - leftover tracking variables like `validationCallCount` that aren't referenced indicate dead code that should be simplified (1)
+-   Use `Uri.file(path).fsPath` for both sides of path comparisons in tests to ensure cross-platform compatibility - Windows converts forward slashes to backslashes automatically (1)
